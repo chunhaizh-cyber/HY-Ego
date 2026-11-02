@@ -8,6 +8,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <set>
+#include <tuple>
 
 namespace 海中鱼巣 {
 namespace {
@@ -245,6 +246,27 @@ bool 更新完成(新外设事实状态 状态) {
     }
 }
 
+std::optional<稳定编码> 新_外设世界树类::获取输出队列特征类型() const noexcept {
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return std::nullopt;
+        if (!有效(输出队列类型)) throw std::runtime_error("peripheral output queue type unavailable");
+        const auto 读取 = 服务_.特征概念服务.读取特征概念定义保护(输出队列类型);
+        if (读取.状态 != 基础结构操作状态::已完成 || 读取.前提已变化
+            || !读取.信息 || 读取.预期节点组.empty() || 读取.信息->类型根 != 输出队列类型)
+            throw std::runtime_error("peripheral output queue definition unavailable");
+        const auto& 定义 = 读取.信息->定义;
+        if (定义.材料类型 != 特征概念材料物理类型::U64数组
+            || !std::holds_alternative<特征概念全材料值域>(定义.值域)
+            || 定义.比较规则 != 特征概念比较规则::完整材料精确
+            || 定义.聚合规则 != 特征概念聚合规则::完整材料精确集合)
+            throw std::runtime_error("peripheral output queue definition corrupt");
+        return 输出队列类型;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设输出队列特征类型", L"已初始化的正式输出队列定义不完整。");
+    }
+}
+
 稳定编码 新_外设世界树类::读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const {
     稳定编码 命中{};
     for (const auto 节点 : 特征组) {
@@ -456,7 +478,8 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
         && 处理.状态 != 新动态概念自动抽象状态::已形成并采用上位概念
         && 处理.状态 != 新动态概念自动抽象状态::已是聚合概念
         && 处理.状态 != 新动态概念自动抽象状态::无同结构候选)
-        throw std::runtime_error("peripheral dynamic abstraction incomplete");
+        throw std::runtime_error("peripheral dynamic abstraction incomplete; status="
+            + std::to_string(static_cast<unsigned>(处理.状态)));
     const auto 后 = 服务_.动态服务.获取动态(动态节点);
     const auto 后列表 = 场景_.查询动态列表(场景节点);
     if (!后 || 后->种类 != 前->种类 || 后->主题存在节点 != 前->主题存在节点
@@ -466,9 +489,9 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
         throw std::runtime_error("peripheral dynamic abstraction readback invalid");
 }
 
-新外设事实状态 新_外设世界树类::更新窗口特征并形成动态(
+新_外设世界树类::特征变化读回 新_外设世界树类::更新窗口特征并形成动态(
     const 新外设对话框定位& 定位, 稳定编码 特征节点,
-    const 新特征准确值& 新值, const 新状态强时间& 时间) {
+    const 新特征准确值& 新值, const 新状态强时间& 时间, std::optional<稳定编码> 来源动作) {
     if (!场景_.是场景节点(定位.场景节点) || 读取窗口定位(定位.场景节点) != 定位
         || (特征节点 != 定位.接收内容特征 && 特征节点 != 定位.接收数量特征
             && 定位.发送数量特征 != 特征节点 && 定位.发送内容特征 != 特征节点
@@ -486,10 +509,22 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
     if (同值) {
         if (更新.状态 != 新场景操作状态::无变化 || 更新.状态节点)
             throw std::runtime_error("peripheral unchanged value unexpectedly published state");
-        return 新外设事实状态::无变化;
+        return {新外设事实状态::无变化,{},{}};
     }
-    if (更新.状态 != 新场景操作状态::已完成 || !更新.状态节点)
-        throw std::runtime_error("peripheral feature update incomplete");
+    if (更新.状态 != 新场景操作状态::已完成 || !更新.状态节点) {
+        std::string 原因 = "peripheral feature update incomplete; scene="
+            + std::to_string(static_cast<unsigned>(更新.状态));
+        if (更新.存在结果) {
+            原因 += "; existence=" + std::to_string(static_cast<unsigned>(更新.存在结果->状态));
+            if (更新.存在结果->特征结果)
+                原因 += "; feature=" + std::to_string(static_cast<unsigned>(更新.存在结果->特征结果->状态));
+            if (更新.存在结果->状态结果)
+                原因 += "; state=" + std::to_string(static_cast<unsigned>(更新.存在结果->状态结果->状态));
+            if (更新.存在结果->专属概念结果)
+                原因 += "; concept=" + std::to_string(static_cast<unsigned>(*更新.存在结果->专属概念结果));
+        }
+        throw std::runtime_error(原因);
+    }
     const auto 后 = 服务_.状态服务.获取状态(*更新.状态节点);
     const auto 列表 = 场景_.查询状态列表(定位.场景节点);
     const auto 类型定位 = 服务_.特征概念服务.比较单特征概念(特征->特征概念节点, 特征->特征概念节点);
@@ -500,13 +535,21 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
         || 后类型.状态 != 特征概念规则状态::已完成 || 后类型.特征类型根 != 类型定位.特征类型根
         || std::count(列表.begin(), 列表.end(), 后->节点) != 1)
         throw std::runtime_error("peripheral new state readback invalid");
-    if (!前) return 新外设事实状态::已完成;
+    if (!前) return {新外设事实状态::已完成,后->节点,{}};
     const auto 动态 = 服务_.动态服务.建立原子动态(定位.窗口节点, 前->节点, 后->节点);
     if (动态.状态 != 新动态操作状态::已完成 || !动态.动态节点
         || 场景_.添加动态(定位.场景节点, *动态.动态节点) != 新场景操作状态::已完成)
         throw std::runtime_error("peripheral dynamic publication incomplete");
+    if (来源动作) {
+        if (服务_.动态服务.关联动作结果(*来源动作,*动态.动态节点,新动作结果关系类型::导致变化)!=新动态操作状态::已完成)
+            throw std::runtime_error("peripheral explicit output action association failed");
+        const auto a=服务_.动态服务.获取动态(*来源动作);
+        if (!a || std::count(a->动作结果组.begin(),a->动作结果组.end(),
+            新动作结果关联{新动作结果关系类型::导致变化,*动态.动态节点})!=1)
+            throw std::runtime_error("peripheral explicit output action association readback failed");
+    }
     核验并处理已发布动态(定位.场景节点, *动态.动态节点);
-    return 新外设事实状态::已完成;
+    return {新外设事实状态::已完成,后->节点,*动态.动态节点};
 }
 
 std::vector<稳定编码> 新_外设世界树类::读取消息成员(稳定编码 特征节点) const {
@@ -607,9 +650,19 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     const auto 保护字段 = 服务_.特征概念服务.消息集合成员保护字段();
     if (!有效(保护字段)) throw std::runtime_error("peripheral message protection key unavailable");
     for (const auto 编码 : 成员) 请求.追加字段组.push_back({集合材料, 保护字段, 编码});
+    // 封存要求每个既有引用目标都有完整预期或只读身份保护。
+    // 消息类型和旧消息成员只被引用，不应为补保护而取得它们的写资格。
+    std::set<稳定编码> 只读目标(成员.begin(), 成员.end());
+    只读目标.insert(消息字段[11]);
+    for (const auto 编码 : 只读目标) {
+        const auto 节点 = 全局基础数据集.查询节点(编码);
+        if (!节点) throw std::runtime_error("peripheral message referenced identity unavailable");
+        请求.只读预期.节点组.push_back(*节点);
+    }
     const auto 封存 = 全局基础数据集.封存原子追加片段(请求);
     if (封存.状态 != 基础节点组追加状态::已完成 || !封存.片段)
-        throw std::runtime_error("peripheral message identity seal failed");
+        throw std::runtime_error("peripheral message identity seal failed; status="
+            + std::to_string(static_cast<unsigned>(封存.状态)));
     新消息待发表凭据 凭据{裸节点, 请求.预期联合节点组, *封存.片段};
     auto 准备 = 服务_.特征服务.准备顶层消息集合更新(特征节点, 集合材料, std::move(凭据));
     if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备)
@@ -664,6 +717,9 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
             || 当前内容 != 实际UTF8正文)
             throw std::runtime_error("peripheral receive readback failed");
         return 新外设事实状态::已完成;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设接收",
+            L"实际接收后特征发布或读回失败，保留已发生事实，不作为可重发否定。", e.what());
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设接收",
             L"实际接收后特征发布或读回失败，保留已发生事实，不作为可重发否定。");
@@ -694,6 +750,9 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
             || 读取文本特征(*定位.发送内容特征) != 实际UTF8正文)
             throw std::runtime_error("outbound formal publication readback failed");
         return 新外设事实状态::已完成;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设发送",
+            L"完整写出已发生，正式发送事实发布失败，保留现场，不重发补记录。", e.what());
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设发送",
             L"完整写出已发生，正式发送事实发布失败，保留现场，不重发补记录。");
@@ -707,6 +766,72 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
         return 读取正式消息(节点);
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设消息", L"消息读取失败，不作为未找到处理。");
+    }
+}
+
+新外设接收记录完整结果 新_外设世界树类::完整读取仍保留的接收记录() const noexcept {
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(消息根)) return {};
+        const auto 根 = 读取消息快照(消息根);
+        新外设接收记录完整结果 结果;
+        std::set<稳定编码> 已读;
+        std::set<std::tuple<std::string, std::string, std::uint64_t>> 来源组;
+        for (const auto& 字段 : 根.结构.字段组) {
+            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+            if (字段.字段节点 != 消息字段[10] || !节点 || !已读.insert(*节点).second)
+                throw std::logic_error("retained peripheral message registry corrupt");
+            const auto 消息 = 读取正式消息(*节点);
+            if (!消息) throw std::logic_error("retained peripheral message missing");
+            if (消息->来源.方向 != 新外设消息方向::接收) continue;
+            if (!来源组.emplace(消息->来源.公开宿主会话, 消息->来源.对话框标识,
+                    消息->来源.来源序号).second)
+                throw std::logic_error("retained inbound message source duplicated");
+            结果.消息组.push_back(*消息);
+        }
+        if (!消息快照相同(根, 读取消息快照(消息根)))
+            throw std::logic_error("retained message registry changed under peripheral lock");
+        std::sort(结果.消息组.begin(), 结果.消息组.end(), [](const auto& 左, const auto& 右) {
+            return std::tie(左.来源.公开宿主会话, 左.来源.对话框标识,
+                       左.来源.来源序号, 左.消息节点)
+                < std::tie(右.来源.公开宿主会话, 右.来源.对话框标识,
+                       右.来源.来源序号, 右.消息节点);
+        });
+        结果.状态 = 新外设事实状态::已完成;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {新外设事实状态::资源失败, {}};
+    } catch (const std::length_error&) {
+        return {新外设事实状态::资源失败, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完整读取保留的接收记录",
+            L"正式消息登记或内容损坏，不交付部分记录。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完整读取保留的接收记录",
+            L"完整消息读取发生未知工程异常。");
+    }
+}
+
+新外设消息保护结果 新_外设世界树类::读取消息保护(稳定编码 节点) const noexcept {
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(消息根)) return {};
+        if (!有效(节点)) return {新外设事实状态::入口拒绝, {}, {}};
+        新外设消息保护结果 结果;
+        结果.消息 = 读取正式消息(节点, &结果.完整保护);
+        if (!结果.消息) return {新外设事实状态::未找到, {}, {}};
+        结果.状态 = 新外设事实状态::已完成;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {新外设事实状态::资源失败, {}, {}};
+    } catch (const std::length_error&) {
+        return {新外设事实状态::资源失败, {}, {}};
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设消息保护",
+            L"正式消息保护读取失败，不作为未找到处理。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设消息保护",
+            L"消息保护读取发生未知工程异常。");
     }
 }
 
@@ -853,8 +978,8 @@ std::vector<新外设消息信息> 新_外设世界树类::读取输出队列成
     return 结果;
 }
 
-void 新_外设世界树类::更新输出队列(const 新外设对话框定位& 定位,
-    const std::vector<新外设消息信息>& 消息组) {
+新_外设世界树类::特征变化读回 新_外设世界树类::更新输出队列(const 新外设对话框定位& 定位,
+    const std::vector<新外设消息信息>& 消息组, std::optional<稳定编码> 来源动作) {
     if (!定位.输出队列特征) throw std::runtime_error("peripheral output queue feature missing");
     const auto 场景 = 场景_.获取场景(定位.场景节点);
     if (!场景 || 读取窗口定位(定位.场景节点) != 定位)
@@ -895,17 +1020,20 @@ void 新_外设世界树类::更新输出队列(const 新外设对话框定位& 
     if (!保护请求.追加字段组.empty()) {
         const auto 发布 = 全局基础数据集.原子追加节点组(保护请求);
         if (发布.状态 != 基础节点组追加状态::已完成)
-            throw std::runtime_error("peripheral output queue member protection failed");
+            throw std::runtime_error("peripheral output queue member protection failed; status="
+                + std::to_string(static_cast<unsigned>(发布.状态)));
     }
     const auto 时间 = 当前强时间();
-    if (!更新完成(更新窗口特征并形成动态(定位, *定位.输出队列特征,
-            新特征准确值{材料节点}, 时间)))
+    const auto change=更新窗口特征并形成动态(定位, *定位.输出队列特征,
+            新特征准确值{材料节点}, 时间,来源动作);
+    if (!更新完成(change))
         throw std::runtime_error("peripheral output queue update failed");
     const auto 读回 = 读取输出队列成员(定位);
     if (读回.size() != 消息组.size()
         || !std::equal(读回.begin(), 读回.end(), 消息组.begin(),
             [](const auto& 左, const auto& 右) { return 左.消息节点 == 右.消息节点; }))
         throw std::runtime_error("peripheral output queue readback mismatch");
+    return change;
 }
 
 新外设消息信息 新_外设世界树类::建立输出消息(const 新外设对话框定位& 定位,
@@ -952,7 +1080,8 @@ void 新_外设世界树类::更新输出队列(const 新外设对话框定位& 
     请求.追加字段组.push_back({消息根, 消息字段[10], 裸节点});
     const auto 发布 = 全局基础数据集.原子追加节点组(请求);
     if (发布.状态 != 基础节点组追加状态::已完成)
-        throw std::runtime_error("peripheral output message publication failed");
+        throw std::runtime_error("peripheral output message publication failed; status="
+            + std::to_string(static_cast<unsigned>(发布.状态)));
     const auto 消息 = 读取正式消息(裸节点);
     if (!消息 || 消息->来源 != 来源 || 消息->场景节点 != 定位.场景节点
         || 消息->窗口节点 != 定位.窗口节点 || 消息->UTF8正文 != 正文)
@@ -968,6 +1097,24 @@ void 新_外设世界树类::更新输出队列(const 新外设对话框定位& 
         if (!新_语言类::严格UTF8字节串有效(请求.UTF8正文))
             return {新外设输出队列状态::目标不符, {}};
         std::lock_guard 锁(外设互斥);
+        return 输出入列_已加锁(请求);
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"外设输出入列",
+            L"正式消息或输出队列发布失败，保留已发生事实，不伪称发送或重试。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"外设输出入列",
+            L"正式消息或输出队列发布失败，保留已发生事实，不伪称发送或重试。");
+    }
+}
+
+新外设输出队列结果 新_外设世界树类::提交输出(
+    const 新外设输出提交请求& 请求) noexcept {
+    if (请求.UTF8正文.empty()) return {新外设输出队列状态::目标不符, {}};
+    const wchar_t* 阶段 = L"正式输出输入、依赖及窗口定位核验失败；保留已发生事实，不重试。";
+    try {
+        if (!新_语言类::严格UTF8字节串有效(请求.UTF8正文))
+            return {新外设输出队列状态::目标不符, {}};
+        std::lock_guard 锁(外设互斥);
         if (!有效(外设根) || !有效(消息根))
             return {新外设输出队列状态::未初始化, {}};
         if (!场景_.是场景节点(请求.定位.场景节点))
@@ -975,31 +1122,82 @@ void 新_外设世界树类::更新输出队列(const 新外设对话框定位& 
         if (读取窗口定位(请求.定位.场景节点) != 请求.定位
             || !请求.定位.输出队列特征)
             return {新外设输出队列状态::目标不符, {}};
+        阶段 = L"正式输出动作来源核验失败；保留已发生事实，不重试。";
+        if (请求.来源动作) {
+            const auto a=服务_.动态服务.获取动态(*请求.来源动作);
+            if (!a || a->种类!=新动态种类::动作 || a->动作目标存在节点!=请求.定位.窗口节点
+                || a->动作目标特征节点!=请求.定位.输出队列特征)
+                throw std::runtime_error("peripheral output source action does not match queue target");
+        }
+        阶段 = L"正式输出的场景、会话及页面来源读取失败；保留已发生事实，不重试。";
         const auto 场景 = 场景_.获取场景(请求.定位.场景节点);
         if (!场景) throw std::runtime_error("peripheral output scene unavailable");
-        const 新外设消息来源键 来源{
-            读取文本特征(读取类型特征(场景->特征节点组, 类型[0])),
-            读取文本特征(读取类型特征(场景->特征节点组, 类型[1])),
-            新外设消息方向::输出, 请求.提交序号};
-        auto 成员 = 读取输出队列成员(请求.定位);
-        if (auto 旧 = 按来源查找消息(来源)) {
-            if (旧->场景节点 != 请求.定位.场景节点
-                || 旧->窗口节点 != 请求.定位.窗口节点
-                || 旧->UTF8正文 != 请求.UTF8正文)
-                throw std::runtime_error("peripheral output source conflicts with immutable record");
-            const auto 在列 = std::find_if(成员.begin(), 成员.end(),
-                [&](const auto& 项) { return 项.消息节点 == 旧->消息节点; });
-            return {在列 == 成员.end() ? 新外设输出队列状态::不在队列
-                : 新外设输出队列状态::已复用, std::move(*旧)};
+        const auto 会话 = 读取文本特征(读取类型特征(场景->特征节点组, 类型[0]));
+        const auto 页面 = 读取文本特征(读取类型特征(场景->特征节点组, 类型[1]));
+        // 消息本体保留来源身份；已领取、取消或清空的记录仍占用序号。
+        // 高水位只从正式记录重建，与入列共用外设锁，不维护第二计数权威。
+        std::uint64_t 最大序号 = 0;
+        std::set<std::uint64_t> 已有序号;
+        阶段 = L"正式输出既有消息身份与来源序号扫描失败；保留已发生事实，不重试。";
+        const auto 根 = 读取消息快照(消息根);
+        for (const auto& 字段 : 根.结构.字段组) {
+            if (字段.字段节点 != 消息字段[10])
+                throw std::runtime_error("peripheral message root corrupt");
+            const auto 消息 = 读取正式消息(std::get<稳定编码>(字段.内容));
+            if (!消息) throw std::runtime_error("peripheral message root holds invalid message");
+            if (消息->来源.方向 != 新外设消息方向::输出
+                || 消息->来源.公开宿主会话 != 会话 || 消息->来源.对话框标识 != 页面)
+                continue;
+            if (消息->场景节点 != 请求.定位.场景节点 || 消息->窗口节点 != 请求.定位.窗口节点
+                || !已有序号.insert(消息->来源.来源序号).second)
+                throw std::runtime_error("peripheral output source identity conflicts");
+            最大序号 = (std::max)(最大序号, 消息->来源.来源序号);
         }
-        auto 消息 = 建立输出消息(请求.定位, 来源, 请求.UTF8正文);
-        成员.push_back(消息);
-        更新输出队列(请求.定位, 成员);
-        return {新外设输出队列状态::已入列, std::move(消息)};
+        阶段 = L"正式输出来源序号发布前复核失败；保留已发生事实，不重试。";
+        if (!消息快照相同(根, 读取消息快照(消息根)))
+            throw std::runtime_error("peripheral message index changed while allocating output source");
+        if (最大序号 == (std::numeric_limits<std::uint64_t>::max)())
+            throw std::runtime_error("peripheral output source sequence exhausted");
+        阶段 = L"正式输出消息建立、队列更新或状态动态读回失败；保留已发生事实，不重试。";
+        return 输出入列_已加锁({请求.定位, 最大序号 + 1, 请求.UTF8正文},请求.来源动作);
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交外设输出", 阶段, 异常.what());
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"外设输出入列",
-            L"正式消息或输出队列发布失败，保留已发生事实，不伪称发送或重试。");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交外设输出", 阶段);
     }
+}
+
+新外设输出队列结果 新_外设世界树类::输出入列_已加锁(
+    const 新外设输出入列请求& 请求, std::optional<稳定编码> 来源动作) {
+    // 两个公开入口均已核验正文并持有外设互斥，此处不得再次获取同锁。
+    if (!有效(外设根) || !有效(消息根))
+        return {新外设输出队列状态::未初始化, {}};
+    if (!场景_.是场景节点(请求.定位.场景节点))
+        return {新外设输出队列状态::来源不存在, {}};
+    if (读取窗口定位(请求.定位.场景节点) != 请求.定位
+        || !请求.定位.输出队列特征)
+        return {新外设输出队列状态::目标不符, {}};
+    const auto 场景 = 场景_.获取场景(请求.定位.场景节点);
+    if (!场景) throw std::runtime_error("peripheral output scene unavailable");
+    const 新外设消息来源键 来源{
+        读取文本特征(读取类型特征(场景->特征节点组, 类型[0])),
+        读取文本特征(读取类型特征(场景->特征节点组, 类型[1])),
+        新外设消息方向::输出, 请求.提交序号};
+    auto 成员 = 读取输出队列成员(请求.定位);
+    if (auto 旧 = 按来源查找消息(来源)) {
+        if (旧->场景节点 != 请求.定位.场景节点
+            || 旧->窗口节点 != 请求.定位.窗口节点
+            || 旧->UTF8正文 != 请求.UTF8正文)
+            throw std::runtime_error("peripheral output source conflicts with immutable record");
+        const auto 在列 = std::find_if(成员.begin(), 成员.end(),
+            [&](const auto& 项) { return 项.消息节点 == 旧->消息节点; });
+        return {在列 == 成员.end() ? 新外设输出队列状态::不在队列
+            : 新外设输出队列状态::已复用, std::move(*旧)};
+    }
+    auto 消息 = 建立输出消息(请求.定位, 来源, 请求.UTF8正文);
+    成员.push_back(消息);
+    const auto change=更新输出队列(请求.定位, 成员,来源动作);
+    return {新外设输出队列状态::已入列, std::move(消息),change.状态节点,change.动态节点};
 }
 
 新外设输出队列结果 新_外设世界树类::领取输出队首(

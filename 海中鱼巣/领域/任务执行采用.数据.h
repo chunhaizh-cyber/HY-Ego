@@ -16,6 +16,8 @@ struct 新任务本能采用材料 final {
     std::vector<新方法条件结果线性关系> 线性关系组;
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::optional<新方法任务成员绑定> 任务成员绑定;
+    std::optional<稳定编码> 执行分支节点;
+    std::vector<稳定编码> 来源执行分支节点组;
     friend bool operator==(const 新任务本能采用材料&, const 新任务本能采用材料&) = default;
 };
 }

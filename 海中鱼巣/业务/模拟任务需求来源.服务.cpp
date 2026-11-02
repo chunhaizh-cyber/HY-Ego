@@ -1,4 +1,5 @@
 #include "模拟任务需求来源.服务.h"
+#include "服务要求.结构化.h"
 #include <algorithm>
 #include <stdexcept>
 #include <tuple>
@@ -14,8 +15,14 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
     }),edges.end());
 }
 }
-模拟任务需求来源服务::模拟任务需求来源服务(const 新_任务类& t,const 新_需求类& d) noexcept
-    :任务_(t),需求_(d) {}
+模拟任务需求来源服务::模拟任务需求来源服务(const 新_任务类& t,const 新_需求类& d,
+    const 结构化服务要求服务& r,const 新_自然语言世界树类& l) noexcept
+    :任务_(t),需求_(d),服务要求_(r),语言_(l) {}
+新模拟需求来源结果<服务要求理解信息> 模拟任务需求来源服务::读取模拟理解来源(稳定编码 n) const {return 服务要求_.读取模拟理解来源(n);}
+新模拟需求来源结果<服务要求确认信息> 模拟任务需求来源服务::读取模拟确认来源(稳定编码 n) const {return 服务要求_.读取模拟确认来源(n);}
+新模拟需求来源结果<新部分服务要求材料> 模拟任务需求来源服务::读取模拟要求来源(稳定编码 n) const {return 服务要求_.读取模拟要求来源(n);}
+新模拟需求来源结果<新模拟需求构造依据> 模拟任务需求来源服务::读取模拟构造依据() const {return 服务要求_.读取模拟构造依据();}
+新自然语言场景复制结果 模拟任务需求来源服务::读取语言场景来源(稳定编码 n) const {return 语言_.读取复制场景(n);}
 
 新模拟业务来源读回<新模拟任务来源投影> 模拟任务需求来源服务::读取任务来源(稳定编码 T) const {
     using S=新模拟业务来源状态;
@@ -56,7 +63,6 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
             记变化("T.evaluations", t->影响评估节点组, t2->影响评估节点组);
             记变化("T.settlement", t->完成结算节点, t2->完成结算节点);
             记变化("T.method_instance", t->方法实例节点, t2->方法实例节点);
-            记变化("T.settlement_source", t->服务结算来源, t2->服务结算来源);
             记变化("T.organization", t->方法执行组织节点, t2->方法执行组织节点);
         } else if (t != t2) 诊断 += " T.presence";
         if (v && v2) {
@@ -95,12 +101,6 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
     edge(K::方法实例,t->方法实例节点,"T.方法实例节点");
     edge(K::执行组织,t->方法执行组织节点,"T.方法执行组织节点");
     edge(K::执行组织,v->方法执行组织节点,"Vt.方法执行组织节点");
-    if(t->服务结算来源) {
-        const auto& a=t->服务结算来源->来源任务;
-        edge(K::任务,a.任务节点,"T.服务结算来源.任务节点");
-        edge(K::任务虚拟存在,a.虚拟存在节点,"T.服务结算来源.虚拟存在节点");
-        edge(K::特征,a.状态特征节点,"T.服务结算来源.状态特征节点");
-    }
     规范引用组(p.实例引用组);
     return {S::已读取,std::move(p),{}};
 }
@@ -108,8 +108,15 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
 新模拟业务来源读回<新模拟需求来源投影> 模拟任务需求来源服务::读取需求来源(稳定编码 D) const {
     using S=新模拟业务来源状态;
     using K=新模拟业务引用类别;
+    const auto identity=需求_.读取需求节点引用身份(D);
+    if(identity.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+    if(identity.状态!=特征概念规则状态::已完成) {
+        if(identity.状态==特征概念规则状态::值不存在||identity.状态==特征概念规则状态::入口拒绝)return {S::来源不存在};
+        throw std::logic_error("demand identity source engineering read failed");
+    }
+    if(!identity.身份||identity.身份保护.empty())throw std::logic_error("successful demand identity projection incomplete");
     const auto g=需求_.读取需求治理信息(D);
-    if(!g)return {S::来源不存在,{},"demand source unavailable"};
+    if(!g)throw std::logic_error("valid demand identity has no governance projection");
     const auto d=需求_.获取需求(D);
     if(需求_.读取需求治理信息(D)!=g||需求_.获取需求(D)!=d)
         return {S::来源已变化,{},"demand source changed during capture"};
@@ -117,6 +124,10 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
         ||(d&&(d->节点!=D||d->需求主体存在节点!=g->需求主体存在节点
         ||!g->完整目标||d->目标存在节点!=g->完整目标->目标存在节点||d->目标!=g->完整目标->目标)))
         throw std::logic_error("demand source owner projections disagree");
+    if(g->完整目标 && g->完整目标->目标.新增成员来源见证)
+        return {S::尚缺依赖提供者,{},"新增成员来源见证目标的隔离模拟来源尚缺依赖提供者",{}};
+    if(g->完整目标 && g->完整目标->目标.引用内容定位)
+        return {S::尚缺依赖提供者,{},"引用内容目标的隔离模拟来源尚未支持"};
     新模拟需求来源投影 p{*g,d,{}};
     const auto edge=[&](K k,std::optional<稳定编码> n,const char* role) {
         if(n){if(!有效(*n))throw std::logic_error("invalid declared demand reference");p.实例引用组.push_back({k,*n,role});}
@@ -142,6 +153,17 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
         edge(K::服务要求确认,a.确认节点,"D.外部要求材料.确认节点");
     }
     规范引用组(p.实例引用组);
-    return {S::已读取,std::move(p),{}};
+    const auto freshIdentity=需求_.读取需求节点引用身份(D);
+    if(freshIdentity.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+    if(freshIdentity.状态==特征概念规则状态::值不存在)return {S::来源已变化,{},"demand identity disappeared during capture"};
+    if(freshIdentity.状态!=特征概念规则状态::已完成||!freshIdentity.身份||freshIdentity.身份保护.empty())
+        throw std::logic_error("fresh demand identity source engineering read failed");
+    if(identity.身份保护.size()!=freshIdentity.身份保护.size())return {S::来源已变化};
+    for(std::size_t i=0;i<identity.身份保护.size();++i) {
+        const auto& a=identity.身份保护[i];const auto& b=freshIdentity.身份保护[i];
+        if(a.结构.字段组!=b.结构.字段组||a.入向字段组!=b.入向字段组
+            ||a.入向外部关系组!=b.入向外部关系组||a.出向外部关系组!=b.出向外部关系组)return {S::来源已变化};
+    }
+    return {S::已读取,std::move(p),{},freshIdentity.身份保护};
 }
 }

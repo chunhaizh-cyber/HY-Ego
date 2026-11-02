@@ -6,6 +6,7 @@
 #include <chrono>
 #include <limits>
 #include <mutex>
+#include <set>
 #include <thread>
 #include <utility>
 
@@ -104,6 +105,84 @@ bool 应用需求动作增量(基础联合节点快照& s, const 新事实追加
     return true;
 }
 
+// 需求的结果留在C；显式动作只在C的一个合法祖先CA挂接，不搬移动作。
+bool 捕获需求动作位置(const 新_场景类& scenes, 稳定编码 root, 稳定编码 C,
+    稳定编码 H, 稳定编码 actor, 稳定编码 A, 稳定编码& CA,
+    std::vector<基础联合节点快照>& protections) {
+    const auto capture = [&](稳定编码 n) {
+        if (std::none_of(protections.begin(), protections.end(), [&](const auto& x) { return x.结构.节点.编码 == n; }))
+            protections.push_back(读取组合完整保护(n));
+    };
+    const auto unchanged = [&] {
+        for (const auto& x : protections)
+            if (!组合快照相同(x, 读取组合完整保护(x.结构.节点.编码))) return false;
+        return true;
+    };
+    capture(A); capture(H); capture(actor);
+    std::vector<稳定编码> chain;
+    const auto path = [&](稳定编码 start, std::vector<稳定编码>& nodes) {
+        std::set<稳定编码> seen;
+        auto current = start;
+        for (;;) {
+            if (!seen.insert(current).second) {
+                if (!unchanged()) return false;
+                世界I64组合故障(L"需求动作场景父链循环");
+            }
+            capture(current);
+            const auto scene = scenes.获取场景(current);
+            if (!scene) { if (!unchanged()) return false; 世界I64组合故障(L"需求动作场景父链损坏"); }
+            nodes.push_back(current);
+            if (current == root) {
+                if (scene->父场景节点) 世界I64组合故障(L"需求动作世界根具有父场景");
+                return true;
+            }
+            if (!scene->父场景节点) return false;
+            const auto parent = *scene->父场景节点;
+            capture(parent);
+            const auto p = scenes.获取场景(parent);
+            if (!p || std::count(p->直接子场景组.begin(), p->直接子场景组.end(), current) != 1) {
+                if (!unchanged()) return false;
+                世界I64组合故障(L"需求动作场景父子关系不一致");
+            }
+            current = parent;
+        }
+    };
+    if (!path(C, chain)) return false;
+    std::optional<稳定编码> found;
+    for (const auto n : chain) {
+        const auto ds = scenes.查询动态列表(n);
+        if (std::find(ds.begin(), ds.end(), A) == ds.end()) continue;
+        if (found) {
+            if (!unchanged()) return false;
+            世界I64组合故障(L"需求动作在多个祖先场景重复挂接");
+        }
+        found = n;
+    }
+    if (!found) return false;
+    // 动作的入向联合结构同时保护挂接唯一性，不把其它业务引用当作挂接。
+    const auto action = 读取组合完整保护(A);
+    for (const auto& field : action.入向字段组) {
+        if (!scenes.是场景节点(field.所属节点)) continue;
+        capture(field.所属节点);
+        const auto scene = scenes.获取场景(field.所属节点);
+        if (!scene) 世界I64组合故障(L"需求动作挂接场景损坏");
+        if (std::find(scene->动态节点组.begin(), scene->动态节点组.end(), A) != scene->动态节点组.end()
+            && field.所属节点 != *found) {
+            if (!unchanged()) return false;
+            世界I64组合故障(L"需求动作具有跨场景重复挂接");
+        }
+    }
+    const auto actorScene = scenes.是场景节点(actor) ? std::optional<稳定编码>{actor} : scenes.查询所属场景(actor);
+    if (!actorScene) return false;
+    std::vector<稳定编码> actorPath;
+    if (!path(*actorScene, actorPath)) return false;
+    if ((H != C && scenes.查询所属场景(H) != std::optional<稳定编码>{C})
+        || !scenes.存在属于场景范围(*found, H) || !scenes.存在属于场景范围(*found, actor)) return false;
+    if (!unchanged()) return false;
+    CA = *found;
+    return true;
+}
+
 } // namespace
 
 struct 新世界需求引用组合准备::实现 final {
@@ -114,6 +193,7 @@ struct 新世界需求引用组合准备::实现 final {
     std::optional<新特征需求引用更新准备> 特征准备;
     std::optional<基础封存追加片段> 保护片段;
     新状态强时间 动作时间;
+    稳定编码 动作场景, 执行主体;
     bool 核心已发表 = false, 已结束 = false;
     void 核对() const noexcept {
         if (线程 != std::this_thread::get_id()) 世界I64组合故障(L"需求组合准备不可跨线程使用");
@@ -209,7 +289,7 @@ struct 新世界需求引用组合准备::实现 final {
         const auto v = 特征服务_.按概念比较特征值(basis.类型根, 新特征准确值{r.新需求节点}, 新特征准确值{r.新需求节点});
         if (v.状态 != 新特征比较状态::已完成 || v.比较值 != 10000) 世界I64组合故障(L"新需求引用身份不合法");
         if (!有效(r.动作定义节点) || !有效(r.动作来源节点) || !有效(r.执行主体节点)
-            || !场景服务_.存在属于场景范围(basis.场景节点, r.执行主体节点)) return out;
+            || (!r.既有动作节点 && !场景服务_.存在属于场景范围(basis.场景节点, r.执行主体节点))) return out;
         std::vector<基础联合节点快照> extra;
         for (const auto n : {r.动作定义节点, r.动作来源节点, r.执行主体节点}) extra.push_back(读取组合完整保护(n));
         auto now = 读取组合真实时间();
@@ -236,7 +316,7 @@ struct 新世界需求引用组合准备::实现 final {
             || act->动作目标特征节点 != basis.特征节点 || act->动作定义节点 != r.动作定义节点
             || act->动作来源节点 != r.动作来源节点 || !act->动作时间 || !act->动作结果组.empty()
             || act->动作时间->语义 != 新状态时间语义::实例绝对UTC || act->动作时间->纳秒 > now.纳秒
-            || std::count(acts.begin(), acts.end(), *out.已发生动作节点) != 1) { out.状态 = S::前提已变化; return out; }
+            || (!r.既有动作节点 && std::count(acts.begin(), acts.end(), *out.已发生动作节点) != 1)) { out.状态 = S::前提已变化; return out; }
         if (basis.前状态节点) {
             const auto pre = 状态服务_.获取状态(*basis.前状态节点);
             if (!pre || act->动作时间->纳秒 <= pre->强时间.纳秒) { out.状态 = S::前提已变化; return out; }
@@ -248,6 +328,11 @@ struct 新世界需求引用组合准备::实现 final {
         }
         auto fresh = 读取需求引用更新依据(basis.场景节点, basis.存在节点, basis.特征节点);
         if (fresh.状态 != S::已读取 || !fresh.依据 || !同依据(*fresh.依据, basis)) { out.状态 = S::前提已变化; return out; }
+        auto actionScene = basis.场景节点;
+        if (r.既有动作节点 && !捕获需求动作位置(场景服务_, 世界树根场景_, basis.场景节点,
+            basis.存在节点, r.执行主体节点, *out.已发生动作节点, actionScene, extra)) {
+            out.状态 = S::前提已变化; return out;
+        }
         基础节点组追加请求 protect;
         protect.预期联合节点组 = basis.定位保护组; protect.预期联合节点组.push_back(basis.特征保护);
         protect.预期联合节点组.insert(protect.预期联合节点组.end(), extra.begin(), extra.end());
@@ -266,6 +351,7 @@ struct 新世界需求引用组合准备::实现 final {
         auto p = std::make_unique<新世界需求引用组合准备::实现>();
         p->所有者 = this; p->特征服务 = &特征服务_; p->材料 = {basis, r.新需求节点, *out.已发生动作节点, basis.特征保护};
         p->动作时间 = *act->动作时间; p->保护片段 = *seal.片段; p->特征准备 = std::move(f.准备);
+        p->动作场景 = actionScene; p->执行主体 = r.执行主体节点;
         out.准备 = 新世界需求引用组合准备{std::move(p)}; out.状态 = S::已准备; return out;
     } catch (...) { 世界I64组合故障(L"需求引用准备工程异常"); }
 }
@@ -309,8 +395,52 @@ struct 新世界需求引用组合准备::实现 final {
         if (m.依据.前状态节点) {
             change.动态发布结果 = 完成动态发布(m.依据.场景节点, 动态服务_.建立原子动态(m.依据.存在节点, *m.依据.前状态节点, s));
             if (!change.动态发布结果->成功() || !change.动态发布结果->动态建立结果 || !change.动态发布结果->动态建立结果->动态节点) 世界I64组合故障(L"需求变化动态未完成");
-            change.动作关联结果 = 关联动作结果(m.依据.场景节点, m.动作节点, *change.动态发布结果->动态建立结果->动态节点, 新动作结果关系类型::导致变化);
+            const auto D = *change.动态发布结果->动态建立结果->动态节点;
+            std::vector<基础联合节点快照> protection;
+            auto CA = x.动作场景;
+            if (!捕获需求动作位置(场景服务_, 世界树根场景_, m.依据.场景节点,
+                m.依据.存在节点, x.执行主体, m.动作节点, CA, protection) || CA != x.动作场景)
+                世界I64组合故障(L"需求核心已发表但动作场景前提变化");
+            for (const auto n : {D, s, m.依据.特征节点}) protection.push_back(读取组合完整保护(n));
+            const auto dynamic = 动态服务_.获取动态(D);
+            const auto post = 状态服务_.获取状态(s);
+            const auto act = 动态服务_.获取动态(m.动作节点);
+            const auto ds = 场景服务_.查询动态列表(m.依据.场景节点);
+            const auto ss = 场景服务_.查询状态列表(m.依据.场景节点);
+            if (!dynamic || dynamic->种类 != 新动态种类::原子 || dynamic->主题存在节点 != m.依据.存在节点
+                || dynamic->状态节点组 != std::vector<稳定编码>{*m.依据.前状态节点, s}
+                || std::count(ds.begin(), ds.end(), D) != 1 || std::count(ss.begin(), ss.end(), s) != 1
+                || !post || post->来源实例特征节点 != m.依据.特征节点 || post->被描述存在节点 != m.依据.存在节点
+                || post->强时间 != time || !act || act->动作时间 != std::optional<新状态强时间>{x.动作时间}
+                || !act->动作定义节点 || !act->动作来源节点
+                || act->动作目标存在节点 != m.依据.存在节点 || act->动作目标特征节点 != m.依据.特征节点)
+                世界I64组合故障(L"需求动作结果关联前事实不一致");
+            protection.push_back(读取组合完整保护(*act->动作定义节点));
+            protection.push_back(读取组合完整保护(*act->动作来源节点));
+            基础节点组追加请求 expected;
+            expected.预期联合节点组 = std::move(protection);
+            std::sort(expected.预期联合节点组.begin(), expected.预期联合节点组.end(),
+                [](const auto& a, const auto& b) { return a.结构.节点.编码 < b.结构.节点.编码; });
+            for (std::size_t i = 1; i < expected.预期联合节点组.size(); ++i)
+                if (expected.预期联合节点组[i-1].结构.节点.编码 == expected.预期联合节点组[i].结构.节点.编码
+                    && !组合快照相同(expected.预期联合节点组[i-1], expected.预期联合节点组[i]))
+                    世界I64组合故障(L"需求已发表但动作结果组合快照冲突");
+            expected.预期联合节点组.erase(std::unique(expected.预期联合节点组.begin(), expected.预期联合节点组.end(),
+                [](const auto& a, const auto& b) { return a.结构.节点.编码 == b.结构.节点.编码; }), expected.预期联合节点组.end());
+            const auto sealed = 全局基础数据集.封存原子追加片段(expected);
+            if (sealed.状态 != 基础节点组追加状态::已完成 || !sealed.片段
+                || 全局基础数据集.原子追加封存片段组({*sealed.片段}).状态 != 基础节点组追加状态::已完成)
+                世界I64组合故障(L"需求已发表但动作结果位置保护变化");
+            // 只在本需求专用路径允许合法祖先CA→结果C；公共同场景wrapper保持不变。
+            change.动作关联结果 = 动态服务_.关联动作结果(m.动作节点, D, 新动作结果关系类型::导致变化);
             if (*change.动作关联结果 != 新动态操作状态::已完成 && *change.动作关联结果 != 新动态操作状态::无变化) 世界I64组合故障(L"需求动作结果未关联");
+            // 正式owner只修改A/D；若位置等其它前提并发漂移，保留已发表事实并工程中止。
+            for (const auto& snapshot : expected.预期联合节点组) {
+                const auto node = snapshot.结构.节点.编码;
+                if (node != m.动作节点 && node != D
+                    && !组合快照相同(snapshot, 读取组合完整保护(node)))
+                    世界I64组合故障(L"需求动作结果已关联但场景前提变化");
+            }
         }
         const auto actual = 状态服务_.获取状态(s);
         if (!actual || actual->来源实例特征节点 != m.依据.特征节点 || actual->被描述存在节点 != m.依据.存在节点
@@ -350,6 +480,7 @@ struct 新世界需求引用组合准备::实现 final {
         capture(ft->特征类型根);
         const auto scenes = 场景服务_.查询状态列表(in.场景节点);
         const auto dynamics = 场景服务_.查询动态列表(in.场景节点);
+        bool actionLocationChanged = false;
         const auto state = [&](稳定编码 n, 稳定编码 source) -> std::optional<新状态信息> {
             capture(n);
             const auto s = 状态服务_.获取状态(n);
@@ -363,14 +494,20 @@ struct 新世界需求引用组合准备::实现 final {
             if (!a || a->种类 != 新动态种类::动作 || a->动作目标种类 != 新动作目标种类::普通存在
                 || a->动作目标存在节点 != in.主体存在节点 || a->动作目标特征节点 != source
                 || !a->动作定义节点 || !a->动作来源节点 || !a->动作时间
-                || a->动作时间->语义 != 新状态时间语义::实例绝对UTC || std::count(dynamics.begin(), dynamics.end(), n) != 1) return {};
+                || a->动作时间->语义 != 新状态时间语义::实例绝对UTC
+                || (!first && std::count(dynamics.begin(), dynamics.end(), n) != 1)) return {};
             capture(a->主题存在节点); capture(*a->动作定义节点); capture(*a->动作来源节点);
-            if (!场景服务_.存在属于场景范围(in.场景节点, a->主题存在节点)) return {};
+            if (first) {
+                auto CA = in.场景节点;
+                if (!捕获需求动作位置(场景服务_, 世界树根场景_, in.场景节点,
+                    in.主体存在节点, a->主题存在节点, n, CA, protections)) { actionLocationChanged = true; return {}; }
+            } else if (!场景服务_.存在属于场景范围(in.场景节点, a->主题存在节点)) return {};
             return a;
         };
         if (first) {
             const auto s = state(*in.实际状态节点, in.新特征节点);
             const auto a = action(*in.动作节点, in.新特征节点);
+            if (actionLocationChanged) return {S::前提已变化, {}};
             if (!s || !a || s->固定准确值 != 新特征准确值{in.当前需求节点}
                 || s->强时间.纳秒 <= a->动作时间->纳秒 || !a->动作结果组.empty()) return {};
             // 首值只允许该F的唯一状态，不能拿后来任意状态补首S。

@@ -21,6 +21,20 @@ class 概念_特征类;
 class 新_任务类;
 class 新_状态类;
 struct 新存在信息;
+struct 新存在概念匹配结果;
+struct 新存在概念匹配材料;
+enum class 新方法执行分支读取状态 : std::uint8_t {
+    已读取=1,方法不存在,分支未指定,分支不属于方法,前提已变化
+};
+struct 新方法执行分支读取结果 final {
+    新方法执行分支读取状态 状态=新方法执行分支读取状态::方法不存在;
+    std::optional<新方法执行分支信息> 分支;
+    新方法初始必要条件定义 有效必要条件;
+};
+struct 新方法参数特征声明读取结果 final {
+    新方法参数特征读取状态 状态=新方法参数特征读取状态::未声明;
+    std::optional<新特征匹配定义快照> 特征定义;
+};
 
 // 方法拥有自己的独立根；该根不挂入世界树、需求树或任务集合根。
 extern 稳定编码 新方法组织根节点;
@@ -39,7 +53,8 @@ enum class 新方法本能调用状态 : std::uint8_t {
     参数场景不匹配,
     函数未登记,
     资源失败,
-    内部错误
+    内部错误,
+    定义前提已变化
 };
 
 struct 新方法本能调用结果 final {
@@ -57,6 +72,27 @@ struct 新方法直接调用身份 final {
 
 struct 方法统计特征类型 final { 稳定编码 运行次数, 成功次数, 可靠度; };
 
+enum class 新方法目录读取状态 : std::uint8_t {
+    已读取, 尚未初始化, 结构不一致, 资源失败, 内部错误
+};
+struct 新方法目录项 final {
+    稳定编码 节点, 方法头节点, 方法虚拟存在节点;
+    新方法头定义 方法头;
+    新方法作用域 作用域 = 新方法作用域::普通世界;
+    新方法实现方式 实现方式 = 新方法实现方式::本能;
+    新方法启用状态 启用状态 = 新方法启用状态::停用;
+    std::optional<新方法行为> 行为;
+    std::optional<std::string> 本能函数登记名;
+    std::optional<稳定编码> 来源方法节点, 实例根节点, 父代方法节点;
+    std::vector<新方法参数规格> 参数规格组;
+    std::uint64_t 条件结果配对数量 = 0;
+};
+struct 新方法目录读取结果 final {
+    新方法目录读取状态 状态 = 新方法目录读取状态::内部错误;
+    std::optional<稳定编码> 方法组织根;
+    std::vector<新方法目录项> 项组;
+};
+
 class 新_方法类 final : public 新方法治理对象读取接口 {
 public:
     新_方法类(
@@ -70,6 +106,9 @@ public:
 
     // 只建立独立方法组织根以及本类使用的类型、字段节点。
     bool 初始化() noexcept;
+    bool 装配正式信息参数读取接口(const 正式信息参数读取接口*) noexcept;
+    bool 装配字段询问运行接口(std::shared_ptr<新本能字段询问运行接口>) noexcept;
+    bool 解除字段询问运行接口(const 新本能字段询问运行接口&) noexcept;
     std::optional<稳定编码> 获取方法启用特征类型() const noexcept;
     std::optional<方法统计特征类型> 初始化并读取方法统计特征类型() noexcept;
     // 独立缺失列表：不建M/Vm/条件结果，不进方法根，不注册或调用函数。
@@ -85,12 +124,27 @@ public:
 
     // 模拟取样只读取正式概念定义；不创建现实实例或修改固定规格。
     std::optional<存在概念信息> 读取模拟存在范围(稳定编码 C) const noexcept;
+    存在范围语义保护结果 读取模拟存在范围语义保护(稳定编码 C) const noexcept;
+    存在概念实例候选读取结果 读取模拟存在原型候选(稳定编码 C) const noexcept;
+    新存在概念匹配结果 比较模拟存在匹配材料(const 新存在概念匹配材料&) const noexcept;
     std::optional<新特征匹配定义快照> 读取模拟特征范围(稳定编码 C) const noexcept;
     std::optional<新特征值信息> 读取模拟候选材料(稳定编码 V) const noexcept;
     // 单向复制的只读来源；调用者持有值快照，不取得源owner的写入口。
     std::optional<新存在信息> 读取模拟来源存在(稳定编码 E) const;
     std::optional<新特征匹配实例快照> 读取模拟来源特征(稳定编码 F) const;
+    std::optional<新特征信息> 读取模拟来源完整特征(稳定编码 F) const;
+    先天信息概念结果 读取模拟需求概念组() const noexcept;
+    正式结构概念保护结果 读取模拟正式结构(稳定编码) const noexcept;
+    先天特征类型槽结果 读取模拟先天特征类型槽(std::uint32_t 语义序号) const noexcept;
+    稳定编码 建立模拟I64目标域(稳定编码 父概念,std::int64_t 准确值);
     稳定编码 保存模拟材料值域(稳定编码 C,const 新特征值信息&);
+    稳定编码 确保已确认消息连接概念();
+    正式结构概念保护结果 读取初始场景事实概念保护(稳定编码) const noexcept;
+    新方法建立结果 补齐空头初始必要条件(稳定编码,const 新方法信息&,
+        const 新方法初始必要条件定义&) noexcept;
+    新方法执行分支读取结果 读取执行分支必要条件(稳定编码,std::optional<稳定编码>) const noexcept;
+    新方法参数特征声明读取结果 读取存在参数特征声明(
+        稳定编码,std::optional<稳定编码>,std::uint32_t,稳定编码) const noexcept;
 
     // 建立方法知识，不登记或调用本能函数。
     新方法建立结果 建立方法知识(
@@ -106,12 +160,9 @@ public:
         const 新方法知识建立请求& 请求) noexcept;
     // 仅退役已完整识别的旧网页方法族；历史方法知识保持不变。
     新方法建立结果 退役旧网页本能登记(const std::string& 登记名) noexcept;
+    新方法建立结果 退役旧服务对象需求登记(const 新方法知识建立请求& 预期旧声明) noexcept;
     新方法建立结果 查询本能登记(
         const std::string& 登记名) const noexcept;
-    新方法建立结果 确保服务结算Q方法登记(
-        const 新方法知识建立请求& 新请求) noexcept;
-    std::optional<稳定编码> 读取服务结算固定加一父代(
-        稳定编码 当前Q方法) const noexcept;
 
     // 只建立“方法节点 -> 稳定登记名 -> C++函数入口”的调用绑定。
     // 不读取或写入参数规格、条件结果和方法虚拟存在内容，也不调用函数。
@@ -120,13 +171,16 @@ public:
         const std::string& 本能函数登记名) noexcept;
     std::optional<新方法信息> 获取方法(
         稳定编码 方法节点) const noexcept;
+    // 全部正式M的轻量只读目录，含停用与副本；配对只计引用，不授予执行资格。
+    新方法目录读取结果 读取方法目录() const noexcept;
     enum class 执行结构读取状态 : std::uint8_t {
-        已读取 = 1, 入口拒绝, 尚未初始化, 方法不存在, 来源不是抽象方法
+        已读取 = 1, 入口拒绝, 尚未初始化, 方法不存在, 来源不是抽象方法, 前提已变化
     };
     struct 执行结构读取结果 final {
         执行结构读取状态 状态 = 执行结构读取状态::入口拒绝;
         std::vector<稳定编码> 根方法节点组;
         std::vector<新方法信息> 方法组;
+        std::vector<基础联合节点快照> 完整保护组;
     };
     // 一次方法锁内读完整调用图；不复制知识、不授予执行资格。
     执行结构读取结果 读取方法执行结构闭包(
@@ -142,7 +196,6 @@ public:
         稳定编码 实例根节点) const noexcept;
     bool 是方法节点(稳定编码 节点) const noexcept;
     // 只读识别退役结算家族，包含实例来源及父代；坏引用/环属于工程故障。
-    bool 是历史服务结算方法(稳定编码 方法节点) const;
     新方法候选结果 查询候选方法(
         const 新方法候选查询& 查询) const noexcept;
 
@@ -164,19 +217,19 @@ public:
         std::vector<新方法参数角色绑定> 角色绑定组,
         const 新内部治理对象读取接口* 治理对象读取 = nullptr,
         const 新服务要求材料读取接口* 服务要求读取 = nullptr,
-        std::optional<新方法任务成员绑定> 任务成员绑定 = {}) const noexcept;
+        std::optional<新方法任务成员绑定> 任务成员绑定 = {},
+        std::optional<稳定编码> 执行分支 = {},
+        std::shared_ptr<新本能需求运行接口> 需求运行 = {}) const noexcept;
     新方法参数场景结果 建立本能登记参数场景(
         std::vector<新方法参数角色绑定> 角色绑定组) const noexcept;
-    新方法参数场景结果 建立服务结算治理参数场景(
-        稳定编码 方法节点, const 新任务贡献治理参数&,
-        const 新内部治理对象读取接口& 治理对象读取) const noexcept;
     // 服务需求两入口的登记专用空容器，不放入任何运行实参。
     新方法参数场景结果 建立服务需求登记参数场景() const noexcept;
     新方法参数场景结果 建立模拟参数场景(
         稳定编码 方法节点,
         std::vector<新方法参数角色绑定> 绑定,
         std::shared_ptr<新方法模拟运行接口> 模拟,
-        std::optional<新方法任务成员绑定> 任务成员绑定 = {}) const noexcept;
+        std::optional<新方法任务成员绑定> 任务成员绑定 = {},
+        std::optional<稳定编码> 执行分支 = {}) const noexcept;
 
     // 只在参数场景已经由本方法建立且方法仍启用时解析登记名并调用一次。
     // 本函数不建立任务执行实例，不判断需求满足，也不自动重试现实动作。
@@ -184,6 +237,7 @@ public:
         稳定编码 方法节点,
         const 方法参数场景& 参数场景) const noexcept;
 
+    // 依正式有序规格核验各位置的存在/特征引用，不依赖任务或固定参数数量。
     新方法直接调用身份 建立直接调用身份(
         稳定编码 方法节点, const std::vector<新方法参数角色绑定>&,
         稳定编码 现实场景, 稳定编码 外设场景);
@@ -205,8 +259,11 @@ private:
         std::optional<新方法治理场景信息> 本批场景 = std::nullopt) const;
     void 清理未绑定方法特征(const 方法虚拟存在准备&) noexcept;
     void 同步方法专属概念(const 新方法虚拟存在引用&) noexcept;
+    新方法操作状态 准备新方法最终发布保护(const 新方法知识建立请求&,
+        const 方法虚拟存在准备&,基础节点组追加请求&);
     新方法建立结果 发布方法结构(const 新方法知识建立请求&,
-        const std::string* 登记名, const 新方法信息* 替代父代 = nullptr) noexcept;
+        const std::string* 登记名, const 新方法信息* 替代父代 = nullptr,
+        const std::vector<基础联合节点快照>* 初始必要保护 = nullptr) noexcept;
     void 回收本批方法图(const std::vector<稳定编码>& 节点,
         const std::vector<稳定编码>& 字段,
         const std::vector<方法虚拟存在准备>& 虚拟组,
@@ -255,6 +312,9 @@ private:
     概念_存在类& 存在概念服务_;
     概念_特征类& 特征概念服务_;
     新_状态类& 状态服务_;
+    const 正式信息参数读取接口* 正式信息读取_ = nullptr;
+    std::shared_ptr<新本能字段询问运行接口> 字段询问运行_;
+    std::weak_ptr<新本能字段询问运行接口> 退役字段询问运行_;
     新方法治理世界协作接口* 内部治理世界_ = nullptr;
     bool 治理组织已就绪_ = false;
 };

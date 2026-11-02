@@ -8,7 +8,6 @@
 #include "新_状态类.h"
 #include "服务要求.材料合同.h"
 #include "服务对象.材料合同.h"
-#include "服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
 
@@ -81,6 +80,7 @@ struct 新本能函数本次条件 final {
     std::vector<新本能函数条件角色材料> 参数角色组;
     std::optional<新任务贡献治理参数> 任务贡献治理参数;
     std::vector<新任务虚拟存在特征组> 治理动作前特征组;
+    std::optional<稳定编码> 执行分支节点;
 
     friend bool operator==(const 新本能函数本次条件&,
         const 新本能函数本次条件&) = default;
@@ -96,6 +96,41 @@ enum class 新本能函数结果取得状态 : std::uint8_t {
 
 // 结果侧只报告本次函数调用实际到达的位置及已经形成的正式材料。
 // 它不证明任务完成、需求满足、预测命中、服务结算或现实效果成立。
+struct 新本能已发布需求结果 final {
+    稳定编码 需求节点, 主体存在节点, 需求特征节点, 结果场景节点;
+    稳定编码 本次动作节点, 首次发布动作节点;
+    friend bool operator==(const 新本能已发布需求结果&, const 新本能已发布需求结果&) = default;
+};
+enum class 新本能已发布需求核验状态 : std::uint8_t {
+    已核验=1, 前提已变化, 已关闭, 资源失败
+};
+struct 新本能已发布需求核验结果 final {
+    新本能已发布需求核验状态 状态=新本能已发布需求核验状态::前提已变化;
+    std::optional<新本能已发布需求结果> 结果;
+    std::vector<基础联合节点快照> 完整保护;
+};
+enum class 新本能字段询问原因 : std::uint8_t {
+    字段已有值=1, 字段不适用, 前提已变化, 定位未支持,
+    缺语言知识, 缺名称, 缺指称, 多义, 已入列
+};
+struct 新本能已提交输出结果 final {
+    稳定编码 窗口节点{}, 输出队列特征节点{}, 消息节点{}, 动作节点{}, 入列状态{}, 入列动态{};
+    std::uint64_t 提交序号=0;
+    friend bool operator==(const 新本能已提交输出结果&,const 新本能已提交输出结果&)=default;
+};
+struct 新本能字段询问返回材料 final {
+    新本能字段询问原因 原因=新本能字段询问原因::定位未支持;
+    std::optional<正式内容引用定位> 正式定位;
+    std::optional<正式内容值> 已读取字段;
+    std::optional<新本能已提交输出结果> 已提交输出;
+    friend bool operator==(const 新本能字段询问返回材料& a,const 新本能字段询问返回材料& b) {
+        if (a.原因!=b.原因 || a.正式定位.has_value()!=b.正式定位.has_value()
+            || a.已读取字段.has_value()!=b.已读取字段.has_value() || a.已提交输出!=b.已提交输出) return false;
+        if (a.正式定位 && (a.正式定位->信息节点!=b.正式定位->信息节点 || a.正式定位->正式内容路径!=b.正式定位->正式内容路径)) return false;
+        return !a.已读取字段 || (a.已读取字段->种类==b.已读取字段->种类
+            && a.已读取字段->状态==b.已读取字段->状态 && a.已读取字段->值==b.已读取字段->值);
+    }
+};
 struct 新本能函数本次结果 final {
     新本能函数执行状态 状态 = 新本能函数执行状态::入口拒绝;
     新本能函数动作阶段 动作阶段 = 新本能函数动作阶段::未进入动作;
@@ -112,6 +147,9 @@ struct 新本能函数本次结果 final {
     std::optional<稳定编码> 服务值消费节点;
     // 纯治理发生与普通方法经验、动作和服务值消费分账。
     std::optional<新任务贡献治理返回材料> 任务贡献治理;
+    std::vector<新方法本次场景事实引用> 已取得场景事实组;
+    std::optional<新本能已发布需求结果> 已发布需求;
+    std::optional<新本能字段询问返回材料> 字段询问;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;
@@ -143,22 +181,13 @@ public:
     static 新本能函数本次条件结果对 提交网页对话消息(
         const 方法参数场景& 参数场景) noexcept;
 
-    // 四部分：确保自身正式方法信息、读取并核验参数、动作执行、结果读回。
-    // 登记只建方法头/Vm及规格，不预造条件结果知识；唯一入口为参数场景。
-    // 当前任务Vt服务值读取及新Q消费缺口见本轮施工记录，不能由固定+1冒充。
-    static 新本能函数本次条件结果对 执行服务值结算(
-        const 方法参数场景& 参数场景) noexcept;
-    static 新本能函数本次条件结果对 主动获取服务需求(
-        const 方法参数场景&) noexcept;
-    static 新本能函数本次条件结果对 被动获取服务需求(
-        const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取服务对象(
+        const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 获取服务对象新需求(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 建立连接(
         const 方法参数场景&) noexcept;
-private:
-    static 新本能函数本次条件结果对 获取服务需求(
-        const 方法参数场景&, 新服务需求获取方式) noexcept;
+    static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
 };
 
 } // namespace 海中鱼巣

@@ -5,6 +5,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <stdexcept>
 
 namespace 海中鱼巣 {
 
@@ -1167,9 +1168,30 @@ std::vector<稳定编码> 新_存在类::查询全部特征(
         const auto& snap = *b.节点组[0].快照;
         for (const auto& f : snap.入向字段组)
             if (f.字段节点 == 存在集合保护字段_) return S::仍被存在集合引用;
+        const auto 补齐引用端点预期 = [](基础字段组合变化请求& 请求,
+            const std::vector<稳定编码>& 目标组) {
+            std::vector<稳定编码> 缺少端点;
+            for (const auto 目标 : 目标组) {
+                if (!有效(目标)) throw std::logic_error("cleanup reference endpoint invalid");
+                if (std::none_of(请求.预期节点组.begin(), 请求.预期节点组.end(),
+                        [&](const auto& 已有) { return 已有.结构.节点.编码 == 目标; }))
+                    缺少端点.push_back(目标);
+            }
+            排序去重(缺少端点);
+            if (缺少端点.empty()) return;
+            const auto 端点 = 全局基础数据集.查询节点组完整结构(缺少端点);
+            if (端点.状态 != 基础结构操作状态::已完成
+                || 端点.节点组.size() != 缺少端点.size())
+                throw std::logic_error("cleanup reference endpoint snapshot failed");
+            for (const auto& 项 : 端点.节点组) {
+                if (!项.快照) throw std::logic_error("cleanup reference endpoint missing");
+                请求.预期节点组.push_back(*项.快照);
+            }
+        };
         基础字段组合变化请求 gate;
         gate.预期节点组 = {snap};
         gate.追加字段组.push_back({存在节点, 存在清理中字段, 存在清理中标记节点});
+        补齐引用端点预期(gate, {存在清理中标记节点});
         const auto g = 全局基础数据集.原子比较变更字段组(gate);
         if (g.状态 == 基础字段组合变化状态::预期不符) return S::清理前提已变化;
         if (g.状态 != 基础字段组合变化状态::已完成 || g.追加字段关系组.size() != 1)
@@ -1189,6 +1211,9 @@ std::vector<稳定编码> 新_存在类::查询全部特征(
         基础字段组合变化请求 end;
         end.预期节点组 = {*tail.节点组[0].快照};
         end.删除字段关系组 = {类型字段.front().编码, g.追加字段关系组.front()};
+        const auto* 类型目标 = std::get_if<稳定编码>(&类型字段.front().内容);
+        if (!类型目标) throw std::logic_error("cleanup existence type target invalid");
+        补齐引用端点预期(end, {*类型目标, 存在清理中标记节点});
         const auto done = 全局基础数据集.原子比较变更字段组(end);
         if (done.状态 != 基础字段组合变化状态::已完成
             || !全局基础数据集.查询字段(存在节点, 节点类型字段).empty()
@@ -1289,26 +1314,150 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     }
 }
 
+新存在身份保护结果 新_存在类::读取存在身份保护可抛内部(稳定编码 节点) const {
+    const auto 读 = 全局基础数据集.查询节点组完整结构({节点});
+    if (读.状态 != 基础结构操作状态::已完成) return {读.状态, {}, {}, false};
+    if (读.节点组.size() != 1 || !读.节点组.front().快照)
+        return {基础结构操作状态::节点不存在, {}, {}, false};
+    const auto& s = *读.节点组.front().快照;
+    std::optional<稳定编码> 类型, 概念;
+    for (const auto& f : s.结构.字段组) {
+        if (f.字段节点 != 节点类型字段 && f.字段节点 != 专属存在概念字段) continue;
+        const auto* n = std::get_if<稳定编码>(&f.内容);
+        auto& v = f.字段节点 == 节点类型字段 ? 类型 : 概念;
+        if (!n || !有效(*n) || v) return {基础结构操作状态::内部不一致, {}, {}, false};
+        v = *n;
+    }
+    if (类型 != 存在节点类型 || !概念)
+        return {基础结构操作状态::内部不一致, {}, {}, false};
+    return {基础结构操作状态::已完成, 新存在身份保护信息{节点, *概念}, {s}, false};
+}
+
 新存在身份保护结果 新_存在类::读取存在身份保护(稳定编码 节点) const noexcept {
     try {
         std::lock_guard 锁(新存在互斥);
-        const auto 读 = 全局基础数据集.查询节点组完整结构({节点});
-        if (读.状态 != 基础结构操作状态::已完成) return {读.状态, {}, {}, false};
-        if (读.节点组.size() != 1 || !读.节点组.front().快照)
-            return {基础结构操作状态::节点不存在, {}, {}, false};
-        const auto& s = *读.节点组.front().快照;
-        std::optional<稳定编码> 类型, 概念;
-        for (const auto& f : s.结构.字段组) {
-            if (f.字段节点 != 节点类型字段 && f.字段节点 != 专属存在概念字段) continue;
-            const auto* n = std::get_if<稳定编码>(&f.内容);
-            auto& v = f.字段节点 == 节点类型字段 ? 类型 : 概念;
-            if (!n || !有效(*n) || v) return {基础结构操作状态::内部不一致, {}, {}, false};
-            v = *n;
+        return 读取存在身份保护可抛内部(节点);
+    } catch (const std::bad_alloc&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+    catch (const std::length_error&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+    catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在身份保护",
+            L"存在身份读取发生工程异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在身份保护",
+            L"存在身份读取发生未知工程异常。");
+    }
+}
+
+新存在顶层特征定位结果 新_存在类::读取存在顶层特征定位保护(稳定编码 节点) const noexcept {
+    using 状态 = 新存在顶层特征定位状态;
+    try {
+        if (!有效(节点)) return {状态::输入不适用, {}, {}};
+        std::lock_guard 锁(新存在互斥);
+        if (!结构已初始化()) return {状态::依赖未就绪, {}, {}};
+        const auto 要求 = [](bool 成立) {
+            if (!成立) throw std::logic_error("existence top-level feature location invariant");
+        };
+        const auto 相同 = [](const 基础联合节点快照& 左, const 基础联合节点快照& 右) {
+            return 左.结构.节点 == 右.结构.节点 && 左.结构.字段组 == 右.结构.字段组
+                && 左.入向字段组 == 右.入向字段组
+                && 左.入向外部关系组 == 右.入向外部关系组
+                && 左.出向外部关系组 == 右.出向外部关系组;
+        };
+        std::vector<稳定编码> 首读节点组{节点类型字段, 存在节点类型, 实例特征字段, 专属存在概念字段, 节点};
+        std::sort(首读节点组.begin(), 首读节点组.end());
+        首读节点组.erase(std::unique(首读节点组.begin(), 首读节点组.end()), 首读节点组.end());
+        const auto 首读 = 全局基础数据集.查询节点组完整结构(首读节点组);
+        if (首读.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        要求(首读.状态 == 基础结构操作状态::已完成 && 首读.节点组.size() == 首读节点组.size());
+        std::map<稳定编码, 基础联合节点快照> 保护;
+        bool 存在缺失 = false;
+        for (std::size_t 序号 = 0; 序号 < 首读节点组.size(); ++序号) {
+            const auto& 项 = 首读.节点组[序号];
+            要求(项.查询节点 == 首读节点组[序号]);
+            if (!项.快照) {
+                // 初始化后的schema不能被解释为尚未装配。
+                要求(项.查询节点 == 节点);
+                存在缺失 = true;
+                continue;
+            }
+            要求(项.快照->结构.节点.编码 == 项.查询节点);
+            保护.emplace(项.查询节点, *项.快照);
         }
-        if (类型 != 存在节点类型 || !概念)
-            return {基础结构操作状态::内部不一致, {}, {}, false};
-        return {基础结构操作状态::已完成, 新存在身份保护信息{节点, *概念}, {s}, false};
-    } catch (...) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+        if (存在缺失) return {状态::存在不存在, {}, {}};
+        const auto 核同 = [&]() {
+            std::vector<稳定编码> 节点组;
+            节点组.reserve(保护.size());
+            for (const auto& [编码, 快照] : 保护) 节点组.push_back(编码);
+            const auto 当前 = 全局基础数据集.查询节点组完整结构(节点组);
+            if (当前.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+            要求(当前.状态 == 基础结构操作状态::已完成 && 当前.节点组.size() == 节点组.size());
+            for (std::size_t 序号 = 0; 序号 < 节点组.size(); ++序号) {
+                const auto& 项 = 当前.节点组[序号];
+                要求(项.查询节点 == 节点组[序号]);
+                if (!项.快照 || !相同(保护.at(项.查询节点), *项.快照)) return false;
+            }
+            return true;
+        };
+        const auto 合并 = [&](const std::vector<基础联合节点快照>& 批) {
+            for (const auto& 快照 : 批) {
+                要求(有效(快照.结构.节点.编码));
+                const auto [位置, 新增] = 保护.emplace(快照.结构.节点.编码, 快照);
+                if (!新增 && !相同(位置->second, 快照)) return false;
+            }
+            return true;
+        };
+        const auto 身份 = 读取存在身份保护可抛内部(节点);
+        if (身份.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (身份.前提已变化) return {状态::前提已变化, {}, {}};
+        if (身份.状态 != 基础结构操作状态::已完成) {
+            if (!核同()) return {状态::前提已变化, {}, {}};
+            要求(false);
+        }
+        要求(身份.信息 && 身份.信息->存在节点 == 节点
+            && 有效(身份.信息->专属存在概念节点) && 身份.预期节点组.size() == 1);
+        if (!合并(身份.预期节点组)) return {状态::前提已变化, {}, {}};
+        新存在顶层特征定位信息 信息{节点, 身份.信息->专属存在概念节点, {}};
+        std::set<稳定编码> 已见;
+        for (const auto& 字段 : 保护.at(节点).结构.字段组) {
+            if (字段.字段节点 != 实例特征字段) continue;
+            const auto* 特征 = std::get_if<稳定编码>(&字段.内容);
+            if (!特征 || !有效(*特征) || !已见.insert(*特征).second) {
+                if (!核同()) return {状态::前提已变化, {}, {}};
+                要求(false);
+            }
+            信息.顶层特征节点组.push_back(*特征);
+        }
+        std::sort(信息.顶层特征节点组.begin(), 信息.顶层特征节点组.end());
+        const auto 概念 = 存在概念服务_.读取专属存在概念身份保护(
+            信息.专属存在概念节点, 节点, 保护.at(节点));
+        switch (概念.状态) {
+        case 专属存在概念身份读取状态::资源失败: throw std::bad_alloc{};
+        case 专属存在概念身份读取状态::提供者未就绪: return {状态::依赖未就绪, {}, {}};
+        case 专属存在概念身份读取状态::前提已变化: return {状态::前提已变化, {}, {}};
+        case 专属存在概念身份读取状态::已完成: break;
+        case 专属存在概念身份读取状态::节点不存在:
+        case 专属存在概念身份读取状态::结构不一致:
+            if (!核同()) return {状态::前提已变化, {}, {}};
+            要求(false);
+            break;
+        default: 要求(false);
+        }
+        要求(概念.专属概念节点 == 信息.专属存在概念节点 && 概念.对应存在节点 == 节点
+            && !概念.身份保护.empty());
+        if (!合并(概念.身份保护) || !核同()) return {状态::前提已变化, {}, {}};
+        std::vector<基础联合节点快照> 完整保护;
+        完整保护.reserve(保护.size());
+        for (auto& [编码, 快照] : 保护) 完整保护.push_back(std::move(快照));
+        return {状态::已读取, std::move(信息), std::move(完整保护)};
+    } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}}; }
+    catch (const std::length_error&) { return {状态::资源失败, {}, {}}; }
+    catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在顶层特征定位保护",
+            L"存在身份或顶层持有结构读取发生工程异常。", 异常.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在顶层特征定位保护",
+            L"存在身份或顶层持有结构读取发生未知工程异常。");
+    }
 }
 
 } // namespace 海中鱼巣

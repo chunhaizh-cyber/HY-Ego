@@ -8,6 +8,8 @@
 #include <mutex>
 #include <new>
 #include <sstream>
+#include <set>
+#include <stdexcept>
 #include <thread>
 
 namespace 海中鱼巣 {
@@ -72,8 +74,8 @@ struct 新_学习线程类::实现 final {
                 std::optional<新学习结束通知> 结束;
                 std::exception_ptr 异常;
                 try {
-                    const auto 协作停止 = [this, 方法=项->方法] {
-                        return 要停止() || !服务.可接收学习(方法);
+                    const auto 协作停止 = [this] {
+                        return 要停止();
                     };
                     if (协作停止()) throw 新学习运行异常(项->方法,新学习运行异常原因::停止取消);
                     if (项->问题消息 && 问题服务)
@@ -170,8 +172,7 @@ struct 新_学习线程类::实现 final {
     新学习接收结果 结果;
     if (!实现_ || !有效(方法)) return 结果;
     try {
-        // 不持学习队列锁读取方法owner；已有承诺仍必须原样交付直到ACK。
-        const bool 接纳新工作 = 实现_->服务.可接收学习(方法);
+        // 已有承诺仍必须原样交付直到ACK。
         std::unique_lock 锁(实现_->互斥);
         if (实现_->停止 || 实现_->已结束) { 结果.状态=新学习操作状态::已停止接收; return 结果; }
         if (!实现_->已进入) { 结果.状态=新学习操作状态::尚未启动; return 结果; }
@@ -179,7 +180,6 @@ struct 新_学习线程类::实现 final {
         if (位置!=实现_->工作组.end()) {
             结果.状态=新学习操作状态::精确重复; 结果.处理结果=位置->second->结果;
         } else {
-            if (!接纳新工作) return 结果;
             auto 项=std::make_shared<实现::工作>(); 项->方法=方法;
             实现_->工作组.emplace(方法,项);
             try { 实现_->待处理.push_back(项); }
@@ -197,7 +197,6 @@ struct 新_学习线程类::实现 final {
     if (!实现_ || !实现_->问题服务 || !有效(消息.方法节点) || !有效(消息.任务节点)
         || !有效(消息.执行实例节点) || !有效(消息.归档节点)) return 结果;
     try {
-        const bool 接纳新工作 = 实现_->服务.可接收学习(消息.方法节点);
         std::lock_guard 锁(实现_->互斥);
         if (实现_->停止 || 实现_->已结束) { 结果.状态=新学习操作状态::已停止接收; return 结果; }
         if (!实现_->已进入) { 结果.状态=新学习操作状态::尚未启动; return 结果; }
@@ -207,7 +206,6 @@ struct 新_学习线程类::实现 final {
             结果.状态=新学习操作状态::精确重复;
             结果.处理结果=位置->second->结果;
         } else {
-            if (!接纳新工作) return 结果;
             auto 项=std::make_shared<实现::工作>();
             项->方法=消息.方法节点; 项->问题消息=消息;
             实现_->问题工作组.emplace(消息.归档节点,项);
@@ -285,6 +283,61 @@ std::optional<新方法问题学习收集结果> 新_学习线程类::读取方�
             + static_cast<std::uint64_t>(std::count_if(实现_->问题工作组.begin(),实现_->问题工作组.end(),
                 [](const auto& 项) { return !项.second->已确认; }));
     } catch (...) { 结果.状态=新学习线程状态::内部错误; }
+    return 结果;
+}
+新学习工作快照 新_学习线程类::读取工作快照() const noexcept {
+    新学习工作快照 结果;
+    if (!实现_) return 结果;
+    try {
+        std::lock_guard 锁(实现_->互斥);
+        新学习线程快照 线程;
+        线程.状态 = 实现_->状态;
+        线程.当前方法 = 实现_->当前方法;
+        线程.停止已请求 = 实现_->停止;
+        std::vector<const 实现::工作*> 活动;
+        for (const auto& [方法, 项] : 实现_->工作组) 活动.push_back(项.get());
+        for (const auto& [归档, 项] : 实现_->问题工作组)
+            if (!项->已确认) 活动.push_back(项.get());
+        const std::set<const 实现::工作*> 活动身份(活动.begin(), 活动.end());
+        if (活动身份.size() != 活动.size())
+            throw std::logic_error("learning snapshot duplicate indexed work");
+        线程.待处理数量 = static_cast<std::uint64_t>(活动.size());
+        std::set<const 实现::工作*> 已输出;
+        const auto 追加 = [&](const 实现::工作& 项, 新学习工作阶段 阶段,
+            std::optional<std::uint64_t> 排队序号) {
+            if (!已输出.insert(&项).second)
+                throw std::logic_error("learning snapshot duplicate work");
+            新学习工作快照项 材料;
+            材料.方法节点 = 项.方法; 材料.阶段 = 阶段; 材料.排队序号 = 排队序号;
+            if (项.问题消息) {
+                材料.种类 = 新学习工作种类::问题材料;
+                材料.问题归档节点 = 项.问题消息->归档节点;
+                材料.任务节点 = 项.问题消息->任务节点;
+                材料.执行实例节点 = 项.问题消息->执行实例节点;
+            }
+            结果.项组.push_back(std::move(材料));
+        };
+        std::uint64_t 序号 = 0;
+        for (const auto& 项 : 实现_->待处理) {
+            if (!项 || 项->已开始 || 项->已完成 || 项->已确认
+                || !活动身份.contains(项.get()))
+                throw std::logic_error("learning snapshot FIFO inconsistent");
+            追加(*项, 新学习工作阶段::排队中, ++序号);
+        }
+        for (const auto 阶段 : {新学习工作阶段::执行中, 新学习工作阶段::完成待确认})
+            for (const auto* 项 : 活动) {
+                if (已输出.contains(项)) continue;
+                if (!项->已开始) throw std::logic_error("learning snapshot unqueued work");
+                if (项->已完成 == (阶段 == 新学习工作阶段::完成待确认))
+                    追加(*项, 阶段, std::nullopt);
+            }
+        结果.线程快照 = 线程;
+        结果.状态 = 新学习工作快照读取状态::已取得;
+    } catch (const std::bad_alloc&) {
+        结果 = {}; 结果.状态 = 新学习工作快照读取状态::资源失败;
+    } catch (...) {
+        结果 = {}; 结果.状态 = 新学习工作快照读取状态::内部错误;
+    }
     return 结果;
 }
 }

@@ -1,4 +1,5 @@
 #include "新_自我线程类.h"
+#include "../业务/接收需求认知.服务.h"
 #include "../领域/新_方法类.h"
 #include "../核心/日志系统.h"
 #include "../核心/容错检查.h"
@@ -15,6 +16,7 @@
 #include <new>
 #include <stdexcept>
 #include <thread>
+#include <type_traits>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -28,6 +30,208 @@ std::mutex 唯一自我互斥;
 新_自我线程类* 唯一自我线程所有者 = nullptr;
 std::optional<新自我线程初始化请求> 唯一自我初始化请求;
 std::atomic_uint64_t 下一自动决议消息编号{1};
+
+#ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
+// 本切片只投影当前调用已经持有的材料；默认关闭，不参与任何业务裁决。
+std::atomic_uint64_t 主线因果阶段日志条数{0};
+#define HY_MAINLINE_STATE(项) case 状态::项: return HY_EGO_WIDEN(#项);
+const wchar_t* 主线因果状态文字(新任务因果子需求提议状态 值) noexcept {
+    using 状态 = 新任务因果子需求提议状态;
+    switch (值) { HY_MAINLINE_STATE(已形成) HY_MAINLINE_STATE(无需子需求)
+        HY_MAINLINE_STATE(材料已变化) HY_MAINLINE_STATE(无路径) HY_MAINLINE_STATE(路径待选择)
+        HY_MAINLINE_STATE(资源延后) }
+    return L"未知因果提议状态";
+}
+const wchar_t* 主线因果状态文字(二次特征概念操作状态 值) noexcept {
+    using 状态 = 二次特征概念操作状态;
+    switch (值) { HY_MAINLINE_STATE(已建立) HY_MAINLINE_STATE(已复用) HY_MAINLINE_STATE(已找到)
+        HY_MAINLINE_STATE(未找到) HY_MAINLINE_STATE(入口拒绝) HY_MAINLINE_STATE(输出定义不合法)
+        HY_MAINLINE_STATE(输入定义不合法) HY_MAINLINE_STATE(特征概念不存在) HY_MAINLINE_STATE(算法不适用)
+        HY_MAINLINE_STATE(概念不存在) HY_MAINLINE_STATE(值域不合法) HY_MAINLINE_STATE(结构不一致)
+        HY_MAINLINE_STATE(资源失败) }
+    return L"未知二次特征概念操作状态";
+}
+const wchar_t* 主线因果状态文字(新需求操作状态 值) noexcept {
+    using 状态 = 新需求操作状态;
+    switch (值) { HY_MAINLINE_STATE(已建立) HY_MAINLINE_STATE(已复用) HY_MAINLINE_STATE(已找到)
+        HY_MAINLINE_STATE(已修改) HY_MAINLINE_STATE(无变化) HY_MAINLINE_STATE(入口拒绝)
+        HY_MAINLINE_STATE(尚未初始化) HY_MAINLINE_STATE(需求不存在) HY_MAINLINE_STATE(父需求不合法)
+        HY_MAINLINE_STATE(目标存在不合法) HY_MAINLINE_STATE(目标形式不合法) HY_MAINLINE_STATE(目标特征类型不合法)
+        HY_MAINLINE_STATE(目标值域不合法) HY_MAINLINE_STATE(比较关系不合法) HY_MAINLINE_STATE(目标方向不合法)
+        HY_MAINLINE_STATE(双根定义冲突) HY_MAINLINE_STATE(任务来源未接通) HY_MAINLINE_STATE(会形成环)
+        HY_MAINLINE_STATE(结构不一致) HY_MAINLINE_STATE(资源失败) HY_MAINLINE_STATE(权重不合法)
+        HY_MAINLINE_STATE(执行域不适用) HY_MAINLINE_STATE(认知来源不合法) HY_MAINLINE_STATE(同来源目标冲突)
+        HY_MAINLINE_STATE(需重新确认) HY_MAINLINE_STATE(前提已变化) HY_MAINLINE_STATE(目标内容依赖未就绪)
+        HY_MAINLINE_STATE(目标内容未支持) }
+    return L"未知需求操作状态";
+}
+const wchar_t* 主线因果状态文字(新自我筹办裁决接收状态 值) noexcept {
+    using 状态 = 新自我筹办裁决接收状态;
+    switch (值) { HY_MAINLINE_STATE(已接收) HY_MAINLINE_STATE(精确重复) HY_MAINLINE_STATE(定位已变化)
+        HY_MAINLINE_STATE(身份冲突) HY_MAINLINE_STATE(已停止接收) HY_MAINLINE_STATE(入口拒绝)
+        HY_MAINLINE_STATE(资源失败) HY_MAINLINE_STATE(内部错误) }
+    return L"未知筹办裁决接收状态";
+}
+const wchar_t* 主线因果状态文字(新自我消息处理状态 值) noexcept {
+    using 状态 = 新自我消息处理状态;
+    switch (值) { HY_MAINLINE_STATE(已复核) HY_MAINLINE_STATE(入口拒绝) HY_MAINLINE_STATE(等待材料)
+        HY_MAINLINE_STATE(比较失败) HY_MAINLINE_STATE(内部不一致) HY_MAINLINE_STATE(停止取消)
+        HY_MAINLINE_STATE(内部错误) HY_MAINLINE_STATE(任务已承接) HY_MAINLINE_STATE(既有终结任务)
+        HY_MAINLINE_STATE(任务管理未就绪) HY_MAINLINE_STATE(任务承接需核查) HY_MAINLINE_STATE(已交接未收回)
+        HY_MAINLINE_STATE(任务筹办已裁决) HY_MAINLINE_STATE(任务筹办定位已变化) HY_MAINLINE_STATE(任务筹办需核查)
+        HY_MAINLINE_STATE(任务结果已裁决) HY_MAINLINE_STATE(任务结果定位已变化) HY_MAINLINE_STATE(任务结果需核查)
+        HY_MAINLINE_STATE(工程停止) HY_MAINLINE_STATE(学习复核已裁决) HY_MAINLINE_STATE(学习复核定位已变化)
+        HY_MAINLINE_STATE(学习复核需核查) HY_MAINLINE_STATE(等待复核已裁决) HY_MAINLINE_STATE(等待复核定位已变化)
+        HY_MAINLINE_STATE(等待复核需核查) HY_MAINLINE_STATE(任务完成贡献待归集) }
+    return L"未知自我消息处理状态";
+}
+#undef HY_MAINLINE_STATE
+struct 主线因果阶段观察 final {
+    const 新自我治理消息& 消息;
+    const 新自我消息处理结果& 结果;
+    const wchar_t* 最近阶段 = L"处理入口";
+    std::optional<稳定编码> 父需求;
+    void 记录(const wchar_t* 阶段, const wchar_t* 状态 = nullptr,
+        std::optional<稳定编码> 子需求 = {}) noexcept {
+        最近阶段 = 阶段;
+        try {
+            const auto 行 = 主线因果阶段日志条数.fetch_add(1, std::memory_order_relaxed);
+            if (行 > 256) return;
+            if (行 == 256) {
+                (void)记录调试日志(L"MAINLINE_PHASE", L"自我线程", L"输出截断",
+                    L"本进程自我因果阶段诊断已达256条；仅停止诊断，不限制业务推进。");
+                return;
+            }
+            std::wostringstream 文本;
+            文本 << L"阶段=" << 阶段 << L"；消息编号=" << 消息.消息编号;
+            if (消息.筹办反馈) 文本 << L"；任务引用=" << 消息.筹办反馈->任务节点.值
+                << L"；工作编号=" << 消息.筹办反馈->原工作.工作编号;
+            if (父需求) 文本 << L"；父需求引用=" << 父需求->值;
+            if (状态) 文本 << L"；返回状态=" << 状态;
+            if (子需求) 文本 << L"；子需求引用=" << 子需求->值;
+            文本 << L"；自我处理状态=" << 主线因果状态文字(结果.状态);
+            if (结果.筹办裁决接收状态) 文本 << L"；裁决接收=" << 主线因果状态文字(*结果.筹办裁决接收状态);
+            (void)记录调试日志(L"MAINLINE_PHASE", L"自我线程", L"处理因果子需求提议", 文本.str());
+        } catch (...) {} // 诊断失败不能修改原分支、回执或返回结果。
+    }
+    ~主线因果阶段观察() noexcept {
+        记录(L"函数返回", 主线因果状态文字(结果.状态));
+    }
+};
+#define HY_SELF_CAUSAL_PHASE(阶段, 状态, 子需求) 观察.记录(阶段, 状态, 子需求)
+#else
+#define HY_SELF_CAUSAL_PHASE(阶段, 状态, 子需求) ((void)0)
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PROPOSAL_DIFF
+// 仅比较本次已经持有的两份值式材料；不查名称/事实，不改变正式比较或分支。
+void 记录因果提议差异(稳定编码 父任务, const 新任务因果子需求提议& 原,
+    const 新任务因果子需求提议& 当前) noexcept {
+    try {
+        static std::atomic_uint64_t 条数{0};
+        const auto 行 = 条数.fetch_add(1, std::memory_order_relaxed);
+        if (行 > 32) return;
+        if (行 == 32) {
+            (void)记录调试日志(L"CAUSAL_PROPOSAL_DIFF", L"自我线程", L"输出截断",
+                L"本进程仅保留32次提议差异观察；不限制实际筹办。");
+            return;
+        }
+        std::wostringstream 文本;
+        文本 << L"父任务引用=" << 父任务.值 << L"；整体相等=" << (原 == 当前)
+            << L"；原状态=" << static_cast<int>(原.状态)
+            << L"；新状态=" << static_cast<int>(当前.状态)
+            << L"；子目标数量=" << 原.子需求项组.size() << L"->" << 当前.子需求项组.size();
+        const auto 差异 = [&](const wchar_t* 字段, const auto& 左, const auto& 右) {
+            if (左 != 右) 文本 << L"；差异=" << 字段;
+        };
+        差异(L"依据", 原.依据, 当前.依据);
+        差异(L"候选依据组", 原.候选依据组, 当前.候选依据组);
+        差异(L"路径选择", 原.路径选择未确定, 当前.路径选择未确定);
+        差异(L"子目标组", 原.子需求项组, 当前.子需求项组);
+        差异(L"继续推进任务组", 原.继续推进任务组, 当前.继续推进任务组);
+        差异(L"未满足关系组", 原.未满足关系组, 当前.未满足关系组);
+        if (原.依据 && 当前.依据) {
+            const auto& 左 = *原.依据;
+            const auto& 右 = *当前.依据;
+            差异(L"请求父任务", 左.请求.父任务节点, 右.请求.父任务节点);
+            差异(L"请求父需求", 左.请求.父需求节点, 右.请求.父需求节点);
+            差异(L"请求目标存在", 左.请求.目标存在节点, 右.请求.目标存在节点);
+            差异(L"请求目标", 左.请求.目标, 右.请求.目标);
+            差异(L"请求通用查询", 左.请求.通用查询, 右.请求.通用查询);
+            差异(L"原始等待边_不直接参与依据相等", 左.请求.当前等待边组, 右.请求.当前等待边组);
+            差异(L"结算上下文有无", 左.请求.结算上下文.has_value(), 右.请求.结算上下文.has_value());
+            差异(L"读回状态", 左.读回.状态, 右.读回.状态);
+            差异(L"读回通用图", 左.读回.通用反查图, 右.读回.通用反查图);
+            差异(L"读回主动方法", 左.读回.主动方法参考组, 右.读回.主动方法参考组);
+            差异(L"读回静态缺口", 左.读回.静态状态缺口组, 右.读回.静态状态缺口组);
+            差异(L"读回能力缺口", 左.读回.能力缺口组, 右.读回.能力缺口组);
+            差异(L"读回分支", 左.读回.分支组, 右.读回.分支组);
+            if (左.请求.结算上下文 && 右.请求.结算上下文) {
+                const auto& a = *左.请求.结算上下文;
+                const auto& b = *右.请求.结算上下文;
+                差异(L"规则节点", a.所依据先天规则.节点, b.所依据先天规则.节点);
+                差异(L"规则定义", a.所依据先天规则.定义, b.所依据先天规则.定义);
+                差异(L"规则统计_不参与依据相等", a.所依据先天规则.统计, b.所依据先天规则.统计);
+                差异(L"发生身份_不参与依据相等", a.所依据先天规则.发生身份组, b.所依据先天规则.发生身份组);
+                差异(L"上下文世界", a.世界根节点, b.世界根节点);
+                差异(L"上下文场景", a.目标场景节点, b.目标场景节点);
+                差异(L"上下文自我", a.自我存在节点, b.自我存在节点);
+                差异(L"上下文目标特征", a.目标特征节点, b.目标特征节点);
+                差异(L"上下文目标值", a.当前目标值, b.当前目标值);
+                差异(L"集合特征", a.服务任务集合特征节点, b.服务任务集合特征节点);
+                差异(L"集合类型", a.服务任务集合类型, b.服务任务集合类型);
+                差异(L"集合材料", a.集合材料节点, b.集合材料节点);
+                差异(L"集合当前值", a.正式集合当前值, b.正式集合当前值);
+                差异(L"任务成员组", a.正式任务成员组, b.正式任务成员组);
+                差异(L"枚举完整", a.成员枚举完整, b.成员枚举完整);
+                差异(L"任务范围", a.任务范围概念, b.任务范围概念);
+                差异(L"候选事实组", a.候选事实组, b.候选事实组);
+                文本 << L"；集合材料引用=" << a.集合材料节点.值 << L"->" << b.集合材料节点.值
+                    << L"；成员数量=" << a.正式任务成员组.size() << L"->" << b.正式任务成员组.size();
+                for (const auto& 旧 : a.候选事实组) {
+                    const auto 位置 = std::find_if(b.候选事实组.begin(), b.候选事实组.end(),
+                        [&](const auto& 新) { return 新.任务节点 == 旧.任务节点; });
+                    if (位置 == b.候选事实组.end()) {
+                        文本 << L"；首个已移除候选任务=" << 旧.任务节点.值;
+                        break;
+                    }
+                    const auto& 新 = *位置;
+                    if (旧 == 新) continue;
+                    文本 << L"；首个变化候选任务=" << 旧.任务节点.值;
+                    差异(L"候选读取状态", 旧.状态, 新.状态);
+                    差异(L"候选任务引用", 旧.任务引用, 新.任务引用);
+                    差异(L"候选需求", 旧.原需求节点, 新.原需求节点);
+                    差异(L"候选目标存在", 旧.原目标存在节点, 新.原目标存在节点);
+                    差异(L"候选目标", 旧.原目标, 新.原目标);
+                    差异(L"候选需求活动", 旧.原需求活动状态, 新.原需求活动状态);
+                    差异(L"候选任务状态", 旧.当前任务状态, 新.当前任务状态);
+                    差异(L"候选服务值", 旧.当前服务值, 新.当前服务值);
+                    差异(L"候选执行", 旧.执行实例节点, 新.执行实例节点);
+                    差异(L"候选评估", 旧.影响评估节点, 新.影响评估节点);
+                    差异(L"候选结算", 旧.完成结算节点, 新.完成结算节点);
+                    差异(L"候选子接收", 旧.直接子接收节点组, 新.直接子接收节点组);
+                    差异(L"候选人类锚点", 旧.人类确认锚点组, 新.人类确认锚点组);
+                    差异(L"候选贡献", 旧.下层贡献证明组, 新.下层贡献证明组);
+                    差异(L"候选治理边界", 旧.治理边界, 新.治理边界);
+                    差异(L"候选消费", 旧.既有消费, 新.既有消费);
+                    差异(L"候选世界", 旧.治理世界根节点, 新.治理世界根节点);
+                    差异(L"候选场景", 旧.治理场景节点, 新.治理场景节点);
+                    差异(L"候选条件", 旧.条件组, 新.条件组);
+                    break;
+                }
+                for (const auto& 新 : b.候选事实组) {
+                    if (std::none_of(a.候选事实组.begin(), a.候选事实组.end(),
+                        [&](const auto& 旧) { return 旧.任务节点 == 新.任务节点; })) {
+                        文本 << L"；首个新增候选任务=" << 新.任务节点.值;
+                        break;
+                    }
+                }
+            }
+        }
+        (void)记录调试日志(L"CAUSAL_PROPOSAL_DIFF", L"自我线程", L"fresh提议与原提议比较", 文本.str());
+    } catch (...) {} // 包括相等运算中的材料复制失败；只丢诊断，不影响原筹办。
+}
+#endif
 
 void 记录治理绑定拒绝(const wchar_t* 入口, const wchar_t* 阶段,
     const 新自我线程操作结果& 结果, int 上游状态 = -1) noexcept {
@@ -570,6 +774,8 @@ bool 新自我线程操作结果::成功() const noexcept {
         || 状态 == 新自我线程操作状态::无变化;
 }
 
+struct 接收认知让出最终 final {};
+
 struct 新_自我线程类::实现 final {
     实现(
         新_世界树类& 世界树,
@@ -584,6 +790,9 @@ struct 新_自我线程类::实现 final {
     新_方法类* 方法服务 = nullptr;
     新_任务类* 任务服务 = nullptr;
     新服务值结算确认接口* 服务结算确认端口 = nullptr;
+    接收需求认知服务* 接收认知 = nullptr;
+    bool 接收认知待唤醒 = false;
+    std::chrono::steady_clock::time_point 最近接收认知推进{};
     std::mutex 治理基础互斥;
     新自我治理基础结果 治理基础缓存;
     mutable std::mutex 状态互斥;
@@ -721,8 +930,10 @@ struct 新_自我线程类::实现 final {
         std::shared_future<新自我消息处理结果> 结果 = 承诺.get_future().share();
         std::chrono::steady_clock::time_point 可处理时点{};
         std::shared_future<新任务承接处理结果> 管理结果;
-        std::optional<新任务承接消息> 服务需求承接消息;
         std::optional<新任务承接消息> 外部服务承接消息;
+        std::optional<稳定编码> 行动请求自我需求;
+        std::optional<新行动请求采用结果> 行动请求采用材料;
+        std::optional<新外部服务需求采用结果> 外部服务采用材料;
         std::optional<新子需求采用回执> 条件子需求回执;
         bool 条件子需求回执已接收 = false;
         std::optional<新自我筹办裁决::因果采用回执> 因果子需求回执;
@@ -739,17 +950,20 @@ struct 新_自我线程类::实现 final {
         bool 直接贡献已确认 = false;
         std::atomic_bool 最终工作已交接阶段{false};
         std::optional<新自我消息处理结果> 贡献前置结果;
+        bool 需求认知已读取 = false;
+        std::optional<新本能已发布需求结果> 需求认知材料;
         std::optional<新服务值最终来源定位> 最终消费来源;
         std::optional<新任务工作请求> 最终消费工作;
         std::shared_future<新任务工作处理结果> 最终消费结果;
         std::optional<新服务值最终消费结果> 直接最终消费结果;
         bool 直接最终消费已确认 = false;
+        std::optional<新任务复合采用请求> 复合子需求采用;
+        std::set<稳定编码> 已处理内容学习方法;
     };
     // 处理中项仍留在活动组，接收方查重与容量计算不会漏算。
     std::vector<std::shared_ptr<消息项>> 活动消息;
     std::size_t 普通消息数量已加锁() const noexcept {
-        return static_cast<std::size_t>(std::count_if(活动消息.begin(), 活动消息.end(),
-            [](const auto& 项) { return !项->消息.服务需求取得反馈; }));
+        return 活动消息.size();
     }
 
     struct 自动承接项 final {
@@ -778,33 +992,57 @@ struct 新_自我线程类::实现 final {
             *初始化结果->服务根需求, 来源);
     }
 
-    void 发现方法学习(稳定编码 方法节点) noexcept {
+    enum class 方法学习发现状态 : std::uint8_t {
+        已接纳 = 1, 已在途, 已处理仍无配对, 已有配对, 无需学习, 暂缓, 停止取消
+    };
+    方法学习发现状态 发现方法学习(稳定编码 方法节点) noexcept {
+        using S = 方法学习发现状态;
+        bool 本次预留 = false;
+        bool 本次标记 = false;
+        bool 已接纳 = false;
         try {
-            if (方法服务->是历史服务结算方法(方法节点)) {
-                if (任务管理) (void)任务管理->通知方法退出适用(方法节点);
-                return;
-            }
             auto 方法=方法服务->获取方法(方法节点);
             // 筹办反馈可能定位任务副本；学习只补抽象方法，不改冻结副本。
             if (方法 && 方法->来源方法节点) 方法=方法服务->获取方法(*方法->来源方法节点);
-            if (!方法 || 方法->来源方法节点 || !方法->条件结果组.empty()
-                || 方法->实现方式!=新方法实现方式::本能) return;
+            if (!方法) throw std::logic_error("学习发现的正式方法不可读");
+            if (方法->来源方法节点 || 方法->实例根节点
+                || 方法->启用状态 != 新方法启用状态::启用
+                || 方法->实现方式 != 新方法实现方式::本能) return S::无需学习;
+            if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
+                throw std::logic_error("正式本能方法缺少登记名");
+            if (!方法->条件结果组.empty()) return S::已有配对;
             方法节点=方法->节点;
             std::unique_lock 锁(状态互斥);
-            if (!学习线程 || 停止已请求 || 已处理学习方法.contains(方法节点)
-                || 在途学习.contains(方法节点)) return;
+            if (停止已请求) return S::停止取消;
+            if (在途学习.contains(方法节点)) return S::已在途;
+            if (已处理学习方法.contains(方法节点)) return S::已处理仍无配对;
+            if (!学习线程) return S::暂缓;
             // 先留接收槽再提交，避免工作已经开始而self分配槽失败丢结果。
-            auto [位置,插入]=在途学习.try_emplace(方法节点);
-            if (!插入) return;
-            已处理学习方法.insert(方法节点);
+            const auto 插入=在途学习.try_emplace(方法节点).second;
+            if (!插入) return S::已在途;
+            本次预留 = true;
+            本次标记 = 已处理学习方法.insert(方法节点).second;
+            if (!本次标记)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"预留方法学习", L"同锁检查后学习去重身份意外已存在。");
             锁.unlock();
             const auto 接收=学习线程->提交学习(方法节点);
+            已接纳 = 接收.状态==新学习操作状态::已完成 || 接收.状态==新学习操作状态::精确重复;
+            if (已接纳 && !接收.处理结果.valid())
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交方法学习", L"学习线程已接纳但未交付有效future。");
             锁.lock();
-            if ((接收.状态==新学习操作状态::已完成
-                    || 接收.状态==新学习操作状态::精确重复) && 接收.处理结果.valid()) {
+            const auto 位置 = 在途学习.find(方法节点);
+            if (位置 == 在途学习.end())
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交方法学习", L"本次学习接收槽在交接期间丢失。");
+            if (已接纳) {
                 位置->second.处理结果=接收.处理结果;
+                return S::已接纳;
             } else {
-                在途学习.erase(位置);
+                if (接收.处理结果.valid())
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交方法学习", L"未接纳回执意外交付有效future。");
+                在途学习.erase(方法节点);
+                已处理学习方法.erase(方法节点);
+                本次预留 = false;
+                本次标记 = false;
                 const 新学习运行异常记录 异常{方法节点,
                     接收.状态==新学习操作状态::资源失败 ? 新学习运行异常原因::资源不足
                     : 接收.状态==新学习操作状态::入口拒绝 ? 新学习运行异常原因::输入不合法
@@ -812,18 +1050,32 @@ struct 新_自我线程类::实现 final {
                 最近学习运行异常=异常;
                 锁.unlock();
                 记录自我学习运行异常(异常);
+                if (接收.状态 == 新学习操作状态::入口拒绝) {
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交方法学习", L"合法抽象方法被学习入口意外拒绝。");
+                }
+                if (接收.状态 != 新学习操作状态::已停止接收
+                    && 接收.状态 != 新学习操作状态::尚未启动
+                    && 接收.状态 != 新学习操作状态::资源失败)
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交方法学习", L"学习接收返回非预期工程状态。");
+                return 接收.状态 == 新学习操作状态::已停止接收 ? S::停止取消 : S::暂缓;
             }
-        } catch (...) {
+        } catch (const std::bad_alloc&) {
+            if (已接纳)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"接纳方法学习", L"有效学习承诺交接发生工程异常，禁止撤销接纳。");
             新学习运行异常记录 异常{方法节点,新学习运行异常原因::内部错误};
-            try { throw; }
-            catch (const std::bad_alloc&) { 异常.原因=新学习运行异常原因::资源不足; }
-            catch (...) {}
+            异常.原因=新学习运行异常原因::资源不足;
             try {
                 std::lock_guard 锁(状态互斥);
-                在途学习.erase(方法节点);
+                if (本次预留) 在途学习.erase(方法节点);
+                if (本次标记) 已处理学习方法.erase(方法节点);
                 最近学习运行异常=异常;
-            } catch (...) {}
+            } catch (...) {
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"撤销学习预留", L"未接纳学习的本次预留无法可靠撤销。");
+            }
             记录自我学习运行异常(异常);
+            return S::暂缓;
+        } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发现方法学习", L"正式方法或学习承诺发生工程错误，禁止作为业务否定处理。");
         }
     }
 
@@ -874,18 +1126,6 @@ struct 新_自我线程类::实现 final {
         }
         项.可处理时点 = std::chrono::steady_clock::now()
             + 有界等待时长(消息配置->资源重试间隔毫秒);
-        if (方法服务->是历史服务结算方法(方法)) {
-            if (任务管理) {
-                const auto 退出 = 任务管理->通知方法退出适用(方法);
-                if (退出 == 新任务管理操作状态::资源失败) return false;
-                if (退出 != 新任务管理操作状态::已完成 && 退出 != 新任务管理操作状态::无变化
-                    && 退出 != 新任务管理操作状态::服务未就绪)
-                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"退出结算学习", L"旧结算学习退出通知被拒绝。");
-            }
-            // 仅收束真实已承诺future；不把取消转换成学习结束知识。
-            项.通知.reset();
-            项.阶段 = 学习交接阶段::待确认学习;
-        }
         if (项.阶段 == 学习交接阶段::待交接管理) {
             const auto 接收 = 任务管理
                 ? 任务管理->提交方法学习结束(*项.通知, 项.交接编号)
@@ -940,10 +1180,6 @@ struct 新_自我线程类::实现 final {
             if (消息.任务节点!=任务 || 消息.执行实例节点!=执行
                 || !有效(消息.方法节点) || !有效(消息.归档节点)) {
                 记录自我学习运行异常({消息.方法节点,新学习运行异常原因::结构不一致});
-                return;
-            }
-            if (方法服务->是历史服务结算方法(消息.方法节点)) {
-                if (任务管理) (void)任务管理->通知方法退出适用(消息.方法节点);
                 return;
             }
             std::lock_guard 锁(状态互斥);
@@ -1317,7 +1553,7 @@ struct 新_自我线程类::实现 final {
                 决议.定位 = 定位;
                 const auto 任务 = 任务服务->获取任务(定位.任务节点);
                 if (!任务) 决议.状态 = 新自我学习复核状态::需核查;
-                else if (任务->节点 != 定位.任务节点 || 任务->需求节点 != 定位.需求节点
+                else if (任务->需求节点 != 定位.需求节点
                     || 任务->当前状态 != 定位.任务状态
                     || 任务->当前候选方法材料节点 != 定位.候选材料节点
                     || 任务->方法实例节点 != 定位.方法实例节点
@@ -1328,26 +1564,25 @@ struct 新_自我线程类::实现 final {
                     const auto 治理 = 需求服务->读取需求治理信息(定位.需求节点);
                     if (治理 && !治理->完整目标)
                         决议.状态 = 新自我学习复核状态::等待材料;
-                    else if (!需求 || 需求->节点 != 定位.需求节点)
+                    else if (!需求)
                         决议.状态 = 新自我学习复核状态::需核查;
                     else if (需求->活动状态 != 新需求活动状态::活动)
                         决议.状态 = 新自我学习复核状态::需求非活动;
                     else {
-                        const auto 当前 = 需求服务->复核当前满足(定位.需求节点);
+                        const auto 资格 = 任务服务->复核任务筹办资格(定位.任务节点);
+                        if (资格.状态 == 新需求筹办资格状态::资源失败
+                            || 资格.状态 == 新需求筹办资格状态::材料已变化) return std::nullopt;
+                        const auto 当前 = 资格.当前满足.value_or(新需求当前满足结果{});
                         if (当前.状态 == 新需求当前满足状态::资源失败) return std::nullopt;
                         决议.当前满足状态 = 当前.状态;
                         if (当前.状态 == 新需求当前满足状态::已满足)
                             决议.状态 = 新自我学习复核状态::当前已满足;
-                        else if (当前.状态 == 新需求当前满足状态::目标特征尚未形成
+                        else if (资格.状态 == 新需求筹办资格状态::允许筹办) {
+                            决议.筹办资格 = 资格;
+                            决议.状态 = 新自我学习复核状态::允许重新筹办;
+                        } else if (当前.状态 == 新需求当前满足状态::目标特征尚未形成
                             || 当前.状态 == 新需求当前满足状态::当前值不存在)
                             决议.状态 = 新自我学习复核状态::等待材料;
-                        else if ((需求->目标.目标形式 == 新需求目标形式::值
-                                && (当前.状态 == 新需求当前满足状态::需增加
-                                    || 当前.状态 == 新需求当前满足状态::需减少
-                                    || 当前.状态 == 新需求当前满足状态::未满足但无有向差值))
-                            || (需求->目标.目标形式 == 新需求目标形式::变化方向
-                                && 当前.状态 == 新需求当前满足状态::需要执行前后比较))
-                            决议.状态 = 新自我学习复核状态::允许重新筹办;
                     }
                 }
                 项.学习决议 = 决议;
@@ -1355,6 +1590,11 @@ struct 新_自我线程类::实现 final {
             结果.学习复核决议 = 项.学习决议;
             const auto 接收 = 任务管理->提交学习复核决议(*项.学习决议);
             结果.学习复核接收状态 = 接收;
+            if (接收 == 新自我学习复核接收状态::筹办材料已变化) {
+                项.学习决议.reset(); return std::nullopt;
+            }
+            if (接收 == 新自我学习复核接收状态::内部错误)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习复核资格交接", L"manager资格复核或交接发生工程错误。");
             if (接收 == 新自我学习复核接收状态::资源失败) return std::nullopt;
             if (接收 == 新自我学习复核接收状态::已接收
                 || 接收 == 新自我学习复核接收状态::精确重复)
@@ -1371,6 +1611,8 @@ struct 新_自我线程类::实现 final {
                 *项.消息.学习复核, 新自我学习复核状态::需核查, {}};
             const auto 接收 = 任务管理->提交学习复核决议(*项.学习决议);
             if (接收 == 新自我学习复核接收状态::资源失败) return std::nullopt;
+            if (接收 == 新自我学习复核接收状态::内部错误)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习复核错误交接", L"manager无法接纳工程核查决议。");
             结果.学习复核决议 = 项.学习决议;
             结果.学习复核接收状态 = 接收;
             return 结果;
@@ -1429,28 +1671,23 @@ struct 新_自我线程类::实现 final {
         if (当前项.状态 == 新任务调度项状态::结构不一致 || !当前项.任务
             || !当前项.需求) return 决议;
         const auto& 任务 = *当前项.任务;
-        if (任务.节点 != 定位.定位.任务节点 || 任务.需求节点 != 定位.定位.需求节点
-            || 任务.当前状态 != 定位.定位.任务状态
-            || 任务.当前候选方法材料节点 != 定位.定位.候选材料节点
-            || 任务.方法实例节点 != 定位.定位.方法实例节点
-            || 任务.方法执行组织节点 != 定位.定位.方法执行组织节点
-            || 任务.最近执行实例节点 != 定位.定位.最近执行实例节点)
-            return 决议;
         const auto 需求 = 需求服务->获取需求(定位.定位.需求节点);
-        if (!需求 || 需求->节点 != 任务.需求节点) return 决议;
+        if (!需求) return 决议;
         if (需求->活动状态 != 新需求活动状态::活动) {
             决议.状态 = 新自我等待复核状态::需求非活动;
             return 决议;
         }
-        const auto 当前 = 需求服务->复核当前满足(需求->节点);
+        const auto 资格 = 任务服务->复核任务筹办资格(任务.节点);
+        if (资格.状态 == 新需求筹办资格状态::资源失败
+            || 资格.状态 == 新需求筹办资格状态::材料已变化) return std::nullopt;
+        const auto 当前 = 资格.当前满足.value_or(新需求当前满足结果{});
         if (当前.状态 == 新需求当前满足状态::资源失败) return std::nullopt;
         决议.当前满足状态 = 当前.状态;
         if (当前.状态 == 新需求当前满足状态::已满足) {
             决议.状态 = 新自我等待复核状态::当前已满足;
             return 决议;
         }
-        if (当前.状态 == 新需求当前满足状态::目标特征尚未形成
-            || 当前.状态 == 新需求当前满足状态::当前值不存在) {
+        if (资格.状态 == 新需求筹办资格状态::等待普通材料) {
             决议.状态 = 新自我等待复核状态::等待材料;
             return 决议;
         }
@@ -1462,10 +1699,7 @@ struct 新_自我线程类::实现 final {
             || 定位.原因 == 新任务等待原因::未分类
             || 定位.原因 == 新任务等待原因::需核查) return 决议;
         if (定位.定位.最近执行实例节点) {
-            if (!当前项.执行 || 当前项.执行->节点 != *定位.定位.最近执行实例节点
-                || 当前项.执行->任务节点 != 任务.节点
-                || 当前项.执行->影响评估节点 != 定位.定位.影响评估节点)
-                return 决议;
+            if (!当前项.执行) return 决议;
             const auto& 执行 = *当前项.执行;
             if (执行.状态 != 新任务执行状态::已评估 || !执行.结束时间) {
                 决议.状态 = 新自我等待复核状态::等待同次执行比较;
@@ -1473,10 +1707,6 @@ struct 新_自我线程类::实现 final {
             }
             if (!当前项.影响评估 || !定位.定位.影响评估节点) return 决议;
             const auto& 评估 = *当前项.影响评估;
-            if (评估.节点 != *定位.定位.影响评估节点
-                || 评估.任务节点 != 任务.节点 || 评估.需求节点 != 需求->节点
-                || 评估.执行实例节点 != 执行.节点 || 评估.方法节点 != 执行.方法节点)
-                return 决议;
             if (需求->目标.目标形式 == 新需求目标形式::变化方向) {
                 // A.方向验证是方法预测验证，不能替代目标D的同次A/B比较。
                 const auto 满足 = 评估.目标需求结果.状态;
@@ -1490,16 +1720,12 @@ struct 新_自我线程类::实现 final {
                     return 决议;
                 }
             }
-        } else if (当前项.执行 || 当前项.影响评估 || 定位.定位.影响评估节点
-            || 定位.原因 == 新任务等待原因::执行后等待
+        } else if (定位.原因 == 新任务等待原因::执行后等待
             || 定位.原因 == 新任务等待原因::同次执行比较材料不足) return 决议;
-        if ((需求->目标.目标形式 == 新需求目标形式::值
-                && (当前.状态 == 新需求当前满足状态::需增加
-                    || 当前.状态 == 新需求当前满足状态::需减少
-                    || 当前.状态 == 新需求当前满足状态::未满足但无有向差值))
-            || (需求->目标.目标形式 == 新需求目标形式::变化方向
-                && 当前.状态 == 新需求当前满足状态::需要执行前后比较))
+        if (资格.状态 == 新需求筹办资格状态::允许筹办) {
+            决议.筹办资格 = 资格;
             决议.状态 = 新自我等待复核状态::允许重新筹办;
+        }
         return 决议;
     }
 
@@ -1529,6 +1755,11 @@ struct 新_自我线程类::实现 final {
         结果.等待复核决议 = 项.等待决议;
         const auto 接收 = 任务管理->提交等待复核决议(*项.等待决议);
         结果.等待复核接收状态 = 接收;
+        if (接收 == 新自我等待复核接收状态::筹办材料已变化) {
+            项.等待决议.reset(); return std::nullopt;
+        }
+        if (接收 == 新自我等待复核接收状态::内部错误)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"等待复核资格交接", L"manager资格复核或交接发生工程错误。");
         // 交接资源失败仅重试同一决定，不重算业务资格。
         if (接收 == 新自我等待复核接收状态::资源失败) return std::nullopt;
         if (接收 == 新自我等待复核接收状态::已接收
@@ -1645,76 +1876,13 @@ struct 新_自我线程类::实现 final {
         catch (...) { return 新任务结果反馈接收状态::内部错误; }
     }
 
-    新自我消息接收结果 接收服务需求执行(
-        const 新服务需求取得反馈定位& 定位) noexcept {
-        新自我消息接收结果 结果;
-        if (!有效(定位.任务节点) || !有效(定位.执行实例节点))
-            return 结果;
-        try {
-            {
-                std::lock_guard 锁(状态互斥);
-                for (const auto& 项 : 活动消息) {
-                    if (项->消息.服务需求取得反馈 == 定位) {
-                        结果.状态 = 新自我消息接收状态::精确重复;
-                        结果.处理结果 = 项->结果; return 结果;
-                    }
-                }
-                if (停止源.stop_requested()) {
-                    结果.状态 = 新自我消息接收状态::已停止接收; return 结果;
-                }
-            }
-            // 领域读取不持self锁；接收后处理器仍会fresh复核，不把接收视作许可。
-            const auto 任务 = 任务服务->获取任务(定位.任务节点);
-            const auto 执行 = 任务服务->获取执行实例(定位.执行实例节点);
-            if (!任务 || !执行 || 执行->任务节点 != 定位.任务节点)
-                throw std::logic_error("service execution submission identity unreadable");
-            if (任务->最近执行实例节点 != 定位.执行实例节点
-                || 任务->当前状态 != 新任务状态::执行中
-                || 执行->状态 != 新任务执行状态::执行中) return 结果;
-            if (!执行->普通动作节点 || !执行->服务需求返回确认
-                || !执行->结果获取方案.服务需求取得数量类型)
-                throw std::logic_error("service execution submission lacks formal evidence");
-            std::lock_guard 锁(状态互斥);
-            if (停止源.stop_requested() || 停止已请求 || 线程已完成) {
-                结果.状态 = 新自我消息接收状态::已停止接收; return 结果;
-            }
-            if (!线程已进入) { 结果.状态 = 新自我消息接收状态::尚未启动; return 结果; }
-            if (!消息配置) { 结果.状态 = 新自我消息接收状态::尚未配置; return 结果; }
-            for (const auto& 项 : 活动消息) {
-                if (!项->消息.服务需求取得反馈) continue;
-                if (*项->消息.服务需求取得反馈 == 定位) {
-                    结果.状态 = 新自我消息接收状态::精确重复;
-                    结果.处理结果 = 项->结果;
-                    return 结果;
-                }
-                if (项->消息.服务需求取得反馈->任务节点 == 定位.任务节点) {
-                    结果.状态 = 新自我消息接收状态::身份冲突; return 结果;
-                }
-            }
-            if (活动消息.size() - 普通消息数量已加锁() >= 新任务工作并发上限)
-                throw std::logic_error("service execution reserved capacity invariant violated");
-            auto 项 = std::make_shared<消息项>();
-            项->消息.消息编号 = 取得自动消息编号();
-            项->消息.类型 = 新自我消息类型::服务需求取得反馈;
-            项->消息.服务需求取得反馈 = 定位;
-            项->可处理时点 = std::chrono::steady_clock::now();
-            活动消息.push_back(项);
-            结果.处理结果 = 项->结果;
-            结果.状态 = 新自我消息接收状态::已接收;
-            状态变化.notify_all();
-            return 结果;
-        } catch (const std::bad_alloc&) { 结果.状态 = 新自我消息接收状态::资源失败; return 结果; }
-        catch (...) {
-            工程异常终止(L"新_自我线程类.cpp", __LINE__, L"接收服务需求执行", L"执行身份或保留控制容量不一致");
-        }
-    }
-
     std::optional<新自我消息处理结果> 处理完整服务需求材料(消息项& 项) noexcept {
         try {
             if (!任务管理 || !任务服务 || !需求服务 || !项.消息.完整服务需求材料)
                 throw std::logic_error("complete service packet dependencies missing");
             新自我消息处理结果 结果;
             结果.原消息 = 项.消息;
+            结果.外部服务需求采用=项.外部服务采用材料;
             const auto& 材料包 = *项.消息.完整服务需求材料;
             // 已提交manager的请求先收回同一future，不能因材料后变而丢弃承接事实。
             if (项.管理结果.valid()) {
@@ -1735,13 +1903,28 @@ struct 新_自我线程类::实现 final {
                 if (!承接.承接 || !承接.承接->任务)
                     throw std::logic_error("complete service acceptance task missing");
                 const auto 当前任务 = 任务服务->获取任务(承接.承接->任务->节点);
-                const auto 治理 = 需求服务->读取需求治理信息(项.外部服务承接消息->需求节点);
-                if (!当前任务 || 当前任务->需求节点 != 项.外部服务承接消息->需求节点
-                    || !治理 || !治理->完整目标 || 治理->外部要求节点 != 材料包.要求节点)
+                if (!当前任务 || 当前任务->需求节点 != 项.外部服务承接消息->需求节点)
                     throw std::logic_error("complete service receipt formal identity mismatch");
             }
-            const auto 采用 = 需求服务->建立或取得外部服务需求已核验(材料包);
-            结果.外部服务需求采用 = 采用;
+            const 新外部服务需求采用结果* 已知前缀=nullptr;
+            if(项.外部服务采用材料)已知前缀=&*项.外部服务采用材料;
+            const auto 采用 = 需求服务->建立或取得外部服务需求已核验(材料包,std::nullopt,已知前缀);
+            if(!项.外部服务采用材料)项.外部服务采用材料.emplace();
+            auto& 已知=*项.外部服务采用材料;
+            if(采用.需求节点) {
+                if(已知.需求节点&&已知.需求节点!=采用.需求节点)
+                    throw std::logic_error("external adoption demand prefix changed");
+                已知.需求节点=采用.需求节点;
+            }
+            if(采用.需求列表项节点) {
+                if(已知.需求列表项节点&&已知.需求列表项节点!=采用.需求列表项节点)
+                    throw std::logic_error("external adoption list prefix changed");
+                已知.需求列表项节点=采用.需求列表项节点;
+            }
+            已知.状态=采用.状态;
+            结果.外部服务需求采用 = 已知;
+            if(采用.状态==新外部服务需求采用状态::前提已变化
+                ||采用.状态==新外部服务需求采用状态::资源失败)return std::nullopt;
             if (采用.状态 == 新外部服务需求采用状态::材料待完善
                 || 采用.状态 == 新外部服务需求采用状态::需重新确认) {
                 结果.状态 = 新自我消息处理状态::等待材料;
@@ -1754,16 +1937,17 @@ struct 新_自我线程类::实现 final {
                 结果.状态 = 新自我消息处理状态::入口拒绝; return 结果;
             }
             if ((采用.状态 != 新外部服务需求采用状态::已建立
-                    && 采用.状态 != 新外部服务需求采用状态::已复用) || !采用.需求节点)
+                    && 采用.状态 != 新外部服务需求采用状态::已复用)
+                || !采用.需求节点||!采用.需求列表项节点)
                 throw std::logic_error("complete service demand adoption failed");
             if (结果.任务承接) {
                 const auto& 承接 = *结果.任务承接;
-                const auto 治理 = 需求服务->读取需求治理信息(*采用.需求节点);
-                if (!治理 || !治理->完整目标 || 治理->外部要求节点 != 材料包.要求节点
+                // D/R/确认/完整目标/list由需求owner的可抛链统一正式核验。
+                if (!项.外部服务承接消息||项.外部服务承接消息->需求节点!=采用.需求节点
                     || !承接.承接 || !承接.承接->任务)
                     throw std::logic_error("complete service demand task receipt unreadable");
                 const auto 当前任务 = 任务服务->获取任务(承接.承接->任务->节点);
-                if (!当前任务 || 当前任务->需求节点 != 治理->节点)
+                if (!当前任务 || 当前任务->需求节点 != *采用.需求节点)
                     throw std::logic_error("complete service demand task identity changed");
                 结果.状态 = 新自我消息处理状态::任务已承接;
                 return 结果;
@@ -1795,164 +1979,123 @@ struct 新_自我线程类::实现 final {
             default: throw std::logic_error("external service acceptance rejected formal demand");
             }
         } catch (const std::bad_alloc&) { return std::nullopt;
+        } catch (const std::length_error&) { return std::nullopt;
         } catch (...) {
             工程异常终止(L"新_自我线程类.cpp", __LINE__, L"处理完整服务需求材料", L"完整需求信息包交接不变量异常");
         }
     }
 
-    std::optional<新自我消息处理结果> 处理服务需求取得反馈(消息项& 项) noexcept {
+    新自我消息接收结果 接纳行动请求(const 新行动请求承接来源& source) noexcept {
+        const auto& key=source.需求来源.键;
+        if(!有效(key.接收消息节点)||!有效(source.需求来源.采用含义节点)
+            ||!有效(source.被认知需求节点)||!有效(source.来源人类节点)||!有效(source.受请求者节点)
+            ||key.原文起点>=key.原文终点||key.根出现路径.empty()
+            ||std::any_of(key.根出现路径.begin(),key.根出现路径.end(),[](auto n){return n<0;}))return {};
         try {
-            新自我消息处理结果 结果;
-            结果.原消息 = 项.消息;
-            if (!任务管理 || !任务服务 || !需求服务 || !项.消息.服务需求取得反馈)
-                throw std::logic_error("service acquisition dependencies missing");
-            const auto& 定位 = *项.消息.服务需求取得反馈;
-            // 已交给manager的future不被后来的当前状态变化抛弃。
-            if (项.管理结果.valid()) {
-                if (项.管理结果.wait_for(std::chrono::milliseconds(0)) != std::future_status::ready)
-                    return std::nullopt;
-                const auto 承接 = 项.管理结果.get();
-                if (!项.服务需求承接消息 || 承接.原消息 != *项.服务需求承接消息)
-                    throw std::logic_error("service acquisition acceptance receipt mismatch");
-                结果.任务承接 = 承接;
-                if (承接.状态 == 新任务承接处理状态::已承接
-                    || 承接.状态 == 新任务承接处理状态::既有终结) {
-                    const auto 当前 = 任务服务->读回服务需求取得结果(定位.任务节点, 定位.执行实例节点);
-                    if (当前.状态 == 新任务操作状态::任务状态不允许) {
-                        结果.状态 = 新自我消息处理状态::任务结果定位已变化; return 结果;
-                    }
-                    if (当前.状态 != 新任务操作状态::已找到
-                        && 当前.状态 != 新任务操作状态::状态材料不足)
-                        throw std::logic_error("service execution fresh result unreadable");
-                    if (!当前.确认节点) {
-                        结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                    }
-                    if (当前.采用需求节点 != 项.服务需求承接消息->需求节点 || !当前.采用任务节点)
-                        throw std::logic_error("service execution receipt has no unique formal D/T");
-                    结果.状态 = 新自我消息处理状态::任务已承接;
-                    return 结果;
-                }
-                if (承接.状态 == 新任务承接处理状态::停止取消) {
-                    结果.状态 = 新自我消息处理状态::停止取消;
-                    return 结果;
-                }
-                // 回执可能因确认失效或定位变化而没有建立；独立复核区分业务变化与工程错。
-                const auto 当前 = 任务服务->读回服务需求取得结果(定位.任务节点, 定位.执行实例节点);
-                if (当前.状态 == 新任务操作状态::任务状态不允许
-                    || (当前.状态 == 新任务操作状态::状态材料不足 && !当前.确认节点)) {
-                    结果.状态 = 新自我消息处理状态::等待材料;
-                    return 结果;
-                }
-                throw std::logic_error("service acquisition task association failed");
+            std::lock_guard lock(状态互斥);
+            if(停止已请求||线程已完成)return {新自我消息接收状态::已停止接收,{}};
+            if(!线程已进入)return {新自我消息接收状态::尚未启动,{}};
+            if(!消息配置)return {新自我消息接收状态::尚未配置,{}};
+            for(const auto& item:活动消息) {
+                if(!item->消息.行动请求来源
+                    ||item->消息.行动请求来源->需求来源.采用含义节点!=source.需求来源.采用含义节点)continue;
+                if(*item->消息.行动请求来源!=source)return {新自我消息接收状态::身份冲突,{}};
+                return {新自我消息接收状态::精确重复,item->结果};
             }
-            const auto 读回 = 任务服务->读回服务需求取得结果(定位.任务节点, 定位.执行实例节点);
-            if (读回.状态 == 新任务操作状态::任务状态不允许) {
-                结果.状态 = 新自我消息处理状态::任务结果定位已变化;
-                return 结果;
+            if(普通消息数量已加锁()>=消息配置->邮箱容量)return {新自我消息接收状态::邮箱已满,{}};
+            const auto item=std::make_shared<消息项>();
+            item->消息.消息编号=取得自动消息编号();
+            if(!item->消息.消息编号)throw std::logic_error("action request self message identity exhausted");
+            item->消息.类型=新自我消息类型::行动请求承接;item->消息.行动请求来源=source;
+            item->可处理时点=std::chrono::steady_clock::now();
+            活动消息.push_back(item);状态变化.notify_all();
+            return {新自我消息接收状态::已接收,item->结果};
+        }catch(const std::bad_alloc&){return {新自我消息接收状态::资源失败,{}};}
+        catch(const std::length_error&){return {新自我消息接收状态::资源失败,{}};}
+        catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"接纳行动请求",L"自我请求邮箱接纳不变量异常。");}
+    }
+
+    std::optional<新自我消息处理结果> 处理行动请求承接(消息项& 项) {
+        try {
+        if(!任务管理||!任务服务||!需求服务||!初始化结果
+            ||!初始化结果->自我存在||!初始化结果->完成服务需求||!项.消息.行动请求来源)
+            throw std::logic_error("action request adoption dependencies missing");
+        新自我消息处理结果 out;out.原消息=项.消息;
+        const auto& source=*项.消息.行动请求来源;
+        if(source.受请求者节点!=*初始化结果->自我存在)
+            throw std::logic_error("action request addressee differs from self");
+        if(项.管理结果.valid()) {
+            if(项.管理结果.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready)return {};
+            const auto receipt=项.管理结果.get();
+            if(!项.外部服务承接消息||receipt.原消息!=*项.外部服务承接消息)
+                throw std::logic_error("action request acceptance receipt mismatch");
+            out.任务承接=receipt;out.行动请求采用=项.行动请求采用材料;
+            if(receipt.状态==新任务承接处理状态::停止取消) {
+                out.状态=新自我消息处理状态::停止取消;return out;
             }
-            if (读回.状态 != 新任务操作状态::已找到
-                && 读回.状态 != 新任务操作状态::状态材料不足)
-                throw std::logic_error("service acquisition execution cannot be read");
-            if (!读回.确认节点) {
-                结果.状态 = 新自我消息处理状态::等待材料;
-                return 结果;
-            }
-            const auto 任务 = 任务服务->获取任务(定位.任务节点);
-            const auto 需求 = 任务 ? 需求服务->获取需求(任务->需求节点) : std::nullopt;
-            if (!任务 || !需求) throw std::logic_error("service acquisition demand cannot be read");
-            if (需求->活动状态 != 新需求活动状态::活动) {
-                结果.状态 = 新自我消息处理状态::等待材料;
-                return 结果;
-            }
-            if (读回.来源需求节点) {
-                // 消息只定位X。原D、R、C均从各自owner重读，绝不采用消息副本。
-                const auto 来源D = 需求服务->获取需求(*读回.来源需求节点);
-                if (!来源D || 来源D->执行域 != 新需求执行域::被认知 || !来源D->认知来源
-                    || !来源D->认知来源->来源要求节点
-                    || 来源D->认知来源->内容确认节点 != *读回.确认节点) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-                const auto C = 需求服务->复核服务要求确认语义(*读回.确认节点);
-                if (C.状态 == 新服务要求确认状态::需重新确认) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-                if (C.状态 != 新服务要求确认状态::当前有效 || !C.确认)
-                    throw std::logic_error("service source demand confirmation unreadable");
-                const auto R = 需求服务->读取部分服务要求(*来源D->认知来源->来源要求节点);
-                if (R.状态 == 新部分服务要求读取状态::材料不存在) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-                if (R.状态 != 新部分服务要求读取状态::已读取 || !R.材料)
-                    throw std::logic_error("service source requirement unreadable");
-                if (C.确认->理解节点 != 来源D->认知来源->理解节点
-                    || C.确认->来源要求节点 != 来源D->认知来源->来源要求节点
-                    || C.确认->来源人类节点 != 来源D->需求主体存在节点
-                    || C.确认->目标存在节点 != 来源D->目标存在节点 || C.确认->目标 != 来源D->目标
-                    || C.确认->目标存在节点 != C.确认->来源人类节点
-                    || R.材料->来源人类节点 != 来源D->需求主体存在节点
-                    || R.材料->理解节点 != C.确认->理解节点 || R.材料->确认节点 != C.确认->确认节点
-                    || !查询服务要求缺项(*R.材料).empty()
-                    || R.材料->已知目标.目标存在节点 != C.确认->目标存在节点
-                    || R.材料->已知目标.目标特征类型概念节点 != C.确认->目标.目标特征类型概念节点
-                    || R.材料->已知目标.目标形式 != C.确认->目标.目标形式
-                    || R.材料->已知目标.目标值域概念节点 != C.确认->目标.目标值域概念节点
-                    || R.材料->已知目标.目标比较关系概念节点 != C.确认->目标.目标比较关系概念节点
-                    || R.材料->已知目标.目标变化方向 != C.确认->目标.目标变化方向) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-                const auto fresh = 任务服务->读回服务需求取得结果(定位.任务节点, 定位.执行实例节点);
-                if (fresh.来源需求节点 != 读回.来源需求节点 || fresh.确认节点 != 读回.确认节点) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-            }
-            const auto 采用 = 需求服务->建立或取得服务要求需求已核验(
-                *读回.确认节点, 定位.执行实例节点);
-            if (采用.状态 == 新服务要求需求建立状态::需重新确认) {
-                结果.状态 = 新自我消息处理状态::等待材料;
-                return 结果;
-            }
-            if ((采用.状态 != 新服务要求需求建立状态::已建立
-                    && 采用.状态 != 新服务要求需求建立状态::已复用)
-                || !采用.建立结果 || !采用.建立结果->需求节点)
-                throw std::logic_error("service acquisition demand adoption failed");
-            if (!项.服务需求承接消息) {
-                新任务承接消息 消息;
-                消息.消息编号 = 项.消息.消息编号;
-                消息.需求节点 = *采用.建立结果->需求节点;
-                消息.依据 = 新任务承接依据::自我服务需求采用;
-                消息.服务需求取得来源 = 定位;
-                项.服务需求承接消息 = 消息;
-            } else if (项.服务需求承接消息->需求节点 != 采用.建立结果->需求节点) {
-                throw std::logic_error("same acquisition execution adopted another demand");
-            }
-            const auto 接收 = 任务管理->提交服务需求执行承接(*项.服务需求承接消息);
-            switch (接收.状态) {
-            case 新任务承接接收状态::已接收:
-            case 新任务承接接收状态::精确重复:
-                if (!接收.处理结果.valid()) throw std::logic_error("missing acquisition acceptance future");
-                项.管理结果 = 接收.处理结果;
-                return std::nullopt;
-            case 新任务承接接收状态::邮箱已满:
-            case 新任务承接接收状态::资源失败:
-            case 新任务承接接收状态::尚未启动:
-                return std::nullopt;
-            case 新任务承接接收状态::已停止接收:
-                结果.状态 = 新自我消息处理状态::任务管理未就绪;
-                return 结果;
-            case 新任务承接接收状态::入口拒绝: {
-                const auto 当前 = 任务服务->读回服务需求取得结果(定位.任务节点, 定位.执行实例节点);
-                if (当前.状态 == 新任务操作状态::任务状态不允许
-                    || (当前.状态 == 新任务操作状态::状态材料不足 && !当前.确认节点)) {
-                    结果.状态 = 新自我消息处理状态::等待材料; return 结果;
-                }
-                throw std::logic_error("service execution acceptance unexpectedly rejected");
-            }
-            default: throw std::logic_error("acquisition acceptance message rejected");
-            }
-        } catch (...) {
-            工程异常终止(L"新_自我线程类.cpp", __LINE__,
-                L"采用服务需求", L"正式取得材料、需求发布或任务交接工程故障");
+            if(receipt.状态!=新任务承接处理状态::已承接
+                &&receipt.状态!=新任务承接处理状态::已重新启用
+                &&receipt.状态!=新任务承接处理状态::既有终结
+                &&receipt.状态!=新任务承接处理状态::需求当前已满足)
+                throw std::logic_error("action request task acceptance failed");
+            if(!项.行动请求自我需求||!receipt.承接||!receipt.承接->任务)
+                throw std::logic_error("action request accepted task payload missing");
+            const auto demand=需求服务->读取需求治理信息(*项.行动请求自我需求);
+            const auto task=任务服务->获取任务(receipt.承接->任务->节点);
+            if(!demand||!demand->完整目标||demand->执行域!=新需求执行域::自我执行
+                ||demand->需求主体存在节点!=source.受请求者节点
+                ||demand->父需求节点!=初始化结果->完成服务需求
+                ||demand->来源类型!=新需求来源类型::行动请求
+                ||demand->行动请求来源!=std::optional{source}
+                ||!task||task->需求节点!=demand->节点)
+                throw std::logic_error("action request formal demand task readback mismatch");
+            out.状态=新自我消息处理状态::任务已承接;return out;
         }
+        if(停止源.stop_requested()) {
+            out.状态=新自我消息处理状态::停止取消;
+            out.行动请求采用=项.行动请求采用材料;return out;
+        }
+        // 首版正式请求全部承接：不读取权限、安全、合理性或方法可用性。
+        const auto adopted=需求服务->建立或取得行动请求需求已核验(source,*初始化结果->完成服务需求);
+        switch(adopted.状态) {
+        case 新行动请求采用状态::资源失败:
+        case 新行动请求采用状态::前提已变化:
+        case 新行动请求采用状态::依赖未就绪:return {};
+        case 新行动请求采用状态::已建立:
+        case 新行动请求采用状态::已复用:break;
+        default:throw std::logic_error("formal action request demand adoption inconsistent");
+        }
+        if(!adopted.需求节点||!adopted.需求列表项节点)
+            throw std::logic_error("action request adoption success payload missing");
+        if(项.行动请求自我需求&&项.行动请求自我需求!=adopted.需求节点)
+            throw std::logic_error("same action request adopted another self demand");
+        项.行动请求自我需求=adopted.需求节点;项.行动请求采用材料=adopted;
+        if(停止源.stop_requested()) {
+            out.状态=新自我消息处理状态::停止取消;out.行动请求采用=adopted;return out;
+        }
+        if(!项.外部服务承接消息) {
+            新任务承接消息 message;
+            message.消息编号=项.消息.消息编号;message.需求节点=*adopted.需求节点;
+            message.依据=新任务承接依据::行动请求;message.行动请求来源=source;
+            项.外部服务承接消息=std::move(message);
+        }
+        const auto accepted=任务管理->提交行动请求需求承接(*项.外部服务承接消息);
+        switch(accepted.状态) {
+        case 新任务承接接收状态::已接收:
+        case 新任务承接接收状态::精确重复:
+            if(!accepted.处理结果.valid())throw std::logic_error("action request manager future missing");
+            项.管理结果=accepted.处理结果;return {};
+        case 新任务承接接收状态::邮箱已满:
+        case 新任务承接接收状态::资源失败:
+        case 新任务承接接收状态::尚未启动:return {};
+        case 新任务承接接收状态::已停止接收:
+            out.状态=新自我消息处理状态::任务管理未就绪;out.行动请求采用=adopted;return out;
+        default:throw std::logic_error("action request manager rejected formal self demand");
+        }
+        }catch(const std::bad_alloc&){return {};}
+        catch(const std::length_error&){return {};}
+        catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理行动请求承接",L"正式请求承接或任务回执不变量异常。",e.what());}
+        catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理行动请求承接",L"正式请求承接发生未知工程异常。");}
     }
 
     // 调用者持有状态互斥。安全根明确“需增加”时才形成普通自动承接；
@@ -2164,7 +2307,29 @@ struct 新_自我线程类::实现 final {
         return 目标.集合目标 ? 二次特征算法::特征材料相似度 : 二次特征算法::有向特征差值;
     }
 
+    新引用内容目标状态 复核内容子需求投影(const 新任务条件子需求项& 目标,
+        std::optional<稳定编码> 已发布需求={}) const {
+            if(!目标.引用内容定位||!目标.目标区间组.empty()||目标.单位||目标.集合目标)
+                return 新引用内容目标状态::定义不合法;
+            if(已发布需求){
+                const auto D=需求服务->获取需求(*已发布需求);
+                if(!D)throw std::logic_error("已发布内容子需求不可读");
+                if(D->活动状态!=新需求活动状态::活动)return 新引用内容目标状态::引用前提已变化;
+            }
+            新需求目标定义 定义;定义.目标特征类型概念节点=目标.目标特征类型概念节点;
+            定义.目标形式=新需求目标形式::值;定义.目标值域概念节点=目标.目标值域概念节点;定义.引用内容定位=目标.引用内容定位;
+            const auto 读=需求服务->求值引用内容条件目标({目标.目标存在节点,定义});
+            if(读.状态==新引用内容目标状态::已满足||读.状态==新引用内容目标状态::未满足||读.状态==新引用内容目标状态::分支待定)
+                return 读.实际特征节点==std::optional<稳定编码>{目标.实际特征节点} ? 读.状态 : 新引用内容目标状态::引用前提已变化;
+            return 读.状态;
+    }
     bool 子需求目标投影一致(const 新任务条件子需求项& 目标) const {
+        if(目标.引用内容定位) {
+            const auto s=复核内容子需求投影(目标);
+            if(s==新引用内容目标状态::资源失败)throw std::bad_alloc{};
+            if(s==新引用内容目标状态::定义不合法)throw std::logic_error("正式内容子目标定义损坏");
+            return s==新引用内容目标状态::已满足||s==新引用内容目标状态::未满足||s==新引用内容目标状态::分支待定;
+        }
         const auto 事实 = 世界树服务->获取事实服务引用();
         const auto 域 = 事实.特征概念服务.获取特征概念(目标.目标值域概念节点);
         if (!域 || 域->单位 != 目标.单位) return false;
@@ -2183,13 +2348,81 @@ struct 新_自我线程类::实现 final {
     bool 正式条件子需求一致(const 新子需求采用项& 采用, 稳定编码 父需求, 稳定编码 父任务) const {
         if (!采用.需求节点) return false;
         const auto d = 需求服务->获取需求(*采用.需求节点);
+        if(采用.来源前驱模板) {
+            if(采用.原提议!=新任务条件子需求项{}||!采用.来源前驱具体目标||!d
+                ||d->父需求节点!=父需求||d->来源类型!=新需求来源类型::任务子目标
+                ||d->来源承接节点!=父任务||d->执行域!=新需求执行域::自我执行
+                ||d->复合来源||新需求完整目标{d->目标存在节点,d->目标}!=*采用.来源前驱具体目标)
+                throw std::logic_error("来源子需求固定身份或具体目标损坏");
+            const bool 仍活动=d->活动状态==新需求活动状态::活动;
+            const auto& 模板=*采用.来源前驱模板;
+            const auto& 目标=*采用.来源前驱具体目标;
+            if(目标.目标.目标形式!=新需求目标形式::值
+                ||目标.目标.目标特征类型概念节点!=模板.目标槽类型
+                ||目标.目标.目标值域概念节点!=模板.要求概念
+                ||目标.目标.目标变化方向||目标.目标.新增成员来源见证)
+                throw std::logic_error("来源子需求具体目标与模板不符");
+            if(模板.种类==新来源前驱前端种类::取得服务对象) {
+                if(采用.来源前驱实例||模板.H||模板.D||!模板.正式根路径.empty()
+                    ||目标.目标.引用内容定位||!目标.目标.目标比较关系概念节点)
+                    throw std::logic_error("来源H前提混入内容实例或非法比较");
+                const auto 事实=世界树服务->获取事实服务引用();
+                const auto 域=事实.特征概念服务.获取特征概念(模板.要求概念);
+                const auto 比较=事实.二次特征概念服务.获取二次特征概念(*目标.目标.目标比较关系概念节点);
+                const bool 比较合法=域&&域->材料类型==特征概念材料物理类型::存在节点引用
+                    &&std::holds_alternative<特征概念存在引用值域>(域->值域)
+                    &&比较&&比较->算法==二次特征算法::特征材料相似度
+                    &&比较->输入定义组==子需求比较输入(模板.目标槽类型)
+                    &&比较->参照特征概念节点==模板.要求概念
+                    &&std::find(比较->结果域种类组.begin(),比较->结果域种类组.end(),
+                        二次特征结果域种类::包含于参照值域)!=比较->结果域种类组.end();
+                if(!比较合法)throw std::logic_error("来源H前提正式引用域或比较定义损坏");
+                return 仍活动;
+            }
+            if((模板.种类!=新来源前驱前端种类::既有需求内容
+                    &&模板.种类!=新来源前驱前端种类::待实例化需求内容)
+                ||!采用.来源前驱实例||!模板.H||目标.目标.目标比较关系概念节点)
+                throw std::logic_error("来源内容子需求缺少固定实例或混入比较");
+            const auto& 实例=*采用.来源前驱实例;
+            if(!实例.骨架就绪||实例.键.父取得任务!=父任务||实例.父需求!=父需求
+                ||实例.键.服务对象!=*模板.H||目标.目标存在节点!=*模板.H
+                ||实例.键.目标槽类型!=模板.目标槽类型||实例.键.正式根路径!=模板.正式根路径
+                ||实例.完整内容概念!=模板.要求概念
+                ||实例.复用指定已有需求!=(模板.种类==新来源前驱前端种类::既有需求内容)
+                ||(实例.复用指定已有需求 ? 模板.D!=实例.需求节点 : 模板.D.has_value())
+                ||目标.目标.引用内容定位!=std::optional<新需求引用内容定位>{新需求引用内容定位{实例.需求节点,模板.正式根路径}})
+                throw std::logic_error("来源内容子需求固定实例与模板不符");
+            const auto 读回=任务服务->读取来源前驱目标实例(实例.键);
+            switch(读回.状态) {
+            case 新服务取得目标实例状态::资源失败:throw std::bad_alloc{};
+            case 新服务取得目标实例状态::前提已变化:case 新服务取得目标实例状态::依赖未就绪:
+            case 新服务取得目标实例状态::已出生待补骨架:return false;
+            case 新服务取得目标实例状态::已复用:
+                if(读回.信息!=采用.来源前驱实例||读回.完整保护.empty())
+                    throw std::logic_error("来源内容实例成功读回与固定身份不符");
+                return 仍活动;
+            default:throw std::logic_error("来源内容固定实例正式读取状态不合法");
+            }
+        }
+        if(采用.来源前驱实例||采用.来源前驱具体目标)return false;
         const auto& 目标 = 采用.原提议;
+        if(目标.引用内容定位) {
+            return d&&d->父需求节点==父需求&&d->来源类型==新需求来源类型::任务子目标
+                &&d->来源承接节点==父任务&&d->目标存在节点==目标.目标存在节点
+                &&!d->复合来源
+                &&d->目标.目标形式==新需求目标形式::值&&!d->目标.目标比较关系概念节点&&!d->目标.目标变化方向
+                &&d->目标.目标特征类型概念节点==目标.目标特征类型概念节点&&d->目标.目标值域概念节点==目标.目标值域概念节点
+                &&d->目标.引用内容定位==目标.引用内容定位&&目标.目标区间组.empty()&&!目标.单位&&!目标.集合目标;
+        }
         if (!d || d->父需求节点 != 父需求 || d->来源类型 != 新需求来源类型::任务子目标
             || d->来源承接节点 != 父任务 || d->目标存在节点 != 目标.目标存在节点
             || d->活动状态 == 新需求活动状态::失活 || d->目标.目标形式 != 新需求目标形式::值
             || d->目标.目标特征类型概念节点 != 目标.目标特征类型概念节点
             || d->目标.目标值域概念节点 != 目标.目标值域概念节点
             || d->目标.目标变化方向 || !d->目标.目标比较关系概念节点 || !子需求目标投影一致(目标)) return false;
+        if(目标.新增成员见证要求) {
+            if(!d->目标.新增成员来源见证||d->目标.新增成员来源见证->要求!=*目标.新增成员见证要求)return false;
+        } else if(d->目标.新增成员来源见证)return false;
         const auto 事实 = 世界树服务->获取事实服务引用();
         const auto 比较 = 事实.二次特征概念服务.获取二次特征概念(*d->目标.目标比较关系概念节点);
         return 比较 && 比较->算法 == 子需求比较算法(目标)
@@ -2236,22 +2469,36 @@ struct 新_自我线程类::实现 final {
             const auto 事实 = 世界树服务->获取事实服务引用();
             auto& 概念服务 = 事实.二次特征概念服务;
             const auto 来源一致 = [&](const 新任务条件子需求提议& 当前) {
+                if(!当前.分解依据||!原提议.分解依据)return false;
+                const auto& 今=*当前.分解依据;
+                const auto& 原=*原提议.分解依据;
                 return (当前.状态 == 新任务条件子需求提议状态::已形成
                         || 当前.状态 == 新任务条件子需求提议状态::无需子需求
                         || 当前.状态 == 新任务条件子需求提议状态::材料未到)
-                    && 当前.分解依据 && 原提议.分解依据
-                    && 当前.分解依据 == 原提议.分解依据
                     && 当前.任务节点 == 原提议.任务节点
                     && 当前.父需求节点 == 原提议.父需求节点
                     && 当前.父需求目标存在节点 == 原提议.父需求目标存在节点
                     && 当前.父需求目标 == 原提议.父需求目标
-                    && 当前.方法实例节点 == 原提议.方法实例节点
-                    && 当前.本能采用 == 原提议.本能采用
                     && 当前.方法节点 == 原提议.方法节点
                     && 当前.配对节点 == 原提议.配对节点
-                    && 当前.条件结果 == 原提议.条件结果
-                    && 当前.参数绑定组 == 原提议.参数绑定组
-                    && 当前.已知条件项组 == 原提议.已知条件项组;
+                    && 今.来源方法节点==原.来源方法节点&&今.来源配对节点==原.来源配对节点
+                    && 今.来源条件节点==原.来源条件节点&&今.来源结果节点==原.来源结果节点
+                    && 今.参数要求组==原.参数要求组&&今.原始条件==原.原始条件
+                    && 今.结果==原.结果&&今.线性关系组==原.线性关系组
+                    && 今.执行分支节点==原.执行分支节点;
+            };
+            const auto 本项等材料 = [&](const 新任务条件子需求提议& 当前,
+                                       const 新任务条件子需求项& 目标) {
+                if(!当前.分解依据)return true;
+                const auto& 未解析=当前.分解依据->未解析条件序号组;
+                const auto 未取得=[&](std::uint64_t 序号){
+                    return std::find(未解析.begin(),未解析.end(),序号)!=未解析.end();
+                };
+                if(!目标.集合目标)return 未取得(目标.条件项序号);
+                return std::any_of(原提议.已知条件项组.begin(),原提议.已知条件项组.end(),[&](const auto& x){
+                    return x.目标存在节点==目标.目标存在节点
+                        &&x.目标特征类型概念节点==目标.目标特征类型概念节点&&未取得(x.条件项序号);
+                });
             };
             const auto 输入定义 = [](稳定编码 类型) {
                 return 子需求比较输入(类型);
@@ -2282,6 +2529,12 @@ struct 新_自我线程类::实现 final {
                             停止剩余(新子需求采用状态::结构错误);
                             break;
                         }
+                        if(采用.原提议.引用内容定位){
+                            const auto s=复核内容子需求投影(采用.原提议,采用.需求节点);
+                            if(s==新引用内容目标状态::资源失败||s==新引用内容目标状态::依赖未就绪||s==新引用内容目标状态::未支持)return 等待();
+                            if(s==新引用内容目标状态::引用前提已变化){停止剩余(新子需求采用状态::来源过期);break;}
+                            if(s==新引用内容目标状态::定义不合法){停止剩余(新子需求采用状态::结构错误);break;}
+                        }
                         continue;
                     }
                     if (采用.状态 != 新子需求采用状态::未处理
@@ -2295,19 +2548,53 @@ struct 新_自我线程类::实现 final {
                     }
                     const auto 当前 = 任务服务->提议任务条件子需求(定位.任务节点);
                     if (当前.状态 == 新任务条件子需求提议状态::资源失败) return 等待();
+                    if(当前.状态==新任务条件子需求提议状态::材料未到
+                        ||当前.状态==新任务条件子需求提议状态::需求信息待完善)return 等待();
+                    if(采用.原提议.引用内容定位){
+                        const auto s=复核内容子需求投影(采用.原提议);
+                        if(s==新引用内容目标状态::资源失败||s==新引用内容目标状态::依赖未就绪||s==新引用内容目标状态::未支持)return 等待();
+                        if(s==新引用内容目标状态::引用前提已变化){停止剩余(新子需求采用状态::来源过期);break;}
+                        if(s==新引用内容目标状态::定义不合法){停止剩余(新子需求采用状态::结构错误);break;}
+                        if(当前.状态==新任务条件子需求提议状态::材料未到||当前.状态==新任务条件子需求提议状态::暂不支持)return 等待();
+                    }
                     if (!来源一致(当前)) {
                         停止剩余(新子需求采用状态::来源过期);
                         break;
                     }
                     if (std::find(当前.子需求项组.begin(), 当前.子需求项组.end(),
                             采用.原提议) == 当前.子需求项组.end()) {
+                        if(本项等材料(当前,采用.原提议))return 等待();
                         采用.状态 = 新子需求采用状态::已无需要;
                         continue;
                     }
                     const auto& 目标 = 采用.原提议;
-                    if (!目标投影一致(目标)) {
+                    if (!目标.引用内容定位&&!目标投影一致(目标)) {
                         停止剩余(新子需求采用状态::来源过期);
                         break;
+                    }
+                    if(目标.引用内容定位) {
+                        新普通需求建立请求 请求;
+                        请求.父需求节点=原提议.父需求节点;请求.目标存在节点=目标.目标存在节点;
+                        请求.目标.目标特征类型概念节点=目标.目标特征类型概念节点;
+                        请求.目标.目标形式=新需求目标形式::值;请求.目标.目标值域概念节点=目标.目标值域概念节点;
+                        请求.目标.引用内容定位=目标.引用内容定位;
+                        请求.来源类型=新需求来源类型::任务子目标;请求.来源承接节点=原提议.任务节点;
+                        const auto 建立=需求服务->建立或取得普通需求已核验(请求,true);
+                        if(建立.状态==新需求操作状态::资源失败||建立.状态==新需求操作状态::目标内容依赖未就绪
+                            ||建立.状态==新需求操作状态::目标内容未支持)return 等待();
+                        if(建立.状态==新需求操作状态::前提已变化){停止剩余(新子需求采用状态::来源过期);break;}
+                        if(!建立.需求节点||(建立.状态!=新需求操作状态::已建立&&建立.状态!=新需求操作状态::已复用)){
+                            停止剩余(新子需求采用状态::结构错误);break;
+                        }
+                        采用.需求节点=建立.需求节点;采用.状态=建立.状态==新需求操作状态::已建立 ? 新子需求采用状态::已建立 : 新子需求采用状态::已复用;
+                        if(!正式需求一致(采用)){停止剩余(新子需求采用状态::结构错误);break;}
+                        const auto 当前内容=复核内容子需求投影(目标,采用.需求节点);
+                        if(当前内容==新引用内容目标状态::资源失败||当前内容==新引用内容目标状态::依赖未就绪
+                            ||当前内容==新引用内容目标状态::未支持)return 等待();
+                        if(当前内容==新引用内容目标状态::引用前提已变化){停止剩余(新子需求采用状态::来源过期);break;}
+                        if(当前内容==新引用内容目标状态::定义不合法){停止剩余(新子需求采用状态::结构错误);break;}
+                        {std::lock_guard 锁(状态互斥);请求关联复核已加锁(建立.状态==新需求操作状态::已建立);}
+                        continue;
                     }
                     const auto 输入 = 输入定义(目标.目标特征类型概念节点);
                     const auto 算法 = 目标比较算法(目标);
@@ -2322,29 +2609,23 @@ struct 新_自我线程类::实现 final {
                     const auto 关系 = 概念服务.建立或取得参照结果域概念(
                         *类型.概念节点, 二次特征结果域种类::包含于参照值域);
                     if (关系.状态 == 二次特征概念操作状态::资源失败) return 等待();
-                    const auto 关系信息 = 关系.概念节点
-                        ? 概念服务.获取二次特征概念(*关系.概念节点) : std::nullopt;
-                    if (!关系信息 || (关系.状态 != 二次特征概念操作状态::已建立
-                            && 关系.状态 != 二次特征概念操作状态::已复用)
-                        || 关系信息->二次特征类型根节点 != *类型.概念节点
-                        || 关系信息->算法 != 算法
-                        || 关系信息->输入定义组 != 输入
-                        || 关系信息->参照特征概念节点 != 目标.目标值域概念节点
-                        || std::find(关系信息->结果域种类组.begin(),
-                            关系信息->结果域种类组.end(), 二次特征结果域种类::包含于参照值域)
-                            == 关系信息->结果域种类组.end()) {
+                    if (!关系.概念节点 || (关系.状态 != 二次特征概念操作状态::已建立
+                            && 关系.状态 != 二次特征概念操作状态::已复用)) {
                         停止剩余(新子需求采用状态::结构错误);
                         break;
                     }
                     // 概念建立与需求发布不是跨owner事务，发布前再次检查来源。
                     const auto 发布前 = 任务服务->提议任务条件子需求(定位.任务节点);
                     if (发布前.状态 == 新任务条件子需求提议状态::资源失败) return 等待();
+                    if(发布前.状态==新任务条件子需求提议状态::材料未到
+                        ||发布前.状态==新任务条件子需求提议状态::需求信息待完善)return 等待();
                     if (!来源一致(发布前)) {
                         停止剩余(新子需求采用状态::来源过期);
                         break;
                     }
                     if (std::find(发布前.子需求项组.begin(), 发布前.子需求项组.end(),
                             目标) == 发布前.子需求项组.end()) {
+                        if(本项等材料(发布前,目标))return 等待();
                         采用.状态 = 新子需求采用状态::已无需要;
                         continue;
                     }
@@ -2417,6 +2698,7 @@ struct 新_自我线程类::实现 final {
                     }
                     const auto 身份 = 任务服务->复核已发布条件子需求身份(
                         定位.任务节点, {采用.原提议, *采用.需求节点});
+                    if(采用.原提议.引用内容定位&&身份==新任务已发布条件子需求核验状态::资源失败)return 等待();
                     if (身份 == 新任务已发布条件子需求核验状态::资源失败
                         || 身份 == 新任务已发布条件子需求核验状态::结构不一致)
                         工程异常终止(L"新_自我线程类.cpp", __LINE__,
@@ -2504,7 +2786,8 @@ struct 新_自我线程类::实现 final {
             return 裁决;
         }
         if (!筹办.条件筹办 || !筹办.独立条件筹办
-            || *筹办.条件筹办 != *筹办.独立条件筹办
+            || 筹办.条件筹办->任务节点 != 定位.任务节点
+            || 筹办.独立条件筹办->任务节点 != 定位.任务节点
             || 筹办.独立条件筹办->状态
                 != 新任务治理条件筹办状态::已完成
             || 筹办.独立条件筹办->方法筹办组.empty()) {
@@ -2605,7 +2888,11 @@ struct 新_自我线程类::实现 final {
                 请求.目标变化方向概念节点 = 方向.概念节点;
                 请求.方法头.可能结果概念组 = {*方向.概念节点};
             }
-            if (任务服务->获取任务(t->节点) != t || 需求服务->获取需求(d->节点) != d
+            const auto 当前需求 = 需求服务->获取需求(d->节点);
+            if (任务服务->获取任务(t->节点) != t || !当前需求
+                || 当前需求->目标存在节点 != d->目标存在节点 || 当前需求->目标 != d->目标
+                || 当前需求->需求主体存在节点 != d->需求主体存在节点
+                || 当前需求->执行域 != d->执行域 || 当前需求->活动状态 != d->活动状态
                 || 任务服务->获取当前候选方法材料(t->节点) != c) return false;
             const auto 当前筹办 = 任务管理->读取最近筹办结果(定位.任务节点);
             if (!当前筹办 || 当前筹办->原工作 != 定位.原工作) return false;
@@ -2618,31 +2905,104 @@ struct 新_自我线程类::实现 final {
         }
     }
 
+    // 无适用错误分支：只移交本消息已有的进度，不改变终结原因或重读事实。
+    void 移交因果采用进度(消息项& 项, 新自我消息处理结果& 结果) noexcept {
+        static_assert(std::is_nothrow_move_constructible_v<新自我筹办裁决::因果采用回执>
+            && std::is_nothrow_move_assignable_v<新自我筹办裁决::因果采用回执>);
+        if (项.因果子需求回执) {
+            结果.停止时因果采用进度 = std::move(项.因果子需求回执);
+            项.因果子需求回执.reset();
+        }
+    }
+
+    // 无适用错误分支：只供确已观察到停止的因果分支调用。
+    void 标记因果停止并移交进度(消息项& 项, 新自我消息处理结果& 结果) noexcept {
+        结果.状态 = 新自我消息处理状态::停止取消;
+        移交因果采用进度(项, 结果);
+    }
+
     // 因果子需求不持有M/C/R或实际F；目标由正式因果提议及原D限定。
     新自我消息处理结果 处理因果子需求提议(
         消息项& 项, const 新任务筹办处理结果& 筹办) noexcept {
         新自我消息处理结果 结果;
         结果.原消息 = 项.消息;
         结果.状态 = 新自我消息处理状态::任务筹办需核查;
+#ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
+        主线因果阶段观察 观察{项.消息, 结果};
+#endif
+        HY_SELF_CAUSAL_PHASE(L"处理入口", nullptr, std::nullopt);
+        const auto 停止 = 停止源.get_token();
+        // §8.1/8.2：收件通知置位后，长筹办须有界让回 while 入口，否则 500ms 补扫无法兑现。
         try {
+            const auto 检查停止 = [&] {
+                if (停止.stop_requested()) throw 新任务因果读取取消{};
+                bool 让出 = false;
+                {
+                    std::lock_guard 锁(状态互斥);
+                    让出 = 接收认知 && 接收认知待唤醒;
+                }
+                if (让出) throw 接收认知让出最终{};
+            };
+            const auto 完整提议 = [](新任务因果提议可停止结果 读取) {
+                if (std::holds_alternative<新任务因果读取取消>(读取)) throw 新任务因果读取取消{};
+                if (std::get<新任务因果子需求提议>(读取).状态 == 新任务因果子需求提议状态::资源延后)
+                    throw std::bad_alloc{};
+                return std::get<新任务因果子需求提议>(std::move(读取));
+            };
+            const auto 完整接收 = [](新自我因果筹办提交结果 读取) {
+                if (std::holds_alternative<新任务因果读取取消>(读取)) throw 新任务因果读取取消{};
+                return std::get<新自我筹办裁决接收状态>(读取);
+            };
+            const auto 读取当前提议 = [&]() -> 新任务因果提议可停止结果 {
+                if (停止.stop_requested()) return 新任务因果读取取消{};
+                auto 边 = 任务管理->读取因果等待边(停止);
+                if (std::holds_alternative<新任务因果读取取消>(边)) return 新任务因果读取取消{};
+                检查停止();
+                auto 当前 = 任务服务->提议任务因果子需求(项.消息.筹办反馈->任务节点,
+                    std::get<std::vector<新因果任务等待边>>(边), 停止);
+                检查停止();
+                return 当前;
+            };
+            检查停止();
             if (!任务管理 || !项.消息.筹办反馈) return 结果;
             const auto& 定位 = *项.消息.筹办反馈;
             if (!项.因果子需求回执 && 筹办.因果子需求提议
                 && 筹办.因果子需求提议->状态 == 新任务因果子需求提议状态::路径待选择) {
                 const auto& 待选 = *筹办.因果子需求提议;
                 if (!待选.路径选择未确定 || 待选.候选依据组.empty() || 待选.依据
-                    || !待选.子需求项组.empty() || !待选.继续推进任务组.empty())
+                    || !待选.子需求项组.empty() || !待选.继续推进任务组.empty()
+                    || !待选.来源前驱前端组.empty())
                     throw std::logic_error("待选因果路径伪装已采用依据或子需求");
-                const auto 当前 = 任务服务->提议任务因果子需求(
-                    定位.任务节点, 任务管理->读取因果等待边());
+                HY_SELF_CAUSAL_PHASE(L"待选路径逆推前", nullptr, std::nullopt);
+                const auto 当前 = 完整提议(读取当前提议());
+                检查停止();
+                HY_SELF_CAUSAL_PHASE(L"待选路径逆推后", 主线因果状态文字(当前.状态), std::nullopt);
+                if (当前.状态 == 新任务因果子需求提议状态::材料已变化) {
+                    结果.状态 = 新自我消息处理状态::已交接未收回;
+                    return 结果;
+                }
                 新自我筹办裁决 裁决;
                 裁决.定位 = 定位;
-                裁决.状态 = 当前 == 待选 ? 新自我筹办裁决状态::等待材料
+                const auto& 原目标 = 待选.候选依据组.front().请求;
+                const bool 同一目标 = !当前.候选依据组.empty()
+                    && std::all_of(当前.候选依据组.begin(), 当前.候选依据组.end(), [&](const auto& 依据) {
+                        const auto& 请求 = 依据.请求;
+                        return 请求.父任务节点 == 定位.任务节点
+                            && 请求.父任务节点 == 原目标.父任务节点 && 请求.父需求节点 == 原目标.父需求节点
+                            && 请求.目标存在节点 == 原目标.目标存在节点 && 请求.目标 == 原目标.目标;
+                    });
+                裁决.状态 = 当前.状态 == 新任务因果子需求提议状态::路径待选择
+                    && 同一目标
+                    ? 新自我筹办裁决状态::等待材料
                     : 新自我筹办裁决状态::任务状态变化;
                 // 候选仍保存在manager原筹办结果中；本回执不是路径采用。
                 结果.筹办裁决 = 裁决;
-                const auto 接收 = 任务管理->提交自我筹办裁决(裁决);
+                HY_SELF_CAUSAL_PHASE(L"待选路径裁决前", nullptr, std::nullopt);
+                检查停止();
+                const auto 接收 = 完整接收(任务管理->提交自我因果筹办裁决(裁决, 停止));
+                HY_SELF_CAUSAL_PHASE(L"待选路径裁决后", 主线因果状态文字(接收), std::nullopt);
                 结果.筹办裁决接收状态 = 接收;
+                检查停止();
                 if (接收 == 新自我筹办裁决接收状态::资源失败)
                     结果.状态 = 新自我消息处理状态::已交接未收回;
                 else if (接收 == 新自我筹办裁决接收状态::已接收
@@ -2658,16 +3018,30 @@ struct 新_自我线程类::实现 final {
                         && 筹办.因果子需求提议->状态 != 新任务因果子需求提议状态::无需子需求)) return 结果;
                 新自我筹办裁决::因果采用回执 回执;
                 回执.原提议 = *筹办.因果子需求提议;
-                回执.项组.reserve(回执.原提议.子需求项组.size());
-                for (const auto& 子项 : 回执.原提议.子需求项组) 回执.项组.push_back({子项});
+                回执.项组.reserve(回执.原提议.子需求项组.size()+回执.原提议.来源前驱前端组.size());
+                for (const auto& 子项 : 回执.原提议.子需求项组) {
+                    检查停止();
+                    回执.项组.push_back({子项});
+                }
+                for(const auto& 模板:回执.原提议.来源前驱前端组) {
+                    检查停止();
+                    新子需求采用项 采用;
+                    采用.来源前驱模板=模板;
+                    回执.项组.push_back(std::move(采用));
+                }
                 项.因果子需求回执 = std::move(回执);
             }
             auto& 回执 = *项.因果子需求回执;
             const auto& 原 = 回执.原提议;
             if (!原.依据) throw std::logic_error("因果采用缺少正式依据");
             const auto& 请求 = 原.依据->请求;
+#ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
+            观察.父需求 = 请求.父需求节点;
+#endif
             if (请求.父任务节点 != 定位.任务节点) throw std::logic_error("因果父任务定位不一致");
+            检查停止();
             const auto 事实 = 世界树服务->获取事实服务引用();
+            检查停止();
             auto& 概念服务 = 事实.二次特征概念服务;
             const auto 输入定义 = [](稳定编码 类型) {
                 return 子需求比较输入(类型);
@@ -2681,9 +3055,39 @@ struct 新_自我线程类::实现 final {
             const auto 正式一致 = [&](const 新子需求采用项& 采用) {
                 return 正式条件子需求一致(采用, 请求.父需求节点, 请求.父任务节点);
             };
-            const auto fresh = [&]() {
+            const auto fresh = [&]() -> 新任务因果提议可停止结果 {
                 // 不持self锁进入manager/task；等待边只取manager正式投影。
-                return 任务服务->提议任务因果子需求(定位.任务节点, 任务管理->读取因果等待边());
+                HY_SELF_CAUSAL_PHASE(L"采用fresh逆推前", nullptr, std::nullopt);
+                auto 当前 = 读取当前提议();
+                if (std::holds_alternative<新任务因果读取取消>(当前)) return 新任务因果读取取消{};
+                [[maybe_unused]] const auto& 正常 = std::get<新任务因果子需求提议>(当前);
+                HY_SELF_CAUSAL_PHASE(L"采用fresh逆推后", 主线因果状态文字(正常.状态), std::nullopt);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PROPOSAL_DIFF
+                记录因果提议差异(定位.任务节点, 原, 正常);
+#endif
+                return 当前;
+            };
+            const auto 当前仍需采用 = [&](const 新子需求采用项& 采用) -> std::optional<bool> {
+                const auto 当前 = 完整提议(fresh());
+                if (当前.状态 == 新任务因果子需求提议状态::材料已变化) return std::nullopt;
+                if (!当前.依据 || (当前.状态 != 新任务因果子需求提议状态::已形成
+                    && 当前.状态 != 新任务因果子需求提议状态::无需子需求)) return false;
+                const auto& 当前请求 = 当前.依据->请求;
+                if (当前请求.父任务节点 != 请求.父任务节点 || 当前请求.父需求节点 != 请求.父需求节点
+                    || 当前请求.目标存在节点 != 请求.目标存在节点 || 当前请求.目标 != 请求.目标)
+                    return false;
+                // 只消费当前仍需的这一项目标；其它候选和因果图变化不撤销它。
+                if (采用.来源前驱模板) {
+                    const auto& 目标 = *采用.来源前驱模板;
+                    return std::any_of(当前.来源前驱前端组.begin(), 当前.来源前驱前端组.end(),
+                        [&](const auto& 项) {
+                            return 项.种类 == 目标.种类 && 项.目标槽类型 == 目标.目标槽类型
+                                && 项.要求概念 == 目标.要求概念 && 项.H == 目标.H && 项.D == 目标.D
+                                && 项.正式根路径 == 目标.正式根路径;
+                        });
+                }
+                return std::find(当前.子需求项组.begin(), 当前.子需求项组.end(), 采用.原提议)
+                    != 当前.子需求项组.end();
             };
             const auto 停止剩余 = [&](新子需求采用状态 状态) {
                 for (auto& 采用 : 回执.项组)
@@ -2692,41 +3096,189 @@ struct 新_自我线程类::实现 final {
             };
             if (!回执.已完成处理) {
                 for (auto& 采用 : 回执.项组) {
-                    if (采用.需求节点) {
+                    检查停止();
+                    if(采用.来源前驱模板) {
+                        const auto& 模板=*采用.来源前驱模板;
+                        if(采用.原提议!=新任务条件子需求项{}||原.来源前驱前端组.size()!=1
+                            ||原.来源前驱前端组.front()!=模板||!请求.来源前驱上下文
+                            ||!原.依据->读回.来源前驱读回)
+                            throw std::logic_error("来源前端采用缺少唯一正式模板");
+                        const auto& 配置=请求.来源前驱上下文->配置;
+                        const auto 核正式身份=[&]() {
+                            const auto 读=任务服务->核验因果子需求身份(*原.依据,*采用.需求节点,停止);
+                            if(std::holds_alternative<新任务因果读取取消>(读))throw 新任务因果读取取消{};
+                            return std::get<bool>(读);
+                        };
+                        if(采用.需求节点) {
+                            if(!采用.来源前驱具体目标)
+                                throw std::logic_error("来源子需求前缀缺少具体目标");
+                            // 保留已发布G/R；真实前提变化交manager重新筹办，不回滚或再生D。
+                            if(!正式一致(采用)||!核正式身份()) {
+                                采用.状态=新子需求采用状态::来源过期;
+                                停止剩余(新子需求采用状态::来源过期);break;
+                            }
+                            if(采用.状态==新子需求采用状态::资源失败)
+                                采用.状态=新子需求采用状态::已复用;
+                            continue;
+                        }
+                        if(采用.状态!=新子需求采用状态::未处理&&采用.状态!=新子需求采用状态::资源失败)continue;
+                        新需求完整目标 具体目标;
+                        if(模板.种类==新来源前驱前端种类::取得服务对象) {
+                            if(采用.来源前驱实例||模板.H||模板.D||!模板.正式根路径.empty()
+                                ||模板.目标槽类型!=配置.交互者类型||模板.要求概念!=配置.交互者人类范围)
+                                throw std::logic_error("服务对象前提模板或实例不合法");
+                            const auto 仍需采用=当前仍需采用(采用);
+                            if(!仍需采用.has_value()) {
+                                结果.状态=新自我消息处理状态::已交接未收回;return 结果;
+                            }
+                            if(!*仍需采用){停止剩余(新子需求采用状态::来源过期);break;}
+                            const auto 域=事实.特征概念服务.获取特征概念(模板.要求概念);
+                            const auto* 引用域=域 ? std::get_if<特征概念存在引用值域>(&域->值域) : nullptr;
+                            if(!引用域||引用域->存在概念节点!=配置.人类概念
+                                ||域->材料类型!=特征概念材料物理类型::存在节点引用)
+                                throw std::logic_error("服务对象前提缺少正式人类引用域");
+                            检查停止();
+                            const auto 类型=概念服务.建立或取得默认二次特征概念(
+                                二次特征算法::特征材料相似度,子需求比较输入(模板.目标槽类型),模板.要求概念);
+                            if(类型.状态==二次特征概念操作状态::资源失败)throw std::bad_alloc{};
+                            if(!类型.概念节点||(类型.状态!=二次特征概念操作状态::已建立
+                                &&类型.状态!=二次特征概念操作状态::已复用))
+                                throw std::logic_error("服务对象前提比较类型建立失败");
+                            检查停止();
+                            const auto 关系=概念服务.建立或取得参照结果域概念(
+                                *类型.概念节点,二次特征结果域种类::包含于参照值域);
+                            if(关系.状态==二次特征概念操作状态::资源失败)throw std::bad_alloc{};
+                            if(!关系.概念节点||(关系.状态!=二次特征概念操作状态::已建立
+                                &&关系.状态!=二次特征概念操作状态::已复用))
+                                throw std::logic_error("服务对象前提比较关系建立失败");
+                            检查停止();
+                            具体目标={请求.目标存在节点,{模板.目标槽类型,新需求目标形式::值,
+                                模板.要求概念,关系.概念节点,{}}};
+                        } else {
+                            if((模板.种类!=新来源前驱前端种类::既有需求内容
+                                    &&模板.种类!=新来源前驱前端种类::待实例化需求内容)
+                                ||!模板.H||模板.目标槽类型!=配置.对象需求类型
+                                ||模板.要求概念!=配置.完整被认知需求概念||!模板.正式根路径.empty())
+                                throw std::logic_error("需求内容前端模板不合法");
+                            auto 实例读取=任务服务->建立或取得来源前驱目标实例(*原.依据,模板,停止);
+                            if(std::holds_alternative<新任务因果读取取消>(实例读取))throw 新任务因果读取取消{};
+                            const auto& 实例结果=std::get<新服务取得目标实例结果>(实例读取);
+                            if(实例结果.信息) {
+                                auto 本次前缀=*实例结果.信息;
+                                if(采用.来源前驱实例) {
+                                    auto 固定身份=本次前缀;
+                                    固定身份.骨架就绪=采用.来源前驱实例->骨架就绪;
+                                    if(固定身份!=*采用.来源前驱实例)
+                                        throw std::logic_error("来源前端续接改变固定实例身份");
+                                    // 非成功reader的未确认位不能抹掉此前已确认进度；
+                                    // 是否可继续仍只取本次状态及本次成功材料，不能借旧true放行。
+                                    if(采用.来源前驱实例->骨架就绪
+                                        &&实例结果.状态!=新服务取得目标实例状态::已建立
+                                        &&实例结果.状态!=新服务取得目标实例状态::已复用)
+                                        本次前缀.骨架就绪=true;
+                                }
+                                采用.来源前驱实例=std::move(本次前缀);
+                            }
+                            // 先保存真实出生前缀，再响应停止；不把骨架/绑定半程当成功。
+                            检查停止();
+                            switch(实例结果.状态) {
+                            case 新服务取得目标实例状态::已建立:case 新服务取得目标实例状态::已复用:break;
+                            case 新服务取得目标实例状态::资源失败:case 新服务取得目标实例状态::依赖未就绪:
+                            case 新服务取得目标实例状态::已出生待补骨架:
+                                采用.状态=新子需求采用状态::资源失败;
+                                结果.状态=新自我消息处理状态::已交接未收回;return 结果;
+                            case 新服务取得目标实例状态::前提已变化:case 新服务取得目标实例状态::绑定冲突:
+                            case 新服务取得目标实例状态::输入不适用:
+                                停止剩余(新子需求采用状态::来源过期);break;
+                            default:throw std::logic_error("来源目标实例入口返回非法状态");
+                            }
+                            if(采用.状态==新子需求采用状态::来源过期)break;
+                            if(!实例结果.信息||!实例结果.信息->骨架就绪||实例结果.完整保护.empty())
+                                throw std::logic_error("来源目标实例成功缺少绑定或骨架材料");
+                            const auto& 实例=*实例结果.信息;
+                            if(实例.键!=新服务取得目标实例键{请求.父任务节点,模板.目标槽类型,*模板.H,模板.正式根路径}
+                                ||实例.父需求!=请求.父需求节点||实例.原父目标!=新需求完整目标{请求.目标存在节点,请求.目标}
+                                ||实例.人类概念!=配置.人类概念||实例.需求身份概念!=配置.需求概念
+                                ||实例.完整内容概念!=模板.要求概念
+                                ||实例.复用指定已有需求!=(模板.种类==新来源前驱前端种类::既有需求内容)
+                                ||(实例.复用指定已有需求 ? 模板.D!=实例.需求节点 : 模板.D.has_value()))
+                                throw std::logic_error("来源目标实例完整含义不符");
+                            具体目标.目标存在节点=*模板.H;
+                            具体目标.目标.目标特征类型概念节点=模板.目标槽类型;
+                            具体目标.目标.目标值域概念节点=模板.要求概念;
+                            具体目标.目标.引用内容定位=新需求引用内容定位{实例.需求节点,模板.正式根路径};
+                        }
+                        采用.来源前驱具体目标=具体目标;
+                        新普通需求建立请求 建立请求;
+                        建立请求.父需求节点=请求.父需求节点;
+                        建立请求.目标存在节点=具体目标.目标存在节点;
+                        建立请求.目标=具体目标.目标;
+                        建立请求.来源类型=新需求来源类型::任务子目标;
+                        建立请求.来源承接节点=请求.父任务节点;
+                        检查停止();
+                        const auto 建立=需求服务->建立或取得普通需求已核验(建立请求,true);
+                        if(建立.需求节点)采用.需求节点=建立.需求节点;
+                        if(建立.状态==新需求操作状态::资源失败||建立.状态==新需求操作状态::目标内容依赖未就绪
+                            ||建立.状态==新需求操作状态::目标内容未支持) {
+                            采用.状态=新子需求采用状态::资源失败;
+                            结果.状态=新自我消息处理状态::已交接未收回;return 结果;
+                        }
+                        if(建立.状态==新需求操作状态::前提已变化) {
+                            停止剩余(新子需求采用状态::来源过期);break;
+                        }
+                        if(!采用.需求节点||(建立.状态!=新需求操作状态::已建立&&建立.状态!=新需求操作状态::已复用))
+                            throw std::logic_error("来源内容子需求发布失败");
+                        采用.状态=建立.状态==新需求操作状态::已建立 ? 新子需求采用状态::已建立 : 新子需求采用状态::已复用;
+                        检查停止();
+                        if(!正式一致(采用)||!核正式身份()) {
+                            采用.状态=新子需求采用状态::来源过期;
+                            停止剩余(新子需求采用状态::来源过期);break;
+                        }
+                        {std::lock_guard 锁(状态互斥);请求关联复核已加锁(建立.状态==新需求操作状态::已建立);}
+                        检查停止();
+                        continue;
+                    }
+                    const bool 续接已成立前缀=采用.需求节点&&采用.状态==新子需求采用状态::资源失败
+                        &&采用.原提议.新增成员见证要求.has_value();
+                    if (采用.需求节点&&!续接已成立前缀) {
                         if (!正式一致(采用)) throw std::logic_error("因果已发布子需求读回不一致");
+                        检查停止();
                         continue; // 发布后重试只读；不覆盖首次发布结论。
                     }
                     if (采用.状态 != 新子需求采用状态::未处理 && 采用.状态 != 新子需求采用状态::资源失败) continue;
-                    {
-                        std::lock_guard 锁(状态互斥);
-                        if (停止已请求) { 结果.状态 = 新自我消息处理状态::停止取消; return 结果; }
+                    if (!续接已成立前缀) {
+                        const auto 仍需采用=当前仍需采用(采用);
+                        if(!仍需采用.has_value()) {
+                            结果.状态=新自我消息处理状态::已交接未收回;return 结果;
+                        }
+                        if(!*仍需采用) { 停止剩余(新子需求采用状态::来源过期); break; }
                     }
-                    if (fresh() != 原) { 停止剩余(新子需求采用状态::来源过期); break; }
+                    检查停止();
                     const auto& 目标 = 采用.原提议;
                     if (!投影一致(目标)) throw std::logic_error("因果目标投影与正式域不一致");
+                    HY_SELF_CAUSAL_PHASE(L"比较类型概念建立前", nullptr, std::nullopt);
+                    检查停止();
                     const auto 类型 = 概念服务.建立或取得默认二次特征概念(
                         算法(目标), 输入定义(目标.目标特征类型概念节点), 目标.目标值域概念节点);
+                    HY_SELF_CAUSAL_PHASE(L"比较类型概念建立后", 主线因果状态文字(类型.状态), std::nullopt);
                     if (类型.状态 == 二次特征概念操作状态::资源失败) {
+                        检查停止();
                         结果.状态 = 新自我消息处理状态::已交接未收回; return 结果;
                     }
                     if (!类型.概念节点 || (类型.状态 != 二次特征概念操作状态::已建立
                         && 类型.状态 != 二次特征概念操作状态::已复用)) throw std::logic_error("因果目标比较类型建立失败");
+                    检查停止();
+                    HY_SELF_CAUSAL_PHASE(L"比较关系概念建立前", nullptr, std::nullopt);
                     const auto 关系 = 概念服务.建立或取得参照结果域概念(
                         *类型.概念节点, 二次特征结果域种类::包含于参照值域);
+                    HY_SELF_CAUSAL_PHASE(L"比较关系概念建立后", 主线因果状态文字(关系.状态), std::nullopt);
                     if (关系.状态 == 二次特征概念操作状态::资源失败) {
+                        检查停止();
                         结果.状态 = 新自我消息处理状态::已交接未收回; return 结果;
                     }
                     if (!关系.概念节点 || (关系.状态 != 二次特征概念操作状态::已建立
                         && 关系.状态 != 二次特征概念操作状态::已复用)) throw std::logic_error("因果目标比较关系建立失败");
-                    const auto 关系信息 = 概念服务.获取二次特征概念(*关系.概念节点);
-                    if (!关系信息 || 关系信息->二次特征类型根节点 != *类型.概念节点
-                        || 关系信息->算法 != 算法(目标)
-                        || 关系信息->输入定义组 != 输入定义(目标.目标特征类型概念节点)
-                        || 关系信息->参照特征概念节点 != 目标.目标值域概念节点
-                        || std::find(关系信息->结果域种类组.begin(), 关系信息->结果域种类组.end(),
-                            二次特征结果域种类::包含于参照值域) == 关系信息->结果域种类组.end())
-                        throw std::logic_error("因果目标比较关系读回不一致");
-                    if (fresh() != 原) { 停止剩余(新子需求采用状态::来源过期); break; }
+                    检查停止();
                     新普通需求建立请求 建立请求;
                     建立请求.父需求节点 = 请求.父需求节点;
                     建立请求.目标存在节点 = 目标.目标存在节点;
@@ -2734,45 +3286,59 @@ struct 新_自我线程类::实现 final {
                         目标.目标值域概念节点, 关系.概念节点, {}};
                     建立请求.来源类型 = 新需求来源类型::任务子目标;
                     建立请求.来源承接节点 = 请求.父任务节点;
-                    const auto 建立 = 需求服务->建立或取得普通需求已核验(建立请求, true);
+                    HY_SELF_CAUSAL_PHASE(L"子需求建立复用前", nullptr, std::nullopt);
+                    检查停止();
+                    const auto 建立 = 目标.新增成员见证要求
+                        ?需求服务->建立或取得新增成员见证需求已核验(建立请求,*目标.新增成员见证要求)
+                        :需求服务->建立或取得普通需求已核验(建立请求, true);
+                    HY_SELF_CAUSAL_PHASE(L"子需求建立复用后", 主线因果状态文字(建立.状态), 建立.需求节点);
                     if (建立.需求节点) {
+                        if(采用.需求节点&&采用.需求节点!=建立.需求节点)
+                            throw std::logic_error("因果子需求续接改变已成立需求身份");
                         采用.需求节点 = 建立.需求节点;
-                        采用.状态 = 建立.状态 == 新需求操作状态::已建立
-                            ? 新子需求采用状态::已建立 : 新子需求采用状态::已复用;
                     }
-                    if (建立.状态 == 新需求操作状态::资源失败) {
+                    if(建立.状态==新需求操作状态::前提已变化&&!采用.需求节点){
+                        停止剩余(新子需求采用状态::来源过期);break;
+                    }
+                    if (建立.状态 == 新需求操作状态::资源失败
+                        ||建立.状态==新需求操作状态::前提已变化) {
+                        采用.状态=新子需求采用状态::资源失败; // 私有pending；保留D/K/B并续接唯一出生核心。
+                        检查停止();
                         结果.状态 = 新自我消息处理状态::已交接未收回; return 结果;
                     }
                     if (!采用.需求节点 || (建立.状态 != 新需求操作状态::已建立
-                        && 建立.状态 != 新需求操作状态::已复用) || !正式一致(采用))
+                        && 建立.状态 != 新需求操作状态::已复用))
+                        throw std::logic_error("因果子需求发布失败");
+                    检查停止();
+                    if (!正式一致(采用))
                         throw std::logic_error("因果子需求发布或独立读回失败");
+                    采用.状态=建立.状态==新需求操作状态::已建立
+                        ? 新子需求采用状态::已建立 : 新子需求采用状态::已复用;
+                    检查停止();
                     {
+                        // 已持状态互斥：不可再调检查停止()（其内部会再 lock → resource_deadlock_would_occur）。
                         std::lock_guard 锁(状态互斥);
-                        请求关联复核已加锁(建立.状态 == 新需求操作状态::已建立);
+                        if (停止.stop_requested()) throw 新任务因果读取取消{};
+                        if (接收认知 && 接收认知待唤醒) throw 接收认知让出最终{};
+                        请求关联复核已加锁(建立.状态 == 新需求操作状态::已建立||续接已成立前缀);
                     }
+                    检查停止();
                 }
-                // 零子D的等待也须fresh后单独确认，不能绕过self采用。
-                if (回执.项组.empty() && fresh() != 原) {
-                    新自我筹办裁决 过期;
-                    过期.定位 = 定位;
-                    过期.状态 = 新自我筹办裁决状态::任务状态变化;
-                    结果.筹办裁决 = 过期;
-                    const auto 接收 = 任务管理->提交自我筹办裁决(过期);
-                    结果.筹办裁决接收状态 = 接收;
-                    结果.状态 = 接收 == 新自我筹办裁决接收状态::资源失败
-                        ? 新自我消息处理状态::已交接未收回
-                        : 新自我消息处理状态::任务筹办定位已变化;
-                    return 结果;
-                }
+                检查停止();
                 回执.已完成处理 = true;
             }
+            检查停止();
             新自我筹办裁决 裁决;
             裁决.定位 = 定位;
             裁决.状态 = 新自我筹办裁决状态::已处理因果子需求;
             裁决.因果回执 = 回执;
             结果.筹办裁决 = 裁决;
-            const auto 接收 = 任务管理->提交自我筹办裁决(裁决);
+            HY_SELF_CAUSAL_PHASE(L"因果采用裁决前", nullptr, std::nullopt);
+            检查停止();
+            const auto 接收 = 完整接收(任务管理->提交自我因果筹办裁决(裁决, 停止));
+            HY_SELF_CAUSAL_PHASE(L"因果采用裁决后", 主线因果状态文字(接收), std::nullopt);
             结果.筹办裁决接收状态 = 接收;
+            检查停止();
             if (接收 == 新自我筹办裁决接收状态::资源失败) {
                 结果.状态 = 新自我消息处理状态::已交接未收回;
             } else if (接收 == 新自我筹办裁决接收状态::已接收 || 接收 == 新自我筹办裁决接收状态::精确重复) {
@@ -2781,11 +3347,95 @@ struct 新_自我线程类::实现 final {
                 结果.状态 = 新自我消息处理状态::任务筹办定位已变化;
             }
             return 结果;
+        } catch (const 新任务因果读取取消&) {
+            标记因果停止并移交进度(项, 结果);
+            return 结果;
+        } catch (const 接收认知让出最终&) {
+            try { (void)记录调试日志(L"RECEIVED_DEMAND_SCHED", L"自我线程", L"筹办让出接收认知",
+                L"因果筹办检查点见接收认知待唤醒，交回运行循环入口。"); } catch (...) {}
+            结果.状态 = 新自我消息处理状态::已交接未收回;
+            return 结果;
         } catch (const std::bad_alloc&) {
             结果.状态 = 新自我消息处理状态::已交接未收回;
             return 结果;
+        } catch (const std::length_error&) {
+            结果.状态 = 新自我消息处理状态::已交接未收回;
+            return 结果;
+        } catch (const std::exception& error) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"处理因果子需求提议", L"正式因果依据、目标或已发布子需求不一致",error.what());
         } catch (...) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"处理因果子需求提议", L"正式因果依据、目标或已发布子需求不一致");
+        }
+    }
+
+    std::optional<新自我消息处理结果> 处理复合目标提议(
+        消息项& 项, const 新任务筹办处理结果& 筹办) noexcept {
+        新自我消息处理结果 结果;
+        结果.原消息 = 项.消息;
+        结果.筹办独立读回 = 筹办;
+        const auto& 定位 = *项.消息.筹办反馈;
+        try {
+            if (!项.复合子需求采用) {
+                if (!筹办.复合目标提议) {
+                    结果.状态 = 新自我消息处理状态::任务筹办需核查; return 结果;
+                }
+                新任务复合采用请求 请求;
+                请求.父任务节点 = 定位.任务节点;
+                请求.原提议 = *筹办.复合目标提议;
+                请求.采用组.reserve(请求.原提议.子目标组.size());
+                项.复合子需求采用 = std::move(请求);
+            }
+            auto& 请求 = *项.复合子需求采用;
+            for (const auto& 子 : 请求.原提议.子目标组) {
+                if (std::any_of(请求.采用组.begin(), 请求.采用组.end(),
+                    [&](const auto& 已有) { return 已有.原提议 == 子; })) continue;
+                // 发表D会改变需求树权重与保护版本；只用fresh事实重新核必要性，
+                // 不用发表前的整批快照把本消息已经发表的前缀判为失效。
+                const auto 本次 = 任务服务->读取当前复合目标提议(定位.任务节点);
+                const auto& 当前 = 本次.提议;
+                if (当前.状态 == 新任务复合分解状态::资源失败
+                    || 当前.状态 == 新任务复合分解状态::依赖未就绪) return std::nullopt;
+                if (当前.父需求节点 != 请求.原提议.父需求节点
+                    || 当前.父目标 != 请求.原提议.父目标
+                    || 当前.判定.分支组 != 请求.原提议.判定.分支组) {
+                    结果.状态 = 新自我消息处理状态::任务筹办定位已变化; return 结果;
+                }
+                if (std::find(当前.子目标组.begin(), 当前.子目标组.end(), 子) == 当前.子目标组.end())
+                    continue; // 已满足项目不新建；已经发表的身份始终保留。
+                新普通需求建立请求 建立请求;
+                建立请求.父需求节点 = 当前.父需求节点;
+                建立请求.目标存在节点 = 子.目标.目标存在节点;
+                建立请求.目标 = 子.目标.目标;
+                建立请求.来源类型 = 新需求来源类型::任务子目标;
+                建立请求.来源承接节点 = 定位.任务节点;
+                建立请求.复合来源 = 子.来源;
+                const auto 建立 = 需求服务->建立或取得复合提议需求已核验(建立请求, 本次.内容);
+                if (建立.状态 == 新需求操作状态::资源失败
+                    || 建立.状态 == 新需求操作状态::目标内容依赖未就绪
+                    || 建立.状态 == 新需求操作状态::目标内容未支持) return std::nullopt;
+                if (建立.状态 == 新需求操作状态::前提已变化) {
+                    结果.状态 = 新自我消息处理状态::任务筹办定位已变化; return 结果;
+                }
+                if (!建立.需求节点 || (建立.状态 != 新需求操作状态::已建立
+                    && 建立.状态 != 新需求操作状态::已复用))
+                    throw std::logic_error("复合子需求正式建立被拒绝");
+                // reserve在首次写之前完成，新增前缀不再分配。
+                请求.采用组.push_back({子, *建立.需求节点});
+                const auto D = 需求服务->获取需求(*建立.需求节点);
+                if (!D || D->父需求节点 != 当前.父需求节点
+                    || D->复合来源 != std::optional{子.来源}
+                    || 新需求完整目标{D->目标存在节点,D->目标} != 子.目标)
+                    throw std::logic_error("复合子需求正式独立读回不一致");
+            }
+            const auto 接收 = 任务管理->提交已确认复合子需求(定位, 请求);
+            if (接收 == 新任务操作状态::资源失败) return std::nullopt;
+            结果.状态 = 接收 == 新任务操作状态::已修改
+                ? 新自我消息处理状态::任务筹办已裁决
+                : 新自我消息处理状态::任务筹办定位已变化;
+            return 结果;
+        } catch (const std::bad_alloc&) { return std::nullopt; }
+        catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复合目标自我采用", L"正式复合目标采用发生工程错误");
         }
     }
 
@@ -2793,6 +3443,18 @@ struct 新_自我线程类::实现 final {
     std::optional<新自我消息处理结果> 处理筹办反馈(消息项& 项) noexcept {
         新自我消息处理结果 结果;
         结果.原消息 = 项.消息;
+        if (停止源.stop_requested()) {
+            标记因果停止并移交进度(项, 结果);
+            return 结果;
+        }
+        {
+            std::lock_guard 锁(状态互斥);
+            if (接收认知 && 接收认知待唤醒) {
+                try { (void)记录调试日志(L"RECEIVED_DEMAND_SCHED", L"自我线程", L"筹办入口让出",
+                    L"处理筹办反馈入口见接收认知待唤醒，先回运行循环。"); } catch (...) {}
+                return std::nullopt;
+            }
+        }
         if (!任务管理 || !项.消息.筹办反馈) {
             结果.状态 = 新自我消息处理状态::任务管理未就绪;
             return 结果;
@@ -2814,13 +3476,79 @@ struct 新_自我线程类::实现 final {
             return 采用;
         }
         结果.筹办独立读回 = 任务管理->读取最近筹办结果(定位.任务节点);
+        if (停止源.stop_requested()) {
+            标记因果停止并移交进度(项, 结果);
+            return 结果;
+        }
         if (!结果.筹办独立读回
             || 结果.筹办独立读回->原工作 != 定位.原工作) {
             结果.状态 = 新自我消息处理状态::任务筹办定位已变化;
             return 结果;
         }
+        if ((!项.复合子需求采用 || 项.复合子需求采用->采用组.empty())
+            && 结果.筹办独立读回->状态 == 新任务筹办处理状态::内容结果定位未支持) {
+            const auto& 工作 = 结果.筹办独立读回->工作结果;
+            if (!工作 || !工作->方法召回 || !工作->方法召回->内容学习发现)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"消费内容学习发现", L"原内容叶反馈缺少完整发现材料。");
+            const auto& 原发现 = *工作->方法召回->内容学习发现;
+            const auto 当前 = 任务服务->查询内容叶方法学习发现(定位.任务节点);
+            if (当前.状态 == 新任务内容学习发现状态::资源失败
+                || 当前.状态 == 新任务内容学习发现状态::查询未完成) return std::nullopt;
+            if (当前.状态 != 新任务内容学习发现状态::已形成 || !当前.发现
+                || *当前.发现 != 原发现 || 原发现.任务节点 != 定位.任务节点) {
+                if (当前.状态 == 新任务内容学习发现状态::已形成 && !当前.发现)
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"消费内容学习发现", L"成功发现缺少完整材料。");
+                新自我筹办裁决 变化裁决;
+                变化裁决.定位 = 定位;
+                变化裁决.状态 = 新自我筹办裁决状态::任务状态变化;
+                结果.筹办裁决 = 变化裁决;
+                const auto 接收 = 任务管理->提交自我筹办裁决(变化裁决);
+                结果.筹办裁决接收状态 = 接收;
+                switch (接收) {
+                case 新自我筹办裁决接收状态::已接收:
+                case 新自我筹办裁决接收状态::精确重复:
+                    结果.状态 = 新自我消息处理状态::任务筹办已裁决; return 结果;
+                case 新自我筹办裁决接收状态::定位已变化:
+                    结果.状态 = 新自我消息处理状态::任务筹办定位已变化; return 结果;
+                case 新自我筹办裁决接收状态::资源失败: return std::nullopt;
+                case 新自我筹办裁决接收状态::已停止接收:
+                    结果.状态 = 新自我消息处理状态::停止取消; return 结果;
+                default:
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"收束内容旧工作", L"内容发现变化裁决未被可靠接收。");
+                }
+            }
+            for (const auto M : 原发现.可学习方法节点组) {
+                if (项.已处理内容学习方法.contains(M)) continue;
+                const auto 学习 = 发现方法学习(M);
+                if (学习 == 方法学习发现状态::暂缓) return std::nullopt;
+                if (学习 == 方法学习发现状态::停止取消) {
+                    结果.状态 = 新自我消息处理状态::停止取消;
+                    return 结果;
+                }
+                try { 项.已处理内容学习方法.insert(M); }
+                catch (const std::bad_alloc&) { return std::nullopt; }
+            }
+        }
+        if (项.复合子需求采用
+            || 结果.筹办独立读回->状态 == 新任务筹办处理状态::复合目标需自我确认
+            || 结果.筹办独立读回->状态 == 新任务筹办处理状态::内容结果定位未支持)
+            return 处理复合目标提议(项, *结果.筹办独立读回);
+        if (停止源.stop_requested()) {
+            标记因果停止并移交进度(项, 结果);
+            return 结果;
+        }
         if (const auto 候选=任务服务->获取当前候选方法材料(定位.任务节点)) {
-            for (const auto 方法节点:候选->候选方法节点组) 发现方法学习(方法节点);
+            for (const auto 方法节点:候选->候选方法节点组) {
+                if (停止源.stop_requested()) {
+                    标记因果停止并移交进度(项, 结果);
+                    return 结果;
+                }
+                (void)发现方法学习(方法节点);
+            }
+        }
+        if (停止源.stop_requested()) {
+            标记因果停止并移交进度(项, 结果);
+            return 结果;
         }
         if (项.条件子需求回执
             || (结果.筹办独立读回->状态 == 新任务筹办处理状态::条件筹办已完成
@@ -2955,17 +3683,6 @@ struct 新_自我线程类::实现 final {
         }
     }
 
-    bool 确认结算效果(const 新任务结果反馈定位& 定位) noexcept {
-        if (!服务结算确认端口) return false;
-        const auto 确认 = 服务结算确认端口->确认并收尾(
-            定位.任务节点, 定位.执行实例节点, 定位.影响评估节点);
-        const bool 已确认 = 确认.状态 == 新服务值结算协作状态::已完成
-            || 确认.状态 == 新服务值结算协作状态::精确重复
-            || 确认.状态 == 新服务值结算协作状态::非本方法;
-        if (!已确认) 服务结算确认端口->报告并停止("服务值结算独立确认或内部收尾失败");
-        return 已确认;
-    }
-
     bool 接纳明确完成来源(稳定编码 任务节点) noexcept {
         if (!任务管理) return false;
         const auto 来源 = 任务服务->核验直接服务结算来源(任务节点);
@@ -2994,14 +3711,69 @@ struct 新_自我线程类::实现 final {
         return 已接纳;
     }
 
+    enum class 需求认知读取进度 { 可继续, 资源重试, 定位变化, 工程停止 };
+    需求认知读取进度 读取本次需求认知(消息项& 项, 新自我消息处理结果& 结果,
+        const 新任务结果反馈定位& 定位) noexcept {
+        try {
+            if (!任务服务) throw std::logic_error("需求认知缺少任务owner");
+            const auto 读回 = 任务服务->读取执行已发布需求(定位.任务节点, 定位.执行实例节点);
+            switch (读回.状态) {
+            case 新任务需求结果读取状态::资源失败:
+                return 需求认知读取进度::资源重试;
+            case 新任务需求结果读取状态::前提已变化:
+            case 新任务需求结果读取状态::执行不存在:
+                结果.已认知需求.reset();
+                结果.状态 = 新自我消息处理状态::任务结果定位已变化;
+                return 需求认知读取进度::定位变化;
+            case 新任务需求结果读取状态::已读取:
+                if (!读回.结果 || 定位.已发布需求节点 != std::optional{读回.结果->需求节点})
+                    throw std::logic_error("需求认知正式结果与消息索引不符");
+                break;
+            case 新任务需求结果读取状态::无此结果:
+                if (读回.结果 || 定位.已发布需求节点)
+                    throw std::logic_error("需求认知空结果与正式消息矛盾");
+                break;
+            default:
+                throw std::logic_error("需求认知依赖未装配或状态异常");
+            }
+            if (项.需求认知已读取 && 项.需求认知材料 != 读回.结果)
+                throw std::logic_error("同消息的正式需求结果身份改变");
+            项.需求认知材料 = 读回.结果;
+            项.需求认知已读取 = true;
+            结果.已认知需求 = 读回.结果;
+            return 需求认知读取进度::可继续;
+        } catch (const std::bad_alloc&) {
+            return 需求认知读取进度::资源重试;
+        } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取本次需求认知", L"同次X正式需求认知核验失败，不自动承接。");
+        }
+    }
+
     std::optional<新自我消息处理结果> 推进最终消费消息(消息项& 项) noexcept {
         try {
             if (!项.贡献前置结果 || !项.最终消费来源 || !任务管理 || !反馈桥 || !服务结算确认端口)
                 throw std::logic_error("最终消费消息前置定位或端口缺失");
+            if (项.消息.结果反馈) {
+                if (!项.需求认知已读取)
+                    throw std::logic_error("结果反馈进入最终消费前缺少正式需求认知读回");
+                auto 认知结果 = *项.贡献前置结果;
+                const auto 进度 = 读取本次需求认知(项, 认知结果, *项.消息.结果反馈);
+                if (进度 == 需求认知读取进度::资源重试) return std::nullopt;
+                if (进度 != 需求认知读取进度::可继续) return 认知结果;
+                项.贡献前置结果->已认知需求 = 认知结果.已认知需求;
+            }
             const auto 核验最终返回 = [&](const 新服务值最终消费结果& 消费,
                 const 新服务值最终消费结果& 正式) {
                 if (消费.来源 != *项.最终消费来源 || 正式.来源 != *项.最终消费来源)
                     throw std::logic_error("最终消费来源不一致");
+                // 技术回执不证明零写；完成只能由同源正式U/J5独立读回确认。
+                if (消费.状态 == 新服务值最终消费状态::资源延后
+                    || 消费.状态 == 新服务值最终消费状态::已准备待续) {
+                    if (正式.状态 != 新服务值最终消费状态::已完成) return false;
+                    if (!正式.消费节点 || !正式.收尾阶段节点)
+                        throw std::logic_error("资源延后后正式完成缺少U/J5");
+                    return true;
+                }
                 const bool 完成 = 消费.状态 == 新服务值最终消费状态::已完成
                     || 消费.状态 == 新服务值最终消费状态::精确重复;
                 if (完成 && (正式.状态 != 新服务值最终消费状态::已完成
@@ -3030,6 +3802,14 @@ struct 新_自我线程类::实现 final {
                 }
                 const auto& 消费 = *项.直接最终消费结果;
                 const auto 正式 = 服务结算确认端口->读取最终来源结果(*项.最终消费来源);
+                if (正式.状态 == 新服务值最终消费状态::资源延后) return std::nullopt;
+                if ((消费.状态 == 新服务值最终消费状态::资源延后
+                        || 消费.状态 == 新服务值最终消费状态::已准备待续)
+                    && 正式.状态 != 新服务值最终消费状态::已完成) {
+                    if (正式.状态 != 新服务值最终消费状态::等待同源工作)
+                        项.直接最终消费结果.reset(); // 下一轮只续原source；执行器先核U/P并收尾。
+                    return std::nullopt;
+                }
                 const bool 完成 = 核验最终返回(消费, 正式);
                 const auto 确认 = 项.直接最终消费已确认 ? 新任务完成结算确认状态::精确重复
                     : 任务管理->确认直接最终服务消费(*项.最终消费来源, 消费);
@@ -3095,24 +3875,70 @@ struct 新_自我线程类::实现 final {
             if (!项.最终消费工作 || 回执.原请求 != *项.最终消费工作
                 || 回执.原请求.最终来源 != 项.最终消费来源)
                 throw std::logic_error("最终消费回执与原工作不一致");
-            const auto 正式 = 服务结算确认端口->读取最终来源结果(*项.最终消费来源);
-            bool 完成 = false;
-            if (回执.状态 == 新任务工作处理状态::最终服务消费已返回 && 回执.最终消费) {
-                完成 = 核验最终返回(*回执.最终消费, 正式);
-            } else if (回执.状态 != 新任务工作处理状态::停止取消 || 回执.最终消费) {
-                throw std::logic_error("最终消费工作回执不是合法业务等待或完成");
-            }
+            // 先回收已交付的transport；资源读回不再占住ready worker。
             const auto 确认 = 任务管理->确认最终服务消费工作(反馈桥.get(),
                 项.最终消费工作->工作编号, *项.最终消费来源);
             if (确认 == 新任务工作操作状态::已在运行) return std::nullopt;
             if (确认 != 新任务工作操作状态::已完成 && 确认 != 新任务工作操作状态::无变化)
                 throw std::logic_error("最终消费工作确认失败");
+            auto 正式 = 服务结算确认端口->读取最终来源结果(*项.最终消费来源);
+            if (正式.状态 == 新服务值最终消费状态::资源延后) return std::nullopt;
+            const auto 技术待续 = [](const 新服务值最终消费结果& r) {
+                return r.状态 == 新服务值最终消费状态::资源延后
+                    || r.状态 == 新服务值最终消费状态::已准备待续;
+            };
+            if (回执.最终消费 && 技术待续(*回执.最终消费)
+                && 正式.状态 != 新服务值最终消费状态::已完成) {
+                if (停止源.stop_requested() || 任务管理->读取停止令牌().stop_requested()) {
+                    auto 结果 = *项.贡献前置结果;
+                    结果.状态 = 新自我消息处理状态::停止取消;
+                    结果.未确认直接最终消费 = 项.直接最终消费结果
+                        ? 项.直接最终消费结果 : 回执.最终消费;
+                    return 结果;
+                }
+                if (正式.状态 == 新服务值最终消费状态::等待同源工作) return std::nullopt;
+                if (项.直接最终消费结果 && 技术待续(*项.直接最终消费结果))
+                    项.直接最终消费结果.reset();
+                if (!项.直接最终消费结果) {
+                    // 同源结果阶段续行，保原工作号/future；执行器负责原P/U防重。
+                    项.直接最终消费结果.emplace(服务结算确认端口->执行最终来源工作(*项.最终消费来源));
+                    if (项.直接最终消费结果->来源 != *项.最终消费来源)
+                        throw std::logic_error("最终消费续接改变来源");
+                }
+                正式 = 服务结算确认端口->读取最终来源结果(*项.最终消费来源);
+                if (正式.状态 == 新服务值最终消费状态::资源延后
+                    || 技术待续(*项.直接最终消费结果)) return std::nullopt;
+            }
+            bool 完成 = false;
+            if (回执.状态 == 新任务工作处理状态::最终服务消费已返回 && 回执.最终消费) {
+                const auto& 消费 = 技术待续(*回执.最终消费)
+                    && 正式.状态 == 新服务值最终消费状态::已完成 ? *回执.最终消费
+                    : 项.直接最终消费结果 ? *项.直接最终消费结果 : *回执.最终消费;
+                完成 = 核验最终返回(消费, 正式);
+                // transport首次核验可能只因资源延后未清业务待办；正式完成统一补确认。
+                if (完成 || 项.直接最终消费结果 || 技术待续(*回执.最终消费)) {
+                    const auto 业务确认 = 任务管理->确认直接最终服务消费(*项.最终消费来源, 消费);
+                    if (业务确认 == 新任务完成结算确认状态::资源失败) return std::nullopt;
+                    if (业务确认 != 新任务完成结算确认状态::已确认
+                        && 业务确认 != 新任务完成结算确认状态::精确重复) {
+                        if (业务确认 == 新任务完成结算确认状态::已停止接收) return std::nullopt;
+                        throw std::logic_error("最终消费同源续接确认失败");
+                    }
+                    项.直接最终消费已确认 = true;
+                }
+            } else if (回执.状态 != 新任务工作处理状态::停止取消 || 回执.最终消费) {
+                throw std::logic_error("最终消费工作回执不是合法业务等待或完成");
+            }
             auto 结果 = *项.贡献前置结果;
             结果.状态 = 完成 ? 新自我消息处理状态::任务结果已裁决
                 : 回执.状态 == 新任务工作处理状态::停止取消 ? 新自我消息处理状态::停止取消
                 : 新自我消息处理状态::任务完成贡献待归集;
             // 未消费也结束本条消息；后续具名进度事件才能生成下一次工作，不能忙重投。
             return 结果;
+        } catch (const std::bad_alloc&) {
+            return std::nullopt;
+        } catch (const std::length_error&) {
+            return std::nullopt;
         } catch (...) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"推进最终消费消息", L"最终消费交接或正式结果核验失败");
         }
@@ -3134,7 +3960,7 @@ struct 新_自我线程类::实现 final {
                         ? 新本能函数动作阶段::未进入动作 : 新本能函数动作阶段::已按函数合同返回)
                     || !对.条件.参数角色组.empty() || r.动作动态节点 || !r.已形成状态节点组.empty()
                     || !r.已形成动态节点组.empty() || !r.已形成二次特征结果组.empty()
-                    || !r.建议观察特征节点组.empty() || r.服务需求信息包 || r.服务对象观察材料 || r.服务值消费节点
+                    || !r.建议观察特征节点组.empty() || r.服务需求信息包 || r.服务对象观察材料 || r.服务值消费节点 || r.已发布需求
                     || (对.条件.任务贡献治理参数 && 对.条件.任务贡献治理参数->完成来源 != 定位)
                     || (!对.条件.任务贡献治理参数 && (!对.条件.治理动作前特征组.empty()
                         || !r.任务贡献治理->本次动作组.empty()
@@ -3296,8 +4122,14 @@ struct 新_自我线程类::实现 final {
             return 结果;
         }
         const auto& 定位 = *项.消息.结果反馈;
-        if (项.贡献工作已交接阶段.load())
+        if (项.贡献工作已交接阶段.load()) {
+            if (!项.需求认知已读取)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"反馈需求认知", L"贡献阶段丢失本次正式认知定位。");
+            const auto 进度 = 读取本次需求认知(项, 结果, 定位);
+            if (进度 == 需求认知读取进度::资源重试) return std::nullopt;
+            if (进度 != 需求认知读取进度::可继续) return 结果;
             return 处理贡献定位(项, {定位.任务节点, 定位.执行实例节点, 定位.影响评估节点}, std::move(结果));
+        }
         const auto 管理结果 = 任务管理->读取最近执行结果(定位.任务节点);
         if (!管理结果 || 管理结果->原工作 != 定位.原工作
             || 管理结果->状态
@@ -3312,7 +4144,10 @@ struct 新_自我线程类::实现 final {
                 && 已有结算->影响评估节点 == 定位.影响评估节点) {
                 结果.任务完成结算 = 新任务完成结算结果{
                     新任务操作状态::精确重复, *已有结算};
-                if (!确认结算效果(定位) || !接纳明确完成来源(定位.任务节点)) {
+                const auto 进度 = 读取本次需求认知(项, 结果, 定位);
+                if (进度 == 需求认知读取进度::资源重试) return std::nullopt;
+                if (进度 != 需求认知读取进度::可继续) return 结果;
+                if (!接纳明确完成来源(定位.任务节点)) {
                     结果.状态 = 新自我消息处理状态::工程停止;
                     return 结果;
                 }
@@ -3335,6 +4170,9 @@ struct 新_自我线程类::实现 final {
             结果.状态 = 新自我消息处理状态::任务结果定位已变化;
             return 结果;
         }
+        const auto 认知进度 = 读取本次需求认知(项, 结果, 定位);
+        if (认知进度 == 需求认知读取进度::资源重试) return std::nullopt;
+        if (认知进度 != 需求认知读取进度::可继续) return 结果;
         发现方法问题学习(定位.任务节点,定位.执行实例节点);
         结果.任务需求当前复核 = 任务服务->复核任务当前需求(
             定位.任务节点);
@@ -3380,6 +4218,11 @@ struct 新_自我线程类::实现 final {
         case 新需求当前满足状态::目标特征尚未形成:
         case 新需求当前满足状态::当前值不存在:
         case 新需求当前满足状态::需求信息待完善:
+        case 新需求当前满足状态::目标引用前提已变化:
+        case 新需求当前满足状态::目标内容未支持:
+        case 新需求当前满足状态::目标内容分支待定:
+        case 新需求当前满足状态::目标内容依赖未就绪:
+        case 新需求当前满足状态::目标内容定义不合法:
             决议.类型 = 新自我任务后继类型::等待;
             break;
         case 新需求当前满足状态::未满足但无有向差值:
@@ -3406,19 +4249,6 @@ struct 新_自我线程类::实现 final {
         default:
             决议.类型 = 新自我任务后继类型::失败;
             break;
-        }
-        if (初始化结果 && 初始化结果->完成服务需求
-            && 结果.执行独立读回->任务
-            && 结果.执行独立读回->任务->需求节点 == 初始化结果->完成服务需求
-            && 决议.类型 != 新自我任务后继类型::完成) {
-            if (服务结算确认端口) 服务结算确认端口->报告并停止(
-                "服务结算执行未能独立确认完成，保留原执行且禁止重筹办");
-            结果.状态 = 新自我消息处理状态::工程停止;
-            return 结果;
-        }
-        if (决议.类型 == 新自我任务后继类型::完成 && !确认结算效果(定位)) {
-            结果.状态 = 新自我消息处理状态::工程停止;
-            return 结果;
         }
         结果.任务后继决议 = 决议;
         结果.任务后继接收状态 =
@@ -3463,6 +4293,8 @@ struct 新_自我线程类::实现 final {
             新自我消息处理结果 结果;
             结果.原消息 = 项->消息;
             结果.状态 = 状态;
+            结果.行动请求采用=项->行动请求采用材料;
+            结果.外部服务需求采用=项->外部服务采用材料;
             if (项->管理结果.valid()) {
                 结果.状态 = 新自我消息处理状态::已交接未收回;
                 结果.未收回任务结果 = 项->管理结果;
@@ -3487,39 +4319,56 @@ struct 新_自我线程类::实现 final {
                 结果.状态 = 新自我消息处理状态::已交接未收回;
                 结果.未确认直接最终消费 = 项->直接最终消费结果;
             }
-            项->承诺.set_value(结果);
+            移交因果采用进度(*项, 结果);
+            项->承诺.set_value(std::move(结果));
         }
         活动消息.clear();
     }
 
     void 运行() noexcept {
         try {
-            const auto 首次结果 = 复核需求();
             std::unique_lock 锁(状态互斥);
-            首次需求复核 = 首次结果;
-            安排自动承接(首次结果);
-            (void)提交需求工作已加锁(新自我工作种类::需求树全局扫描);
+            // 入口就绪不等待首次业务工作；消息可入队，但仍在首次准备后处理。
             线程已进入 = true;
+            生命周期 = 停止已请求
+                ? 新自我线程生命周期::正在停止
+                : 新自我线程生命周期::启动中;
+            状态变化.notify_all();
+            std::optional<std::chrono::steady_clock::time_point> 首次重试;
+            if (!停止已请求) {
+                // 跨owner的复核不能持状态互斥，启动方须能及时取得入口见证。
+                锁.unlock();
+                const auto 首次结果 = 复核需求();
+                锁.lock();
+                首次需求复核 = 首次结果;
+                if (!停止已请求) {
+                    安排自动承接(首次结果);
+                    (void)提交需求工作已加锁(新自我工作种类::需求树全局扫描);
+                    if (消息配置 && 首次结果.状态 == 新自我需求复核状态::资源失败) {
+                        首次重试 = std::chrono::steady_clock::now()
+                            + 有界等待时长(消息配置->资源重试间隔毫秒);
+                    }
+                }
+            }
             生命周期 = 停止已请求
                 ? 新自我线程生命周期::正在停止
                 : 新自我线程生命周期::等待治理消息;
             状态变化.notify_all();
-            std::optional<std::chrono::steady_clock::time_point> 首次重试;
-            if (消息配置 && 首次结果.状态 == 新自我需求复核状态::资源失败) {
-                首次重试 = std::chrono::steady_clock::now()
-                    + 有界等待时长(消息配置->资源重试间隔毫秒);
-            }
             const auto 等待推进 = [&](std::optional<std::chrono::steady_clock::time_point> 时点 = std::nullopt) {
-                if (有关联变化通知() || 最终服务工作待唤醒.load()) return;
+                if (有关联变化通知() || 最终服务工作待唤醒.load() || 接收认知待唤醒) return;
                 if (需求扫描阶段 == 新自我需求扫描阶段::等待扫描结果
                     && 扫描工作结果.valid()
                     && 扫描工作结果.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) return;
                 if (首次重试 && (!时点 || *首次重试 < *时点)) 时点 = 首次重试;
+                if(接收认知) {
+                    const auto next=最近接收认知推进+std::chrono::milliseconds(500);
+                    if(!时点||next<*时点)时点=next;
+                }
                 时点 = 合并后台推进时点已加锁(时点);
                 生命周期 = 新自我线程生命周期::等待治理消息;
                 if (时点) 状态变化.wait_until(锁, *时点);
                 else 状态变化.wait(锁, [this] {
-                    return 停止已请求 || 有关联变化通知() || 最终服务工作待唤醒.load()
+                    return 停止已请求 || 有关联变化通知() || 最终服务工作待唤醒.load() || 接收认知待唤醒
                         || !活动消息.empty() || 有学习结果已就绪()
                         || (需求扫描阶段 == 新自我需求扫描阶段::等待扫描结果
                             && 扫描工作结果.valid()
@@ -3529,7 +4378,54 @@ struct 新_自我线程类::实现 final {
                 });
             };
             bool 扫描需要让出 = false;
-            while (!停止已请求) {
+            while (!停止已请求 && !停止源.stop_requested()) {
+                if(接收认知&&(接收认知待唤醒||std::chrono::steady_clock::now()>=最近接收认知推进+std::chrono::milliseconds(500))) {
+                    // 清标志在扫描前，锁外调用后不覆盖其间新通知。
+                    const bool 由唤醒=接收认知待唤醒;
+                    接收认知待唤醒=false;
+                    auto* provider=接收认知;const auto token=停止源.get_token();
+                    bool 行动请求已入邮箱=false;
+                    锁.unlock();
+                    try {
+                        try {
+                            std::wostringstream 诊断;
+                            诊断<<L"由唤醒="<<(由唤醒 ? 1 : 0);
+                            (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"推进接收需求认知入口",诊断.str());
+                        } catch (...) {}
+                        const auto observed=provider->推进一次(token);
+                        if(!token.stop_requested()&&observed
+                            &&observed->阶段==接收需求认知阶段::已读回行动请求&&observed->待交接请求) {
+                            const auto accepted=接纳行动请求(*observed->待交接请求);
+                            if(accepted.状态==新自我消息接收状态::已接收
+                                ||accepted.状态==新自我消息接收状态::精确重复) {
+                                if(!accepted.处理结果.valid())throw std::logic_error("action request self mailbox future missing");
+                                if(!token.stop_requested()) {
+                                    const auto ack=provider->确认行动请求已交接(*observed->待交接请求);
+                                    if(ack!=接收行动请求交接确认状态::已确认
+                                        &&ack!=接收行动请求交接确认状态::精确重复
+                                        &&ack!=接收行动请求交接确认状态::资源失败)
+                                        throw std::logic_error("action request cognition handoff acknowledgement mismatch");
+                                    // 确认只证明邮箱接纳；回入口优先排干行动请求承接，再建Ds/T。
+                                    if(ack==接收行动请求交接确认状态::已确认
+                                        ||ack==接收行动请求交接确认状态::精确重复)
+                                        行动请求已入邮箱=true;
+                                }
+                            } else if(accepted.状态!=新自我消息接收状态::邮箱已满
+                                &&accepted.状态!=新自我消息接收状态::资源失败
+                                &&accepted.状态!=新自我消息接收状态::尚未启动
+                                &&accepted.状态!=新自我消息接收状态::尚未配置
+                                &&accepted.状态!=新自我消息接收状态::已停止接收)
+                                throw std::logic_error("formal action request mailbox rejected source");
+                        }
+                    }
+                    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"推进接收需求认知",L"真实消息认知结构或内部不变量错误，不当作业务缺项重试。",e.what());}
+                    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"推进接收需求认知",L"真实消息认知发生未知工程异常。");}
+                    锁.lock();
+                    最近接收认知推进=std::chrono::steady_clock::now();
+                    if(停止已请求||停止源.stop_requested())break;
+                    // 普通认知拍仍继续原治理；仅行动请求已入邮箱时回入口优先排干。
+                    if(行动请求已入邮箱)continue;
+                }
                 if (最终服务工作待唤醒.exchange(false)) {
                     const auto 当前 = std::chrono::steady_clock::now();
                     for (const auto& 项 : 活动消息)
@@ -3585,16 +4481,6 @@ struct 新_自我线程类::实现 final {
                 if (问题位置!=问题学习组.end()) {
                     auto& 项=问题位置->second;
                     const auto 消息=项.消息;
-                    锁.unlock();
-                    const bool 退出学习 = 方法服务->是历史服务结算方法(消息.方法节点);
-                    const auto 退出通知 = 退出学习 && 任务管理
-                        ? 任务管理->通知方法退出适用(消息.方法节点) : 新任务管理操作状态::无变化;
-                    锁.lock();
-                    if (退出通知 == 新任务管理操作状态::资源失败) {
-                        项.可投递时点=std::chrono::steady_clock::now()+有界等待时长(消息配置->资源重试间隔毫秒);
-                        continue;
-                    }
-                    if (退出学习 && !项.处理结果.valid()) { 项.已消费=true; continue; }
                     if (!项.处理结果.valid()) {
                         锁.unlock();
                         const auto 接收=学习线程->提交方法问题学习(消息);
@@ -3716,7 +4602,15 @@ struct 新_自我线程类::实现 final {
                     });
                 if (自动位置 != 自动承接.end() && *自动位置) {
                     auto& 自动项 = **自动位置;
-                    if (自动项.可处理时点 <= std::chrono::steady_clock::now()) {
+                    // 邮箱中已就绪的行动请求承接优先于自动承接扫描，避免交接后被长自动路径饿死。
+                    const bool 有就绪行动请求 = std::any_of(活动消息.begin(), 活动消息.end(),
+                        [](const auto& m) {
+                            return m->消息.类型 == 新自我消息类型::行动请求承接
+                                && m->可处理时点 <= std::chrono::steady_clock::now();
+                        });
+                    if (有就绪行动请求) {
+                        // fall through to 活动消息 prefer path
+                    } else if (自动项.可处理时点 <= std::chrono::steady_clock::now()) {
                         生命周期 = 新自我线程生命周期::正在处理消息;
                         锁.unlock();
                         const bool 已终结 = 处理自动承接(自动项);
@@ -3734,8 +4628,17 @@ struct 新_自我线程类::实现 final {
                         continue;
                     }
                 }
+                // 已就绪行动请求承接优先于更早入队的筹办反馈：阶段13交接后先建Ds/T（§5 确认≠已建Ds/T）。
+                const auto 选信时点 = std::chrono::steady_clock::now();
                 const auto 最早 = std::min_element(活动消息.begin(), 活动消息.end(),
-                    [](const auto& 左, const auto& 右) {
+                    [&](const auto& 左, const auto& 右) {
+                        const bool 左就绪 = 左->可处理时点 <= 选信时点;
+                        const bool 右就绪 = 右->可处理时点 <= 选信时点;
+                        const bool 左请求 = 左就绪
+                            && 左->消息.类型 == 新自我消息类型::行动请求承接;
+                        const bool 右请求 = 右就绪
+                            && 右->消息.类型 == 新自我消息类型::行动请求承接;
+                        if (左请求 != 右请求) return 左请求;
                         return 左->可处理时点 < 右->可处理时点;
                     });
                 const auto 项 = *最早;
@@ -3762,10 +4665,10 @@ struct 新_自我线程类::实现 final {
                     单次结果 = 处理任务结果反馈(*项);
                 else if (项->消息.类型 == 新自我消息类型::任务完成贡献复核)
                     单次结果 = 处理任务完成贡献复核(*项);
-                else if (项->消息.类型 == 新自我消息类型::服务需求取得反馈)
-                    单次结果 = 处理服务需求取得反馈(*项);
                 else if (项->消息.类型 == 新自我消息类型::完整服务需求材料)
                     单次结果 = 处理完整服务需求材料(*项);
+                else if (项->消息.类型 == 新自我消息类型::行动请求承接)
+                    单次结果 = 处理行动请求承接(*项);
                 else if (项->消息.类型 == 新自我消息类型::学习后需求复核)
                     单次结果 = 处理学习复核(*项);
                 else if (项->消息.类型 == 新自我消息类型::等待任务复核)
@@ -3782,6 +4685,9 @@ struct 新_自我线程类::实现 final {
                 if (结果.状态 == 新自我消息处理状态::工程停止) {
                     停止源.request_stop(); 停止已请求 = true;
                 }
+                // request_stop先于请求方取得状态锁；本线程重新持锁后也须锁存
+                // 已观察到的停止，不能趁请求方尚未写bool继续调度下一消息。
+                if (停止源.stop_requested()) 停止已请求 = true;
                 if (结果.需求复核) 安排自动承接(*结果.需求复核);
                 // 只有已核验并处理的真实治理消息允许重新探测依赖；学习回流、
                 // 轮询、拒绝/结构异常和停止不解除扫描等待，更不解除硬失败。
@@ -3801,7 +4707,8 @@ struct 新_自我线程类::实现 final {
                         + 有界等待时长(消息配置->资源重试间隔毫秒);
                     continue;
                 }
-                请求关联复核已加锁(有效治理事件);
+                if (!停止源.stop_requested() && 结果.状态 != 新自我消息处理状态::停止取消)
+                    请求关联复核已加锁(有效治理事件);
                 if (停止已请求 && 结果.需求复核
                     && 结果.需求复核->状态 == 新自我需求复核状态::资源失败) {
                     结果.状态 = 新自我消息处理状态::停止取消;
@@ -3874,7 +4781,13 @@ struct 新_自我线程类::实现 final {
     // 工作完成回调直接引用self；必须在self互斥和实现销毁前join。
     实现_->自我工作线程.reset();
     // 学习回调可能仍在使用反馈桥；先停止并join，才拆桥和依赖。
-    实现_->学习线程.reset();
+    std::unique_ptr<新_学习线程类> 待回收学习线程;
+    try {
+        std::lock_guard 锁(实现_->状态互斥);
+        待回收学习线程 = std::move(实现_->学习线程);
+    } catch (...) { std::terminate(); }
+    // 学习完成通知会取得self锁，故成员移出后必须在锁外join。
+    待回收学习线程.reset();
     try {
         const auto 桥 = 实现_->反馈桥;
         const auto 管理 = 实现_->任务管理;
@@ -4710,6 +5623,25 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
     }
 }
 
+新自我线程操作结果 新_自我线程类::绑定接收需求认知(接收需求认知服务& provider) noexcept {
+    if(!实现_)return {新自我线程操作状态::资源失败,新自我线程生命周期::内部错误};
+    try {
+        std::lock_guard join(实现_->加入互斥);std::lock_guard lock(实现_->状态互斥);
+        if(实现_->工作线程.joinable()||实现_->线程已完成)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
+        if(实现_->接收认知==&provider)return 实现_->操作结果(新自我线程操作状态::无变化);
+        if(实现_->接收认知)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
+        实现_->接收认知=&provider;实现_->接收认知待唤醒=true;
+        return 实现_->操作结果(新自我线程操作状态::已完成);
+    }catch(...){return {新自我线程操作状态::内部错误,新自我线程生命周期::内部错误};}
+}
+void 新_自我线程类::通知接收认知变化() noexcept {
+    if(!实现_)return;
+    try {std::lock_guard lock(实现_->状态互斥);
+        if(实现_->停止已请求||实现_->线程已完成||!实现_->接收认知)return;
+        实现_->接收认知待唤醒=true;实现_->状态变化.notify_all();
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"通知接收认知变化",L"接收认知轻通知异常。");}
+}
+
 新自我线程操作结果 新_自我线程类::绑定服务值结算确认端口(
     新服务值结算确认接口& 端口) noexcept {
     if (!实现_) return {新自我线程操作状态::资源失败, 新自我线程生命周期::内部错误};
@@ -4845,7 +5777,7 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
         结果.状态 = 新自我消息接收状态::资源失败;
         return 结果;
     }
-    if (!消息.消息编号 || 消息.服务需求取得反馈 || 消息.完整服务需求材料 || 消息.完成贡献复核) return 结果;
+    if (!消息.消息编号 || 消息.完整服务需求材料 || 消息.完成贡献复核 || 消息.行动请求来源) return 结果;
     if (消息.类型 == 新自我消息类型::事实变化) {
         if (!有效(消息.来源状态节点) || 有效(消息.需求节点)
             || 消息.筹办反馈 || 消息.结果反馈 || 消息.学习复核
@@ -4935,24 +5867,10 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
     }
 }
 
-新自我消息接收结果 新_自我线程类::提交服务需求执行(
-    const 新服务需求取得反馈定位& 定位) noexcept {
-    if (!实现_) return {新自我消息接收状态::资源失败, {}};
-    return 实现_->接收服务需求执行(定位);
-}
-
-bool 新_自我线程类::使用服务需求执行依赖(const 新_任务类& 任务,
-    const 新_任务管理线程类& 管理) const noexcept {
-    if (!实现_) return false;
-    try {
-        {
-            std::lock_guard 锁(实现_->状态互斥);
-            if (实现_->任务服务 != &任务 || 实现_->任务管理 != &管理) return false;
-        }
-        return 管理.使用任务服务(任务);
-    } catch (...) {
-        工程异常终止(L"新_自我线程类.cpp", __LINE__, L"核验服务需求执行依赖", L"线程依赖读取异常");
-    }
+新自我消息接收结果 新_自我线程类::提交行动请求承接(
+    const 新行动请求承接来源& source) noexcept {
+    if(!实现_)return {新自我消息接收状态::资源失败,{}};
+    return 实现_->接纳行动请求(source);
 }
 
 std::stop_token 新_自我线程类::读取停止令牌() const noexcept {
@@ -5049,6 +5967,21 @@ std::stop_token 新_自我线程类::读取停止令牌() const noexcept {
         return {新自我线程操作状态::内部错误,
             新自我线程生命周期::内部错误};
     }
+}
+
+新学习工作快照 新_自我线程类::读取学习工作快照() const noexcept {
+    if (!实现_) return {};
+    try {
+        std::lock_guard 锁(实现_->状态互斥);
+        if (实现_->学习线程) return 实现_->学习线程->读取工作快照();
+        新学习工作快照 结果;
+        结果.状态 = 新学习工作快照读取状态::尚未建立;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        新学习工作快照 结果;
+        结果.状态 = 新学习工作快照读取状态::资源失败;
+        return 结果;
+    } catch (...) { return {}; }
 }
 
 新自我线程快照 新_自我线程类::读取快照() const noexcept {

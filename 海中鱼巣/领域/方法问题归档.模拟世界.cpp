@@ -1,4 +1,5 @@
 #include "方法问题归档.模拟世界.h"
+#include <algorithm>
 #include <bit>
 #include <limits>
 #include <stdexcept>
@@ -24,7 +25,7 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新方法有序参数规格>) return std::tie(x.序号,x.信息类型,x.范围概念节点);
     else if constexpr (std::is_same_v<U, 新方法有序参数引用>) return std::tie(x.序号,x.信息类型,x.信息节点);
     else if constexpr (std::is_same_v<U, 新方法参数规格>) {
-        if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织) return std::tie(x.参数角色节点,x.存在概念节点,
+        if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织))) return std::tie(x.参数角色节点,x.存在概念节点,
             x.要求场景,x.特征规格组,x.对象种类,x.集合成员约束,x.有序规格);
         else return std::tie(x.参数角色节点,x.存在概念节点,
             x.要求场景,x.特征规格组,x.对象种类,x.集合成员约束);
@@ -37,14 +38,17 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新服务要求分项引用>) return std::tie(x.理解节点,x.分项);
     else if constexpr (std::is_same_v<U, 新服务要求确认引用>) return std::tie(x.确认节点);
     else if constexpr (std::is_same_v<U, 新方法参数角色绑定>) {
-        if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织) return std::tie(x.参数角色节点,x.世界场景节点,
+        if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织))) return std::tie(x.参数角色节点,x.世界场景节点,
             x.实际存在节点,x.实际特征组,x.任务虚拟存在引用,x.服务要求分项引用,x.服务要求确认引用,x.有序引用);
         else return std::tie(x.参数角色节点,x.世界场景节点,
             x.实际存在节点,x.实际特征组,x.任务虚拟存在引用,x.服务要求分项引用,x.服务要求确认引用);
     }
     else if constexpr (std::is_same_v<U, 新任务本能采用定位>) return std::tie(x.组织节点,x.方法作用域节点,x.配对要求节点);
     else if constexpr (std::is_same_v<U, 新任务本能采用材料>) {
-        if constexpr (F == 格式::任务成员有序参数任务执行组织)
+        if constexpr((F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))
+            return std::tie(x.定位,x.来源方法节点,x.来源配对节点,x.来源条件节点,x.来源结果节点,
+                x.参数要求组,x.原始条件,x.需要条件,x.结果,x.线性关系组,x.参数绑定组,x.任务成员绑定,x.执行分支节点,x.来源执行分支节点组);
+        else if constexpr (F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织)
             return std::tie(x.定位,x.来源方法节点,x.来源配对节点,x.来源条件节点,x.来源结果节点,
                 x.参数要求组,x.原始条件,x.需要条件,x.结果,x.线性关系组,x.参数绑定组,x.任务成员绑定);
         else return std::tie(x.定位,x.来源方法节点,x.来源配对节点,x.来源条件节点,x.来源结果节点,
@@ -100,7 +104,7 @@ template<格式 F, class T> auto 成员(T& x) {
         x.动作目标存在节点,x.动作目标特征节点,x.动作目标种类,x.动作目标任务虚拟存在,
         x.动作时间,x.动作结果组,x.动态概念节点,x.被引用次数);
     else if constexpr (std::is_same_v<U, 新方法条件项定义>) {
-        if constexpr (F == 格式::任务成员有序参数任务执行组织)
+        if constexpr (F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))
             return std::tie(x.参数角色节点,x.存在概念节点,x.特征类型概念节点,x.特征值域概念节点,
                 x.二次特征概念节点,x.状态或动态概念节点,x.精确数值域,x.参数序号,x.任务成员变量序号);
         else if constexpr (F == 格式::有序参数任务执行组织) return std::tie(x.参数角色节点,x.存在概念节点,
@@ -109,7 +113,7 @@ template<格式 F, class T> auto 成员(T& x) {
             x.特征类型概念节点,x.特征值域概念节点,x.二次特征概念节点,x.状态或动态概念节点,x.精确数值域);
     }
     else if constexpr (std::is_same_v<U, 新方法结果项定义>) {
-        if constexpr (F == 格式::任务成员有序参数任务执行组织)
+        if constexpr (F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))
             return std::tie(x.参数角色节点,x.特征类型概念节点,x.特征值域概念节点,x.变化方向概念节点,
                 x.状态或动态概念节点,x.主要结果,x.精确数值域,x.参数序号,x.任务成员变量序号);
         else if constexpr (F == 格式::有序参数任务执行组织) return std::tie(x.参数角色节点,x.特征类型概念节点,
@@ -119,36 +123,60 @@ template<格式 F, class T> auto 成员(T& x) {
     }
     else if constexpr (std::is_same_v<U, 新方法结果确认要求>) return std::tie(x.必要证据质量,x.最大等待纳秒,
         x.等待条件概念节点,x.多证据关系,x.禁止结果关系规则,x.禁止结果项组);
+    else if constexpr (std::is_same_v<U, 新方法初始场景事实限定>)
+        return std::tie(x.关系概念节点,x.场景参数序号,x.主体参数序号,x.对象参数序号,x.特征参数序号);
+    else if constexpr (std::is_same_v<U, 新方法本次场景事实引用>)
+        return std::tie(x.限定,x.事实来源身份,x.动作节点);
     else if constexpr (std::is_same_v<U, 新方法条件定义>) {
-        if constexpr (F == 格式::任务成员有序参数任务执行组织)
+        if constexpr (F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))
+            return std::tie(x.关系规则,x.条件项组,x.参数关系组,x.场景事实限定组);
+        else if constexpr (F == 格式::任务成员有序参数任务执行组织)
             return std::tie(x.关系规则,x.条件项组,x.参数关系组);
         else return std::tie(x.关系规则,x.条件项组);
     }
     else if constexpr (std::is_same_v<U, 新方法结果定义>) {
-        if constexpr (F == 格式::任务成员有序参数任务执行组织)
+        if constexpr ((F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织))
+            return std::tie(x.关系规则,x.结果项组,x.确认要求,x.参数关系组,x.场景事实限定组);
+        else if constexpr (F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))
             return std::tie(x.关系规则,x.结果项组,x.确认要求,x.参数关系组);
         else return std::tie(x.关系规则,x.结果项组,x.确认要求);
     }
     else if constexpr (std::is_same_v<U, 新方法条件结果线性关系>) return std::tie(x.条件序号,x.结果序号,
         x.方向,x.原条件域,x.原结果域);
     // 格式1的嵌套布局保持七字段，配对来源仅在问题头末尾作带标签扩展。
-    else if constexpr (std::is_same_v<U, 新方法条件结果信息>) return std::tie(x.配对节点,x.条件节点,
-        x.结果节点,x.条件,x.结果,x.命中次数,x.线性关系组);
+    else if constexpr (std::is_same_v<U, 新方法条件结果信息>) {
+        if constexpr((F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))return std::tie(x.配对节点,x.条件节点,
+            x.结果节点,x.条件,x.结果,x.命中次数,x.线性关系组,x.来源执行分支节点组);
+        else return std::tie(x.配对节点,x.条件节点,x.结果节点,x.条件,x.结果,x.命中次数,x.线性关系组);
+    }
     else if constexpr (std::is_same_v<U, 新本能函数条件特征材料>) return std::tie(x.特征节点,x.动作前准确值);
     else if constexpr (std::is_same_v<U, 新本能函数条件角色材料>) {
         if constexpr (F == 格式::旧方法副本) return std::tie(x.参数角色节点,x.世界场景节点,
             x.实际存在节点,x.实际特征组,x.任务虚拟存在引用);
-        else if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织) return std::tie(x.参数角色节点,x.世界场景节点,
+        else if constexpr (F == 格式::有序参数任务执行组织 || F == 格式::任务成员有序参数任务执行组织 || F == 格式::场景事实有序参数任务执行组织 || (F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织))) return std::tie(x.参数角色节点,x.世界场景节点,
             x.实际存在节点,x.实际特征组,x.任务虚拟存在引用,x.服务要求分项引用,x.服务要求确认引用,
             x.服务要求分项快照,x.服务要求确认快照,x.有序引用);
         else return std::tie(x.参数角色节点,x.世界场景节点,x.实际存在节点,x.实际特征组,
             x.任务虚拟存在引用,x.服务要求分项引用,x.服务要求确认引用,x.服务要求分项快照,x.服务要求确认快照);
     }
-    else if constexpr (std::is_same_v<U, 新本能函数本次条件>) return std::tie(x.参数角色组);
+    else if constexpr (std::is_same_v<U, 新本能函数本次条件>) {
+        if constexpr((F == 格式::正式分支有序参数任务执行组织 || (F == 格式::场景结果有序参数任务执行组织 || F == 格式::需求结果有序参数任务执行组织)))return std::tie(x.参数角色组,x.执行分支节点);
+        else return std::tie(x.参数角色组);
+    }
     else if constexpr (std::is_same_v<U, 新本能二次特征观察结果>) return std::tie(x.二次特征类型概念节点,
         x.上次累计值,x.本次累计值,x.结果值,x.结果值域概念节点);
+    else if constexpr (std::is_same_v<U, 新本能已发布需求结果>)
+        return std::tie(x.需求节点,x.主体存在节点,x.需求特征节点,x.结果场景节点,x.本次动作节点,x.首次发布动作节点);
     else if constexpr (std::is_same_v<U, 新本能函数本次结果>) {
-        if constexpr (F == 格式::旧方法副本) return std::tie(x.状态,x.动作阶段,x.结果取得状态,
+        if constexpr (F == 格式::需求结果有序参数任务执行组织)
+            return std::tie(x.状态,x.动作阶段,x.结果取得状态,x.动作动态节点,x.已形成状态节点组,
+                x.已形成动态节点组,x.已形成二次特征结果组,x.建议观察特征节点组,
+                x.服务需求信息包,x.服务对象观察材料,x.已取得场景事实组,x.已发布需求);
+        else if constexpr (F == 格式::场景结果有序参数任务执行组织)
+            return std::tie(x.状态,x.动作阶段,x.结果取得状态,x.动作动态节点,x.已形成状态节点组,
+                x.已形成动态节点组,x.已形成二次特征结果组,x.建议观察特征节点组,
+                x.服务需求信息包,x.服务对象观察材料,x.已取得场景事实组);
+        else if constexpr (F == 格式::旧方法副本) return std::tie(x.状态,x.动作阶段,x.结果取得状态,
             x.动作动态节点,x.已形成状态节点组,x.已形成动态节点组,x.已形成二次特征结果组,x.建议观察特征节点组);
         else return std::tie(x.状态,x.动作阶段,x.结果取得状态,x.动作动态节点,x.已形成状态节点组,
             x.已形成动态节点组,x.已形成二次特征结果组,x.建议观察特征节点组,x.服务需求信息包,x.服务对象观察材料);
@@ -158,6 +186,18 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新场景快照缺口>) return std::tie(x.种类,x.来源节点,x.原因);
     else static_assert(!sizeof(T), "归档类型必须显式列出全部字段");
 }
+bool 归档需求结果有效(const 新方法问题反馈材料& x) noexcept {
+    if (!x.本次运行对 || !x.本次运行对->结果.已发布需求) return true;
+    const auto& r = x.本次运行对->结果;
+    const auto& d = *r.已发布需求;
+    return 有效(d.需求节点) && 有效(d.主体存在节点) && 有效(d.需求特征节点)
+        && 有效(d.结果场景节点) && 有效(d.本次动作节点) && 有效(d.首次发布动作节点)
+        && r.动作动态节点 == std::optional<稳定编码>{d.本次动作节点}
+        && r.动作阶段 != 新本能函数动作阶段::未进入动作
+        && r.结果取得状态 == 新本能函数结果取得状态::已取得
+        && !r.任务贡献治理 && !r.服务值消费节点;
+}
+
 template<class T> struct 可选型 : std::false_type {};
 template<class T> struct 可选型<std::optional<T>> : std::true_type {};
 template<class T> struct 数组型 : std::false_type {};
@@ -337,6 +377,12 @@ bool 采用身份有效(const 新方法问题反馈材料& x) noexcept {
     if (x.采用来源 != 新方法问题采用来源::任务执行组织 || 有效(x.实例方法节点)
         || !x.任务采用 || x.采用配对 != 新方法条件结果信息{}) return false;
     const auto& a=*x.任务采用;
+    if(a.执行分支节点){
+        if(!有效(*a.执行分支节点)||std::find(a.来源执行分支节点组.begin(),a.来源执行分支节点组.end(),*a.执行分支节点)==a.来源执行分支节点组.end())return false;
+    }else if(!a.来源执行分支节点组.empty())return false;
+    for(std::size_t i=0;i<a.来源执行分支节点组.size();++i)if(!有效(a.来源执行分支节点组[i])
+        ||std::find(a.来源执行分支节点组.begin(),a.来源执行分支节点组.begin()+i,a.来源执行分支节点组[i])!=a.来源执行分支节点组.begin()+i)return false;
+    if(x.本次运行对&&x.本次运行对->条件.执行分支节点!=a.执行分支节点)return false;
     std::uint32_t 集合位置=0;
     bool 原条件含成员=false,需要条件含成员=false;
     const auto 核验项 = [&](const auto& 项,bool* 含成员) {
@@ -416,14 +462,50 @@ bool 需要格式4(const 新方法问题反馈材料& x) noexcept {
     }
     return false;
 }
+bool 需要格式5(const 新方法问题反馈材料& x) noexcept {
+    if (!x.采用配对.条件.场景事实限定组.empty()) return true;
+    return x.任务采用 && (!x.任务采用->原始条件.场景事实限定组.empty()
+        || !x.任务采用->需要条件.场景事实限定组.empty());
+}
+bool 需要格式6(const 新方法问题反馈材料& x) noexcept {
+    return !x.采用配对.来源执行分支节点组.empty()||(x.任务采用&&(x.任务采用->执行分支节点||!x.任务采用->来源执行分支节点组.empty()))
+        ||(x.本次运行对&&x.本次运行对->条件.执行分支节点);
+}
+bool 需要格式7(const 新方法问题反馈材料& x) noexcept {
+    return !x.采用配对.结果.场景事实限定组.empty()
+        || (x.任务采用 && !x.任务采用->结果.场景事实限定组.empty())
+        || (x.本次运行对 && !x.本次运行对->结果.已取得场景事实组.empty());
+}
+bool 需要格式8(const 新方法问题反馈材料& x) noexcept {
+    return x.本次运行对 && x.本次运行对->结果.已发布需求.has_value();
+}
 std::vector<std::uint64_t> 编码问题头(const 新方法问题反馈材料& x, 格式 f) {
+    const auto 含引用内容条件=[](const 新方法条件定义& c){return std::any_of(c.条件项组.begin(),c.条件项组.end(),
+        [](const auto& 项){return 项.引用内容条件.has_value();});};
+    if(含引用内容条件(x.采用配对.条件)||(x.任务采用&&(含引用内容条件(x.任务采用->原始条件)||含引用内容条件(x.任务采用->需要条件))))
+        throw std::runtime_error("引用内容条件尚不支持方法问题归档");
+    if (需要格式8(x) && f != 格式::需求结果有序参数任务执行组织)
+        throw std::runtime_error("已发布需求结果必须使用归档格式8");
+    if (!归档需求结果有效(x)) throw std::runtime_error("归档已发布需求结果身份或本次动作不符");
+    if (需要格式7(x) && f != 格式::场景结果有序参数任务执行组织 && f != 格式::需求结果有序参数任务执行组织)
+        throw std::runtime_error("场景结果材料必须使用归档格式7");
     if (!采用身份有效(x)) throw std::runtime_error("问题采用来源与载荷不一致");
-    const bool 有序格式=f==格式::有序参数任务执行组织||f==格式::任务成员有序参数任务执行组织;
+    if(需要格式6(x)&&(f!=格式::正式分支有序参数任务执行组织 && f != 格式::场景结果有序参数任务执行组织 && f != 格式::需求结果有序参数任务执行组织))
+        throw std::runtime_error("正式分支材料必须使用归档格式6");
+    const bool 有序格式=f==格式::有序参数任务执行组织||f==格式::任务成员有序参数任务执行组织||(f==格式::场景事实有序参数任务执行组织||(f == 格式::正式分支有序参数任务执行组织 || (f == 格式::场景结果有序参数任务执行组织 || f == 格式::需求结果有序参数任务执行组织)));
     if (含有序参数(x) != 有序格式)
         throw std::runtime_error("有序参数材料与归档格式不一致");
-    if(需要格式4(x)&&f!=格式::任务成员有序参数任务执行组织)
+    if(需要格式5(x)&&f!=格式::场景事实有序参数任务执行组织&&(f!=格式::正式分支有序参数任务执行组织 && f != 格式::场景结果有序参数任务执行组织 && f != 格式::需求结果有序参数任务执行组织))
+        throw std::runtime_error("场景事实材料必须使用归档格式5");
+    if(需要格式4(x)&&f!=格式::任务成员有序参数任务执行组织&&f!=格式::场景事实有序参数任务执行组织&&(f!=格式::正式分支有序参数任务执行组织 && f != 格式::场景结果有序参数任务执行组织 && f != 格式::需求结果有序参数任务执行组织))
         throw std::runtime_error("任务成员或参数关系材料必须使用归档格式4");
     switch (f) {
+    case 格式::需求结果有序参数任务执行组织:
+        if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
+        return 编码问题头格式<格式::需求结果有序参数任务执行组织>(x);
+    case 格式::场景结果有序参数任务执行组织:
+        if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
+        return 编码问题头格式<格式::场景结果有序参数任务执行组织>(x);
     case 格式::旧方法副本:
         if (x.采用来源 != 新方法问题采用来源::旧方法副本) break;
         return 编码问题头格式<格式::旧方法副本>(x);
@@ -433,6 +515,12 @@ std::vector<std::uint64_t> 编码问题头(const 新方法问题反馈材料& x,
     case 格式::有序参数任务执行组织:
         if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
         return 编码问题头格式<格式::有序参数任务执行组织>(x);
+    case 格式::正式分支有序参数任务执行组织:
+        if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
+        return 编码问题头格式<格式::正式分支有序参数任务执行组织>(x);
+    case 格式::场景事实有序参数任务执行组织:
+        if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
+        return 编码问题头格式<格式::场景事实有序参数任务执行组织>(x);
     case 格式::任务成员有序参数任务执行组织:
         if (x.采用来源 != 新方法问题采用来源::任务执行组织) break;
         return 编码问题头格式<格式::任务成员有序参数任务执行组织>(x);
@@ -442,32 +530,45 @@ std::vector<std::uint64_t> 编码问题头(const 新方法问题反馈材料& x,
 新方法问题反馈材料 解码问题头(const std::vector<std::uint64_t>& data, 格式 f) {
     新方法问题反馈材料 x;
     switch (f) {
+    case 格式::需求结果有序参数任务执行组织: x=解码问题头格式<格式::需求结果有序参数任务执行组织>(data); break;
+    case 格式::场景结果有序参数任务执行组织: x=解码问题头格式<格式::场景结果有序参数任务执行组织>(data); break;
     case 格式::旧方法副本: x=解码问题头格式<格式::旧方法副本>(data); break;
     case 格式::任务执行组织: x=解码问题头格式<格式::任务执行组织>(data); break;
     case 格式::有序参数任务执行组织: x=解码问题头格式<格式::有序参数任务执行组织>(data); break;
     case 格式::任务成员有序参数任务执行组织: x=解码问题头格式<格式::任务成员有序参数任务执行组织>(data); break;
+    case 格式::场景事实有序参数任务执行组织: x=解码问题头格式<格式::场景事实有序参数任务执行组织>(data); break;
+    case 格式::正式分支有序参数任务执行组织: x=解码问题头格式<格式::正式分支有序参数任务执行组织>(data); break;
     default: throw std::runtime_error("未知问题归档格式");
     }
     if (!采用身份有效(x)) throw std::runtime_error("问题采用载荷非法");
-    if (含有序参数(x) != (f==格式::有序参数任务执行组织||f==格式::任务成员有序参数任务执行组织))
+    if (!归档需求结果有效(x)) throw std::runtime_error("归档已发布需求结果载荷非法");
+    if (含有序参数(x) != (f==格式::有序参数任务执行组织||f==格式::任务成员有序参数任务执行组织||(f==格式::场景事实有序参数任务执行组织||(f == 格式::正式分支有序参数任务执行组织 || (f == 格式::场景结果有序参数任务执行组织 || f == 格式::需求结果有序参数任务执行组织)))))
         throw std::runtime_error("有序参数载荷与归档格式不一致");
     return x;
 }
 std::vector<编码记录> 编码场景快照(const 新执行场景快照& x, 格式 f) {
     switch (f) {
+    case 格式::需求结果有序参数任务执行组织: return 编码场景快照格式<格式::需求结果有序参数任务执行组织>(x);
+    case 格式::场景结果有序参数任务执行组织: return 编码场景快照格式<格式::场景结果有序参数任务执行组织>(x);
     case 格式::旧方法副本: return 编码场景快照格式<格式::旧方法副本>(x);
     case 格式::任务执行组织: return 编码场景快照格式<格式::任务执行组织>(x);
     case 格式::有序参数任务执行组织: return 编码场景快照格式<格式::有序参数任务执行组织>(x);
     case 格式::任务成员有序参数任务执行组织: return 编码场景快照格式<格式::任务成员有序参数任务执行组织>(x);
+    case 格式::场景事实有序参数任务执行组织: return 编码场景快照格式<格式::场景事实有序参数任务执行组织>(x);
+    case 格式::正式分支有序参数任务执行组织: return 编码场景快照格式<格式::正式分支有序参数任务执行组织>(x);
     }
     throw std::runtime_error("未知场景归档格式");
 }
 新执行场景快照 解码场景快照(const std::vector<编码记录>& records, 格式 f) {
     switch (f) {
+    case 格式::需求结果有序参数任务执行组织: return 解码场景快照格式<格式::需求结果有序参数任务执行组织>(records);
+    case 格式::场景结果有序参数任务执行组织: return 解码场景快照格式<格式::场景结果有序参数任务执行组织>(records);
     case 格式::旧方法副本: return 解码场景快照格式<格式::旧方法副本>(records);
     case 格式::任务执行组织: return 解码场景快照格式<格式::任务执行组织>(records);
     case 格式::有序参数任务执行组织: return 解码场景快照格式<格式::有序参数任务执行组织>(records);
     case 格式::任务成员有序参数任务执行组织: return 解码场景快照格式<格式::任务成员有序参数任务执行组织>(records);
+    case 格式::场景事实有序参数任务执行组织: return 解码场景快照格式<格式::场景事实有序参数任务执行组织>(records);
+    case 格式::正式分支有序参数任务执行组织: return 解码场景快照格式<格式::正式分支有序参数任务执行组织>(records);
     }
     throw std::runtime_error("未知场景归档格式");
 }

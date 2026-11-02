@@ -13,6 +13,7 @@
 #include "../领域/服务值结算.本能合同.h"
 
 namespace 海中鱼巣 {
+class 接收需求认知服务;
 
 // 只缓存进程内已经正式建立并读回的世界事实身份；稳定编码本身就是
 // self 身份，不再建立运行代次、逻辑线程身份或第二份 self 事实。
@@ -198,9 +199,9 @@ enum class 新自我消息类型 : std::uint8_t {
     任务结果反馈 = 4,
     学习后需求复核 = 5,
     等待任务复核 = 6,
-    服务需求取得反馈 = 7,
     完整服务需求材料 = 8,
-    任务完成贡献复核 = 9
+    任务完成贡献复核 = 9,
+    行动请求承接 = 10
 };
 
 struct 新自我治理消息 final {
@@ -217,9 +218,9 @@ struct 新自我治理消息 final {
     std::optional<新任务结果反馈定位> 结果反馈;
     std::optional<新任务学习复核定位> 学习复核;
     std::optional<新任务等待复核定位> 等待复核;
-    std::optional<新服务需求取得反馈定位> 服务需求取得反馈;
     std::optional<新完整服务需求材料包> 完整服务需求材料;
     std::optional<新任务贡献反馈定位> 完成贡献复核;
+    std::optional<新行动请求承接来源> 行动请求来源{};
     friend bool operator==(const 新自我治理消息&,
         const 新自我治理消息&) = default;
 };
@@ -250,6 +251,8 @@ struct 新自我消息处理结果 final {
     std::optional<新自我筹办裁决接收状态> 筹办裁决接收状态;
     std::optional<新任务结果状态接收状态> 结果状态接收状态;
     std::optional<新任务治理执行读回结果> 执行独立读回;
+    // 正式读取的对方需求，仅认知；不表示已承接或已建立自我任务。
+    std::optional<新本能已发布需求结果> 已认知需求;
     std::optional<新需求当前满足结果> 任务需求当前复核;
     std::optional<新自我任务后继决议> 任务后继决议;
     std::optional<新自我任务后继接收状态> 任务后继接收状态;
@@ -268,6 +271,9 @@ struct 新自我消息处理结果 final {
     std::optional<新外部服务需求采用结果> 外部服务需求采用;
     std::optional<新任务贡献治理返回材料> 未确认直接贡献治理;
     std::optional<新服务值最终消费结果> 未确认直接最终消费;
+    // 工程停止仅移交本消息已发生的因果发布进度，不表示manager已采用。
+    std::optional<新自我筹办裁决::因果采用回执> 停止时因果采用进度;
+    std::optional<新行动请求采用结果> 行动请求采用{};
 };
 
 enum class 新自我消息接收状态 : std::uint8_t {
@@ -289,7 +295,6 @@ struct 新自我线程初始化结果 final {
     std::optional<新场景成员建立结果> 自我建立结果;
     std::optional<新自我本能双根初始化结果> 本能双根结果;
     std::optional<新需求建立结果> 完成服务需求建立结果;
-    std::optional<新服务值结算登记结果> 服务结算登记;
     std::optional<新服务值治理初始化结果> 服务结算治理;
     std::optional<新需求建立结果> 需要服务对象需求建立结果;
     std::optional<稳定编码> 自我所在场景;
@@ -325,10 +330,12 @@ struct 新自我线程快照 final {
     std::optional<稳定编码> 服务对象特征节点;
     std::optional<稳定编码> 需要服务对象需求;
     std::optional<稳定编码> 方法组织根;
+    // 只表示已到达消息线程入口，不代表首次业务复核完成。
     bool 线程已进入 = false;
     bool 停止已请求 = false;
     bool 线程已完成 = false;
     std::uint64_t 活动消息数 = 0;
+    // 仅在首次复核实际返回后有值；有值仍需按结果状态判断。
     std::optional<新自我本能需求复核结果> 首次需求复核;
     新自我需求扫描阶段 需求扫描阶段 = 新自我需求扫描阶段::未启动;
     std::optional<std::uint64_t> 最近需求数量;
@@ -370,8 +377,8 @@ public:
     // 在self初始化前建立或读回安全/服务根所需的特征和比较概念。
     新自我治理基础结果 建立或取得治理基础() noexcept;
 
-    // 创建 OS 线程并等待其进入常驻等待态。停止采用独立的进程内控制
-    // 信号，不伪装成治理消息。
+    // 创建 OS 线程并等待其到达运行入口，不等待首次需求复核或扫描完成。
+    // 首次准备期间消息仅入队；停止采用独立进程内信号，不伪装成治理消息。
     新自我线程操作结果 启动(std::uint64_t 等待毫秒) noexcept;
     // 启动前配置，启动后不可变。全树扫描结果必须经消息线程交接，
     // 因此启动治理线程前必须完成配置并绑定manager。
@@ -379,23 +386,22 @@ public:
         const 新自我消息运行配置& 配置) noexcept;
     // 启动前绑定，manager必须存活到self回收后；world须同时覆盖两者。
     新自我线程操作结果 绑定任务管理(新_任务管理线程类& 任务管理) noexcept;
+    新自我线程操作结果 绑定接收需求认知(接收需求认知服务&) noexcept;
+    void 通知接收认知变化() noexcept;
     新自我线程操作结果 绑定服务值结算确认端口(
         新服务值结算确认接口& 端口) noexcept;
     新自我消息接收结果 提交消息(
         const 新自我治理消息& 消息) noexcept;
     // 仅提交完整且明确确认的R/U/C定位；处理时独立读回，不同步等待建任务。
     新自我消息接收结果 提交完整服务需求材料(const 新完整服务需求材料包&) noexcept;
+    新自我消息接收结果 提交行动请求承接(const 新行动请求承接来源&) noexcept;
     新自我线程操作结果 请求停止() noexcept;
     std::stop_token 读取停止令牌() const noexcept;
     新自我线程操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新自我线程快照 读取快照() const noexcept;
+    新学习工作快照 读取学习工作快照() const noexcept;
 
 private:
-    friend class 服务需求本能运行服务;
-    新自我消息接收结果 提交服务需求执行(
-        const 新服务需求取得反馈定位&) noexcept;
-    bool 使用服务需求执行依赖(const 新_任务类&,
-        const 新_任务管理线程类&) const noexcept;
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };

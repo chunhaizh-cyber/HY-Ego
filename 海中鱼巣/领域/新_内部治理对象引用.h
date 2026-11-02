@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include "../核心/基础数据集.h"
 #include "新_状态类.h"
@@ -46,7 +47,7 @@ struct 新治理任务特征变化结果 final {
 enum class 新任务贡献动作种类 : std::int64_t {
     来源计值 = 1, 直接接收 = 2, 权威迁移 = 3, 直属结算收尾 = 4, 最终结算收尾 = 5
 };
-enum class 新结算能力类别 : std::uint8_t { 历史方法 = 1, 自我服务值治理 = 2 };
+enum class 新结算能力类别 : std::uint8_t { 自我服务值治理 = 2 };
 struct 新结算能力引用 final {
     新结算能力类别 类别;
     稳定编码 节点;
@@ -144,11 +145,15 @@ public:
         const 新方法虚拟存在引用&) const noexcept = 0;
 };
 class 新特征I64更新准备;
+using 新方法治理片段工厂 = std::function<基础封存追加片段()>;
 class 新方法治理世界协作接口 {
 public:
     virtual ~新方法治理世界协作接口() = default;
     virtual 新方法治理场景发布结果 发布新方法治理场景组(
         const std::vector<新方法虚拟存在引用>&, const 基础封存追加片段&,
+        新特征I64更新准备* 联动特征准备 = nullptr) noexcept = 0;
+    virtual 新方法治理场景发布结果 发布新方法治理场景组(
+        const std::vector<新方法虚拟存在引用>&, const 新方法治理片段工厂&,
         新特征I64更新准备* 联动特征准备 = nullptr) noexcept = 0;
     virtual void 迁移已有方法治理场景(
         const std::vector<新方法虚拟存在引用>&) noexcept = 0;

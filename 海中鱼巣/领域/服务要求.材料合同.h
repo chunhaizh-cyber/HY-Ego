@@ -7,8 +7,52 @@
 #include <variant>
 #include <vector>
 #include "新_需求类.h"
+#include "概念_二次特征类.h"
 
 namespace 海中鱼巣 {
+
+struct 服务要求特征语义快照 {
+    稳定编码 概念节点;
+    特征概念材料物理类型 材料类型 = 特征概念材料物理类型::I64标量;
+    std::optional<稳定编码> 单位;
+    特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
+    friend bool operator==(const 服务要求特征语义快照&, const 服务要求特征语义快照&) = default;
+};
+struct 服务要求值域语义快照 {
+    服务要求特征语义快照 特征语义;
+    特征概念值域 值域;
+    friend bool operator==(const 服务要求值域语义快照&, const 服务要求值域语义快照&) = default;
+};
+struct 服务要求比较语义快照 {
+    稳定编码 比较概念节点, 类型根节点;
+    二次特征算法 算法 = 二次特征算法::有向特征差值;
+    std::vector<二次特征概念输入定义> 输入定义组;
+    std::optional<稳定编码> 参照概念节点;
+    服务要求值域语义快照 输出语义;
+    std::vector<二次特征结果域种类> 结果域种类组;
+    friend bool operator==(const 服务要求比较语义快照&, const 服务要求比较语义快照&) = default;
+};
+struct 服务要求目标语义快照 {
+    服务要求特征语义快照 目标类型;
+    std::optional<服务要求值域语义快照> 目标域;
+    std::optional<服务要求比较语义快照> 比较;
+    friend bool operator==(const 服务要求目标语义快照&, const 服务要求目标语义快照&) = default;
+};
+struct 服务要求理解信息 {
+    稳定编码 节点, 语言场景节点;
+    std::string 公开会话标识;
+    稳定编码 来源人类节点, 目标存在节点;
+    新需求目标定义 目标;
+    服务要求目标语义快照 固定语义;
+    std::optional<稳定编码> 来源要求节点;
+    friend bool operator==(const 服务要求理解信息&, const 服务要求理解信息&) = default;
+};
+struct 服务要求确认信息 {
+    稳定编码 节点;
+    服务要求理解信息 理解;
+    bool 需重新确认 = false;
+    friend bool operator==(const 服务要求确认信息&, const 服务要求确认信息&) = default;
+};
 
 enum class 新服务要求分项种类 : std::uint8_t {
     来源人类 = 1, 目标存在, 目标特征类型, 目标定义
@@ -58,41 +102,24 @@ struct 新服务需求信息包 final {
     friend bool operator==(const 新服务需求信息包&, const 新服务需求信息包&) = default;
 };
 
-enum class 新服务需求获取方式 : std::uint8_t { 主动 = 1, 被动 = 2 };
-struct 新服务需求获取配置 final {
-    稳定编码 自我存在节点, 自我存在概念节点, 所在场景节点;
-    稳定编码 服务任务集合特征节点, 服务任务集合类型;
-    稳定编码 服务任务集合全域, 数量变化量类型, 已新增值域;
-    稳定编码 通用存在概念节点, 人类概念节点;
-    稳定编码 交互者特征类型节点, 对象需求类型;
-    friend bool operator==(const 新服务需求获取配置&, const 新服务需求获取配置&) = default;
-};
-struct 新服务需求获取动作回执 final {
-    bool 已新建 = false;
-    std::optional<稳定编码> 动作节点;
-};
-enum class 新服务需求执行控制 : std::uint8_t {
-    已收束 = 1, 条件已变化, 停止中断
-};
-struct 新服务需求执行回执 final {
-    新服务需求执行控制 控制 = 新服务需求执行控制::停止中断;
-    std::vector<稳定编码> 结果状态节点组;
-};
 class 方法参数场景;
 struct 新方法知识建立请求;
 struct 新方法建立结果;
 struct 新本能函数本次条件结果对;
 
-// 动作身份保留在外层执行租约中，不作为函数的第二个上下文参数。
-class 新服务需求获取本能端口 {
-public:
-    virtual ~新服务需求获取本能端口() = default;
-    virtual std::optional<新服务需求获取配置> 读取登记材料() const noexcept = 0;
-    virtual 新方法建立结果 确保方法登记(新服务需求获取方式,
-        const 新方法知识建立请求&) noexcept = 0;
-    virtual 新本能函数本次条件结果对 执行任务(新服务需求获取方式,
-        const 方法参数场景&, 稳定编码 执行实例节点) noexcept = 0;
-    virtual void 报告工程故障(std::string_view) noexcept = 0;
+struct 新服务对象新需求配置 final {
+    稳定编码 自我存在节点, 人类概念节点, 通用存在概念节点;
+    稳定编码 对象需求类型, 完整被认知需求概念;
+    稳定编码 需求身份概念;
+    friend bool operator==(const 新服务对象新需求配置&,
+        const 新服务对象新需求配置&) = default;
 };
-using 新服务需求工程报告函数 = void (*)(std::string_view) noexcept;
+// 新需求的材料来自显式绑定的场景存在；本端口不筹办、不承接为自我需求。
+class 新服务对象新需求本能端口 {
+public:
+    virtual ~新服务对象新需求本能端口() = default;
+    virtual std::optional<新服务对象新需求配置> 读取登记材料() const noexcept = 0;
+    virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
+    virtual 新本能函数本次条件结果对 执行(const 方法参数场景&) noexcept = 0;
+};
 } // namespace 海中鱼巣

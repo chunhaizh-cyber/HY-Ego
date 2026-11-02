@@ -10,7 +10,8 @@ class 概念_特征类;
 class 动作方法投影服务 final : public 动作方法定义只读提供者 {
 public:
     动作方法投影服务(新_方法类&, const 新_任务类&,
-        const 概念_存在类&, const 概念_特征类&) noexcept;
+        const 概念_存在类&, const 概念_特征类&,
+        const 关系治理动作只读提供者* = nullptr) noexcept;
     动作概念定义 读取动作方法投影(const 动作方法投影请求&) const override;
     bool 核验普通治理动作定义(const 动作概念定义&) const override;
 private:
@@ -18,5 +19,6 @@ private:
     const 新_任务类& 任务_;
     const 概念_存在类& 存在概念_;
     const 概念_特征类& 特征概念_;
+    const 关系治理动作只读提供者* 关系治理动作_;
 };
 }

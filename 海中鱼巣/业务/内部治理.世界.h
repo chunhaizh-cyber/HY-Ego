@@ -23,6 +23,9 @@ public:
     新方法治理场景发布结果 发布新方法治理场景组(
         const std::vector<新方法虚拟存在引用>&, const 基础封存追加片段&,
         新特征I64更新准备* 联动特征准备 = nullptr) noexcept override;
+    新方法治理场景发布结果 发布新方法治理场景组(
+        const std::vector<新方法虚拟存在引用>&, const 新方法治理片段工厂&,
+        新特征I64更新准备* 联动特征准备 = nullptr) noexcept override;
     void 迁移已有方法治理场景(const std::vector<新方法虚拟存在引用>&) noexcept override;
     std::optional<新方法治理场景信息> 读取方法治理场景(
         const 新方法虚拟存在引用&) const noexcept override;

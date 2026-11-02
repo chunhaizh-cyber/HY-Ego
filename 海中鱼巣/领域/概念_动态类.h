@@ -61,6 +61,12 @@ struct 动态概念信息 final {
     friend bool operator==(const 动态概念信息&,
         const 动态概念信息&) = default;
 };
+enum class 动作概念定义保护状态 : std::uint8_t { 已读取=1,概念不存在,前提已变化 };
+struct 动作概念定义保护结果 final {
+    动作概念定义保护状态 状态=动作概念定义保护状态::概念不存在;
+    std::optional<动态概念信息> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
+};
 
 enum class 动态概念操作状态 : std::uint8_t {
     已建立 = 1,
@@ -117,6 +123,7 @@ public:
     动态概念建立结果 建立或取得动作概念(const 动作概念定义&) noexcept;
     动态概念建立结果 建立或取得动作概念(const 动作概念定义&, 新事实追加保护增量&) noexcept;
     bool 是动作概念节点(稳定编码 节点) const noexcept;
+    动作概念定义保护结果 读取动作概念定义保护(稳定编码) const noexcept;
 
     // 每个双状态原子动态先建立一个新的实例概念，不按内容相同复用。
     动态概念建立结果 建立实例动态概念(

@@ -115,11 +115,27 @@ struct 新存在身份保护结果 final {
     std::vector<基础联合节点快照> 预期节点组;
     bool 前提已变化 = false;
 };
+enum class 新存在顶层特征定位状态 : std::uint8_t {
+    已读取 = 1, 输入不适用, 存在不存在, 依赖未就绪, 前提已变化, 资源失败
+};
+struct 新存在顶层特征定位信息 final {
+    稳定编码 存在节点, 专属存在概念节点;
+    std::vector<稳定编码> 顶层特征节点组;
+    friend bool operator==(const 新存在顶层特征定位信息&,
+        const 新存在顶层特征定位信息&) = default;
+};
+struct 新存在顶层特征定位结果 final {
+    新存在顶层特征定位状态 状态 = 新存在顶层特征定位状态::依赖未就绪;
+    std::optional<新存在顶层特征定位信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
 class 新_存在类 final : public 特征存在引用读取接口, public 特征存在成员读取接口 {
 public:
     特征存在成员读取结果 读取存在集合成员身份(稳定编码) const noexcept override;
     bool 装配存在集合成员保护字段(稳定编码) noexcept;
     新存在身份保护结果 读取存在身份保护(稳定编码) const noexcept;
+    // 只定位正式身份及顶层持有引用；各F及其值仍由特征owner读取。
+    新存在顶层特征定位结果 读取存在顶层特征定位保护(稳定编码) const noexcept;
     新存在特征值更新结果 建立当前引用集合特征状态(
         稳定编码, 稳定编码, 稳定编码, 稳定编码, const 新状态强时间&, 新事实追加保护增量&) noexcept;
     新存在特征值更新结果 完成已提交引用集合特征变化(
@@ -232,6 +248,7 @@ public:
 
 private:
     friend class 新_世界树类;
+    新存在身份保护结果 读取存在身份保护可抛内部(稳定编码) const;
     enum class 已提交准确值类别 : std::uint8_t { I64, 存在引用, 需求引用, 引用集合, 恢复需求引用 };
     新存在特征值更新结果 完成已恢复需求引用特征变化(
         稳定编码, 稳定编码, 稳定编码, 稳定编码, const 新状态强时间&) noexcept;

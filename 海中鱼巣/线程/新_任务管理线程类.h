@@ -6,6 +6,7 @@
 #include <memory>
 #include <optional>
 #include <stop_token>
+#include <variant>
 #include <vector>
 #include "../领域/新_任务类.h"
 #include "新_任务工作线程类.h"
@@ -44,16 +45,10 @@ enum class 新任务承接依据 : std::uint8_t {
     自我状态变化复核 = 3,
     自我全树扫描 = 4,
     自我条件子需求 = 5,
-    自我服务需求采用 = 6,
-    外部服务要求 = 7
+    外部服务要求 = 7,
+    行动请求 = 8
 };
 
-// 只交付已真实返回材料的执行定位，不把消息正文当作正式需求。
-struct 新服务需求取得反馈定位 final {
-    稳定编码 任务节点, 执行实例节点;
-    friend bool operator==(const 新服务需求取得反馈定位&,
-        const 新服务需求取得反馈定位&) = default;
-};
 
 // 唯一业务用途是承接需求；由自我决议的调用链提供具体需求。
 struct 新任务承接消息 final {
@@ -63,8 +58,8 @@ struct 新任务承接消息 final {
     // 只有“自我状态变化复核”携带正式状态节点；它同时作为该根的
     // 单调决议身份，防止旧状态通知在任务终结后重新启用任务。
     std::optional<稳定编码> 来源状态节点;
-    std::optional<新服务需求取得反馈定位> 服务需求取得来源;
     std::optional<稳定编码> 外部要求节点;
+    std::optional<新行动请求承接来源> 行动请求来源{};
     friend bool operator==(const 新任务承接消息&, const 新任务承接消息&) = default;
 };
 
@@ -139,7 +134,7 @@ enum class 新任务筹办处理状态 : std::uint8_t {
     状态推进失败,
     停止取消,
     内部错误,
-    组织能力暂不支持
+    组织能力暂不支持, 复合目标需自我确认, 内容结果定位未支持, 未执行目标已满足
 };
 
 struct 新任务筹办处理结果 final {
@@ -151,6 +146,8 @@ struct 新任务筹办处理结果 final {
     std::optional<新任务治理条件筹办结果> 独立条件筹办;
     std::optional<新任务条件子需求提议> 独立子需求提议;
     std::optional<新任务因果子需求提议> 因果子需求提议;
+    std::optional<新任务复合目标分解提议> 复合目标提议;
+    std::optional<新任务执行前目标收束结果> 执行前目标收束;
 };
 
 // manager只向self交付当前筹办结果的稳定定位；正式筹办内容必须由
@@ -192,13 +189,14 @@ struct 新自我学习复核决议 final {
     新任务学习复核定位 定位;
     新自我学习复核状态 状态 = 新自我学习复核状态::需核查;
     std::optional<新需求当前满足状态> 当前满足状态;
+    std::optional<新需求筹办资格结果> 筹办资格;
     friend bool operator==(const 新自我学习复核决议&,
         const 新自我学习复核决议&) = default;
 };
 
 enum class 新自我学习复核接收状态 : std::uint8_t {
     已接收 = 1, 精确重复, 定位已变化, 身份冲突,
-    已停止接收, 入口拒绝, 资源失败, 内部错误
+    已停止接收, 入口拒绝, 资源失败, 内部错误, 筹办材料已变化 = 9
 };
 
 enum class 新任务学习复核反馈接收状态 : std::uint8_t {
@@ -227,6 +225,7 @@ struct 新自我等待复核决议 final {
     新任务等待复核定位 定位;
     新自我等待复核状态 状态 = 新自我等待复核状态::需核查;
     std::optional<新需求当前满足状态> 当前满足状态;
+    std::optional<新需求筹办资格结果> 筹办资格;
     friend bool operator==(const 新自我等待复核决议&,
         const 新自我等待复核决议&) = default;
 };
@@ -236,7 +235,7 @@ enum class 新任务等待复核反馈接收状态 : std::uint8_t {
 };
 enum class 新自我等待复核接收状态 : std::uint8_t {
     已接收 = 1, 精确重复, 定位已变化, 身份冲突,
-    已停止接收, 入口拒绝, 资源失败, 内部错误
+    已停止接收, 入口拒绝, 资源失败, 内部错误, 筹办材料已变化 = 9
 };
 
 enum class 新任务结果状态接收状态 : std::uint8_t {
@@ -292,7 +291,7 @@ enum class 新任务执行处理状态 : std::uint8_t {
     独立读回失败,
     停止取消,
     内部错误,
-    工程停止
+    工程停止, 未执行目标已满足
 };
 
 struct 新任务执行处理结果 final {
@@ -307,6 +306,8 @@ struct 新任务结果反馈定位 final {
     新任务工作请求 原工作;
     稳定编码 执行实例节点;
     稳定编码 影响评估节点;
+    // 索引提示不是事实；self仍从同一X正式重读已发布需求。
+    std::optional<稳定编码> 已发布需求节点;
     bool 完整() const noexcept;
     friend bool operator==(const 新任务结果反馈定位&,
         const 新任务结果反馈定位&) = default;
@@ -349,6 +350,9 @@ struct 新子需求采用项 final {
     新任务条件子需求项 原提议;
     新子需求采用状态 状态 = 新子需求采用状态::未处理;
     std::optional<稳定编码> 需求节点;
+    std::optional<新来源前驱内容模板> 来源前驱模板;
+    std::optional<新服务取得目标实例信息> 来源前驱实例;
+    std::optional<新需求完整目标> 来源前驱具体目标;
     friend bool operator==(const 新子需求采用项&,
         const 新子需求采用项&) = default;
 };
@@ -390,6 +394,12 @@ enum class 新自我筹办裁决接收状态 : std::uint8_t {
     已停止接收, 入口拒绝, 资源失败, 内部错误
 };
 
+// 工程停止与完整业务结果分账，不把取消解释成空边或拒绝采用。
+using 新因果等待边可停止结果 = std::variant<
+    std::vector<新因果任务等待边>, 新任务因果读取取消>;
+using 新自我因果筹办提交结果 = std::variant<
+    新自我筹办裁决接收状态, 新任务因果读取取消>;
+
 // 当前完成M1承接、W1/W2筹办、self执行前裁决回收，并在self允许后
 // 派发W3本能执行；结算任务无明确来源时等待条件，具备来源后同样
 // 经W1召回、W2核验和self选择进入worker，初始化不预绑函数指针。
@@ -413,7 +423,6 @@ public:
         const void* 自我所有者, std::uint64_t 工作编号,
         const 新任务贡献反馈定位&) noexcept;
     bool 绑定方法学习读取(const 新_方法类&) noexcept;
-    新任务管理操作状态 通知方法退出适用(稳定编码 方法节点) noexcept;
     // 交接编号仅作进程内去重；相关任务经self fresh复核后才能重新筹办。
     新方法学习接收状态 提交方法学习结束(
         const 新学习结束通知&, std::uint64_t 交接编号) noexcept;
@@ -433,6 +442,7 @@ public:
     新任务管理操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
     新任务管理快照 读取快照() const noexcept;
     std::vector<新因果任务等待边> 读取因果等待边() const;
+    新因果等待边可停止结果 读取因果等待边(std::stop_token) const;
     std::optional<新任务筹办处理结果> 读取最近筹办结果(
         稳定编码 任务节点) const noexcept;
     std::optional<新自我筹办裁决> 读取最近自我筹办裁决(
@@ -480,14 +490,18 @@ private:
         贡献反馈接收函数 贡献接收,
         std::function<void()> 最终服务工作唤醒,
         const 新长期服务值结算配置& 服务结算配置) noexcept;
-    新任务承接接收结果 提交服务需求执行承接(const 新任务承接消息&) noexcept;
     新任务承接接收结果 提交外部服务需求承接(const 新任务承接消息&) noexcept;
+    新任务承接接收结果 提交行动请求需求承接(const 新任务承接消息&) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
     新自我筹办裁决接收状态 提交自我筹办裁决(
         const 新自我筹办裁决& 裁决) noexcept;
+    新自我因果筹办提交结果 提交自我因果筹办裁决(
+        const 新自我筹办裁决&, std::stop_token) noexcept;
     新任务承接接收结果 提交已确认条件子需求(
         const 新任务筹办反馈定位& 父筹办定位,
         const 新任务承接消息& 消息) noexcept;
+    新任务操作状态 提交已确认复合子需求(const 新任务筹办反馈定位&,
+        const 新任务复合采用请求&) noexcept;
     新任务结果状态接收状态 提交结果状态通知(
         稳定编码 状态节点) noexcept;
     新自我任务后继接收状态 提交自我任务后继决议(

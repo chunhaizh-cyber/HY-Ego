@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\字段询问.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\本能字段询问.运行接口.h" />
+    <ClCompile Include="海中鱼巣\领域\本能字段询问.运行接口.cpp" />
+    <ClInclude Include="海中鱼巣\业务\字段询问.语言服务.h" />
+    <ClCompile Include="海中鱼巣\业务\字段询问.语言服务.cpp" />
+    <ClInclude Include="海中鱼巣\业务\字段询问.本能运行服务.h" />
+    <ClCompile Include="海中鱼巣\业务\字段询问.本能运行服务.cpp" />
+  </ItemGroup>
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -124,6 +133,7 @@
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\debug\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+          <StackReserveSize>16777216</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -144,6 +154,7 @@
       <AdditionalDependencies>bcrypt.lib;ws2_32.lib;shell32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories Condition="'$(EnableD455RealSense)'=='true'">$(D455VcpkgRoot)\installed\x64-windows\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies Condition="'$(EnableD455RealSense)'=='true'">realsense2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+          <StackReserveSize>16777216</StackReserveSize>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -194,6 +205,8 @@
     <ClCompile Include="海中鱼巣\界面\宿主.网页对话.cpp" />
     <ClInclude Include="海中鱼巣\装配.普通应用.h" />
     <ClCompile Include="海中鱼巣\装配.普通应用.cpp" />
+    <ClInclude Include="海中鱼巣\装配.网页外设.h" />
+    <ClCompile Include="海中鱼巣\装配.网页外设.cpp" />
     <ClCompile Include="海中鱼巣\核心\基础数据集.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_自然语言世界树类.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_语言类.cpp" />
@@ -228,7 +241,12 @@
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\连接.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\领域\消息连接.规则.cpp" />
+    <ClCompile Include="海中鱼巣\业务\本能交互.执行核心.cpp" />
+    <ClCompile Include="海中鱼巣\业务\本能需求.执行核心.cpp" />
+    <ClCompile Include="海中鱼巣\业务\接收需求认知.服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\内部治理.世界.cpp" />
+    <ClCompile Include="海中鱼巣\业务\内部治理.先天因果初始化服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务需求.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象需求.发布服务.cpp" />
@@ -287,6 +305,10 @@
     <ClInclude Include="海中鱼巣\业务\因果.任务筹办服务.h" />
     <ClCompile Include="海中鱼巣\业务\因果.任务筹办服务.cpp" />
     <ClInclude Include="海中鱼巣\领域\概念_存在类.h" />
+    <ClInclude Include="海中鱼巣\领域\信息内容.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\接收认知来源.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\接收需求认知.服务.h" />
+    <ClInclude Include="海中鱼巣\领域\语言含义图.数据.h" />
     <ClInclude Include="海中鱼巣\领域\新_存在类.h" />
     <ClInclude Include="海中鱼巣\领域\新_场景类.h" />
     <ClInclude Include="海中鱼巣\领域\新_状态类.h" />
@@ -305,14 +327,22 @@
     <ClInclude Include="海中鱼巣\领域\新_本能函数集.h" />
     <ClInclude Include="海中鱼巣\领域\服务值结算.本能合同.h" />
     <ClInclude Include="海中鱼巣\领域\服务要求.材料合同.h" />
+    <ClInclude Include="海中鱼巣\领域\模拟需求.数据.h" />
     <ClInclude Include="海中鱼巣\业务\服务需求.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\领域\服务对象.材料合同.h" />
     <ClInclude Include="海中鱼巣\业务\服务对象.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务对象需求.发布服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\领域\消息交互.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\消息连接.规则.h" />
+    <ClInclude Include="海中鱼巣\领域\本能交互.运行接口.h" />
+    <ClInclude Include="海中鱼巣\业务\本能交互.执行核心.h" />
+    <ClInclude Include="海中鱼巣\业务\本能需求.执行核心.h" />
+    <ClInclude Include="海中鱼巣\领域\本能需求.运行接口.h" />
     <ClInclude Include="海中鱼巣\领域\连接.本能合同.h" />
     <ClInclude Include="海中鱼巣\业务\内部治理.世界.h" />
+    <ClInclude Include="海中鱼巣\业务\内部治理.先天因果初始化服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务要求.结构化.h" />
     <ClInclude Include="海中鱼巣\领域\新_本能函数管理类.h" />
     <ClInclude Include="海中鱼巣\领域\新_因果公共类型.h" />

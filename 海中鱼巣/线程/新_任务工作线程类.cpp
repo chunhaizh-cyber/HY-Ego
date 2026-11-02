@@ -10,6 +10,16 @@
 #include <new>
 #include <thread>
 #include <vector>
+// 仅具名排查构建开启；默认构建不编译本诊断，不改变工作结果。
+#if defined(HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL) || defined(HY_EGO_DEBUG_LOG_WORKER_EXECUTION)
+#include "../核心/日志系统.h"
+#include <atomic>
+#include <sstream>
+#endif
+#ifdef HY_EGO_DEBUG_LOG_WORKER_EXECUTION
+#include <exception>
+#include <stop_token>
+#endif
 
 namespace 海中鱼巣 {
 namespace {
@@ -17,6 +27,135 @@ std::mutex 工作所有者互斥;
 const 新_任务工作线程类* 工作所有者 = nullptr;
 // 在取得join串行锁之前识别自身，避免另一线程正在join本线程时相互等待。
 thread_local const void* 当前工作池 = nullptr;
+
+#ifdef HY_EGO_DEBUG_LOG_WORKER_EXECUTION
+const wchar_t* 工作执行观察种类名(新任务工作种类 种类) noexcept {
+    switch (种类) {
+#define 工作种类项(名称) case 新任务工作种类::名称: return L## #名称;
+    工作种类项(查找方法) 工作种类项(检查条件) 工作种类项(执行本能动作)
+    工作种类项(获取本能结果) 工作种类项(读取任务调度材料)
+    工作种类项(检测本能结果) 工作种类项(执行最终服务消费) 工作种类项(执行任务贡献治理)
+#undef 工作种类项
+    }
+    return L"未知枚举";
+}
+
+class 工作执行观察 final {
+public:
+    工作执行观察(const 新任务工作请求& 请求, std::stop_token 停止) noexcept
+        : 请求_(请求), 停止_(停止), 开始_(std::chrono::steady_clock::now()),
+          原异常数_(std::uncaught_exceptions()) {
+        try {
+            static std::atomic<std::uint64_t> 条数{0};
+            const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
+            if (序号 > 256) return;
+            if (序号 == 256) {
+                (void)记录调试日志(L"WORKER_EXECUTION", L"任务工作线程", L"日志截断",
+                    L"本进程仅观察前256项工作的起止，不裁剪实际工作。");
+                return;
+            }
+            已启用_ = true;
+            记录(L"进入实际工作");
+        } catch (...) {} // 只隔离人读诊断故障，不进入业务结果。
+    }
+
+    ~工作执行观察() noexcept {
+        if (已启用_) 记录(std::uncaught_exceptions() > 原异常数_
+            ? L"实际工作异常展开" : L"实际工作已返回");
+    }
+
+private:
+    void 记录(const wchar_t* 阶段) const noexcept {
+        try {
+            const auto 耗时 = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - 开始_).count();
+            std::wostringstream 文本;
+            文本 << L"工作编号=" << 请求_.工作编号
+                 << L"；工作种类=" << 工作执行观察种类名(请求_.种类)
+                 << L"；任务引用=" << 请求_.任务节点.值
+                 << L"；耗时毫秒=" << 耗时
+                 << L"；观察到池停止=" << (停止_.stop_requested() ? L"是" : L"否");
+            (void)记录调试日志(L"WORKER_EXECUTION", L"任务工作线程", 阶段, 文本.str());
+        } catch (...) {} // 不查询领域材料、不加业务锁、不影响原异常展开。
+    }
+
+    const 新任务工作请求& 请求_;
+    std::stop_token 停止_;
+    std::chrono::steady_clock::time_point 开始_;
+    int 原异常数_;
+    bool 已启用_ = false;
+};
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+const wchar_t* 召回诊断状态名(新任务治理方法召回状态 状态) noexcept {
+    switch (状态) {
+#define 召回状态项(名称) case 新任务治理方法召回状态::名称: return L## #名称;
+    召回状态项(已发布有候选) 召回状态项(已发布完整无候选)
+    召回状态项(任务状态已变化) 召回状态项(尚未初始化)
+    召回状态项(任务不存在) 召回状态项(需求不存在)
+    召回状态项(方法查询未完成) 召回状态项(候选发布未完成)
+    召回状态项(结构不一致) 召回状态项(资源失败)
+    召回状态项(需求信息待完善) 召回状态项(复合目标需自我确认)
+    召回状态项(内容结果定位未支持) 召回状态项(未执行目标已满足)
+#undef 召回状态项
+    }
+    return L"未知枚举";
+}
+
+template<class 状态类型>
+const wchar_t* 召回诊断操作名(状态类型 状态) noexcept {
+    switch (状态) {
+    case 状态类型::已建立: return L"已建立";
+    case 状态类型::已找到: return L"已找到";
+    case 状态类型::已修改: return L"已修改";
+    case 状态类型::无变化: return L"无变化";
+    case 状态类型::入口拒绝: return L"入口拒绝";
+    case 状态类型::尚未初始化: return L"尚未初始化";
+    case 状态类型::方法不存在: return L"方法不存在";
+    case 状态类型::结构不一致: return L"结构不一致";
+    case 状态类型::资源失败: return L"资源失败";
+    default: return L"其它操作状态";
+    }
+}
+
+void 记录召回诊断(const 新任务工作请求& 请求,
+    const 新任务工作处理结果* 结果) noexcept {
+    try {
+        static std::atomic<std::uint64_t> 条数{0};
+        const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
+        if (序号 > 256) return;
+        if (序号 == 256) {
+            (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务工作线程", L"日志截断",
+                L"本进程仅保留前256条召回诊断，不裁剪实际查询或任务。");
+            return;
+        }
+        std::wostringstream 文本;
+        文本 << L"工作编号=" << 请求.工作编号 << L" 任务引用=" << 请求.任务节点.值;
+        if (结果 && 结果->方法召回) {
+            const auto& 召回 = *结果->方法召回;
+            文本 << L" 原召回状态=" << 召回诊断状态名(召回.状态);
+            if (召回.需求节点) 文本 << L" 需求引用=" << 召回.需求节点->值;
+            else 文本 << L" 需求引用=未取得";
+            if (召回.方法查询)
+                文本 << L" 方法查询状态=" << 召回诊断操作名(召回.方法查询->状态)
+                     << L" 查询候选数=" << 召回.方法查询->方法节点组.size();
+            else 文本 << L" 方法查询=未取得";
+            文本 << L" 发布已尝试=" << (召回.发布已尝试 ? L"是" : L"否");
+            if (召回.发布结果) {
+                文本 << L" 发布返回状态=" << 召回诊断操作名(召回.发布结果->状态);
+                if (召回.发布结果->材料节点)
+                    文本 << L" 发布材料引用=" << 召回.发布结果->材料节点->值;
+                else 文本 << L" 发布材料引用=未取得";
+            } else 文本 << L" 发布结果=未取得";
+            if (召回.候选材料节点) 文本 << L" 正式候选材料引用=" << 召回.候选材料节点->值;
+            else 文本 << L" 正式候选材料引用=未取得";
+        }
+        (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务工作线程",
+            结果 ? L"召回已返回" : L"进入召回", 文本.str());
+    } catch (...) {} // 诊断失败不改变实际工作返回、映射及停止行为。
+}
+#endif
 
 std::chrono::milliseconds 工作等待时长(std::uint64_t 毫秒) noexcept {
     const auto 最大 = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -213,6 +352,9 @@ struct 新_任务工作线程类::实现 final {
     }
 
     void 处理工作(const std::shared_ptr<工作项>& 项, 新任务工作处理结果& 结果) {
+#ifdef HY_EGO_DEBUG_LOG_WORKER_EXECUTION
+        工作执行观察 观察(项->请求, 停止源.get_token());
+#endif
         if (项->请求.种类 == 新任务工作种类::执行任务贡献治理) {
             if (!最终服务消费端口 || !项->请求.贡献来源)
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"贡献治理工作", L"端口或完成定位缺失");
@@ -236,8 +378,19 @@ struct 新_任务工作线程类::实现 final {
             结果.调度材料 = 任务服务->读取任务调度材料();
             结果.状态 = 新任务工作处理状态::调度材料已返回;
         } else if (项->请求.种类 == 新任务工作种类::查找方法) {
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            记录召回诊断(项->请求, nullptr);
+#endif
             结果.方法召回 = 任务服务->查询任务方法候选并发布(项->请求.任务节点);
+            结果.复合目标提议=结果.方法召回->复合目标提议;
             switch (结果.方法召回->状态) {
+            case 新任务治理方法召回状态::未执行目标已满足:
+                结果.执行前目标收束=结果.方法召回->执行前目标收束;
+                结果.状态=新任务工作处理状态::未执行目标已满足;break;
+            case 新任务治理方法召回状态::复合目标需自我确认:
+                结果.状态=新任务工作处理状态::复合目标需自我确认;break;
+            case 新任务治理方法召回状态::内容结果定位未支持:
+                结果.状态=新任务工作处理状态::内容结果定位未支持;break;
             case 新任务治理方法召回状态::已发布有候选:
                 结果.状态 = 新任务工作处理状态::已发布有候选; break;
             case 新任务治理方法召回状态::已发布完整无候选:
@@ -256,9 +409,16 @@ struct 新_任务工作线程类::实现 final {
             case 新任务治理方法召回状态::资源失败:
                 结果.状态 = 新任务工作处理状态::需核查; break;
             }
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            记录召回诊断(项->请求, &结果);
+#endif
         } else if (项->请求.种类 == 新任务工作种类::检查条件) {
             结果.执行组织交付 = 任务服务->交付候选方法执行组织(项->请求.任务节点);
             const auto 交付 = 结果.执行组织交付->状态;
+            if(交付==新任务执行组织状态::定义前提已变化) {
+                结果.状态=新任务工作处理状态::执行组织定义前提已变化;
+                return;
+            }
             if (交付 == 新任务执行组织状态::增补结构暂不支持) {
                 结果.状态 = 新任务工作处理状态::组织能力暂不支持;
                 return; // 明确能力边界；不得继续用旧组织产生条件或子需求。
@@ -296,7 +456,10 @@ struct 新_任务工作线程类::实现 final {
         } else if (项->请求.种类 == 新任务工作种类::执行本能动作 && 项->请求.本能执行请求) {
             新_本能函数管理类::本能停止守卫 停止守卫(停止源.get_token());
             结果.本能执行 = 任务服务->执行任务本能方法(*项->请求.本能执行请求);
-            结果.状态 = 结果.本能执行->状态 == 新任务治理本能执行状态::任务状态已变化
+            if(结果.本能执行->状态==新任务治理本能执行状态::未执行目标已满足){
+                结果.执行前目标收束=结果.本能执行->执行前目标收束;
+                结果.状态=新任务工作处理状态::未执行目标已满足;
+            } else 结果.状态 = 结果.本能执行->状态 == 新任务治理本能执行状态::任务状态已变化
                 ? 新任务工作处理状态::任务状态已变化 : 新任务工作处理状态::本能动作已返回;
         } else if (项->请求.种类 == 新任务工作种类::获取本能结果 && 项->请求.本能结果获取请求) {
             结果.本能结果获取 = 任务服务->获取任务本能结果(*项->请求.本能结果获取请求);

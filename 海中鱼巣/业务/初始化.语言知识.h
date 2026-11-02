@@ -14,9 +14,15 @@ namespace 海中鱼巣 {
 class 概念_存在类;
 class 概念_名称关系类;
 
+struct 初始化语言概念名称绑定 final {
+    std::string 语义键;
+    稳定编码 概念节点{};
+};
+
 struct 初始化语言知识请求 final {
     std::string 标准文本;
     稳定编码 语言节点, 规范化合同节点;
+    std::vector<初始化语言概念名称绑定> 概念名称绑定组;
 };
 
 enum class 初始化语言知识状态 : std::uint8_t {

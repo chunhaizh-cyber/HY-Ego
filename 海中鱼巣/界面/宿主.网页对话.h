@@ -4,12 +4,28 @@
 #include <csignal>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace 海中鱼巣 {
+
+enum class 网页控制快照状态 : std::uint8_t {
+    未接入, 采集中, 已取得, 采集失败, 已停止
+};
+struct 网页控制快照读取结果 final {
+    网页控制快照状态 状态 = 网页控制快照状态::未接入;
+    std::shared_ptr<const std::string> UTF8JSON;
+    std::uint64_t 序号 = 0;
+    std::uint64_t 距采集完成毫秒 = 0;
+    bool 正在采集 = false;
+};
+struct 网页控制面板回调组 final {
+    // 仅取得共享缓存，不得在HTTP线程查询业务owner。
+    std::function<网页控制快照读取结果()> 读取;
+};
 
 enum class 网页对话宿主状态 : std::uint8_t {
     用户结束 = 0,
@@ -96,15 +112,6 @@ struct 网页对话页面消息快照结果 final {
     std::size_t 最大消息条数,
     std::size_t 最大正文总字节数) noexcept;
 
-// 会话标识只使用公开来源标识，不传递URL中的私有令牌。
-// 对话框标识仅定位本次页面，不是认证身份。正式事实接收后的工程错误
-// 必须终止，不能返回false诱使客户端把已经收到的内容当作未接收。
-using 网页对话消息接收函数 = bool (*)(
-    std::string_view 会话标识,
-    std::string_view 对话框标识,
-    std::uint64_t 消息序号,
-    std::string_view UTF8正文) noexcept;
-
 enum class 网页服务输入状态 : std::uint8_t {
     已完成 = 1, 匿名会话, 已复用, 未绑定, 会话失效, 输入不完整,
     输入不合法, 对象不匹配, 理解不存在, 结构不一致, 资源失败,
@@ -182,6 +189,7 @@ struct 网页服务输入回调组 {
         const 网页部分服务要求提交&) noexcept = nullptr;
     网页部分服务要求结果 (*查询部分要求)(std::string_view,
         std::uint64_t 要求编码) noexcept = nullptr;
+    void (*接收事实已记录)(std::string_view 会话,std::string_view 页面,std::uint64_t 上行序号) noexcept = nullptr;
 };
 
 struct 网页对话框目标 final {
@@ -210,9 +218,9 @@ struct 网页定向发送事实 final {
     std::uint64_t 提交序号 = 0;
     std::string UTF8正文;
 };
-struct 网页对话框事实回调组 final {
-    bool (*确认页面)(const 网页对话框目标&) noexcept = nullptr;
-    void (*发送完成)(const 网页定向发送事实&) noexcept = nullptr;
+struct 网页输出入列请求 final {
+    网页对话框目标 目标;
+    std::string UTF8正文;
 };
 struct 网页输出队列项 final {
     网页对话框目标 目标;
@@ -228,10 +236,21 @@ struct 网页输出队列回执 final {
 };
 // 只在宿主运行租约内借用；提供者不得回调宿主或重新取得应用上下文锁。
 struct 网页输出队列回调组 final {
-    std::function<网页输出队列回执(const 网页定向发送事实&)> 入列;
+    std::function<网页输出队列回执(const 网页输出入列请求&)> 入列;
     std::function<网页输出队列回执(const 网页对话框目标&)> 领取;
     std::function<网页输出队列回执(const 网页对话框目标&, std::uint64_t)> 取消;
     std::function<网页输出队列回执(const 网页对话框目标&)> 清空;
+};
+// 完整网页外设控制域；业务服务及自我/任务状态不参与外设事实准入。
+// 闭包保活适配状态，外层必须在world销毁前关闭模块并收束宿主。
+struct 网页外设运行回调组 final {
+    std::function<bool(std::string_view)> 会话开始;
+    std::function<void(std::string_view)> 会话结束;
+    std::function<bool(const 网页对话框目标&)> 确认页面;
+    std::function<bool(std::string_view, std::string_view,
+        std::uint64_t, std::string_view)> 接收消息;
+    std::function<void(const 网页定向发送事实&)> 发送完成;
+    网页输出队列回调组 输出队列;
 };
 网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
 网页定向发送结果 查询网页对话框发送(
@@ -255,22 +274,8 @@ bool 释放网页对话框出站占用(const 网页对话框目标&, std::uint64
 // 页面显式请求结束或进程停止信号到达前，本函数保持运行。
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收 = nullptr) noexcept;
-
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
-    const 网页服务输入回调组& 服务输入) noexcept;
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
+    const 网页外设运行回调组& 外设,
     const 网页服务输入回调组& 服务输入,
-    const 网页对话框事实回调组& 对话框事实) noexcept;
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
-    const 网页服务输入回调组& 服务输入,
-    const 网页对话框事实回调组& 对话框事实,
-    const 网页输出队列回调组& 输出队列) noexcept;
+    const 网页控制面板回调组& 控制面板) noexcept;
 
 } // namespace 海中鱼巣

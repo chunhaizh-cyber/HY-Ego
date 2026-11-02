@@ -5,10 +5,12 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 #include "../领域/概念_特征类.h"
 
 namespace 海中鱼巣 {
+struct 新特征匹配定义快照;
 
 struct 数值模拟输入区间 final {
     std::int64_t 下界 = 0;
@@ -143,6 +145,14 @@ std::vector<通用模拟候选值> 生成通用模拟整数候选(
 // 全有限枚举随机排列、不放回；不削减合法候选覆盖。
 std::vector<通用模拟候选值> 生成通用模拟枚举候选(
     std::vector<通用模拟候选值> 候选, std::uint64_t 种子);
+enum class 通用UTF8取样状态 : std::uint8_t { 已生成=1, 无合法候选, 域未支持 };
+struct 通用UTF8取样结果 final {
+    通用UTF8取样状态 状态=通用UTF8取样状态::域未支持;
+    std::vector<std::string> 候选;
+    bool 全有限域=false;
+};
+通用UTF8取样结果 生成通用模拟UTF8候选(const 新特征匹配定义快照&,
+    bool 非空,const std::vector<新特征值信息>& 有限材料,std::uint64_t 种子);
 
 class 通用模拟组合游标 final {
 public:

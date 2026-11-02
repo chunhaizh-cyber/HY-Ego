@@ -1,7 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="领域">
+      <UniqueIdentifier>{C734D1D8-C842-42AB-B4AB-CE48DD1FA213}</UniqueIdentifier>
+    </Filter>
+    <ClInclude Include="海中鱼巣\领域\字段询问.数据.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\本能字段询问.运行接口.h"><Filter>领域</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\领域\本能字段询问.运行接口.cpp"><Filter>领域</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\字段询问.语言服务.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\字段询问.语言服务.cpp"><Filter>业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\字段询问.本能运行服务.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\字段询问.本能运行服务.cpp"><Filter>业务</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="海中鱼巣\业务\连接.本能运行服务.cpp"><Filter>业务</Filter></ClCompile>
+    <ClCompile Include="海中鱼巣\业务\本能交互.执行核心.cpp"><Filter>业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\本能交互.执行核心.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\本能需求.执行核心.cpp"><Filter>业务</Filter></ClCompile>
+    <ClCompile Include="海中鱼巣\业务\接收需求认知.服务.cpp"><Filter>业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\接收需求认知.服务.h"><Filter>业务</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\业务\本能需求.执行核心.h"><Filter>业务</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\本能需求.运行接口.h"><Filter>领域</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\领域\消息连接.规则.cpp"><Filter>领域</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\领域\消息连接.规则.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\消息交互.数据.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\本能交互.运行接口.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h"><Filter>业务</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\连接.本能合同.h"><Filter>领域\合同</Filter></ClInclude>
     <Filter Include="源文件">
@@ -161,6 +184,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClCompile Include="海中鱼巣\装配.普通应用.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\装配.网页外设.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\装配.网页外设.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\启动.应用程序.h">
@@ -387,6 +416,15 @@
     <ClInclude Include="海中鱼巣\领域\概念_存在类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\信息内容.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\接收认知来源.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\语言含义图.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\领域\概念_存在类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -471,6 +509,9 @@
     <ClInclude Include="海中鱼巣\领域\服务要求.材料合同.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\模拟需求.数据.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClInclude Include="海中鱼巣\领域\服务对象.材料合同.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -498,7 +539,13 @@
     <ClInclude Include="海中鱼巣\业务\内部治理.世界.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\业务\内部治理.先天因果初始化服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\内部治理.世界.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="海中鱼巣\业务\内部治理.先天因果初始化服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClInclude Include="海中鱼巣\业务\服务要求.结构化.h">

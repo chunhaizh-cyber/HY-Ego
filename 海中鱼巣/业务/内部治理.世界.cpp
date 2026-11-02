@@ -189,6 +189,18 @@ std::optional<新方法治理场景信息> 新_内部治理世界类::读取方�
 新方法治理场景发布结果 新_内部治理世界类::发布新方法治理场景组(
     const std::vector<新方法虚拟存在引用>& 引用组, const 基础封存追加片段& 方法片段,
     新特征I64更新准备* 联动特征准备) noexcept {
+    try {
+        // 旧调用保持原封存身份及前提；适配器只在本次同步调用期间借用。
+        const 新方法治理片段工厂 工厂 = [&方法片段]() { return 方法片段; };
+        return 发布新方法治理场景组(引用组, 工厂, 联动特征准备);
+    } catch (...) {
+        return {}; // 工厂适配尚未进入候选准备，明确零发表。
+    }
+}
+
+新方法治理场景发布结果 新_内部治理世界类::发布新方法治理场景组(
+    const std::vector<新方法虚拟存在引用>& 引用组, const 新方法治理片段工厂& 方法片段工厂,
+    新特征I64更新准备* 联动特征准备) noexcept {
     std::vector<新方法治理场景发布准备> 准备组;
     bool 发布结果须保留 = false;
     try {
@@ -206,6 +218,10 @@ std::optional<新方法治理场景信息> 新_内部治理世界类::读取方�
             if (!准备) throw std::runtime_error("method scene preparation failed");
             准备组.push_back(std::move(*准备));
         }
+        // 全部场景prepare已经返回；这里不持场景/E/EC锁。仅同步调用一次，
+        // 不保存工厂、不刷新旧片段，也不在CAS失败后重新调用。
+        if (!方法片段工厂) throw std::runtime_error("method publication fragment factory is empty");
+        const auto 方法片段 = 方法片段工厂();
         std::vector<基础封存追加片段> 片段组{方法片段};
         for (const auto& 准备 : 准备组) 片段组.push_back(准备.场景片段());
         基础节点组追加状态 状态;

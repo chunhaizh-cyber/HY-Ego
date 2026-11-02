@@ -4,6 +4,7 @@
 #include <future>
 #include <memory>
 #include <optional>
+#include <vector>
 #include "../业务/模拟学习.服务.h"
 #include "../业务/方法问题学习.服务.h"
 
@@ -26,6 +27,24 @@ struct 新学习线程快照 final {
     bool 停止已请求=false;
 };
 
+enum class 新学习工作快照读取状态 : std::uint8_t {
+    已取得, 尚未建立, 资源失败, 内部错误
+};
+enum class 新学习工作种类 : std::uint8_t { 方法模拟, 问题材料 };
+enum class 新学习工作阶段 : std::uint8_t { 排队中, 执行中, 完成待确认 };
+struct 新学习工作快照项 final {
+    新学习工作种类 种类 = 新学习工作种类::方法模拟;
+    新学习工作阶段 阶段 = 新学习工作阶段::排队中;
+    稳定编码 方法节点;
+    std::optional<稳定编码> 问题归档节点, 任务节点, 执行实例节点;
+    std::optional<std::uint64_t> 排队序号;
+};
+struct 新学习工作快照 final {
+    新学习工作快照读取状态 状态 = 新学习工作快照读取状态::内部错误;
+    std::optional<新学习线程快照> 线程快照;
+    std::vector<新学习工作快照项> 项组;
+};
+
 // 服务覆盖线程寿命；已接收工作保留至接收者确认，重复方法共用同一future。
 class 新_学习线程类 final {
 public:
@@ -45,6 +64,8 @@ public:
     新学习操作状态 请求停止() noexcept;
     新学习操作状态 等待停止(std::uint64_t 等待毫秒) noexcept;
     新学习线程快照 读取快照() const noexcept;
+    // 完整活动工作副本；不消费future，不确认结果，不包含已确认去重缓存。
+    新学习工作快照 读取工作快照() const noexcept;
 private:
     struct 实现;
     std::unique_ptr<实现> 实现_;

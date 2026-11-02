@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <variant>
 #include <utility>
 #include <vector>
@@ -12,6 +13,8 @@
 #include "概念_特征类.h"
 
 namespace 海中鱼巣 {
+
+class 概念_存在类;
 
 using 新特征准确值 = 特征概念准确值;
 
@@ -126,6 +129,57 @@ struct 新特征I64提交结果 final {
     std::vector<基础片段发布回执> 附加片段回执组;
 };
 
+enum class 新特征头保护状态 : std::uint8_t {
+    已读取 = 1, 特征不存在, 前提已变化, 依赖未就绪, 资源失败
+};
+struct 新特征头信息 final {
+    稳定编码 特征节点, 特征概念节点, 特征类型根;
+    std::optional<稳定编码> 上级特征节点;
+    friend bool operator==(const 新特征头信息&, const 新特征头信息&) = default;
+};
+struct 新特征头保护结果 final {
+    新特征头保护状态 状态 = 新特征头保护状态::依赖未就绪;
+    std::optional<新特征头信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
+
+enum class 新特征完整读取状态 : std::uint8_t {
+    已读取=1, 特征不存在, 依赖未就绪, 类型未支持, 前提已变化, 资源失败
+};
+struct 新特征完整保护信息 final {
+    新特征信息 特征;
+    稳定编码 特征类型根;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 新特征完整读取结果 final {
+    新特征完整读取状态 状态=新特征完整读取状态::依赖未就绪;
+    std::optional<新特征完整保护信息> 信息;
+};
+struct 新特征当前值设置项 final {
+    稳定编码 特征节点;
+    std::optional<新特征准确值> 新当前值;
+};
+struct 新特征当前值组完成结果 final {
+    std::vector<std::pair<稳定编码,新特征值添加结果>> 项结果组;
+};
+class 新特征当前值组准备 final {
+public:
+    新特征当前值组准备(新特征当前值组准备&&) noexcept;
+    新特征当前值组准备& operator=(新特征当前值组准备&&) noexcept;
+    ~新特征当前值组准备() noexcept;
+    新特征当前值组准备(const 新特征当前值组准备&)=delete;
+    新特征当前值组准备& operator=(const 新特征当前值组准备&)=delete;
+private:
+    struct 实现;
+    explicit 新特征当前值组准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+struct 新特征当前值组准备结果 final {
+    新特征I64准备状态 状态=新特征I64准备状态::入口拒绝;
+    std::optional<新特征当前值组准备> 准备;
+};
+
 class 新特征引用集合更新准备 final {
 public:
     新特征引用集合更新准备(新特征引用集合更新准备&&) noexcept;
@@ -216,6 +270,23 @@ private:
 struct 新特征需求引用准备结果 final {
     新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
     std::optional<新特征需求引用更新准备> 准备;
+};
+class 新特征概念引用更新准备 final {
+public:
+    新特征概念引用更新准备(新特征概念引用更新准备&&) noexcept;
+    新特征概念引用更新准备& operator=(新特征概念引用更新准备&&) noexcept;
+    ~新特征概念引用更新准备() noexcept;
+    新特征概念引用更新准备(const 新特征概念引用更新准备&) = delete;
+    新特征概念引用更新准备& operator=(const 新特征概念引用更新准备&) = delete;
+private:
+    struct 实现;
+    explicit 新特征概念引用更新准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_特征类;
+};
+struct 新特征概念引用准备结果 final {
+    新特征I64准备状态 状态 = 新特征I64准备状态::入口拒绝;
+    std::optional<新特征概念引用更新准备> 准备;
 };
 struct 新特征需求历史恢复请求 final {
     稳定编码 特征节点, 当前需求节点, 标准需求节点;
@@ -339,6 +410,14 @@ struct 新特征清理准备结果 final {
 
 class 新_特征类 final {
 public:
+    bool 装配正式概念引用读取接口(const 概念_存在类* 范围读取,
+        std::span<const 正式概念身份读取接口* const> 身份组) noexcept;
+    新特征概念引用准备结果 准备顶层概念引用更新(稳定编码 特征节点, 稳定编码 概念节点) noexcept;
+    新特征I64提交结果 提交顶层概念引用更新(新特征概念引用更新准备&,
+        const std::vector<基础封存追加片段>&) noexcept;
+    新特征值添加结果 完成顶层概念引用更新(新特征概念引用更新准备&) noexcept;
+    void 结束顶层概念引用更新(新特征概念引用更新准备&) noexcept;
+    void 取消顶层概念引用更新(新特征概念引用更新准备&) noexcept;
     void 装配存在成员身份读取接口(const 特征存在成员读取接口&) noexcept;
     新特征存在引用准备结果 准备顶层存在引用更新(稳定编码 特征节点, 稳定编码 存在节点) noexcept;
     新特征I64提交结果 提交顶层存在引用更新(新特征存在引用更新准备&,
@@ -380,6 +459,7 @@ public:
     // 通过自己的内部字段引用该节点，本类不建立业务外部父子关系。
     // 提供实际值时，会在同一特征类型概念图中选择包含该值的最具体概念
     // 作为模板；本函数只建立节点，不写入实际值。
+    // 信息节点引用型仅支持未知值空实例；非空值仍拒绝，不省略实例身份。
     稳定编码 建立特征(
         稳定编码 特征概念节点,
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
@@ -398,6 +478,17 @@ public:
 
     std::optional<新特征信息> 获取特征(
         稳定编码 特征节点) const noexcept;
+
+    // 只读取身份、类型根和父定位；完整快照不代表已解释实例值或历史。
+    新特征头保护结果 读取特征头保护(稳定编码) const noexcept;
+    新特征完整读取结果 读取特征完整保护(稳定编码) const noexcept;
+    新特征当前值组准备结果 准备特征当前值组(
+        const std::vector<新特征当前值设置项>&) noexcept;
+    新特征I64提交结果 提交特征当前值组(新特征当前值组准备&,
+        const std::vector<基础封存追加片段>& 附加片段组) noexcept;
+    新特征当前值组完成结果 完成特征当前值组(新特征当前值组准备&) noexcept;
+    void 结束特征当前值组(新特征当前值组准备&) noexcept;
+    void 取消特征当前值组(新特征当前值组准备&) noexcept;
 
     // 捕获只读物理投影，不调用普通getter的当前/历史归属验证。
     // 顶层请求不存在返回空；已声明引用或物理结构损坏走工程终止。
@@ -437,6 +528,9 @@ public:
 
     新特征I64准备结果 准备顶层I64更新(
         稳定编码 特征节点, std::int64_t 新值) noexcept;
+    新特征I64准备结果 准备顶层I64更新(
+        稳定编码 特征节点, std::int64_t 新值,
+        const std::vector<基础联合节点快照>& 附加完整预期) noexcept;
     新特征I64提交结果 提交顶层I64更新(
         新特征I64更新准备& 准备,
         const std::vector<基础封存追加片段>& 附加片段组) noexcept;
@@ -493,10 +587,22 @@ public:
         稳定编码 右概念节点) const noexcept;
 
 private:
+    特征概念规则状态 读取信息存在引用定义保护(const 特征概念信息&,
+        std::vector<基础联合节点快照>&) const;
+    特征概念规则状态 读取信息存在引用值保护(const 特征概念信息&, const 新特征准确值&,
+        std::vector<基础联合节点快照>&) const;
+    新特征信息 读取信息存在引用实例(稳定编码 特征节点, const 特征概念信息&) const;
+    特征概念规则状态 读取概念引用值保护(const 特征概念信息&, const 新特征准确值&,
+        std::vector<基础联合节点快照>&) const;
+    新特征信息 读取正式概念引用实例(稳定编码 特征节点, const 特征概念信息&) const;
+    const 概念_存在类* 概念范围读取接口_ = nullptr;
+    std::vector<const 正式概念身份读取接口*> 概念身份读取接口组_;
     新特征I64准备结果 准备顶层准确值更新(
         稳定编码 特征节点, const 新特征准确值& 新值, bool 引用集合,
         新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false,
-        bool 单需求引用 = false) noexcept;
+        bool 单需求引用 = false,
+        const std::vector<基础联合节点快照>* 附加完整预期 = nullptr,
+        bool 单概念引用 = false) noexcept;
     const 特征需求成员读取接口* 需求引用读取接口_ = nullptr;
     const 特征存在成员读取接口* 存在成员身份读取接口_ = nullptr;
     新特征值添加结果 完成添加值归组(

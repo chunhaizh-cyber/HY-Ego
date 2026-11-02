@@ -7,8 +7,10 @@
 #include <vector>
 #include <variant>
 #include <span>
+#include <functional>
 
 #include "../核心/基础数据集.h"
+#include "信息内容.数据.h"
 #include "概念_特征类.h"
 
 namespace 海中鱼巣 {
@@ -43,7 +45,7 @@ struct 基础范围概念定义 final {
 };
 enum class 结构约束原语 : std::uint8_t {
     禁止项目=1,域属于FT,比较适用于目标,数值不大于,连续有序,同所属父链无环,
-    固定配对基数,允许未知当前值,需求父链合法
+    固定配对基数,允许未知当前值,需求父链合法,同一对象恰一结构分支
 };
 struct 结构约束定义 final {
     结构约束原语 原语;
@@ -75,6 +77,71 @@ struct 正式结构概念保护结果 final {
     std::optional<正式结构概念信息> 信息;
     std::vector<基础联合节点快照> 完整保护组;
 };
+enum class 正式结构有效内容读取状态 : std::uint8_t {
+    已读取=1, 输入不合法, 未找到, 非信息结构,
+    依赖未就绪, 前提已变化, 资源失败
+};
+struct 正式结构有效内容项 final {
+    稳定编码 特征类型, 内容概念;
+    std::vector<稳定编码> 读取路径;
+    friend bool operator==(const 正式结构有效内容项&,
+        const 正式结构有效内容项&) = default;
+};
+struct 正式结构有效约束 final {
+    稳定编码 约束概念节点;
+    结构约束定义 定义;
+    std::vector<稳定编码> 声明结构概念组;
+    friend bool operator==(const 正式结构有效约束&,
+        const 正式结构有效约束&) = default;
+};
+struct 正式结构有效内容 final {
+    稳定编码 概念节点;
+    std::vector<正式结构有效内容项> 内容项组;
+    std::vector<正式结构有效约束> 约束组;
+    friend bool operator==(const 正式结构有效内容&,
+        const 正式结构有效内容&) = default;
+};
+struct 正式结构有效内容读取结果 final {
+    正式结构有效内容读取状态 状态=正式结构有效内容读取状态::输入不合法;
+    std::optional<正式结构有效内容> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 引用内容筹办概念组 final {
+    稳定编码 完整被认知需求, 自我引用内容值需求, 自我引用内容单项值需求, 恰一分支约束;
+};
+struct 引用内容筹办概念结果 final {
+    正式结构操作状态 状态=正式结构操作状态::输入拒绝;
+    std::optional<引用内容筹办概念组> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+enum class 正式内容符合状态 : std::uint8_t {
+    符合=1, 不符合, 当前未知, 不适用, 未支持, 前提已变化, 资源失败
+};
+struct 正式内容符合结果 final {
+    正式内容符合状态 状态=正式内容符合状态::未支持;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+struct 正式结构项目判定 final {
+    稳定编码 特征类型, 要求概念;
+    正式内容符合状态 状态{};
+    friend bool operator==(const 正式结构项目判定&,const 正式结构项目判定&)=default;
+};
+struct 正式结构分支判定 final {
+    稳定编码 约束概念;
+    std::optional<稳定编码> 所选分支;
+    正式内容符合状态 状态{};
+    friend bool operator==(const 正式结构分支判定&,const 正式结构分支判定&)=default;
+};
+struct 正式结构内容判定结果 final {
+    正式内容符合状态 状态=正式内容符合状态::未支持;
+    std::vector<正式结构项目判定> 项目组;
+    std::vector<正式结构分支判定> 分支组;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+using 正式直接内容读取器=std::function<正式内容值(稳定编码,稳定编码)>;
+using 正式引用身份核验器=std::function<正式内容符合结果(
+    基础概念原语,const std::vector<std::int64_t>&,const std::vector<稳定编码>&,const 正式内容值&)>;
+using 正式关联约束核验器=std::function<正式内容符合结果(稳定编码,const 结构约束定义&)>;
 enum class 结构项概念保护状态 : std::uint8_t { 已读取=1,输入拒绝,依赖未就绪,未取得正式概念证明,前提已变化 };
 struct 结构项概念保护结果 final {
     结构项概念保护状态 状态=结构项概念保护状态::输入拒绝;
@@ -135,6 +202,21 @@ struct 普通存在概念定义保护结果 final {
     std::vector<基础联合节点快照> 完整保护组;
 };
 
+// 范围语义不包含名称、无关下位或使用本概念的入向引用。
+struct 存在范围语义信息 final {
+    稳定编码 节点;
+    存在概念种类 种类;
+    std::optional<稳定编码> 对应存在节点;
+    std::vector<存在概念特征项> 特征组;
+    std::vector<稳定编码> 上位概念组;
+    friend bool operator==(const 存在范围语义信息&, const 存在范围语义信息&) = default;
+};
+struct 存在范围语义保护结果 final {
+    正式概念读取状态 状态=正式概念读取状态::非本提供者概念;
+    std::optional<存在范围语义信息> 信息;
+    基础只读预期 只读预期;
+};
+
 enum class 存在概念操作状态 : std::uint8_t {
     已建立 = 1,
     已复用 = 2,
@@ -154,6 +236,25 @@ enum class 存在概念操作状态 : std::uint8_t {
 struct 存在概念建立结果 final {
     存在概念操作状态 状态 = 存在概念操作状态::入口拒绝;
     std::optional<稳定编码> 概念节点;
+};
+
+struct 存在根建立请求 final {
+    std::optional<稳定编码> 既有根候选;
+    std::vector<稳定编码> 必要直接下位普通概念组;
+};
+
+enum class 存在分类概念形状 : std::uint8_t {
+    普通专属=1, 普通抽象, 信息结构
+};
+struct 存在分类关系信息 final {
+    稳定编码 概念节点;
+    存在分类概念形状 形状;
+    std::vector<稳定编码> 直接上位概念组, 直接下位概念组;
+};
+struct 存在分类关系保护结果 final {
+    正式结构操作状态 状态=正式结构操作状态::输入拒绝;
+    std::optional<存在分类关系信息> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
 };
 
 struct 存在概念抽象结果 final {
@@ -239,6 +340,11 @@ struct 指代概念查询结果 final {
     指代概念查询状态 状态 = 指代概念查询状态::输入拒绝;
     std::optional<指代概念信息> 信息;
 };
+struct 指代概念保护结果 final {
+    指代概念查询状态 状态 = 指代概念查询状态::输入拒绝;
+    std::optional<指代概念信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
 
 struct 指代名称联合建立请求结果 final {
     基础互引节点操作状态 状态 = 基础互引节点操作状态::入口拒绝;
@@ -287,12 +393,30 @@ struct 存在概念上位保护结果 final {
 };
 class 概念_存在类 final : public 正式概念身份读取接口 {
 public:
+    // owner登记的语义根不同于物理组织根；名称仅供语言引用。
+    存在概念建立结果 建立或取得存在根概念(const 存在根建立请求&) noexcept;
+    普通存在概念定义保护结果 读取存在根概念保护() const noexcept;
+    // 共同分类视图不接管D/T/M实例内容或写入权限。
+    存在分类关系保护结果 读取存在分类关系保护(稳定编码) const noexcept;
     正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
     普通存在概念定义保护结果 读取普通存在概念定义保护(稳定编码) const noexcept;
+    存在范围语义保护结果 读取存在范围语义保护(稳定编码) const noexcept;
     结构项概念保护结果 读取结构项概念保护(稳定编码 特征类型, 稳定编码 内容概念,
         std::span<const 正式概念身份读取接口* const> 提供者组) const noexcept;
     正式结构概念结果 读取正式结构概念(稳定编码) const noexcept;
     正式结构概念保护结果 读取正式结构概念保护(稳定编码) const noexcept;
+    // 只读定义展开、按值返回；不执行实例读取路径或实例符合性判定。
+    正式结构有效内容读取结果 读取正式结构有效内容保护(稳定编码 概念节点) const noexcept;
+    引用内容筹办概念结果 建立或取得引用内容筹办概念(const 新_特征值类&,
+        std::span<const 正式概念身份读取接口* const>) noexcept;
+    引用内容筹办概念结果 读取引用内容筹办概念() const noexcept;
+    正式内容符合结果 比较正式内容范围(稳定编码,const 正式内容值&,
+        const 正式引用身份核验器&) const noexcept;
+    正式结构内容判定结果 判定正式结构内容(稳定编码,稳定编码,
+        const 正式直接内容读取器&,const 正式引用身份核验器&,
+        const 正式关联约束核验器&) const noexcept;
+    正式结构概念结果 建立或取得已确认消息连接概念() noexcept;
+    正式结构概念保护结果 读取已确认消息连接概念保护() const noexcept;
     先天信息概念结果 建立或取得先天需求任务方法概念(const 先天信息类型依赖&,
         const 新_特征值类&, std::span<const 正式概念身份读取接口* const>) noexcept;
     先天信息概念结果 建立或取得自我需求子概念(稳定编码 唯一自我存在,
@@ -311,6 +435,7 @@ public:
     指代概念写入结果 建立或取得指代概念(const 指代概念定义& 请求);
     指代概念查询结果 查询指代概念(const 指代概念定义& 请求) const;
     指代概念查询结果 获取指代概念(稳定编码 概念节点) const;
+    指代概念保护结果 读取指代概念保护(稳定编码 概念节点) const;
     指代名称反向参与结果 准备指代名称反向参与(
         稳定编码 概念节点, const 指代概念定义& 预期定义) const;
 

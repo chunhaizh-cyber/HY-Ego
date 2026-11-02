@@ -62,7 +62,8 @@ enum class 新方法操作状态 : std::uint8_t {
     结构不一致 = 19,
     资源失败 = 20,
     参数材料未到 = 22,
-    登记已退役 = 23
+    登记已退役 = 23,
+    定义前提已变化 = 24
 };
 
 struct 新方法头定义 final {
@@ -113,6 +114,29 @@ struct 新方法有序参数规格 final {
         const 新方法有序参数规格&) = default;
 };
 
+enum class 新外设消息方向 : std::int64_t;
+enum class 新方法模拟输入时机 : std::int64_t { 调用前=1, 参数新增消息后=2 };
+struct 新方法模拟消息触发 final {
+    std::uint32_t 特征参数序号=0;
+    新外设消息方向 方向{};
+    friend bool operator==(const 新方法模拟消息触发&,const 新方法模拟消息触发&)=default;
+};
+struct 新方法模拟消息输入定义 final {
+    std::uint32_t 顺序=0;
+    std::uint32_t 目标特征参数序号=0,窗口存在参数序号=0,对端存在参数序号=0;
+    新外设消息方向 方向{};
+    稳定编码 正文范围概念;
+    bool 正文非空=false;
+    新方法模拟输入时机 时机=新方法模拟输入时机::调用前;
+    std::optional<新方法模拟消息触发> 触发;
+    friend bool operator==(const 新方法模拟消息输入定义&,const 新方法模拟消息输入定义&)=default;
+};
+struct 新方法模拟输入方案定义 final {
+    std::uint32_t 顺序=0;
+    std::vector<新方法模拟消息输入定义> 消息组;
+    friend bool operator==(const 新方法模拟输入方案定义&,const 新方法模拟输入方案定义&)=default;
+};
+
 struct 新方法有序参数引用 final {
     std::uint32_t 序号 = 0;
     新方法参数信息类型 信息类型 = 新方法参数信息类型::存在;
@@ -161,6 +185,23 @@ struct 新方法参数规格 final {
         const 新方法参数规格&) = default;
 };
 
+enum class 新方法内容作用点 : std::uint8_t { 特征当前引用=1, 参数自身=2 };
+struct 新方法引用内容条件 final {
+    std::vector<稳定编码> 正式内容路径;
+    稳定编码 要求概念节点;
+    新方法内容作用点 作用点=新方法内容作用点::特征当前引用;
+    bool 要求认知来源当前有效=false;
+    friend bool operator==(const 新方法引用内容条件&,
+        const 新方法引用内容条件&) = default;
+};
+
+enum class 新方法当前值状态 : std::uint8_t { 未知=1, 已知=2 };
+struct 新方法特征前态限定 final {
+    新方法当前值状态 当前值状态=新方法当前值状态::未知;
+    std::optional<std::uint64_t> 历史不同值数量;
+    friend bool operator==(const 新方法特征前态限定&, const 新方法特征前态限定&)=default;
+};
+
 struct 新方法条件项定义 final {
     稳定编码 参数角色节点;
     std::optional<稳定编码> 存在概念节点;
@@ -173,6 +214,8 @@ struct 新方法条件项定义 final {
     // 0仅指旧角色格式；非零时参数角色节点必须为空。
     std::uint32_t 参数序号 = 0;
     std::uint32_t 任务成员变量序号 = 0;
+    std::optional<新方法引用内容条件> 引用内容条件;
+    std::optional<新方法特征前态限定> 特征前态限定;
     friend bool operator==(const 新方法条件项定义&,
         const 新方法条件项定义&) = default;
 };
@@ -188,6 +231,7 @@ struct 新方法结果项定义 final {
     std::optional<特征概念I64闭区间> 精确数值域;
     std::uint32_t 参数序号 = 0;
     std::uint32_t 任务成员变量序号 = 0;
+    std::optional<新方法引用内容条件> 引用内容结果;
     friend bool operator==(const 新方法结果项定义&,
         const 新方法结果项定义&) = default;
 };
@@ -223,12 +267,27 @@ struct 新方法结果确认要求 final {
         const 新方法结果确认要求&) = default;
 };
 
+struct 新方法初始场景事实限定 final {
+    稳定编码 关系概念节点;
+    std::uint32_t 场景参数序号=0,主体参数序号=0,对象参数序号=0,特征参数序号=0;
+    friend bool operator==(const 新方法初始场景事实限定&,const 新方法初始场景事实限定&)=default;
+};
+
 struct 新方法条件定义 final {
     新方法项关系规则 关系规则 = 新方法项关系规则::单项;
     std::vector<新方法条件项定义> 条件项组;
     std::vector<新方法参数关系> 参数关系组;
+    std::vector<新方法初始场景事实限定> 场景事实限定组;
     friend bool operator==(const 新方法条件定义&,
         const 新方法条件定义&) = default;
+};
+
+struct 新方法本次场景事实引用 final {
+    新方法初始场景事实限定 限定;
+    稳定编码 事实来源身份;
+    稳定编码 动作节点;
+    friend bool operator==(const 新方法本次场景事实引用&,
+        const 新方法本次场景事实引用&) = default;
 };
 
 struct 新方法结果定义 final {
@@ -236,8 +295,19 @@ struct 新方法结果定义 final {
     std::vector<新方法结果项定义> 结果项组;
     新方法结果确认要求 确认要求;
     std::vector<新方法参数关系> 参数关系组;
+    std::vector<新方法初始场景事实限定> 场景事实限定组;
     friend bool operator==(const 新方法结果定义&,
         const 新方法结果定义&) = default;
+};
+struct 新方法执行分支定义 final {
+    std::uint32_t 顺序=0;
+    新方法条件定义 必要条件;
+    friend bool operator==(const 新方法执行分支定义&,const 新方法执行分支定义&)=default;
+};
+struct 新方法执行分支信息 final {
+    稳定编码 节点;
+    新方法执行分支定义 定义;
+    friend bool operator==(const 新方法执行分支信息&,const 新方法执行分支信息&)=default;
 };
 
 // 输入上升时输出的方向，区别于一次动作前后的结果变化方向。
@@ -259,10 +329,16 @@ struct 新方法条件结果定义 final {
     新方法条件定义 条件;
     新方法结果定义 结果;
     std::vector<新方法条件结果线性关系> 线性关系组;
+    std::vector<稳定编码> 来源执行分支节点组;
     friend bool operator==(const 新方法条件结果定义&,
         const 新方法条件结果定义&) = default;
 };
 
+struct 新方法初始必要条件定义 final {
+    新方法条件定义 条件;
+    std::vector<新方法初始场景事实限定> 场景事实限定组;
+    friend bool operator==(const 新方法初始必要条件定义&,const 新方法初始必要条件定义&)=default;
+};
 struct 新方法知识建立请求 final {
     新方法作用域 作用域 = 新方法作用域::普通世界;
     新方法实现方式 实现方式 = 新方法实现方式::本能;
@@ -272,6 +348,9 @@ struct 新方法知识建立请求 final {
     std::optional<新方法行为> 行为;
     std::vector<新方法参数关系> 初始模拟关系组;
     std::vector<std::uint32_t> 初始模拟事件参数组;
+    std::vector<新方法模拟输入方案定义> 初始模拟输入方案组;
+    std::optional<新方法初始必要条件定义> 初始必要条件;
+    std::vector<新方法执行分支定义> 执行分支组;
 };
 
 struct 新方法条件结果信息 final {
@@ -286,6 +365,7 @@ struct 新方法条件结果信息 final {
     // 实例配对指向最初的抽象配对；抽象配对为空，旧实例允许缺省。
     std::optional<稳定编码> 来源配对节点;
     新方法知识来源种类 知识来源 = 新方法知识来源种类::未注明;
+    std::vector<稳定编码> 来源执行分支节点组;
     friend bool operator==(const 新方法条件结果信息&,
         const 新方法条件结果信息&) = default;
 };
@@ -342,6 +422,9 @@ struct 新方法信息 final {
     std::optional<新方法行为> 行为;
     std::vector<新方法参数关系> 初始模拟关系组;
     std::vector<std::uint32_t> 初始模拟事件参数组;
+    std::vector<新方法模拟输入方案定义> 初始模拟输入方案组;
+    std::optional<新方法初始必要条件定义> 初始必要条件;
+    std::vector<新方法执行分支信息> 执行分支组;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 

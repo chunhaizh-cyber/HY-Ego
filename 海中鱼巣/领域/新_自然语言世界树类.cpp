@@ -7,6 +7,9 @@
 #include <functional>
 #include <limits>
 #include <mutex>
+#include <map>
+#include <set>
+#include <stdexcept>
 #include <unordered_set>
 
 namespace 海中鱼巣 {
@@ -17,6 +20,7 @@ namespace {
 
 std::recursive_mutex 自然语言世界树互斥;
 稳定编码 自然语言概念来源字段{};
+struct 语言复制前提变化 final {};
 
 bool 节点仍存在(稳定编码 节点) noexcept {
     return 有效(节点) && 全局基础数据集.查询节点(节点).has_value();
@@ -277,6 +281,90 @@ bool 新自然语言世界初始化结果::成功() const noexcept {
             || 状态 == 新自然语言世界初始化状态::无变化)
         && 根节点 && 有效(*根节点);
 }
+新自然语言场景复制结果 新_自然语言世界树类::读取复制场景(稳定编码 n) const {
+    using S=新自然语言场景结构比较状态;
+    std::lock_guard lock(自然语言世界树互斥);
+    try {
+    if(!有效(自然语言世界树根节点)||!有效(自然语言概念来源字段))return {S::未初始化};
+    if(!结构仍存在(场景服务_))throw std::runtime_error("initialized language world structure corrupt");
+    const auto scope=场景服务_.读取指定场景范围完整(n);
+    if(scope.状态==新场景范围成员读取状态::资源失败)return {S::资源失败};
+    if(scope.状态==新场景范围成员读取状态::起点不可读||scope.状态==新场景范围成员读取状态::不属本树)return {};
+    if(scope.状态==新场景范围成员读取状态::读取已变化)return {S::前提已变化};
+    if(scope.状态!=新场景范围成员读取状态::已完成)throw std::runtime_error("language source scene range read failed");
+    if(n==自然语言世界树根节点||scope.直接父场景节点!=std::optional{自然语言世界树根节点})return {};
+    const auto scene=场景服务_.获取场景(n);
+    if(!scene)throw std::runtime_error("language scene source identity unreadable");
+    if(!scene->直接子场景组.empty()||!scene->状态节点组.empty()||!scene->动态节点组.empty())
+        return {S::复制内容未支持};
+    新自然语言场景复制信息 info{*scene};
+    std::map<稳定编码,新存在信息> members;
+    std::map<稳定编码,基础联合节点快照> definitionProtection;
+    const auto protect=[&](const auto& group) {
+        for(const auto& x:group){const auto [it,added]=definitionProtection.emplace(x.结构.节点.编码,x);
+            if(!added&&(it->second.结构.字段组!=x.结构.字段组||it->second.入向字段组!=x.入向字段组
+                ||it->second.入向外部关系组!=x.入向外部关系组||it->second.出向外部关系组!=x.出向外部关系组))
+                throw 语言复制前提变化{};}
+    };
+    const auto protectConcept=[&](稳定编码 C) {
+        const auto existence=存在概念服务_.读取普通存在概念定义保护(C);
+        if(existence.状态==正式概念读取状态::已读取){protect(existence.完整保护组);return;}
+        if(existence.状态==正式概念读取状态::前提已变化)throw 语言复制前提变化{};
+        if(existence.状态!=正式概念读取状态::非本提供者概念)throw std::runtime_error("language source existence concept read failed");
+        const auto feature=特征概念服务_.读取特征概念定义保护(C);
+        if(feature.前提已变化)throw 语言复制前提变化{};
+        if(feature.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(feature.状态!=基础结构操作状态::已完成||!feature.信息)throw std::runtime_error("language source feature concept read failed");
+        protect(feature.预期节点组);
+    };
+    protectConcept(scene->专属存在概念节点);
+    std::set<稳定编码> ids{n,自然语言世界树根节点,自然语言概念来源字段,scene->专属存在概念节点};
+    ids.insert(scene->特征节点组.begin(),scene->特征节点组.end());
+    for(const auto E:scene->直接成员存在组) {
+        const auto e=存在服务_.获取存在(E);
+        if(!e)throw std::runtime_error("language scene member has no existence identity");
+        members.emplace(E,*e);protectConcept(e->专属存在概念节点);
+        ids.insert(E);ids.insert(e->专属存在概念节点);
+        const auto fields=全局基础数据集.查询字段(E,自然语言概念来源字段);
+        if(fields.empty())info.普通成员存在组.push_back(E);
+        else {
+            const auto instance=读取概念实例(E,场景服务_,存在服务_,特征服务_,特征概念服务_,存在概念服务_);
+            if(!instance||instance->所属场景节点!=n)throw std::runtime_error("language concept instance source corrupt");
+            info.概念实例组.push_back(*instance);ids.insert(instance->概念节点);
+            protectConcept(instance->概念节点);
+        }
+        ids.insert(e->特征节点组.begin(),e->特征节点组.end());
+    }
+    for(const auto E:scene->边界存在组) {
+        const auto e=存在服务_.读取存在身份保护(E);
+        if(e.状态==基础结构操作状态::资源失败)return {S::资源失败};
+        if(e.前提已变化)return {S::前提已变化};
+        if(e.状态!=基础结构操作状态::已完成||!e.信息)throw std::runtime_error("language scene boundary identity missing");
+        ids.insert(E);ids.insert(e.信息->专属存在概念节点);
+        protect(e.预期节点组);protectConcept(e.信息->专属存在概念节点);
+    }
+    auto snapshots=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
+    if(snapshots.状态==基础结构操作状态::资源失败)return {S::资源失败};
+    if(snapshots.状态!=基础结构操作状态::已完成)throw std::runtime_error("language source snapshot failed");
+    新自然语言场景复制结果 result{S::已完成,info};
+    for(const auto& x:snapshots.节点组){if(!x.快照)throw std::runtime_error("language source dependency disappeared");protect(std::vector<基础联合节点快照>{*x.快照});}
+    if(场景服务_.获取场景(n)!=scene)return {S::前提已变化};
+    for(const auto& [E,e]:members)if(存在服务_.获取存在(E)!=std::optional{e})return {S::前提已变化};
+    for(const auto& e:info.概念实例组)if(读取概念实例(e.节点,场景服务_,存在服务_,特征服务_,特征概念服务_,存在概念服务_)!=std::optional{e})return {S::前提已变化};
+    ids.clear();for(const auto& [id,p]:definitionProtection){ids.insert(id);result.完整保护.push_back(p);}
+    const auto fresh=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
+    if(fresh.状态==基础结构操作状态::资源失败)return {S::资源失败};
+    if(fresh.状态!=基础结构操作状态::已完成||fresh.节点组.size()!=result.完整保护.size())
+        throw std::runtime_error("language source recheck failed");
+    for(std::size_t i=0;i<fresh.节点组.size();++i) {
+        const auto& a=result.完整保护[i];const auto& b=fresh.节点组[i].快照;
+        if(!b||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
+            ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
+            return {S::前提已变化};
+    }return result;
+    }catch(const 语言复制前提变化&){return {S::前提已变化};}
+    catch(const std::bad_alloc&){return {S::资源失败};}
+}
 
 bool 新自然语言概念实例建立结果::成功() const noexcept {
     return 状态 == 新自然语言概念实例操作状态::已建立
@@ -345,6 +433,16 @@ std::optional<稳定编码> 新_自然语言世界树类::获取根节点() cons
     } catch (...) {
         return std::nullopt;
     }
+}
+
+新来源子场景结果 新_自然语言世界树类::建立或取得接收来源场景(稳定编码 消息) noexcept {
+    std::lock_guard 锁(自然语言世界树互斥);
+    return 场景服务_.建立或取得来源子场景(自然语言世界树根节点, 消息);
+}
+
+新来源子场景结果 新_自然语言世界树类::读取接收来源场景(稳定编码 消息) const noexcept {
+    std::lock_guard 锁(自然语言世界树互斥);
+    return 场景服务_.读取来源子场景(自然语言世界树根节点, 消息);
 }
 
 新自然语言场景建立结果 新_自然语言世界树类::建立空场景() noexcept {

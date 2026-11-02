@@ -162,6 +162,169 @@ struct 新先天因果概念组 final {
     friend bool operator==(const 新先天因果概念组&, const 新先天因果概念组&) = default;
 };
 
+enum class 新关系先天治理操作 : std::int64_t { 同步正式服务任务投影=1, 发布自我任务完成决议=2 };
+enum class 新关系先天角色类别 : std::int64_t { 普通存在=1, 需求信息=2, 任务信息=3, 执行实例=4, 影响评估=5 };
+struct 新关系先天角色 final {
+    std::int64_t 序号;
+    新关系先天角色类别 类别;
+    稳定编码 范围概念;
+    friend bool operator==(const 新关系先天角色&,const 新关系先天角色&)=default;
+};
+enum class 新关系先天条件种类 : std::int64_t {
+    角色有效=1, 自我服务投影绑定, 需求父链归根, 排除需求有父,
+    投影源对应完整, 当前引用集合合法, 当前集合等于投影, 投影待写入,
+    需求准备非待完善, 任务关联需求, 任务最近执行, 执行关联任务,
+    执行关联评估, 评估关联任务, 评估关联执行, 评估允许完成,
+    自我接受完成决议, 任务状态属于, 执行状态属于
+};
+struct 新关系先天条件 final {
+    std::int64_t 序号;
+    新关系先天条件种类 种类;
+    稳定编码 关系概念;
+    std::vector<std::int64_t> 角色组;
+    std::vector<稳定编码> 概念参数组;
+    friend bool operator==(const 新关系先天条件&,const 新关系先天条件&)=default;
+};
+enum class 新关系先天结果种类 : std::int64_t { 正式服务任务投影=1, 特征值域=2 };
+enum class 新关系先天结果变化 : std::int64_t { 改变=1, 保持=2 };
+struct 新关系先天结果 final {
+    新关系先天结果种类 种类;
+    新关系先天结果变化 变化;
+    std::int64_t 结果存在角色;
+    稳定编码 结果特征类型,结果范围概念;
+    std::vector<std::int64_t> 来源角色组;
+    稳定编码 结果关系概念;
+    friend bool operator==(const 新关系先天结果&,const 新关系先天结果&)=default;
+};
+struct 新关系先天因果定义 final {
+    稳定编码 规则概念,治理定义,作用场景范围概念,动作概念;
+    新因果动作触发方式 触发方式=新因果动作触发方式::被动触发;
+    std::vector<新关系先天角色> 角色组;
+    std::vector<新关系先天条件> 全部条件;
+    新关系先天结果 唯一结果;
+    friend bool operator==(const 新关系先天因果定义&,const 新关系先天因果定义&)=default;
+};
+struct 新关系先天因果信息 final {
+    稳定编码 节点;
+    新关系先天因果定义 定义;
+    新因果统计 统计;
+    std::vector<稳定编码> 发生身份组;
+    friend bool operator==(const 新关系先天因果信息&,const 新关系先天因果信息&)=default;
+};
+struct 新关系先天元数据请求 final {
+    稳定编码 自我概念,需求概念,任务概念;
+    稳定编码 服务任务投影场景范围概念,任务治理场景范围概念;
+    稳定编码 服务任务特征类型,任务状态特征类型;
+    稳定编码 等待自我决议值域,已完成值域;
+    friend bool operator==(const 新关系先天元数据请求&,const 新关系先天元数据请求&)=default;
+};
+struct 新关系先天元数据 final {
+    新关系先天元数据请求 材料;
+    std::vector<std::pair<新关系先天治理操作,稳定编码>> 治理定义组;
+    std::vector<稳定编码> 规则概念组;
+    std::vector<std::pair<新关系先天条件种类,稳定编码>> 关系概念组;
+    std::vector<std::pair<新关系先天角色类别,稳定编码>> 角色范围组;
+    稳定编码 执行已评估范围,完成决议范围,投影结果关系,状态结果关系;
+    friend bool operator==(const 新关系先天元数据&,const 新关系先天元数据&)=default;
+};
+
+enum class 新来源前驱治理步骤 : std::uint8_t { 自我采用请求=1,管理关联任务 };
+enum class 新来源前驱发生分支 : std::uint8_t { 新建=1,复用 };
+enum class 新来源前驱求值阶段 : std::uint8_t { 动作前输入=1,动作接纳,动作后结果 };
+enum class 新来源前驱角色 : std::uint8_t {
+    自我=1,人类,接收消息,采用含义,被认知需求,自我需求,任务,完成服务父需求,认知出现定位
+};
+enum class 新来源前驱条件种类 : std::uint8_t {
+    角色合法=1,人类主体,被认知需求归属,需求完整,正式行动请求,
+    请求受话者,请求内容同需求,合法完成服务父域,同源自我需求尚无,
+    同源自我需求已存在,自我请求采用机制,自我需求来源合法,
+    自我需求活动且准备允许,管理承接机制,需求尚无任务,需求已有唯一任务,
+    主体需求引用,来源自我需求对应,投影源条目对应
+};
+enum class 新来源前驱关系结果 : std::uint8_t { 同源自我需求=1,需求唯一任务 };
+struct 新来源前驱条件 final {
+    新来源前驱求值阶段 阶段{};
+    std::uint32_t 序号=0;
+    新来源前驱条件种类 种类{};
+    稳定编码 关系概念;
+    std::vector<新来源前驱角色> 角色组;
+    std::vector<稳定编码> 概念参数组;
+    friend bool operator==(const 新来源前驱条件&,const 新来源前驱条件&)=default;
+};
+struct 新服务取得来源前驱配置 final {
+    稳定编码 自我概念,人类概念,需求概念,任务概念;
+    稳定编码 交互者类型,交互者人类范围,对象需求类型,完整被认知需求概念,服务任务类型;
+    稳定编码 自我采用场景范围,管理关联场景范围;
+    friend bool operator==(const 新服务取得来源前驱配置&,const 新服务取得来源前驱配置&)=default;
+};
+struct 新来源前驱规则定义 final {
+    稳定编码 规则概念,治理定义,动作概念,场景范围;
+    新来源前驱治理步骤 步骤{};
+    新来源前驱发生分支 分支{};
+    新因果动作触发方式 触发方式=新因果动作触发方式::被动触发;
+    std::vector<std::pair<新来源前驱角色,稳定编码>> 角色范围组;
+    // 新建输出只能在动作后引入，不并入动作前输入AND。
+    std::vector<新来源前驱角色> 输入角色组,动作引入角色组;
+    std::vector<新来源前驱条件> 输入条件组,接纳核验组,结果校验组;
+    新来源前驱关系结果 结果{};
+    稳定编码 结果关系概念;
+    std::vector<新来源前驱角色> 结果角色组;
+    friend bool operator==(const 新来源前驱规则定义&,const 新来源前驱规则定义&)=default;
+};
+struct 新来源前驱规则信息 final {
+    稳定编码 节点;
+    新来源前驱规则定义 定义;
+    新因果统计 统计;
+    std::vector<稳定编码> 发生身份组;
+    std::vector<基础联合节点快照> 完整保护;
+    friend bool operator==(const 新来源前驱规则信息& a,const 新来源前驱规则信息& b) {
+        return a.节点==b.节点&&a.定义==b.定义&&a.统计==b.统计&&a.发生身份组==b.发生身份组;
+    }
+};
+struct 新服务取得来源前驱元数据 final {
+    稳定编码 节点;
+    新服务取得来源前驱配置 配置;
+    std::vector<稳定编码> 规则概念组;
+    std::vector<std::pair<新来源前驱治理步骤,稳定编码>> 治理定义组;
+    std::vector<std::pair<新来源前驱角色,稳定编码>> 角色范围组;
+    std::vector<std::pair<新来源前驱条件种类,稳定编码>> 条件关系组;
+    std::vector<std::pair<新来源前驱关系结果,稳定编码>> 结果关系组;
+    friend bool operator==(const 新服务取得来源前驱元数据&,const 新服务取得来源前驱元数据&)=default;
+};
+enum class 新来源前驱元数据读取状态 : std::uint8_t {
+    已读取=1,未找到,前提已变化,依赖未就绪,资源失败
+};
+struct 新来源前驱链条件定义 final {
+    稳定编码 所属元数据;
+    新来源前驱条件种类 种类{};
+    稳定编码 关系概念;
+    std::vector<新来源前驱角色> 角色组;
+    std::vector<稳定编码> 概念参数组;
+    friend bool operator==(const 新来源前驱链条件定义&,const 新来源前驱链条件定义&)=default;
+};
+struct 新来源前驱元数据读取结果 final {
+    新来源前驱元数据读取状态 状态=新来源前驱元数据读取状态::依赖未就绪;
+    std::optional<新服务取得来源前驱元数据> 信息;
+    std::vector<新来源前驱链条件定义> 链条件组;
+    std::vector<基础联合节点快照> 完整保护;
+    friend bool operator==(const 新来源前驱元数据读取结果& a,const 新来源前驱元数据读取结果& b) {
+        return a.状态==b.状态&&a.信息==b.信息&&a.链条件组==b.链条件组;
+    }
+};
+enum class 新来源前驱规则读取状态 : std::uint8_t {
+    已读取=1,未找到,前提已变化,依赖未就绪,资源失败
+};
+struct 新来源前驱规则读取结果 final {
+    新来源前驱规则读取状态 状态=新来源前驱规则读取状态::依赖未就绪;
+    std::optional<新来源前驱规则信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
+struct 新来源前驱规则查询结果 final {
+    新来源前驱规则读取状态 状态=新来源前驱规则读取状态::依赖未就绪;
+    std::vector<新来源前驱规则信息> 规则组;
+    std::vector<基础联合节点快照> 完整保护;
+};
+
 struct 新因果信息 final
 {
     稳定编码 节点;

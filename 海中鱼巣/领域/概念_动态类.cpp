@@ -7,6 +7,7 @@
 #include <mutex>
 #include <set>
 #include <limits>
+#include <map>
 #include <stdexcept>
 
 namespace 海中鱼巣 {
@@ -778,9 +779,71 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
     return false;
 }
 
+struct 动作类别前提变化 final {};
+enum class 动作定义读取方式 { 完整保护, 普通语义 };
+
+void 核对有序存在范围语义(稳定编码 范围, const 概念_存在类& 存在) {
+    const auto 普通 = 存在.读取存在范围语义保护(范围);
+    if (普通.状态 == 正式概念读取状态::前提已变化) throw 动作类别前提变化{};
+    if (普通.状态 == 正式概念读取状态::已读取 && 普通.信息) return;
+    if (普通.状态 != 正式概念读取状态::非本提供者概念)
+        throw std::runtime_error("ordered existence semantic range owner read failed");
+    // 正式信息结构仍由其owner解释，不在动作类猜测schema或退化成节点存在判断。
+    const auto 信息 = 存在.读取正式结构概念(范围);
+    if (信息.状态 == 正式结构操作状态::前提已变化) throw 动作类别前提变化{};
+    if (信息.状态 != 正式结构操作状态::已读取 || !信息.信息
+        || !std::holds_alternative<信息结构概念定义>(信息.信息->定义))
+        throw std::runtime_error("ordered semantic information range is not a formal information structure");
+}
+
+std::vector<基础联合节点快照> 读取有序存在范围保护(稳定编码 范围,const 概念_存在类& 存在) {
+    const auto 普通=存在.读取普通存在概念定义保护(范围);
+    if(普通.状态==正式概念读取状态::前提已变化)throw 动作类别前提变化{};
+    if(普通.状态==正式概念读取状态::已读取&&普通.信息&&!普通.完整保护组.empty())return 普通.完整保护组;
+    if(普通.状态!=正式概念读取状态::非本提供者概念)
+        throw std::runtime_error("ordered existence range owner read failed");
+    const auto 信息=存在.读取正式结构概念保护(范围);
+    if(信息.状态==正式结构操作状态::前提已变化)throw 动作类别前提变化{};
+    if(信息.状态!=正式结构操作状态::已读取||!信息.信息||信息.完整保护组.empty()
+        ||!std::holds_alternative<信息结构概念定义>(信息.信息->定义))
+        throw std::runtime_error("ordered information range is not a formal information structure");
+    return 信息.完整保护组;
+}
+void 核验信息关系动作规格(const 动作概念定义& 定义) {
+    if (!定义.信息关系规格) return;
+    const auto& 规格 = *定义.信息关系规格;
+    std::vector<std::int64_t> 预期角色, 预期结果;
+    switch (规格.操作) {
+    case 新信息关系治理操作::自我采用正式请求:
+        预期角色 = {1,2,3,4,5,6,8,9};
+        预期结果 = {1,2,3,4,9,5,6,8};
+        break;
+    case 新信息关系治理操作::管理关联唯一任务:
+        预期角色 = {1,2,3,4,5,6,7,8,9};
+        预期结果 = {6,7};
+        break;
+    default: throw std::runtime_error("invalid information relation action operation");
+    }
+    if (定义.能力类别 != 动作能力定义类别::内部治理能力 || 定义.抽象方法节点
+        || 定义.目标特征类型概念节点 || !定义.参数规格组.empty()
+        || 定义.执行主体.对象类别 != 动作参数对象类别::普通世界
+        || 定义.作用目标.对象类别 != 动作参数对象类别::普通世界
+        || !定义.执行主体.存在概念节点
+        || 定义.执行主体.存在概念节点 != 定义.作用目标.存在概念节点
+        || 定义.执行主体.参数角色节点 || 定义.作用目标.参数角色节点
+        || !节点仍存在(规格.结果关系概念)
+        || 规格.角色范围组.size() != 预期角色.size() || 规格.结果角色组 != 预期结果)
+        throw std::runtime_error("invalid information relation action shape");
+    // 这里只核定义范围及其存活；尚待实际动作引入的Ds/T不是调用前实例。
+    for (std::size_t i = 0; i < 预期角色.size(); ++i)
+        if (规格.角色范围组[i].first != 预期角色[i]
+            || !节点仍存在(规格.角色范围组[i].second))
+            throw std::runtime_error("invalid information relation action role range");
+}
+
 动作概念定义 规范化动作定义(动作概念定义 定义,
     const 概念_特征类& 特征, const 概念_二次特征类& 二次,
-    const 概念_存在类* 存在) {
+    const 概念_存在类* 存在, 动作定义读取方式 方式 = 动作定义读取方式::完整保护) {
     if (!存在) throw std::runtime_error("action existence concept reader not configured");
     const auto 校验存在C = [&](const auto& C) {
         if (C && !存在->获取存在概念(*C)) throw std::runtime_error("action role is not an existence concept");
@@ -795,6 +858,7 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
     const auto 可选存在 = [](const auto& 节点) { return !节点 || 节点仍存在(*节点); };
     const bool 方法能力 = 定义.能力类别 == 动作能力定义类别::方法能力;
     const bool 治理能力 = 定义.能力类别 == 动作能力定义类别::内部治理能力;
+    核验信息关系动作规格(定义);
     const bool 普通治理形状 = 定义.执行主体.对象类别 == 动作参数对象类别::普通世界
         && 定义.作用目标.对象类别 == 动作参数对象类别::普通世界
         && 定义.执行主体.存在概念节点
@@ -806,7 +870,7 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
     if ((!方法能力 && !治理能力)
         || (方法能力 && (!定义.抽象方法节点 || !节点仍存在(*定义.抽象方法节点)))
         || (治理能力 && (定义.抽象方法节点
-            || (!普通治理形状 && !虚拟治理形状))))
+            || (!普通治理形状 && !虚拟治理形状 && !定义.信息关系规格))))
         throw std::runtime_error("invalid action capability kind or method identity");
     if (!节点仍存在(定义.能力定义节点)
         || !定义.执行主体.存在概念节点
@@ -839,8 +903,9 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
                 throw std::runtime_error("invalid ordered action parameter");
             switch (有序.信息类型) {
             case 新方法参数信息类型::存在:
-                if (!存在->获取存在概念(有序.范围概念节点))
-                    throw std::runtime_error("invalid ordered existence concept");
+                if (方式 == 动作定义读取方式::普通语义)
+                    核对有序存在范围语义(有序.范围概念节点, *存在);
+                else (void)读取有序存在范围保护(有序.范围概念节点,*存在);
                 break;
             case 新方法参数信息类型::特征:
                 if (!特征.获取特征概念(有序.范围概念节点))
@@ -898,7 +963,60 @@ std::int64_t 形状数量(std::size_t 数量) {
     return static_cast<std::int64_t>(数量);
 }
 
-std::vector<基础节点初始字段> 编码动作定义(const 动作概念定义& 定义) {
+struct 动作参数类别保护 final {
+    新方法参数信息类型 分派类型;
+    稳定编码 类别概念;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+
+bool 动作定义快照相同(const 基础联合节点快照& a, const 基础联合节点快照& b) {
+    return a.结构.节点 == b.结构.节点 && a.结构.字段组 == b.结构.字段组
+        && a.入向字段组 == b.入向字段组 && a.入向外部关系组 == b.入向外部关系组
+        && a.出向外部关系组 == b.出向外部关系组;
+}
+
+void 合并动作类别保护(std::vector<基础联合节点快照>& 目标,
+    const std::vector<基础联合节点快照>& 输入) {
+    for (const auto& n : 输入) {
+        const auto old = std::find_if(目标.begin(), 目标.end(),
+            [&](const auto& p) { return p.结构.节点 == n.结构.节点; });
+        if (old == 目标.end()) 目标.push_back(n);
+        else if (!动作定义快照相同(*old, n)) throw 动作类别前提变化{};
+    }
+}
+
+动作参数类别保护 读取动作参数类别保护(
+    新方法参数信息类型 类型, const 概念_存在类& 存在, const 概念_特征类& 特征) {
+    动作参数类别保护 r{类型, {}, {}};
+    if (类型 == 新方法参数信息类型::存在) {
+        const auto p = 存在.读取存在根概念保护();
+        if (p.状态 == 正式概念读取状态::前提已变化) throw 动作类别前提变化{};
+        if (p.状态 != 正式概念读取状态::已读取 || !p.信息 || p.完整保护组.empty())
+            throw std::runtime_error("action parameter existence category root unavailable");
+        r.类别概念 = p.信息->节点; r.完整保护组 = p.完整保护组;
+    } else if (类型 == 新方法参数信息类型::特征) {
+        const auto p = 特征.读取特征类别根概念保护();
+        if (p.状态 == 正式概念读取状态::前提已变化) throw 动作类别前提变化{};
+        if (p.状态 != 正式概念读取状态::已读取 || !p.信息 || p.完整保护组.empty())
+            throw std::runtime_error("action parameter feature category root unavailable");
+        r.类别概念 = p.信息->节点; r.完整保护组 = p.完整保护组;
+    } else throw std::runtime_error("action parameter dispatch hint invalid");
+    return r;
+}
+
+动作参数类别保护 解析动作参数类别保护(
+    稳定编码 C, const 概念_存在类& 存在, const 概念_特征类& 特征) {
+    auto e = 读取动作参数类别保护(新方法参数信息类型::存在, 存在, 特征);
+    auto f = 读取动作参数类别保护(新方法参数信息类型::特征, 存在, 特征);
+    if (e.类别概念 == f.类别概念) throw std::runtime_error("action parameter category roots collide");
+    if (C == e.类别概念) return e;
+    if (C == f.类别概念) return f;
+    throw std::runtime_error("action parameter category is not an admitted owner root");
+}
+
+std::vector<基础节点初始字段> 编码动作定义(const 动作概念定义& 定义,
+    const 概念_存在类* 存在, const 概念_特征类& 特征,
+    std::vector<基础联合节点快照>& 类别保护) {
     std::vector<基础节点初始字段> 字段{
         {节点类型字段, 聚合动态概念节点类型},
         {定义类别字段, 基础值{static_cast<std::int64_t>(动态概念定义类别::动作)}},
@@ -919,13 +1037,29 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         形状数量(定义.参数规格组.size())};
     const bool 有序参数 = !定义.参数规格组.empty() && 定义.参数规格组.front().有序规格.has_value();
     // 旧形状首项为正的对象类别；负标记与版本仅用于新布局，旧记录不插字段。
-    if (有序参数) 形状.insert(形状.begin(), {-1, 2});
+    if (定义.信息关系规格) 形状.insert(形状.begin(), {-2, 1});
+    else if (有序参数) 形状.insert(形状.begin(), {-1, 3});
     const auto 引用 = [&](稳定编码 值) { 字段.push_back({动作规格引用字段, 值}); };
+    if (定义.信息关系规格) {
+        const auto& 规格 = *定义.信息关系规格;
+        形状.insert(形状.end(), {static_cast<std::int64_t>(规格.操作),
+            形状数量(规格.角色范围组.size()), 形状数量(规格.结果角色组.size())});
+        引用(规格.结果关系概念);
+        for (const auto& [角色, 范围] : 规格.角色范围组) {
+            形状.push_back(角色); 引用(范围);
+        }
+        形状.insert(形状.end(), 规格.结果角色组.begin(), 规格.结果角色组.end());
+    }
     for (const auto& 规格 : 定义.参数规格组) {
         if (有序参数) {
             const auto& 有序 = *规格.有序规格;
-            形状.insert(形状.end(), {static_cast<std::int64_t>(有序.序号),
-                static_cast<std::int64_t>(有序.信息类型)});
+            if (!存在) throw std::runtime_error("action parameter category provider unavailable");
+            const auto p = 读取动作参数类别保护(有序.信息类型, *存在, 特征);
+            合并动作类别保护(类别保护, p.完整保护组);
+            if(有序.信息类型==新方法参数信息类型::存在)
+                合并动作类别保护(类别保护,读取有序存在范围保护(有序.范围概念节点,*存在));
+            形状.push_back(static_cast<std::int64_t>(有序.序号));
+            引用(p.类别概念);
             引用(有序.范围概念节点);
             continue;
         }
@@ -944,7 +1078,9 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     return 字段;
 }
 
-动作概念定义 解码动作定义(稳定编码 节点) {
+动作概念定义 解码动作定义(稳定编码 节点,
+    const 概念_存在类* 存在, const 概念_特征类& 特征,
+    std::vector<基础联合节点快照>& 类别保护, 动作定义读取方式 方式) {
     const auto 能力 = 读取唯一节点字段(节点, 动作能力字段);
     const auto 方法 = 读取可选节点字段(节点, 动作抽象方法字段);
     const auto 能力类别 = 读取可选I64字段(节点, 动作能力类别字段);
@@ -966,12 +1102,26 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     std::sort(引用字段.begin(), 引用字段.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
     std::size_t si = 0, ri = 0;
     const bool 有序参数 = 形状->front() == -1;
-    if (有序参数) {
-        if (形状->size() < 9 || (*形状)[1] != 2)
+    const bool 信息关系 = 形状->front() == -2;
+    std::int64_t 版本 = 0;
+    if (信息关系) {
+        if (形状->size() < 12 || (*形状)[1] != 1)
+            throw std::runtime_error("unsupported information relation action version");
+        si = 2;
+    } else if (有序参数) {
+        if (形状->size() < 9 || ((*形状)[1] != 2 && (*形状)[1] != 3))
             throw std::runtime_error("unsupported ordered action specification version");
+        版本 = (*形状)[1];
         si = 2;
     }
     const auto 数字 = [&]() { return 形状->at(si++); };
+    const auto 对象类别 = [&]() {
+        const auto v = 数字();
+        const auto c = static_cast<动作参数对象类别>(v);
+        if (static_cast<std::int64_t>(c) != v || !动作对象类别合法(c))
+            throw std::runtime_error("invalid action object category");
+        return c;
+    };
     const auto 布尔 = [&]() { const auto v = 数字(); if (v != 0 && v != 1) throw std::runtime_error("invalid action shape bool"); return v != 0; };
     const auto 数量 = [&]() { const auto v = 数字(); if (v < 0 || static_cast<std::uint64_t>(v) > 引用字段.size()) throw std::runtime_error("invalid action shape count"); return static_cast<std::size_t>(v); };
     const auto 引用 = [&]() { const auto* v = std::get_if<稳定编码>(&引用字段.at(ri++).内容); if (!v || !节点仍存在(*v)) throw std::runtime_error("invalid action concept specification reference"); return *v; };
@@ -979,8 +1129,10 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     定义.能力定义节点 = *能力; 定义.抽象方法节点 = *方法;
     定义.能力类别 = *能力类别
         ? static_cast<动作能力定义类别>(**能力类别) : 动作能力定义类别::方法能力;
-    定义.执行主体 = {*主体, *主体角色, static_cast<动作参数对象类别>(数字())};
-    定义.作用目标 = {*目标, *目标角色, static_cast<动作参数对象类别>(数字())};
+    if (*能力类别 && static_cast<std::int64_t>(定义.能力类别) != **能力类别)
+        throw std::runtime_error("invalid action capability category encoding");
+    定义.执行主体 = {*主体, *主体角色, 对象类别()};
+    定义.作用目标 = {*目标, *目标角色, 对象类别()};
     const auto 有主体角色 = 布尔(), 有目标 = 布尔(), 有目标角色 = 布尔(), 有类型 = 布尔();
     if (有主体角色 != 主体角色->has_value() || 有目标 != 目标->has_value()
         || 有目标角色 != 目标角色->has_value() || 有类型 != 目标类型->has_value())
@@ -988,6 +1140,25 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     定义.目标特征类型概念节点 = *目标类型;
     const auto 规格数 = 数量();
     if (有序参数 && 规格数 == 0) throw std::runtime_error("empty ordered action specification");
+    if (信息关系) {
+        if (规格数 != 0) throw std::runtime_error("mixed information relation action parameters");
+        新信息关系治理动作规格 规格;
+        const auto 操作 = 数字();
+        if (操作 != static_cast<std::int64_t>(新信息关系治理操作::自我采用正式请求)
+            && 操作 != static_cast<std::int64_t>(新信息关系治理操作::管理关联唯一任务))
+            throw std::runtime_error("invalid information relation action operation encoding");
+        规格.操作 = static_cast<新信息关系治理操作>(操作);
+        const auto 角色数 = 数量(), 结果角色数 = 数量();
+        规格.结果关系概念 = 引用();
+        for (std::size_t i = 0; i < 角色数; ++i)
+            规格.角色范围组.emplace_back(数字(), 引用());
+        for (std::size_t i = 0; i < 结果角色数; ++i)
+            规格.结果角色组.push_back(数字());
+        定义.信息关系规格 = std::move(规格);
+        核验信息关系动作规格(定义);
+    }
+    // 普通getter只解释本次参数的类别，不拼接不同时间的全树写入保护。
+    std::optional<动作参数类别保护> 存在类别, 特征类别;
     for (std::size_t i = 0; i < 规格数; ++i) {
         动作参数规格 规格;
         if (有序参数) {
@@ -995,14 +1166,41 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
             if (序号 <= 0 || static_cast<std::uint64_t>(序号) > (std::numeric_limits<std::uint32_t>::max)()
                 || static_cast<std::uint64_t>(序号) != i + 1)
                 throw std::runtime_error("invalid ordered action parameter position");
-            const auto 类型 = static_cast<新方法参数信息类型>(数字());
-            if (类型 != 新方法参数信息类型::存在 && 类型 != 新方法参数信息类型::特征)
-                throw std::runtime_error("invalid ordered action parameter type");
+            新方法参数信息类型 类型;
+            if (版本 == 2) {
+                const auto hint = 数字();
+                if (hint != 1 && hint != 2) throw std::runtime_error("invalid ordered action parameter type");
+                类型 = static_cast<新方法参数信息类型>(hint);
+            } else {
+                if (!存在) throw std::runtime_error("action category provider unavailable");
+                const auto 类别节点 = 引用();
+                if (方式 == 动作定义读取方式::普通语义) {
+                    if (!存在类别) {
+                        存在类别 = 读取动作参数类别保护(新方法参数信息类型::存在, *存在, 特征);
+                        特征类别 = 读取动作参数类别保护(新方法参数信息类型::特征, *存在, 特征);
+                        if (存在类别->类别概念 == 特征类别->类别概念)
+                            throw std::runtime_error("action parameter category roots collide");
+                    }
+                    if (类别节点 == 存在类别->类别概念) 类型 = 新方法参数信息类型::存在;
+                    else if (类别节点 == 特征类别->类别概念) 类型 = 新方法参数信息类型::特征;
+                    else throw std::runtime_error("action parameter category is not an admitted owner root");
+                } else {
+                    const auto p = 解析动作参数类别保护(类别节点, *存在, 特征);
+                    类型 = p.分派类型;
+                    合并动作类别保护(类别保护, p.完整保护组);
+                }
+            }
             规格.有序规格 = 新方法有序参数规格{static_cast<std::uint32_t>(序号), 类型, 引用()};
+            if(类型==新方法参数信息类型::存在) {
+                if(!存在)throw std::runtime_error("ordered existence range provider missing");
+                if (方式 == 动作定义读取方式::普通语义)
+                    核对有序存在范围语义(规格.有序规格->范围概念节点, *存在);
+                else 合并动作类别保护(类别保护,读取有序存在范围保护(规格.有序规格->范围概念节点,*存在));
+            }
             定义.参数规格组.push_back(std::move(规格));
             continue;
         }
-        规格.对象类别 = static_cast<动作参数对象类别>(数字());
+        规格.对象类别 = 对象类别();
         const auto 有存在 = 布尔(); 规格.要求场景 = 布尔(); const auto 特征数 = 数量();
         规格.参数角色节点 = 引用(); if (有存在) 规格.存在概念节点 = 引用();
         for (std::size_t j = 0; j < 特征数; ++j) {
@@ -1018,6 +1216,38 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     return 定义;
 }
 
+struct 动作概念读取材料 final {
+    动态概念信息 信息;
+    std::vector<基础联合节点快照> 类别保护组;
+};
+
+// 形状及合法性规则共用；普通读取不取得可供正式写入使用的完整保护。
+动作概念读取材料 读取动作概念材料(稳定编码 C,
+    const 概念_特征类& 特征, const 概念_二次特征类& 二次,
+    const 概念_存在类* 存在, 动作定义读取方式 方式 = 动作定义读取方式::完整保护) {
+    if (!结构仍存在() || !节点仍存在(C)
+        || 读取概念种类(C) != std::optional{动态概念种类::聚合}
+        || 读取唯一I64字段(C, 定义类别字段)
+            != std::optional{static_cast<std::int64_t>(动态概念定义类别::动作)})
+        throw std::runtime_error("action concept identity or owner unavailable");
+    if (!全局基础数据集.查询字段(C, 对应动态字段).empty()
+        || !全局基础数据集.查询字段(C, 状态变化项字段).empty()
+        || !全局基础数据集.查询字段(C, 动态特征项字段).empty()
+        || !查询概念关系(C, true).empty() || !查询概念关系(C, false).empty())
+        throw std::runtime_error("mixed action/change concept structure");
+    const auto 归属 = 全局基础数据集.查询目标关系(C, 基础外部关系类型::父子);
+    if (std::count_if(归属.begin(), 归属.end(), [&](const auto& r) {
+            return r.源节点 == 动态概念图根节点 && r.角色或顺序 == 0;
+        }) != 1) throw std::runtime_error("action concept root membership mismatch");
+    动作概念读取材料 r;
+    const auto d = 解码动作定义(C, 存在, 特征, r.类别保护组, 方式);
+    if (规范化动作定义(d, 特征, 二次, 存在, 方式) != d)
+        throw std::runtime_error("noncanonical action concept definition");
+    r.信息.节点 = C; r.信息.种类 = 动态概念种类::聚合;
+    r.信息.定义类别 = 动态概念定义类别::动作; r.信息.动作定义 = d;
+    return r;
+}
+
 } // namespace
 
 动态概念建立结果 概念_动态类::建立或取得动作概念(const 动作概念定义& 输入) noexcept {
@@ -1031,21 +1261,65 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         std::lock_guard 锁(动态概念图互斥);
         if (!结构仍存在()) throw std::runtime_error("action concept owner not initialized");
         const auto 定义 = 规范化动作定义(输入, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_);
-        for (const auto 节点 : 查询全部动态概念()) {
-            const auto 已有 = 获取动态概念(节点);
-            if (已有 && 已有->定义类别 == 动态概念定义类别::动作 && 已有->动作定义 == 定义)
+        // 不经公开枚举：该入口会先调用noexcept getter，吞掉专门前提变化路径。
+        // 先完整核对原范围的全部成员，再按节点排序查重，不能命中后跳过后部损坏。
+        std::map<稳定编码, 动态概念信息> 已有概念组;
+        for (const auto& 关系 : 全局基础数据集.查询源关系(动态概念图根节点, 基础外部关系类型::父子)) {
+            if (关系.角色或顺序 != 组织归属关系角色 && 关系.角色或顺序 != 0) continue;
+            const auto 节点 = 关系.目标节点;
+            std::optional<动态概念信息> 已有;
+            if (读取唯一I64字段(节点, 定义类别字段)
+                == std::optional{static_cast<std::int64_t>(动态概念定义类别::动作)})
+                已有 = 读取动作概念材料(节点, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_).信息;
+            else 已有 = 获取动态概念(节点);
+            if (!已有) throw std::runtime_error("dynamic concept root contains incomplete definition");
+            if (关系.角色或顺序 == 组织归属关系角色 || 已有->定义类别 == 动态概念定义类别::动作) {
+                const auto [old, added] = 已有概念组.emplace(节点, *已有);
+                if (!added && old->second != *已有) throw 动作类别前提变化{};
+            }
+        }
+        for (const auto& [节点, 已有] : 已有概念组) {
+            if (已有.定义类别 == 动态概念定义类别::动作 && 已有.动作定义 == 定义)
                 return {动态概念操作状态::已复用, 节点};
         }
-        const auto 字段请求 = 编码动作定义(定义);
-        增量.新增字段组.reserve(字段请求.size());
-        增量.新建节点组.reserve(1);
-        增量.新增外部关系组.reserve(1);
-        const auto 新建 = 全局基础数据集.原子建立节点({动态概念图根节点, 字段请求});
-        if (新建.状态 != 基础结构操作状态::已完成 || !新建.节点)
+        std::vector<基础联合节点快照> 类别保护;
+        const auto 字段请求 = 编码动作定义(定义, 动作存在概念读取_, 特征概念服务_, 类别保护);
+        新事实追加保护增量 回执;
+        回执.新增字段组.reserve(字段请求.size());
+        回执.新建节点组.reserve(1);
+        回执.新增外部关系组.reserve(1);
+        基础节点组追加请求 发布请求;
+        基础组内新节点 C;
+        std::set<稳定编码> 端点{动态概念图根节点};
+        for (const auto& f : 字段请求) {
+            C.字段组.push_back({f.字段节点, std::visit([](const auto& v)->基础组内字段内容 { return v; }, f.内容)});
+            端点.insert(f.字段节点);
+            if (const auto* ref = std::get_if<稳定编码>(&f.内容)) 端点.insert(*ref);
+        }
+        const auto 端点读取 = 全局基础数据集.查询节点组完整结构({端点.begin(), 端点.end()});
+        if (端点读取.状态 != 基础结构操作状态::已完成 || 端点读取.节点组.size() != 端点.size())
+            throw std::runtime_error("action publication endpoint capture failed");
+        发布请求.预期联合节点组 = 类别保护;
+        for (const auto& n : 端点读取.节点组) {
+            if (!n.快照) throw std::runtime_error("action publication endpoint missing");
+            合并动作类别保护(发布请求.预期联合节点组, {*n.快照});
+        }
+        发布请求.新节点组.push_back(std::move(C));
+        发布请求.追加外部关系组.push_back({动态概念图根节点, 基础组内节点引用{0}, 基础外部关系类型::父子, 0});
+        if (规范化动作定义(定义, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_) != 定义)
+            throw std::runtime_error("action publication definition became noncanonical");
+        const auto 新建 = 全局基础数据集.原子追加节点组(发布请求);
+        if (新建.状态 == 基础节点组追加状态::预期不符) throw 动作类别前提变化{};
+        if (新建.状态 != 基础节点组追加状态::已完成 || 新建.新节点组.size() != 1)
             throw std::runtime_error("atomic action concept publication failed");
-        const auto 读回 = 获取动态概念(*新建.节点);
-        if (!读回 || 读回->动作定义 != 定义) throw std::runtime_error("action concept readback mismatch");
-        const auto 结构 = 全局基础数据集.查询完整节点结构(*新建.节点);
+        const auto 新C = 新建.新节点组.front();
+        // 类别新引用已改变root入向字段，发表前proof不能复用于后置核验。
+        const auto 读回 = 读取动作概念定义保护(新C);
+        if (读回.状态 == 动作概念定义保护状态::前提已变化) throw 动作类别前提变化{};
+        if (读回.状态 != 动作概念定义保护状态::已读取 || !读回.信息
+            || 读回.信息->节点 != 新C || 读回.信息->动作定义 != 定义 || 读回.完整保护组.empty())
+            throw std::runtime_error("action concept readback mismatch");
+        const auto 结构 = 全局基础数据集.查询完整节点结构(新C);
         if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构
             || 结构.结构->字段组.size() != 字段请求.size())
             throw std::runtime_error("action concept receipt structure mismatch");
@@ -1054,21 +1328,32 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         for (std::size_t i = 0; i < 字段请求.size(); ++i) {
             const auto& f = 字段组[i];
             const auto& 请求 = 字段请求[i];
-            if (f.所属节点 != *新建.节点 || f.字段节点 != 请求.字段节点 || f.内容 != 请求.内容)
+            if (f.所属节点 != 新C || f.字段节点 != 请求.字段节点 || f.内容 != 请求.内容)
                 throw std::runtime_error("action concept receipt field mismatch");
-            增量.新增字段组.push_back(f);
+            回执.新增字段组.push_back(f);
         }
-        const auto 联合 = 全局基础数据集.查询节点组完整结构({*新建.节点});
+        const auto 联合 = 全局基础数据集.查询节点组完整结构({新C});
         if (联合.状态 != 基础结构操作状态::已完成 || 联合.节点组.size() != 1 || !联合.节点组[0].快照)
             throw std::runtime_error("action concept receipt relation missing");
         const auto& 入向 = 联合.节点组[0].快照->入向外部关系组;
         if (入向.size() != 1 || 入向[0].源节点 != 动态概念图根节点
-            || 入向[0].目标节点 != *新建.节点 || 入向[0].类型 != 基础外部关系类型::父子
+            || 入向[0].目标节点 != 新C || 入向[0].类型 != 基础外部关系类型::父子
             || 入向[0].角色或顺序 != 0)
             throw std::runtime_error("action concept receipt parent mismatch");
-        增量.新增外部关系组.push_back(入向[0]);
-        增量.新建节点组.push_back(*新建.节点);
-        return {动态概念操作状态::已建立, 新建.节点};
+        if (新建.新节点初始字段关系组.size() != 1
+            || 新建.新节点初始字段关系组.front().size() != 字段组.size()
+            || 新建.追加外部关系组 != std::vector<稳定编码>{入向[0].编码})
+            throw std::runtime_error("action concept atomic receipt differs");
+        for (std::size_t i = 0; i < 字段组.size(); ++i)
+            if (新建.新节点初始字段关系组.front()[i] != 字段组[i].编码)
+                throw std::runtime_error("action concept initial field receipt order differs");
+        回执.新增外部关系组.push_back(入向[0]);
+        回执.新建节点组.push_back(新C);
+        增量 = std::move(回执);
+        return {动态概念操作状态::已建立, 新C};
+    } catch (const 动作类别前提变化&) {
+        增量 = {};
+        return {动态概念操作状态::状态不一致, {}};
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动作概念发布", L"动作概念定义或原子发布异常。", e.what());
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动作概念发布", L"未知工程异常。"); }
@@ -1755,24 +2040,17 @@ std::optional<动态概念信息> 概念_动态类::获取动态概念(
                 && *类别 != static_cast<std::int64_t>(动态概念定义类别::变化)))
                 throw std::runtime_error("invalid dynamic concept definition category");
             if (*类别 == static_cast<std::int64_t>(动态概念定义类别::动作)) {
-                if (*种类 != 动态概念种类::聚合
-                    || !全局基础数据集.查询字段(概念节点, 对应动态字段).empty()
-                    || !全局基础数据集.查询字段(概念节点, 状态变化项字段).empty()
-                    || !全局基础数据集.查询字段(概念节点, 动态特征项字段).empty()
-                    || !查询概念关系(概念节点, true).empty()
-                    || !查询概念关系(概念节点, false).empty())
-                    throw std::runtime_error("mixed action/change concept structure");
-                const auto 归属 = 全局基础数据集.查询目标关系(概念节点, 基础外部关系类型::父子);
-                if (std::count_if(归属.begin(), 归属.end(), [&](const auto& r) {
-                        return r.源节点 == 动态概念图根节点 && r.角色或顺序 == 0;
-                    }) != 1) throw std::runtime_error("action concept root membership mismatch");
-                const auto 定义 = 解码动作定义(概念节点);
-                if (规范化动作定义(定义, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_) != 定义)
-                    throw std::runtime_error("noncanonical action concept definition");
-                动态概念信息 信息;
-                信息.节点 = 概念节点; 信息.种类 = 动态概念种类::聚合;
-                信息.定义类别 = 动态概念定义类别::动作; 信息.动作定义 = 定义;
-                return 信息;
+                // 类别根/正式结构owner尚可能报告瞬时前提变化；整份fresh重读，
+                // 不复用上一份部分材料、不无限重试、不将未完成伪装成概念不存在。
+                for (unsigned 次数 = 0; 次数 < 3; ++次数) {
+                    try {
+                        return 读取动作概念材料(概念节点, 特征概念服务_, 二次特征概念服务_,
+                            动作存在概念读取_, 动作定义读取方式::普通语义).信息;
+                    } catch (const 动作类别前提变化&) {
+                        if (次数 == 2) throw;
+                    }
+                }
+                throw std::runtime_error("action semantic read did not complete");
             }
         }
         std::optional<稳定编码> 对应动态;
@@ -1804,6 +2082,8 @@ std::optional<动态概念信息> 概念_动态类::获取动态概念(
         排序去重(下位);
         return 动态概念信息{概念节点, *种类, 对应动态,
             *状态变化, *动态特征, std::move(上位), std::move(下位)};
+    } catch (const 动作类别前提变化&) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取动态概念", L"动作概念语义读取连续三次前提变化，未取得完整材料，禁止伪装为概念不存在。");
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取动态概念", L"概念结构读取异常。", e.what());
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取动态概念", L"未知工程异常。"); }
@@ -1811,6 +2091,56 @@ std::optional<动态概念信息> 概念_动态类::获取动态概念(
 
 bool 概念_动态类::是动态概念节点(稳定编码 节点) const noexcept {
     return 获取动态概念(节点).has_value();
+}
+
+动作概念定义保护结果 概念_动态类::读取动作概念定义保护(稳定编码 C) const noexcept {
+    try {
+        std::lock_guard 锁(动态概念图互斥);
+        if(!节点仍存在(C))return {};
+        const auto 材料 = 读取动作概念材料(C, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_);
+        std::set<稳定编码> 身份{C,动态概念图根节点,节点类型字段,聚合动态概念节点类型};
+        for(const auto* f:动作字段组())身份.insert(*f);
+        const auto 局部=全局基础数据集.查询完整节点结构(C);
+        if(!局部.结构)throw std::runtime_error("action concept protection node unavailable");
+        for(const auto& f:局部.结构->字段组) {
+            身份.insert(f.字段节点);
+            if (const auto* ref = std::get_if<稳定编码>(&f.内容)) 身份.insert(*ref);
+        }
+        for (const auto& n : 材料.类别保护组) 身份.insert(n.结构.节点.编码);
+        const std::vector<稳定编码> 请求{身份.begin(),身份.end()};
+        const auto 读=全局基础数据集.查询节点组完整结构(请求);
+        if(读.状态!=基础结构操作状态::已完成||读.节点组.size()!=请求.size())
+            throw std::runtime_error("action concept protection capture failed");
+        动作概念定义保护结果 结果;
+        结果.完整保护组 = 材料.类别保护组;
+        for(const auto& n:读.节点组) {
+            if(!n.快照)throw std::runtime_error("action concept protection snapshot missing");
+            合并动作类别保护(结果.完整保护组, {*n.快照});
+        }
+        if (!节点仍存在(C)) return {动作概念定义保护状态::前提已变化,{},{}};
+        const auto 再材料 = 读取动作概念材料(C, 特征概念服务_, 二次特征概念服务_, 动作存在概念读取_);
+        if (再材料.信息 != 材料.信息) return {动作概念定义保护状态::前提已变化,{},{}};
+        合并动作类别保护(结果.完整保护组, 再材料.类别保护组);
+        std::sort(结果.完整保护组.begin(), 结果.完整保护组.end(),
+            [](const auto& a, const auto& b) { return a.结构.节点.编码 < b.结构.节点.编码; });
+        const auto 复核=全局基础数据集.查询节点组完整结构(请求);
+        if(复核.状态!=基础结构操作状态::已完成||复核.节点组.size()!=结果.完整保护组.size())
+            throw std::runtime_error("action concept protection recapture failed");
+        for(std::size_t i=0;i<结果.完整保护组.size();++i) {
+            const auto& a=结果.完整保护组[i];const auto& b=复核.节点组[i].快照;
+            if(!b||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
+                ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
+                return {动作概念定义保护状态::前提已变化,{},{}};
+        }
+        结果.状态=动作概念定义保护状态::已读取;结果.信息=材料.信息;
+        return 结果;
+    } catch (const 动作类别前提变化&) {
+        return {动作概念定义保护状态::前提已变化,{},{}};
+    } catch(const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取动作概念定义保护",L"正式动作概念保护读取异常。",e.what());
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取动作概念定义保护",L"未知工程异常。");
+    }
 }
 
 bool 概念_动态类::是实例动态概念节点(稳定编码 节点) const noexcept {

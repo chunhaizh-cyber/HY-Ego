@@ -47,6 +47,7 @@ class 新服务对象获取本能端口 {
 public:
     virtual ~新服务对象获取本能端口() = default;
     virtual std::optional<新服务对象获取配置> 读取登记材料() const noexcept = 0;
+    virtual std::optional<稳定编码> 读取初始连接关系概念() const noexcept = 0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
     virtual 新本能函数本次条件结果对 执行任务(
         const 方法参数场景&, 稳定编码 执行实例节点) noexcept = 0;

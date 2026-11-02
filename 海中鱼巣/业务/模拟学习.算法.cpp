@@ -1,4 +1,6 @@
 #include "模拟学习.算法.h"
+#include "../领域/新_语言类.h"
+#include "../领域/新_特征类.h"
 
 #include <algorithm>
 #include <bit>
@@ -11,6 +13,27 @@
 #include <stdexcept>
 
 namespace 海中鱼巣 {
+通用UTF8取样结果 生成通用模拟UTF8候选(const 新特征匹配定义快照& d,bool nonempty,
+    const std::vector<新特征值信息>& materials,std::uint64_t seed) {
+    if(d.材料类型!=特征概念材料物理类型::UTF8字符串||d.比较规则!=特征概念比较规则::完整材料精确)return {};
+    通用UTF8取样结果 out;
+    if(std::holds_alternative<特征概念全材料值域>(d.值域)) {
+        if(!materials.empty())throw std::invalid_argument("UTF8 whole domain received arbitrary materials");
+        if(!nonempty)out.候选.emplace_back();out.候选.emplace_back(".");
+    } else if(const auto* ids=std::get_if<std::vector<稳定编码>>(&d.值域)) {
+        if(ids->size()!=materials.size())throw std::invalid_argument("UTF8 finite domain materials incomplete");
+        out.全有限域=true;
+        for(std::size_t i=0;i<ids->size();++i) {
+            const auto& m=materials[i];const auto* text=std::get_if<std::string>(&m.材料);
+            if(m.节点!=(*ids)[i]||m.物理类型!=材料物理类型::UTF8字符串||!text||!新_语言类::严格UTF8字节串有效(*text))
+                throw std::invalid_argument("UTF8 finite domain material corrupt");
+            if(!nonempty||!text->empty())out.候选.push_back(*text);
+        }
+        std::sort(out.候选.begin(),out.候选.end());out.候选.erase(std::unique(out.候选.begin(),out.候选.end()),out.候选.end());
+        std::mt19937_64 random(seed);std::shuffle(out.候选.begin(),out.候选.end(),random);
+    } else return out;
+    out.状态=out.候选.empty()?通用UTF8取样状态::无合法候选:通用UTF8取样状态::已生成;return out;
+}
 namespace {
 
 using 整数 = std::int64_t;
@@ -97,7 +120,6 @@ struct 工作区域 final {
         for (const auto& 区间 : 区间组) {
             const auto 中 = 区间中点(区间.下界, 区间.上界);
             std::vector<整数> 点{区间.下界, 中, 区间.上界};
-            std::sort(点.begin(), 点.end());
             点.erase(std::unique(点.begin(), 点.end()), 点.end());
             网格.push_back(std::move(点));
         }

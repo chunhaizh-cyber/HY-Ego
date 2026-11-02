@@ -1,4 +1,6 @@
 #include "新_任务类.h"
+#include "本能交互.运行接口.h"
+#include "本能需求.运行接口.h"
 #include "任务结算.规则.h"
 #include "新_方法类.h"
 #include "新_场景类.h"
@@ -16,6 +18,8 @@
 #include <array>
 #include <bit>
 #include <chrono>
+#include <condition_variable>
+#include <functional>
 #include <limits>
 #include <map>
 #include <mutex>
@@ -25,9 +29,113 @@
 #include <stdexcept>
 #include <tuple>
 #include <thread>
+#include <type_traits>
 #include <utility>
 
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
+#include "../核心/日志系统.h"
+#include <exception>
+#include <source_location>
+#include <sstream>
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+#ifndef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
+#include "../核心/日志系统.h"
+#include <sstream>
+#endif
+#endif
+
 namespace 海中鱼巣 {
+
+namespace {
+bool 同一来源前端目标(const 新来源前驱内容模板& a,const 新来源前驱内容模板& b) noexcept {
+    return a.种类==b.种类&&a.目标槽类型==b.目标槽类型&&a.要求概念==b.要求概念
+        &&a.H==b.H&&a.D==b.D&&a.正式根路径==b.正式根路径;
+}
+}
+
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+namespace 调试内部 {
+// 仅诊断构建的跨翻译单元样本回收，无领域公开端口。
+void 清空特征附加预期诊断() noexcept;
+std::wstring 取回特征附加预期诊断();
+}
+namespace {
+struct 任务状态前提样本 final {
+    稳定编码 T, F, 前状态;
+    新任务状态 原状态{}, 新状态{};
+    std::size_t 保护数 = 0, 前状态字段数 = 0;
+    int 阶段 = 0, 准备状态 = 0, 提交状态 = 0, 写入状态 = 0;
+};
+thread_local 任务状态前提样本* 当前任务状态前提样本 = nullptr;
+}
+#endif
+
+
+#ifdef HY_EGO_DEBUG_LOG_DEMAND_SOURCE_GUARD
+namespace 需求守卫诊断内部 {
+extern thread_local char 最近故障[256];
+}
+#endif
+
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+namespace {
+struct 因果阶段监控缓冲;
+thread_local 因果阶段监控缓冲* 当前因果阶段监控 = nullptr;
+
+// 仅同步调用期间借用；辅助函数不输出日志，也不取得任何业务锁。
+struct 因果阶段监控缓冲 final {
+    std::wstring 内容;
+    const std::chrono::steady_clock::time_point 起点 = std::chrono::steady_clock::now();
+    std::chrono::steady_clock::time_point 上一观察 = 起点;
+    因果阶段监控缓冲* 前层 = 当前因果阶段监控;
+    因果阶段监控缓冲() noexcept { 当前因果阶段监控 = this; }
+    ~因果阶段监控缓冲() noexcept {
+        当前因果阶段监控 = 前层;
+        try { (void)记录调试日志(L"CAUSAL_PREPARATION", L"任务筹办", L"提议任务因果子需求", 内容); }
+        catch (...) {}
+    }
+    template<class 写入类型>
+    void 观察(写入类型 写入) noexcept {
+        try {
+            if (内容.size() >= 32768) return;
+            const auto 当前 = std::chrono::steady_clock::now();
+            std::wostringstream 文本;
+            文本 << L"累计毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 起点).count()
+                << L"；观察间隔毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 上一观察).count()
+                << L"；";
+            上一观察 = 当前;
+            写入(文本);
+            内容 += 文本.str().substr(0, 4096); 内容 += L'\n';
+        } catch (...) {}
+    }
+};
+
+void 观察因果构造阶段(const wchar_t* 阶段, 稳定编码 节点 = {}) noexcept {
+    if (当前因果阶段监控) 当前因果阶段监控->观察([&](auto& 文本) {
+        文本 << 阶段;
+        if (节点.值) 文本 << L"；阶段关联节点=" << 节点.值;
+    });
+}
+
+struct 因果构造观察范围 final {
+    const wchar_t* 名称;
+    稳定编码 节点;
+    因果构造观察范围(const wchar_t* 阶段, 稳定编码 关联节点 = {}) noexcept
+        : 名称(阶段), 节点(关联节点) {
+        if (当前因果阶段监控) 当前因果阶段监控->观察([&](auto& 文本) {
+            文本 << L"开始：" << 名称 << L"；阶段关联节点=" << 节点.值;
+        });
+    }
+    ~因果构造观察范围() noexcept {
+        if (当前因果阶段监控) 当前因果阶段监控->观察([&](auto& 文本) {
+            文本 << L"结束：" << 名称 << L"；阶段关联节点=" << 节点.值;
+        });
+    }
+};
+}
+#endif
 
 稳定编码 任务集合根节点{};
 
@@ -47,6 +155,135 @@ struct 新_任务类::服务值治理读取上下文 final {
     稳定编码 定义列表键, 自我概念键, 服务值类型键;
 };
 
+struct 新_任务类::新方法内容核验上下文 final {
+    std::set<稳定编码> 当前递归任务栈;
+    std::shared_ptr<新_需求类::提议源收集批> 提议源;
+};
+struct 新_任务类::新方法内容必要性投影 final {
+    方法内容必要性状态 状态=方法内容必要性状态::仍必要;
+    std::optional<新需求信息> 子需求,父需求;
+    std::optional<新任务信息> 子任务,父任务;
+    std::optional<新任务条件子需求提议> 父提议;
+    std::vector<基础联合节点快照> 保护;
+    std::wstring 诊断;
+    std::shared_ptr<新_需求类::提议源收集批> 提议源;
+};
+
+struct 新_任务类::新任务需求准备保护批 final {
+    稳定编码 T;
+    std::optional<新任务信息> 任务;
+    std::optional<新需求治理信息> 需求;
+    新任务需求准备结果 结果;
+    新服务要求执行守卫结果 守卫;
+    std::map<稳定编码,新服务要求执行守卫结果> 后代守卫;
+    std::vector<基础联合节点快照> 保护;
+    std::shared_ptr<新_需求类::提议源收集批> 提议源;
+};
+struct 新_任务类::因果执行许可 final {
+    稳定编码 T;
+    std::optional<新任务信息> 任务;
+    std::vector<新需求治理信息> 父链;
+    因果子需求采用组 采用组;
+    std::vector<基础联合节点快照> 保护;
+    const 新因果筹办读取接口* 读取接口=nullptr;
+    std::optional<新任务服务需求取得合同> 取得合同;
+    std::optional<新自我服务结算配置> 结算配置;
+    bool 服务任务同步=false;
+    const void* 同步所有者=nullptr;
+    稳定编码 排除需求;
+};
+
+struct 新_任务类::新任务本次场景核验批 final {
+    struct 项 final {
+        std::optional<稳定编码> 执行组织节点;
+        稳定编码 方法节点;
+        std::optional<稳定编码> 来源配对节点;
+        新方法初始场景事实限定 限定;
+        std::vector<新方法参数角色绑定> 绑定组;
+        新交互求值状态 状态 = 新交互求值状态::材料不足;
+        std::optional<稳定编码> 执行分支节点;
+    };
+    稳定编码 T;
+    std::optional<稳定编码> X;
+    std::optional<新任务本能采用材料> 固定采用;
+    bool 允许当前执行=false,允许部分绑定=false,已读取=false,仅查找目标=false;
+    std::optional<新任务信息> 任务;
+    std::optional<新需求信息> 需求;
+    std::optional<新任务执行信息> 执行;
+    std::optional<新任务方法执行组织> 组织;
+    std::optional<新任务候选方法材料> 候选;
+    std::vector<新方法信息> 方法组;
+    新任务治理条件筹办结果 纯筹办;
+    std::vector<基础联合节点快照> 保护;
+    std::vector<项> 项组;
+    std::vector<std::pair<稳定编码,新方法执行分支信息>> 分支定义组;
+    std::vector<新方法执行分支读取结果> 分支投影组;
+    struct 附属声明项 final {
+        稳定编码 方法,特征类型根;
+        std::optional<稳定编码> 分支;
+        std::uint32_t 位置=0;
+        新方法参数特征声明读取结果 声明;
+    };
+    std::vector<附属声明项> 附属声明组;
+    struct 正式参数项 final {
+        稳定编码 方法,范围;std::uint32_t 位置=0;
+        std::optional<稳定编码> 指定需求;
+        正式信息参数读取结果 读取;
+        std::map<稳定编码,正式信息参数读取结果> 条件范围组;
+    };
+    std::vector<正式参数项> 正式参数组;
+    struct 内容条件项 final {
+        稳定编码 方法,配对;
+        std::optional<稳定编码> 分支;
+        std::size_t 序号=0;
+        新方法引用内容条件 声明;
+        std::optional<稳定编码> 主体,特征,固定需求;
+        std::optional<新需求完整目标> 目标;
+        新引用内容目标判定 判定;
+        bool 参数已绑定=false;
+        std::optional<新服务要求确认保护状态> 认知来源资格;
+        std::optional<新需求治理信息> 固定认知来源;
+        std::optional<新服务要求确认目标> 认知来源确认;
+    };
+    std::vector<内容条件项> 内容条件组;
+    struct 内容关系项 final {
+        稳定编码 方法, 配对; std::optional<稳定编码> 分支;
+        新方法参数关系 关系;
+        std::optional<bool> 符合;
+    };
+    std::vector<内容关系项> 内容关系组;
+    std::optional<新任务需求结果读取结果> 正式需求执行结果;
+    std::vector<std::pair<新任务预计特征变化,新引用内容目标判定>> 内容后置组;
+    std::shared_ptr<新方法内容核验上下文> 内容核验上下文;
+    std::map<稳定编码,新方法内容必要性投影> 内容必要性组;
+    std::optional<新需求筹办资格结果> 内容目标资格;
+    std::optional<新引用内容目标判定> 内容目标判定;
+    std::map<稳定编码,新引用内容目标判定> 子内容判定组;
+    std::optional<新任务复合分解状态> 复合必要性;
+    std::optional<新任务复合分解状态> 已满足静态来源;
+    std::optional<新需求当前满足结果> 普通值目标当前满足{};
+    std::optional<新需求当前满足结果> 当前需求满足{};
+    std::optional<新需求新增成员判定结果> 新增成员目标判定;
+    struct 新增成员目标预读项 final {
+        新需求信息 需求;
+        std::optional<新需求新增成员判定结果> 判定;
+        新需求当前满足结果 当前满足;
+    };
+    std::vector<新增成员目标预读项> 新增成员目标组;
+    std::optional<std::vector<稳定编码>> 冲突候选需求清单;
+    std::optional<新任务需求准备保护批> 需求准备;
+    struct 结果场景项 final {
+        新方法初始场景事实限定 限定;
+        新交互求值状态 构成状态=新交互求值状态::不支持;
+        新交互求值状态 事实状态=新交互求值状态::尚未具备;
+        std::optional<新方法本次场景事实引用> 引用;
+        std::optional<新交互连接过程> 过程;
+    };
+    std::vector<结果场景项> 结果场景组;
+    std::vector<新方法本次场景事实引用> 待记录引用组;
+    bool 分支有效=true;
+};
+
 struct 新_任务类::方法问题暂存 final {
     稳定编码 任务节点, 执行实例节点;
     新执行场景采集请求 采集请求;
@@ -60,126 +297,42 @@ namespace {
 
 std::recursive_mutex 新任务互斥;
 
-template<class 方法视图>
-bool 是有序服务需求取得方法(const 方法视图& 方法) {
-    return 方法.本能函数登记名 == std::optional<std::string>{新本能函数登记名_主动获取服务需求}
-        || 方法.本能函数登记名 == std::optional<std::string>{新本能函数登记名_被动获取服务需求};
-}
-template<class 方法视图>
-bool 是服务需求取得方法(const 方法视图& 方法) {
-    return 是有序服务需求取得方法(方法)
-        || 方法.本能函数登记名 == std::optional<std::string>{"主动获取服务需求"}
-        || 方法.本能函数登记名 == std::optional<std::string>{"被动获取服务需求"}
-        || 方法.本能函数登记名 == std::optional<std::string>{"builtin.service_requirement.acquire_active.v1"}
-        || 方法.本能函数登记名 == std::optional<std::string>{"builtin.service_requirement.acquire_passive.v1"};
-}
-
-// D不复制进X；以本次固定E4/F5和C重新定位唯一当前需求，不从历史回退。
-struct 有序服务需求来源 final {
-    新需求信息 需求;
-    新特征信息 需求特征;
-    新服务要求确认目标 确认;
-    新部分服务要求读取结果 要求;
-    std::array<稳定编码, 6> 参数;
+// 向上送出：只取消本次工程读取，不产生任务业务状态。
+struct 因果读取停止信号 final {};
+struct 因果读取来源变化信号 final {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
+    explicit 因果读取来源变化信号(std::source_location 来源 = std::source_location::current()) noexcept
+        : 触发行(来源.line()) {}
+    std::uint_least32_t 触发行 = 0;
+#endif
 };
-std::optional<有序服务需求来源> 读取有序服务需求来源(
-    const 新方法信息& 方法, const std::vector<新方法参数角色绑定>& 绑定组,
-    const 新任务服务需求取得合同& 合同, const 新_需求类& 需求服务,
-    const 新_存在类& 存在服务, const 新_场景类& 场景服务,
-    const 新_特征类& 特征服务, const 新_特征值类& 值服务,
-    const 概念_特征类& 概念服务, std::optional<稳定编码> 指定需求,
-    std::optional<稳定编码> 指定确认) {
-    if (!是有序服务需求取得方法(方法) || 方法.作用域 != 新方法作用域::普通世界
-        || 方法.参数规格组.size() != 6 || 绑定组.size() != 6)
-        throw std::logic_error("有序取得方法规格数量或作用域不一致");
-    constexpr std::array<新方法参数信息类型, 6> 类型{
-        新方法参数信息类型::存在, 新方法参数信息类型::存在, 新方法参数信息类型::特征,
-        新方法参数信息类型::存在, 新方法参数信息类型::特征, 新方法参数信息类型::特征};
-    std::array<稳定编码, 6> 参数{};
-    std::array<bool, 6> 规格已见{}, 绑定已见{};
-    for (const auto& 规格 : 方法.参数规格组) {
-        if (!规格.有序规格 || 规格.有序规格->序号 < 1 || 规格.有序规格->序号 > 6)
-            throw std::logic_error("取得方法不是六有序规格");
-        const auto i = 规格.有序规格->序号 - 1;
-        if (规格已见[i] || 规格.有序规格->信息类型 != 类型[i])
-            throw std::logic_error("取得方法有序规格重复或类型错误");
-        规格已见[i] = true;
+void 检查因果读取停止(std::stop_token 停止) {
+    if (停止.stop_requested()) throw 因果读取停止信号{};
+}
+std::unique_lock<std::recursive_mutex> 获取因果读取任务锁(std::stop_token 停止) {
+    检查因果读取停止(停止);
+    std::unique_lock<std::recursive_mutex> 锁{新任务互斥, std::defer_lock};
+    if (!停止.stop_possible()) { 锁.lock(); return 锁; }
+    std::mutex 停车互斥;
+    std::condition_variable_any 停车;
+    while (!锁.try_lock()) {
+        检查因果读取停止(停止);
+        std::unique_lock 等待锁{停车互斥};
+        (void)停车.wait_for(等待锁, 停止, std::chrono::milliseconds{10}, [] { return false; });
     }
-    for (const auto& 绑定 : 绑定组) {
-        if (!绑定.有序引用 || 绑定.有序引用->序号 < 1 || 绑定.有序引用->序号 > 6)
-            throw std::logic_error("取得执行缺有序实参");
-        const auto i = 绑定.有序引用->序号 - 1;
-        if (绑定已见[i] || 绑定.有序引用->信息类型 != 类型[i])
-            throw std::logic_error("取得执行有序实参重复或类型错误");
-        绑定已见[i] = true; 参数[i] = 绑定.有序引用->信息节点;
-    }
-    if (参数[1] != 合同.自我存在节点 || 参数[5] != 合同.服务任务集合特征节点
-        || !场景服务.是场景节点(参数[0])) throw std::logic_error("取得执行场景或自我参数错误");
-    const auto 自我 = 存在服务.获取存在(参数[1]), 人 = 存在服务.获取存在(参数[3]);
-    if (!自我 || !人) return {};
-    const auto 持有 = [](const auto& E, 稳定编码 F) {
-        return std::find(E.特征节点组.begin(), E.特征节点组.end(), F) != E.特征节点组.end();
-    };
-    if (!持有(*自我, 参数[2]) || !持有(*自我, 参数[5]) || !持有(*人, 参数[4]))
-        throw std::logic_error("取得执行特征所属存在错误");
-    if (!场景服务.存在属于场景范围(参数[0], 参数[1])
-        || !场景服务.存在属于场景范围(参数[0], 参数[3])) return {};
-    for (const auto& 规格 : 方法.参数规格组) {
-        const auto i = 规格.有序规格->序号 - 1;
-        if (i == 0) continue;
-        if (类型[i] == 新方法参数信息类型::存在) {
-            if (!存在服务.存在节点属于概念(参数[i], 规格.有序规格->范围概念节点)) return {};
-        } else {
-            const auto F = 特征服务.获取特征(参数[i]);
-            if (!F) return {};
-            const auto 比较 = 概念服务.比较单特征概念(F->特征概念节点, 规格.有序规格->范围概念节点);
-            if (比较.状态 != 特征概念规则状态::已完成 || !比较.关系)
-                throw std::logic_error("取得执行特征范围不可比较");
-            if (*比较.关系 != 单特征概念关系::同一 && *比较.关系 != 单特征概念关系::右为上位) return {};
-        }
-    }
-    const auto 交互者 = 特征服务.获取特征(参数[2]);
-    if (!交互者) return {};
-    const 新特征准确值 目标引用{参数[3]};
-    if (交互者->当前值 != std::optional<新特征准确值>{目标引用}
-        && std::find(交互者->历史不同值.begin(), 交互者->历史不同值.end(), 目标引用)
-            == 交互者->历史不同值.end()) return {};
-    const auto F = 特征服务.获取特征(参数[4]);
-    const auto 定义 = F ? 概念服务.获取特征概念(F->特征概念节点) : std::nullopt;
-    if (!F || !F->当前值 || !定义) return {};
-    if (定义->材料类型 != 特征概念材料物理类型::需求节点引用
-        || 定义->比较规则 != 特征概念比较规则::需求身份精确)
-        throw std::logic_error("取得来源不是需求单节点引用");
-    const auto* V = std::get_if<稳定编码>(&*F->当前值);
-    if (!V) throw std::logic_error("取得来源当前值不是正式D引用");
-    const auto D = 需求服务.获取需求(*V);
-    if (!D) throw std::logic_error("取得来源当前D不可读");
-    if ((指定需求 && D->节点 != *指定需求) || D->执行域 != 新需求执行域::被认知
-        || D->需求主体存在节点 != 参数[3] || !D->认知来源
-        || (指定确认 && D->认知来源->内容确认节点 != *指定确认)) return {};
-    if (!D || !D->认知来源->来源要求节点) return {};
-    const auto C = 需求服务.复核服务要求确认语义(D->认知来源->内容确认节点);
-    if (C.状态 == 新服务要求确认状态::需重新确认) return {};
-    if (C.状态 != 新服务要求确认状态::当前有效 || !C.确认)
-        throw std::logic_error("取得来源确认不可读");
-    const auto& 确认 = *C.确认;
-    if (确认.理解节点 != D->认知来源->理解节点 || 确认.来源要求节点 != D->认知来源->来源要求节点
-        || 确认.来源人类节点 != 参数[3] || 确认.目标存在节点 != D->目标存在节点
-        || 确认.目标 != D->目标) return {};
-    const auto R = 需求服务.读取部分服务要求(*D->认知来源->来源要求节点);
-    if (R.状态 == 新部分服务要求读取状态::材料不存在) return {};
-    if (R.状态 != 新部分服务要求读取状态::已读取 || !R.材料 || R.发布预期节点组.empty())
-        throw std::logic_error("取得来源要求不可读");
-    if (R.材料->要求节点 != *D->认知来源->来源要求节点
-        || R.材料->来源人类节点 != 参数[3] || R.材料->理解节点 != 确认.理解节点
-        || R.材料->确认节点 != 确认.确认节点 || !查询服务要求缺项(*R.材料).empty()
-        || R.材料->已知目标.目标存在节点 != 确认.目标存在节点
-        || R.材料->已知目标.目标特征类型概念节点 != 确认.目标.目标特征类型概念节点
-        || R.材料->已知目标.目标形式 != 确认.目标.目标形式
-        || R.材料->已知目标.目标值域概念节点 != 确认.目标.目标值域概念节点
-        || R.材料->已知目标.目标比较关系概念节点 != 确认.目标.目标比较关系概念节点
-        || R.材料->已知目标.目标变化方向 != 确认.目标.目标变化方向) return {};
-    return 有序服务需求来源{*D, *F, 确认, R, 参数};
+    检查因果读取停止(停止);
+    return 锁;
+}
+template<class 正常类型, class 结果类型>
+正常类型 提取因果正常读取(结果类型&& 结果) {
+    if (auto* 正常 = std::get_if<正常类型>(&结果)) return std::move(*正常);
+    if (std::holds_alternative<新任务因果读取取消>(结果)) throw 因果读取停止信号{};
+    throw std::logic_error("因果读取variant无合法分支");
+}
+template<class 正常类型, class 结果类型>
+正常类型 提取无停止因果读取(结果类型&& 结果) noexcept {
+    if (auto* 正常 = std::get_if<正常类型>(&结果)) return std::move(*正常);
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"不可停止因果读取", L"空停止令牌返回取消或非法variant。");
 }
 
 // 参数位置与旧角色身份分账；本文件所有选择/冻结使用同一个定位比较。
@@ -264,7 +417,7 @@ std::optional<bool> 核验参数位置关系(
     const std::vector<新方法参数角色绑定>& 绑定组, const 新方法参数关系& 关系,
     const 新_存在类& 存在服务, const 新_场景类& 场景服务,
     const 新_特征类& 特征服务, const 新_特征值类& 值服务,
-    const 概念_特征类& 概念服务) {
+    const 概念_特征类& 概念服务, const 新_需求类* 需求服务=nullptr) {
     const auto 查 = [&](std::uint32_t 序号) -> const 新方法有序参数引用* {
         const 新方法有序参数引用* 结果 = nullptr;
         for (const auto& 绑定 : 绑定组) if (绑定.有序引用 && 绑定.有序引用->序号 == 序号) {
@@ -289,6 +442,16 @@ std::optional<bool> 核验参数位置关系(
         const auto 右场景 = 场景服务.查询所属场景(右->信息节点);
         if (!左场景 || !右场景) return std::nullopt;
         return *左场景 == *右场景;
+    }
+    case 新方法参数关系种类::场景包含存在: {
+        if(左->信息类型!=新方法参数信息类型::存在||右->信息类型!=新方法参数信息类型::存在)
+            throw std::logic_error("scene membership relation requires two existences");
+        if(!场景服务.是场景节点(左->信息节点))return false;
+        const auto 所属=场景服务.查询所属场景(右->信息节点);
+        if(!所属)return std::nullopt;
+        for(const auto& b:绑定组)if(b.有序引用&&b.有序引用->序号==关系.右参数序号)
+            if(b.世界场景节点&&*b.世界场景节点!=*所属)return false;
+        return *所属==左->信息节点;
     }
     case 新方法参数关系种类::特征所属存在: {
         if (左->信息类型 != 新方法参数信息类型::特征 || 右->信息类型 != 新方法参数信息类型::存在)
@@ -320,10 +483,217 @@ std::optional<bool> 核验参数位置关系(
         if (!成员) throw std::logic_error("collection material type mismatch");
         return std::find(成员->begin(), 成员->end(), 右->信息节点.值) != 成员->end();
     }
+    case 新方法参数关系种类::特征引用存在: {
+        if (左->信息类型 != 新方法参数信息类型::特征 || 右->信息类型 != 新方法参数信息类型::存在)
+            throw std::logic_error("特征引用存在关系必须左特征右存在");
+        const auto 特征 = 特征服务.获取特征(左->信息节点);
+        if (!特征) throw std::logic_error("引用关系左特征不可读");
+        const auto 概念 = 概念服务.获取特征概念(特征->特征概念节点);
+        if(概念&&概念->材料类型==特征概念材料物理类型::需求节点引用
+            &&概念->比较规则==特征概念比较规则::需求身份精确) {
+            if(!需求服务)return std::nullopt;
+            if(!需求服务->读取需求治理信息(右->信息节点))return std::nullopt;
+            if(!特征->当前值)return std::nullopt;
+            const auto* D=std::get_if<稳定编码>(&*特征->当前值);
+            if(!D||!需求服务->读取需求治理信息(*D))throw std::logic_error("demand relation current identity invalid");
+            return *D==右->信息节点;
+        }
+        if (!存在服务.获取存在(右->信息节点)) throw std::logic_error("引用关系右存在不可读");
+        if (!概念 || 概念->材料类型 != 特征概念材料物理类型::存在节点引用
+            || 概念->比较规则 != 特征概念比较规则::存在身份精确
+            || !std::holds_alternative<特征概念存在引用值域>(概念->值域))
+            throw std::logic_error("引用关系左特征不是正式存在单引用");
+        if (!特征->当前值) return std::nullopt;
+        const auto* 引用 = std::get_if<稳定编码>(&*特征->当前值);
+        if (!引用 || !有效(*引用) || !存在服务.获取存在(*引用))
+            throw std::logic_error("引用关系当前值类型错误或悬空");
+        return *引用 == 右->信息节点;
+    }
     }
     throw std::logic_error("unknown parameter relation");
 }
+
+// 上位链只证明包含；未到达时继续用正式实例匹配，未知绝不折算为不符。
+std::optional<bool> 证明真实存在引用范围(稳定编码 存在节点, 稳定编码 范围概念,
+    const 新_存在类& 存在服务, const 概念_存在类& 概念服务) {
+    const auto 存在 = 存在服务.获取存在(存在节点);
+    if (!存在) throw std::logic_error("引用结果真实存在不可读");
+    const auto 专属 = 概念服务.获取存在概念(存在->专属存在概念节点);
+    if (!专属 || 专属->种类 != 存在概念种类::专属 || 专属->对应存在节点 != std::optional<稳定编码>{存在节点})
+        throw std::logic_error("引用结果专属概念未指向本存在");
+    if (!概念服务.获取存在概念(范围概念)) throw std::logic_error("引用结果目标存在概念不可读");
+    std::set<稳定编码> 已完成, 正在访问;
+    bool 命中 = false;
+    std::function<void(稳定编码)> 访问 = [&](稳定编码 节点) {
+        if (正在访问.contains(节点)) throw std::logic_error("存在概念上位链有环");
+        if (已完成.contains(节点)) return;
+        const auto 概念 = 概念服务.获取存在概念(节点);
+        if (!概念) throw std::logic_error("存在概念上位链节点不可读");
+        正在访问.insert(节点);
+        if (节点 == 范围概念) 命中 = true;
+        for (auto 上位 : 概念->上位概念组) 访问(上位);
+        正在访问.erase(节点); 已完成.insert(节点);
+    };
+    访问(专属->节点);
+    if (命中) return true;
+    const auto 匹配 = 存在服务.匹配存在概念(存在节点, 范围概念);
+    if (匹配.状态 == 新存在概念匹配状态::匹配) return true;
+    if (匹配.状态 == 新存在概念匹配状态::不符合) return false;
+    return std::nullopt;
+}
 // 持有原回调引用，不复制function。必须在owner锁之后构造，先通知后释放锁。
+const 新方法有序参数引用* 内容参数绑定(const std::vector<新方法参数角色绑定>& 绑定,
+    std::uint32_t 序号, 新方法参数信息类型 类型) {
+    const 新方法有序参数引用* 命中=nullptr;
+    for(const auto& b:绑定)if(b.有序引用&&b.有序引用->序号==序号) {
+        if(命中||b.有序引用->信息类型!=类型)throw std::logic_error("content parameter binding malformed");
+        命中=&*b.有序引用;
+    }
+    return 命中;
+}
+bool 是首值条件(const 新方法条件定义& C,std::uint32_t F) {
+    std::map<std::uint32_t,std::uint32_t> 别名;
+    const auto 根=[&](std::uint32_t n){std::set<std::uint32_t> seen;
+        while(别名.contains(n)&&别名.at(n)!=n){if(!seen.insert(n).second)throw std::logic_error("prestate alias cycle");n=别名.at(n);}return n;};
+    for(const auto& r:C.参数关系组)if(r.种类==新方法参数关系种类::同一){
+        const auto a=根(r.左参数序号),b=根(r.右参数序号);别名[(std::max)(a,b)]=(std::min)(a,b);
+    }
+    std::size_t 数=0;
+    for(const auto& c:C.条件项组)if(根(c.参数序号)==根(F)&&c.特征前态限定) {
+        const auto& p=*c.特征前态限定;
+        if(p.当前值状态!=新方法当前值状态::未知||p.历史不同值数量!=std::optional<std::uint64_t>{0})return false;
+        ++数;
+    }
+    return 数==1;
+}
+struct 已绑定内容结果 final {
+    std::uint32_t 特征位置=0,需求位置=0,主体位置=0;
+    稳定编码 F,H,D,C;
+};
+std::optional<已绑定内容结果> 绑定内容结果(const 新方法结果项定义& r,
+    const 新方法结果定义& R,const 新方法条件定义& C,
+    const std::vector<新方法参数角色绑定>& 绑定) {
+    if(!r.引用内容结果)return {};
+    if(r.引用内容结果->作用点!=新方法内容作用点::特征当前引用
+        ||r.引用内容结果->要求认知来源当前有效
+        ||!r.引用内容结果->正式内容路径.empty())return {};
+    std::map<std::uint32_t,std::uint32_t> 别名;
+    const auto 根=[&](std::uint32_t n){std::set<std::uint32_t> seen;
+        while(别名.contains(n)&&别名.at(n)!=n){if(!seen.insert(n).second)throw std::logic_error("content alias cycle");n=别名.at(n);}return n;};
+    for(const auto& rel:C.参数关系组)if(rel.种类==新方法参数关系种类::同一){
+        const auto a=根(rel.左参数序号),b=根(rel.右参数序号);别名[(std::max)(a,b)]=(std::min)(a,b);
+    }
+    const auto 查绑定=[&](std::uint32_t n,新方法参数信息类型 k)->std::optional<稳定编码>{
+        std::optional<稳定编码> found;
+        for(const auto& b:绑定)if(b.有序引用&&根(b.有序引用->序号)==根(n)){
+            if(b.有序引用->信息类型!=k)throw std::logic_error("content alias type mismatch");
+            if(found&&*found!=b.有序引用->信息节点)return {};found=b.有序引用->信息节点;
+        }return found;};
+    已绑定内容结果 x;x.特征位置=r.参数序号;x.C=r.引用内容结果->要求概念节点;
+    for(const auto& rel:R.参数关系组)if(rel.种类==新方法参数关系种类::特征引用存在&&根(rel.左参数序号)==根(x.特征位置)) {
+        if(x.需求位置&&根(x.需求位置)!=根(rel.右参数序号))return {};x.需求位置=rel.右参数序号;
+    }
+    for(const auto& rel:C.参数关系组)if(rel.种类==新方法参数关系种类::特征所属存在&&根(rel.左参数序号)==根(x.特征位置)) {
+        if(x.主体位置&&根(x.主体位置)!=根(rel.右参数序号))return {};x.主体位置=rel.右参数序号;
+    }
+    const auto f=查绑定(x.特征位置,新方法参数信息类型::特征);
+    const auto d=查绑定(x.需求位置,新方法参数信息类型::存在);
+    const auto h=查绑定(x.主体位置,新方法参数信息类型::存在);
+    if(!f||!d||!h)return {};
+    x.F=*f;x.H=*h;x.D=*d;return x;
+}
+bool 核同需求结果保护(const std::vector<基础联合节点快照>&);
+bool 合并需求结果保护(std::vector<基础联合节点快照>&,const std::vector<基础联合节点快照>&);
+bool 内容概念保证(稳定编码 实际要求,稳定编码 目标要求,const 概念_存在类& 概念) {
+    // 只沿正式结构上位闭包证明包含，不以一次D碰巧符合证明更窄目标。
+    std::set<稳定编码> 完成,栈;bool 命中=false,有效=true;
+    std::vector<基础联合节点快照> 保护;
+    std::function<void(稳定编码)> 读=[&](稳定编码 C) {
+        if(完成.contains(C))return;
+        if(!栈.insert(C).second)throw std::logic_error("content concept ancestry cycle");
+        const auto p=概念.读取正式结构概念保护(C);
+        if(p.状态!=正式结构操作状态::已读取||!p.信息||p.完整保护组.empty()){
+            有效=false;栈.erase(C);return;
+        }
+        const auto e=概念.读取正式结构有效内容保护(C);
+        if(e.状态==正式结构有效内容读取状态::资源失败)throw std::bad_alloc{};
+        if(e.状态!=正式结构有效内容读取状态::已读取||!e.信息||e.完整保护组.empty()){
+            有效=false;栈.erase(C);return;
+        }
+        if(!合并需求结果保护(保护,p.完整保护组)||!合并需求结果保护(保护,e.完整保护组))有效=false;
+        if(C==目标要求)命中=true;
+        if(const auto* s=std::get_if<信息结构概念定义>(&p.信息->定义))for(const auto 上:s->上位结构概念组)读(上);
+        栈.erase(C);完成.insert(C);
+    };
+    读(实际要求);return 有效&&命中&&核同需求结果保护(保护);
+}
+bool 是本叶内容目标(const 新需求信息& D) {
+    return D.目标.引用内容定位&&D.目标.引用内容定位->正式内容路径.empty()
+        &&有效(D.目标.引用内容定位->引用需求节点)&&D.目标.目标值域概念节点&&!D.复合来源;
+}
+bool 有本叶内容知识(const 新方法信息& M,const 新需求信息& D,const 概念_存在类& 概念) {
+    if(!是本叶内容目标(D)||M.行为!=新方法行为::改变||M.实现方式!=新方法实现方式::本能
+        ||M.来源方法节点||M.实例根节点||M.启用状态!=新方法启用状态::启用)return false;
+    for(const auto& p:M.条件结果组)if(p.结果.结果项组.size()==1&&p.结果.确认要求.禁止结果项组.empty()) {
+        const auto& r=p.结果.结果项组.front();
+        if(r.引用内容结果&&r.引用内容结果->作用点==新方法内容作用点::特征当前引用
+            &&r.引用内容结果->正式内容路径.empty()&&是首值条件(p.条件,r.参数序号)
+            &&内容概念保证(r.引用内容结果->要求概念节点,*D.目标.目标值域概念节点,概念))return true;
+    }return false;
+}
+template<class 场景批类型>
+std::optional<std::optional<新服务要求确认目标>> 读取本批内容来源(
+    const 新任务本能采用材料& 采用,const 场景批类型& 批) {
+    std::optional<新服务要求确认目标> 来源;
+    for(std::size_t i=0;i<采用.需要条件.条件项组.size();++i) {
+        const auto& c=采用.需要条件.条件项组[i];
+        if(!c.引用内容条件||!c.引用内容条件->要求认知来源当前有效)continue;
+        const auto p=std::find_if(批.内容条件组.begin(),批.内容条件组.end(),[&](const auto& v){
+            return v.方法==采用.来源方法节点&&v.配对==采用.来源配对节点&&v.分支==采用.执行分支节点
+                &&v.序号==i&&v.声明==*c.引用内容条件;
+        });
+        if(p==批.内容条件组.end()||!p->认知来源确认
+            ||p->认知来源资格!=std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::已准备})return std::nullopt;
+        if(来源&&来源!=p->认知来源确认)return std::nullopt;
+        来源=p->认知来源确认;
+    }
+    return std::optional<std::optional<新服务要求确认目标>>{std::in_place,std::move(来源)};
+}
+template<class 场景批类型>
+bool 核验本次内容后状态(const 新任务执行信息& X,const 场景批类型& 批,
+    const 新任务预计特征变化& 预计,const 新任务结果获取目标& 目标,const 新状态信息& S) {
+    if(!预计.预期引用内容||!X.本能采用||!X.普通动作节点
+        ||!目标.动作前明确无值||目标.动作前准确值||!批.正式需求执行结果
+        ||批.正式需求执行结果->状态!=新任务需求结果读取状态::已读取
+        ||!批.正式需求执行结果->结果||批.正式需求执行结果->结果!=X.已发布需求)return false;
+    const auto& 采用=*X.本能采用;
+    if(采用.结果.结果项组.size()!=1||!采用.结果.确认要求.禁止结果项组.empty())return false;
+    const auto x=绑定内容结果(采用.结果.结果项组.front(),采用.结果,采用.需要条件,采用.参数绑定组);
+    if(!x||!是首值条件(采用.需要条件,x->特征位置))return false;
+    for(std::size_t i=0;i<采用.需要条件.条件项组.size();++i) {
+        const auto& c=采用.需要条件.条件项组[i];
+        if(!c.引用内容条件||!c.引用内容条件->要求认知来源当前有效)continue;
+        const auto p=std::find_if(批.内容条件组.begin(),批.内容条件组.end(),[&](const auto& v){
+            return v.方法==采用.来源方法节点&&v.配对==采用.来源配对节点&&v.分支==采用.执行分支节点
+                &&v.序号==i&&v.声明==*c.引用内容条件&&v.固定需求==std::optional<稳定编码>{x->D}
+                &&v.主体==std::optional<稳定编码>{x->H}&&v.特征==std::optional<稳定编码>{x->F};
+        });
+        if(p==批.内容条件组.end()||p->认知来源资格!=std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::已准备})return false;
+    }
+    const auto& r=*批.正式需求执行结果->结果;
+    const auto& 内容=*预计.预期引用内容;
+    const auto 来源=读取本批内容来源(采用,批);
+    if(!来源||*来源!=内容.认知来源确认||目标.认知来源确认!=内容.认知来源确认)return false;
+    if(x->H!=r.主体存在节点||x->F!=r.需求特征节点||x->D!=r.需求节点
+        ||x->C!=内容.要求概念节点||内容.需求节点!=x->D||!内容.正式内容路径.empty()
+        ||r.本次动作节点!=*X.普通动作节点||!有效(r.首次发布动作节点)
+        ||目标.作用对象节点!=x->H||目标.实际特征节点!=x->F||预计.作用对象节点!=x->H
+        ||S.被描述存在节点!=x->H||S.来源实例特征节点!=x->F
+        ||S.固定准确值!=新特征准确值{x->D}
+        ||std::find(X.动作输出状态节点组.begin(),X.动作输出状态节点组.end(),S.节点)==X.动作输出状态节点组.end())return false;
+    const auto p=std::find_if(批.内容后置组.begin(),批.内容后置组.end(),[&](const auto& v){return v.first==预计;});
+    return p!=批.内容后置组.end()&&p->second.状态==新引用内容目标状态::已满足;
+}
 struct 关联检查离域通知 final {
     const std::function<void()>& 通知;
     ~关联检查离域通知() noexcept {
@@ -570,6 +940,27 @@ bool 条件投影一致(const 新任务条件子需求项& 项, const 特征概�
         && 域.值域 == 特征概念值域{项.目标区间组};
 }
 
+// 同一完整已知条件组的AND归并；不读取当前值、不创建域，供提议与历史身份共用。
+std::optional<特征概念任务集合值域> 合并同槽任务集合条件(
+    const std::vector<新任务条件子需求项>& 已知组,const 新任务条件子需求项& 首项) {
+    if(!首项.集合目标||首项.单位)return {};
+    特征概念任务集合值域 合并;
+    for(const auto& 项:已知组){
+        if(项.目标存在节点!=首项.目标存在节点||项.目标特征类型概念节点!=首项.目标特征类型概念节点)continue;
+        if(!项.集合目标||项.单位||项.实际特征节点!=首项.实际特征节点)return {};
+        合并.至少一个任务=合并.至少一个任务||项.集合目标->至少一个任务;
+        合并.必含任务节点组.insert(合并.必含任务节点组.end(),项.集合目标->必含任务节点组.begin(),项.集合目标->必含任务节点组.end());
+        合并.必含需求任务组.insert(合并.必含需求任务组.end(),项.集合目标->必含需求任务组.begin(),项.集合目标->必含需求任务组.end());
+        合并.必含服务要求任务组.insert(合并.必含服务要求任务组.end(),项.集合目标->必含服务要求任务组.begin(),项.集合目标->必含服务要求任务组.end());
+    }
+    for(auto* 组:{&合并.必含任务节点组,&合并.必含需求任务组,&合并.必含服务要求任务组}){
+        if(std::any_of(组->begin(),组->end(),[](auto 节点){return !有效(节点);}))return {};
+        std::sort(组->begin(),组->end());组->erase(std::unique(组->begin(),组->end()),组->end());
+    }
+    if(!合并.必含任务节点组.empty()||!合并.必含需求任务组.empty()||!合并.必含服务要求任务组.empty())合并.至少一个任务=false;
+    return 合并;
+}
+
 bool 是结算正式单值目标(const 新需求目标定义& goal,
     const 概念_特征类& features, const 概念_二次特征类& secondary) {
     if (!goal.目标值域概念节点 || !goal.目标比较关系概念节点
@@ -756,7 +1147,7 @@ extern 稳定编码 执行所属任务字段,执行方法字段,任务执行实�
 namespace 任务执行组织存储 {
 enum class 类型 : std::size_t {
     根, 作用域, 参数, 参数特征, 集合约束, 配对, 条件项, 结果项,
-    禁止项, 确认, 线性, 步骤, 分支, 执行采用, 执行条件, 执行绑定, 数量
+    禁止项, 确认, 线性, 步骤, 分支, 执行采用, 执行条件, 执行绑定, 场景事实, 条件分支, 内容位置关系, 数量
 };
 enum class 字段 : std::size_t {
     组织根, 所属任务, 治理宿主, 根作用域, 作用域成员,
@@ -774,7 +1165,21 @@ enum class 字段 : std::size_t {
     采用作用域, 采用配对, 绑定成员, 绑定所属采用, 世界场景, 实际存在,
     实际特征, 引用任务, 引用虚拟存在, 引用状态特征, 服务理解, 服务分项,
     服务确认, 参数位置, 参数信息类型, 参数范围概念, 参数信息节点, 条件位置关系, 结果位置关系,
-    任务成员变量, 成员集合参数位置, 成员任务, 成员虚拟存在, 成员状态特征, 成员服务值特征, 数量
+    任务成员变量, 成员集合参数位置, 成员任务, 成员虚拟存在, 成员状态特征, 成员服务值特征,
+    场景事实成员, 场景事实关系, 场景位置, 主体位置, 对象位置, 特征位置,
+    来源条件分支成员, 来源条件分支, 配对来源条件分支, 采用条件分支, 采用来源条件分支,
+    结果场景事实成员, 结果方案必需场景事实成员, 结果方案所属执行,
+    执行场景事实成员字段, 执行场景事实引用节点类型, 执行场景事实所属字段,
+    执行场景事实关系字段, 执行场景事实四位置字段, 执行场景事实来源字段, 执行场景事实动作字段,
+    条件内容要求, 条件内容项,
+    执行需求结果成员字段, 执行需求结果节点类型, 执行需求结果所属字段, 执行需求结果格式字段,
+    执行需求结果需求字段, 执行需求结果主体字段, 执行需求结果特征字段,
+    执行需求结果场景字段, 执行需求结果动作字段, 执行需求结果首次动作字段,
+    内容作用点, 前态当前值状态, 前态历史数量, 结果内容要求, 结果内容项, 结果内容作用点,
+    条件内容关系成员, 结果内容关系成员, 内容关系所属, 内容关系左, 内容关系右, 内容关系路径,
+    预计内容需求, 预计内容要求, 预计内容路径, 目标明确无值, 内容认知来源当前有效,
+    内容来源确认, 内容来源理解, 内容来源人类, 内容来源目标存在, 内容来源目标FT, 内容来源目标形式,
+    内容来源目标域, 内容来源目标比较, 内容来源要求, 内容来源目标引用需求, 内容来源目标内容项, 内容来源目标方向, 数量
 };
 稳定编码 类型节点[static_cast<std::size_t>(类型::数量)]{};
 稳定编码 字段节点[static_cast<std::size_t>(字段::数量)]{};
@@ -807,7 +1212,17 @@ bool 仍存在() noexcept {
 }
 template<class 建立器> bool 初始化(建立器&& 建立) {
     for (auto& 节点 : 类型节点) if (!建立(节点)) return false;
-    for (auto& 节点 : 字段节点) if (!建立(节点)) return false;
+    for (std::size_t i=0;i<static_cast<std::size_t>(字段::结果场景事实成员);++i)
+        if (!建立(字段节点[i])) return false;
+    std::vector<稳定编码*> 新键;
+    for(std::size_t i=static_cast<std::size_t>(字段::结果场景事实成员);i<std::size(字段节点);++i)
+        if(!有效(字段节点[i]))新键.push_back(&字段节点[i]);
+    if(!新键.empty()){
+        基础节点组追加请求 请求;请求.新节点组.resize(新键.size());
+        const auto 发布=全局基础数据集.原子追加节点组(请求);
+        if(发布.状态!=基础节点组追加状态::已完成||发布.新节点组.size()!=新键.size())return false;
+        for(std::size_t i=0;i<新键.size();++i)*新键[i]=发布.新节点组[i];
+    }
     return true;
 }
 std::int64_t 序号(std::size_t 值) {
@@ -877,10 +1292,11 @@ void 规范集合(std::vector<稳定编码>& 组) {
         域.节点 = 域.来源方法节点 = 方法.节点;
         域.来源方法虚拟存在节点 = 方法.方法虚拟存在节点;
         域.作用域 = 方法.作用域; 域.实现方式 = 方法.实现方式;
+        域.来源执行分支组=方法.执行分支组;
         for (const auto& 参数 : 方法.参数规格组) 域.参数要求组.push_back({{}, 参数});
         for (const auto& 对 : 方法.条件结果组)
             域.配对要求组.push_back({对.配对节点, 对.配对节点, 对.条件节点,
-                对.结果节点, 对.条件, 对.结果, 对.线性关系组});
+                对.结果节点, 对.条件, 对.结果, 对.线性关系组,对.来源执行分支节点组});
         for (const auto& 步 : 方法.组合步骤组)
             域.步骤组.push_back({步.步骤节点, 步.步骤节点, 步.调用方法节点, 步.顺序});
         域.入口步骤节点 = 方法.组合入口步骤节点;
@@ -907,10 +1323,15 @@ std::optional<新任务方法执行组织> 合并定义(
         要求(旧域.来源方法虚拟存在节点 == 新域.来源方法虚拟存在节点
             && 旧域.作用域 == 新域.作用域 && 旧域.实现方式 == 新域.实现方式
             && 旧域.参数要求组 == 新域.参数要求组, "adopted method parameter definition changed");
-        for (const auto& 对 : 旧域.配对要求组) {
+        要求(旧域.来源执行分支组==新域.来源执行分支组,"source branch declarations changed");
+        for (auto& 对 : 旧域.配对要求组) {
             const auto 新对 = std::find_if(新域.配对要求组.begin(), 新域.配对要求组.end(),
                 [&](const auto& 项) { return 项.来源配对节点 == 对.来源配对节点; });
-            要求(新对 != 新域.配对要求组.end() && *新对 == 对, "adopted pair changed or disappeared");
+            要求(新对 != 新域.配对要求组.end(), "adopted pair disappeared");
+            auto 内容=*新对;内容.来源执行分支节点组=对.来源执行分支节点组;
+            要求(内容==对,"adopted pair content changed");
+            for(const auto 支:对.来源执行分支节点组)要求(std::find(新对->来源执行分支节点组.begin(),新对->来源执行分支节点组.end(),支)!=新对->来源执行分支节点组.end(),"adopted branch source removed");
+            对.来源执行分支节点组=新对->来源执行分支节点组;
         }
         for (const auto& 对 : 新域.配对要求组)
             if (std::none_of(旧域.配对要求组.begin(), 旧域.配对要求组.end(),
@@ -971,11 +1392,24 @@ struct 写器 final {
         std::vector<std::int64_t> 材料;
         材料.reserve(关系组.size() * 3);
         for (const auto& 关系 : 关系组) {
+            const auto 种类 = static_cast<std::int64_t>(关系.种类);
+            if (种类 == 8) {
+                要求(关系.左参数序号 && 关系.右参数序号 && 关系.左正式内容路径.size()==1,
+                    "invalid content relation");
+                const auto 子 = 子节点(类型::内容位置关系, 节点,
+                    项==字段::条件位置关系 ? 字段::条件内容关系成员 : 字段::结果内容关系成员,
+                    字段::内容关系所属);
+                数(子,字段::内容关系左,关系.左参数序号); 数(子,字段::内容关系右,关系.右参数序号);
+                引用(子,字段::内容关系路径,关系.左正式内容路径.front());
+                continue;
+            }
+            if (种类 < 1 || 种类 > 7 || !关系.左参数序号 || !关系.右参数序号 || !关系.左正式内容路径.empty())
+                throw std::logic_error("invalid persisted parameter relation");
             材料.push_back(static_cast<std::int64_t>(关系.种类));
             材料.push_back(关系.左参数序号);
             材料.push_back(关系.右参数序号);
         }
-        节点组.at(节点).字段组.push_back({取(项), 基础值{std::move(材料)}});
+        if(!材料.empty())节点组.at(节点).字段组.push_back({取(项), 基础值{std::move(材料)}});
     }
     std::size_t 新节点(类型 种类) {
         const auto 位置 = 节点组.size();
@@ -1012,16 +1446,79 @@ struct 写器 final {
             引用(节点, 字段::方向概念, 项.变化方向概念节点);
             引用(节点, 字段::状态动态概念, 项.状态或动态概念节点);
             数(节点, 字段::主要结果, 项.主要结果 ? 1 : 0); 值域(节点, 项.精确数值域);
+            if(项.引用内容结果) {
+                const auto& C=*项.引用内容结果;
+                要求(!禁止 && !C.要求认知来源当前有效 && C.作用点==新方法内容作用点::特征当前引用 && C.正式内容路径.empty()
+                    &&项.参数序号&&!项.特征类型概念节点&&!项.特征值域概念节点&&!项.精确数值域
+                    &&!项.变化方向概念节点&&!项.状态或动态概念节点,"invalid content result copy");
+                引用(节点,字段::结果内容要求,C.要求概念节点);
+                数(节点,字段::结果内容作用点,static_cast<std::int64_t>(C.作用点));
+            }
+        }
+    }
+    void 场景事实(std::size_t 节点, const std::vector<新方法初始场景事实限定>& 组,
+        字段 成员字段=字段::场景事实成员) {
+        for (std::size_t i=0; i<组.size(); ++i) {
+            const auto& 项=组[i];
+            要求(有效(项.关系概念节点) && 项.场景参数序号 && 项.主体参数序号
+                && 项.对象参数序号 && 项.特征参数序号, "invalid persisted scene fact");
+            要求(std::find(组.begin(),组.begin()+i,项)==组.begin()+i,"duplicate scene fact");
+            const auto 子=子节点(类型::场景事实,节点,成员字段,字段::所属配对,序号(i));
+            引用(子,字段::场景事实关系,项.关系概念节点);
+            数(子,字段::场景位置,项.场景参数序号); 数(子,字段::主体位置,项.主体参数序号);
+            数(子,字段::对象位置,项.对象参数序号); 数(子,字段::特征位置,项.特征参数序号);
+        }
+    }
+    void 写内容条件(std::size_t 节点,const 新方法条件项定义& 项) {
+        if(项.特征前态限定) {
+            const auto& P=*项.特征前态限定;
+            要求(项.参数序号&&!项.引用内容条件&&!项.任务成员变量序号&&!项.存在概念节点
+                &&!项.特征值域概念节点&&!项.精确数值域&&!项.二次特征概念节点&&!项.状态或动态概念节点,
+                "invalid feature precondition copy");
+            数(节点,字段::前态当前值状态,static_cast<std::int64_t>(P.当前值状态));
+            if(P.历史不同值数量) {
+                要求(*P.历史不同值数量<=static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()),"history count overflow");
+                数(节点,字段::前态历史数量,static_cast<std::int64_t>(*P.历史不同值数量));
+            }
+        }
+        if(!项.引用内容条件)return;
+        const auto& 内容=*项.引用内容条件;
+        要求(项.参数序号&&!有效(项.参数角色节点)&&!项.任务成员变量序号
+            &&!项.存在概念节点&&!项.特征类型概念节点&&!项.特征值域概念节点
+            &&!项.二次特征概念节点&&!项.状态或动态概念节点&&!项.精确数值域
+            &&有效(内容.要求概念节点)&&内容.正式内容路径.size()<=1,"非法内容条件副本");
+        引用(节点,字段::条件内容要求,内容.要求概念节点);
+        数(节点,字段::内容作用点,static_cast<std::int64_t>(内容.作用点));
+        if(内容.要求认知来源当前有效) {
+            要求(内容.作用点==新方法内容作用点::参数自身&&内容.正式内容路径.empty(),"invalid current recognition source qualification");
+            数(节点,字段::内容认知来源当前有效,1);
+        }
+        if(!内容.正式内容路径.empty())引用(节点,字段::条件内容项,内容.正式内容路径.front());
+    }
+    void 写条件(std::size_t 节点,const 新方法条件定义& C) {
+        数(节点,字段::条件关系,static_cast<std::int64_t>(C.关系规则));
+        位置关系(节点,字段::条件位置关系,C.参数关系组);场景事实(节点,C.场景事实限定组);
+        for(std::size_t i=0;i<C.条件项组.size();++i){
+            const auto& 项=C.条件项组[i];
+            const auto 子=子节点(类型::条件项,节点,字段::条件成员,字段::所属配对,序号(i));
+            参数定位(子,项.参数角色节点,项.参数序号);引用(子,字段::存在概念,项.存在概念节点);
+            if(项.任务成员变量序号)数(子,字段::任务成员变量,项.任务成员变量序号);
+            引用(子,字段::特征类型,项.特征类型概念节点);引用(子,字段::值域概念,项.特征值域概念节点);
+            引用(子,字段::二次特征,项.二次特征概念节点);引用(子,字段::状态动态概念,项.状态或动态概念节点);
+            值域(子,项.精确数值域);写内容条件(子,项);
         }
     }
     void 写配对(std::size_t 节点, const 新任务执行配对要求& 对) {
+        for(const auto 支:对.来源执行分支节点组)引用(节点,字段::配对来源条件分支,支);
         引用(节点, 字段::来源配对, 对.来源配对节点);
         引用(节点, 字段::来源条件, 对.来源条件节点);
         引用(节点, 字段::来源结果, 对.来源结果节点);
         数(节点, 字段::条件关系, static_cast<std::int64_t>(对.条件.关系规则));
         数(节点, 字段::结果关系, static_cast<std::int64_t>(对.结果.关系规则));
         位置关系(节点, 字段::条件位置关系, 对.条件.参数关系组);
+        场景事实(节点, 对.条件.场景事实限定组);
         位置关系(节点, 字段::结果位置关系, 对.结果.参数关系组);
+        场景事实(节点, 对.结果.场景事实限定组, 字段::结果场景事实成员);
         for (std::size_t i = 0; i < 对.条件.条件项组.size(); ++i) {
             const auto& 项 = 对.条件.条件项组[i];
             const auto 子 = 子节点(类型::条件项, 节点, 字段::条件成员, 字段::所属配对, 序号(i));
@@ -1030,7 +1527,7 @@ struct 写器 final {
             引用(子, 字段::特征类型, 项.特征类型概念节点);
             引用(子, 字段::值域概念, 项.特征值域概念节点);
             引用(子, 字段::二次特征, 项.二次特征概念节点);
-            引用(子, 字段::状态动态概念, 项.状态或动态概念节点); 值域(子, 项.精确数值域);
+            引用(子, 字段::状态动态概念, 项.状态或动态概念节点); 值域(子, 项.精确数值域);写内容条件(子,项);
         }
         写结果(节点, 对.结果.结果项组, false);
         const auto 确认 = 子节点(类型::确认, 节点, 字段::确认要求, 字段::所属配对);
@@ -1089,14 +1586,30 @@ struct 写器 final {
         for (const auto& 域 : 组织.方法作用域组) {
             const auto 节点 = 身份映射.at(域.节点);
             if (既有节点.contains(节点)) {
-                for (const auto& 对 : 域.配对要求组)
-                    if (!既有节点.contains(身份映射.at(对.节点))) 写配对(身份映射.at(对.节点), 对);
+                for (const auto& 对 : 域.配对要求组){
+                    const auto 子=身份映射.at(对.节点);
+                    if (!既有节点.contains(子)) 写配对(子, 对);
+                    else {
+                        const auto 旧域位置=std::find_if(旧组织->方法作用域组.begin(),旧组织->方法作用域组.end(),[&](const auto& x){return x.来源方法节点==域.来源方法节点;});
+                        要求(旧域位置!=旧组织->方法作用域组.end(),"source scope absent during metadata append");
+                        const auto& 旧域=*旧域位置;
+                        const auto 旧对位置=std::find_if(旧域.配对要求组.begin(),旧域.配对要求组.end(),[&](const auto& x){return x.来源配对节点==对.来源配对节点;});
+                        要求(旧对位置!=旧域.配对要求组.end(),"source pair absent during metadata append");
+                        const auto& 旧对=*旧对位置;
+                        for(const auto 支:对.来源执行分支节点组)if(std::find(旧对.来源执行分支节点组.begin(),旧对.来源执行分支节点组.end(),支)==旧对.来源执行分支节点组.end())引用(子,字段::配对来源条件分支,支);
+                    }
+                }
                 continue;
             }
             引用(节点, 字段::来源方法, 域.来源方法节点);
             引用(节点, 字段::来源虚拟存在, 域.来源方法虚拟存在节点);
             数(节点, 字段::作用域值, static_cast<std::int64_t>(域.作用域));
             数(节点, 字段::实现方式, static_cast<std::int64_t>(域.实现方式));
+            for(const auto& 支:域.来源执行分支组) {
+                const auto 子=子节点(类型::条件分支,节点,字段::来源条件分支成员,字段::所属作用域,支.定义.顺序);
+                引用(子,字段::来源条件分支,支.节点);
+                写条件(子,支.定义.必要条件);
+            }
             for (std::size_t i = 0; i < 域.参数要求组.size(); ++i) {
                 const auto& 规格 = 域.参数要求组[i].规格;
                 const auto 子 = 子节点(类型::参数, 节点, 字段::参数成员, 字段::所属作用域, 序号(i));
@@ -1173,9 +1686,11 @@ struct 读器 final {
     std::map<稳定编码, 基础节点结构> 节点组;
     std::set<稳定编码> 已访问, 已用字段, 引用目标;
     bool 执行采用模式=false;
-    explicit 读器(稳定编码 根节点,bool 采用模式=false) : 根(根节点),执行采用模式(采用模式) {
+    bool 场景方案模式=false;
+    explicit 读器(稳定编码 根节点,bool 采用模式=false,bool 方案模式=false) : 根(根节点),执行采用模式(采用模式),场景方案模式(方案模式) {
         // 反向枚举全部组织成员，不能只相信根列出的成员而漏掉孤儿节点。
-        const auto 根字段 = 执行采用模式 ? 字段::采用根 : 字段::组织根;
+        const auto 根字段 = 方案模式 ? 字段::结果方案所属执行
+            : 执行采用模式 ? 字段::采用根 : 字段::组织根;
         const auto 反查 = 全局基础数据集.查询字段引用节点结构(根, 取(根字段));
         要求(反查.状态 == 基础结构操作状态::已完成, "organization members reverse read failed");
         std::set<稳定编码> 编码组{根};
@@ -1225,14 +1740,13 @@ struct 读器 final {
     std::vector<新方法参数关系> 位置关系(稳定编码 节点, 字段 项) {
         const auto 字段组 = 取字段(节点, 取(项));
         要求(字段组.size() <= 1, "parameter relation cardinality");
-        if (字段组.empty()) return {};
-        const auto* 值 = std::get_if<基础值>(&字段组.front()->内容);
+        const auto* 值 = 字段组.empty() ? nullptr : std::get_if<基础值>(&字段组.front()->内容);
         const auto* 材料 = 值 ? std::get_if<std::vector<std::int64_t>>(&值->材料) : nullptr;
-        要求(材料 && 材料->size() % 3 == 0, "invalid parameter relation material");
+        要求(字段组.empty() || (材料 && 材料->size() % 3 == 0), "invalid parameter relation material");
         std::vector<新方法参数关系> 结果;
-        for (std::size_t i = 0; i < 材料->size(); i += 3) {
+        for (std::size_t i = 0; 材料 && i < 材料->size(); i += 3) {
             const auto 种类 = 材料->at(i), 左 = 材料->at(i + 1), 右 = 材料->at(i + 2);
-            要求(种类 >= 1 && 种类 <= 5 && 左 > 0 && 右 > 0
+            要求(种类 >= 1 && 种类 <= 7 && 左 > 0 && 右 > 0
                 && 左 <= (std::numeric_limits<std::uint32_t>::max)()
                 && 右 <= (std::numeric_limits<std::uint32_t>::max)(), "invalid parameter relation position");
             const 新方法参数关系 关系{static_cast<新方法参数关系种类>(种类),
@@ -1240,6 +1754,16 @@ struct 读器 final {
             要求(std::find(结果.begin(), 结果.end(), 关系) == 结果.end(), "duplicate parameter relation");
             结果.push_back(关系);
         }
+        const auto 子组值=子组(节点,项==字段::条件位置关系 ? 字段::条件内容关系成员 : 字段::结果内容关系成员,
+            类型::内容位置关系,字段::内容关系所属,false);
+        for(const auto 子:子组值) {
+            const auto L=数(子,字段::内容关系左),R=数(子,字段::内容关系右);
+            要求(L>0&&R>0&&L<=(std::numeric_limits<std::uint32_t>::max)()&&R<=(std::numeric_limits<std::uint32_t>::max)(),"content relation position");
+            新方法参数关系 r{新方法参数关系种类::内容引用参数,static_cast<std::uint32_t>(L),static_cast<std::uint32_t>(R),{引用(子,字段::内容关系路径)}};
+            要求(std::find(结果.begin(),结果.end(),r)==结果.end(),"duplicate content relation");结果.push_back(std::move(r));
+        }
+        if(!子组值.empty())std::sort(结果.begin(),结果.end(),[](const auto& L,const auto& R){
+            return std::tie(L.种类,L.左参数序号,L.右参数序号,L.左正式内容路径)<std::tie(R.种类,R.左参数序号,R.右参数序号,R.左正式内容路径);});
         return 结果;
     }
     std::optional<std::int64_t> 可选数(稳定编码 节点, 字段 项) {
@@ -1267,7 +1791,8 @@ struct 读器 final {
         const auto 组 = 取字段(节点, 节点类型字段);
         要求(组.size() == 1 && std::get_if<稳定编码>(&组.front()->内容)
             && std::get<稳定编码>(组.front()->内容) == 取(种类), "wrong organization node type");
-        if(执行采用模式){if(节点!=根)要求(引用(节点,字段::采用根)==根,"cross-execution-adoption node");}
+        if(场景方案模式){if(节点!=根)要求(引用(节点,字段::结果方案所属执行)==根,"cross-result-plan node");}
+        else if(执行采用模式){if(节点!=根)要求(引用(节点,字段::采用根)==根,"cross-execution-adoption node");}
         else if (种类 != 类型::根) 要求(引用(节点, 字段::组织根) == 根, "cross-root node");
         if (父) 要求(引用(节点, 父->first) == 父->second, "containment reverse mismatch");
     }
@@ -1315,19 +1840,84 @@ struct 读器 final {
             项.变化方向概念节点 = 可选引用(节点, 字段::方向概念);
             项.状态或动态概念节点 = 可选引用(节点, 字段::状态动态概念);
             项.主要结果 = 布尔(节点, 字段::主要结果); 项.精确数值域 = 值域(节点);
+            const auto C=可选引用(节点,字段::结果内容要求),FT=可选引用(节点,字段::结果内容项);
+            const auto Scope=可选数(节点,字段::结果内容作用点);
+            要求(!FT&&(!Scope||C),"incomplete content result copy");
+            if(C) {
+                要求(!禁止&&Scope&&*Scope==1&&项.参数序号&&!项.特征类型概念节点
+                    &&!项.特征值域概念节点&&!项.精确数值域&&!项.变化方向概念节点&&!项.状态或动态概念节点,"mixed content result");
+                项.引用内容结果=新方法引用内容条件{{},*C,新方法内容作用点::特征当前引用};
+            }
             要求(!(项.精确数值域 && 项.特征值域概念节点), "conflicting result domains");
             结果.push_back(std::move(项));
         }
         return 结果;
     }
+    std::vector<新方法初始场景事实限定> 场景事实(稳定编码 节点,
+        字段 成员字段=字段::场景事实成员) {
+        std::vector<新方法初始场景事实限定> 结果;
+        for (const auto 子:子组(节点,成员字段,类型::场景事实,字段::所属配对,true)) {
+            const auto 位置=[&](字段 项) {
+                const auto 值=数(子,项);
+                要求(值>0 && 值<=(std::numeric_limits<std::uint32_t>::max)(),"invalid scene fact position");
+                return static_cast<std::uint32_t>(值);
+            };
+            const 新方法初始场景事实限定 项{引用(子,字段::场景事实关系),位置(字段::场景位置),
+                位置(字段::主体位置),位置(字段::对象位置),位置(字段::特征位置)};
+            要求(std::find(结果.begin(),结果.end(),项)==结果.end(),"duplicate scene fact");
+            结果.push_back(项);
+        }
+        return 结果;
+    }
+    void 读内容条件(稳定编码 节点,新方法条件项定义& 项) {
+        const auto 前态=可选数(节点,字段::前态当前值状态),历史=可选数(节点,字段::前态历史数量);
+        要求(!历史||前态,"history precondition missing current state");
+        if(前态) {
+            要求((*前态==1||*前态==2)&&(!历史||*历史>=0),"invalid feature precondition");
+            项.特征前态限定=新方法特征前态限定{static_cast<新方法当前值状态>(*前态),
+                历史 ? std::optional<std::uint64_t>{static_cast<std::uint64_t>(*历史)} : std::nullopt};
+        }
+        const auto C=可选引用(节点,字段::条件内容要求),FT=可选引用(节点,字段::条件内容项);
+        const auto Scope=可选数(节点,字段::内容作用点);
+        const auto 有效来源=可选数(节点,字段::内容认知来源当前有效);
+        要求((!FT||C)&&(!Scope||(C&&(*Scope==1||*Scope==2)))
+            &&(!有效来源||(C&&*有效来源==1&&Scope&&*Scope==2&&!FT)),"内容条件路径缺要求");
+        if(!C)return;
+        要求(项.参数序号&&!有效(项.参数角色节点)&&!项.任务成员变量序号
+            &&!项.存在概念节点&&!项.特征类型概念节点&&!项.特征值域概念节点
+            &&!项.二次特征概念节点&&!项.状态或动态概念节点&&!项.精确数值域,"内容条件混用旧形状");
+        要求(!项.特征前态限定,"content and precondition mixed");
+        项.引用内容条件=新方法引用内容条件{FT ? std::vector<稳定编码>{*FT} : std::vector<稳定编码>{},*C,
+            Scope ? static_cast<新方法内容作用点>(*Scope) : 新方法内容作用点::特征当前引用,有效来源.has_value()};
+    }
+    新方法条件定义 读条件(稳定编码 节点) {
+        新方法条件定义 C;
+        C.关系规则=枚举值<新方法项关系规则>(节点,字段::条件关系,1,6);
+        C.参数关系组=位置关系(节点,字段::条件位置关系);C.场景事实限定组=场景事实(节点);
+        for(const auto 子:子组(节点,字段::条件成员,类型::条件项,字段::所属配对,true)){
+            新方法条件项定义 项;std::tie(项.参数角色节点,项.参数序号)=参数定位(子);
+            项.存在概念节点=可选引用(子,字段::存在概念);
+            const auto 成员=可选数(子,字段::任务成员变量);
+            要求(!成员||(*成员==1&&项.参数序号),"invalid branch member variable");项.任务成员变量序号=成员 ? 1:0;
+            项.特征类型概念节点=可选引用(子,字段::特征类型);项.特征值域概念节点=可选引用(子,字段::值域概念);
+            项.二次特征概念节点=可选引用(子,字段::二次特征);项.状态或动态概念节点=可选引用(子,字段::状态动态概念);
+            项.精确数值域=值域(子);要求(!(项.精确数值域&&项.特征值域概念节点),"conflicting branch domains");
+            读内容条件(子,项);C.条件项组.push_back(std::move(项));
+        }
+        return C;
+    }
     新任务执行配对要求 读配对(稳定编码 节点) {
         新任务执行配对要求 对;
         对.节点 = 节点; 对.来源配对节点 = 引用(节点, 字段::来源配对);
+        对.来源执行分支节点组=引用组(节点,字段::配对来源条件分支);
+        规范集合(对.来源执行分支节点组);
         对.来源条件节点 = 引用(节点, 字段::来源条件); 对.来源结果节点 = 引用(节点, 字段::来源结果);
         对.条件.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::条件关系, 1, 6);
         对.结果.关系规则 = 枚举值<新方法项关系规则>(节点, 字段::结果关系, 1, 6);
         对.条件.参数关系组 = 位置关系(节点, 字段::条件位置关系);
+        对.条件.场景事实限定组 = 场景事实(节点);
         对.结果.参数关系组 = 位置关系(节点, 字段::结果位置关系);
+        对.结果.场景事实限定组 = 场景事实(节点, 字段::结果场景事实成员);
         for (const auto 子 : 子组(节点, 字段::条件成员, 类型::条件项, 字段::所属配对, true)) {
             新方法条件项定义 项;
             std::tie(项.参数角色节点, 项.参数序号) = 参数定位(子); 项.存在概念节点 = 可选引用(子, 字段::存在概念);
@@ -1339,7 +1929,7 @@ struct 读器 final {
             项.二次特征概念节点 = 可选引用(子, 字段::二次特征);
             项.状态或动态概念节点 = 可选引用(子, 字段::状态动态概念); 项.精确数值域 = 值域(子);
             要求(!(项.精确数值域 && 项.特征值域概念节点), "conflicting condition domains");
-            对.条件.条件项组.push_back(std::move(项));
+            读内容条件(子,项);对.条件.条件项组.push_back(std::move(项));
         }
         对.结果.结果项组 = 读结果(节点, false);
         const auto 确认组 = 子组(节点, 字段::确认要求, 类型::确认, 字段::所属配对, false);
@@ -1378,6 +1968,12 @@ struct 读器 final {
             域.来源方法虚拟存在节点 = 引用(节点, 字段::来源虚拟存在);
             域.作用域 = 枚举值<新方法作用域>(节点, 字段::作用域值, 1, 2);
             域.实现方式 = 枚举值<新方法实现方式>(节点, 字段::实现方式, 1, 2);
+            for(const auto 子:子组(节点,字段::来源条件分支成员,类型::条件分支,字段::所属作用域,true)) {
+                const auto 顺序=数(子,字段::顺序);
+                要求(顺序==域.来源执行分支组.size(),"non-contiguous source branch order");
+                域.来源执行分支组.push_back({引用(子,字段::来源条件分支),
+                    {static_cast<std::uint32_t>(顺序),读条件(子)}});
+            }
             for (const auto 子 : 子组(节点, 字段::参数成员, 类型::参数, 字段::所属作用域, true)) {
                 新任务执行参数要求 参数{子, {}}; auto& 规格 = 参数.规格;
                 const auto [角色, 位置] = 参数定位(子);
@@ -1449,6 +2045,15 @@ void 核验图(const 新任务方法执行组织& 组织) {
             "invalid method scope");
         要求(域.实现方式 == 新方法实现方式::本能 || 域.实现方式 == 新方法实现方式::组合,
             "invalid method implementation");
+        std::set<稳定编码> 条件支;
+        for(std::size_t i=0;i<域.来源执行分支组.size();++i){const auto& 支=域.来源执行分支组[i];
+            要求(有效(支.节点)&&条件支.insert(支.节点).second&&支.定义.顺序==i
+                &&支.定义.必要条件.关系规则==新方法项关系规则::全部成立,"invalid source condition branch");}
+        for(const auto& 对:域.配对要求组){
+            要求(条件支.empty()==对.来源执行分支节点组.empty(),"pair branch sources absent or legacy mixed");
+            std::set<稳定编码> 唯一;
+            for(const auto 支:对.来源执行分支节点组)要求(条件支.contains(支)&&唯一.insert(支).second,"invalid pair branch source");
+        }
         if (域.实现方式 == 新方法实现方式::本能)
             要求(域.步骤组.empty() && 域.分支组.empty() && !域.入口步骤节点, "innate contains combination graph");
         std::map<稳定编码, const 新方法参数规格*> 角色;
@@ -1467,6 +2072,29 @@ void 核验图(const 新任务方法执行组织& 组织) {
                 && 角色.emplace(规格.参数角色节点, &规格).second, "duplicate parameter role");
         }
         const auto 核验位置 = [&](const auto& 项) {
+            if constexpr(requires{项.引用内容条件;})if(项.引用内容条件){
+                要求(有序&&项.参数序号&&项.参数序号<=域.参数要求组.size()
+                    &&域.参数要求组[项.参数序号-1].规格.有序规格->信息类型==
+                        (项.引用内容条件->作用点==新方法内容作用点::参数自身 ? 新方法参数信息类型::存在 : 新方法参数信息类型::特征)
+                    &&!有效(项.参数角色节点)&&!项.任务成员变量序号&&!项.存在概念节点
+                    &&!项.特征类型概念节点&&!项.特征值域概念节点&&!项.精确数值域
+                    &&!项.二次特征概念节点&&!项.状态或动态概念节点
+                    &&项.引用内容条件->正式内容路径.size()<=1&&有效(项.引用内容条件->要求概念节点),"任务内容条件形状损坏");
+            }
+            if constexpr(requires{项.特征前态限定;})if(项.特征前态限定) {
+                要求(有序&&项.参数序号&&项.参数序号<=域.参数要求组.size()
+                    &&域.参数要求组[项.参数序号-1].规格.有序规格->信息类型==新方法参数信息类型::特征
+                    &&!项.引用内容条件&&!项.存在概念节点&&!项.特征值域概念节点&&!项.精确数值域
+                    &&!项.二次特征概念节点&&!项.状态或动态概念节点&&!项.任务成员变量序号,"任务前态形状损坏");
+            }
+            if constexpr(requires{项.引用内容结果;})if(项.引用内容结果) {
+                要求(有序&&项.参数序号&&项.参数序号<=域.参数要求组.size()
+                    &&域.参数要求组[项.参数序号-1].规格.有序规格->信息类型==新方法参数信息类型::特征
+                    &&项.引用内容结果->作用点==新方法内容作用点::特征当前引用
+                    &&!项.引用内容结果->要求认知来源当前有效
+                    &&项.引用内容结果->正式内容路径.empty()&&!项.特征类型概念节点&&!项.特征值域概念节点
+                    &&!项.精确数值域&&!项.变化方向概念节点&&!项.状态或动态概念节点&&!项.任务成员变量序号,"任务内容结果形状损坏");
+            }
             要求(项.任务成员变量序号 <= 1 && (!项.任务成员变量序号 || (有序 && 项.参数序号)),
                 "invalid task member variable position");
             要求(有序 ? 项.参数序号 > 0 && 项.参数序号 <= 域.参数要求组.size() && !有效(项.参数角色节点)
@@ -1474,8 +2102,8 @@ void 核验图(const 新任务方法执行组织& 组织) {
             if (有序) {
                 const auto 类型 = 域.参数要求组[项.参数序号 - 1].规格.有序规格->信息类型;
                 if (类型 == 新方法参数信息类型::存在)
-                    要求(!项.特征类型概念节点 && !项.特征值域概念节点 && !项.精确数值域,
-                        "ordered existence cannot read undeclared feature");
+                    要求((!项.特征值域概念节点&&!项.精确数值域)||项.特征类型概念节点,
+                        "ordered existence value requires explicit feature type");
                 if constexpr (requires { 项.存在概念节点; }) {
                     if (类型 == 新方法参数信息类型::特征)
                         要求(!项.存在概念节点, "ordered feature cannot carry existence constraint");
@@ -1492,6 +2120,16 @@ void 核验图(const 新任务方法执行组织& 组织) {
                 "collection feature unresolved");
         }
         for (const auto& 对 : 域.配对要求组) {
+            for(const auto* 关系组:{&对.条件.参数关系组,&对.结果.参数关系组})for(const auto& r:*关系组) {
+                要求(有序&&r.左参数序号&&r.右参数序号
+                    &&r.左参数序号<=域.参数要求组.size()&&r.右参数序号<=域.参数要求组.size(),"task relation unbound position");
+                if(r.种类==新方法参数关系种类::内容引用参数) {
+                    要求(关系组==&对.条件.参数关系组&&r.左正式内容路径.size()==1
+                        &&域.参数要求组[r.左参数序号-1].规格.有序规格->信息类型==新方法参数信息类型::存在
+                        &&域.参数要求组[r.右参数序号-1].规格.有序规格->信息类型==新方法参数信息类型::存在,
+                        "content subject relation shape malformed");
+                }else 要求(r.左正式内容路径.empty(),"legacy task relation carries content path");
+            }
             std::optional<std::uint32_t> 成员位置;
             for (const auto& 项 : 对.条件.条件项组) if (项.任务成员变量序号) {
                 要求(!成员位置 || *成员位置 == 项.参数序号, "multiple member collection positions");
@@ -1509,9 +2147,20 @@ void 核验图(const 新任务方法执行组织& 组织) {
             for (const auto& 项 : 对.结果.结果项组) 核验位置(项);
             for (const auto& 项 : 对.结果.确认要求.禁止结果项组)
                 核验位置(项);
+            for(std::size_t i=0;i<对.结果.场景事实限定组.size();++i){
+                const auto& 项=对.结果.场景事实限定组[i];
+                要求(有序&&有效(项.关系概念节点),"result scene fact requires ordered parameters and relation");
+                const std::uint32_t 位置[]={项.场景参数序号,项.主体参数序号,项.对象参数序号,项.特征参数序号};
+                for(std::size_t k=0;k<4;++k)要求(位置[k]&&位置[k]<=域.参数要求组.size()
+                    &&域.参数要求组[位置[k]-1].规格.有序规格->信息类型==(k==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在),"result scene fact position/type mismatch");
+                要求(std::find(对.结果.场景事实限定组.begin(),对.结果.场景事实限定组.begin()+i,项)==对.结果.场景事实限定组.begin()+i,"duplicate result scene fact");
+            }
             std::set<std::pair<std::size_t, std::size_t>> 线性索引;
             for (const auto& 项 : 对.线性关系组)
                 要求(项.条件序号 < 对.条件.条件项组.size() && 项.结果序号 < 对.结果.结果项组.size()
+                    && !对.条件.条件项组[项.条件序号].引用内容条件
+                    && !对.条件.条件项组[项.条件序号].特征前态限定
+                    && !对.结果.结果项组[项.结果序号].引用内容结果
                     && 线性索引.emplace(项.条件序号, 项.结果序号).second, "invalid linear pair index");
         }
     }
@@ -1565,7 +2214,10 @@ std::optional<新任务方法执行组织> 读取已加锁(稳定编码 任务, 
 void 核验概念引用(const 新任务方法执行组织& 组织,
     const 概念_特征类& 特征, const 概念_存在类& 存在, const 概念_二次特征类& 二次) {
     const auto 存在概念 = [&](const std::optional<稳定编码>& 节点) {
-        要求(!节点 || 存在.是存在概念节点(*节点), "invalid existence concept reference");
+        if(!节点||存在.是存在概念节点(*节点))return;
+        const auto C=存在.读取正式结构概念保护(*节点);
+        要求(C.状态==正式结构操作状态::已读取&&C.信息
+            &&(std::holds_alternative<信息结构概念定义>(C.信息->定义)||std::holds_alternative<基础范围概念定义>(C.信息->定义)),"invalid existence concept reference");
     };
     const auto 特征概念 = [&](const std::optional<稳定编码>& 节点) {
         // 存在概念可作为复合特征类型/值域；不能排除这条已确定的语义。
@@ -1585,6 +2237,7 @@ void 核验概念引用(const 新任务方法执行组织& 组织,
     };
     const auto 结果组 = [&](const auto& 组) {
         for (const auto& 项 : 组) {
+            if(项.引用内容结果)存在概念(项.引用内容结果->要求概念节点);
             特征概念(项.特征类型概念节点); 特征概念(项.特征值域概念节点);
             二次概念(项.变化方向概念节点); 精确域(项);
         }
@@ -1604,7 +2257,26 @@ void 核验概念引用(const 新任务方法执行组织& 组织,
             if (参数.规格.集合成员约束) 特征概念(参数.规格.集合成员约束->集合特征类型概念节点);
         }
         for (const auto& 对 : 域.配对要求组) {
+            for(const auto& r:对.条件.参数关系组)if(r.种类==新方法参数关系种类::内容引用参数) {
+                const auto 槽=特征.读取先天特征类型槽(先天特征类型槽::需求主体);
+                要求(槽.类型根&&r.左正式内容路径==std::vector<稳定编码>{*槽.类型根}
+                    &&特征.是特征概念节点(*槽.类型根),"task content relation is not formal demand subject slot");
+            }
             for (const auto& 项 : 对.条件.条件项组) {
+                if(项.引用内容条件){
+                    const auto C=存在.读取正式结构概念保护(项.引用内容条件->要求概念节点);
+                    要求(C.状态==正式结构操作状态::已读取&&C.信息
+                        &&(std::holds_alternative<信息结构概念定义>(C.信息->定义)||std::holds_alternative<基础范围概念定义>(C.信息->定义)),"内容条件C不可读");
+                    for(const auto FT:项.引用内容条件->正式内容路径)要求(特征.是特征概念节点(FT),"内容条件路径非正式FT");
+                    if(项.引用内容条件->要求认知来源当前有效) {
+                        const auto 先天=存在.读取引用内容筹办概念();
+                        要求(先天.状态==正式结构操作状态::已读取&&先天.信息
+                            &&项.引用内容条件->作用点==新方法内容作用点::参数自身
+                            &&项.引用内容条件->正式内容路径.empty()
+                            &&项.引用内容条件->要求概念节点==先天.信息->完整被认知需求,
+                            "current recognition source qualification requires complete recognized demand");
+                    }
+                }
                 存在概念(项.存在概念节点); 特征概念(项.特征类型概念节点);
                 特征概念(项.特征值域概念节点); 二次概念(项.二次特征概念节点); 精确域(项);
             }
@@ -1634,9 +2306,14 @@ struct 来源方法视图 final {
     std::vector<新方法参数规格> 参数规格组;
     std::vector<新方法条件结果信息> 条件结果组;
     std::optional<新方法行为> 行为;
+    std::vector<新方法执行分支信息> 执行分支组;
 };
+std::optional<稳定编码> 配对执行分支(const 新方法条件结果信息& 对) {
+    要求(对.来源执行分支节点组.size()<=1,"expanded pair contains multiple branches");
+    return 对.来源执行分支节点组.empty() ? std::nullopt : std::optional<稳定编码>{对.来源执行分支节点组.front()};
+}
 新任务本能采用材料 取得采用定义(const 新任务方法执行组织& 组织,
-    const 新任务本能采用定位& 定位) {
+    const 新任务本能采用定位& 定位,std::optional<稳定编码> 分支={}) {
     要求(组织.节点==定位.组织节点,"采用组织身份不一致");
     const auto 域=std::find_if(组织.方法作用域组.begin(),组织.方法作用域组.end(),
         [&](const auto& 项){return 项.节点==定位.方法作用域节点;});
@@ -1646,15 +2323,25 @@ struct 来源方法视图 final {
     const auto 对=std::find_if(域->配对要求组.begin(),域->配对要求组.end(),
         [&](const auto& 项){return 项.节点==定位.配对要求节点;});
     要求(对!=域->配对要求组.end(),"采用配对不属于根作用域");
+    if(域->来源执行分支组.empty())要求(!分支&&对->来源执行分支节点组.empty(),"legacy adoption contains branch");
+    else 要求(分支 && std::any_of(域->来源执行分支组.begin(),域->来源执行分支组.end(),[&](const auto& x){return x.节点==*分支;})
+        && std::find(对->来源执行分支节点组.begin(),对->来源执行分支节点组.end(),*分支)!=对->来源执行分支节点组.end(),"adoption branch not declared by method and pair");
     新任务本能采用材料 采用;
     采用.定位=定位;采用.来源方法节点=域->来源方法节点;采用.来源配对节点=对->来源配对节点;
     采用.来源条件节点=对->来源条件节点;采用.来源结果节点=对->来源结果节点;
     for(const auto& 参数:域->参数要求组)采用.参数要求组.push_back(参数.规格);
     采用.原始条件=对->条件;采用.需要条件=对->条件;采用.结果=对->结果;采用.线性关系组=对->线性关系组;
+    采用.执行分支节点=分支;
+    采用.来源执行分支节点组=对->来源执行分支节点组;
     return 采用;
 }
 void 核对采用定义(const 新任务方法执行组织& 组织,const 新任务本能采用材料& 采用) {
-    auto 原定义=取得采用定义(组织,采用.定位);
+    auto 原定义=取得采用定义(组织,采用.定位,采用.执行分支节点);
+    std::set<稳定编码> 唯一来源;
+    for(const auto 支:采用.来源执行分支节点组)要求(有效(支)&&唯一来源.insert(支).second
+        &&std::find(原定义.来源执行分支节点组.begin(),原定义.来源执行分支节点组.end(),支)!=原定义.来源执行分支节点组.end(),"frozen branch source removed or invalid");
+    要求(采用.执行分支节点 ? 唯一来源.contains(*采用.执行分支节点):唯一来源.empty(),"selected branch missing from frozen source");
+    原定义.来源执行分支节点组=采用.来源执行分支节点组;
     原定义.需要条件=采用.需要条件;原定义.参数绑定组=采用.参数绑定组;
     原定义.任务成员绑定=采用.任务成员绑定;
     if (采用.任务成员绑定) {
@@ -1664,33 +2351,52 @@ void 核对采用定义(const 新任务方法执行组织& 组织,const 新任�
     }
     要求(原定义==采用,"采用源稳定定义不一致");
     要求(采用.需要条件.关系规则==采用.原始条件.关系规则
+        &&采用.需要条件.参数关系组==采用.原始条件.参数关系组
+        &&采用.需要条件.场景事实限定组==采用.原始条件.场景事实限定组
         &&采用.需要条件.条件项组.size()==采用.原始条件.条件项组.size(),"有效条件结构异义");
     for(std::size_t 序号=0;序号<采用.原始条件.条件项组.size();++序号){
         auto 原项=采用.原始条件.条件项组[序号];const auto& 有效项=采用.需要条件.条件项组[序号];
+        if(原项.引用内容条件)要求(原项==有效项,"内容条件不可被线性域改写");
         原项.精确数值域=有效项.精确数值域;原项.特征值域概念节点=有效项.特征值域概念节点;
         要求(原项==有效项,"有效条件改写非值字段");
     }
 }
 std::optional<来源方法视图> 读取来源视图(const 新任务方法执行组织& 组织,
-    稳定编码 来源M,const 新_方法类& 方法服务,const 新任务本能采用材料* 固定采用=nullptr) {
+    稳定编码 来源M,const std::vector<新方法信息>& 方法组,const 新任务本能采用材料* 固定采用=nullptr) {
     const auto 域=std::find_if(组织.方法作用域组.begin(),组织.方法作用域组.end(),
         [&](const auto& 项){return 项.来源方法节点==来源M;});
     要求(域!=组织.方法作用域组.end(),"来源方法无任务要求");
     if(固定采用){核对采用定义(组织,*固定采用);要求(固定采用->定位.方法作用域节点==域->节点,"固定采用作用域异义");}
-    const auto M=方法服务.获取方法(来源M);
-    要求(M.has_value(),"已冻结来源方法读取失败");
+    const auto M=std::find_if(方法组.begin(),方法组.end(),[&](const auto& x){return x.节点==来源M;});
+    要求(M!=方法组.end(),"已冻结来源方法读取失败");
     要求(!M->来源方法节点&&!M->实例根节点,"任务要求引用不是抽象方法");
     来源方法视图 视图;视图.节点=来源M;视图.作用域节点=域->节点;视图.启用状态=M->启用状态;
     视图.实现方式=域->实现方式;视图.本能函数登记名=M->本能函数登记名;
     视图.行为=M->行为;
+    视图.执行分支组=M->执行分支组;
     for(const auto& 项:域->参数要求组)视图.参数规格组.push_back(项.规格);
     要求(M->参数规格组==视图.参数规格组&&M->实现方式==域->实现方式,"源参数或实现方式同编码异义");
+    要求(M->执行分支组==域->来源执行分支组,"source branch definitions changed");
     for(const auto& 项:域->配对要求组){
         if(固定采用&&项.节点!=固定采用->定位.配对要求节点)continue;
         新方法条件结果信息 对;
         对.配对节点=项.来源配对节点;对.条件节点=项.来源条件节点;对.结果节点=项.来源结果节点;
         对.条件 = 固定采用 ? 固定采用->需要条件 : 项.条件;对.结果=项.结果;对.线性关系组=项.线性关系组;
-        视图.条件结果组.push_back(std::move(对));
+        const auto 原对=std::find_if(M->条件结果组.begin(),M->条件结果组.end(),[&](const auto& x){return x.配对节点==项.来源配对节点;});
+        要求(原对!=M->条件结果组.end()&&原对->条件==项.条件&&原对->结果==项.结果
+            &&原对->线性关系组==项.线性关系组
+            &&std::all_of(项.来源执行分支节点组.begin(),项.来源执行分支节点组.end(),[&](const auto 支){return std::find(原对->来源执行分支节点组.begin(),原对->来源执行分支节点组.end(),支)!=原对->来源执行分支节点组.end();}),"source pair definitions changed");
+        if(M->执行分支组.empty()){
+            要求(项.来源执行分支节点组.empty()&&(!固定采用||!固定采用->执行分支节点),"legacy pair has branch source");
+            视图.条件结果组.push_back(std::move(对));
+        }else{
+            要求(!项.来源执行分支节点组.empty(),"branched pair missing source");
+            for(const auto& 支:M->执行分支组){
+                if(std::find(项.来源执行分支节点组.begin(),项.来源执行分支节点组.end(),支.节点)==项.来源执行分支节点组.end())continue;
+                if(固定采用&&固定采用->执行分支节点!=支.节点)continue;
+                auto 候选=对;候选.来源执行分支节点组={支.节点};视图.条件结果组.push_back(std::move(候选));
+            }
+        }
     }
     return 视图;
 }
@@ -1855,19 +2561,21 @@ bool 核验完整条件与参数规格(const 新方法条件定义& 条件,
     return true;
 }
 
-void 建立执行采用已加锁(稳定编码 X,const 新任务本能采用材料& 采用) {
+void 追加执行冻结采用(基础节点组追加请求& 请求,std::size_t X,const 新任务本能采用材料& 采用) {
     要求(采用.参数绑定组.size() == 采用.参数要求组.size(), "执行采用参数数量不完整");
     要求(std::none_of(采用.原始条件.条件项组.begin(),采用.原始条件.条件项组.end(),
         [](const auto& 项){return 项.任务成员变量序号 != 0;}) || 采用.任务成员绑定,
         "member execution requires frozen binding");
-    要求(全局基础数据集.查询字段(X,取(字段::执行采用引用)).empty(),"执行采用不能重复发布");
-    const auto 原结构=全局基础数据集.查询完整节点结构(X);
-    要求(原结构.状态==基础结构操作状态::已完成&&原结构.结构.has_value(),"执行构造结构读取失败");
     写器 写;写.执行采用模式=true;
     const auto 根=写.新节点(类型::执行采用);
-    写.引用(根,字段::采用所属执行,X);写.引用(根,字段::采用组织,采用.定位.组织节点);
+    写.引用(根,字段::采用组织,采用.定位.组织节点);
     写.引用(根,字段::采用作用域,采用.定位.方法作用域节点);写.引用(根,字段::采用配对,采用.定位.配对要求节点);
     写.数(根,字段::条件关系,static_cast<std::int64_t>(采用.需要条件.关系规则));
+    写.位置关系(根,字段::条件位置关系,采用.需要条件.参数关系组);
+    写.引用(根,字段::采用条件分支,采用.执行分支节点);
+    for(const auto 支:采用.来源执行分支节点组)写.引用(根,字段::采用来源条件分支,支);
+    写.场景事实(根,采用.需要条件.场景事实限定组);
+    写.场景事实(根,采用.结果.场景事实限定组,字段::结果场景事实成员);
     if (采用.任务成员绑定) {
         const auto& 成员 = *采用.任务成员绑定;
         要求(成员.集合参数序号 && 有效(成员.任务引用.任务节点)
@@ -1884,7 +2592,7 @@ void 建立执行采用已加锁(稳定编码 X,const 新任务本能采用材�
         写.参数定位(子,项.参数角色节点,项.参数序号);写.引用(子,字段::存在概念,项.存在概念节点);
         写.引用(子,字段::特征类型,项.特征类型概念节点);写.引用(子,字段::值域概念,项.特征值域概念节点);
         写.引用(子,字段::二次特征,项.二次特征概念节点);写.引用(子,字段::状态动态概念,项.状态或动态概念节点);
-        写.值域(子,项.精确数值域);
+        写.值域(子,项.精确数值域);写.写内容条件(子,项);
         if (项.任务成员变量序号) 写.数(子, 字段::任务成员变量, 项.任务成员变量序号);
     }
     for(std::size_t 序=0;序<采用.参数绑定组.size();++序){
@@ -1917,11 +2625,12 @@ void 建立执行采用已加锁(稳定编码 X,const 新任务本能采用材�
         if(项.服务要求分项引用){写.引用(子,字段::服务理解,项.服务要求分项引用->理解节点);写.数(子,字段::服务分项,static_cast<std::int64_t>(项.服务要求分项引用->分项));}
         if(项.服务要求确认引用)写.引用(子,字段::服务确认,项.服务要求确认引用->确认节点);
     }
-    基础节点组追加请求 请求;请求.新节点组=std::move(写.节点组);
-    请求.预期既有节点组.push_back(*原结构.结构);
-    请求.追加字段组.push_back({X,取(字段::执行采用引用),基础组内节点引用{根}});
-    const auto 发布=全局基础数据集.原子追加节点组(请求);
-    要求(发布.状态==基础节点组追加状态::已完成,"执行采用原子追加失败");
+    const auto 偏移=请求.新节点组.size();
+    for(auto& 节点:写.节点组)for(auto& 字:节点.字段组)
+        if(auto* 引用=std::get_if<基础组内节点引用>(&字.内容))引用->索引+=偏移;
+    写.节点组.at(根).字段组.push_back({取(字段::采用所属执行),基础组内节点引用{X}});
+    请求.新节点组.at(X).字段组.push_back({取(字段::执行采用引用),基础组内节点引用{偏移+根}});
+    for(auto& 节点:写.节点组)请求.新节点组.push_back(std::move(节点));
 }
 std::optional<新任务本能采用材料> 读取执行采用已加锁(稳定编码 X,稳定编码 T,稳定编码 M) {
     const auto 采用字段=全局基础数据集.查询字段(X,取(字段::执行采用引用));
@@ -1935,7 +2644,10 @@ std::optional<新任务本能采用材料> 读取执行采用已加锁(稳定编
     要求(虚拟字段.size()==1&&std::get_if<稳定编码>(&虚拟字段.front().内容),"执行任务虚拟存在缺失");
     const auto 组织=读取已加锁(T,std::get<稳定编码>(虚拟字段.front().内容));
     要求(组织.has_value(),"执行采用组织已丢失");
-    auto 采用=取得采用定义(*组织,定位);
+    const auto 分支=读.可选引用(根,字段::采用条件分支);
+    auto 采用=取得采用定义(*组织,定位,分支);
+    要求(读.场景事实(根,字段::结果场景事实成员)==采用.结果.场景事实限定组,"execution adopted result scene facts lost or changed");
+    采用.来源执行分支节点组=读.引用组(根,字段::采用来源条件分支);
     要求(采用.来源方法节点==M,"执行采用真实M不一致");
     const auto 成员位置 = 读.可选数(根, 字段::成员集合参数位置);
     const auto 成员T = 读.可选引用(根, 字段::成员任务);
@@ -1949,6 +2661,10 @@ std::optional<新任务本能采用材料> 读取执行采用已加锁(稳定编
         采用.任务成员绑定 = 新方法任务成员绑定{static_cast<std::uint32_t>(*成员位置), {*成员T, *成员Vt, *成员状态F}, 成员Q};
     }
     采用.需要条件.关系规则=读.枚举值<新方法项关系规则>(根,字段::条件关系,1,6);
+    if(!全局基础数据集.查询字段(根,取(字段::条件位置关系)).empty()
+        ||!全局基础数据集.查询字段(根,取(字段::条件内容关系成员)).empty())
+        采用.需要条件.参数关系组=读.位置关系(根,字段::条件位置关系);
+    采用.需要条件.场景事实限定组=读.场景事实(根);
     采用.需要条件.条件项组.clear();
     for(const auto 子:读.子组(根,字段::条件成员,类型::执行条件,字段::所属配对,true)){
         新方法条件项定义 项;std::tie(项.参数角色节点,项.参数序号)=读.参数定位(子);
@@ -1959,7 +2675,7 @@ std::optional<新任务本能采用材料> 读取执行采用已加锁(稳定编
         项.特征值域概念节点=读.可选引用(子,字段::值域概念);项.二次特征概念节点=读.可选引用(子,字段::二次特征);
         项.状态或动态概念节点=读.可选引用(子,字段::状态动态概念);项.精确数值域=读.值域(子);
         要求(!(项.精确数值域&&项.特征值域概念节点),"执行条件双值域");
-        采用.需要条件.条件项组.push_back(std::move(项));
+        读.读内容条件(子,项);采用.需要条件.条件项组.push_back(std::move(项));
     }
     std::set<稳定编码> 已有角色;
     for(const auto 子:读.子组(根,字段::绑定成员,类型::执行绑定,字段::绑定所属采用,true)){
@@ -2048,6 +2764,275 @@ void 清理执行采用已加锁(稳定编码 X) {
     要求(全局基础数据集.删除字段(字段组.front().编码),"执行采用X引用解除失败");
     要求(全局基础数据集.原子删除节点结构(节点组,字段关系组,{})==基础结构操作状态::已完成,"执行采用独占结构删除失败");
 }
+std::vector<新方法初始场景事实限定> 读取方案场景事实(稳定编码 X,
+    std::vector<稳定编码>* 子节点组=nullptr,std::vector<稳定编码>* 字段关系组=nullptr,
+    std::vector<基础联合节点快照>* 保护=nullptr) {
+    读器 读(X,false,true);
+    auto 结果=读.场景事实(X,字段::结果方案必需场景事实成员);
+    要求(读.已访问.size()+1==读.节点组.size(),"result plan orphan scene fact");
+    for(const auto& [节点,结构]:读.节点组){
+        if(节点!=X){
+            if(子节点组)子节点组->push_back(节点);
+            for(const auto& 字:结构.字段组)
+                要求(读.已用字段.contains(字.编码),"unexpected result scene fact field");
+        }
+        for(const auto& 字:结构.字段组)if(读.已用字段.contains(字.编码)&&字段关系组)字段关系组->push_back(字.编码);
+        if(保护){
+            const auto 完整=全局基础数据集.查询节点组完整结构({节点});
+            要求(完整.状态==基础结构操作状态::已完成&&完整.节点组.size()==1&&完整.节点组.front().快照,"result scene plan protection unreadable");
+            const auto& p=*完整.节点组.front().快照;
+            要求(p.结构.节点==结构.节点&&p.结构.字段组==结构.字段组,"result scene plan changed during protection");
+            保护->push_back(p);
+        }
+    }
+    return 结果;
+}
+void 建立方案场景事实(稳定编码 X,const std::vector<新方法初始场景事实限定>& 组) {
+    if(组.empty())return;
+    要求(读取方案场景事实(X).empty(),"result scene plan already exists");
+    const auto 原=全局基础数据集.查询完整节点结构(X);
+    要求(原.状态==基础结构操作状态::已完成&&原.结构,"result scene plan X unreadable");
+    基础节点组追加请求 请求;请求.预期既有节点组.push_back(*原.结构);
+    for(std::size_t i=0;i<组.size();++i){
+        const auto& 项=组[i];
+        要求(有效(项.关系概念节点)&&项.场景参数序号&&项.主体参数序号&&项.对象参数序号&&项.特征参数序号,"invalid result scene plan");
+        要求(std::find(组.begin(),组.begin()+i,项)==组.begin()+i,"duplicate result scene plan");
+        基础组内新节点 子;
+        子.字段组={{节点类型字段,取(类型::场景事实)},{取(字段::结果方案所属执行),X},
+            {取(字段::所属配对),X},{取(字段::顺序),基础值{序号(i)}},
+            {取(字段::场景事实关系),项.关系概念节点},
+            {取(字段::场景位置),基础值{static_cast<std::int64_t>(项.场景参数序号)}},
+            {取(字段::主体位置),基础值{static_cast<std::int64_t>(项.主体参数序号)}},
+            {取(字段::对象位置),基础值{static_cast<std::int64_t>(项.对象参数序号)}},
+            {取(字段::特征位置),基础值{static_cast<std::int64_t>(项.特征参数序号)}}};
+        请求.新节点组.push_back(std::move(子));
+        请求.追加字段组.push_back({X,取(字段::结果方案必需场景事实成员),基础组内节点引用{i}});
+    }
+    const auto 发布=全局基础数据集.原子追加节点组(请求);
+    要求(发布.状态==基础节点组追加状态::已完成,"result scene plan append failed");
+    要求(读取方案场景事实(X)==组,"result scene plan readback mismatch");
+}
+void 清理方案场景事实(稳定编码 X) {
+    std::vector<稳定编码> 节点组,字段组;
+    (void)读取方案场景事实(X,&节点组,&字段组);
+    if(节点组.empty())return;
+    for(const auto& 字:全局基础数据集.查询字段(X,取(字段::结果方案必需场景事实成员))){
+        要求(全局基础数据集.删除字段(字.编码),"result scene plan X unlink failed");
+        std::erase(字段组,字.编码);
+    }
+    要求(全局基础数据集.原子删除节点结构(节点组,字段组,{})==基础结构操作状态::已完成,"result scene plan cleanup failed");
+}
+auto 场景引用排序键(const 新方法本次场景事实引用& x) {
+    return std::tuple{x.限定.关系概念节点,x.限定.场景参数序号,x.限定.主体参数序号,
+        x.限定.对象参数序号,x.限定.特征参数序号,x.事实来源身份,x.动作节点};
+}
+std::vector<新方法本次场景事实引用> 读取执行场景事实(稳定编码 X,
+    std::vector<稳定编码>* 节点组=nullptr,std::vector<稳定编码>* 字段组=nullptr,
+    std::vector<基础联合节点快照>* 保护=nullptr) {
+    const auto 反向=全局基础数据集.查询字段引用节点结构(X,取(字段::执行场景事实所属字段));
+    要求(反向.状态==基础结构操作状态::已完成,"X scene fact ownership read failed");
+    std::set<稳定编码> 所属节点;
+    for(const auto& 字:反向.引用字段组)要求(所属节点.insert(字.所属节点).second,"duplicate X scene fact owner");
+    const auto 宿主=全局基础数据集.查询完整节点结构(X);
+    要求(宿主.状态==基础结构操作状态::已完成&&宿主.结构,"X scene fact host read failed");
+    std::set<稳定编码> 列出;
+    for(const auto& 字:宿主.结构->字段组)if(字.字段节点==取(字段::执行场景事实成员字段)){
+        const auto* 子=std::get_if<稳定编码>(&字.内容);
+        要求(子&&列出.insert(*子).second,"X scene fact duplicate member");
+        if(字段组)字段组->push_back(字.编码);
+    }
+    要求(列出==所属节点,"X scene fact orphan or foreign member");
+    if(列出.empty())return {};
+    const auto 批=全局基础数据集.查询节点组完整结构({列出.begin(),列出.end()});
+    要求(批.状态==基础结构操作状态::已完成&&批.节点组.size()==列出.size(),"X scene fact batch read failed");
+    std::map<std::int64_t,新方法本次场景事实引用> 排序;
+    for(const auto& 子:批.节点组){
+        要求(子.快照&&子.快照->入向外部关系组.empty()&&子.快照->出向外部关系组.empty(),"X scene fact child unreadable");
+        const auto& 结构=子.快照->结构;
+        要求(结构.字段组.size()==7,"X scene fact child field count");
+        const auto 单=[&](稳定编码 键)->const 基础字段关系&{
+            const 基础字段关系* 命中=nullptr;
+            for(const auto& 字:结构.字段组)if(字.字段节点==键){要求(!命中,"X scene fact duplicate field");命中=&字;}
+            要求(命中,"X scene fact missing field");return *命中;
+        };
+        const auto 引用=[&](稳定编码 键){const auto* 值=std::get_if<稳定编码>(&单(键).内容);要求(值&&有效(*值),"X scene fact invalid reference");return *值;};
+        要求(引用(节点类型字段)==取(字段::执行场景事实引用节点类型)
+            &&引用(取(字段::执行场景事实所属字段))==X,"X scene fact wrong type or owner");
+        const auto* 序材料=std::get_if<基础值>(&单(取(字段::顺序)).内容);
+        const auto* 序=序材料 ? std::get_if<std::int64_t>(&序材料->材料) : nullptr;
+        const auto* 位材料=std::get_if<基础值>(&单(取(字段::执行场景事实四位置字段)).内容);
+        const auto* 位=位材料 ? std::get_if<std::vector<std::int64_t>>(&位材料->材料) : nullptr;
+        要求(序&&*序>=0&&位&&位->size()==4,"X scene fact sequence or positions malformed");
+        for(auto v:*位)要求(v>0&&v<=(std::numeric_limits<std::uint32_t>::max)(),"X scene fact position out of bounds");
+        新方法本次场景事实引用 项{{引用(取(字段::执行场景事实关系字段)),
+            static_cast<std::uint32_t>((*位)[0]),static_cast<std::uint32_t>((*位)[1]),
+            static_cast<std::uint32_t>((*位)[2]),static_cast<std::uint32_t>((*位)[3])},
+            引用(取(字段::执行场景事实来源字段)),引用(取(字段::执行场景事实动作字段))};
+        要求(项.事实来源身份==X&&排序.emplace(*序,项).second,"X scene fact wrong source or duplicate sequence");
+        const auto 入向=全局基础数据集.查询目标字段(结构.节点.编码,取(字段::执行场景事实成员字段));
+        要求(入向.size()==1&&入向.front().所属节点==X,"X scene fact multiple parents");
+        if(节点组)节点组->push_back(结构.节点.编码);
+        if(字段组)for(const auto& 字:结构.字段组)字段组->push_back(字.编码);
+        if(保护)保护->push_back(*子.快照);
+    }
+    std::vector<新方法本次场景事实引用> 结果;
+    for(const auto& [序,项]:排序){要求(序==序号(结果.size()),"X scene fact sequence gap");
+        要求(std::none_of(结果.begin(),结果.end(),[&](const auto& 旧){return 旧.限定==项.限定;}),"X scene fact duplicate or conflicting declaration");结果.push_back(项);}
+    std::sort(结果.begin(),结果.end(),[](const auto& a,const auto& b){return 场景引用排序键(a)<场景引用排序键(b);});
+    return 结果;
+}
+void 追加执行场景事实(稳定编码 X,稳定编码 动作,const 新任务本能采用材料& 采用,
+    const std::vector<新方法本次场景事实引用>& 报告) {
+    auto 原=读取执行场景事实(X);
+    auto 新组=报告;
+    std::sort(新组.begin(),新组.end(),[](const auto& a,const auto& b){return 场景引用排序键(a)<场景引用排序键(b);});
+    基础节点组追加请求 请求;
+    const auto 原X=全局基础数据集.查询完整节点结构(X);
+    要求(原X.状态==基础结构操作状态::已完成&&原X.结构,"X scene fact append host unreadable");
+    请求.预期既有节点组.push_back(*原X.结构);
+    for(std::size_t i=0;i<新组.size();++i){const auto& 项=新组[i];
+        要求(项.事实来源身份==X&&项.动作节点==动作&&有效(动作),"X scene fact report wrong source/action");
+        const std::uint32_t 位[]={项.限定.场景参数序号,项.限定.主体参数序号,项.限定.对象参数序号,项.限定.特征参数序号};
+        要求(有效(项.限定.关系概念节点),"X scene fact report missing relation");
+        for(std::size_t k=0;k<4;++k)要求(位[k]&&位[k]<=采用.参数要求组.size()
+            &&采用.参数要求组[位[k]-1].有序规格
+            &&采用.参数要求组[位[k]-1].有序规格->信息类型==(k==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在),"X scene fact report position/type mismatch");
+        要求(!i||新组[i-1].限定!=项.限定,"X scene fact duplicate report");
+        const auto 旧=std::find_if(原.begin(),原.end(),[&](const auto& x){return x.限定==项.限定;});
+        if(旧!=原.end()){要求(*旧==项,"X scene fact report changes prior identity");continue;}
+        const auto 序=原.size()+请求.新节点组.size();
+        基础组内新节点 子;
+        子.字段组={{节点类型字段,取(字段::执行场景事实引用节点类型)},
+            {取(字段::执行场景事实所属字段),X},{取(字段::顺序),基础值{序号(序)}},
+            {取(字段::执行场景事实关系字段),项.限定.关系概念节点},
+            {取(字段::执行场景事实四位置字段),基础值{std::vector<std::int64_t>{项.限定.场景参数序号,项.限定.主体参数序号,项.限定.对象参数序号,项.限定.特征参数序号}}},
+            {取(字段::执行场景事实来源字段),X},{取(字段::执行场景事实动作字段),动作}};
+        请求.追加字段组.push_back({X,取(字段::执行场景事实成员字段),基础组内节点引用{请求.新节点组.size()}});
+        请求.新节点组.push_back(std::move(子));
+    }
+    if(!请求.新节点组.empty())要求(全局基础数据集.原子追加节点组(请求).状态==基础节点组追加状态::已完成,"X scene fact append failed");
+    const auto 读回=读取执行场景事实(X);
+    for(const auto& 项:报告)要求(std::find(读回.begin(),读回.end(),项)!=读回.end(),"X scene fact append readback failed");
+}
+std::optional<新本能已发布需求结果> 读取执行需求结果(稳定编码 X,
+    std::vector<稳定编码>* 子节点组=nullptr, std::vector<稳定编码>* 字段关系组=nullptr,
+    std::vector<基础联合节点快照>* 保护=nullptr) {
+    const auto 宿主=全局基础数据集.查询节点组完整结构({X});
+    if(宿主.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    要求(宿主.状态==基础结构操作状态::已完成&&宿主.节点组.size()==1&&宿主.节点组.front().快照,
+        "X demand result host unreadable");
+    const auto& 主=*宿主.节点组.front().快照;
+    std::optional<稳定编码> 子;
+    for(const auto& 字:主.结构.字段组)if(字.字段节点==取(字段::执行需求结果成员字段)){
+        const auto* 值=std::get_if<稳定编码>(&字.内容);
+        要求(值&&有效(*值)&&!子,"X demand result multiple or malformed members");
+        子=*值;if(字段关系组)字段关系组->push_back(字.编码);
+    }
+    std::set<稳定编码> 反向子;
+    for(const auto& 字:主.入向字段组)if(字.字段节点==取(字段::执行需求结果所属字段))
+        要求(反向子.insert(字.所属节点).second,"X demand result duplicate owner");
+    要求(反向子==(子 ? std::set<稳定编码>{*子}:std::set<稳定编码>{}),
+        "X demand result orphan or foreign member");
+    if(保护)保护->push_back(主);
+    if(!子)return {};
+    const auto 批=全局基础数据集.查询节点组完整结构({*子});
+    if(批.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    要求(批.状态==基础结构操作状态::已完成&&批.节点组.size()==1&&批.节点组.front().快照,
+        "X demand result child unreadable");
+    const auto& 快照=*批.节点组.front().快照;
+    const auto& 结构=快照.结构;
+    要求(结构.字段组.size()==9&&快照.入向外部关系组.empty()&&快照.出向外部关系组.empty(),
+        "X demand result child shape invalid");
+    std::set<稳定编码> 已读;
+    const auto 单=[&](稳定编码 键)->const 基础字段关系&{
+        const 基础字段关系* 命中=nullptr;
+        for(const auto& 字:结构.字段组)if(字.字段节点==键){要求(!命中,"X demand result duplicate field");命中=&字;}
+        要求(命中,"X demand result missing field");已读.insert(键);return *命中;
+    };
+    const auto 引用=[&](稳定编码 键){const auto* 值=std::get_if<稳定编码>(&单(键).内容);
+        要求(值&&有效(*值),"X demand result invalid reference");return *值;};
+    要求(引用(节点类型字段)==取(字段::执行需求结果节点类型)
+        &&引用(取(字段::执行需求结果所属字段))==X,"X demand result type/owner mismatch");
+    const auto* 格式材料=std::get_if<基础值>(&单(取(字段::执行需求结果格式字段)).内容);
+    const auto* 格式=格式材料 ? std::get_if<std::int64_t>(&格式材料->材料):nullptr;
+    要求(格式&&*格式==1,"X demand result unknown format");
+    新本能已发布需求结果 结果{引用(取(字段::执行需求结果需求字段)),引用(取(字段::执行需求结果主体字段)),
+        引用(取(字段::执行需求结果特征字段)),引用(取(字段::执行需求结果场景字段)),
+        引用(取(字段::执行需求结果动作字段)),引用(取(字段::执行需求结果首次动作字段))};
+    要求(已读.size()==9,"X demand result unexpected field");
+    const std::set<稳定编码> 目标{结果.需求节点,结果.主体存在节点,结果.需求特征节点,
+        结果.结果场景节点,结果.本次动作节点,结果.首次发布动作节点};
+    const auto 目标批=全局基础数据集.查询节点组完整结构({目标.begin(),目标.end()});
+    if(目标批.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    要求(目标批.状态==基础结构操作状态::已完成&&目标批.节点组.size()==目标.size(),
+        "X demand result target references unreadable");
+    for(const auto& 项:目标批.节点组)要求(项.快照.has_value(),"X demand result dangling target reference");
+    std::size_t 入向数=0;
+    for(const auto& 字:快照.入向字段组){
+        要求(字.字段节点==取(字段::执行需求结果成员字段)&&字.所属节点==X,
+            "X demand result foreign incoming reference");++入向数;
+    }
+    要求(入向数==1,"X demand result multiple parents");
+    if(子节点组)子节点组->push_back(*子);
+    if(字段关系组)for(const auto& 字:结构.字段组)字段关系组->push_back(字.编码);
+    if(保护)保护->push_back(快照);
+    return 结果;
+}
+void 追加执行需求结果(稳定编码 X,const 新本能已发布需求结果& 结果) {
+    std::vector<稳定编码> 子节点组;
+    const auto 原=读取执行需求结果(X,&子节点组);
+    if(原){要求(*原==结果,"X demand result conflicting repeated report");return;}
+    // 本门只追加task独占组织；A结果、X入向及世界当前值的合法变化不挡住原报告保存。
+    std::set<稳定编码> 自身节点{X};
+    自身节点.insert(子节点组.begin(),子节点组.end());
+    const auto 加所属=[&](稳定编码 根,字段 所属字段){
+        自身节点.insert(根);
+        const auto 反向=全局基础数据集.查询字段引用节点结构(根,取(所属字段));
+        if(反向.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        要求(反向.状态==基础结构操作状态::已完成,"X demand report own organization unreadable");
+        for(const auto& 字:反向.引用字段组)自身节点.insert(字.所属节点);
+    };
+    const auto 采用组=全局基础数据集.查询字段(X,取(字段::执行采用引用));
+    要求(采用组.size()==1&&std::get_if<稳定编码>(&采用组.front().内容),"X demand report adoption missing");
+    const auto 采用=std::get<稳定编码>(采用组.front().内容);
+    加所属(采用,字段::采用根);
+    const auto 组织组=全局基础数据集.查询字段(采用,取(字段::采用组织));
+    要求(组织组.size()==1&&std::get_if<稳定编码>(&组织组.front().内容),"X demand report organization missing");
+    加所属(std::get<稳定编码>(组织组.front().内容),字段::组织根);
+    const auto 自身快照=全局基础数据集.查询节点组完整结构({自身节点.begin(),自身节点.end()});
+    if(自身快照.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    要求(自身快照.状态==基础结构操作状态::已完成&&自身快照.节点组.size()==自身节点.size(),
+        "X demand report own structures unreadable");
+    基础节点组追加请求 请求;
+    for(const auto& 项:自身快照.节点组){
+        要求(项.快照.has_value(),"X demand report own structure missing");
+        请求.预期既有节点组.push_back(项.快照->结构);
+    }
+    const 稳定编码 引用组[]={结果.需求节点,结果.主体存在节点,结果.需求特征节点,
+        结果.结果场景节点,结果.本次动作节点,结果.首次发布动作节点};
+    for(const auto n:引用组)要求(有效(n),"X demand result empty reference");
+    基础组内新节点 子;
+    子.字段组={{节点类型字段,取(字段::执行需求结果节点类型)},
+        {取(字段::执行需求结果所属字段),X},{取(字段::执行需求结果格式字段),基础值{std::int64_t{1}}},
+        {取(字段::执行需求结果需求字段),结果.需求节点},{取(字段::执行需求结果主体字段),结果.主体存在节点},
+        {取(字段::执行需求结果特征字段),结果.需求特征节点},{取(字段::执行需求结果场景字段),结果.结果场景节点},
+        {取(字段::执行需求结果动作字段),结果.本次动作节点},{取(字段::执行需求结果首次动作字段),结果.首次发布动作节点}};
+    请求.新节点组.push_back(std::move(子));
+    请求.追加字段组.push_back({X,取(字段::执行需求结果成员字段),基础组内节点引用{0}});
+    const auto 发布=全局基础数据集.原子追加节点组(请求);
+    if(发布.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
+    要求(发布.状态==基础节点组追加状态::已完成,"X demand result protected append failed");
+    要求(读取执行需求结果(X)==结果,"X demand result append readback mismatch");
+}
+void 清理执行场景事实(稳定编码 X) {
+    std::vector<稳定编码> 节点组,字段组;(void)读取执行场景事实(X,&节点组,&字段组);
+    if(节点组.empty())return;
+    for(const auto& 字:全局基础数据集.查询字段(X,取(字段::执行场景事实成员字段))){
+        要求(全局基础数据集.删除字段(字.编码),"X scene fact unlink failed");
+        std::erase(字段组,字.编码);
+    }
+    要求(全局基础数据集.原子删除节点结构(节点组,字段组,{})==基础结构操作状态::已完成,"X scene fact cleanup failed");
+}
 } // namespace 任务执行组织存储
 bool 核验采用筹办就绪(const 新任务治理条件筹办结果& 筹办,
     const 新任务本能采用材料& 采用) {
@@ -2069,6 +3054,7 @@ bool 核验采用筹办就绪(const 新任务治理条件筹办结果& 筹办,
             || 方法.条件结果组.front().结果节点 != 采用.来源结果节点
             || 方法.条件结果组.front().执行要求定位 != 采用.定位
             || 方法.条件结果组.front().任务成员绑定 != 采用.任务成员绑定
+            || 方法.条件结果组.front().执行分支节点 != 采用.执行分支节点
             || 方法.条件结果组.front().状态 != 新任务方法条件项核验状态::具备)
             throw std::logic_error("固定采用筹办配对定位不一致");
         return true;
@@ -2108,6 +3094,7 @@ namespace 任务信息范围存储 {
 稳定编码 任务成员字段{};
 稳定编码 任务需求字段{};
 稳定编码 任务虚拟存在字段{};
+稳定编码 来源前驱目标实例字段{};
 稳定编码 任务最近方法字段{};
 稳定编码 任务方法实例字段{};
 稳定编码 任务最近执行字段{};
@@ -2124,10 +3111,10 @@ namespace 贡献权威存储 {
 稳定编码 动作定义{}, 主体{}, 现实场景{}, 前状态{}, 来源任务{}, 时间{}, 原值{}, 新值{};
 稳定编码 来源执行{}, 来源评估{}, 来源结算{}, 直接接收{}, 旧小计{}, 发表结果{};
 稳定编码 接管类型{}, 接管字段{}, 接管来源{};
-稳定编码 来源直接接收{}, 边界结算任务{}, 边界结算需求{}, 边界服务根需求{}, 边界登记方法{};
+稳定编码 来源直接接收{}, 边界结算任务{}, 边界结算需求{}, 边界服务根需求{};
 稳定编码 边界格式版本{}, 边界治理能力{};
-std::array<稳定编码*, 7> 收尾键组() {
-    return {&来源直接接收, &边界结算任务, &边界结算需求, &边界服务根需求, &边界登记方法,
+std::array<稳定编码*, 6> 收尾键组() {
+    return {&来源直接接收, &边界结算任务, &边界结算需求, &边界服务根需求,
         &边界格式版本, &边界治理能力};
 }
 }
@@ -2137,17 +3124,17 @@ namespace 服务值治理定义存储 {
 namespace 最终消费存储 {
 稳定编码 准备类型{}, 消费类型{}, 证明类型{}, 锚点类型{}, 准备关联{}, 消费关联{}, 准备引用{};
 稳定编码 任务{}, 结算{}, 接收{}, 需求{}, 执行{}, 评估{}, 虚拟存在{}, 状态特征{}, 贡献特征{}, 贡献值{};
-稳定编码 边界任务{}, 边界需求{}, 边界根{}, 方法{}, 场景{}, 存在{}, 特征{};
+稳定编码 边界任务{}, 边界需求{}, 边界根{}, 场景{}, 存在{}, 特征{};
 稳定编码 证明组{}, 锚点组{}, 锚点任务{}, 子接收组{}, 确认组{};
-稳定编码 前值{}, 后值{}, 时间{}, 零额{}, 动作{}, 前状态{}, 后状态{}, 动态{}, 零额确认{}, 收尾{}, 旧动作方法{};
+稳定编码 前值{}, 后值{}, 时间{}, 零额{}, 动作{}, 前状态{}, 后状态{}, 动态{}, 零额确认{}, 收尾{};
 稳定编码 状态概念{}, 贡献概念{};
 稳定编码 格式版本{}, 治理能力{};
 std::vector<稳定编码*> 键组() {
     return {&准备类型, &消费类型, &证明类型, &锚点类型, &准备关联, &消费关联, &准备引用,
         &任务, &结算, &接收, &需求, &执行, &评估, &虚拟存在, &状态特征, &贡献特征, &贡献值,
-        &边界任务, &边界需求, &边界根, &方法, &场景, &存在, &特征, &证明组, &锚点组,
+        &边界任务, &边界需求, &边界根, &场景, &存在, &特征, &证明组, &锚点组,
         &锚点任务, &子接收组, &确认组, &前值, &后值, &时间, &零额, &动作, &前状态,
-        &后状态, &动态, &零额确认, &收尾, &旧动作方法, &状态概念, &贡献概念, &格式版本, &治理能力};
+        &后状态, &动态, &零额确认, &收尾, &状态概念, &贡献概念, &格式版本, &治理能力};
 }
 }
 namespace 贡献权威存储 {
@@ -2170,6 +3157,10 @@ std::vector<稳定编码*> 键组() {
 稳定编码 候选目标值域字段{};
 稳定编码 候选目标比较关系字段{};
 稳定编码 候选目标变化方向字段{};
+稳定编码 候选目标引用需求字段{};
+稳定编码 候选目标内容项字段{};
+稳定编码 候选目标新增成员格式字段{},候选目标新增成员来源种类字段{},候选目标新增成员源FT字段{};
+稳定编码 候选目标新增成员B材料字段{},候选目标新增成员指定H字段{},候选目标新增成员指定D字段{};
 稳定编码 候选查询作用域字段{};
 稳定编码 候选查询实现方式字段{};
 稳定编码 候选查询作用存在字段{};
@@ -2267,11 +3258,6 @@ std::vector<稳定编码*> 键组() {
 稳定编码 任务已结算动作定义类型{};
 稳定编码 任务内部动作定义字段{};
 稳定编码 内部动作操作码字段{};
-稳定编码 结算来源任务字段{};
-稳定编码 结算来源虚拟存在字段{};
-稳定编码 结算来源状态特征字段{};
-稳定编码 结算冻结前值字段{};
-稳定编码 结算目标值域字段{};
 稳定编码 执行普通动作字段{};
 稳定编码 执行取得数量类型字段{};
 稳定编码 执行返回确认字段{};
@@ -2282,7 +3268,7 @@ bool 节点仍存在(稳定编码 节点) noexcept {
 
 bool 是任务状态值(std::int64_t 值) noexcept {
     return 值 >= static_cast<std::int64_t>(新任务状态::已建立)
-        && 值 <= static_cast<std::int64_t>(新任务状态::已结算);
+        && 值 <= static_cast<std::int64_t>(新任务状态::未执行但目标已满足);
 }
 
 bool 是执行状态值(std::int64_t 值) noexcept {
@@ -2331,7 +3317,14 @@ bool 是终结状态(新任务状态 状态) noexcept {
     return 状态 == 新任务状态::已完成
         || 状态 == 新任务状态::已失败
         || 状态 == 新任务状态::已取消
-        || 状态 == 新任务状态::已结算;
+        || 状态 == 新任务状态::已结算
+        || 状态 == 新任务状态::未执行但目标已满足;
+}
+
+bool 是无完成来源的未执行满足子任务(const 新任务信息& 子,bool 有直接接收) {
+    if(子.当前状态!=新任务状态::未执行但目标已满足||子.完成结算节点)return false;
+    if(有直接接收)throw std::logic_error("未执行满足子任务无完成来源但有直接接收");
+    return true;
 }
 
 bool 是合法状态迁移(新任务状态 原状态, 新任务状态 新状态) noexcept {
@@ -2380,6 +3373,7 @@ bool 是合法状态迁移(新任务状态 原状态, 新任务状态 新状态)
     case 新任务状态::已失败:
     case 新任务状态::已取消:
     case 新任务状态::已结算:
+    case 新任务状态::未执行但目标已满足:
         return false;
     }
     return false;
@@ -2394,8 +3388,7 @@ bool 结构已初始化() {
     for (const auto 键 : 贡献权威存储::键组()) if (!有效(*键)) return false;
     const std::vector<稳定编码> 节点组{
         任务已结算动作定义类型, 任务内部动作定义字段, 内部动作操作码字段,
-        结算来源任务字段, 结算来源虚拟存在字段, 结算来源状态特征字段,
-        结算冻结前值字段, 结算目标值域字段, 执行普通动作字段, 执行取得数量类型字段, 执行返回确认字段,
+        执行普通动作字段, 执行取得数量类型字段, 执行返回确认字段,
         任务集合根节点, 节点类型字段, 任务集合根类型, 任务节点类型,
         任务虚拟存在节点类型, 任务执行实例节点类型,
         任务预计变化阶段节点类型, 任务预计变化项节点类型,
@@ -2404,14 +3397,16 @@ bool 结构已初始化() {
         任务实际状态项节点类型, 任务影响评估节点类型,
         任务完成结算节点类型,
         任务候选方法材料节点类型,
-        任务成员字段, 任务需求字段, 任务虚拟存在字段,
+        任务成员字段, 任务需求字段, 任务虚拟存在字段, 来源前驱目标实例字段,
         任务最近方法字段, 任务方法实例字段, 任务最近执行字段, 任务影响评估字段,
         任务完成结算字段,
         任务候选方法材料字段, 任务待回收候选方法材料编码字段,
         候选所属任务字段, 候选需求字段,
         候选目标特征类型字段, 候选目标形式字段,
         候选目标值域字段, 候选目标比较关系字段,
-        候选目标变化方向字段, 候选查询作用域字段,
+        候选目标变化方向字段, 候选目标引用需求字段, 候选目标内容项字段,
+        候选目标新增成员格式字段,候选目标新增成员来源种类字段,候选目标新增成员源FT字段,
+        候选目标新增成员B材料字段,候选目标新增成员指定H字段,候选目标新增成员指定D字段,候选查询作用域字段,
         候选查询实现方式字段, 候选查询作用存在字段,
         候选查询特征类型字段, 候选查询可能结果字段,
         候选查询状态字段, 候选查询完整字段, 候选方法字段,
@@ -2651,15 +3646,41 @@ std::optional<新任务候选方法材料> 读取候选方法材料信息(
         结果.需求目标.目标变化方向 = static_cast<新需求变化方向>(
             方向值->值);
     }
+    const auto 固定D组 = 全局基础数据集.查询字段(材料节点, 候选目标引用需求字段);
+    const auto 路径组 = 全局基础数据集.查询字段(材料节点, 候选目标内容项字段);
+    if (固定D组.size() > 1 || 路径组.size() > 1 || (固定D组.empty() && !路径组.empty())) return std::nullopt;
+    if (!固定D组.empty()) {
+        const auto D = 读取唯一节点字段(材料节点, 候选目标引用需求字段);
+        const auto FT = 读取唯一节点字段(材料节点, 候选目标内容项字段);
+        if (!D || (!路径组.empty() && !FT)) return std::nullopt;
+        结果.需求目标.引用内容定位 = 新需求引用内容定位{*D, {}};
+        if (FT) 结果.需求目标.引用内容定位->正式内容路径.push_back(*FT);
+    }
+    const std::array keys{候选目标新增成员格式字段,候选目标新增成员来源种类字段,候选目标新增成员源FT字段,
+        候选目标新增成员B材料字段,候选目标新增成员指定H字段,候选目标新增成员指定D字段};
+    bool extension=false;for(const auto key:keys)if(!全局基础数据集.查询字段(材料节点,key).empty())extension=true;
+    if(extension){
+        const auto format=读取唯一I64字段记录(材料节点,keys[0]),kind=读取唯一I64字段记录(材料节点,keys[1]);
+        const auto ft=读取唯一节点字段(材料节点,keys[2]),b=读取唯一节点字段(材料节点,keys[3]);
+        const auto h=读取唯一节点字段(材料节点,keys[4]),d=读取唯一节点字段(材料节点,keys[5]);
+        if(!format||!kind||format->值!=1||kind->值!=1||!ft||!b||(d&&!h))throw std::logic_error("候选新增成员目标快照字段不完整");
+        for(std::size_t i=0;i<keys.size();++i){
+            const std::size_t expected=(i<4||(i==4&&h)||(i==5&&d))?1:0;
+            if(全局基础数据集.查询字段(材料节点,keys[i]).size()!=expected)throw std::logic_error("候选新增成员目标快照字段基数不合法");}
+        if(结果.需求目标.引用内容定位||结果.需求目标.目标形式!=新需求目标形式::值||结果.需求目标.目标变化方向)
+            throw std::logic_error("候选新增成员目标快照形状不合法");
+        结果.需求目标.新增成员来源见证=新需求新增成员见证约束{{*ft,h,d},*b};
+    }
     const bool 值形状 = 结果.需求目标.目标形式 == 新需求目标形式::值
         && 结果.需求目标.目标值域概念节点
-        && 结果.需求目标.目标比较关系概念节点
+        && (结果.需求目标.引用内容定位 ? !结果.需求目标.目标比较关系概念节点
+            : 结果.需求目标.目标比较关系概念节点.has_value())
         && !结果.需求目标.目标变化方向;
     const bool 方向形状 = 结果.需求目标.目标形式
             == 新需求目标形式::变化方向
         && !结果.需求目标.目标值域概念节点
         && !结果.需求目标.目标比较关系概念节点
-        && 结果.需求目标.目标变化方向;
+        && 结果.需求目标.目标变化方向 && !结果.需求目标.引用内容定位;
     if (!值形状 && !方向形状) return std::nullopt;
     结果.查询状态 = 新方法操作状态::已找到;
     结果.查询完整 = true;
@@ -2708,7 +3729,9 @@ bool 删除候选方法材料节点(稳定编码 材料节点) noexcept {
         节点类型字段, 候选所属任务字段, 候选需求字段,
         候选目标特征类型字段, 候选目标形式字段,
         候选目标值域字段, 候选目标比较关系字段,
-        候选目标变化方向字段, 候选查询作用域字段,
+        候选目标变化方向字段, 候选目标引用需求字段, 候选目标内容项字段,
+        候选目标新增成员格式字段,候选目标新增成员来源种类字段,候选目标新增成员源FT字段,
+        候选目标新增成员B材料字段,候选目标新增成员指定H字段,候选目标新增成员指定D字段,候选查询作用域字段,
         候选查询实现方式字段, 候选查询作用存在字段,
         候选查询特征类型字段, 候选查询可能结果字段,
         候选查询状态字段, 候选查询完整字段, 候选方法字段};
@@ -2796,8 +3819,7 @@ bool 结构仍存在(bool 包含收尾扩展 = true) {
         for (const auto 键 : 最终消费存储::键组()) if (!节点仍存在(*键)) return false;
     const std::vector<稳定编码> 节点组{
         任务已结算动作定义类型, 任务内部动作定义字段, 内部动作操作码字段,
-        结算来源任务字段, 结算来源虚拟存在字段, 结算来源状态特征字段,
-        结算冻结前值字段, 结算目标值域字段, 执行普通动作字段, 执行取得数量类型字段, 执行返回确认字段,
+        执行普通动作字段, 执行取得数量类型字段, 执行返回确认字段,
         任务集合根节点, 节点类型字段, 任务集合根类型, 任务节点类型,
         任务虚拟存在节点类型, 任务执行实例节点类型,
         任务预计变化阶段节点类型, 任务预计变化项节点类型,
@@ -2805,14 +3827,16 @@ bool 结构仍存在(bool 包含收尾扩展 = true) {
         任务禁止结果目标节点类型,
         任务实际状态项节点类型, 任务影响评估节点类型,
         任务完成结算节点类型, 任务候选方法材料节点类型,
-        任务成员字段, 任务需求字段, 任务虚拟存在字段,
+        任务成员字段, 任务需求字段, 任务虚拟存在字段, 来源前驱目标实例字段,
         任务最近方法字段, 任务方法实例字段, 任务最近执行字段, 任务影响评估字段,
         任务完成结算字段, 任务候选方法材料字段,
         任务待回收候选方法材料编码字段,
         候选所属任务字段, 候选需求字段,
         候选目标特征类型字段, 候选目标形式字段,
         候选目标值域字段, 候选目标比较关系字段,
-        候选目标变化方向字段, 候选查询作用域字段,
+        候选目标变化方向字段, 候选目标引用需求字段, 候选目标内容项字段,
+        候选目标新增成员格式字段,候选目标新增成员来源种类字段,候选目标新增成员源FT字段,
+        候选目标新增成员B材料字段,候选目标新增成员指定H字段,候选目标新增成员指定D字段,候选查询作用域字段,
         候选查询实现方式字段, 候选查询作用存在字段,
         候选查询特征类型字段, 候选查询可能结果字段,
         候选查询状态字段, 候选查询完整字段, 候选方法字段,
@@ -2900,48 +3924,28 @@ std::optional<新任务虚拟存在信息> 读取任务虚拟存在信息(
         任务执行组织存储::读取定位投影(任务节点, *虚拟存在)};
 }
 
-bool 读取服务结算来源字段(
-    稳定编码 节点, std::optional<新任务服务结算来源绑定>& 结果) {
-    结果.reset();
-    std::size_t 数量 = 0;
-    for (const auto 字段 : {结算来源任务字段, 结算来源虚拟存在字段,
-            结算来源状态特征字段, 结算冻结前值字段, 结算目标值域字段}) {
-        const auto 组 = 全局基础数据集.查询字段(节点, 字段);
-        if (组.size() > 1) return false;
-        数量 += 组.size();
-    }
-    if (数量 == 0) return true;
-    if (数量 != 5) return false;
-    const auto 任务 = 读取唯一节点字段(节点, 结算来源任务字段);
-    const auto 虚拟 = 读取唯一节点字段(节点, 结算来源虚拟存在字段);
-    const auto 特征 = 读取唯一节点字段(节点, 结算来源状态特征字段);
-    const auto 前值 = 读取唯一I64字段记录(节点, 结算冻结前值字段);
-    const auto 目标 = 读取唯一节点字段(节点, 结算目标值域字段);
-    if (!任务 || !虚拟 || !特征 || !前值 || !目标
-        || !节点类型为(*任务, 任务节点类型)
-        || !节点类型为(*虚拟, 任务虚拟存在节点类型)
-        || 读取唯一节点字段(*任务, 任务虚拟存在字段) != 虚拟
-        || 读取唯一节点字段(*虚拟, 虚拟存在所属任务字段) != 任务
-        || 读取唯一节点字段(*虚拟, 虚拟存在状态特征字段) != 特征) return false;
-    结果 = 新任务服务结算来源绑定{{*任务, *虚拟, *特征}, 前值->值, *目标};
-    return true;
-}
-
 std::optional<新任务信息> 读取任务信息(
     稳定编码 任务节点, const 新_特征类& 特征服务) {
-    if (!结构仍存在() || !节点类型为(任务节点, 任务节点类型)) {
+    if (!结构已初始化()
+        || !节点类型为(任务集合根节点, 任务集合根类型)
+        || !节点类型为(任务节点, 任务节点类型)) {
         return std::nullopt;
     }
     const auto 需求 = 读取唯一节点字段(任务节点, 任务需求字段);
     const auto 虚拟存在 = 读取任务虚拟存在信息(任务节点, 特征服务);
     if (!需求 || !虚拟存在) return std::nullopt;
+    const auto 来源实例字段组=全局基础数据集.查询字段(任务节点,来源前驱目标实例字段);
+    if(来源实例字段组.size()>1)throw std::logic_error("任务来源前驱实例绑定字段重复");
+    if(!来源实例字段组.empty()) {
+        const auto* 引用=std::get_if<稳定编码>(&来源实例字段组.front().内容);
+        if(!引用||!有效(*引用))throw std::logic_error("任务来源前驱实例绑定引用不合法");
+    }
     新任务信息 结果;
     结果.节点 = 任务节点;
     结果.需求节点 = *需求;
     结果.任务虚拟存在节点 = 虚拟存在->节点;
     结果.方法执行组织节点 = 虚拟存在->方法执行组织节点;
     结果.当前状态 = 虚拟存在->当前状态;
-    if (!读取服务结算来源字段(任务节点, 结果.服务结算来源)) return std::nullopt;
     const auto 候选材料组 = 全局基础数据集.查询字段(
         任务节点, 任务候选方法材料字段);
     const auto 方法组 = 全局基础数据集.查询字段(任务节点, 任务最近方法字段);
@@ -3016,19 +4020,6 @@ bool 写入I64字段(
     return true;
 }
 
-bool 写入服务结算来源字段(
-    稳定编码 节点, const 新任务服务结算来源绑定& 绑定,
-    std::vector<稳定编码>& 已写字段) {
-    已写字段.reserve(已写字段.size() + 5);
-    return 写入节点字段(节点, 结算来源任务字段, 绑定.来源任务.任务节点, 已写字段)
-        && 写入节点字段(节点, 结算来源虚拟存在字段,
-            绑定.来源任务.虚拟存在节点, 已写字段)
-        && 写入节点字段(节点, 结算来源状态特征字段,
-            绑定.来源任务.状态特征节点, 已写字段)
-        && 写入I64字段(节点, 结算冻结前值字段, 绑定.冻结前值, 已写字段)
-        && 写入节点字段(节点, 结算目标值域字段, 绑定.目标值域概念节点, 已写字段);
-}
-
 bool 写入准确值字段(
     稳定编码 节点, 稳定编码 字段, const 新特征准确值& 值,
     std::vector<稳定编码>& 已写字段) {
@@ -3040,6 +4031,99 @@ bool 写入准确值字段(
         && 写入节点字段(节点, 字段, *值节点, 已写字段);
 }
 
+std::vector<稳定编码> 认知来源快照字段键组() {
+    using q=任务执行组织存储::字段;
+    std::vector<稳定编码> 结果;
+    for(const auto f:{q::内容来源确认,q::内容来源理解,q::内容来源人类,q::内容来源目标存在,q::内容来源目标FT,
+        q::内容来源目标形式,q::内容来源目标域,q::内容来源目标比较,q::内容来源要求,q::内容来源目标引用需求,
+        q::内容来源目标内容项,q::内容来源目标方向})结果.push_back(任务执行组织存储::取(f));
+    return 结果;
+}
+void 收集认知来源引用(const 新服务要求确认目标& s,std::set<稳定编码>& 引用) {
+    for(const auto n:{s.确认节点,s.理解节点,s.来源人类节点,s.目标存在节点,s.目标.目标特征类型概念节点})引用.insert(n);
+    for(const auto n:{s.来源要求节点,s.目标.目标值域概念节点,s.目标.目标比较关系概念节点})if(n)引用.insert(*n);
+    if(s.目标.引用内容定位) {
+        引用.insert(s.目标.引用内容定位->引用需求节点);
+        引用.insert(s.目标.引用内容定位->正式内容路径.begin(),s.目标.引用内容定位->正式内容路径.end());
+    }
+}
+bool 认知来源快照定义有效(const 新服务要求确认目标& s) {
+    if(s.目标.新增成员来源见证)return false;
+    for(const auto n:{s.确认节点,s.理解节点,s.来源人类节点,s.目标存在节点,s.目标.目标特征类型概念节点})
+        if(!节点仍存在(n))return false;
+    for(const auto n:{s.来源要求节点,s.目标.目标值域概念节点,s.目标.目标比较关系概念节点})
+        if(n&&!节点仍存在(*n))return false;
+    const auto& t=s.目标;
+    if(t.引用内容定位) {
+        if(!节点仍存在(t.引用内容定位->引用需求节点)||t.引用内容定位->正式内容路径.size()>1)return false;
+        for(const auto FT:t.引用内容定位->正式内容路径)if(!节点仍存在(FT))return false;
+    }
+    if(t.目标形式==新需求目标形式::值)return t.目标值域概念节点&&!t.目标变化方向
+        &&(t.引用内容定位 ? !t.目标比较关系概念节点 : t.目标比较关系概念节点.has_value());
+    return t.目标形式==新需求目标形式::变化方向&&!t.目标值域概念节点&&!t.目标比较关系概念节点
+        &&!t.引用内容定位&&t.目标变化方向
+        &&(*t.目标变化方向==新需求变化方向::增加||*t.目标变化方向==新需求变化方向::减少);
+}
+std::optional<std::optional<新服务要求确认目标>> 读取认知来源快照(稳定编码 宿主) {
+    using q=任务执行组织存储::字段;
+    bool 有字段=false,合法=true;
+    std::map<q,std::optional<稳定编码>> 引用;
+    for(const auto f:{q::内容来源确认,q::内容来源理解,q::内容来源人类,q::内容来源目标存在,q::内容来源目标FT,
+        q::内容来源目标域,q::内容来源目标比较,q::内容来源要求,q::内容来源目标引用需求,q::内容来源目标内容项}) {
+        const auto 组=全局基础数据集.查询字段(宿主,任务执行组织存储::取(f));
+        有字段=有字段||!组.empty();
+        if(组.size()>1){合法=false;continue;}
+        if(组.empty()){引用.emplace(f,std::nullopt);continue;}
+        const auto* n=std::get_if<稳定编码>(&组.front().内容);
+        if(!n||!节点仍存在(*n)){合法=false;continue;}
+        引用.emplace(f,*n);
+    }
+    const auto 读数=[&](q f)->std::optional<std::int64_t>{
+        const auto 组=全局基础数据集.查询字段(宿主,任务执行组织存储::取(f));
+        有字段=有字段||!组.empty();
+        if(组.empty())return {};
+        const auto 值=读取唯一I64字段记录(宿主,任务执行组织存储::取(f));
+        if(组.size()!=1||!值){合法=false;return {};}
+        return 值->值;
+    };
+    const auto 形式=读数(q::内容来源目标形式),方向=读数(q::内容来源目标方向);
+    if(!合法)return std::nullopt;
+    if(!有字段)return std::optional<std::optional<新服务要求确认目标>>{std::in_place,std::nullopt};
+    for(const auto f:{q::内容来源确认,q::内容来源理解,q::内容来源人类,q::内容来源目标存在,q::内容来源目标FT})
+        if(!引用.at(f))return std::nullopt;
+    if(!形式||(*形式!=1&&*形式!=2)||(方向&&*方向!=1&&*方向!=2)
+        ||(引用.at(q::内容来源目标内容项)&&!引用.at(q::内容来源目标引用需求)))return std::nullopt;
+    新服务要求确认目标 结果{*引用.at(q::内容来源确认),*引用.at(q::内容来源理解),*引用.at(q::内容来源人类),
+        *引用.at(q::内容来源目标存在),{},引用.at(q::内容来源要求)};
+    auto& t=结果.目标;t.目标特征类型概念节点=*引用.at(q::内容来源目标FT);t.目标形式=static_cast<新需求目标形式>(*形式);
+    t.目标值域概念节点=引用.at(q::内容来源目标域);t.目标比较关系概念节点=引用.at(q::内容来源目标比较);
+    if(方向)t.目标变化方向=static_cast<新需求变化方向>(*方向);
+    if(引用.at(q::内容来源目标引用需求)) {
+        t.引用内容定位=新需求引用内容定位{*引用.at(q::内容来源目标引用需求),{}};
+        if(引用.at(q::内容来源目标内容项))t.引用内容定位->正式内容路径.push_back(*引用.at(q::内容来源目标内容项));
+    }
+    if(!认知来源快照定义有效(结果))return std::nullopt;
+    return std::optional<std::optional<新服务要求确认目标>>{std::in_place,std::move(结果)};
+}
+bool 写入认知来源快照(稳定编码 宿主,const std::optional<新服务要求确认目标>& 值,std::vector<稳定编码>& 已写字段) {
+    if(!值)return true;
+    if(!认知来源快照定义有效(*值))return false;
+    using q=任务执行组织存储::字段;
+    const auto 引用=[&](q f,稳定编码 n){return 写入节点字段(宿主,任务执行组织存储::取(f),n,已写字段);};
+    const auto 可选引用=[&](q f,const std::optional<稳定编码>& n){return !n||引用(f,*n);};
+    const auto& s=*值;const auto& t=s.目标;
+    if(!引用(q::内容来源确认,s.确认节点)||!引用(q::内容来源理解,s.理解节点)||!引用(q::内容来源人类,s.来源人类节点)
+        ||!引用(q::内容来源目标存在,s.目标存在节点)||!引用(q::内容来源目标FT,t.目标特征类型概念节点)
+        ||!写入I64字段(宿主,任务执行组织存储::取(q::内容来源目标形式),static_cast<std::int64_t>(t.目标形式),已写字段)
+        ||!可选引用(q::内容来源目标域,t.目标值域概念节点)||!可选引用(q::内容来源目标比较,t.目标比较关系概念节点)
+        ||!可选引用(q::内容来源要求,s.来源要求节点))return false;
+    if(t.目标变化方向&&!写入I64字段(宿主,任务执行组织存储::取(q::内容来源目标方向),static_cast<std::int64_t>(*t.目标变化方向),已写字段))return false;
+    if(t.引用内容定位) {
+        if(!引用(q::内容来源目标引用需求,t.引用内容定位->引用需求节点))return false;
+        if(!t.引用内容定位->正式内容路径.empty()&&!引用(q::内容来源目标内容项,t.引用内容定位->正式内容路径.front()))return false;
+    }
+    return true;
+}
 bool 预计变化定义有效(const std::vector<新任务预计变化阶段>& 阶段组) {
     if (阶段组.empty()) return false;
     std::vector<新任务预计变化阶段> 排序 = 阶段组;
@@ -3051,6 +4135,12 @@ bool 预计变化定义有效(const std::vector<新任务预计变化阶段>& �
             || 排序[i].变化组.empty()) return false;
         std::set<std::pair<std::uint64_t, std::uint64_t>> 已见;
         for (const auto& 变化 : 排序[i].变化组) {
+            if(变化.预期引用内容) {
+                const auto& C=*变化.预期引用内容;
+                if(!节点仍存在(C.需求节点)||!节点仍存在(C.要求概念节点)||!C.正式内容路径.empty()
+                    ||(C.认知来源确认&&!认知来源快照定义有效(*C.认知来源确认))
+                    ||变化.预期方向||变化.预期变化关系节点||变化.预期值域概念节点||变化.预期精确数值域)return false;
+            }
             if (变化.预期精确数值域 && (变化.预期值域概念节点
                 || !精确域有效(*变化.预期精确数值域))) return false;
             if (!节点仍存在(变化.作用对象节点)
@@ -3133,6 +4223,20 @@ std::optional<std::vector<预计阶段物理>> 读取预计阶段物理组(
                 || (变化.预期方向 && !变化.预期变化关系节点
                     && !变化.预期值域概念节点 && !*精确域)) return std::nullopt;
             变化.预期精确数值域 = *精确域;
+            using q=任务执行组织存储::字段;
+            const auto DC=全局基础数据集.查询字段(*项节点,任务执行组织存储::取(q::预计内容需求));
+            const auto CC=全局基础数据集.查询字段(*项节点,任务执行组织存储::取(q::预计内容要求));
+            const auto Path=全局基础数据集.查询字段(*项节点,任务执行组织存储::取(q::预计内容路径));
+            if(!Path.empty()||DC.size()!=CC.size()||DC.size()>1)return std::nullopt;
+            if(!DC.empty()) {
+                const auto D=读取唯一节点字段(*项节点,任务执行组织存储::取(q::预计内容需求));
+                const auto C=读取唯一节点字段(*项节点,任务执行组织存储::取(q::预计内容要求));
+                if(!D||!C||变化.预期方向||变化.预期变化关系节点||变化.预期值域概念节点||变化.预期精确数值域)return std::nullopt;
+                变化.预期引用内容=新任务预计引用内容{*D,*C,{}};
+            }
+            const auto 来源=读取认知来源快照(*项节点);
+            if(!来源||(*来源&&!变化.预期引用内容))return std::nullopt;
+            if(变化.预期引用内容)变化.预期引用内容->认知来源确认=*来源;
             阶段.变化组.push_back({*项节点, std::move(变化)});
         }
         if (阶段.变化组.empty()) return std::nullopt;
@@ -3167,6 +4271,7 @@ std::optional<新任务结果获取方案> 读取结果获取方案(
         return std::nullopt;
     }
     新任务结果获取方案 结果;
+    结果.必需场景事实组=任务执行组织存储::读取方案场景事实(执行节点);
     if (!派生字段组.empty()) {
         结果.服务需求取得数量类型 = 读取唯一节点字段(执行节点, 执行取得数量类型字段);
         if (!结果.服务需求取得数量类型) return std::nullopt;
@@ -3247,6 +4352,11 @@ std::optional<新任务结果获取方案> 读取结果获取方案(
             *目标节点, 结果目标特征类型根字段);
         const auto 动作前准确值 = 读取唯一准确值字段(
             *目标节点, 结果目标动作前准确值字段);
+        const auto 无值组=全局基础数据集.查询字段(*目标节点,任务执行组织存储::取(任务执行组织存储::字段::目标明确无值));
+        const auto 无值=无值组.empty() ? std::optional<唯一I64字段记录>{} : 读取唯一I64字段记录(*目标节点,任务执行组织存储::取(任务执行组织存储::字段::目标明确无值));
+        const auto 来源=读取认知来源快照(*目标节点);
+        if(!来源)return std::nullopt;
+        if(无值组.size()>1||(!无值组.empty()&&(!无值||无值->值!=1))||(无值&&动作前准确值))return std::nullopt;
         const auto 前值字段组 = 全局基础数据集.查询字段(*目标节点, 结果目标动作前准确值字段);
         const auto 必须 = 读取唯一I64字段记录(
             *目标节点, 结果目标必须出现字段);
@@ -3257,7 +4367,7 @@ std::optional<新任务结果获取方案> 读取结果获取方案(
         }
         排序组.push_back({*目标节点, 顺序->值,
             {*作用对象, *实际特征, *类型根, 动作前准确值,
-                必须->值 == 1}});
+                必须->值 == 1,无值.has_value(),*来源}});
     }
     std::sort(排序组.begin(), 排序组.end(), [](const auto& 左, const auto& 右) {
         return 左.顺序 < 右.顺序;
@@ -3369,7 +4479,9 @@ std::optional<std::vector<实际状态物理>> 读取实际状态物理组(
 std::optional<新任务执行信息> 读取执行信息(
     稳定编码 执行节点, const 新_状态类& 状态服务,
     const 新_特征类& 特征服务, const 概念_特征类& 特征概念服务) {
-    if (!结构仍存在() || !节点类型为(执行节点, 任务执行实例节点类型)) {
+    if (!结构已初始化()
+        || !节点类型为(任务集合根节点, 任务集合根类型)
+        || !节点类型为(执行节点, 任务执行实例节点类型)) {
         return std::nullopt;
     }
     const auto 任务 = 读取唯一节点字段(执行节点, 执行所属任务字段);
@@ -3387,6 +4499,9 @@ std::optional<新任务执行信息> 读取执行信息(
     结果.任务节点 = *任务;
     结果.方法节点 = *方法;
     结果.本能采用=任务执行组织存储::读取执行采用已加锁(执行节点,*任务,*方法);
+    if(结果获取方案->必需场景事实组 != (结果.本能采用
+        ? 结果.本能采用->结果.场景事实限定组 : std::vector<新方法初始场景事实限定>{}))
+        throw std::logic_error("X结果场景方案与冻结采用不一致");
     结果.状态 = static_cast<新任务执行状态>(状态->值);
     结果.开始时间 = {
         static_cast<新状态时间语义>(开始语义->值), 开始时间->值};
@@ -3398,6 +4513,30 @@ std::optional<新任务执行信息> 读取执行信息(
         结果.预计变化阶段组.push_back(std::move(公开阶段));
     }
     结果.结果获取方案 = *结果获取方案;
+    // 恢复时仅核对冻结定义和绑定，不把动作后的F重新解释成未知前态。
+    for(const auto& 目标:结果.结果获取方案.目标组)if(目标.动作前明确无值) {
+        if(!结果.本能采用||结果.本能采用->结果.结果项组.size()!=1||目标.动作前准确值)return std::nullopt;
+        const auto& a=*结果.本能采用;
+        const auto x=绑定内容结果(a.结果.结果项组.front(),a.结果,a.需要条件,a.参数绑定组);
+        if(!x||!是首值条件(a.需要条件,x->特征位置)||x->H!=目标.作用对象节点||x->F!=目标.实际特征节点)return std::nullopt;
+        const bool 要求来源=std::any_of(a.需要条件.条件项组.begin(),a.需要条件.条件项组.end(),[](const auto& c){
+            return c.引用内容条件&&c.引用内容条件->要求认知来源当前有效;
+        });
+        if(要求来源&&!目标.认知来源确认)return std::nullopt;
+        bool 有预测=false;
+        for(const auto& 阶段:结果.预计变化阶段组)for(const auto& v:阶段.变化组)
+            if(v.作用对象节点==x->H&&v.预期引用内容
+                &&v.预期引用内容->需求节点==x->D&&v.预期引用内容->要求概念节点==x->C
+                &&v.预期引用内容->正式内容路径.empty()&&v.预期引用内容->认知来源确认==目标.认知来源确认)有预测=true;
+        if(!有预测)return std::nullopt;
+    }
+    for(const auto& 阶段:结果.预计变化阶段组)for(const auto& v:阶段.变化组)if(v.预期引用内容) {
+        const auto 根=取得特征概念类型根(特征概念服务,v.特征类型概念节点);
+        if(!根||std::none_of(结果.结果获取方案.目标组.begin(),结果.结果获取方案.目标组.end(),[&](const auto& p){
+            return p.作用对象节点==v.作用对象节点&&p.特征类型根概念节点==*根&&p.动作前明确无值&&!p.动作前准确值
+                &&p.认知来源确认==v.预期引用内容->认知来源确认;
+        }))return std::nullopt;
+    }
     const auto 核验精确 = [&](稳定编码 类型, 稳定编码 实际特征,
         const std::optional<特征概念I64闭区间>& 域) {
         if (!域) return true;
@@ -3420,7 +4559,6 @@ std::optional<新任务执行信息> 读取执行信息(
     }
     for (const auto& 目标 : 结果获取方案->禁止结果组)
         if (!核验精确(目标.特征类型根概念节点, 目标.实际特征节点, 目标.禁止精确数值域)) return std::nullopt;
-    if (!读取服务结算来源字段(执行节点, 结果.服务结算来源)) return std::nullopt;
     const auto 动作字段组 = 全局基础数据集.查询字段(执行节点, 执行普通动作字段);
     const auto 确认字段组 = 全局基础数据集.查询字段(执行节点, 执行返回确认字段);
     if (确认字段组.size() > 1) return std::nullopt;
@@ -3484,11 +4622,21 @@ std::optional<新任务执行信息> 读取执行信息(
     if (结果.状态 == 新任务执行状态::已评估 && !结果.影响评估节点) {
         return std::nullopt;
     }
+    结果.本次场景事实组=任务执行组织存储::读取执行场景事实(执行节点);
+    结果.已发布需求=任务执行组织存储::读取执行需求结果(执行节点);
+    if(结果.已发布需求&&(!结果.本能采用||!结果.普通动作节点
+        ||结果.已发布需求->本次动作节点!=*结果.普通动作节点))
+        throw std::logic_error("X已发布需求与正式动作/采用不一致");
+    for(const auto& 项:结果.本次场景事实组)
+        if(!结果.普通动作节点||项.动作节点!=*结果.普通动作节点||!结果.本能采用)
+            throw std::logic_error("X场景事实引用与正式动作/采用不一致");
     return 结果;
 }
 
 std::optional<新任务影响评估信息> 读取评估信息(稳定编码 评估节点) {
-    if (!结构仍存在() || !节点类型为(评估节点, 任务影响评估节点类型)) {
+    if (!结构已初始化()
+        || !节点类型为(任务集合根节点, 任务集合根类型)
+        || !节点类型为(评估节点, 任务影响评估节点类型)) {
         return std::nullopt;
     }
     const auto 任务 = 读取唯一节点字段(评估节点, 评估所属任务字段);
@@ -3646,8 +4794,10 @@ std::optional<新任务完成贡献> 读取完成贡献(稳定编码 结算) {
         贡献要求(false); return {};
     }
 }
-std::vector<基础联合节点快照> 贡献完整快照(const std::set<稳定编码>& 节点组) {
+std::vector<基础联合节点快照> 贡献完整快照(const std::set<稳定编码>& 节点组,bool 资源可延后=false) {
+    if(资源可延后&&节点组.empty())return {};
     const auto 读取 = 全局基础数据集.查询节点组完整结构({节点组.begin(), 节点组.end()});
+    if(资源可延后&&读取.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
     贡献要求(读取.状态 == 基础结构操作状态::已完成 && 读取.节点组.size() == 节点组.size());
     std::vector<基础联合节点快照> 结果;
     for (const auto& 项 : 读取.节点组) { 贡献要求(项.快照.has_value()); 结果.push_back(*项.快照); }
@@ -3659,14 +4809,90 @@ bool 贡献快照相同(const 基础联合节点快照& l, const 基础联合节
         && l.入向字段组 == r.入向字段组;
 }
 
+// 需求结果只保存正式引用。锁外取得的组织快照不能用后来快照覆盖竞争。
+std::vector<基础联合节点快照> 捕获需求结果执行保护(稳定编码 T,稳定编码 X,稳定编码 A) {
+    using namespace 任务执行组织存储;
+    std::set<稳定编码> 节点组{T,X,A};
+    const auto 加所属=[&](稳定编码 根,字段 所属字段){
+        节点组.insert(根);
+        const auto 反向=全局基础数据集.查询字段引用节点结构(根,取(所属字段));
+        if(反向.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        要求(反向.状态==基础结构操作状态::已完成,"demand result adoption ownership unreadable");
+        for(const auto& 字:反向.引用字段组)节点组.insert(字.所属节点);
+    };
+    const auto 根=全局基础数据集.查询字段(X,取(字段::执行采用引用));
+    要求(根.size()==1&&std::get_if<稳定编码>(&根.front().内容),"demand result missing frozen adoption");
+    const auto 采用=std::get<稳定编码>(根.front().内容);
+    加所属(采用,字段::采用根);
+    const auto 组织=全局基础数据集.查询字段(采用,取(字段::采用组织));
+    要求(组织.size()==1&&std::get_if<稳定编码>(&组织.front().内容),"demand result missing adoption organization");
+    加所属(std::get<稳定编码>(组织.front().内容),字段::组织根);
+    const auto 批=全局基础数据集.查询节点组完整结构({节点组.begin(),节点组.end()});
+    if(批.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    要求(批.状态==基础结构操作状态::已完成&&批.节点组.size()==节点组.size(),"demand result execution protection unreadable");
+    std::vector<基础联合节点快照> 结果;
+    for(const auto& 项:批.节点组){要求(项.快照.has_value(),"demand result execution identity missing");结果.push_back(*项.快照);}
+    return 结果;
+}
+bool 核同需求结果保护(const std::vector<基础联合节点快照>& 保护) {
+    std::set<稳定编码> 节点组;
+    for(const auto& p:保护)节点组.insert(p.结构.节点.编码);
+    const auto 批=全局基础数据集.查询节点组完整结构({节点组.begin(),节点组.end()});
+    if(批.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    任务执行组织存储::要求(批.状态==基础结构操作状态::已完成&&批.节点组.size()==节点组.size(),
+        "demand result protection reread failed");
+    for(const auto& 原:保护){
+        const auto 今=std::find_if(批.节点组.begin(),批.节点组.end(),[&](const auto& x){return x.查询节点==原.结构.节点.编码;});
+        if(今==批.节点组.end()||!今->快照||!贡献快照相同(原,*今->快照))return false;
+    }
+    return true;
+}
+bool 合并需求结果保护(std::vector<基础联合节点快照>& 目标,const std::vector<基础联合节点快照>& 来源) {
+    for(const auto& p:来源){
+        const auto 旧=std::find_if(目标.begin(),目标.end(),[&](const auto& x){return x.结构.节点.编码==p.结构.节点.编码;});
+        if(旧==目标.end())目标.push_back(p);
+        else if(!贡献快照相同(*旧,p))return false;
+    }
+    return true;
+}
+bool 核验需求结果执行身份(const 新任务执行信息& 执行,const 新本能已发布需求结果& 结果,
+    const 新动态信息& 动作) {
+    if(!执行.本能采用||!执行.普通动作节点||*执行.普通动作节点!=结果.本次动作节点
+        ||执行.本能采用->参数绑定组.size()<2)return false;
+    const auto& H=执行.本能采用->参数绑定组[0].有序引用;
+    const auto& F=执行.本能采用->参数绑定组[1].有序引用;
+    return H&&F&&H->序号==1&&F->序号==2
+        &&H->信息类型==新方法参数信息类型::存在&&F->信息类型==新方法参数信息类型::特征
+        &&H->信息节点==结果.主体存在节点&&F->信息节点==结果.需求特征节点
+        &&动作.节点==结果.本次动作节点&&动作.种类==新动态种类::动作
+        &&动作.动作来源节点==执行.节点&&动作.动作定义节点==执行.方法节点
+        &&动作.动作目标种类==新动作目标种类::普通存在
+        &&动作.动作目标存在节点==结果.主体存在节点&&动作.动作目标特征节点==结果.需求特征节点
+        &&动作.动作时间&&动作.动作时间->语义==新状态时间语义::实例绝对UTC
+        &&执行.开始时间.语义==新状态时间语义::实例绝对UTC
+        &&动作.动作时间->纳秒>=执行.开始时间.纳秒
+        &&(!执行.结束时间||(执行.结束时间->语义==新状态时间语义::实例绝对UTC
+            &&动作.动作时间->纳秒<=执行.结束时间->纳秒));
+}
+
 // 仅在task互斥内使用；完整D-T枚举决定直子全集，不能以空查询掩盖读取故障。
 using 贡献对应全集 = std::map<稳定编码, std::pair<新需求治理信息, std::optional<新任务信息>>>;
-贡献对应全集 读取贡献对应(const 新_任务类& 服务) {
-    const auto 读取 = 服务.读取需求列表任务对应();
+贡献对应全集 读取贡献对应(const 新_任务类& 服务, std::stop_token 停止 = {}) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"贡献对应全集");
+#endif
+    检查因果读取停止(停止);
+    const auto 读取 = 提取因果正常读取<新需求任务对应结果>(服务.读取需求列表任务对应(停止));
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"贡献对应正式读取已返回，即将转换map");
+#endif
     贡献要求(读取.状态 == 新任务操作状态::已找到);
     贡献对应全集 结果;
-    for (const auto& 项 : 读取.对应项组)
+    for (const auto& 项 : 读取.对应项组) {
+        检查因果读取停止(停止);
         贡献要求(结果.emplace(项.需求.节点, std::pair{项.需求, 项.任务}).second);
+    }
+    检查因果读取停止(停止);
     return 结果;
 }
 // 只读正式边界；历史J调用本函数不依赖运行配置，不进入高层贡献/J权威递归。
@@ -3740,35 +4966,33 @@ std::optional<新服务值治理定义> 读取服务值治理定义物理(
 }
 
 void 核验贡献结算边界(const 新任务结算边界证据& b, const 贡献对应全集& 全集,
-    const 新_需求类& 需求, const 新_方法类& 方法, const 新_任务类& 任务) {
+    const 新_需求类& 需求, const 新_方法类& 方法, const 新_任务类& 任务, std::stop_token 停止 = {}) {
+    检查因果读取停止(停止);
     const auto l = 全集.find(b.结算需求节点), 根项 = 全集.find(b.服务根需求节点);
     贡献要求(l != 全集.end() && l->second.second && l->second.second->节点 == b.结算任务节点
         && 根项 != 全集.end() && b.服务根需求节点 == 服务根需求节点);
-    const auto d = 需求.获取需求(b.结算需求节点), 根 = 需求.获取需求(b.服务根需求节点);
+    const auto d = 需求.获取需求(b.结算需求节点);
+    贡献要求(d.has_value());
+    检查因果读取停止(停止);
+    const auto 根 = 需求.获取需求(b.服务根需求节点);
     贡献要求(d && 根 && d->父需求节点 == b.服务根需求节点 && !根->父需求节点
         && 根->根角色 == 新需求根角色::服务 && 根->目标.目标形式 == 新需求目标形式::变化方向
         && 根->目标.目标变化方向 == 新需求变化方向::增加
         && d->目标存在节点 == 根->目标存在节点
         && d->目标.目标特征类型概念节点 == 根->目标.目标特征类型概念节点);
     switch (b.能力.类别) {
-    case 新结算能力类别::历史方法: {
-        const auto m = 方法.获取方法(b.能力.节点);
-        贡献要求(m && m->作用域 == 新方法作用域::普通世界 && m->实现方式 == 新方法实现方式::本能
-        && m->本能函数登记名 == std::optional<std::string>{"服务值结算"}
-        && std::find(m->方法头.涉及特征类型概念组.begin(), m->方法头.涉及特征类型概念组.end(),
-            根->目标.目标特征类型概念节点) != m->方法头.涉及特征类型概念组.end());
-        break;
-    }
     case 新结算能力类别::自我服务值治理: {
+        检查因果读取停止(停止);
         const auto g = 任务.读取服务值治理定义(b.能力.节点);
         贡献要求(g && g->服务值特征类型节点 == 根->目标.目标特征类型概念节点);
         break;
     }
     default: 贡献要求(false);
     }
+    检查因果读取停止(停止);
 }
 std::set<稳定编码> 贡献保护节点(const 新_任务类& 服务,
-    const 贡献对应全集& 全集, 稳定编码 本需求) {
+    const 贡献对应全集& 全集, 稳定编码 本需求,bool 资源可延后=false) {
     std::set<稳定编码> 结果{任务集合根节点, 本需求};
     const auto 本项 = 全集.find(本需求); 贡献要求(本项 != 全集.end());
     const auto 父需求 = 本项->second.first.父需求节点;
@@ -3803,7 +5027,7 @@ std::set<稳定编码> 贡献保护节点(const 新_任务类& 服务,
             for (const auto 键 : {贡献权威存储::来源执行, 贡献权威存储::来源评估,
                     贡献权威存储::来源结算, 贡献权威存储::前状态, 贡献权威存储::发表结果,
                     贡献权威存储::来源直接接收, 贡献权威存储::边界结算任务,
-                    贡献权威存储::边界结算需求, 贡献权威存储::边界服务根需求, 贡献权威存储::边界登记方法,
+                    贡献权威存储::边界结算需求, 贡献权威存储::边界服务根需求,
                     贡献权威存储::边界治理能力})
                 if (const auto n = 读取唯一节点字段(j, 键)) 结果.insert(*n);
             if (const auto x = 读取唯一节点字段(j, 贡献权威存储::来源执行)) 执行组.insert(*x);
@@ -3833,7 +5057,7 @@ std::set<稳定编码> 贡献保护节点(const 新_任务类& 服务,
     for (std::size_t i = 0; i < 待查特征.size(); ++i) {
         const auto f = 待查特征[i]; if (!已查特征.insert(f).second) continue;
         结果.insert(f);
-        const auto 结构 = 贡献完整快照({f}).front();
+        const auto 结构 = 贡献完整快照({f},资源可延后).front();
         for (const auto& 边 : 结构.出向外部关系组)
             if (边.类型 == 基础外部关系类型::父子) 待查特征.push_back(边.目标节点);
         std::set<稳定编码> 材料;
@@ -3842,7 +5066,7 @@ std::set<稳定编码> 贡献保护节点(const 新_任务类& 服务,
             if (const auto* n = std::get_if<稳定编码>(&字段.内容)) 材料.insert(*n);
         }
         结果.insert(材料.begin(), 材料.end());
-        for (const auto& 项 : 贡献完整快照(材料))
+        for (const auto& 项 : 贡献完整快照(材料,资源可延后))
             for (const auto& 字段 : 项.结构.字段组) {
                 结果.insert(字段.字段节点);
                 if (const auto* n = std::get_if<稳定编码>(&字段.内容)) 结果.insert(*n);
@@ -3853,11 +5077,11 @@ std::set<稳定编码> 贡献保护节点(const 新_任务类& 服务,
 
 // 只收集L1读保护，不解释其它owner的字段：保护种子、其字段引用材料和
 // 材料的直接引用（方法头/参数角色/概念、Ct参与者及任务绑定均在其中）。
-void 补充贡献材料保护(std::set<稳定编码>& 保护, const std::set<稳定编码>& 种子) {
+void 补充贡献材料保护(std::set<稳定编码>& 保护, const std::set<稳定编码>& 种子,bool 资源可延后=false) {
     auto 本层 = 种子;
     for (int 层 = 0; 层 < 3; ++层) {
         std::set<稳定编码> 下层;
-        for (const auto& 项 : 贡献完整快照(本层)) {
+        for (const auto& 项 : 贡献完整快照(本层,资源可延后)) {
             保护.insert(项.结构.节点.编码);
             for (const auto& f : 项.结构.字段组) {
                 保护.insert(f.字段节点);
@@ -3872,11 +5096,60 @@ void 补充贡献材料保护(std::set<稳定编码>& 保护, const std::set<稳
     }
 }
 
+void 捕获因果节点保护(std::vector<基础联合节点快照>& 保护,const std::set<稳定编码>& 节点){
+    if(节点.empty())return;
+    const auto p=全局基础数据集.查询节点组完整结构({节点.begin(),节点.end()});
+    if(p.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    if(p.状态!=基础结构操作状态::已完成||p.节点组.size()!=节点.size())throw std::logic_error("因果请求保护读取失败");
+    std::vector<基础联合节点快照> 新保护;新保护.reserve(p.节点组.size());
+    for(const auto& n:p.节点组){if(!n.快照)throw 因果读取来源变化信号{};新保护.push_back(*n.快照);}
+    if(!合并需求结果保护(保护,新保护))throw 因果读取来源变化信号{};
+}
+bool 核同因果节点保护(const std::vector<基础联合节点快照>& 保护){
+    return 保护.empty()||核同需求结果保护(保护);
+}
+void 捕获因果材料保护(std::vector<基础联合节点快照>& 保护,const std::set<稳定编码>& 种子){
+    捕获因果节点保护(保护,种子);
+    auto 闭包=种子;补充贡献材料保护(闭包,种子,true);
+    // 原预期留给调用者最终完整核同；扩展后仅首次捕获尚未保护的材料。
+    for(const auto& 已采:保护)闭包.erase(已采.结构.节点.编码);
+    捕获因果节点保护(保护,闭包);
+}
+// 同次请求共用一次全集/直接材料读取；实际资格计算仍在本保护建立后重新读取。
+void 捕获因果贡献保护(const 新_任务类& 服务,const std::set<稳定编码>& 需求组,
+    std::vector<基础联合节点快照>& 保护){
+    if(需求组.empty())return;
+    捕获因果节点保护(保护,{任务集合根节点,需求树根节点});
+    const auto 枚举=服务.读取需求列表任务对应();
+    if(枚举.状态==新任务操作状态::资源失败)throw std::bad_alloc{};
+    if(枚举.状态!=新任务操作状态::已找到)throw std::logic_error("因果贡献全集读取不完整");
+    std::set<稳定编码> 直接节点;
+    贡献对应全集 全集;
+    for(const auto& 项:枚举.对应项组){直接节点.insert(项.需求.节点);if(项.需求列表项节点)直接节点.insert(*项.需求列表项节点);
+        if(项.任务){直接节点.insert(项.任务->节点);直接节点.insert(项.任务->任务虚拟存在节点);}
+        全集.emplace(项.需求.节点,std::pair{项.需求,项.任务});}
+    捕获因果节点保护(保护,直接节点);
+    std::set<稳定编码> 闭包;
+    for(const auto D:需求组) {
+        const auto 本项=贡献保护节点(服务,全集,D,true);
+        闭包.insert(本项.begin(),本项.end());
+    }
+    补充贡献材料保护(闭包,直接节点,true);
+    // T的类型字段已在直接保护内；不新增物理类型标签的全仓入向预期。
+    // 调用方原有保护不改，外部提供者仍持有自己的保护范围。
+    闭包.erase(任务节点类型);
+    // 已采快照留在原保护中，由下面完整核同覆盖；这里只首次捕获新增节点。
+    for(const auto& 已采:保护)闭包.erase(已采.结构.节点.编码);
+    捕获因果节点保护(保护,闭包);
+    if(!核同因果节点保护(保护))throw 因果读取来源变化信号{};
+}
+
 std::optional<新任务完成结算信息> 读取完成结算信息(
     稳定编码 结算节点,
     const 新_状态类& 状态服务) {
-    if (!结构仍存在() || !节点类型为(
-            结算节点, 任务完成结算节点类型)) return std::nullopt;
+    if (!结构已初始化()
+        || !节点类型为(任务集合根节点, 任务集合根类型)
+        || !节点类型为(结算节点, 任务完成结算节点类型)) return std::nullopt;
     const auto 任务 = 读取唯一节点字段(结算节点, 结算所属任务字段);
     const auto 需求 = 读取唯一节点字段(结算节点, 结算需求字段);
     const auto 执行 = 读取唯一节点字段(结算节点, 结算执行实例字段);
@@ -3951,11 +5224,9 @@ std::optional<稳定编码> 读取最终准备定位(稳定编码 k) {
     s.需求节点 = 贡献必需节点(p, q::需求); s.执行实例节点 = 贡献必需节点(p, q::执行);
     s.影响评估节点 = 贡献必需节点(p, q::评估);
     const auto version = 贡献可选整数(p, q::格式版本);
-    const auto method = 贡献可选节点(p, q::方法), governance = 贡献可选节点(p, q::治理能力);
-    贡献要求(version ? (*version == 2 && governance && !method) : (method && !governance));
-    const 新结算能力引用 ability = version
-        ? 新结算能力引用{新结算能力类别::自我服务值治理, *governance}
-        : 新结算能力引用{新结算能力类别::历史方法, *method};
+    const auto governance = 贡献可选节点(p, q::治理能力);
+    贡献要求(version && *version == 2 && governance);
+    const 新结算能力引用 ability{新结算能力类别::自我服务值治理, *governance};
     s.边界 = {贡献必需节点(p, q::边界任务), 贡献必需节点(p, q::边界需求),
         贡献必需节点(p, q::边界根), ability};
     s.自我场景节点 = 贡献必需节点(p, q::场景); s.自我存在节点 = 贡献必需节点(p, q::存在);
@@ -4016,7 +5287,6 @@ std::optional<新任务最终消费信息> 读取最终消费核心原始(稳定
         && 贡献必需节点(*u, q::存在) == v.来源.自我存在节点
         && 贡献必需节点(*u, q::特征) == v.来源.自我特征节点
         && 贡献可选整数(*u, q::格式版本) == 贡献可选整数(*p, q::格式版本)
-        && 贡献可选节点(*u, q::方法) == 贡献可选节点(*p, q::方法)
         && 贡献可选节点(*u, q::治理能力) == 贡献可选节点(*p, q::治理能力)
         && 贡献必需节点(*u, q::边界任务) == v.来源.边界.结算任务节点
         && 贡献必需节点(*u, q::边界需求) == v.来源.边界.结算需求节点
@@ -4136,6 +5406,9 @@ bool 删除未进入动作执行结构(
     稳定编码 执行节点,
     const std::vector<预计阶段物理>& 阶段组,
     新_动态类* 动态服务) noexcept {
+    try{if(任务执行组织存储::读取执行需求结果(执行节点))
+        throw std::logic_error("zero-action X cannot delete a published demand result");}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"删除未进入动作执行结构",L"已发布需求保护或结构核验失败");}
     if (!全局基础数据集.查询字段(执行节点, 执行返回确认字段).empty()) return false;
     const auto 动作字段组 = 全局基础数据集.查询字段(执行节点, 执行普通动作字段);
     if (动作字段组.size() > 1) return false;
@@ -4180,8 +5453,6 @@ bool 删除未进入动作执行结构(
         禁止目标节点组.push_back(*目标节点);
     }
     const std::vector<稳定编码> 执行字段组{
-        结算来源任务字段, 结算来源虚拟存在字段, 结算来源状态特征字段,
-        结算冻结前值字段, 结算目标值域字段,
         节点类型字段, 执行所属任务字段, 执行方法字段,
         执行状态字段, 执行开始时间语义字段, 执行开始时间字段,
         执行结束时间语义字段, 执行结束时间字段, 执行取得数量类型字段,
@@ -4189,16 +5460,19 @@ bool 删除未进入动作执行结构(
         执行结果获取渠道方案字段, 执行结果获取目标字段,
         执行禁止结果关系规则字段, 执行禁止结果目标字段,
         执行动作输出状态字段, 执行实际状态项字段, 执行评估字段};
-    try{任务执行组织存储::清理执行采用已加锁(执行节点);}
+    try{任务执行组织存储::清理执行场景事实(执行节点);任务执行组织存储::清理方案场景事实(执行节点);任务执行组织存储::清理执行采用已加锁(执行节点);}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"清理未入动作X采用",L"独占采用结构核验失败");}
     if (!删除节点具名字段(执行节点, 执行字段组)) return false;
 
     const std::vector<稳定编码> 阶段字段组{
         节点类型字段, 阶段顺序字段, 阶段变化项字段};
-    const std::vector<稳定编码> 项字段组{
+    std::vector<稳定编码> 项字段组{
         节点类型字段, 变化作用对象字段, 变化特征类型字段,
         变化关系字段, 变化方向符号字段, 变化值域字段, 变化精确数值域字段,
-        变化必须出现字段};
+        变化必须出现字段,任务执行组织存储::取(任务执行组织存储::字段::预计内容需求),
+        任务执行组织存储::取(任务执行组织存储::字段::预计内容要求),任务执行组织存储::取(任务执行组织存储::字段::预计内容路径)};
+    const auto 来源字段=认知来源快照字段键组();
+    项字段组.insert(项字段组.end(),来源字段.begin(),来源字段.end());
     for (const auto& 阶段 : 阶段组) {
         if (!删除节点具名字段(阶段.节点, 阶段字段组)) return false;
         for (const auto& 项 : 阶段.变化组) {
@@ -4213,10 +5487,11 @@ bool 删除未进入动作执行结构(
             return false;
         }
     }
-    const std::vector<稳定编码> 结果目标字段组{
+    std::vector<稳定编码> 结果目标字段组{
         节点类型字段, 结果目标顺序字段, 结果目标作用对象字段,
         结果目标实际特征字段, 结果目标特征类型根字段,
-        结果目标动作前准确值字段, 结果目标必须出现字段};
+        结果目标动作前准确值字段, 结果目标必须出现字段,任务执行组织存储::取(任务执行组织存储::字段::目标明确无值)};
+    结果目标字段组.insert(结果目标字段组.end(),来源字段.begin(),来源字段.end());
     for (const auto 目标节点 : 结果目标节点组) {
         if (!删除节点具名字段(目标节点, 结果目标字段组)
             || (!全局基础数据集.删除节点(目标节点)
@@ -4291,6 +5566,13 @@ bool 建立预计结构(
             if (变化.预期精确数值域
                 && !写入任务精确域(项节点, 变化精确数值域字段,
                     *变化.预期精确数值域, 已建.字段组)) return false;
+            if(变化.预期引用内容) {
+                using q=任务执行组织存储::字段;
+                if(!变化.预期引用内容->正式内容路径.empty()
+                    ||!写入节点字段(项节点,任务执行组织存储::取(q::预计内容需求),变化.预期引用内容->需求节点,已建.字段组)
+                    ||!写入节点字段(项节点,任务执行组织存储::取(q::预计内容要求),变化.预期引用内容->要求概念节点,已建.字段组))return false;
+                if(!写入认知来源快照(项节点,变化.预期引用内容->认知来源确认,已建.字段组))return false;
+            }
             if (!写入节点字段(阶段节点, 阶段变化项字段,
                 项节点, 已建.字段组)) return false;
         }
@@ -4301,6 +5583,7 @@ bool 建立预计结构(
 }
 
 struct 已建结果获取结构 final {
+    std::optional<稳定编码> 场景方案执行;
     std::vector<稳定编码> 渠道节点组;
     std::vector<稳定编码> 目标节点组;
     std::vector<稳定编码> 禁止目标节点组;
@@ -4308,6 +5591,7 @@ struct 已建结果获取结构 final {
 };
 
 void 清理结果获取结构(已建结果获取结构& 已建) noexcept {
+    if(已建.场景方案执行)任务执行组织存储::清理方案场景事实(*已建.场景方案执行);
     回滚字段(已建.字段组);
     for (auto 位置 = 已建.禁止目标节点组.rbegin();
         位置 != 已建.禁止目标节点组.rend(); ++位置) {
@@ -4337,6 +5621,8 @@ bool 建立结果获取结构(
     }
     if (方案.服务需求取得数量类型
         && !写入节点字段(执行节点, 执行取得数量类型字段, *方案.服务需求取得数量类型, 已建.字段组)) return false;
+    已建.场景方案执行=执行节点;
+    任务执行组织存储::建立方案场景事实(执行节点,方案.必需场景事实组);
     for (const auto& 渠道 : 方案.渠道方案组) {
         const auto 渠道节点 = 全局基础数据集.新建节点();
         if (!有效(渠道节点)) return false;
@@ -4371,6 +5657,8 @@ bool 建立结果获取结构(
         const auto 目标节点 = 全局基础数据集.新建节点();
         if (!有效(目标节点)) return false;
         已建.目标节点组.push_back(目标节点);
+        if(目标.动作前明确无值&&!写入I64字段(目标节点,任务执行组织存储::取(任务执行组织存储::字段::目标明确无值),1,已建.字段组))return false;
+        if(!写入认知来源快照(目标节点,目标.认知来源确认,已建.字段组))return false;
         if (!写入节点字段(目标节点, 节点类型字段,
                 任务结果获取目标节点类型, 已建.字段组)
             || !写入I64字段(目标节点, 结果目标顺序字段,
@@ -4437,9 +5725,119 @@ bool 建立结果获取结构(
     return true;
 }
 
+// 只构造本次X的组内图；这里不分配正式编码，不读写底座。
+void 追加执行字段(基础节点组追加请求& 请求,std::size_t 节点,稳定编码 键,基础组内字段内容 内容){
+    请求.新节点组.at(节点).字段组.push_back({键,std::move(内容)});
+}
+std::size_t 追加执行类型节点(基础节点组追加请求& 请求,稳定编码 类型){
+    const auto n=请求.新节点组.size();请求.新节点组.push_back({{{节点类型字段,类型}}});return n;
+}
+void 追加执行准确值(基础节点组追加请求& 请求,std::size_t n,稳定编码 键,const 新特征准确值& 值){
+    if(const auto* v=std::get_if<std::int64_t>(&值))追加执行字段(请求,n,键,基础值{*v});
+    else 追加执行字段(请求,n,键,std::get<稳定编码>(值));
+}
+void 追加执行认知快照(基础节点组追加请求& 请求,std::size_t n,const std::optional<新服务要求确认目标>& 值){
+    if(!值)return;if(!认知来源快照定义有效(*值))throw std::logic_error("X认知来源快照定义不合法");
+    using q=任务执行组织存储::字段;
+    const auto 引用=[&](q 键,稳定编码 v){追加执行字段(请求,n,任务执行组织存储::取(键),v);};
+    const auto 可选=[&](q 键,const std::optional<稳定编码>& v){if(v)引用(键,*v);};
+    const auto& s=*值;const auto& t=s.目标;
+    引用(q::内容来源确认,s.确认节点);引用(q::内容来源理解,s.理解节点);引用(q::内容来源人类,s.来源人类节点);
+    引用(q::内容来源目标存在,s.目标存在节点);引用(q::内容来源目标FT,t.目标特征类型概念节点);
+    追加执行字段(请求,n,任务执行组织存储::取(q::内容来源目标形式),基础值{static_cast<std::int64_t>(t.目标形式)});
+    可选(q::内容来源目标域,t.目标值域概念节点);可选(q::内容来源目标比较,t.目标比较关系概念节点);可选(q::内容来源要求,s.来源要求节点);
+    if(t.目标变化方向)追加执行字段(请求,n,任务执行组织存储::取(q::内容来源目标方向),基础值{static_cast<std::int64_t>(*t.目标变化方向)});
+    if(t.引用内容定位){引用(q::内容来源目标引用需求,t.引用内容定位->引用需求节点);
+        if(!t.引用内容定位->正式内容路径.empty())引用(q::内容来源目标内容项,t.引用内容定位->正式内容路径.front());}
+}
+std::size_t 追加执行节点(基础节点组追加请求& 请求,const 新任务执行开始请求& 输入){
+    if(!请求.新节点组.empty())throw std::logic_error("X必须为同组首节点");
+    const auto n=追加执行类型节点(请求,任务执行实例节点类型);
+    追加执行字段(请求,n,执行所属任务字段,输入.任务节点);追加执行字段(请求,n,执行方法字段,输入.方法节点);
+    追加执行字段(请求,n,执行状态字段,基础值{static_cast<std::int64_t>(新任务执行状态::执行中)});
+    追加执行字段(请求,n,执行开始时间语义字段,基础值{static_cast<std::int64_t>(输入.开始时间.语义)});
+    追加执行字段(请求,n,执行开始时间字段,基础值{输入.开始时间.纳秒});return n;
+}
+void 追加执行预计结构(基础节点组追加请求& 请求,std::size_t X,std::vector<新任务预计变化阶段> 阶段组){
+    std::sort(阶段组.begin(),阶段组.end(),[](const auto& a,const auto& b){return a.顺序<b.顺序;});
+    for(const auto& 阶段:阶段组){
+        const auto s=追加执行类型节点(请求,任务预计变化阶段节点类型);
+        追加执行字段(请求,s,阶段顺序字段,基础值{阶段.顺序});
+        追加执行字段(请求,X,执行预计阶段字段,基础组内节点引用{s});
+        for(const auto& v:阶段.变化组){
+            const auto n=追加执行类型节点(请求,任务预计变化项节点类型);
+            追加执行字段(请求,s,阶段变化项字段,基础组内节点引用{n});
+            追加执行字段(请求,n,变化作用对象字段,v.作用对象节点);追加执行字段(请求,n,变化特征类型字段,v.特征类型概念节点);
+            追加执行字段(请求,n,变化必须出现字段,基础值{std::int64_t{v.必须出现 ? 1 : 0}});
+            if(v.预期变化关系节点)追加执行字段(请求,n,变化关系字段,*v.预期变化关系节点);
+            if(v.预期方向)追加执行字段(请求,n,变化方向符号字段,基础值{static_cast<std::int64_t>(*v.预期方向)});
+            if(v.预期值域概念节点)追加执行字段(请求,n,变化值域字段,*v.预期值域概念节点);
+            if(v.预期精确数值域){if(!精确域有效(*v.预期精确数值域))throw std::logic_error("X预计精确域不合法");
+                追加执行字段(请求,n,变化精确数值域字段,基础值{std::vector<std::int64_t>{v.预期精确数值域->下界,v.预期精确数值域->上界}});}
+            if(v.预期引用内容){using q=任务执行组织存储::字段;
+                if(!v.预期引用内容->正式内容路径.empty())throw std::logic_error("X预计内容路径未支持");
+                追加执行字段(请求,n,任务执行组织存储::取(q::预计内容需求),v.预期引用内容->需求节点);
+                追加执行字段(请求,n,任务执行组织存储::取(q::预计内容要求),v.预期引用内容->要求概念节点);
+                追加执行认知快照(请求,n,v.预期引用内容->认知来源确认);}
+        }
+    }
+}
+void 追加执行结果获取结构(基础节点组追加请求& 请求,std::size_t X,const 新任务结果获取方案& 方案){
+    if(!方案.完整())throw std::logic_error("X结果获取方案不完整");
+    追加执行字段(请求,X,执行结果获取多渠道关系字段,基础值{static_cast<std::int64_t>(方案.多渠道关系)});
+    追加执行字段(请求,X,执行禁止结果关系规则字段,基础值{static_cast<std::int64_t>(方案.禁止结果关系规则)});
+    if(方案.服务需求取得数量类型)追加执行字段(请求,X,执行取得数量类型字段,*方案.服务需求取得数量类型);
+    using q=任务执行组织存储::字段;
+    for(std::size_t i=0;i<方案.必需场景事实组.size();++i){const auto& v=方案.必需场景事实组[i];
+        if(!有效(v.关系概念节点)||!v.场景参数序号||!v.主体参数序号||!v.对象参数序号||!v.特征参数序号
+            ||std::find(方案.必需场景事实组.begin(),方案.必需场景事实组.begin()+i,v)!=方案.必需场景事实组.begin()+i)
+            throw std::logic_error("X结果场景事实定义不合法");
+        const auto n=追加执行类型节点(请求,任务执行组织存储::取(任务执行组织存储::类型::场景事实));
+        追加执行字段(请求,X,任务执行组织存储::取(q::结果方案必需场景事实成员),基础组内节点引用{n});
+        追加执行字段(请求,n,任务执行组织存储::取(q::结果方案所属执行),基础组内节点引用{X});
+        追加执行字段(请求,n,任务执行组织存储::取(q::所属配对),基础组内节点引用{X});
+        追加执行字段(请求,n,任务执行组织存储::取(q::顺序),基础值{static_cast<std::int64_t>(i)});
+        追加执行字段(请求,n,任务执行组织存储::取(q::场景事实关系),v.关系概念节点);
+        for(const auto& [键,值]:std::array<std::pair<q,std::uint32_t>,4>{{{q::场景位置,v.场景参数序号},{q::主体位置,v.主体参数序号},{q::对象位置,v.对象参数序号},{q::特征位置,v.特征参数序号}}})
+            追加执行字段(请求,n,任务执行组织存储::取(键),基础值{static_cast<std::int64_t>(值)});
+    }
+    for(const auto& v:方案.渠道方案组){const auto n=追加执行类型节点(请求,任务结果获取渠道方案节点类型);
+        追加执行字段(请求,X,执行结果获取渠道方案字段,基础组内节点引用{n});
+        追加执行字段(请求,n,渠道方案顺序字段,基础值{v.顺序});
+        追加执行字段(请求,n,渠道方案类型字段,基础值{static_cast<std::int64_t>(v.渠道)});
+        追加执行字段(请求,n,渠道方案证据质量字段,基础值{static_cast<std::int64_t>(v.证据质量)});
+        if(v.最大等待纳秒)追加执行字段(请求,n,渠道方案最大等待纳秒字段,基础值{*v.最大等待纳秒});
+        if(v.等待条件概念节点)追加执行字段(请求,n,渠道方案等待条件概念字段,*v.等待条件概念节点);
+    }
+    for(std::size_t i=0;i<方案.目标组.size();++i){const auto& v=方案.目标组[i];const auto n=追加执行类型节点(请求,任务结果获取目标节点类型);
+        追加执行字段(请求,X,执行结果获取目标字段,基础组内节点引用{n});
+        if(v.动作前明确无值)追加执行字段(请求,n,任务执行组织存储::取(q::目标明确无值),基础值{std::int64_t{1}});
+        追加执行认知快照(请求,n,v.认知来源确认);
+        追加执行字段(请求,n,结果目标顺序字段,基础值{static_cast<std::int64_t>(i)});
+        追加执行字段(请求,n,结果目标作用对象字段,v.作用对象节点);追加执行字段(请求,n,结果目标实际特征字段,v.实际特征节点);
+        追加执行字段(请求,n,结果目标特征类型根字段,v.特征类型根概念节点);
+        if(v.动作前准确值)追加执行准确值(请求,n,结果目标动作前准确值字段,*v.动作前准确值);
+        追加执行字段(请求,n,结果目标必须出现字段,基础值{std::int64_t{v.必须出现 ? 1 : 0}});
+    }
+    for(std::size_t i=0;i<方案.禁止结果组.size();++i){const auto& v=方案.禁止结果组[i];const auto n=追加执行类型节点(请求,任务禁止结果目标节点类型);
+        追加执行字段(请求,X,执行禁止结果目标字段,基础组内节点引用{n});
+        追加执行字段(请求,n,禁止目标顺序字段,基础值{static_cast<std::int64_t>(i)});
+        追加执行字段(请求,n,禁止目标作用对象字段,v.作用对象节点);追加执行字段(请求,n,禁止目标实际特征字段,v.实际特征节点);
+        追加执行字段(请求,n,禁止目标特征类型根字段,v.特征类型根概念节点);追加执行准确值(请求,n,禁止目标动作前准确值字段,v.动作前准确值);
+        if(v.禁止方向)追加执行字段(请求,n,禁止目标方向字段,基础值{static_cast<std::int64_t>(*v.禁止方向)});
+        if(v.禁止值域概念节点)追加执行字段(请求,n,禁止目标值域字段,*v.禁止值域概念节点);
+        if(v.禁止状态或动态概念节点)追加执行字段(请求,n,禁止目标状态动态字段,*v.禁止状态或动态概念节点);
+        if(v.禁止精确数值域){if(!精确域有效(*v.禁止精确数值域))throw std::logic_error("X禁止精确域不合法");
+            追加执行字段(请求,n,禁止目标精确数值域字段,基础值{std::vector<std::int64_t>{v.禁止精确数值域->下界,v.禁止精确数值域->上界}});}
+    }
+}
+void 追加执行冻结采用(基础节点组追加请求& 请求,std::size_t X,const 新任务本能采用材料& 采用){
+    任务执行组织存储::追加执行冻结采用(请求,X,采用);
+}
+
 // 只核对集合身份，不把某个T的内容错误扩大成全集丢失。
-// 原全集查询及调度扫描共用同一登记/类型双向算法。
-std::optional<std::vector<稳定编码>> 读取任务登记全集() {
+// 运行时只读正式登记；初始化另外核对仓库类型全集。
+std::optional<std::vector<稳定编码>> 读取任务登记全集(bool 核验类型全集=false) {
     std::vector<稳定编码> 登记任务;
     for (const auto& 字段 : 全局基础数据集.查询字段(
             任务集合根节点, 任务成员字段)) {
@@ -4450,6 +5848,11 @@ std::optional<std::vector<稳定编码>> 读取任务登记全集() {
     std::sort(登记任务.begin(), 登记任务.end());
     if (std::adjacent_find(登记任务.begin(), 登记任务.end()) != 登记任务.end())
         return std::nullopt;
+    if(!核验类型全集) {
+        for(const auto 任务:登记任务)
+            if(!节点类型为(任务,任务节点类型))return std::nullopt;
+        return 登记任务;
+    }
     std::vector<稳定编码> 类型任务;
     for (const auto& 字段 : 全局基础数据集.查询目标字段(
             任务节点类型, 节点类型字段)) {
@@ -4574,6 +5977,11 @@ bool 新任务调度定位::完整() const noexcept {
 }
 
 bool 新任务结果获取方案::完整() const noexcept {
+    for(std::size_t i=0;i<必需场景事实组.size();++i){
+        const auto& 项=必需场景事实组[i];
+        if(!有效(项.关系概念节点)||!项.场景参数序号||!项.主体参数序号||!项.对象参数序号||!项.特征参数序号
+            ||std::find(必需场景事实组.begin(),必需场景事实组.begin()+i,项)!=必需场景事实组.begin()+i)return false;
+    }
     if (服务需求取得数量类型 && (!有效(*服务需求取得数量类型)
         || 目标组.size() != 1 || !目标组.front().必须出现
         || 渠道方案组.size() != 1
@@ -4606,6 +6014,9 @@ bool 新任务结果获取方案::完整() const noexcept {
     }
     std::set<std::pair<std::uint64_t, std::uint64_t>> 已见目标;
     for (const auto& 目标 : 目标组) {
+        if(目标.动作前明确无值&&目标.动作前准确值)return false;
+        if(目标.认知来源确认&&(!目标.动作前明确无值||目标.认知来源确认->来源人类节点!=目标.作用对象节点
+            ||!认知来源快照定义有效(*目标.认知来源确认)))return false;
         if (!有效(目标.作用对象节点) || !有效(目标.实际特征节点)
             || !有效(目标.特征类型根概念节点)
             || (目标.动作前准确值 && std::holds_alternative<稳定编码>(*目标.动作前准确值)
@@ -4770,6 +6181,8 @@ void 新_任务类::准备执行问题材料(
 void 新_任务类::保存执行问题运行对(稳定编码 任务节点, 稳定编码 执行实例节点,
     const 新本能函数本次条件结果对& 运行) noexcept {
     try {
+        if(运行.结果.动作阶段==新本能函数动作阶段::未进入动作&&运行.结果.已发布需求)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"保存执行问题运行对",L"零动作不得携带已发布需求");
         std::lock_guard 锁(新任务互斥);
         const auto 位置 = 方法问题暂存组_.find(执行实例节点.值);
         if (位置 == 方法问题暂存组_.end() || 位置->second->任务节点 != 任务节点) return;
@@ -5193,9 +6606,10 @@ bool 新_任务类::初始化() noexcept {
         const auto 核对任务状态域 = [&]() {
             const auto 概念 = 特征概念服务_.获取特征概念(任务状态特征概念);
             if (!概念 || 概念->材料类型 != 特征概念材料物理类型::I64标量) return false;
-            const 特征概念值域 新域 = std::vector<特征概念I64闭区间>{{1, 12}};
+            const 特征概念值域 新域 = std::vector<特征概念I64闭区间>{{1, 13}};
             const 特征概念值域 旧域 = std::vector<特征概念I64闭区间>{{1, 11}};
-            return 概念->值域 == 新域 || (概念->值域 == 旧域
+            const 特征概念值域 旧结算域 = std::vector<特征概念I64闭区间>{{1, 12}};
+            return 概念->值域 == 新域 || ((概念->值域 == 旧域 || 概念->值域 == 旧结算域)
                 && 特征概念服务_.更新特征概念值域(
                     任务状态特征概念, 新域, 特征值服务_));
         };
@@ -5287,6 +6701,7 @@ bool 新_任务类::初始化() noexcept {
         // 先补齐追加的架构键，再判完整初始化。已有类型/字段身份只核验、
         // 不重建，旧组织和X继续使用原字段布局，不因扩展键缺失重走业务初始化。
         if (!任务执行组织存储::初始化(建立)) return false;
+        if (!建立(来源前驱目标实例字段)) return false;
         if (结构已初始化()) {
             贡献要求(结构仍存在(false));
             确保收尾扩展();
@@ -5301,11 +6716,6 @@ bool 新_任务类::初始化() noexcept {
             && 建立(任务已结算动作定义类型)
             && 建立(任务内部动作定义字段)
             && 建立(内部动作操作码字段)
-            && 建立(结算来源任务字段)
-            && 建立(结算来源虚拟存在字段)
-            && 建立(结算来源状态特征字段)
-            && 建立(结算冻结前值字段)
-            && 建立(结算目标值域字段)
             && 建立(执行普通动作字段)
             && 建立(执行取得数量类型字段)
             && 建立(执行返回确认字段)
@@ -5340,6 +6750,10 @@ bool 新_任务类::初始化() noexcept {
             && 建立(候选目标值域字段)
             && 建立(候选目标比较关系字段)
             && 建立(候选目标变化方向字段)
+            && 建立(候选目标引用需求字段)
+            && 建立(候选目标内容项字段)
+            && 建立(候选目标新增成员格式字段)&&建立(候选目标新增成员来源种类字段)&&建立(候选目标新增成员源FT字段)
+            && 建立(候选目标新增成员B材料字段)&&建立(候选目标新增成员指定H字段)&&建立(候选目标新增成员指定D字段)
             && 建立(候选查询作用域字段)
             && 建立(候选查询实现方式字段)
             && 建立(候选查询作用存在字段)
@@ -5442,7 +6856,7 @@ bool 新_任务类::初始化() noexcept {
             定义.材料类型 = 特征概念材料物理类型::I64标量;
             定义.值域 = std::vector<特征概念I64闭区间>{{
                 static_cast<std::int64_t>(新任务状态::已建立),
-                static_cast<std::int64_t>(新任务状态::已结算)}};
+                static_cast<std::int64_t>(新任务状态::未执行但目标已满足)}};
             定义.比较规则 = 特征概念比较规则::I64数值;
             定义.聚合规则 = 特征概念聚合规则::不自动聚合;
             任务状态特征概念 = 特征概念服务_.建立或取得特征概念(
@@ -5565,10 +6979,9 @@ bool 新_任务类::初始化() noexcept {
     using namespace 任务执行组织存储;
     try {
         if (!有效(任务节点)) return {状态::入口拒绝, {}};
-        for (const auto n : 来源方法节点组)
-            if (方法服务_.是历史服务结算方法(n)) return {状态::来源方法不存在, {}};
         // 方法快照先结束；禁止持有任务锁再进入方法闭包锁。
         const auto 闭包 = 方法服务_.读取方法执行结构闭包(来源方法节点组);
+        if(闭包.状态==方法状态::前提已变化)return {状态::定义前提已变化,{}};
         switch (闭包.状态) {
         case 方法状态::入口拒绝: return {状态::入口拒绝, {}};
         case 方法状态::尚未初始化: return {状态::尚未初始化, {}};
@@ -5659,7 +7072,7 @@ bool 新_任务类::初始化() noexcept {
         if (!有效(任务节点)) return {状态::入口拒绝, {}};
         std::lock_guard 锁(新任务互斥);
         if (!结构已初始化()) return {状态::尚未初始化, {}};
-        要求(结构仍存在(), "task schema missing");
+        要求(节点类型为(任务集合根节点, 任务集合根类型), "task schema root invalid");
         const auto 节点 = 全局基础数据集.查询完整节点结构(任务节点);
         if (节点.状态 == 基础结构操作状态::节点不存在) return {状态::任务不存在, {}};
         要求(节点.状态 == 基础结构操作状态::已完成 && 节点.结构, "task read failed");
@@ -5848,11 +7261,21 @@ std::optional<新任务信息> 新_任务类::获取任务(
     }
 }
 
+新任务单读可停止结果 新_任务类::获取任务(稳定编码 T, std::stop_token 停止) const {
+    try {
+        auto 锁 = 获取因果读取任务锁(停止);
+        auto 结果 = 获取任务(T); // 保留原单getter的完整合同及错误边界。
+        检查因果读取停止(停止);
+        return 结果;
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+}
+
 std::optional<新任务虚拟存在信息> 新_任务类::获取任务虚拟存在(
     稳定编码 任务节点) const noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
-        if (!结构仍存在()) return std::nullopt;
+        if (!结构已初始化()
+            || !节点类型为(任务集合根节点, 任务集合根类型)) return std::nullopt;
         return 读取任务虚拟存在信息(任务节点, 特征服务_);
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取任务虚拟存在",L"任务虚拟存在结构读取失败，不得作为无定位继续判断。");
@@ -5870,9 +7293,59 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
 std::optional<新任务本能采用材料> 新_任务类::读取执行本能采用(稳定编码 X) const noexcept {
     const auto 执行 = 获取执行实例(X);return 执行 ? 执行->本能采用 : std::nullopt;
 }
+新任务需求结果读取结果 新_任务类::读取执行已发布需求(稳定编码 T,稳定编码 X) const noexcept {
+    using S=新任务需求结果读取状态;
+    try{
+        std::optional<新任务执行信息> 原执行;
+        std::vector<基础联合节点快照> 保护;
+        新本能需求任务参数工厂* 工厂=nullptr;
+        新_动态类* 动态=nullptr;
+        {
+            std::lock_guard 锁(新任务互斥);
+            原执行=读取执行信息(X,状态服务_,特征服务_,特征概念服务_);
+            if(!原执行){
+                if(全局基础数据集.查询节点(X))throw std::logic_error("present X is not a valid execution");
+                return {S::执行不存在,{}};
+            }
+            if(原执行->任务节点!=T||!读取任务信息(T,特征服务_))
+                throw std::logic_error("published demand result task ownership mismatch");
+            if(!原执行->已发布需求)return {S::无此结果,{}};
+            工厂=本能需求任务参数工厂_;动态=本能动作读取_;
+            if(!工厂)return {S::依赖未装配,{}};
+            if(!动态)throw std::logic_error("published demand execution action reader missing");
+            保护=捕获需求结果执行保护(T,X,原执行->已发布需求->本次动作节点);
+            std::vector<基础联合节点快照> 子保护;
+            if(任务执行组织存储::读取执行需求结果(X,nullptr,nullptr,&子保护)!=原执行->已发布需求)
+                return {S::前提已变化,{}};
+            if(!合并需求结果保护(保护,子保护))return {S::前提已变化,{}};
+        }
+        // 历史身份核验不要求X仍处于任务最近位，不授予重新执行资格。
+        const auto 正式=工厂->核验任务新需求结果(原执行->方法节点,*原执行->已发布需求);
+        if(正式.状态==新本能已发布需求核验状态::资源失败)return {S::资源失败,{}};
+        if(正式.状态==新本能已发布需求核验状态::前提已变化)return {S::前提已变化,{}};
+        if(正式.状态==新本能已发布需求核验状态::已关闭)return {S::依赖未装配,{}};
+        if(正式.状态!=新本能已发布需求核验状态::已核验||正式.结果!=原执行->已发布需求||正式.完整保护.empty())
+            throw std::logic_error("published demand formal verification returned inconsistent material");
+        if(!合并需求结果保护(保护,正式.完整保护))return {S::前提已变化,{}};
+        const auto 动作=动态->获取动态(原执行->已发布需求->本次动作节点);
+        if(!动作||!核验需求结果执行身份(*原执行,*原执行->已发布需求,*动作))
+            throw std::logic_error("published demand action or ordered parameters mismatch");
+        std::lock_guard 锁(新任务互斥);
+        if(工厂!=本能需求任务参数工厂_||动态!=本能动作读取_
+            ||读取执行信息(X,状态服务_,特征服务_,特征概念服务_)!=原执行
+            ||!核同需求结果保护(保护))return {S::前提已变化,{}};
+        return {S::已读取,原执行->已发布需求};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取执行已发布需求",L"正式需求结果结构或来源不一致");}
+}
 新任务本能输入复核状态 新_任务类::复核执行本能输入(稳定编码 X,const 方法参数场景& 场景) const noexcept {
     try{
+        const auto 旧执行=获取执行实例(X);
+        if(!旧执行)return 新任务本能输入复核状态::执行不在当前位;
+        auto 场景批=准备本次场景核验批(旧执行->任务节点,X,nullptr,true);
+        读取本次场景核验批(场景批);
         std::lock_guard 锁(新任务互斥);const auto 执行=获取执行实例(X);
+        if(!核同本次场景核验批(场景批))return 新任务本能输入复核状态::条件已变化;
         if (!执行) {
             if (全局基础数据集.查询节点(X)) throw std::logic_error("现存X不可读");
             return 新任务本能输入复核状态::执行不在当前位;
@@ -5880,19 +7353,16 @@ std::optional<新任务本能采用材料> 新_任务类::读取执行本能采�
         if (!执行->本能采用) throw std::logic_error("本能执行缺少冻结采用");
         const auto 任务=获取任务(执行->任务节点);
         if(!任务)throw std::logic_error("执行所属任务不可读");
-        if (任务->服务结算来源) {
-            const auto 来源 = 读取任务完成结算(任务->服务结算来源->来源任务.任务节点);
-            if (来源 && 来源->服务贡献) return 新任务本能输入复核状态::最终贡献消费尚未装配;
-        }
         const auto 正式读回 = 读回任务执行(执行->任务节点, X);
         if (正式读回.状态 == 新任务治理执行读回状态::结构不一致
             || 正式读回.状态 == 新任务治理执行读回状态::资源失败)
             throw std::logic_error("临近输入正式执行结构损坏");
         if (正式读回.状态 != 新任务治理执行读回状态::已读回等待观察)
             return 新任务本能输入复核状态::执行不在当前位;
-        if(场景.方法节点()!=执行->方法节点||场景.全部角色绑定()!=执行->本能采用->参数绑定组)
+        if(场景.方法节点()!=执行->方法节点||场景.全部角色绑定()!=执行->本能采用->参数绑定组
+            ||场景.执行分支节点()!=执行->本能采用->执行分支节点)
             throw std::logic_error("参数场景与本次X采用不一致");
-        const auto 核验=核验任务条件和参数内部(任务->节点,&*执行->本能采用,true);
+        const auto 核验=核验任务条件和参数内部(任务->节点,&*执行->本能采用,true,false,场景批);
         if (核验.状态 == 新任务治理条件筹办状态::任务状态已变化) {
             const auto 当前 = 获取任务(执行->任务节点);
             if (!当前) throw std::logic_error("复核当前任务不可读");
@@ -5933,7 +7403,8 @@ std::optional<新任务候选方法材料> 新_任务类::获取候选方法材�
     稳定编码 材料节点) const noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
-        if (!结构仍存在()) return std::nullopt;
+        if (!结构已初始化()
+            || !节点类型为(任务集合根节点, 任务集合根类型)) return std::nullopt;
         return 读取候选方法材料信息(材料节点);
     } catch (...) {
         return std::nullopt;
@@ -5956,7 +7427,8 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
     稳定编码 需求节点) const noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
-        if (!结构仍存在()) {
+        if (!结构已初始化()
+            || !节点类型为(任务集合根节点, 任务集合根类型)) {
             return std::nullopt;
         }
         const auto 需求 = 需求服务_.读取需求治理信息(需求节点);
@@ -5983,11 +7455,188 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
     }
 }
 
+新需求任务定位可停止结果 新_任务类::查询需求任务(稳定编码 D, std::stop_token 停止) const {
+    try {
+        auto 锁 = 获取因果读取任务锁(停止);
+        auto 结果 = 查询需求任务(D); // 已持同一task锁，原getter只递归取得。
+        检查因果读取停止(停止);
+        return 结果;
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+}
+
+新需求新增成员基准结果 新_任务类::读取新增成员目标基准(稳定编码 E,稳定编码 FT) const noexcept {
+    return 读取新增成员目标基准内部(E,FT,nullptr);
+}
+新需求新增成员基准结果 新_任务类::读取新增成员目标基准内部(
+    稳定编码 E,稳定编码 FT,新_需求类::提议源收集批* 源) const noexcept {
+    using S=新需求新增成员读取状态;
+    try {
+        const auto require=[](bool ok,const char* reason){if(!ok)throw std::logic_error(reason);};
+        std::optional<新任务服务需求取得合同> config;稳定编码 excluded;
+        {std::lock_guard lock(新任务互斥);config=服务需求取得合同_;excluded=服务任务排除需求_;}
+        if(!config||!有效(excluded))return {S::依赖未就绪,{},{}};
+        if(config->自我存在节点!=E||config->服务任务集合类型!=FT)return {S::未支持,{},{}};
+        std::vector<基础联合节点快照> protect;
+        捕获因果节点保护(protect,{E});
+        const auto e=存在服务_.获取存在(E);if(!e)return {S::前提已变化,{},{}};
+        // 本次只读取集合当前值；完整特征子树读口不支持U64数组。
+        // 与派生源取材一致，先保护F，再经其owner读回值和正式概念定义。
+        捕获因果节点保护(protect,{config->服务任务集合特征节点});
+        const auto feature=特征服务_.获取特征(config->服务任务集合特征节点);
+        if(!feature)return {S::前提已变化,{},{}};
+        const auto& f=*feature;
+        const auto definition=特征概念服务_.读取特征概念定义保护(f.特征概念节点);
+        if(definition.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+        if(definition.前提已变化)return {S::前提已变化,{},{}};
+        require(definition.状态==基础结构操作状态::已完成&&definition.信息,"源集合实例概念定义读取不完整");
+        if(!合并需求结果保护(protect,definition.预期节点组))return {S::前提已变化,{},{}};
+        // 实例可以引用包含当前材料的下位概念；全材料范围属于FT根定义。
+        const auto sourceDefinition=特征概念服务_.读取特征概念定义保护(FT);
+        if(sourceDefinition.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+        if(sourceDefinition.前提已变化)return {S::前提已变化,{},{}};
+        require(sourceDefinition.状态==基础结构操作状态::已完成&&sourceDefinition.信息,
+            "源集合特征类型根定义读取不完整");
+        if(!合并需求结果保护(protect,sourceDefinition.预期节点组))return {S::前提已变化,{},{}};
+        const auto& type=sourceDefinition.信息->定义;
+        require(definition.信息->类型根==FT&&sourceDefinition.信息->类型根==FT
+            &&type.材料类型==特征概念材料物理类型::U64数组&&!type.单位
+            &&std::holds_alternative<特征概念全材料值域>(type.值域)
+            &&type.比较规则==特征概念比较规则::服务任务集合身份判等
+            &&type.聚合规则==特征概念聚合规则::不自动聚合
+            &&std::count(e->特征节点组.begin(),e->特征节点组.end(),f.节点)==1&&!f.实例单位,
+            "源集合正式类型、规则或存在持有关系不一致");
+        std::set<稳定编码> seen;
+        for(const auto n:e->特征节点组){
+            require(有效(n)&&seen.insert(n).second,"目标存在特征清单有无效或重复身份");
+            if(n==f.节点)continue;
+            捕获因果节点保护(protect,{n});
+            const auto other=特征服务_.获取特征(n);
+            if(!other)return {S::前提已变化,{},{}};
+            const auto otherDefinition=特征概念服务_.读取特征概念定义保护(other->特征概念节点);
+            if(otherDefinition.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+            if(otherDefinition.前提已变化)return {S::前提已变化,{},{}};
+            require(otherDefinition.状态==基础结构操作状态::已完成&&otherDefinition.信息,"其它实例特征概念定义读取不完整");
+            if(!合并需求结果保护(protect,otherDefinition.预期节点组))return {S::前提已变化,{},{}};
+            require(otherDefinition.信息->类型根!=FT,"目标存在具有多个源集合特征实例");
+        }
+        if(!f.当前值)return {S::依赖未就绪,{},{}};
+        const auto* id=std::get_if<稳定编码>(&*f.当前值);require(id&&有效(*id),"源集合当前值不是合法材料引用");
+        捕获因果节点保护(protect,{*id});
+        const auto material=特征值服务_.获取特征值(*id);
+        const auto* members=material?std::get_if<std::vector<std::uint64_t>>(&material->材料):nullptr;
+        require(material&&material->物理类型==材料物理类型::U64数组&&members,"源集合当前材料不是U64数组");
+        新需求新增成员基准 result{E,f.节点,FT,*id,{}};
+        for(const auto n:*members){const 稳定编码 t{n};require(有效(t),"源集合包含无效任务身份");result.成员组.push_back(t);}
+        std::sort(result.成员组.begin(),result.成员组.end());
+        require(std::adjacent_find(result.成员组.begin(),result.成员组.end())==result.成员组.end(),"源集合包含重复任务身份");
+        const auto mapping=读取需求列表任务对应();
+        if(mapping.状态==新任务操作状态::资源失败)return {S::资源失败,{},{}};
+        if(mapping.状态!=新任务操作状态::已找到)throw std::logic_error("新增成员基准D/T投影读取不完整");
+        std::set<稳定编码> graph{任务集合根节点,需求树根节点};
+        for(const auto& item:mapping.对应项组){
+            if(源)需求服务_.采集提议源需求本体保护(item.需求.节点,*源,protect);
+            else graph.insert(item.需求.节点);
+            if(item.任务)graph.insert(item.任务->节点);
+        }
+        捕获因果节点保护(protect,graph);
+        const auto projectedAgain=查询服务任务(excluded);
+        if(projectedAgain.状态==新任务操作状态::资源失败)return {S::资源失败,{},{}};
+        if(projectedAgain.状态!=新任务操作状态::已找到)throw std::logic_error("新增成员基准D/T投影复读不完整");
+        if(projectedAgain.任务节点组!=result.成员组)return {S::前提已变化,{},{}};
+        {std::lock_guard lock(新任务互斥);if(服务需求取得合同_!=config||服务任务排除需求_!=excluded)return {S::前提已变化,{},{}};}
+        if(!核同因果节点保护(protect)||!需求服务_.核同提议源(源))return {S::前提已变化,{},{}};
+        return {S::已读取,std::move(result),std::move(protect)};
+    }catch(新需求目标定义核验状态 s){
+        if(s==新需求目标定义核验状态::前提已变化)return {S::前提已变化,{},{}};
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取新增成员目标基准",L"需求源读取发生非预期工程错误");
+    }catch(const 因果读取来源变化信号&){return {S::前提已变化,{},{}};}
+    catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(const std::length_error&){return {S::资源失败,{},{}};}
+    catch(const std::exception& error){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取新增成员目标基准",L"正式集合结构读取工程故障",error.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取新增成员目标基准",L"正式集合结构读取工程故障");}
+}
+新需求新增成员判定结果 新_任务类::判定新增成员来源(const 新需求完整目标& t) const noexcept {
+    return 判定新增成员来源内部(t,nullptr);
+}
+新需求新增成员判定结果 新_任务类::判定新增成员来源内部(
+    const 新需求完整目标& t,新_需求类::提议源收集批* 源) const noexcept {
+    using S=新需求新增成员读取状态;
+    try {
+        const auto def=需求服务_.核验新增成员目标定义保护(t);
+        if(def.状态==新需求目标定义核验状态::资源失败)return {S::资源失败,{},{},{},{}};
+        if(def.状态==新需求目标定义核验状态::前提已变化)return {S::前提已变化,{},{},{},{}};
+        if(def.状态!=新需求目标定义核验状态::已完成)return {S::未支持,{},{},{},{}};
+        const auto& c=*t.目标.新增成员来源见证;
+        auto current=读取新增成员目标基准内部(t.目标存在节点,c.要求.源特征类型概念节点,源);
+        if(current.状态!=S::已读取)return {current.状态,{},{},{},{}};
+        贡献要求(current.基准.has_value());
+        auto protect=std::move(def.完整保护);
+        if(!合并需求结果保护(protect,current.完整保护))return {S::前提已变化,{},{},{},{}};
+        const auto before=特征值服务_.获取特征值(c.基准材料节点);
+        const auto* values=before?std::get_if<std::vector<std::uint64_t>>(&before->材料):nullptr;贡献要求(values);
+        const auto count=特征服务_.计算任务集合新增数(c.要求.源特征类型概念节点,
+            新特征准确值{c.基准材料节点},新特征准确值{current.基准->材料节点});
+        if(count.状态==新特征比较状态::资源失败)return {S::资源失败,{},{},{},{}};
+        贡献要求(count.状态==新特征比较状态::已完成&&count.比较值&&*count.比较值>=0);
+        std::vector<稳定编码> baseline;for(const auto id:*values)baseline.push_back(稳定编码{id});
+        std::vector<稳定编码> added;std::set_difference(current.基准->成员组.begin(),current.基准->成员组.end(),
+            baseline.begin(),baseline.end(),std::back_inserter(added));
+        std::vector<新需求新增成员来源见证> witnesses;
+        std::vector<std::pair<稳定编码,新需求信息>> adopted;
+        for(const auto T:added){
+            // 每个公开读取自行结束task锁；下列需求/语言来源调用不持task锁。
+            捕获因果节点保护(protect,{T});
+            const auto owner=读取任务所属需求(T);
+            if(owner.状态==特征任务成员读取状态::资源失败)return {S::资源失败,{},{},{},{}};
+            贡献要求(owner.状态==特征任务成员读取状态::已读取&&owner.需求节点);
+            const auto d=源 ? 需求服务_.读取提议源需求(*owner.需求节点,*源,protect)
+                : 需求服务_.获取需求(*owner.需求节点);贡献要求(d.has_value());
+            if(!源)捕获因果节点保护(protect,{d->节点});
+            adopted.emplace_back(T,*d);
+            if(d->来源类型!=新需求来源类型::行动请求){贡献要求(!d->行动请求来源);continue;}
+            贡献要求(d->行动请求来源.has_value());const auto& source=*d->行动请求来源;
+            if(source.受请求者节点!=t.目标存在节点)continue;
+            if(c.要求.指定来源主体&&source.来源人类节点!=*c.要求.指定来源主体)continue;
+            if(c.要求.指定被认知需求&&source.被认知需求节点!=*c.要求.指定被认知需求)continue;
+            const auto valid=需求服务_.读取行动请求承接来源保护(source);
+            if(valid.状态==新行动请求来源读取状态::资源失败)return {S::资源失败,{},{},{},{}};
+            if(valid.状态==新行动请求来源读取状态::前提已变化)return {S::前提已变化,{},{},{},{}};
+            if(valid.状态==新行动请求来源读取状态::依赖未就绪)return {S::依赖未就绪,{},{},{},{}};
+            贡献要求(valid.状态==新行动请求来源读取状态::已读取&&valid.信息);
+            const auto unique=需求服务_.查询行动请求自我需求内部(source,源);
+            if(unique.状态==新需求操作状态::资源失败)return {S::资源失败,{},{},{},{}};
+            if(unique.状态==新需求操作状态::前提已变化)return {S::前提已变化,{},{},{},{}};
+            if(unique.状态==新需求操作状态::尚未初始化)return {S::依赖未就绪,{},{},{},{}};
+            贡献要求(unique.状态==新需求操作状态::已找到&&unique.信息&&unique.信息->节点==d->节点
+                &&d->目标存在节点==valid.信息->目标.目标存在节点&&d->目标==valid.信息->目标.目标
+                &&查询需求任务(d->节点)==T);
+            if(!合并需求结果保护(protect,valid.完整保护)||!合并需求结果保护(protect,unique.完整保护))return {S::前提已变化,{},{},{},{}};
+            witnesses.push_back({T,d->节点,source});
+        }
+        for(const auto& [T,d]:adopted)if(!需求服务_.提议需求值相同(需求服务_.获取需求(d.节点),std::optional{d},源)
+            ||查询需求任务(d.节点)!=T)return {S::前提已变化,{},{},{},{}};
+        const auto fresh=读取新增成员目标基准内部(t.目标存在节点,c.要求.源特征类型概念节点,源);
+        if(fresh.状态!=S::已读取)return {fresh.状态,{},{},{},{}};
+        if(fresh.基准!=current.基准||!合并需求结果保护(protect,fresh.完整保护)
+            ||!核同因果节点保护(protect)||!需求服务_.核同提议源(源))return {S::前提已变化,{},{},{},{}};
+        return {S::已读取,std::move(current.基准),count.比较值,std::move(witnesses),std::move(protect)};
+    }catch(新需求目标定义核验状态 s){
+        if(s==新需求目标定义核验状态::前提已变化)return {S::前提已变化,{},{},{},{}};
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"判定新增成员来源",L"需求源读取发生非预期工程错误");
+    }catch(const 因果读取来源变化信号&){return {S::前提已变化,{},{},{},{}};}
+    catch(const std::bad_alloc&){return {S::资源失败,{},{},{},{}};}
+    catch(const std::length_error&){return {S::资源失败,{},{},{},{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"判定新增成员来源",L"同一新增任务来源读取工程故障");}
+}
 新任务列表结果 新_任务类::查询服务任务(稳定编码 排除需求) const noexcept {
+    return 提取无停止因果读取<新任务列表结果>(查询服务任务(排除需求, {}));
+}
+
+新任务列表可停止结果 新_任务类::查询服务任务(稳定编码 排除需求, std::stop_token 停止) const noexcept {
     新任务列表结果 结果;
     try {
-        std::lock_guard 锁(新任务互斥);
-        const auto 来源 = 读取需求列表任务对应();
+        auto 锁 = 获取因果读取任务锁(停止);
+        const auto 来源 = 提取因果正常读取<新需求任务对应结果>(读取需求列表任务对应(停止));
         if (来源.状态 != 新任务操作状态::已找到) {
             结果.状态 = 来源.状态;
             return 结果;
@@ -5995,14 +7644,17 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
         结果.状态 = 新任务操作状态::结构不一致;
         std::map<稳定编码, const 新需求任务对应项*> 需求索引;
         for (const auto& 项 : 来源.对应项组) {
+            检查因果读取停止(停止);
             if (!需求索引.emplace(项.需求.节点, &项).second) return 结果;
         }
         std::vector<稳定编码> 成员;
         bool 排除合法 = false;
         for (const auto& 项 : 来源.对应项组) {
+            检查因果读取停止(停止);
             const auto* 祖先 = &项.需求;
             std::size_t 步数 = 0;
             while (!祖先->根角色) {
+                检查因果读取停止(停止);
                 if (++步数 > 需求索引.size() || !祖先->父需求节点) return 结果;
                 const auto 父 = 需求索引.find(*祖先->父需求节点);
                 if (父 == 需求索引.end()) return 结果;
@@ -6026,11 +7678,15 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
             return 结果;
         }
         // 完整来源已证明唯一性；这里只规范顺序，不掩盖重复来源。
+        检查因果读取停止(停止);
         std::sort(成员.begin(), 成员.end());
+        检查因果读取停止(停止);
         结果.任务节点组 = std::move(成员);
         结果.状态 = 新任务操作状态::已找到;
+        检查因果读取停止(停止);
         return 结果;
-    } catch (...) {
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+    catch (...) {
         结果.任务节点组.clear();
         结果.状态 = 新任务操作状态::资源失败;
         return 结果;
@@ -6090,17 +7746,36 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 }
 
 新需求任务对应结果 新_任务类::读取需求列表任务对应() const noexcept {
+    return 提取无停止因果读取<新需求任务对应结果>(读取需求列表任务对应({}));
+}
+
+新需求任务对应可停止结果 新_任务类::读取需求列表任务对应(std::stop_token 停止) const noexcept {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"正式需求列表任务对应");
+#endif
     新需求任务对应结果 结果;
     结果.状态 = 新任务操作状态::结构不一致;
     try {
         // 与既有任务写入保持task→demand方向。整个对应读取期间固定T，
         // D快照之后新增的需求不属于本次快照，调用者下次须重新读取。
-        std::lock_guard 锁(新任务互斥);
+        auto 锁 = 获取因果读取任务锁(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"D/T对应已取得任务锁");
+#endif
         if (!结构仍存在()) {
             结果.状态 = 新任务操作状态::尚未初始化;
             return 结果;
         }
-        const auto 列表 = 需求服务_.查询全部需求列表();
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"D/T对应即将读取需求owner完整列表");
+#endif
+        检查因果读取停止(停止);
+        auto 列表读取 = 需求服务_.查询全部需求列表(停止);
+        if (std::holds_alternative<新需求读取取消>(列表读取)) throw 因果读取停止信号{};
+        auto 列表 = std::get<新需求列表全集结果>(std::move(列表读取));
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"D/T对应需求owner完整列表已返回，即将核验任务登记");
+#endif
         if (列表.状态 != 新需求操作状态::已找到) {
             if (列表.状态 == 新需求操作状态::尚未初始化)
                 结果.状态 = 新任务操作状态::尚未初始化;
@@ -6110,37 +7785,44 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         }
         std::map<稳定编码, const 新需求治理信息*> 需求映射;
         for (const auto& 需求 : 列表.需求组) {
+            检查因果读取停止(停止);
             if (需求.执行域 != 新需求执行域::自我执行) return 结果;
             需求映射.emplace(需求.节点, &需求);
         }
         std::set<稳定编码> 登记任务;
         std::map<稳定编码, 新任务信息> 需求任务;
+        检查因果读取停止(停止);
         for (const auto& 字段 : 全局基础数据集.查询字段(
                 任务集合根节点, 任务成员字段)) {
+            检查因果读取停止(停止);
             const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
             if (!节点 || !登记任务.insert(*节点).second) return 结果;
             auto 任务 = 获取任务(*节点);
             if (!任务 || !需求映射.contains(任务->需求节点)) return 结果;
+            检查因果读取停止(停止);
             const auto 需求节点 = 任务->需求节点;
             if (!需求任务.emplace(需求节点, std::move(*任务)).second) {
                 结果.状态 = 新任务操作状态::需求已有多个任务;
                 return 结果;
             }
         }
-        std::set<稳定编码> 类型任务;
-        for (const auto& 字段 : 全局基础数据集.查询目标字段(
-                任务节点类型, 节点类型字段)) {
-            if (!节点类型为(字段.所属节点, 任务节点类型)
-                || !类型任务.insert(字段.所属节点).second) return 结果;
-        }
-        if (类型任务 != 登记任务) return 结果;
+        检查因果读取停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"D/T对应任务登记读取结束，即将正反核验");
+#endif
 
         std::vector<新需求任务对应项> 候选;
         候选.reserve(列表.需求组.size());
         std::map<稳定编码, 稳定编码> 列表映射;
-        for (const auto& l : 列表.列表项组) for (const auto d : l.需求节点组)
-            if (!列表映射.emplace(d, l.节点).second) return 结果;
+        for (const auto& l : 列表.列表项组) {
+            检查因果读取停止(停止);
+            for (const auto d : l.需求节点组) {
+                检查因果读取停止(停止);
+                if (!列表映射.emplace(d, l.节点).second) return 结果;
+            }
+        }
         for (const auto& d : 列表.需求组) {
+            检查因果读取停止(停止);
                 const auto 需求节点 = d.节点;
                 const auto 反向 = 全局基础数据集.查询目标字段(需求节点, 任务需求字段);
                 const auto 任务 = 需求任务.find(需求节点);
@@ -6150,6 +7832,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
                 } else {
                     if (反向.size() != 1 || 反向.front().所属节点 != 任务->second.节点)
                         return 结果;
+                    检查因果读取停止(停止);
                     const auto 正向 = 全局基础数据集.查询字段(任务->second.节点, 任务需求字段);
                     if (正向.size() != 1 || 正向.front().编码 != 反向.front().编码)
                         return 结果;
@@ -6161,8 +7844,10 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         }
         结果.对应项组 = std::move(候选);
         结果.状态 = 新任务操作状态::已找到;
+        检查因果读取停止(停止);
         return 结果;
-    } catch (...) {
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+    catch (...) {
         结果.状态 = 新任务操作状态::资源失败;
         结果.对应项组.clear();
         return 结果;
@@ -6203,10 +7888,12 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 }
 
 新任务调度材料项 新_任务类::读取任务调度项已加锁(
-    稳定编码 任务节点, bool& 资源失败) const {
+    稳定编码 任务节点, bool& 资源失败,const 新任务本次场景核验批& 场景批) const {
     新任务调度材料项 项;
+    项.新增成员目标判定=场景批.新增成员目标判定;
     项.定位.任务节点 = 任务节点;
-    项.任务 = 读取任务信息(任务节点, 特征服务_);
+    项.任务 = 场景批.任务;
+    if (!项.任务) 项.任务 = 读取任务信息(任务节点, 特征服务_);
     if (!项.任务) return 项;
     const auto& 任务 = *项.任务;
     项.定位.需求节点 = 任务.需求节点;
@@ -6240,6 +7927,37 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     }
     项.需求 = 需求服务_.获取需求(任务.需求节点);
     if (!项.需求) return 项;
+    if(任务.当前状态==新任务状态::未执行但目标已满足){
+        项.状态=新任务调度项状态::终结;项.等待原因=新任务等待原因::无;return 项;
+    }
+    if(项.需求->目标.引用内容定位
+        &&!(是本叶内容目标(*项.需求)&&(任务.当前候选方法材料节点||任务.方法执行组织节点||任务.最近执行实例节点))) {
+        // 内容定位当前不进入普通候选/执行组织的语义；W1先交复合分解，
+        // 叶子仍真实粗召回，但不能以普通E/FT结果绕过内容定位执行门。
+        if(任务.当前候选方法材料节点||任务.方法实例节点||任务.方法执行组织节点
+            ||任务.最近执行实例节点||任务.完成结算节点)return 项;
+        if(任务.当前状态!=新任务状态::已建立&&任务.当前状态!=新任务状态::待查找方法
+            &&任务.当前状态!=新任务状态::等待条件)return 项;
+        bool 来源有效=true;
+        if(const auto it=场景批.内容必要性组.find(任务.需求节点);it!=场景批.内容必要性组.end()){
+            const auto s=核同方法内容必要性投影已加锁(it->second);
+            资源失败=s==方法内容必要性状态::资源失败;if(资源失败)return 项;
+            来源有效=s==方法内容必要性状态::仍必要;
+        }
+        if(项.需求->复合来源) {
+            const auto 必要=场景批.已满足静态来源.value_or(
+                场景批.复合必要性.value_or(新任务复合分解状态::依赖未就绪));
+            资源失败=必要==新任务复合分解状态::资源失败;
+            if(资源失败)return 项;
+            来源有效=必要==新任务复合分解状态::已形成;
+        }
+        项.状态=任务.当前状态==新任务状态::等待条件||!来源有效
+            ||项.需求->活动状态!=新需求活动状态::活动
+ ? 新任务调度项状态::业务等待 : 新任务调度项状态::普通可筹办;
+        项.等待原因=项.状态==新任务调度项状态::业务等待
+ ? 新任务等待原因::需求材料未到 : 新任务等待原因::无;
+        return 项;
+    }
 
     if (任务.当前候选方法材料节点) {
         项.候选材料 = 读取候选方法材料信息(*任务.当前候选方法材料节点);
@@ -6286,15 +8004,6 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
             : 新任务调度项状态::完成待结算;
         项.等待原因 = 新任务等待原因::无;
         return 项;
-    }
-    if (当前使用历史结算方法() && 任务.服务结算来源) {
-        const auto 来源 = 读取任务虚拟存在引用(任务.服务结算来源->来源任务);
-        if (!当前使用历史结算方法() || 服务结算配置_->结算任务节点 != 任务节点
-            || 服务结算配置_->结算需求 != 任务.需求节点 || !来源
-            || 来源->当前状态 != static_cast<std::int64_t>(新任务状态::已完成)
-            || 任务.服务结算来源->冻结前值 != 服务结算配置_->冻结前值
-            || 任务.服务结算来源->目标值域概念节点
-                != 服务结算配置_->目标值域概念节点) return 项;
     }
     if (任务.方法实例节点&&!任务.方法执行组织节点) {
         const auto 实例 = 方法服务_.获取混合方法实例(*任务.方法实例节点);
@@ -6362,7 +8071,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     // 已有组织仍完整核验；这里不创建组织，也不赋予真正执行资格。
     if (任务.当前状态 == 新任务状态::待检查条件 && 任务.方法执行组织节点) {
         // 这里只读核验，绝不进入会覆盖实例条件的选择/筹办入口。
-        项.条件核验 = 核验任务条件和参数(任务节点);
+        项.条件核验 = 核验任务条件和参数内部(任务节点,nullptr,false,false,场景批);
         if (项.条件核验->状态 != 新任务治理条件筹办状态::已完成
             || !项.条件核验->候选已完整核验) {
             资源失败 = 项.条件核验->状态 == 新任务治理条件筹办状态::资源失败;
@@ -6396,6 +8105,17 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 新任务调度材料读取结果 新_任务类::读取任务调度材料() const noexcept {
     新任务调度材料读取结果 结果;
     try {
+        std::vector<新任务本次场景核验批> 批组;
+        std::optional<std::vector<稳定编码>> 原全集;
+        {std::lock_guard 锁(新任务互斥);原全集=读取任务登记全集();}
+        if(原全集)for(const auto T:*原全集){
+            const auto 上下文=std::make_shared<新方法内容核验上下文>();
+            auto 批=准备本次场景核验批(T,{},nullptr,false,false,上下文,true);
+            if(批.任务&&批.任务->当前状态==新任务状态::待检查条件&&批.任务->方法执行组织节点)
+                批=准备本次场景核验批(T);
+            批组.push_back(std::move(批));
+        }
+        for(auto& 批:批组)读取本次场景核验批(批);
         std::lock_guard 锁(新任务互斥);
         if (!治理已初始化_ || !结构仍存在()) {
             结果.状态 = 新任务调度读取状态::尚未初始化;
@@ -6403,10 +8123,14 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         }
         const auto 全集 = 读取任务登记全集();
         if (!全集) return 结果;
+        if(全集!=原全集)return 结果;
+        for(const auto& 批:批组)if(!核同本次场景核验批(批))return 结果;
         结果.项组.reserve(全集->size());
         bool 资源失败 = false;
         for (const auto 任务节点 : *全集) {
-            auto 项 = 读取任务调度项已加锁(任务节点, 资源失败);
+            const auto 批=std::find_if(批组.begin(),批组.end(),[&](const auto& x){return x.T==任务节点;});
+            if(批==批组.end())throw std::logic_error("调度场景批缺项");
+            auto 项 = 读取任务调度项已加锁(任务节点, 资源失败,*批);
             if (资源失败) {
                 结果.状态 = 新任务调度读取状态::资源失败;
                 结果.项组.clear();
@@ -6426,7 +8150,13 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     稳定编码 任务节点) const noexcept {
     新任务调度材料读取结果 结果;
     try {
+        const auto 上下文=std::make_shared<新方法内容核验上下文>();
+        auto 批=准备本次场景核验批(任务节点,{},nullptr,false,false,上下文,true);
+        if(批.任务&&批.任务->当前状态==新任务状态::待检查条件&&批.任务->方法执行组织节点)
+            批=准备本次场景核验批(任务节点);
+        读取本次场景核验批(批);
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批))return 结果;
         if (!治理已初始化_ || !结构仍存在()) {
             结果.状态 = 新任务调度读取状态::尚未初始化;
             return 结果;
@@ -6439,7 +8169,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         if (登记.size() != 1 || 登记.front().所属节点 != 任务集合根节点
             || !节点类型为(任务节点, 任务节点类型)) return 结果;
         bool 资源失败 = false;
-        auto 项 = 读取任务调度项已加锁(任务节点, 资源失败);
+        auto 项 = 读取任务调度项已加锁(任务节点, 资源失败,批);
         if (资源失败) {
             结果.状态 = 新任务调度读取状态::资源失败;
             return 结果;
@@ -6456,21 +8186,22 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 新任务操作状态 新_任务类::准备等待任务重新筹办(
     const 新任务调度定位& 预期定位) noexcept {
     try {
+        const auto 上下文=std::make_shared<新方法内容核验上下文>();
+        auto 场景批=准备本次场景核验批(预期定位.任务节点,{},nullptr,false,false,上下文,true);
+        if(场景批.任务&&场景批.任务->当前状态==新任务状态::待检查条件&&场景批.任务->方法执行组织节点)
+            场景批=准备本次场景核验批(预期定位.任务节点);
+        读取本次场景核验批(场景批);
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批))return 新任务操作状态::预期已变化;
         if (!预期定位.完整()) return 新任务操作状态::入口拒绝;
         if (预期定位.任务状态 != 新任务状态::已建立
             && 预期定位.任务状态 != 新任务状态::等待条件
             && 预期定位.任务状态 != 新任务状态::待检查条件)
             return 新任务操作状态::任务状态不允许;
-        const auto 读取 = 读取任务调度材料(预期定位.任务节点);
-        if (读取.状态 != 新任务调度读取状态::已读取) {
-            if (读取.状态 == 新任务调度读取状态::资源失败) return 新任务操作状态::资源失败;
-            if (读取.状态 == 新任务调度读取状态::尚未初始化) return 新任务操作状态::尚未初始化;
-            if (读取.状态 == 新任务调度读取状态::任务不存在) return 新任务操作状态::任务不存在;
-            return 新任务操作状态::结构不一致;
-        }
-        if (读取.项组.size() != 1) return 新任务操作状态::结构不一致;
-        const auto& 项 = 读取.项组.front();
+        if(!治理已初始化_||!结构仍存在())return 新任务操作状态::尚未初始化;
+        bool 资源失败=false;
+        const auto 项=读取任务调度项已加锁(预期定位.任务节点,资源失败,场景批);
+        if(资源失败)return 新任务操作状态::资源失败;
         if (项.状态 == 新任务调度项状态::结构不一致 || !项.任务 || !项.需求)
             return 新任务操作状态::结构不一致;
         auto 迁移后定位 = 预期定位;
@@ -6485,7 +8216,11 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         if (项.执行 && (项.执行->状态 != 新任务执行状态::已评估
                 || !项.执行->结束时间 || !项.影响评估))
             return 新任务操作状态::任务状态不允许;
-        const auto 当前 = 需求服务_.复核当前满足(项.定位.需求节点);
+        const auto 资格 = 复核任务筹办资格已加锁(预期定位.任务节点,场景批);
+        if (资格.状态 == 新需求筹办资格状态::资源失败) return 新任务操作状态::资源失败;
+        if (资格.状态 != 新需求筹办资格状态::允许筹办 || !资格.当前满足)
+            return 新任务操作状态::任务状态不允许;
+        const auto& 当前 = *资格.当前满足;
         if (当前.状态 == 新需求当前满足状态::资源失败) return 新任务操作状态::资源失败;
         if (项.需求->目标.目标形式 == 新需求目标形式::变化方向) {
             if (当前.状态 != 新需求当前满足状态::需要执行前后比较)
@@ -6496,18 +8231,12 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
             if (项.执行 && 项.影响评估->目标需求结果.状态 != 新需求当前满足状态::需增加
                 && 项.影响评估->目标需求结果.状态 != 新需求当前满足状态::需减少)
                 return 新任务操作状态::状态材料不足;
-        } else if (当前.状态 != 新需求当前满足状态::需增加
+        } else if (!资格.派生定义 && 当前.状态 != 新需求当前满足状态::需增加
             && 当前.状态 != 新需求当前满足状态::需减少
             && 当前.状态 != 新需求当前满足状态::未满足但无有向差值) {
             return 新任务操作状态::任务状态不允许;
         }
-        // 长期结算T必须回到既有来源/冻结值门，不能借普通恢复旁路。
-        const bool 是结算任务 = 当前使用历史结算方法()
-            && 服务结算配置_->结算任务节点 == 预期定位.任务节点;
-        if (项.任务->服务结算来源 && !是结算任务) return 新任务操作状态::结构不一致;
-        const auto 写入 = 是结算任务
-            ? 准备服务结算筹办(预期定位.任务节点)
-            : 修改任务状态(预期定位.任务节点, 新任务状态::待查找方法);
+        const auto 写入 = 修改任务状态(预期定位.任务节点, 新任务状态::待查找方法);
         if (写入 != 新任务操作状态::已修改 && 写入 != 新任务操作状态::无变化) return 写入;
         const auto 读回 = 获取任务(预期定位.任务节点);
         auto 预期任务 = *项.任务;
@@ -6519,16 +8248,21 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 新任务列表结果 新_任务类::查询受方法学习影响任务(稳定编码 方法节点) const noexcept {
     新任务列表结果 结果;
     try {
+        const auto 原全集=查询全部任务();
+        if(原全集.状态!=新任务操作状态::已找到)return 原全集;
+        std::map<稳定编码,新任务需求准备保护批> 准备组;
+        for(const auto T:原全集.任务节点组)准备组.emplace(T,读取任务需求准备保护批(T));
         std::lock_guard 锁(新任务互斥);
+        const auto 今全集=查询全部任务();
+        if(今全集.状态!=新任务操作状态::已找到||今全集.任务节点组!=原全集.任务节点组){结果.状态=新任务操作状态::预期已变化;return 结果;}
+        for(const auto& [T,p]:准备组)if(!核同任务需求准备保护批(p)){结果.状态=新任务操作状态::预期已变化;return 结果;}
         const auto 方法 = 方法服务_.获取方法(方法节点);
         if (!方法 || 方法->来源方法节点 || 方法->实例根节点
             || 方法->启用状态 != 新方法启用状态::启用 || 方法->条件结果组.empty()
-            || 方法服务_.是历史服务结算方法(方法节点)) {
+            || 方法->实现方式 != 新方法实现方式::本能) {
             结果.状态 = 新任务操作状态::方法不存在; return 结果;
         }
-        const auto 全部 = 查询全部任务();
-        if (全部.状态 != 新任务操作状态::已找到) return 全部;
-        for (const auto 节点 : 全部.任务节点组) {
+        for (const auto 节点 : 今全集.任务节点组) {
             const auto t = 获取任务(节点);
             if (!t) { 结果.状态 = 新任务操作状态::结构不一致; 结果.任务节点组.clear(); return 结果; }
             if (t->当前状态 != 新任务状态::已建立 && t->当前状态 != 新任务状态::待查找方法
@@ -6539,7 +8273,10 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
                 if (!x || x->任务节点 != 节点) { 结果.状态 = 新任务操作状态::结构不一致; 结果.任务节点组.clear(); return 结果; }
                 if (x->状态 != 新任务执行状态::已评估) continue;
             }
-            const auto 准备 = 复核任务需求准备(节点);
+            const auto& 准备 = 准备组.at(节点).结果;
+            if(准备.状态==新任务需求准备状态::来源前提已变化||准备.状态==新任务需求准备状态::资源延后){
+                结果.状态=准备.状态==新任务需求准备状态::资源延后 ? 新任务操作状态::资源失败 : 新任务操作状态::预期已变化;
+                结果.任务节点组.clear();return 结果;}
             if (准备.状态 == 新任务需求准备状态::待完善) continue;
             const auto d = 需求服务_.获取需求(t->需求节点);
             if (!d) { 结果.状态 = 新任务操作状态::结构不一致; 结果.任务节点组.clear(); return 结果; }
@@ -6557,12 +8294,18 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
                 结果.状态 = 新任务操作状态::结构不一致; 结果.任务节点组.clear(); return 结果;
             }
             bool 相关 = false;
+            auto 相关目标类型 = d->目标.目标特征类型概念节点;
+            const bool 内容目标 = d->目标.引用内容定位.has_value();
+            if (内容目标) {
+                if (d->目标.引用内容定位->正式内容路径.size() != 1) continue;
+                相关目标类型 = d->目标.引用内容定位->正式内容路径.front();
+            }
             const auto 检查类型 = [&](稳定编码 类型) {
                 const auto 根 = 取得特征概念类型根(特征概念服务_, 类型);
-                return 根 && *根 == d->目标.目标特征类型概念节点;
+                return 根 && *根 == 相关目标类型;
             };
             for (const auto 类型 : 方法->方法头.涉及特征类型概念组) 相关 = 相关 || 检查类型(类型);
-            for (const auto& 对 : 方法->条件结果组) for (const auto& r : 对.结果.结果项组)
+            if (!内容目标) for (const auto& 对 : 方法->条件结果组) for (const auto& r : 对.结果.结果项组)
                 if (r.特征类型概念节点) 相关 = 相关 || 检查类型(*r.特征类型概念节点);
             if (t->当前候选方法材料节点) {
                 const auto 材料 = 获取候选方法材料(*t->当前候选方法材料节点);
@@ -6600,11 +8343,18 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 
 新任务操作状态 新_任务类::准备学习后重新筹办(稳定编码 任务节点, 稳定编码 方法节点) noexcept {
     try {
+        const auto 上下文=std::make_shared<新方法内容核验上下文>();
+        auto 场景批=准备本次场景核验批(任务节点,{},nullptr,false,false,上下文,true);
+        读取本次场景核验批(场景批);
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批))return 新任务操作状态::预期已变化;
         const auto 相关 = 查询受方法学习影响任务(方法节点);
         if (相关.状态 != 新任务操作状态::已找到) return 相关.状态;
         if (std::find(相关.任务节点组.begin(), 相关.任务节点组.end(), 任务节点) == 相关.任务节点组.end())
             return 新任务操作状态::任务状态不允许;
+        const auto 资格 = 复核任务筹办资格已加锁(任务节点,场景批);
+        if (资格.状态 == 新需求筹办资格状态::资源失败) return 新任务操作状态::资源失败;
+        if (资格.状态 != 新需求筹办资格状态::允许筹办) return 新任务操作状态::任务状态不允许;
         const auto 写入 = 修改任务状态(任务节点, 新任务状态::待查找方法);
         if (写入 != 新任务操作状态::已修改 && 写入 != 新任务操作状态::无变化) return 写入;
         const auto 读回 = 获取任务(任务节点);
@@ -6649,11 +8399,26 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     }
 }
 
-void 新_任务类::提交已核验任务状态特征值(
+新任务操作状态 新_任务类::提交已核验任务状态特征值(
     const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态,
-    std::optional<稳定编码> 可撤销前状态) noexcept {
+    std::optional<稳定编码> 可撤销前状态,
+    const std::vector<基础联合节点快照>& 附加完整预期) noexcept {
     新特征I64准备结果 准备;
     bool 已证零发表 = true;
+    std::optional<新任务操作状态> 技术状态;
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+    if (当前任务状态前提样本) {
+        当前任务状态前提样本->T = 虚拟.任务节点;
+        当前任务状态前提样本->F = 虚拟.任务状态特征节点;
+        当前任务状态前提样本->原状态 = 虚拟.当前状态;
+        当前任务状态前提样本->新状态 = 新状态;
+        当前任务状态前提样本->保护数 = 附加完整预期.size();
+        当前任务状态前提样本->阶段 = 0;
+        当前任务状态前提样本->准备状态 = 0;
+        当前任务状态前提样本->提交状态 = 0;
+        当前任务状态前提样本->写入状态 = 0;
+    }
+#endif
     try {
         std::lock_guard 锁(新任务互斥);
         const 新任务虚拟存在引用 引用{虚拟.任务节点, 虚拟.节点, 虚拟.任务状态特征节点};
@@ -6663,7 +8428,16 @@ void 新_任务类::提交已核验任务状态特征值(
         if (!当前 || 当前->状态.当前值 != 旧值 || 旧值 == 新值 || !是任务状态值(新值))
             throw std::runtime_error("task state update identity/value changed");
         // 前S必须先建立；S引用F会改变F封存更新的完整入边预期。
-        准备 = 特征服务_.准备顶层I64更新(引用.状态特征节点, 新值);
+        准备 = 特征服务_.准备顶层I64更新(引用.状态特征节点, 新值, 附加完整预期);
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+        if (当前任务状态前提样本) {
+            当前任务状态前提样本->阶段 = 1;
+            当前任务状态前提样本->准备状态 = static_cast<int>(准备.状态);
+        }
+#endif
+        if(准备.状态==新特征I64准备状态::资源失败){技术状态=新任务操作状态::资源失败;throw std::bad_alloc{};}
+        if(准备.状态==新特征I64准备状态::预期已变化||准备.状态==新特征I64准备状态::联合更新占用){
+            技术状态=新任务操作状态::任务状态不允许;throw std::runtime_error("task protected premise changed");}
         if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备
             || 准备.准备->特征节点() != 引用.状态特征节点
             || 准备.准备->原当前值() != 旧值 || 准备.准备->新当前值() != 新值
@@ -6671,9 +8445,17 @@ void 新_任务类::提交已核验任务状态特征值(
             throw std::runtime_error("task state feature preparation failed");
         已证零发表 = false;
         const auto 提交 = 特征服务_.提交顶层I64更新(*准备.准备, {});
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+        if (当前任务状态前提样本) {
+            当前任务状态前提样本->阶段 = 2;
+            当前任务状态前提样本->提交状态 = static_cast<int>(提交.状态);
+        }
+#endif
         if (提交.状态 != 基础节点组追加状态::已完成) {
             if (!提交.附加片段回执组.empty()) throw std::runtime_error("failed update carries publication receipts");
             已证零发表 = true;
+            if(提交.状态==基础节点组追加状态::预期不符)技术状态=新任务操作状态::任务状态不允许;
+            else if(提交.状态==基础节点组追加状态::资源失败)技术状态=新任务操作状态::资源失败;
             throw std::runtime_error("task state feature zero publication");
         }
         if (!提交.附加片段回执组.empty()) throw std::runtime_error("unexpected task feature extra receipts");
@@ -6681,13 +8463,21 @@ void 新_任务类::提交已核验任务状态特征值(
         if (收尾.状态 != 新特征写入状态::已完成 || !收尾.当前值已改变)
             throw std::runtime_error("task state feature aggregation incomplete");
         特征服务_.结束顶层I64更新(*准备.准备);
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+        if (当前任务状态前提样本) 当前任务状态前提样本->阶段 = 3;
+#endif
         确保任务虚拟存在语义(虚拟.任务节点);
         const auto 读回 = 读取任务虚拟存在特征组(引用);
         const auto 语义 = 读取任务虚拟存在语义(引用);
         if (!读回 || 读回->状态.当前值 != 新值 || !语义
             || 语义->状态.当前状态 != 新值)
             throw std::runtime_error("task state feature/concept readback mismatch");
+        return 新任务操作状态::已修改;
     } catch (...) {
+        try{throw;}
+        catch(const std::bad_alloc&){if(已证零发表)技术状态=新任务操作状态::资源失败;}
+        catch(const std::length_error&){if(已证零发表)技术状态=新任务操作状态::资源失败;}
+        catch(...){}
         if (已证零发表) {
             if (准备.准备) 特征服务_.取消顶层I64更新(*准备.准备);
             if (可撤销前状态) {
@@ -6701,13 +8491,24 @@ void 新_任务类::提交已核验任务状态特征值(
                         L"零发表后的未消费前状态清理失败，保留现场。");
             }
         }
+        if(已证零发表&&技术状态)return *技术状态;
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"提交任务状态特征",
             L"特征提交或收尾异常；未知或已发表的事实不回滚，不作为业务结果继续。");
     }
 }
 
 新任务操作状态 新_任务类::写入已核验任务状态值(
-    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态) noexcept {
+    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态,
+    const std::vector<基础联合节点快照>& 附加完整预期) noexcept {
+    std::optional<稳定编码> 未消费前状态;
+    bool 状态已发表=false;
+    const auto 清理前状态=[&]{
+        if(!未消费前状态)return;
+        const auto p=状态服务_.获取状态(*未消费前状态);
+        if(!p||p->被引用次数!=0||状态服务_.删除状态(*未消费前状态)!=新状态操作状态::已完成)
+            throw std::logic_error("任务状态零发表前状态清理失败");
+        未消费前状态.reset();
+    };
     try {
         std::lock_guard 锁(新任务互斥);
         const 新任务虚拟存在引用 引用{虚拟.任务节点, 虚拟.节点, 虚拟.任务状态特征节点};
@@ -6722,10 +8523,28 @@ void 新_任务类::提交已核验任务状态特征值(
         确保任务虚拟存在语义(虚拟.任务节点);
         const auto 前时间 = 当前实例UTC强时间();
         if (!前时间) throw std::runtime_error("task before-state UTC unavailable");
-        const auto 前 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.状态特征节点, *前时间);
+        新事实追加保护增量 增量;
+        const auto 前 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.状态特征节点, *前时间, 增量);
         if (前.状态 != 新状态操作状态::已完成 || !前.状态节点)
             throw std::runtime_error("task before-state publication failed");
-        提交已核验任务状态特征值(虚拟, 新状态, 前.状态节点);
+        未消费前状态=前.状态节点;
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+        if (当前任务状态前提样本) {
+            当前任务状态前提样本->前状态 = *前.状态节点;
+            当前任务状态前提样本->前状态字段数 = 增量.新增字段组.size();
+        }
+#endif
+        auto 保护=附加完整预期;
+        if(!增量.新增外部关系组.empty()||!增量.字段变化组.empty())throw std::logic_error("任务前状态不是纯追加增量");
+        for(const auto& f:增量.新增字段组)if(const auto* ref=std::get_if<稳定编码>(&f.内容))
+            for(auto& p:保护)if(p.结构.节点.编码==*ref){
+                p.入向字段组.push_back(f);
+                std::sort(p.入向字段组.begin(),p.入向字段组.end(),[](const auto& a,const auto& b){return a.编码<b.编码;});
+            }
+        const auto 提交=提交已核验任务状态特征值(虚拟, 新状态, 前.状态节点, 保护);
+        未消费前状态.reset(); // 已由提交链消费，或其已证零发表清理。
+        if(提交!=新任务操作状态::已修改)return 提交;
+        状态已发表=true;
         const auto 后时间 = 当前实例UTC强时间();
         if (!后时间 || 后时间->纳秒 <= 前时间->纳秒)
             throw std::runtime_error("task state observation clock did not advance");
@@ -6742,6 +8561,12 @@ void 新_任务类::提交已核验任务状态特征值(
             || 读回->变化动态节点 != 变化.变化动态节点)
             throw std::runtime_error("task state change readback mismatch");
         return 新任务操作状态::已修改;
+    } catch(const std::bad_alloc&){
+        if(!状态已发表){try{清理前状态();return 新任务操作状态::资源失败;}catch(...){}}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写入任务状态",L"状态发表后资源故障或零发表前状态清理失败");
+    } catch(const std::length_error&){
+        if(!状态已发表){try{清理前状态();return 新任务操作状态::资源失败;}catch(...){}}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写入任务状态",L"状态发表后资源故障或零发表前状态清理失败");
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"写入任务状态",
             L"任务状态变化组织异常；保留实际特征及状态动态，不返回部分成功。");
@@ -6749,11 +8574,12 @@ void 新_任务类::提交已核验任务状态特征值(
 }
 
 新任务操作状态 新_任务类::写入任务状态(
-    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态) noexcept {
+    const 新任务虚拟存在信息& 虚拟, 新任务状态 新状态,
+    const std::vector<基础联合节点快照>& 附加完整预期) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
         if (!是合法状态迁移(虚拟.当前状态, 新状态)) return 新任务操作状态::任务状态不允许;
-        return 写入已核验任务状态值(虚拟, 新状态);
+        return 写入已核验任务状态值(虚拟, 新状态, 附加完整预期);
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务状态迁移", L"任务状态迁移工程异常。");
     }
@@ -6762,6 +8588,11 @@ void 新_任务类::提交已核验任务状态特征值(
 新任务操作状态 新_任务类::修改任务状态(
     稳定编码 任务节点,
     新任务状态 新状态) noexcept {
+    return 修改任务状态受保护(任务节点,新状态,{});
+}
+
+新任务操作状态 新_任务类::修改任务状态受保护(稳定编码 任务节点,
+    新任务状态 新状态,const std::vector<基础联合节点快照>& 附加完整预期) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
         if (!结构仍存在()) return 新任务操作状态::尚未初始化;
@@ -6770,7 +8601,7 @@ void 新_任务类::提交已核验任务状态特征值(
         }
         const auto 虚拟存在 = 读取任务虚拟存在信息(任务节点, 特征服务_);
         if (!虚拟存在) return 新任务操作状态::任务不存在;
-        return 写入任务状态(*虚拟存在, 新状态);
+        return 写入任务状态(*虚拟存在, 新状态, 附加完整预期);
     } catch (...) {
         return 新任务操作状态::资源失败;
     }
@@ -6783,6 +8614,28 @@ bool 新_任务类::装配本能动作读取(新_动态类& 动态服务) noexce
         本能动作读取_ = &动态服务;
         return true;
     } catch (...) { return false; }
+}
+
+bool 新_任务类::配置本能需求任务参数工厂(新本能需求任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能需求任务参数工厂_) return 本能需求任务参数工厂_ == &工厂;
+        本能需求任务参数工厂_ = &工厂;
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"配置本能需求任务参数工厂", L"工厂配置工程故障。");
+    }
+}
+
+bool 新_任务类::卸载本能需求任务参数工厂(新本能需求任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能需求任务参数工厂_ != &工厂) return false;
+        本能需求任务参数工厂_ = nullptr;
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"卸载本能需求任务参数工厂", L"工厂卸载工程故障。");
+    }
 }
 
 std::optional<稳定编码> 新_任务类::获取任务已结算动作定义() const noexcept {
@@ -6854,19 +8707,10 @@ std::optional<新服务值治理定义> 新_任务类::读取服务值治理定�
 std::optional<新任务结算边界证据> 新_任务类::读取当前结算边界() const {
     if (自我服务结算配置_) {
         const auto& c = *自我服务结算配置_;
-        if (服务结算配置_) 贡献要求(服务结算配置_->结算任务节点 == c.结算任务节点
-            && 服务结算配置_->结算需求 == c.结算需求节点 && 服务结算配置_->服务根需求 == c.服务根需求节点);
         return 新任务结算边界证据{c.结算任务节点, c.结算需求节点, c.服务根需求节点, c.能力};
-    }
-    if (服务结算配置_) {
-        const auto& c = *服务结算配置_;
-        return 新任务结算边界证据{c.结算任务节点, c.结算需求, c.服务根需求,
-            {新结算能力类别::历史方法, c.登记方法校验节点}};
     }
     return {};
 }
-bool 新_任务类::当前使用历史结算方法() const { return 服务结算配置_.has_value() && !自我服务结算配置_; }
-
 新任务操作状态 新_任务类::配置自我服务结算(const 新自我服务结算配置& c) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -6901,9 +8745,6 @@ bool 新_任务类::当前使用历史结算方法() const { return 服务结算
             || 取得特征概念类型根(特征概念服务_, f->特征概念节点) != c.服务值特征类型节点)
             return 新任务操作状态::结构不一致;
         if (自我服务结算配置_) return *自我服务结算配置_ == c ? 新任务操作状态::精确重复 : 新任务操作状态::结构不一致;
-        if (服务结算配置_ && (服务结算配置_->结算任务节点 != c.结算任务节点
-            || 服务结算配置_->结算需求 != c.结算需求节点 || 服务结算配置_->服务根需求 != c.服务根需求节点))
-            return 新任务操作状态::结构不一致;
         if (t->当前状态 != 新任务状态::已建立 && t->当前状态 != 新任务状态::等待条件)
             return 新任务操作状态::任务状态不允许;
         std::size_t definitionChildren = 0;
@@ -6919,66 +8760,6 @@ bool 新_任务类::当前使用历史结算方法() const { return 服务结算
         自我服务结算配置_ = c;
         return 新任务操作状态::已修改;
     } catch (...) { 贡献要求(false); return 新任务操作状态::资源失败; }
-}
-
-新任务操作状态 新_任务类::配置服务结算任务(
-    const 新任务服务结算配置& 配置) noexcept {
-    try {
-        std::lock_guard 锁(新任务互斥);
-        if (!结构仍存在()) return 新任务操作状态::尚未初始化;
-        if (自我服务结算配置_ && (自我服务结算配置_->结算任务节点 != 配置.结算任务节点
-            || 自我服务结算配置_->结算需求节点 != 配置.结算需求
-            || 自我服务结算配置_->服务根需求节点 != 配置.服务根需求))
-            return 新任务操作状态::结构不一致;
-        const auto 任务 = 获取任务(配置.结算任务节点);
-        const auto 需求 = 需求服务_.获取需求(配置.结算需求);
-        const auto 根 = 需求服务_.获取需求(配置.服务根需求);
-        const auto 方法 = 方法服务_.获取方法(配置.登记方法校验节点);
-        const auto 域 = 特征概念服务_.获取特征概念(配置.目标值域概念节点);
-        const auto* 区间 = 域 ? std::get_if<std::vector<特征概念I64闭区间>>(&域->值域) : nullptr;
-        constexpr auto 最大值 = (std::numeric_limits<std::int64_t>::max)();
-        const auto 目标值 = 配置.冻结前值 == 最大值 ? 最大值 : 配置.冻结前值 + 1;
-        if (!任务 || !需求 || !根 || !方法 || !域 || !区间 || 区间->size() != 1
-            || 区间->front().下界 != 目标值 || 区间->front().上界 != 目标值
-            || 域->材料类型 != 特征概念材料物理类型::I64标量
-            || 任务->需求节点 != 配置.结算需求
-            || 需求->父需求节点 != 配置.服务根需求
-            || 根->根角色 != 新需求根角色::服务
-            || 根->目标.目标形式 != 新需求目标形式::变化方向
-            || 根->目标.目标变化方向 != 新需求变化方向::增加
-            || 需求->目标存在节点 != 根->目标存在节点
-            || 需求->目标.目标特征类型概念节点 != 根->目标.目标特征类型概念节点
-            || 需求->目标.目标形式 != 新需求目标形式::值
-            || 需求->目标.目标值域概念节点 != 配置.目标值域概念节点
-            || 取得特征概念类型根(特征概念服务_, 配置.目标值域概念节点)
-                != 需求->目标.目标特征类型概念节点
-            || 方法->作用域 != 新方法作用域::普通世界
-            || 方法->实现方式 != 新方法实现方式::本能
-            || 方法->本能函数登记名 != std::optional<std::string>{"服务值结算"}
-            || std::find(方法->方法头.涉及特征类型概念组.begin(),
-                方法->方法头.涉及特征类型概念组.end(), 需求->目标.目标特征类型概念节点)
-                == 方法->方法头.涉及特征类型概念组.end()) return 新任务操作状态::结构不一致;
-        // 旧治理动作始终引用旧M；不得在替代后按登记名把历史解释为Q头。
-        const auto 定义 = 获取任务已结算动作定义(); 贡献要求(定义.has_value());
-        const auto 父代 = 方法服务_.读取服务结算固定加一父代(方法->节点);
-        const auto 冻结 = 贡献可选节点(*定义, 最终消费存储::旧动作方法);
-        if (冻结) 贡献要求(父代 == 冻结);
-        else if (父代) {
-            基础节点组追加请求 req;
-            req.追加字段组.push_back({*定义, 最终消费存储::旧动作方法, *父代});
-            req.预期联合节点组 = 贡献完整快照({*定义, 方法->节点, *父代});
-            const auto published = 全局基础数据集.原子追加节点组(req);
-            贡献要求(published.状态 == 基础节点组追加状态::已完成);
-        }
-        贡献要求(读取任务已结算动作方法() == 父代);
-        if (服务结算配置_)
-            return *服务结算配置_ == 配置 ? 新任务操作状态::精确重复 : 新任务操作状态::结构不一致;
-        if (任务->当前状态 != 新任务状态::已建立 && 任务->当前状态 != 新任务状态::等待条件)
-            return 新任务操作状态::任务状态不允许;
-        // 仅保存不可变装配定位；不发布候选或最近方法，采用仍由W1/W2/self决定。
-        服务结算配置_ = 配置;
-        return 新任务操作状态::已修改;
-    } catch (...) { return 新任务操作状态::资源失败; }
 }
 
 新任务操作状态 新_任务类::配置服务需求取得合同(
@@ -7019,8 +8800,119 @@ bool 新_任务类::当前使用历史结算方法() const { return 服务结算
     } catch (...) { return 新任务操作状态::资源失败; }
 }
 
+新任务操作状态 新_任务类::配置服务取得来源前驱(
+    const 新服务取得来源前驱配置& 配置) noexcept {
+    try {
+        std::unique_lock 锁(新任务互斥);
+        if (!结构仍存在()) return 新任务操作状态::尚未初始化;
+        const bool 原已配置=服务取得来源前驱配置_.has_value();
+        if (服务取得来源前驱配置_&&*服务取得来源前驱配置_!=配置)return 新任务操作状态::入口拒绝;
+        if ((!原已配置&&已开始过执行_) || !服务需求取得合同_)
+            return 新任务操作状态::入口拒绝;
+        for (const auto C : {配置.自我概念, 配置.人类概念, 配置.需求概念, 配置.任务概念,
+            配置.交互者类型, 配置.交互者人类范围, 配置.对象需求类型,
+            配置.完整被认知需求概念, 配置.服务任务类型,
+            配置.自我采用场景范围, 配置.管理关联场景范围})
+            if (!有效(C)) return 新任务操作状态::入口拒绝;
+        const auto 自我身份 = 存在服务_.读取存在身份保护(服务需求取得合同_->自我存在节点);
+        if (自我身份.状态 == 基础结构操作状态::资源失败) return 新任务操作状态::资源失败;
+        if (自我身份.前提已变化) return 新任务操作状态::预期已变化;
+        if (自我身份.状态 != 基础结构操作状态::已完成) return 新任务操作状态::入口拒绝;
+        贡献要求(自我身份.信息
+            && 自我身份.信息->存在节点 == 服务需求取得合同_->自我存在节点
+            && !自我身份.预期节点组.empty());
+        if (配置.自我概念 != 自我身份.信息->专属存在概念节点
+            || 配置.服务任务类型 != 服务需求取得合同_->服务任务集合类型)
+            return 新任务操作状态::入口拒绝;
+        const auto 信息概念 = 存在概念服务_.读取先天需求任务方法概念();
+        const auto 内容概念 = 存在概念服务_.读取引用内容筹办概念();
+        if (信息概念.状态 == 正式结构操作状态::依赖未就绪
+            || 信息概念.状态 == 正式结构操作状态::未找到
+            || 内容概念.状态 == 正式结构操作状态::依赖未就绪
+            || 内容概念.状态 == 正式结构操作状态::未找到)
+            return 新任务操作状态::依赖未实现;
+        if (信息概念.状态 == 正式结构操作状态::前提已变化
+            || 内容概念.状态 == 正式结构操作状态::前提已变化)
+            return 新任务操作状态::预期已变化;
+        贡献要求(信息概念.状态 == 正式结构操作状态::已读取 && 信息概念.信息
+            && 内容概念.状态 == 正式结构操作状态::已读取 && 内容概念.信息);
+        if (配置.需求概念 != 信息概念.信息->需求 || 配置.任务概念 != 信息概念.信息->任务
+            || 配置.完整被认知需求概念 != 内容概念.信息->完整被认知需求)
+            return 新任务操作状态::入口拒绝;
+        std::vector<基础联合节点快照> 保护 = 自我身份.预期节点组;
+        if (!合并需求结果保护(保护, 内容概念.完整保护组)) return 新任务操作状态::预期已变化;
+        for (const auto C : {配置.需求概念, 配置.任务概念, 配置.完整被认知需求概念}) {
+            const auto r = 存在概念服务_.读取正式概念身份保护(C);
+            if (r.状态 == 正式概念读取状态::依赖未就绪) return 新任务操作状态::依赖未实现;
+            if (r.状态 == 正式概念读取状态::前提已变化) return 新任务操作状态::预期已变化;
+            贡献要求(r.状态 == 正式概念读取状态::已读取 && r.身份
+                && r.身份->概念节点 == C && !r.身份->完整保护组.empty());
+            if (!合并需求结果保护(保护, r.身份->完整保护组)) return 新任务操作状态::预期已变化;
+        }
+        for (const auto C : {配置.自我概念, 配置.人类概念, 配置.自我采用场景范围,
+            配置.管理关联场景范围}) {
+            const auto r = 存在概念服务_.读取普通存在概念定义保护(C);
+            if (r.状态 == 正式概念读取状态::依赖未就绪) return 新任务操作状态::依赖未实现;
+            if (r.状态 == 正式概念读取状态::前提已变化) return 新任务操作状态::预期已变化;
+            if (r.状态 != 正式概念读取状态::已读取) return 新任务操作状态::入口拒绝;
+            贡献要求(r.信息 && r.信息->节点 == C && !r.完整保护组.empty());
+            if (!合并需求结果保护(保护, r.完整保护组)) return 新任务操作状态::预期已变化;
+        }
+        std::map<稳定编码, 特征概念定义保护信息> 特征定义;
+        for (const auto C : {配置.交互者类型, 配置.交互者人类范围, 配置.对象需求类型,
+            配置.服务任务类型}) {
+            const auto r = 特征概念服务_.读取特征概念定义保护(C);
+            if (r.状态 == 基础结构操作状态::资源失败) return 新任务操作状态::资源失败;
+            if (r.前提已变化) return 新任务操作状态::预期已变化;
+            if (r.状态 != 基础结构操作状态::已完成) return 新任务操作状态::入口拒绝;
+            贡献要求(r.信息 && r.信息->定义.节点 == C && !r.预期节点组.empty());
+            if (!合并需求结果保护(保护, r.预期节点组)) return 新任务操作状态::预期已变化;
+            特征定义.emplace(C, *r.信息);
+        }
+        const auto& 交互者 = 特征定义.at(配置.交互者类型);
+        const auto& 人类范围 = 特征定义.at(配置.交互者人类范围);
+        const auto* 域 = std::get_if<特征概念存在引用值域>(&人类范围.定义.值域);
+        if (交互者.类型根 != 配置.交互者类型 || 人类范围.类型根 != 配置.交互者类型
+            || 交互者.定义.材料类型 != 特征概念材料物理类型::存在节点引用
+            || 人类范围.定义.材料类型 != 特征概念材料物理类型::存在节点引用
+            || !域 || 域->存在概念节点 != 配置.人类概念
+            || 人类范围.定义.单位 != 交互者.定义.单位
+            || 人类范围.定义.比较规则 != 交互者.定义.比较规则
+            || 人类范围.定义.聚合规则 != 交互者.定义.聚合规则
+            || 特征定义.at(配置.对象需求类型).类型根 != 配置.对象需求类型
+            || 特征定义.at(配置.对象需求类型).定义.材料类型 != 特征概念材料物理类型::需求节点引用
+            || 特征定义.at(配置.服务任务类型).类型根 != 配置.服务任务类型
+            || 特征定义.at(配置.服务任务类型).定义.材料类型 != 特征概念材料物理类型::U64数组
+            || !std::holds_alternative<特征概念全材料值域>(特征定义.at(配置.服务任务类型).定义.值域)
+            || 特征定义.at(配置.服务任务类型).定义.单位
+            || 特征定义.at(配置.服务任务类型).定义.比较规则 != 特征概念比较规则::服务任务集合身份判等
+            || 特征定义.at(配置.服务任务类型).定义.聚合规则 != 特征概念聚合规则::不自动聚合)
+            return 新任务操作状态::入口拒绝;
+        const auto* 原接口=因果筹办读取_;
+        const auto 原取得合同=服务需求取得合同_;
+        锁.unlock();
+        const auto 定义批=提取因果正常读取<来源前驱当前定义批>(读取来源前驱当前定义批内部(配置,{},true));
+        if(定义批.状态==新来源前驱元数据读取状态::资源失败)return 新任务操作状态::资源失败;
+        if(定义批.状态==新来源前驱元数据读取状态::前提已变化)return 新任务操作状态::预期已变化;
+        if(定义批.状态!=新来源前驱元数据读取状态::已读取)return 新任务操作状态::依赖未实现;
+        if(!合并需求结果保护(保护,定义批.完整保护))return 新任务操作状态::预期已变化;
+        锁.lock();
+        if(因果筹办读取_!=原接口||服务需求取得合同_!=原取得合同||(!原已配置&&已开始过执行_)||!结构仍存在())
+            return 新任务操作状态::预期已变化;
+        if (!核同因果节点保护(保护)) return 新任务操作状态::预期已变化;
+        if(服务取得来源前驱配置_)return *服务取得来源前驱配置_==配置
+            ? 新任务操作状态::已复用 : 新任务操作状态::入口拒绝;
+        服务取得来源前驱配置_ = 配置;
+        return 新任务操作状态::已修改;
+    } catch (const std::bad_alloc&) { return 新任务操作状态::资源失败; }
+    catch (const std::length_error&) { return 新任务操作状态::资源失败; }
+    catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"配置服务取得来源前驱", L"正式来源配置读取故障"); }
+}
+
 bool 新_任务类::是服务需求取得目标(const 新需求信息& 需求) const {
     return 服务需求取得合同_
+        && 需求.目标.新增成员来源见证
+        && 需求.目标.新增成员来源见证->要求==新需求新增成员见证要求{服务需求取得合同_->服务任务集合类型,{},{}}
         && 需求.目标存在节点 == 服务需求取得合同_->自我存在节点
         && 需求.目标.目标形式 == 新需求目标形式::值
         && 需求.目标.目标特征类型概念节点 == 服务需求取得合同_->数量变化量类型
@@ -7031,6 +8923,7 @@ bool 新_任务类::是服务需求取得目标(const 新需求信息& 需求) c
 新直接服务结算来源结果 新_任务类::核验直接服务结算来源(稳定编码 来源任务节点) const noexcept {
     新直接服务结算来源结果 结果;
     try {
+        const auto 准备批=读取任务需求准备保护批(来源任务节点);
         std::lock_guard 锁(新任务互斥);
         const auto 边界 = 读取当前结算边界();
         if (!边界) return 结果;
@@ -7059,7 +8952,10 @@ bool 新_任务类::是服务需求取得目标(const 新需求信息& 需求) c
             || 需求->服务要求确认组.empty()) {
             结果.状态 = 新直接服务结算来源状态::非直接服务; return 结果;
         }
-        const auto 语义 = 需求服务_.复核需求服务要求语义(需求->节点);
+        if(!核同任务需求准备保护批(准备批)){
+            结果.状态=新直接服务结算来源状态::尚未完成;return 结果;
+        }
+        const auto& 语义 = 准备批.守卫;
         if (语义.状态 == 新服务要求执行守卫状态::需重新确认) {
             结果.状态 = 新直接服务结算来源状态::需重新确认; return 结果;
         }
@@ -7080,95 +8976,6 @@ bool 新_任务类::是服务需求取得目标(const 新需求信息& 需求) c
     } catch (...) { 结果.状态 = 新直接服务结算来源状态::资源失败; return 结果; }
 }
 
-std::optional<新任务服务结算来源绑定> 新_任务类::读取服务结算来源(
-    稳定编码 结算任务节点) const noexcept {
-    try {
-        std::lock_guard 锁(新任务互斥);
-        const auto 任务 = 获取任务(结算任务节点);
-        return 任务 ? 任务->服务结算来源 : std::nullopt;
-    } catch (...) { return std::nullopt; }
-}
-
-新任务操作状态 新_任务类::接纳服务结算来源(
-    稳定编码 结算任务节点, const 新任务服务结算来源绑定& 绑定) noexcept {
-    try {
-        std::lock_guard 锁(新任务互斥);
-        if (!当前使用历史结算方法() || 服务结算配置_->结算任务节点 != 结算任务节点
-            || 结算任务节点 == 绑定.来源任务.任务节点
-            || 绑定.冻结前值 != 服务结算配置_->冻结前值
-            || 绑定.目标值域概念节点 != 服务结算配置_->目标值域概念节点)
-            return 新任务操作状态::入口拒绝;
-        const auto 任务 = 获取任务(结算任务节点);
-        if (!任务) return 新任务操作状态::任务不存在;
-        const auto 新贡献来源 = 读取任务完成结算(绑定.来源任务.任务节点);
-        if (新贡献来源 && 新贡献来源->服务贡献) return 新任务操作状态::最终贡献消费尚未装配;
-        if (任务->服务结算来源)
-            return *任务->服务结算来源 == 绑定 ? 新任务操作状态::精确重复 : 新任务操作状态::结构不一致;
-        if (任务->当前状态 != 新任务状态::已建立 && 任务->当前状态 != 新任务状态::等待条件
-            && 任务->当前状态 != 新任务状态::待查找方法 && 任务->当前状态 != 新任务状态::待检查条件)
-            return 新任务操作状态::任务状态不允许;
-        const auto 来源 = 读取任务虚拟存在引用(绑定.来源任务);
-        if (!来源 || 来源->当前状态 != static_cast<std::int64_t>(新任务状态::已完成))
-            return 新任务操作状态::任务状态不允许;
-        const auto 来源准入 = 核验直接服务结算来源(绑定.来源任务.任务节点);
-        if (来源准入.状态 == 新直接服务结算来源状态::最终贡献消费尚未装配)
-            return 新任务操作状态::最终贡献消费尚未装配;
-        if (来源准入.状态 != 新直接服务结算来源状态::允许结算)
-            return 来源准入.状态 == 新直接服务结算来源状态::资源失败 ? 新任务操作状态::资源失败
-                : 来源准入.状态 == 新直接服务结算来源状态::结构不一致
-                    || 来源准入.状态 == 新直接服务结算来源状态::尚未配置 ? 新任务操作状态::结构不一致
-                    : 新任务操作状态::任务状态不允许;
-        const auto 当前 = 需求服务_.复核当前满足(任务->需求节点);
-        if (当前.状态 != 新需求当前满足状态::需增加 || !当前.实际特征节点)
-            return 当前.状态 == 新需求当前满足状态::资源失败
-                ? 新任务操作状态::资源失败 : 新任务操作状态::任务状态不允许;
-        const auto 特征 = 特征服务_.获取特征(*当前.实际特征节点);
-        if (!特征 || 特征->当前值 != std::optional<新特征准确值>{新特征准确值{绑定.冻结前值}})
-            return 新任务操作状态::结构不一致;
-        std::vector<稳定编码> 已写;
-        已写.reserve(5);
-        if (!写入服务结算来源字段(结算任务节点, 绑定, 已写)) {
-            回滚字段(已写);
-            return 新任务操作状态::资源失败;
-        }
-        std::optional<新任务服务结算来源绑定> 读回;
-        if (!读取服务结算来源字段(结算任务节点, 读回) || 读回 != 绑定) {
-            回滚字段(已写);
-            return 新任务操作状态::结构不一致;
-        }
-        return 新任务操作状态::已修改;
-    } catch (...) { return 新任务操作状态::资源失败; }
-}
-
-新任务操作状态 新_任务类::准备服务结算筹办(稳定编码 结算任务节点) noexcept {
-    try {
-        std::lock_guard 锁(新任务互斥);
-        if (!治理已初始化_ || !当前使用历史结算方法()
-            || 服务结算配置_->结算任务节点 != 结算任务节点) return 新任务操作状态::入口拒绝;
-        const auto 任务 = 获取任务(结算任务节点);
-        if (!任务) return 新任务操作状态::任务不存在;
-        if (任务->当前状态 != 新任务状态::已建立 && 任务->当前状态 != 新任务状态::等待条件
-            && 任务->当前状态 != 新任务状态::待查找方法 && 任务->当前状态 != 新任务状态::待检查条件)
-            return 新任务操作状态::任务状态不允许;
-        // 来源是执行条件，不是查找方法和筹办的前置许可。
-        if (任务->服务结算来源) {
-            const auto 完成 = 读取任务完成结算(任务->服务结算来源->来源任务.任务节点);
-            if (完成 && 完成->服务贡献) return 新任务操作状态::最终贡献消费尚未装配;
-            const auto 来源 = 读取任务虚拟存在引用(任务->服务结算来源->来源任务);
-            if (!来源 || 来源->当前状态 != static_cast<std::int64_t>(新任务状态::已完成))
-                return 新任务操作状态::任务状态不允许;
-        }
-        const auto 当前 = 需求服务_.复核当前满足(任务->需求节点);
-        const auto 特征 = 当前.实际特征节点 ? 特征服务_.获取特征(*当前.实际特征节点) : std::nullopt;
-        if (当前.状态 != 新需求当前满足状态::需增加 || !特征
-            || 特征->当前值 != std::optional<新特征准确值>{新特征准确值{服务结算配置_->冻结前值}})
-            return 新任务操作状态::任务状态不允许;
-        if (任务->当前状态 == 新任务状态::待查找方法) return 新任务操作状态::无变化;
-        if (任务->当前状态 == 新任务状态::已建立) return 准备任务查找方法(结算任务节点);
-        return 修改任务状态(结算任务节点, 新任务状态::待查找方法);
-    } catch (...) { return 新任务操作状态::资源失败; }
-}
-
 std::optional<稳定编码> 新_任务类::获取任务状态特征类型() const noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -7186,30 +8993,6 @@ std::optional<稳定编码> 新_任务类::获取任务服务值特征类型() c
         return 任务服务值特征概念;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取任务服务值特征类型", L"既有任务服务值类型不可读。");
-    }
-}
-
-std::optional<稳定编码> 新_任务类::读取任务已结算动作方法() const noexcept {
-    try {
-        std::lock_guard 锁(新任务互斥);
-        const auto definition = 获取任务已结算动作定义(); 贡献要求(definition.has_value());
-        const auto frozen = 贡献可选节点(*definition, 最终消费存储::旧动作方法);
-        if (frozen) {
-            const auto m = 方法服务_.获取方法(*frozen);
-            贡献要求(m && !m->来源方法节点 && !m->父代方法节点
-                && m->实现方式 == 新方法实现方式::本能 && m->作用域 == 新方法作用域::普通世界
-                && m->本能函数登记名 == std::optional<std::string>{"服务值结算"});
-            return frozen;
-        }
-        // 无历史发生的新安装可为空；已有动作却无法还原M时不能猜测当前登记头。
-        for (const auto& f : 贡献完整快照({*definition}).front().入向字段组) {
-            if (!本能动作读取_ || !本能动作读取_->是动态节点(f.所属节点)) continue;
-            const auto a = 本能动作读取_->获取动态(f.所属节点);
-            贡献要求(a && a->动作定义节点 != definition);
-        }
-        return {};
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务已结算动作方法", L"旧动作方法身份无法完整还原。");
     }
 }
 
@@ -7347,16 +9130,15 @@ std::optional<新任务贡献动作阶段> 新_任务类::读取任务贡献动�
         j.来源最终消费节点 = 贡献可选节点(n, 最终消费存储::消费关联);
         贡献要求(j.来源最终消费节点.has_value() == (j.种类 == 新任务贡献动作种类::最终结算收尾));
         const auto l = 贡献可选节点(n, q::边界结算任务), d = 贡献可选节点(n, q::边界结算需求);
-        const auto 根 = 贡献可选节点(n, q::边界服务根需求), m = 贡献可选节点(n, q::边界登记方法);
+        const auto 根 = 贡献可选节点(n, q::边界服务根需求);
         const auto g = 贡献可选节点(n, q::边界治理能力);
         const auto version = 贡献可选整数(n, q::边界格式版本);
         if (状态收尾) {
             贡献要求(j.来源直接接收节点 && l && d && 根);
-            贡献要求(version ? ((*version == 1 && m && !g) || (*version == 2 && g && !m)) : (m && !g));
+            贡献要求(version && *version == 2 && g);
             j.结算边界 = 新任务结算边界证据{*l, *d, *根,
-                g ? 新结算能力引用{新结算能力类别::自我服务值治理, *g}
-                  : 新结算能力引用{新结算能力类别::历史方法, *m}};
-        } else 贡献要求(!j.来源直接接收节点 && !l && !d && !根 && !m && !g && !version);
+                新结算能力引用{新结算能力类别::自我服务值治理, *g}};
+        } else 贡献要求(!j.来源直接接收节点 && !l && !d && !根 && !g && !version);
         贡献要求(j.来源执行节点.has_value() == j.来源评估节点.has_value());
         if (j.来源执行节点) {
             const auto x = 读取执行信息(*j.来源执行节点, 状态服务_, 特征服务_, 特征概念服务_);
@@ -7542,10 +9324,6 @@ void 新_任务类::核验任务贡献特征权威(稳定编码 t) const noexcep
             节点.字段组.push_back({q::边界结算需求, j.结算边界->结算需求节点});
             节点.字段组.push_back({q::边界服务根需求, j.结算边界->服务根需求节点});
             switch (j.结算边界->能力.类别) {
-            case 新结算能力类别::历史方法:
-                节点.字段组.push_back({q::边界格式版本, 基础值{std::int64_t{1}}});
-                节点.字段组.push_back({q::边界登记方法, j.结算边界->能力.节点});
-                break;
             case 新结算能力类别::自我服务值治理:
                 节点.字段组.push_back({q::边界格式版本, 基础值{std::int64_t{2}}});
                 节点.字段组.push_back({q::边界治理能力, j.结算边界->能力.节点});
@@ -7632,6 +9410,8 @@ void 新_任务类::初始化任务治理场景组织() noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
         if (!结构仍存在() || !内部治理世界_) throw std::runtime_error("task scene initialization dependencies missing");
+        // 全仓类型/登记健康核验属于初始化，不附加到每次正式D/T业务读取。
+        if(!读取任务登记全集(true))throw std::runtime_error("task scene registration/type inventory is inconsistent");
         const auto 对应 = 读取需求列表任务对应();
         if (对应.状态 != 新任务操作状态::已找到) throw std::runtime_error("task/demand full correspondence is inconsistent");
         std::vector<新任务虚拟存在引用> 引用组;
@@ -7928,7 +9708,8 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         if (动作.状态 != 新治理动作登记状态::已建立 || !动作.动作节点)
             throw std::runtime_error("governance action publication failed");
         结果.内部动作节点 = 动作.动作节点;
-        提交已核验任务状态特征值(*虚拟, 新任务状态::已结算, std::nullopt);
+        if(提交已核验任务状态特征值(*虚拟, 新任务状态::已结算, std::nullopt)!=新任务操作状态::已修改)
+            throw std::runtime_error("settled task state publication incomplete after action");
         结果.任务读回 = 读取任务虚拟存在引用(目标);
         if (!结果.任务读回 || 结果.任务读回->当前状态 != static_cast<std::int64_t>(新任务状态::已结算))
             throw std::runtime_error("settled task state write/readback failed");
@@ -7973,7 +9754,18 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
 新任务候选方法发布结果 新_任务类::发布候选方法材料(
     新任务候选方法发布请求 请求) noexcept {
     新任务候选方法发布结果 结果;
+    if(请求.需求目标.引用内容定位&&!请求.需求目标.引用内容定位->正式内容路径.empty()) {
+        // 新定位的真实粗召回不得通过旧发表入口变成普通E/FT候选。
+        结果.状态=新任务操作状态::依赖未实现;return 结果;
+    }
     try {
+        std::vector<基础联合节点快照> 新增保护;
+        if(请求.需求目标.新增成员来源见证){
+            const auto r=需求服务_.读取新增成员来源见证(请求.需求节点);
+            if(r.状态!=新需求新增成员读取状态::已读取){
+                结果.状态=r.状态==新需求新增成员读取状态::资源失败 ? 新任务操作状态::资源失败 : 新任务操作状态::依赖未实现;return 结果;}
+            新增保护=r.完整保护;
+        }
         std::lock_guard 锁(新任务互斥);
         if (!结构仍存在()) {
             结果.状态 = 新任务操作状态::尚未初始化;
@@ -8006,6 +9798,17 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
                               : 新任务操作状态::需求不存在;
             return 结果;
         }
+        if(请求.需求目标.引用内容定位) {
+            if(!是本叶内容目标(*需求)||请求.候选方法节点组.empty()){
+                结果.状态=新任务操作状态::依赖未实现;return 结果;
+            }
+            for(const auto M:请求.候选方法节点组) {
+                const auto 方法=方法服务_.获取方法(M);
+                if(!方法||!有本叶内容知识(*方法,*需求,存在概念服务_)){
+                    结果.状态=新任务操作状态::依赖未实现;return 结果;
+                }
+            }
+        }
         if (请求.查询状态 != 新方法操作状态::已找到 || !请求.查询完整
             || 请求.查询.作用域 || 请求.查询.实现方式
             || !请求.查询.作用存在概念组.empty()
@@ -8014,12 +9817,20 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             || 请求.查询.涉及特征类型概念组.front()
                 != 请求.需求目标.目标特征类型概念节点) return 结果;
 
-        const auto 权威候选 = 方法服务_.查询候选方法(请求.查询);
+        auto 权威候选 = 方法服务_.查询候选方法(请求.查询);
         if (权威候选.状态 != 新方法操作状态::已找到) {
             结果.状态 = 权威候选.状态 == 新方法操作状态::资源失败
                 ? 新任务操作状态::资源失败
                 : 新任务操作状态::结构不一致;
             return 结果;
+        }
+        if(请求.需求目标.引用内容定位) {
+            auto& 候选=权威候选.方法节点组;
+            候选.erase(std::remove_if(候选.begin(),候选.end(),[&](稳定编码 M){
+                const auto m=方法服务_.获取方法(M);
+                if(!m)throw std::logic_error("formal candidate unreadable during publication");
+                return !有本叶内容知识(*m,*需求,存在概念服务_);
+            }),候选.end());
         }
         if (权威候选.方法节点组 != 请求.候选方法节点组) {
             结果.状态 = 新任务操作状态::结构不一致;
@@ -8059,6 +9870,37 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             }
         }
 
+        if(请求.需求目标.新增成员来源见证) {
+            基础节点组追加请求 batch;batch.预期联合节点组=std::move(新增保护);
+            捕获因果节点保护(batch.预期联合节点组,{请求.任务节点});
+            基础组内新节点 material;const auto& c=*请求.需求目标.新增成员来源见证;
+            material.字段组={{节点类型字段,任务候选方法材料节点类型},{候选所属任务字段,请求.任务节点},
+                {候选需求字段,请求.需求节点},{候选目标特征类型字段,请求.需求目标.目标特征类型概念节点},
+                {候选目标形式字段,基础值{static_cast<std::int64_t>(请求.需求目标.目标形式)}},
+                {候选目标值域字段,*请求.需求目标.目标值域概念节点},{候选目标比较关系字段,*请求.需求目标.目标比较关系概念节点},
+                {候选查询状态字段,基础值{static_cast<std::int64_t>(请求.查询状态)}},{候选查询完整字段,基础值{std::int64_t{1}}},
+                {候选目标新增成员格式字段,基础值{std::int64_t{1}}},{候选目标新增成员来源种类字段,基础值{std::int64_t{1}}},
+                {候选目标新增成员源FT字段,c.要求.源特征类型概念节点},{候选目标新增成员B材料字段,c.基准材料节点}};
+            if(c.要求.指定来源主体)material.字段组.push_back({候选目标新增成员指定H字段,*c.要求.指定来源主体});
+            if(c.要求.指定被认知需求)material.字段组.push_back({候选目标新增成员指定D字段,*c.要求.指定被认知需求});
+            for(const auto FT:请求.查询.涉及特征类型概念组)material.字段组.push_back({候选查询特征类型字段,FT});
+            for(const auto M:请求.候选方法节点组)material.字段组.push_back({候选方法字段,M});
+            batch.新节点组.push_back(std::move(material));
+            const auto links=全局基础数据集.查询字段(请求.任务节点,任务候选方法材料字段);
+            贡献要求(links.size()<=1);
+            if(links.empty())batch.追加字段组.push_back({请求.任务节点,任务候选方法材料字段,基础组内节点引用{0}});
+            else {batch.删除字段关系组.push_back(links.front().编码);
+                batch.追加字段组.push_back({请求.任务节点,任务候选方法材料字段,基础组内节点引用{0}});
+                贡献要求(旧材料.has_value());batch.追加字段组.push_back({请求.任务节点,任务待回收候选方法材料编码字段,基础值{std::vector<std::uint64_t>{旧材料->节点.值}}});}
+            const auto commit=全局基础数据集.原子追加节点组(batch);
+            if(commit.状态==基础节点组追加状态::预期不符){结果.状态=新任务操作状态::任务状态不允许;return 结果;}
+            if(commit.状态==基础节点组追加状态::资源失败){结果.状态=新任务操作状态::资源失败;return 结果;}
+            贡献要求(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==1);
+            const auto id=commit.新节点组.front();const auto read=读取候选方法材料信息(id);
+            贡献要求(read&&read->需求目标==请求.需求目标&&读取任务信息(请求.任务节点,特征服务_)->当前候选方法材料节点==id);
+            if(旧材料)贡献要求(收口待回收候选材料(请求.任务节点));
+            结果.状态=旧材料 ? 新任务操作状态::已修改 : 新任务操作状态::已建立;结果.材料节点=id;return 结果;
+        }
         const auto 材料节点 = 全局基础数据集.新建节点();
         if (!有效(材料节点)) {
             结果.状态 = 新任务操作状态::资源失败;
@@ -8082,6 +9924,13 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         if (完成 && 请求.需求目标.目标值域概念节点) {
             完成 = 写入节点字段(材料节点, 候选目标值域字段,
                 *请求.需求目标.目标值域概念节点, 已写字段);
+        }
+        if (完成 && 请求.需求目标.引用内容定位) {
+            const auto& 定位 = *请求.需求目标.引用内容定位;
+            完成 = 定位.正式内容路径.size() <= 1
+                && 写入节点字段(材料节点, 候选目标引用需求字段, 定位.引用需求节点, 已写字段);
+            if (完成 && !定位.正式内容路径.empty())
+                完成 = 写入节点字段(材料节点, 候选目标内容项字段, 定位.正式内容路径.front(), 已写字段);
         }
         if (完成 && 请求.需求目标.目标比较关系概念节点) {
             完成 = 写入节点字段(材料节点, 候选目标比较关系字段,
@@ -8167,10 +10016,11 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
                             : 新任务操作状态::已建立;
         结果.材料节点 = 材料节点;
         return 结果;
-    } catch (...) {
+    } catch (const std::bad_alloc&) {
         结果.状态 = 新任务操作状态::资源失败;
         return 结果;
-    }
+    } catch (const std::length_error&) {结果.状态=新任务操作状态::资源失败;return 结果;}
+    catch (...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"发布候选方法材料",L"完整目标快照发表工程故障");}
 }
 
 新任务操作状态 新_任务类::清除候选方法材料(
@@ -8252,15 +10102,31 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
     try {
         const auto permit = 读取因果执行许可(请求.任务节点);
         if (!permit) { 新任务执行结果 changed; changed.状态 = 新任务操作状态::预期已变化; return changed; }
-        return 开始方法执行内部(请求, *permit);
-    } catch (...) {
+        auto 场景批=准备本次场景核验批(请求.任务节点,{},请求.本能采用 ? &*请求.本能采用 : nullptr);
+        读取本次场景核验批(场景批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){新任务执行结果 changed;changed.状态=新任务操作状态::预期已变化;return changed;}
+        return 开始方法执行内部(请求, *permit,场景批);
+    }catch(const std::bad_alloc&){新任务执行结果 r;r.状态=新任务操作状态::资源失败;return r;}
+    catch(const std::length_error&){新任务执行结果 r;r.状态=新任务操作状态::资源失败;return r;}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"开始方法执行", L"因果路径执行前读取故障");
     }
 }
 
 新任务执行结果 新_任务类::开始方法执行内部(
-    const 新任务执行开始请求& 请求, const 因果执行许可& permit) noexcept {
+    const 新任务执行开始请求& 请求, const 因果执行许可& permit,const 新任务本次场景核验批& 场景批) noexcept {
     新任务执行结果 结果;
+    新特征I64准备结果 状态准备;
+    std::optional<稳定编码> 可撤销前状态;
+    bool 核心已发表=false;
+    const auto 清理未发表=[&]{
+        if(核心已发表)throw std::logic_error("不得撤销已发表X");
+        if(状态准备.准备)特征服务_.取消顶层I64更新(*状态准备.准备);
+        if(可撤销前状态){const auto p=状态服务_.获取状态(*可撤销前状态);
+            if(!p||p->被引用次数!=0||状态服务_.删除状态(*可撤销前状态)!=新状态操作状态::已完成)
+                throw std::logic_error("X零发表前状态清理失败");可撤销前状态.reset();}
+    };
     try {
         std::lock_guard 锁(新任务互斥);
         if (!核对因果执行许可(请求.任务节点, permit)) { 结果.状态 = 新任务操作状态::预期已变化; return 结果; }
@@ -8277,10 +10143,12 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             结果.状态 = 新任务操作状态::任务状态不允许;
             return 结果;
         }
-        const auto 来源守卫 = 需求服务_.复核需求服务要求语义(任务->需求节点);
+        const auto& 来源守卫 = 场景批.需求准备->守卫;
         if (来源守卫.状态 != 新服务要求执行守卫状态::不涉及
             && 来源守卫.状态 != 新服务要求执行守卫状态::当前有效) {
-            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
+            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::前提已变化
+                ? 新任务操作状态::任务状态不允许
+                : 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
                 ? 新任务操作状态::入口拒绝
                 : 来源守卫.状态 == 新服务要求执行守卫状态::资源失败
                     ? 新任务操作状态::资源失败 : 新任务操作状态::结构不一致;
@@ -8294,7 +10162,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
         if(!请求.本能采用||请求.本能采用->来源方法节点!=请求.方法节点
             ||方法->来源方法节点||方法->实例根节点||方法->实现方式!=新方法实现方式::本能)
             throw std::logic_error("开始本能执行采用身份不合法");
-        const auto 采用复核=核验任务条件和参数内部(请求.任务节点,&*请求.本能采用,false);
+        const auto 采用复核=核验任务条件和参数内部(请求.任务节点,&*请求.本能采用,false,false,场景批);
         if (!核验采用筹办就绪(采用复核, *请求.本能采用)) {
             结果.状态 = 新任务操作状态::入口拒绝;
             return 结果;
@@ -8312,25 +10180,55 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             || 请求.结果获取方案.服务需求取得数量类型)) {
             结果.状态 = 新任务操作状态::方法影响定义不合法; return 结果;
         }
+        std::set<稳定编码> 已核验首值特征;
+        const auto 当前认知来源=读取本批内容来源(*请求.本能采用,场景批);
         for (const auto& 阶段 : 请求.预计变化阶段组) for (const auto& 预计 : 阶段.变化组) {
             const auto 预计类型根 = 取得特征概念类型根(特征概念服务_, 预计.特征类型概念节点);
             if (!预计类型根) throw std::logic_error("执行预计特征类型不可读");
             const auto 目标 = std::find_if(请求.结果获取方案.目标组.begin(), 请求.结果获取方案.目标组.end(),
                 [&](const auto& 项) { return 项.作用对象节点 == 预计.作用对象节点
                     && 项.特征类型根概念节点 == *预计类型根; });
+            bool 首值已核验=false;
+            if(预计.预期引用内容&&!读取行为&&目标!=请求.结果获取方案.目标组.end()
+                &&目标->动作前明确无值&&!目标->动作前准确值&&预计.必须出现
+                &&!预计.预期方向&&!预计.预期变化关系节点&&!预计.预期值域概念节点&&!预计.预期精确数值域
+                &&请求.本能采用->结果.结果项组.size()==1
+                &&请求.本能采用->结果.确认要求.禁止结果项组.empty()
+                &&执行需求->目标.引用内容定位&&执行需求->目标.引用内容定位->正式内容路径.empty()
+                &&执行需求->目标.目标值域概念节点) {
+                const auto x=绑定内容结果(请求.本能采用->结果.结果项组.front(),请求.本能采用->结果,
+                    请求.本能采用->需要条件,请求.本能采用->参数绑定组);
+                if(x&&是首值条件(请求.本能采用->需要条件,x->特征位置)
+                    &&x->F==目标->实际特征节点&&x->H==预计.作用对象节点&&x->H==执行需求->目标存在节点
+                    &&预计.预期引用内容->需求节点==x->D&&预计.预期引用内容->要求概念节点==x->C
+                    &&预计.预期引用内容->正式内容路径.empty()&&当前认知来源
+                    &&预计.预期引用内容->认知来源确认==*当前认知来源
+                    &&目标->认知来源确认==*当前认知来源
+                    &&执行需求->目标.引用内容定位->引用需求节点==x->D
+                    &&内容概念保证(x->C,*执行需求->目标.目标值域概念节点,存在概念服务_)) {
+                    // 公开开始入口独立fresh核同，不把调用方的无值bool当成事实。
+                    const auto F=特征服务_.获取特征(x->F);
+                    const auto H=存在服务_.获取存在(x->H);
+                    首值已核验=F&&H&&!F->当前值&&F->历史不同值.empty()
+                        &&取得特征概念类型根(特征概念服务_,F->特征概念节点)==预计类型根
+                        &&std::find(H->特征节点组.begin(),H->特征节点组.end(),x->F)!=H->特征节点组.end();
+                    if(首值已核验)已核验首值特征.insert(x->F);
+                }
+            }
             if ((读取行为 && (预计.预期方向 || 预计.预期变化关系节点))
-                || (!读取行为 && (目标 == 请求.结果获取方案.目标组.end() || !目标->动作前准确值))) {
+                || (预计.预期引用内容&&!首值已核验)
+                || (!读取行为 && (目标 == 请求.结果获取方案.目标组.end() || (!目标->动作前准确值&&!首值已核验)))) {
                 结果.状态 = 新任务操作状态::方法影响定义不合法; return 结果;
             }
         }
         if (!读取行为 && std::any_of(请求.结果获取方案.目标组.begin(), 请求.结果获取方案.目标组.end(),
-                [](const auto& 项) { return !项.动作前准确值; })) {
+                [&](const auto& 项) { return !项.动作前准确值
+                    &&(!项.动作前明确无值||!已核验首值特征.contains(项.实际特征节点)); })) {
             结果.状态 = 新任务操作状态::方法影响定义不合法; return 结果;
         }
         if (请求.结果获取方案.服务需求取得数量类型) {
             if (!是服务需求取得目标(*执行需求)
                 || 请求.结果获取方案.服务需求取得数量类型 != 服务需求取得合同_->数量变化量类型
-                || !是服务需求取得方法(*方法)
                 || 请求.预计变化阶段组.size() != 1 || 请求.预计变化阶段组.front().变化组.size() != 1)
                 throw std::logic_error("取得执行准入的具名目标/方法/阶段不一致");
             const auto& 合同 = *服务需求取得合同_;
@@ -8401,174 +10299,95 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
             if (校验 != 新任务操作状态::已找到) { 结果.状态 = 校验; return 结果; }
         }
 
-        if (当前使用历史结算方法() && 服务结算配置_->结算任务节点 == 请求.任务节点) {
-            if (!任务->服务结算来源) {
-                结果.状态 = 新任务操作状态::方法影响定义不合法;
-                return 结果;
+        基础节点组追加请求 任务追加;
+        const auto X索引=追加执行节点(任务追加,请求);
+        追加执行预计结构(任务追加,X索引,请求.预计变化阶段组);
+        追加执行结果获取结构(任务追加,X索引,请求.结果获取方案);
+        追加执行冻结采用(任务追加,X索引,*请求.本能采用);
+        const auto 原方法=读取唯一节点字段记录(请求.任务节点,任务最近方法字段);
+        const auto 原执行=读取唯一节点字段记录(请求.任务节点,任务最近执行字段);
+        if(全局基础数据集.查询字段(请求.任务节点,任务最近方法字段).size()>1
+            ||全局基础数据集.查询字段(请求.任务节点,任务最近执行字段).size()>1)
+            throw std::logic_error("X最近字段不唯一");
+        if(原方法)任务追加.删除字段关系组.push_back(原方法->关系);
+        if(原执行)任务追加.删除字段关系组.push_back(原执行->关系);
+        任务追加.追加字段组.push_back({请求.任务节点,任务最近方法字段,请求.方法节点});
+        任务追加.追加字段组.push_back({请求.任务节点,任务最近执行字段,基础组内节点引用{X索引}});
+        const auto 虚拟=读取任务虚拟存在信息(请求.任务节点,特征服务_);
+        if(!虚拟||!内部治理世界_||!任务治理场景组织已就绪_)throw std::logic_error("X共同发布缺任务治理上下文");
+        const 新任务虚拟存在引用 引用{请求.任务节点,虚拟->节点,虚拟->任务状态特征节点};
+        const auto 治理场景=内部治理世界_->读取任务治理场景(引用);
+        if(!治理场景)throw std::logic_error("X共同发布缺治理场景");
+        auto 保护=场景批.保护;
+        if(!合并需求结果保护(保护,permit.保护)){结果.状态=新任务操作状态::预期已变化;return 结果;}
+        const auto 前时间=当前实例UTC强时间();if(!前时间)throw std::logic_error("X前状态时间不可用");
+        新事实追加保护增量 增量;
+        const auto 前=状态服务_.建立状态(引用.虚拟存在节点,引用.状态特征节点,*前时间,增量);
+        if(前.状态==新状态操作状态::资源失败){结果.状态=新任务操作状态::资源失败;return 结果;}
+        if(前.状态!=新状态操作状态::已完成||!前.状态节点)throw std::logic_error("X共同发布前状态建立失败");
+        可撤销前状态=前.状态节点;
+        if(!增量.新增外部关系组.empty()||!增量.字段变化组.empty())throw std::logic_error("X前状态不是纯追加");
+        for(const auto& f:增量.新增字段组)if(const auto* ref=std::get_if<稳定编码>(&f.内容))
+            for(auto& p:保护)if(p.结构.节点.编码==*ref){
+                p.入向字段组.push_back(f);
+                std::sort(p.入向字段组.begin(),p.入向字段组.end(),[](const auto& a,const auto& b){return a.编码<b.编码;});
             }
-            const auto 来源准入 = 核验直接服务结算来源(任务->服务结算来源->来源任务.任务节点);
-            if (来源准入.状态 != 新直接服务结算来源状态::允许结算) {
-                结果.状态 = 来源准入.状态 == 新直接服务结算来源状态::资源失败
-                    ? 新任务操作状态::资源失败
-                    : 来源准入.状态 == 新直接服务结算来源状态::结构不一致
-                        || 来源准入.状态 == 新直接服务结算来源状态::尚未配置
-                        ? 新任务操作状态::结构不一致 : 新任务操作状态::任务状态不允许;
-                return 结果;
-            }
-            const auto 来源 = 读取任务虚拟存在引用(任务->服务结算来源->来源任务);
-            const auto 当前 = 需求服务_.复核当前满足(任务->需求节点);
-            const auto 特征 = 当前.实际特征节点
-                ? 特征服务_.获取特征(*当前.实际特征节点) : std::nullopt;
-            if (!来源 || 来源->当前状态 != static_cast<std::int64_t>(新任务状态::已完成)
-                || 当前.状态 != 新需求当前满足状态::需增加 || !特征
-                || 特征->当前值 != std::optional<新特征准确值>{新特征准确值{任务->服务结算来源->冻结前值}}
-                || std::none_of(请求.结果获取方案.目标组.begin(), 请求.结果获取方案.目标组.end(),
-                    [&](const auto& 目标) {
-                        return 目标.实际特征节点 == *当前.实际特征节点
-                            && 目标.动作前准确值 == 新特征准确值{任务->服务结算来源->冻结前值};
-                    })) {
-                结果.状态 = 新任务操作状态::方法影响定义不合法;
-                return 结果;
-            }
+        任务追加.预期联合节点组=保护;
+        const auto 片段=全局基础数据集.封存原子追加片段(任务追加);
+        if(片段.状态==基础节点组追加状态::资源失败){清理未发表();结果.状态=新任务操作状态::资源失败;return 结果;}
+        if(片段.状态==基础节点组追加状态::预期不符){清理未发表();结果.状态=新任务操作状态::任务状态不允许;return 结果;}
+        if(片段.状态!=基础节点组追加状态::已完成||!片段.片段)throw std::logic_error("X追加片段封存失败");
+        状态准备=特征服务_.准备顶层I64更新(引用.状态特征节点,static_cast<std::int64_t>(新任务状态::执行中),保护);
+        if(状态准备.状态==新特征I64准备状态::资源失败){清理未发表();结果.状态=新任务操作状态::资源失败;return 结果;}
+        if(状态准备.状态==新特征I64准备状态::预期已变化||状态准备.状态==新特征I64准备状态::联合更新占用){
+            清理未发表();结果.状态=新任务操作状态::任务状态不允许;return 结果;}
+        if(状态准备.状态!=新特征I64准备状态::已准备||!状态准备.准备
+            ||状态准备.准备->原当前值()!=static_cast<std::int64_t>(新任务状态::待执行))
+            throw std::logic_error("X共同发布Ft准备不一致");
+        const auto 提交=特征服务_.提交顶层I64更新(*状态准备.准备,{*片段.片段});
+        if(提交.状态!=基础节点组追加状态::已完成){
+            if(!提交.附加片段回执组.empty())throw std::logic_error("X失败提交携发表回执");
+            if(提交.状态==基础节点组追加状态::资源失败||提交.状态==基础节点组追加状态::预期不符){
+                清理未发表();结果.状态=提交.状态==基础节点组追加状态::资源失败 ? 新任务操作状态::资源失败 : 新任务操作状态::任务状态不允许;return 结果;}
+            throw std::logic_error("X共同发表未知失败");
         }
-        const auto 执行节点 = 全局基础数据集.新建节点();
-        if (!有效(执行节点)) {
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-        std::vector<稳定编码> 执行字段;
-        执行字段.reserve(16);
-        已建预计结构 预计结构;
-        已建结果获取结构 结果获取结构;
-        const auto 清理新执行 = [&]() noexcept {
-            try{任务执行组织存储::清理执行采用已加锁(执行节点);}
-            catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"清理构造中X采用",L"采用结构核验失败");}
-            清理结果获取结构(结果获取结构);
-            清理预计结构(预计结构);
-            回滚字段(执行字段);
-            (void)全局基础数据集.删除节点(执行节点);
-        };
-        const bool 执行基础完整 =
-            写入节点字段(执行节点, 节点类型字段,
-                任务执行实例节点类型, 执行字段)
-            && 写入节点字段(执行节点, 执行所属任务字段,
-                请求.任务节点, 执行字段)
-            && 写入节点字段(执行节点, 执行方法字段,
-                请求.方法节点, 执行字段)
-            && 写入I64字段(执行节点, 执行状态字段,
-                static_cast<std::int64_t>(新任务执行状态::执行中),
-                执行字段)
-            && 写入I64字段(执行节点, 执行开始时间语义字段,
-                static_cast<std::int64_t>(请求.开始时间.语义), 执行字段)
-            && 写入I64字段(执行节点, 执行开始时间字段,
-                请求.开始时间.纳秒, 执行字段);
-        if (!执行基础完整
-            || (任务->服务结算来源 && !写入服务结算来源字段(
-                执行节点, *任务->服务结算来源, 执行字段))
-            || !建立预计结构(执行节点, 请求.预计变化阶段组, 预计结构)
-            || !建立结果获取结构(
-                执行节点, 请求.结果获取方案, 结果获取结构)) {
-            清理新执行();
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-
-        任务执行组织存储::建立执行采用已加锁(执行节点,*请求.本能采用);
-        const auto 构造读回=读取执行信息(执行节点,状态服务_,特征服务_,特征概念服务_);
-        if(!构造读回||构造读回->本能采用!=请求.本能采用)throw std::logic_error("X采用完整发布读回失败");
-        const auto 原方法 = 读取唯一节点字段记录(
-            请求.任务节点, 任务最近方法字段);
-        const auto 原执行 = 读取唯一节点字段记录(
-            请求.任务节点, 任务最近执行字段);
-        const auto 方法字段组 = 全局基础数据集.查询字段(
-            请求.任务节点, 任务最近方法字段);
-        const auto 执行字段组 = 全局基础数据集.查询字段(
-            请求.任务节点, 任务最近执行字段);
-        if (方法字段组.size() > 1 || 执行字段组.size() > 1) {
-            清理新执行();
-            结果.状态 = 新任务操作状态::结构不一致;
-            return 结果;
-        }
-        std::optional<稳定编码> 新方法字段;
-        std::optional<稳定编码> 新执行字段;
-        bool 方法已设置 = false;
-        bool 执行已设置 = false;
-        if (原方法) {
-            方法已设置 = 全局基础数据集.修改字段节点(
-                原方法->关系, 请求.方法节点);
-        } else {
-            const auto 字段 = 全局基础数据集.添加字段节点(
-                请求.任务节点, 任务最近方法字段, 请求.方法节点);
-            方法已设置 = 有效(字段);
-            if (方法已设置) 新方法字段 = 字段;
-        }
-        if (方法已设置) {
-            if (原执行) {
-                执行已设置 = 全局基础数据集.修改字段节点(
-                    原执行->关系, 执行节点);
-            } else {
-                const auto 字段 = 全局基础数据集.添加字段节点(
-                    请求.任务节点, 任务最近执行字段, 执行节点);
-                执行已设置 = 有效(字段);
-                if (执行已设置) 新执行字段 = 字段;
-            }
-        }
-        auto 恢复最近字段 = [&]() noexcept {
-            if (新执行字段) {
-                (void)全局基础数据集.删除字段(*新执行字段);
-            } else if (原执行) {
-                (void)全局基础数据集.修改字段节点(
-                    原执行->关系, 原执行->目标);
-            }
-            if (新方法字段) {
-                (void)全局基础数据集.删除字段(*新方法字段);
-            } else if (原方法) {
-                (void)全局基础数据集.修改字段节点(
-                    原方法->关系, 原方法->目标);
-            }
-        };
-        if (!方法已设置 || !执行已设置) {
-            恢复最近字段();
-            清理新执行();
-            结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
-        }
-
-        const auto 虚拟存在 = 读取任务虚拟存在信息(
-            请求.任务节点, 特征服务_);
-        if (!虚拟存在) {
-            恢复最近字段();
-            清理新执行();
-            结果.状态 = 新任务操作状态::任务虚拟存在缺失;
-            return 结果;
-        }
-        const auto 状态结果 = 写入任务状态(
-            *虚拟存在, 新任务状态::执行中);
-        if (状态结果 != 新任务操作状态::已修改) {
-            const auto 当前虚拟存在 = 读取任务虚拟存在信息(请求.任务节点, 特征服务_);
-            if (!当前虚拟存在 || 当前虚拟存在->当前状态 == 新任务状态::执行中) {
-                // 当前状态可能已经发布，不得删除其正式X和采用证据。
-                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"开始方法执行", L"任务状态发布结果不确定，保留执行证据");
-            }
-            恢复最近字段();
-            清理新执行();
-            结果.状态 = 状态结果;
-            return 结果;
-        }
+        核心已发表=true;
+        if(提交.附加片段回执组.size()!=1||!提交.附加片段回执组.front().对应片段(*片段.片段)
+            ||提交.附加片段回执组.front().新节点组().size()!=任务追加.新节点组.size())
+            throw std::logic_error("X共同发表回执不完整");
+        const auto 执行节点=提交.附加片段回执组.front().新节点组().at(X索引);
+        const auto 完成=特征服务_.完成顶层I64更新(*状态准备.准备);
+        if(完成.状态!=新特征写入状态::已完成||!完成.当前值已改变)throw std::logic_error("X共同发表Ft聚合失败");
+        特征服务_.结束顶层I64更新(*状态准备.准备);
+        确保任务虚拟存在语义(请求.任务节点);
+        const auto 后时间=当前实例UTC强时间();if(!后时间||后时间->纳秒<=前时间->纳秒)throw std::logic_error("X后状态时间不递增");
+        const auto 后=状态服务_.建立状态(引用.虚拟存在节点,引用.状态特征节点,*后时间);
+        if(后.状态!=新状态操作状态::已完成||!后.状态节点)throw std::logic_error("X后状态建立失败");
+        const 新任务虚拟存在特征引用 目标{引用,引用.状态特征节点};
+        const auto 变化=内部治理世界_->完成任务特征变化(目标,*前.状态节点,*后.状态节点);
+        const auto 动态读回=内部治理世界_->读取任务特征变化(目标,*前.状态节点,*后.状态节点);
+        const auto 任务读回=获取任务(请求.任务节点);
+        if(!动态读回||变化.目标!=目标||变化.治理场景节点!=治理场景->场景节点
+            ||变化.变化动态节点!=动态读回->变化动态节点||!任务读回||任务读回->最近执行实例节点!=执行节点
+            ||任务读回->最近方法节点!=请求.方法节点||任务读回->当前状态!=新任务状态::执行中)
+            throw std::logic_error("X共同发表任务/Ft/动态独立读回失败");
         已开始过执行_ = true;
         const auto 读回 = 读取执行信息(执行节点, 状态服务_, 特征服务_, 特征概念服务_);
         if (!读回 || 读回->任务节点 != 请求.任务节点
             || 读回->方法节点 != 请求.方法节点
             || 读回->状态 != 新任务执行状态::执行中
-            || 读回->结果获取方案 != 请求.结果获取方案
-            || 读回->服务结算来源 != 任务->服务结算来源) {
-            结果.状态 = 新任务操作状态::结构不一致;
-            结果.执行实例节点 = 执行节点;
-            return 结果;
+            || 读回->结果获取方案 != 请求.结果获取方案) {
+            throw std::logic_error("X共同发表后完整执行图或方案读回不一致");
         }
         结果.状态 = 新任务操作状态::已开始执行;
         结果.执行实例节点 = 执行节点;
         return 结果;
+    }catch(const std::bad_alloc&){
+        if(!核心已发表){try{清理未发表();结果.状态=新任务操作状态::资源失败;return 结果;}catch(...){}}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"开始方法执行",L"共同发表后资源故障或零发表清理失败");
+    }catch(const std::length_error&){
+        if(!核心已发表){try{清理未发表();结果.状态=新任务操作状态::资源失败;return 结果;}catch(...){}}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"开始方法执行",L"共同发表后资源故障或零发表清理失败");
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"开始方法执行", L"执行采用发布工程故障，保留已发布事实");
     }
@@ -8600,381 +10419,49 @@ bool 核验执行本能动作(const 新任务执行信息& 执行, const 新任�
 }
 }
 
-void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, 稳定编码 执行节点,
-    const 方法参数场景& 参数场景, 稳定编码 动作节点, std::optional<稳定编码> 来源需求节点) {
-    std::lock_guard 锁(新任务互斥);
-    const auto 任务 = 获取任务(任务节点);
-    const auto 执行 = 获取执行实例(执行节点);
-    const auto 需求 = 任务 ? 需求服务_.获取需求(任务->需求节点) : std::nullopt;
-    const auto 方法 = 执行 ? 方法服务_.获取方法(执行->方法节点) : std::nullopt;
-    const auto 动作 = 本能动作读取_ ? 本能动作读取_->获取动态(动作节点) : std::nullopt;
-    if (方法 && 是有序服务需求取得方法(*方法)) {
-        if (!服务需求取得合同_ || !任务 || !执行 || !需求 || !动作 || !来源需求节点
-            || !是服务需求取得目标(*需求) || 执行->任务节点 != 任务节点
-            || 任务->最近执行实例节点 != 执行节点 || 任务->当前状态 != 新任务状态::执行中
-            || 执行->状态 != 新任务执行状态::执行中 || !执行->本能采用
-            || 参数场景.用途() != 新方法参数场景用途::执行 || 参数场景.方法节点() != 执行->方法节点
-            || 参数场景.全部角色绑定() != 执行->本能采用->参数绑定组
-            || 执行->结果获取方案.服务需求取得数量类型 != 服务需求取得合同_->数量变化量类型
-            || !核验执行本能动作(*执行, *任务, *动作, 服务需求取得合同_->自我存在节点, 存在服务_, 场景服务_)
-            || 动作->动作目标存在节点 != 服务需求取得合同_->自我存在节点
-            || 动作->动作目标特征节点 != 服务需求取得合同_->服务任务集合特征节点)
-            throw std::logic_error("有序取得执行X/场景/动作不一致");
-        const auto 来源 = 读取有序服务需求来源(*方法, 执行->本能采用->参数绑定组,
-            *服务需求取得合同_, 需求服务_, 存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_, 来源需求节点, {});
-        if (!来源) throw std::logic_error("有序取得动作后来源条件已变化");
-        const auto C = 来源->确认.确认节点;
-        if (执行->普通动作节点 || 执行->服务需求返回确认) {
-            if (执行->普通动作节点 == 动作节点 && 执行->服务需求返回确认 == C) return;
-            throw std::logic_error("有序取得X已有不同执行依据");
+void 新_任务类::记录执行本能结果(稳定编码 T,稳定编码 X,const 新本能函数本次结果& 报告) noexcept {
+    try{
+        if(报告.已取得场景事实组.empty()&&!报告.已发布需求)return;
+        if(报告.已发布需求){
+            if(!报告.动作动态节点||报告.动作阶段==新本能函数动作阶段::未进入动作
+                ||报告.结果取得状态!=新本能函数结果取得状态::已取得
+                ||报告.任务贡献治理||报告.服务值消费节点||报告.服务需求信息包||报告.服务对象观察材料)
+                throw std::logic_error("published demand report contains illegal zero-action or exclusive payload");
+            std::lock_guard 锁(新任务互斥);
+            const auto 执行=读取执行信息(X,状态服务_,特征服务_,特征概念服务_);
+            if(!执行||执行->任务节点!=T||!节点类型为(T,任务节点类型)||!执行->本能采用
+                ||执行->普通动作节点!=报告.动作动态节点||!本能动作读取_)
+                throw std::logic_error("published demand report lacks formal X/task/adoption/action");
+            const auto 动作=本能动作读取_->获取动态(报告.已发布需求->本次动作节点);
+            if(!动作||!核验需求结果执行身份(*执行,*报告.已发布需求,*动作))
+                throw std::logic_error("published demand report source/action/ordered parameter mismatch");
+            // 先保存原函数报告；不在此门读取publisher/factory或核当前世界效果。
+            任务执行组织存储::追加执行需求结果(X,*报告.已发布需求);
+            const auto 读回=读取执行信息(X,状态服务_,特征服务_,特征概念服务_);
+            if(!读回||读回->已发布需求!=报告.已发布需求)
+                throw std::logic_error("published demand report complete X readback mismatch");
         }
-        if (执行->结果获取方案.目标组.size() != 1 || !执行->结果获取方案.目标组.front().动作前准确值)
-            throw std::logic_error("有序取得缺少冻结集合基准");
-        const auto& 结果目标 = 执行->结果获取方案.目标组.front();
-        const auto 任务集合 = 特征服务_.获取特征(服务需求取得合同_->服务任务集合特征节点);
-        if (!任务集合 || !任务集合->当前值
-            || 取得特征概念类型根(特征概念服务_, 任务集合->特征概念节点) != 服务需求取得合同_->服务任务集合类型
-            || 结果目标.作用对象节点 != 服务需求取得合同_->自我存在节点
-            || 结果目标.实际特征节点 != 服务需求取得合同_->服务任务集合特征节点
-            || 结果目标.特征类型根概念节点 != 服务需求取得合同_->服务任务集合类型)
-            throw std::logic_error("有序取得结果目标不是正式自我任务集合");
-        const auto* 基准V = std::get_if<稳定编码>(&*执行->结果获取方案.目标组.front().动作前准确值);
-        const auto 基准 = 基准V ? 特征值服务_.获取特征值(*基准V) : std::nullopt;
-        if (!基准 || 基准->物理类型 != 材料物理类型::U64数组
-            || !std::get_if<std::vector<std::uint64_t>>(&基准->材料))
-            throw std::logic_error("有序取得冻结集合基准不可读");
-        if (本能动作读取_->增加引用(动作节点) != 新动态操作状态::已完成)
-            throw std::logic_error("有序取得动作引用失败");
-        std::set<稳定编码> 守卫{任务节点, 执行节点, 需求->节点, 执行->方法节点, 动作节点,
-            来源->需求.节点, C, 来源->确认.理解节点, *来源->确认.来源要求节点, *基准V};
-        守卫.insert(来源->参数.begin(), 来源->参数.end());
-        for (const auto& 规格 : 方法->参数规格组) 守卫.insert(规格.有序规格->范围概念节点);
-        守卫.insert(来源->需求.目标.目标特征类型概念节点);
-        if (来源->需求.目标.目标值域概念节点) 守卫.insert(*来源->需求.目标.目标值域概念节点);
-        if (来源->需求.目标.目标比较关系概念节点) 守卫.insert(*来源->需求.目标.目标比较关系概念节点);
-        if (const auto* V = std::get_if<稳定编码>(&*来源->需求特征.当前值)) 守卫.insert(*V);
-        const auto 批读 = 全局基础数据集.查询节点组完整结构({守卫.begin(), 守卫.end()});
-        if (批读.状态 != 基础结构操作状态::已完成 || 批读.节点组.size() != 守卫.size())
-            throw std::logic_error("有序取得发布守卫不可读");
-        基础字段组合变化请求 请求;
-        for (const auto& 项 : 批读.节点组) {
-            if (!项.快照) throw std::logic_error("有序取得发布目标已退出");
-            请求.预期节点组.push_back(*项.快照);
-        }
-        for (const auto& 预期 : 来源->要求.发布预期节点组) {
-            const auto 已有 = std::find_if(请求.预期节点组.begin(), 请求.预期节点组.end(),
-                [&](const auto& 项) { return 项.结构.节点.编码 == 预期.结构.节点.编码; });
-            if (已有 == 请求.预期节点组.end()) 请求.预期节点组.push_back(预期);
-            else if (已有->结构.字段组 != 预期.结构.字段组
-                || 已有->入向字段组 != 预期.入向字段组
-                || 已有->入向外部关系组 != 预期.入向外部关系组
-                || 已有->出向外部关系组 != 预期.出向外部关系组)
-                throw std::logic_error("有序取得来源要求快照已变化");
-        }
-        const auto fresh = 获取执行实例(执行节点);
-        const auto fresh任务 = 获取任务(任务节点);
-        const auto fresh来源 = 读取有序服务需求来源(*方法, 执行->本能采用->参数绑定组,
-            *服务需求取得合同_, 需求服务_, 存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_, 来源需求节点, C);
-        if (!fresh || *fresh != *执行 || !fresh任务 || *fresh任务 != *任务 || !fresh来源
-            || fresh来源->需求 != 来源->需求 || fresh来源->需求特征 != 来源->需求特征
-            || fresh来源->确认 != 来源->确认 || fresh来源->要求.材料 != 来源->要求.材料)
-            throw std::logic_error("有序取得发布前来源变化");
-        请求.追加字段组.push_back({执行节点, 执行普通动作字段, 动作节点});
-        请求.追加字段组.push_back({执行节点, 执行返回确认字段, C});
-        if (全局基础数据集.原子比较变更字段组(请求).状态 != 基础字段组合变化状态::已完成)
-            throw std::logic_error("有序取得动作与确认原子发布失败");
-        const auto 读回 = 获取执行实例(执行节点);
-        if (!读回 || 读回->普通动作节点 != 动作节点 || 读回->服务需求返回确认 != C)
-            throw std::logic_error("有序取得原子发布读回失败");
-        return;
-    }
-    if (!任务 || !执行 || !需求 || !方法 || !动作 || !是服务需求取得目标(*需求)
-        || 执行->任务节点 != 任务节点 || 任务->最近执行实例节点 != 执行节点
-        || 任务->当前状态 != 新任务状态::执行中 || 执行->状态 != 新任务执行状态::执行中
-        || !执行->本能采用 || 参数场景.用途() != 新方法参数场景用途::执行
-        || 参数场景.方法节点() != 执行->方法节点
-        || 参数场景.全部角色绑定() != 执行->本能采用->参数绑定组
-        || 执行->结果获取方案.服务需求取得数量类型 != 服务需求取得合同_->数量变化量类型
-        || !是服务需求取得方法(*方法)
-        || !核验执行本能动作(*执行, *任务, *动作, 服务需求取得合同_->自我存在节点, 存在服务_, 场景服务_))
-        throw std::logic_error("取得执行参数场景与X/动作不一致");
-    const auto& 合同 = *服务需求取得合同_;
-    if (方法->作用域 != 新方法作用域::内部治理 || 方法->参数规格组.size() != 6
-        || 参数场景.全部角色绑定().size() != 6
-        || 动作->动作目标存在节点 != 合同.自我存在节点
-        || 动作->动作目标特征节点 != 合同.服务任务集合特征节点)
-        throw std::logic_error("取得方法六角色或动作自我集合目标不一致");
-    // 角色身份来自正式Vm规格的对象种类，绝不按编码大小猜测角色顺序。
-    std::array<const 新方法参数规格*, 6> 规格组{};
-    for (const auto& 规格 : 方法->参数规格组) {
-        std::size_t 序号 = 5;
-        switch (规格.对象种类) {
-        case 新方法参数对象种类::服务要求来源人类: 序号 = 0; break;
-        case 新方法参数对象种类::服务要求目标存在: 序号 = 1; break;
-        case 新方法参数对象种类::服务要求目标特征类型: 序号 = 2; break;
-        case 新方法参数对象种类::服务要求目标定义: 序号 = 3; break;
-        case 新方法参数对象种类::服务要求确认: 序号 = 4; break;
-        case 新方法参数对象种类::普通世界: 序号 = 5; break;
-        default: throw std::logic_error("取得方法包含未知参数对象种类");
-        }
-        if (规格组[序号] || !参数场景.查询角色(规格.参数角色节点))
-            throw std::logic_error("取得方法对象角色重复或参数未绑定");
-        规格组[序号] = &规格;
-    }
-    if (std::any_of(规格组.begin(), 规格组.end(), [](const auto* 项) { return 项 == nullptr; }))
-        throw std::logic_error("取得方法缺少必需对象角色");
-    for (std::size_t i = 0; i < 5; ++i)
-        if (规格组[i]->存在概念节点 || 规格组[i]->要求场景
-            || !规格组[i]->特征规格组.empty() || 规格组[i]->集合成员约束)
-            throw std::logic_error("取得方法材料角色规格不是正式只读材料引用");
-    const auto* 自我绑定 = 参数场景.查询角色(规格组[5]->参数角色节点);
-    const auto 自我 = 存在服务_.获取存在(合同.自我存在节点);
-    const auto 专属概念 = 存在服务_.查询专属存在概念(合同.自我存在节点);
-    const auto F = 参数场景.读取绑定特征(合同.服务任务集合特征节点);
-    const auto& 集合规格 = 规格组[5]->特征规格组;
-    if (!自我绑定 || !自我 || !专属概念 || 规格组[5]->存在概念节点 != 专属概念
-        || !规格组[5]->要求场景 || !自我绑定->世界场景节点
-        || 规格组[5]->集合成员约束
-        || 自我绑定->实际存在节点 != 合同.自我存在节点
-        || 自我绑定->实际特征组 != std::vector<新方法实际特征绑定>{{合同.服务任务集合特征节点}}
-        || 自我绑定->任务虚拟存在引用 || 自我绑定->服务要求分项引用 || 自我绑定->服务要求确认引用
-        || 集合规格.size() != 1 || 集合规格.front().特征类型概念节点 != 合同.服务任务集合类型
-        || !集合规格.front().值域概念节点 || !集合规格.front().二次特征概念组.empty()
-        || !F || !F->当前值 || 执行->结果获取方案.目标组.size() != 1
-        || 取得特征概念类型根(特征概念服务_, F->特征概念节点) != 合同.服务任务集合类型
-        || std::find(自我->特征节点组.begin(), 自我->特征节点组.end(), F->节点) == 自我->特征节点组.end()
-        || !场景服务_.存在属于场景范围(*自我绑定->世界场景节点, 合同.自我存在节点))
-        throw std::logic_error("取得执行自我集合角色或冻结基准不一致");
-    const auto 全域概念 = 特征概念服务_.获取特征概念(*集合规格.front().值域概念节点);
-    const auto* 全域 = 全域概念 ? std::get_if<特征概念任务集合值域>(&全域概念->值域) : nullptr;
-    if (!全域概念 || !全域 || 全域概念->材料类型 != 特征概念材料物理类型::U64数组
-        || 全域概念->单位 || 全域概念->比较规则 != 特征概念比较规则::服务任务集合身份判等
-        || 取得特征概念类型根(特征概念服务_, 全域概念->节点) != 合同.服务任务集合类型
-        || !全域->必含任务节点组.empty() || !全域->必含需求任务组.empty()
-        || !全域->必含服务要求任务组.empty() || 全域->至少一个任务)
-        throw std::logic_error("取得方法集合规格不是同FT正式全域");
-    const auto* 集合值编码 = std::get_if<稳定编码>(&*F->当前值);
-    const auto 集合材料 = 集合值编码 ? 参数场景.读取绑定特征值材料(*集合值编码) : std::nullopt;
-    const auto* 集合值 = 集合材料 ? std::get_if<std::vector<std::uint64_t>>(&集合材料->材料) : nullptr;
-    if (!集合材料 || 集合材料->物理类型 != 材料物理类型::U64数组 || !集合值
-        || std::any_of(集合值->begin(), 集合值->end(), [](auto 项) { return 项 == 0; }))
-        throw std::logic_error("取得执行集合准确材料不可读");
-    // 动作前liveF==B由函数/运行端口核验。其它X可在本helper取得任务锁前
-    // 合法更新集合；此处只校验已冻结B的材料，不以当前F覆盖或否定B。
-    const auto& 基准值 = 执行->结果获取方案.目标组.front().动作前准确值;
-    if (!基准值) throw std::logic_error("取得执行缺少冻结集合基准");
-    const auto* 基准编码 = std::get_if<稳定编码>(&*基准值);
-    const auto 基准材料 = 基准编码 ? 特征值服务_.获取特征值(*基准编码) : std::nullopt;
-    const auto* 基准集合 = 基准材料 ? std::get_if<std::vector<std::uint64_t>>(&基准材料->材料) : nullptr;
-    if (!基准材料 || 基准材料->物理类型 != 材料物理类型::U64数组 || !基准集合
-        || std::any_of(基准集合->begin(), 基准集合->end(), [](auto 项) { return 项 == 0; }))
-        throw std::logic_error("取得执行冻结集合基准材料不可读");
-    const auto 确认 = 参数场景.读取绑定服务要求确认身份(规格组[4]->参数角色节点);
-    if (确认.状态 != 新服务要求确认状态::已读取 || !确认.确认)
-        throw std::logic_error("取得执行正式确认不可读");
-    const auto& 确认身份 = *确认.确认;
-    const auto owner确认 = 需求服务_.读取服务要求确认身份(确认身份.确认节点);
-    if (owner确认.状态 != 新服务要求确认状态::已读取 || owner确认.确认 != 确认.确认)
-        throw std::logic_error("取得执行参数场景与正式确认owner不一致");
-    for (std::size_t i = 0; i < 4; ++i) {
-        const auto 分项 = 参数场景.读取绑定服务要求分项(规格组[i]->参数角色节点);
-        if (分项.状态 != 新服务要求材料读取状态::已读取 || !分项.材料
-            || 分项.材料->引用.理解节点 != 确认身份.理解节点
-            || static_cast<std::size_t>(分项.材料->引用.分项) != i + 1)
-            throw std::logic_error("取得执行四分项不是同一正式理解");
-        if (i < 3) {
-            const auto* 值 = std::get_if<稳定编码>(&分项.材料->值);
-            const auto 预期 = i == 0 ? 确认身份.来源人类节点
-                : i == 1 ? 确认身份.目标存在节点 : 确认身份.目标.目标特征类型概念节点;
-            if (!值 || *值 != 预期) throw std::logic_error("取得执行分项值与正式确认不一致");
-        } else {
-            const auto* 值 = std::get_if<新服务要求目标分项>(&分项.材料->值);
-            const auto& 目标 = 确认身份.目标;
-            if (!值 || *值 != 新服务要求目标分项{目标.目标形式, 目标.目标值域概念节点,
-                    目标.目标比较关系概念节点, 目标.目标变化方向})
-                throw std::logic_error("取得执行目标分项与正式确认不一致");
-        }
-    }
-    if (执行->普通动作节点 || 执行->服务需求返回确认) {
-        if (执行->普通动作节点 == 动作节点 && 执行->服务需求返回确认 == 确认身份.确认节点) return;
-        throw std::logic_error("X已持有不同或不完整执行依据");
-    }
-    // 引用计数发生在快照之前；CAS失败保留已发生动作并进入工程终止，不回滚事实。
-    if (本能动作读取_->增加引用(动作节点) != 新动态操作状态::已完成)
-        throw std::logic_error("取得动作引用失败");
-    std::set<稳定编码> 守卫{任务节点, 执行节点, 动作节点, 确认身份.确认节点,
-        确认身份.理解节点, 执行->方法节点, 需求->节点, 确认身份.来源人类节点,
-        确认身份.目标存在节点, 确认身份.目标.目标特征类型概念节点,
-        合同.自我存在节点, 合同.服务任务集合特征节点, *专属概念, 全域概念->节点, *集合值编码, *基准编码};
-    if (确认身份.目标.目标值域概念节点) 守卫.insert(*确认身份.目标.目标值域概念节点);
-    if (确认身份.目标.目标比较关系概念节点) 守卫.insert(*确认身份.目标.目标比较关系概念节点);
-    const auto 批读 = 全局基础数据集.查询节点组完整结构({守卫.begin(), 守卫.end()});
-    if (批读.状态 != 基础结构操作状态::已完成 || 批读.节点组.size() != 守卫.size())
-        throw std::logic_error("执行依据完整预期读取失败");
-    基础字段组合变化请求 请求;
-    for (const auto& 项 : 批读.节点组) {
-        if (!项.快照) throw std::logic_error("执行依据引用目标不存在");
-        请求.预期节点组.push_back(*项.快照);
-    }
-    const auto fresh = 获取执行实例(执行节点);
-    const auto fresh任务 = 获取任务(任务节点);
-    const auto fresh确认 = 需求服务_.读取服务要求确认身份(确认身份.确认节点);
-    const auto freshF = 参数场景.读取绑定特征(合同.服务任务集合特征节点);
-    if (!fresh || *fresh != *执行 || !fresh任务 || *fresh任务 != *任务
-        || fresh确认.状态 != 新服务要求确认状态::已读取 || fresh确认.确认 != 确认.确认
-        || !freshF || *freshF != *F)
-        throw std::logic_error("执行依据快照前正式材料已变化");
-    请求.追加字段组.push_back({执行节点, 执行普通动作字段, 动作节点});
-    请求.追加字段组.push_back({执行节点, 执行返回确认字段, 确认身份.确认节点});
-    const auto 发布 = 全局基础数据集.原子比较变更字段组(请求);
-    if (发布.状态 != 基础字段组合变化状态::已完成)
-        throw std::logic_error("取得动作与确认原子发布失败");
-    const auto 读回 = 获取执行实例(执行节点);
-    if (!读回 || 读回->普通动作节点 != 动作节点 || 读回->服务需求返回确认 != 确认身份.确认节点)
-        throw std::logic_error("取得执行依据发布读回失败");
-}
-
-新任务服务需求取得读回结果 新_任务类::读回服务需求取得结果(
-    稳定编码 任务节点, 稳定编码 执行节点) const noexcept {
-    新任务服务需求取得读回结果 结果;
-    try {
+        if(报告.已取得场景事实组.empty())return;
+        auto 批=准备本次场景核验批(T,X,nullptr,true);
+        批.待记录引用组=报告.已取得场景事实组;
+        读取本次场景核验批(批);
         std::lock_guard 锁(新任务互斥);
-        const auto 任务 = 获取任务(任务节点);
-        const auto 执行 = 获取执行实例(执行节点);
-        const auto 需求 = 任务 ? 需求服务_.获取需求(任务->需求节点) : std::nullopt;
-        const auto 边界 = 读取当前结算边界();
-        if (!服务需求取得合同_ || !边界 || !任务 || !执行 || !需求
-            || 执行->任务节点 != 任务节点 || !是服务需求取得目标(*需求)
-            || 执行->结果获取方案.服务需求取得数量类型 != 服务需求取得合同_->数量变化量类型)
-            return 结果;
-        if (任务->最近执行实例节点 != 执行节点 || 任务->当前状态 == 新任务状态::已失败
-            || 任务->当前状态 == 新任务状态::已取消) { 结果.状态 = 新任务操作状态::任务状态不允许; return 结果; }
-        const auto 方法 = 方法服务_.获取方法(执行->方法节点);
-        if (!方法 || !是服务需求取得方法(*方法)) return 结果;
-        结果.状态 = 新任务操作状态::状态材料不足;
-        if (!执行->普通动作节点 || !执行->服务需求返回确认) return 结果;
-        const auto 动作 = 本能动作读取_ ? 本能动作读取_->获取动态(*执行->普通动作节点) : std::nullopt;
-        if (!动作 || !核验执行本能动作(*执行, *任务, *动作,
-            服务需求取得合同_->自我存在节点, 存在服务_, 场景服务_)) {
-            结果.状态 = 新任务操作状态::结构不一致; return 结果;
+        if(!核同本次场景核验批(批))throw std::logic_error("记录本次场景报告时定义/执行前提变化");
+        for(const auto& r:报告.已取得场景事实组){
+            const auto 项=std::find_if(批.结果场景组.begin(),批.结果场景组.end(),[&](const auto& x){return x.限定==r.限定;});
+            if(项==批.结果场景组.end()||项->构成状态!=新交互求值状态::已取得)throw std::logic_error("实际场景报告缺少正式构成能力");
         }
-        const auto 确认 = 需求服务_.复核服务要求确认语义(*执行->服务需求返回确认);
-        if (确认.状态 == 新服务要求确认状态::需重新确认) return 结果;
-        if (确认.状态 != 新服务要求确认状态::当前有效 || !确认.确认) {
-            结果.状态 = 确认.状态 == 新服务要求确认状态::资源失败
-                ? 新任务操作状态::资源失败 : 新任务操作状态::结构不一致; return 结果;
-        }
-        if (是有序服务需求取得方法(*方法)) {
-            if (!执行->本能采用) { 结果.状态 = 新任务操作状态::结构不一致; return 结果; }
-            const auto 来源 = 读取有序服务需求来源(*方法, 执行->本能采用->参数绑定组,
-                *服务需求取得合同_, 需求服务_, 存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_, {}, 执行->服务需求返回确认);
-            if (!来源) return 结果;
-            if (动作->动作目标存在节点 != 服务需求取得合同_->自我存在节点
-                || 动作->动作目标特征节点 != 服务需求取得合同_->服务任务集合特征节点) {
-                结果.状态 = 新任务操作状态::结构不一致; return 结果;
-            }
-            结果.来源需求节点 = 来源->需求.节点;
-        }
-        结果.确认节点 = 执行->服务需求返回确认;
-        auto 采用 = 需求服务_.查询服务需求取得来源(执行节点);
-        if (采用.状态 != 新服务要求采用关系状态::已读取) {
-            结果.状态 = 采用.状态 == 新服务要求采用关系状态::资源失败
-                ? 新任务操作状态::资源失败 : 新任务操作状态::结构不一致; return 结果;
-        }
-        if (采用.需求节点组.empty()) 采用 = 需求服务_.查询服务要求采用关系(*结果.确认节点);
-        if (采用.状态 != 新服务要求采用关系状态::已读取 || 采用.需求节点组.size() > 1) {
-            结果.状态 = 采用.状态 == 新服务要求采用关系状态::资源失败
-                ? 新任务操作状态::资源失败 : 新任务操作状态::结构不一致; return 结果;
-        }
-        if (采用.需求节点组.empty()) return 结果;
-        const auto D = 需求服务_.获取需求(采用.需求节点组.front());
-        if (!D || D->父需求节点 != 边界->结算需求节点
-            || (D->来源承接节点 != 边界->结算任务节点
-                && D->来源类型 != 新需求来源类型::外部服务要求)
-            || std::find(D->服务要求确认组.begin(), D->服务要求确认组.end(), *结果.确认节点) == D->服务要求确认组.end()
-            || D->目标存在节点 != 确认.确认->目标存在节点 || D->目标 != 确认.确认->目标) {
-            结果.状态 = 新任务操作状态::结构不一致; return 结果;
-        }
-        结果.采用需求节点 = D->节点;
-        const auto 对应 = 读取需求列表任务对应();
-        if (对应.状态 != 新任务操作状态::已找到) { 结果.状态 = 对应.状态; return 结果; }
-        const auto 对应项 = std::find_if(对应.对应项组.begin(), 对应.对应项组.end(),
-            [&](const auto& 项) { return 项.需求.节点 == D->节点; });
-        if (对应项 == 对应.对应项组.end()) { 结果.状态 = 新任务操作状态::结构不一致; return 结果; }
-        if (!对应项->任务) return 结果;
-        结果.采用任务节点 = 对应项->任务->节点;
-        const auto& 合同 = *服务需求取得合同_;
-        if (执行->结果获取方案.目标组.size() != 1) { 结果.状态 = 新任务操作状态::结构不一致; return 结果; }
-        const auto& 目标 = 执行->结果获取方案.目标组.front();
-        const auto F = 特征服务_.获取特征(合同.服务任务集合特征节点);
-        const auto E = 存在服务_.获取存在(合同.自我存在节点);
-        if (!E || !F || !F->当前值
-            || 取得特征概念类型根(特征概念服务_, F->特征概念节点) != 合同.服务任务集合类型
-            || 目标.作用对象节点 != 合同.自我存在节点
-            || 目标.实际特征节点 != 合同.服务任务集合特征节点 || 目标.特征类型根概念节点 != 合同.服务任务集合类型
-            || std::find(E->特征节点组.begin(), E->特征节点组.end(), F->节点) == E->特征节点组.end()) {
-            结果.状态 = 新任务操作状态::结构不一致; return 结果;
-        }
-        const auto 读集合 = [&](const 新特征准确值& 值) {
-            const auto* 编码 = std::get_if<稳定编码>(&值);
-            const auto 材料 = 编码 ? 特征值服务_.获取特征值(*编码) : std::nullopt;
-            const auto* 数组 = 材料 ? std::get_if<std::vector<std::uint64_t>>(&材料->材料) : nullptr;
-            if (!材料 || 材料->物理类型 != 材料物理类型::U64数组 || !数组)
-                throw std::logic_error("取得集合材料不可读");
-            auto 集合 = *数组;
-            for (const auto 项 : 集合) if (项 == 0) throw std::logic_error("取得集合含无效任务编码");
-            std::sort(集合.begin(), 集合.end()); 集合.erase(std::unique(集合.begin(), 集合.end()), 集合.end());
-            return 集合;
-        };
-        if (!目标.动作前准确值) throw std::logic_error("取得结果缺少冻结集合基准");
-        const auto B = 读集合(*目标.动作前准确值), C = 读集合(*F->当前值);
-        const auto 正式 = 查询服务任务(边界->结算需求节点);
-        if (正式.状态 != 新任务操作状态::已找到) { 结果.状态 = 正式.状态; return 结果; }
-        std::vector<std::uint64_t> 正式集合;
-        for (const auto T : 正式.任务节点组) 正式集合.push_back(T.值);
-        std::sort(正式集合.begin(), 正式集合.end());
-        if (正式集合 != C) return 结果; // 被动同步尚未发布，正常等待。
-        std::vector<std::uint64_t> Q;
-        if (D->服务需求取得执行节点 == 执行节点
-            && std::binary_search(C.begin(), C.end(), 结果.采用任务节点->值)
-            && !std::binary_search(B.begin(), B.end(), 结果.采用任务节点->值))
-            Q.push_back(结果.采用任务节点->值);
-        const auto 投影 = 特征值服务_.保存或取得特征值(材料物理类型::U64数组, Q);
-        if (!有效(投影)) { 结果.状态 = 新任务操作状态::资源失败; return 结果; }
-        新_二次特征类 二次(特征服务_, 二次特征概念服务_);
-        const auto 计数 = 二次.计算({合同.数量变化量类型,
-            二次特征准确特征输入{std::nullopt, 合同.服务任务集合类型, *目标.动作前准确值},
-            二次特征准确特征输入{std::nullopt, 合同.服务任务集合类型, 新特征准确值{投影}}, std::nullopt});
-        if (计数.状态 != 新二次特征计算状态::已完成 || !计数.结果值 || *计数.结果值 < 0 || *计数.结果值 > 1) {
-            结果.状态 = 计数.状态 == 新二次特征计算状态::资源失败 ? 新任务操作状态::资源失败 : 新任务操作状态::结构不一致;
-            return 结果;
-        }
-        结果.来源新增数 = 计数.结果值;
-        结果.状态 = 新任务操作状态::已找到;
-        if (*计数.结果值 == 0) return 结果;
-        std::optional<新状态信息> 最新;
-        for (const auto S : 状态服务_.按实例特征查询状态(F->节点)) {
-            const auto 状态 = 状态服务_.获取状态(S);
-            if (!状态) throw std::logic_error("集合状态owner读取失败");
-            if (状态->被描述存在节点 != 合同.自我存在节点
-                || 取得特征概念类型根(特征概念服务_, 状态->特征类型概念节点) != 合同.服务任务集合类型
-                || 状态->强时间.语义 != 执行->开始时间.语义) continue;
-            if (!最新 || 最新->强时间.纳秒 < 状态->强时间.纳秒) 最新 = 状态;
-            else if (最新->强时间 == 状态->强时间 && 最新->固定准确值 != 状态->固定准确值)
-                throw std::logic_error("集合当前状态时间冲突");
-            else if (最新->强时间 == 状态->强时间 && 状态->节点 < 最新->节点) 最新 = 状态;
-        }
-        if (!最新 || 最新->特征类型概念节点 != F->特征概念节点 || !动作->动作时间
-            || 最新->强时间.纳秒 < 动作->动作时间->纳秒
-            || 读集合(最新->固定准确值) != C) {
-            结果.状态 = 新任务操作状态::状态材料不足; return 结果;
-        }
-        结果.结果状态节点组.push_back(最新->节点);
-        return 结果;
-    } catch (const std::bad_alloc&) { 结果.状态 = 新任务操作状态::资源失败; return 结果; }
-    catch (...) { 结果.状态 = 新任务操作状态::结构不一致; return 结果; }
+        const auto 执行=获取执行实例(X);
+        if(!执行||执行->任务节点!=T||!执行->本能采用)throw std::logic_error("记录本次场景结果缺少正式X采用");
+        if(!执行->普通动作节点||报告.动作动态节点!=执行->普通动作节点)
+            throw std::logic_error("场景结果报告未关联X正式动作");
+        任务执行组织存储::追加执行场景事实(X,*执行->普通动作节点,*执行->本能采用,报告.已取得场景事实组);
+        const auto 读回=获取执行实例(X);
+        if(!读回)throw std::logic_error("场景结果组合追加后X不可读");
+        if(报告.已发布需求&&读回->已发布需求!=报告.已发布需求)throw std::logic_error("published demand complete X readback mismatch");
+        for(const auto& r:报告.已取得场景事实组)if(std::find(读回->本次场景事实组.begin(),读回->本次场景事实组.end(),r)==读回->本次场景事实组.end())throw std::logic_error("场景结果完整读回不一致");
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录执行本能结果",L"本次场景事实保存故障，保留动作及已确认事实");}
 }
-
 新任务操作状态 新_任务类::记录本能动作身份(
     稳定编码 任务节点, 稳定编码 执行实例节点,
     稳定编码 动作动态节点, 新_动态类& 动态服务) noexcept {
@@ -8987,35 +10474,13 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
         const auto 需求 = 任务 ? 需求服务_.获取需求(任务->需求节点) : std::nullopt;
         if (!任务 || !执行 || !需求 || !动作 || 执行->任务节点 != 任务节点)
             return 新任务操作状态::结构不一致;
-        if (执行->服务结算来源) {
-        if (执行->任务节点 != 任务节点 || 任务->服务结算来源 != 执行->服务结算来源
-            || 动作->种类 != 新动态种类::动作
-            || 动作->动作目标种类 != 新动作目标种类::普通存在
-            || 动作->动作来源节点 != 执行->服务结算来源->来源任务.任务节点
-            || 动作->动作定义节点 != 执行->方法节点
-            || 动作->主题存在节点 != 需求->目标存在节点
-            || 动作->动作目标存在节点 != 需求->目标存在节点
-            || !动作->动作目标特征节点 || !动作->动作时间
-            || 动作->动作时间->语义 != 执行->开始时间.语义
-            || 动作->动作时间->纳秒 < 执行->开始时间.纳秒) return 新任务操作状态::结构不一致;
-        const auto 目标 = std::find_if(执行->结果获取方案.目标组.begin(),
-            执行->结果获取方案.目标组.end(), [&](const auto& 项) {
-                return 项.作用对象节点 == 动作->主题存在节点
-                    && 项.实际特征节点 == *动作->动作目标特征节点
-                    && 项.特征类型根概念节点 == 需求->目标.目标特征类型概念节点;
-            });
-        const auto 场景 = 场景服务_.查询所属场景(需求->目标存在节点);
-        if (目标 == 执行->结果获取方案.目标组.end() || !场景) return 新任务操作状态::结构不一致;
-        const auto 动作列表 = 场景服务_.查询动态列表(*场景);
-        if (std::find(动作列表.begin(), 动作列表.end(), 动作动态节点) == 动作列表.end())
-            return 新任务操作状态::结构不一致;
-        } else {
+
             const auto 安全根 = 需求服务_.获取需求(安全根需求节点);
             const auto 服务根 = 需求服务_.获取需求(服务根需求节点);
             if (!安全根 || !服务根 || 安全根->目标存在节点 != 服务根->目标存在节点
                 || !核验执行本能动作(*执行, *任务, *动作, 服务根->目标存在节点, 存在服务_, 场景服务_))
                 return 新任务操作状态::结构不一致;
-        }
+
         if (执行->普通动作节点)
             return *执行->普通动作节点 == 动作动态节点 ? 新任务操作状态::精确重复 : 新任务操作状态::结构不一致;
         if (任务->当前状态 != 新任务状态::执行中 || 执行->状态 != 新任务执行状态::执行中
@@ -9397,6 +10862,16 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
 新任务影响评估结果 新_任务类::评估方法执行影响(
     稳定编码 任务节点,
     稳定编码 执行实例节点) noexcept {
+    try {
+        auto 批=准备本次场景核验批(任务节点,执行实例节点,nullptr,true);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务影响评估结果 r;r.状态=新任务操作状态::任务状态不允许;return r;}
+        return 评估方法执行影响内部(任务节点,执行实例节点,批);
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"评估方法执行影响",L"锁外本次场景结果读取故障");}
+}
+新任务影响评估结果 新_任务类::评估方法执行影响内部(
+    稳定编码 任务节点,稳定编码 执行实例节点,const 新任务本次场景核验批& 场景批) noexcept {
     新任务影响评估结果 结果;
     try {
         std::lock_guard 锁(新任务互斥);
@@ -9422,6 +10897,22 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
         if (!方法) {
             结果.状态 = 新任务操作状态::结构不一致;
             return 结果;
+        }
+        if(执行->状态!=新任务执行状态::已评估
+            &&std::any_of(执行->预计变化阶段组.begin(),执行->预计变化阶段组.end(),[](const auto& p){
+                return std::any_of(p.变化组.begin(),p.变化组.end(),[](const auto& v){return v.预期引用内容.has_value();});
+            })) {
+            const auto 来源=执行->本能采用 ? 读取本批内容来源(*执行->本能采用,场景批)
+                : std::optional<std::optional<新服务要求确认目标>>{};
+            if(!来源){结果.状态=新任务操作状态::状态材料不足;return 结果;}
+            for(const auto& 阶段:执行->预计变化阶段组)for(const auto& v:阶段.变化组)if(v.预期引用内容
+                &&v.预期引用内容->认知来源确认!=*来源){结果.状态=新任务操作状态::状态材料不足;return 结果;}
+        }
+        // 本次场景事实是独立AND硬门，不伪装成FT预计或状态数量。
+        if(场景批.结果场景组.size()!=执行->结果获取方案.必需场景事实组.size()
+            ||std::any_of(场景批.结果场景组.begin(),场景批.结果场景组.end(),[](const auto& x){
+                return x.构成状态!=新交互求值状态::已取得||x.事实状态!=新交互求值状态::已取得||!x.过程;})){
+            结果.状态=新任务操作状态::状态材料不足;return 结果;
         }
         新方法条件结果信息 冻结配对;
         if (执行->本能采用) {
@@ -9522,6 +11013,8 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
                     if (实际.强时间.纳秒 < 最早允许时间
                         || 实际.被描述存在节点 != 预计.变化.作用对象节点
                         || !*预计类型正确 || !*实际类型正确) continue;
+                    if(预计.变化.预期引用内容
+                        &&!核验本次内容后状态(*执行,场景批,预计.变化,*方案目标,实际))continue;
                     if (!最佳
                         || 实际.强时间.纳秒
                             < (*实际组)[*最佳].状态.强时间.纳秒
@@ -9568,6 +11061,9 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
                         return 项.变化.预期值域概念节点.has_value() || 项.变化.预期精确数值域.has_value();
                     });
             });
+        const bool 有内容要求=std::any_of(阶段组->begin(),阶段组->end(),[](const auto& 阶段){
+            return std::any_of(阶段.变化组.begin(),阶段.变化组.end(),[](const auto& p){return p.变化.预期引用内容.has_value();});
+        });
         auto 合并验证 = [](新任务影响验证状态 当前,
             新任务影响验证状态 新值) noexcept {
             if (当前 == 新任务影响验证状态::冲突
@@ -9613,12 +11109,19 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
         auto 方向验证 = 有方向要求
             ? 新任务影响验证状态::已验证通过
             : 新任务影响验证状态::不适用;
-        auto 值域验证 = 有值域要求
+        auto 值域验证 = (有值域要求||有内容要求)
             ? 新任务影响验证状态::已验证通过
             : 新任务影响验证状态::不适用;
         for (const auto& 阶段 : *阶段组) {
             for (const auto& 预计 : 阶段.变化组) {
                 const auto* 实际 = 查找命中(预计.变化);
+                if(预计.变化.预期引用内容) {
+                    const auto* 目标=实际 ? 查找目标(*实际) : nullptr;
+                    const auto 内容验证=实际&&目标&&核验本次内容后状态(*执行,场景批,预计.变化,*目标,*实际)
+                        ?新任务影响验证状态::已验证通过:新任务影响验证状态::已验证不通过;
+                    值域验证=合并验证(值域验证,内容验证);
+                    continue; // 内容身份/完整性不是数值方向或幅度。
+                }
                 if (预计.变化.预期变化关系节点 || 预计.变化.预期方向) {
                     新任务影响验证状态 单项 =
                         新任务影响验证状态::未验证;
@@ -9901,45 +11404,11 @@ void 新_任务类::记录服务需求执行依据(稳定编码 任务节点, �
             }
         }
 
-        auto 需求结果 = 复核任务需求(任务节点);
+        auto 需求结果 = 场景批.当前需求满足.value_or(新需求当前满足结果{});
         const auto 需求定义 = 需求服务_.获取需求(任务->需求节点);
         if (!需求定义) {
             结果.状态 = 新任务操作状态::结构不一致;
             return 结果;
-        }
-        if (执行->结果获取方案.服务需求取得数量类型) {
-            const auto 取得 = 读回服务需求取得结果(任务节点, 执行实例节点);
-            if (取得.状态 != 新任务操作状态::已找到 || 取得.来源新增数 != 1
-                || 取得.结果状态节点组.empty()) {
-                结果.状态 = 取得.状态 == 新任务操作状态::资源失败
-                    ? 新任务操作状态::资源失败 : 取得.状态 == 新任务操作状态::结构不一致
-                        ? 新任务操作状态::结构不一致 : 新任务操作状态::状态材料不足;
-                return 结果;
-            }
-            // A保留X已正式接纳的历史S；其它X可以随后更新当前集合而不改变
-            // 本X贡献。fresh计数证明当前仍在集合，历史S证明本次结果闭包。
-            const auto 动作 = 执行->普通动作节点 && 本能动作读取_
-                ? 本能动作读取_->获取动态(*执行->普通动作节点) : std::nullopt;
-            if (!动作 || !动作->动作时间 || !执行->结束时间 || !取得.采用任务节点)
-                throw std::logic_error("取得评估缺少动作/结束/采用任务身份");
-            const bool 同源命中 = std::any_of(实际组->begin(), 实际组->end(), [&](const auto& 项) {
-                const auto& S = 项.状态;
-                if (std::find(必需命中状态.begin(), 必需命中状态.end(), S.节点) == 必需命中状态.end()
-                    || S.被描述存在节点 != 服务需求取得合同_->自我存在节点
-                    || S.来源实例特征节点 != 服务需求取得合同_->服务任务集合特征节点
-                    || S.强时间.语义 != 动作->动作时间->语义
-                    || S.强时间.纳秒 < 动作->动作时间->纳秒
-                    || S.强时间.纳秒 > 执行->结束时间->纳秒) return false;
-                const auto* 编码 = std::get_if<稳定编码>(&S.固定准确值);
-                const auto 材料 = 编码 ? 特征值服务_.获取特征值(*编码) : std::nullopt;
-                const auto* 集合 = 材料 ? std::get_if<std::vector<std::uint64_t>>(&材料->材料) : nullptr;
-                if (!材料 || 材料->物理类型 != 材料物理类型::U64数组 || !集合)
-                    throw std::logic_error("取得历史结果S集合材料不可读");
-                return std::find(集合->begin(), 集合->end(), 取得.采用任务节点->值) != 集合->end();
-            });
-            if (!同源命中) { 结果.状态 = 新任务操作状态::状态材料不足; return 结果; }
-            方向验证 = 幅度验证 = 新任务影响验证状态::不适用;
-            值域验证 = 多渠道验证 = 归因验证 = 新任务影响验证状态::已验证通过;
         }
         if (需求定义->目标.目标形式 == 新需求目标形式::变化方向) {
             if (需求结果.状态 == 新需求当前满足状态::资源失败) {
@@ -10192,13 +11661,16 @@ std::optional<新任务贡献计值类型> 新_任务类::判定完成贡献叶�
     if (!有效(任务节点) || !有效(执行实例节点)
         || !有效(影响评估节点)) return 结果;
     try {
+        const auto 准备批=读取任务需求准备保护批(任务节点);
         std::lock_guard 锁(新任务互斥);
+        if(!核同任务需求准备保护批(准备批)||准备批.结果.状态==新任务需求准备状态::来源前提已变化){结果.状态=新任务操作状态::预期已变化;return 结果;}
+        if(准备批.结果.状态==新任务需求准备状态::资源延后){结果.状态=新任务操作状态::资源失败;return 结果;}
         if (!结构仍存在()) {
             结果.状态 = 新任务操作状态::尚未初始化;
             return 结果;
         }
         const auto 任务 = 读取任务信息(任务节点, 特征服务_);
-        if (任务 && 复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善) {
+        if (任务 && 准备批.结果.状态 == 新任务需求准备状态::待完善) {
             结果.状态 = 新任务操作状态::需求信息待完善; return 结果;
         }
         const auto 执行 = 读取执行信息(执行实例节点, 状态服务_, 特征服务_, 特征概念服务_);
@@ -10227,15 +11699,6 @@ std::optional<新任务贡献计值类型> 新_任务类::判定完成贡献叶�
             || !评估->允许形成完成决议()) {
             结果.状态 = 新任务操作状态::任务状态不允许;
             return 结果;
-        }
-        if (执行->结果获取方案.服务需求取得数量类型 && !任务->完成结算节点) {
-            const auto fresh = 复核任务需求(任务节点);
-            if (fresh.状态 != 新需求当前满足状态::已满足) {
-                结果.状态 = fresh.状态 == 新需求当前满足状态::资源失败 ? 新任务操作状态::资源失败
-                    : fresh.状态 == 新需求当前满足状态::结构不一致 ? 新任务操作状态::结构不一致
-                    : 新任务操作状态::任务状态不允许;
-                return 结果;
-            }
         }
         auto 结果闭包 = 执行->实际状态节点组;
         std::sort(结果闭包.begin(), 结果闭包.end(), [](稳定编码 左, 稳定编码 右) {
@@ -10292,10 +11755,12 @@ std::optional<新任务贡献计值类型> 新_任务类::判定完成贡献叶�
                 const bool 失败或取消 = 子 && (子->当前状态 == 新任务状态::已失败 || 子->当前状态 == 新任务状态::已取消);
                 const bool 有接收 = std::any_of(父贡献.second.begin(), 父贡献.second.end(),
                     [&](const auto& r) { return 子 && r.子任务节点 == 子->节点; });
+                const bool 未执行满足=子&&子->当前状态==新任务状态::未执行但目标已满足;
+                if(子&&是无完成来源的未执行满足子任务(*子,有接收))continue;
                 if (失败或取消 && !有接收) continue;
                 // 保留原采集顺序：首个未就绪子项阻断，不继续读取后续K。
                 // 此处只确认本次计值依赖能否读齐，不在采集层计算贡献。
-                if (!失败或取消 && (!子 || (子->当前状态 != 新任务状态::已完成
+                if (!失败或取消 && !未执行满足 && (!子 || (子->当前状态 != 新任务状态::已完成
                     && 子->当前状态 != 新任务状态::已结算) || !子->完成结算节点)) {
                     结果.状态 = 新任务操作状态::等待直接子结算; return 结果;
                 }
@@ -10312,6 +11777,11 @@ std::optional<新任务贡献计值类型> 新_任务类::判定完成贡献叶�
                 }
                 const auto 子结算 = 读取完成结算信息(*子->完成结算节点, 状态服务_);
                 贡献要求(子结算.has_value());
+                if(未执行满足){
+                    贡献要求(子结算->任务节点==子->节点&&子结算->需求节点==d&&子结算->服务贡献.has_value());
+                    const auto any=std::find_if(父贡献.second.begin(),父贡献.second.end(),[&](const auto& r){return r.子任务节点==子->节点;});
+                    if(any!=父贡献.second.end())贡献要求(any->来源完成结算节点==子结算->节点&&any->贡献值==子结算->服务贡献->贡献值);
+                }
                 核验任务贡献特征权威(子->节点);
                 const auto 接收 = std::find_if(父贡献.second.begin(), 父贡献.second.end(),
                     [&](const auto& r) { return r.子任务节点 == 子->节点 && r.来源完成结算节点 == 子结算->节点; });
@@ -10435,14 +11905,16 @@ std::optional<新任务贡献计值类型> 新_任务类::判定完成贡献叶�
         结果.状态 = 新任务操作状态::已建立;
         结果.结算 = *读回;
         return 结果;
-    } catch (...) {
+    } catch(const std::bad_alloc&){结果.状态=新任务操作状态::资源失败;return 结果;}
+    catch(const std::length_error&){结果.状态=新任务操作状态::资源失败;return 结果;}
+    catch (...) {
         贡献要求(false);
         return 结果;
     }
 }
 
 struct 新_任务类::最终消费占用 final {
-    const 新_任务类* 所有者 = nullptr;
+    新_任务类* 所有者 = nullptr;
     std::thread::id 线程;
     新任务最终来源信息 来源;
     稳定编码 准备节点;
@@ -10453,9 +11925,86 @@ struct 新_任务类::最终消费占用 final {
     std::optional<基础片段发布回执> 回执;
     std::optional<新任务最终消费信息> 消费;
     bool 只收尾 = false;
+    enum class 准备阶段 : std::uint8_t { 发表前=1, 已发表P待基线, 可交付, 已入账收尾 };
+    准备阶段 阶段=准备阶段::发表前;
+    基础节点组追加请求 原追加请求;
+    std::optional<基础节点组追加结果> P发表回执;
+    std::vector<基础联合节点快照> 发表前预期;
+    bool 已正式完成=false;
 };
+void 新_任务类::完成最终准备基线(最终消费占用& 原状态) {
+    auto* state=&原状态;namespace q=最终消费存储;
+    贡献要求(state->P发表回执.has_value());
+    const auto& publication=*state->P发表回执;const auto& req=state->原追加请求;
+    const auto& after=state->发表前预期;const auto& s=state->来源;
+    state->保护节点.insert(publication.新节点组.begin(), publication.新节点组.end());
+    state->基线 = 贡献完整快照(state->保护节点,true);
+    // P发表不能成为重新接受资格变化的窗口。旧快照只允许加入本次
+    // 已发布P/证明/锚点的精确引用，其它内容仍必须等于发表前材料。
+    const auto 取快照 = [&](稳定编码 id) -> const 基础联合节点快照& {
+        const auto it = std::find_if(state->基线.begin(), state->基线.end(),
+            [&](const auto& n) { return n.结构.节点.编码 == id; });
+        贡献要求(it != state->基线.end()); return *it;
+    };
+    const auto 解析内容 = [&](const 基础组内字段内容& v) -> 基础字段内容 {
+        if (const auto* value = std::get_if<基础值>(&v)) return *value;
+        if (const auto* ref = std::get_if<稳定编码>(&v)) return *ref;
+        return publication.新节点组.at(std::get<基础组内节点引用>(v).索引);
+    };
+    std::vector<基础字段关系> 新增字段;
+    for (std::size_t i = 0; i < publication.新节点组.size(); ++i) {
+        const auto& node = 取快照(publication.新节点组[i]);
+        auto fields = node.结构.字段组;
+        贡献要求(fields.size() == req.新节点组[i].字段组.size()
+            && node.入向外部关系组.empty() && node.出向外部关系组.empty());
+        for (const auto& expected : req.新节点组[i].字段组) {
+            const auto content = 解析内容(expected.内容);
+            const auto it = std::find_if(fields.begin(), fields.end(), [&](const auto& f) {
+                return f.所属节点 == node.结构.节点.编码
+                    && f.字段节点 == expected.字段节点 && f.内容 == content;
+            });
+            贡献要求(it != fields.end()); 新增字段.push_back(*it); fields.erase(it);
+        }
+    }
+    贡献要求(publication.追加字段关系组.size() == req.追加字段组.size());
+    for (std::size_t i = 0; i < req.追加字段组.size(); ++i) {
+        const auto& f = req.追加字段组[i];
+        新增字段.push_back({publication.追加字段关系组[i], f.所属节点, f.字段节点, 解析内容(f.内容)});
+    }
+    for (const auto& current : state->基线) {
+        const auto id = current.结构.节点.编码;
+        const auto old = std::find_if(after.begin(), after.end(),
+            [&](const auto& n) { return n.结构.节点.编码 == id; });
+        基础联合节点快照 expected{};
+        if (old != after.end()) expected = *old;
+        else expected.结构.节点 = current.结构.节点;
+        for (const auto& f : 新增字段) {
+            if (f.所属节点 == id) expected.结构.字段组.push_back(f);
+            if (const auto* ref = std::get_if<稳定编码>(&f.内容); ref && *ref == id)
+                expected.入向字段组.push_back(f);
+        }
+        const auto 按编码 = [](const auto& l, const auto& r) { return l.编码 < r.编码; };
+        std::sort(expected.结构.字段组.begin(), expected.结构.字段组.end(), 按编码);
+        std::sort(expected.入向字段组.begin(), expected.入向字段组.end(), 按编码);
+        贡献要求(贡献快照相同(current, expected));
+    }
+    state->场景基线 = 场景服务_.获取场景(s.自我场景节点);
+    贡献要求(state->场景基线.has_value());
+    state->阶段=最终消费占用::准备阶段::可交付;
+}
+
 struct 新任务最终消费准备::实现 final {
     std::shared_ptr<新_任务类::最终消费占用> 占用;
+    bool 已交付=false;
+    ~实现() noexcept {
+        if(!已交付||!占用)return;
+        try{std::lock_guard 锁(新任务互斥);
+            auto& 槽=占用->所有者->最终消费占用组_.at(占用->来源.来源.完成结算节点);
+            if(槽.活令牌.lock()!=占用)throw std::logic_error("最终消费token槽身份变化");
+            槽.活令牌.reset();
+            if(占用->已正式完成)槽.待续.reset();else 槽.待续=占用;
+        }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"归还最终消费准备",L"原同源占用槽不一致");}
+    }
 };
 新任务最终消费准备::新任务最终消费准备(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
 新任务最终消费准备::~新任务最终消费准备() noexcept = default;
@@ -10481,12 +12030,17 @@ void 新_任务类::初始化任务最终消费结构() noexcept {
 }
 
 std::optional<新任务最终消费信息> 新_任务类::读取任务最终消费(稳定编码 k) const noexcept {
+    try{return 提取已核验任务最终消费(k);}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取任务最终消费",L"最终消费冻结事实不完整；保留现场。");}
+}
+std::optional<新任务最终消费信息> 新_任务类::提取已核验任务最终消费(稳定编码 k) const {
     try {
         std::lock_guard 锁(新任务互斥);
         auto u = 读取最终消费核心原始(k);
         if (!u) {
             const auto it = 最终消费占用组_.find(k);
-            贡献要求(!读取最终准备定位(k) || (it != 最终消费占用组_.end() && !it->second.expired()));
+            贡献要求(!读取最终准备定位(k) || (it != 最终消费占用组_.end()
+                && (!it->second.活令牌.expired()||it->second.待续)));
             return {};
         }
         const auto& s = u->来源;
@@ -10594,7 +12148,9 @@ std::optional<新任务最终消费信息> 新_任务类::读取任务最终消�
                 && t->当前状态 == 新任务状态::已结算);
         } else 贡献要求(t->当前状态 == 新任务状态::已完成);
         return u;
-    } catch (...) {
+    }catch(const std::bad_alloc&){throw;}
+    catch(const std::length_error&){throw;}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务最终消费", L"最终消费冻结事实不完整；保留现场。");
     }
 }
@@ -10605,25 +12161,53 @@ struct 新_任务类::结算因果资格核心 final {
     std::map<std::pair<新先天因果条件种类, 稳定编码>, std::vector<稳定编码>> 已核验条件;
 };
 
-新因果候选事实 新_任务类::读取结算候选身份(稳定编码 T) const {
-    std::lock_guard 锁(新任务互斥);
+新因果候选事实 新_任务类::读取结算候选身份(稳定编码 T, std::stop_token 停止,
+    const 新任务需求准备保护批& 准备批) const {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"结算候选身份", T);
+#endif
+    检查因果读取停止(停止);
+    auto 锁 = 获取因果读取任务锁(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"候选身份已取得任务锁", T);
+#endif
     贡献要求(有效(T));
     新因果候选事实 facts; facts.任务节点 = T;
+    检查因果读取停止(停止);
     const auto task = 获取任务(T);
     if (!task) {
         贡献要求(!全局基础数据集.查询节点(T));
         return facts;
     }
+    检查因果读取停止(停止);
     const auto demand = 需求服务_.读取需求治理信息(task->需求节点);
+    贡献要求(demand.has_value());
+    检查因果读取停止(停止);
     const auto vt = 获取任务虚拟存在(T);
-    贡献要求(demand && vt && 查询需求任务(task->需求节点) == T);
+    贡献要求(vt.has_value());
+    检查因果读取停止(停止);
+    贡献要求(查询需求任务(task->需求节点) == T);
+    检查因果读取停止(停止);
     const 新任务虚拟存在引用 binding{T, vt->节点, vt->任务状态特征节点};
+    检查因果读取停止(停止);
     const auto fields = 读取任务虚拟存在特征组(binding);
+    贡献要求(fields.has_value());
+    检查因果读取停止(停止);
     const auto scene = 内部治理世界_ ? 内部治理世界_->读取任务治理场景(binding) : std::nullopt;
     贡献要求(fields && scene);
     facts.任务引用 = binding; facts.原需求节点 = task->需求节点;
     facts.原需求活动状态 = demand->活动状态;
-    const auto preparation = 复核任务需求准备(T);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"候选身份T/D/Vt及治理场景已读取，即将核验需求准备", T);
+#endif
+    检查因果读取停止(停止);
+    const auto& preparation = 准备批.结果;
+    if(preparation.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+    if(preparation.状态==新任务需求准备状态::来源前提已变化||!核同任务需求准备保护批(准备批)){
+        facts=新因果候选事实{};facts.任务节点=T;facts.状态=新因果候选读取状态::来源已变化;return facts;}
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"候选身份需求准备核验已返回", T);
+#endif
     贡献要求(preparation.状态 == 新任务需求准备状态::待完善
         || preparation.状态 == 新任务需求准备状态::可筹办);
     facts.状态 = preparation.状态 == 新任务需求准备状态::待完善
@@ -10636,74 +12220,148 @@ struct 新_任务类::结算因果资格核心 final {
     facts.当前任务状态 = static_cast<std::int64_t>(task->当前状态);
     if (fields->服务值) facts.当前服务值 = fields->服务值->当前值;
     facts.治理世界根节点 = scene->根场景节点; facts.治理场景节点 = scene->场景节点;
+    检查因果读取停止(停止);
     facts.治理边界 = 读取当前结算边界();
+    检查因果读取停止(停止);
     facts.执行实例节点 = task->最近执行实例节点;
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"候选身份即将审计历史执行与结算", T);
+#endif
     // 历史X/A/K同样审计；未完成不能掩盖已经发表的坏身份。
+    检查因果读取停止(停止);
     for (const auto& ref : 全局基础数据集.查询目标字段(T, 执行所属任务字段)) {
+        检查因果读取停止(停止);
         const auto x = 读取执行信息(ref.所属节点, 状态服务_, 特征服务_, 特征概念服务_);
         贡献要求(x && x->任务节点 == T);
+        检查因果读取停止(停止);
         if (x->节点 == task->最近执行实例节点) facts.影响评估节点 = x->影响评估节点;
     }
+    检查因果读取停止(停止);
     for (const auto& ref : 全局基础数据集.查询目标字段(T, 评估所属任务字段)) {
+        检查因果读取停止(停止);
         const auto a = 读取评估信息(ref.所属节点);
         贡献要求(a && a->任务节点 == T && a->需求节点 == task->需求节点);
+        检查因果读取停止(停止);
         const auto x = 读取执行信息(a->执行实例节点, 状态服务_, 特征服务_, 特征概念服务_);
         贡献要求(x && x->任务节点 == T && x->影响评估节点 == a->节点 && x->方法节点 == a->方法节点);
     }
+    检查因果读取停止(停止);
     for (const auto& ref : 全局基础数据集.查询目标字段(T, 结算所属任务字段)) {
+        检查因果读取停止(停止);
         const auto k = 读取贡献严格结算(ref.所属节点, 状态服务_, 特征服务_, 特征概念服务_);
         贡献要求(k.任务节点 == T && task->完成结算节点 == k.节点);
     }
     if (task->最近执行实例节点) {
+        检查因果读取停止(停止);
         const auto x = 获取执行实例(*task->最近执行实例节点);
         贡献要求(x && x->任务节点 == T);
         facts.影响评估节点 = x->影响评估节点;
     }
-    for (const auto& r : 读取父贡献(T).second) facts.直接子接收节点组.push_back(r.节点);
+    检查因果读取停止(停止);
+    for (const auto& r : 读取父贡献(T).second) {
+        检查因果读取停止(停止);
+        facts.直接子接收节点组.push_back(r.节点);
+    }
     facts.完成结算节点 = task->完成结算节点;
     if (task->完成结算节点) {
+        检查因果读取停止(停止);
         const auto k = 读取贡献严格结算(*task->完成结算节点, 状态服务_, 特征服务_, 特征概念服务_);
-        if (const auto p = 读取最终准备定位(k.节点)) (void)读取最终冻结来源(*p);
+        检查因果读取停止(停止);
+        if (const auto p = 读取最终准备定位(k.节点)) {
+            检查因果读取停止(停止);
+            (void)读取最终冻结来源(*p);
+        }
+        检查因果读取停止(停止);
         const auto running = 最终消费占用组_.find(k.节点);
-        const bool active = running != 最终消费占用组_.end() && !running->second.expired();
+        const bool active = running != 最终消费占用组_.end() && !running->second.活令牌.expired();
         // 在途U可能正等待world结果提交；只审冻结格式，不把合法在途当坏完成。
-        const auto u = active ? 读取最终消费核心原始(k.节点) : 读取任务最终消费(k.节点);
+        检查因果读取停止(停止);
+        const auto u = active ? 读取最终消费核心原始(k.节点) : 提取已核验任务最终消费(k.节点);
         if (u && !active) {
             facts.既有消费 = 新因果既有消费证据{u->准备节点, u->消费节点,
                 u->收尾阶段节点, u->前值, u->后值, 最终结果引用完整(*u), u->收尾阶段节点.has_value()};
-            for (const auto& a : u->来源.人类服务锚点组)
+            检查因果读取停止(停止);
+            for (const auto& a : u->来源.人类服务锚点组) {
+                检查因果读取停止(停止);
                 facts.人类确认锚点组.push_back({a.任务节点, a.需求节点, a.完成结算节点, a.服务确认节点组});
-            for (const auto& p : u->来源.贡献证明组)
+            }
+            检查因果读取停止(停止);
+            for (const auto& p : u->来源.贡献证明组) {
+                检查因果读取停止(停止);
                 facts.下层贡献证明组.push_back({p.任务节点, p.完成结算节点, p.人类服务锚点任务节点, p.直接子接收节点组});
+            }
         }
     }
-    if (贡献可选节点(T, 贡献权威存储::接管字段)) 核验任务贡献特征权威(T);
-    for (const auto J : 贡献引用组(T, 贡献权威存储::阶段列表))
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"候选身份历史执行与结算已核验，即将审计贡献阶段", T);
+#endif
+    检查因果读取停止(停止);
+    const auto 已接管 = 贡献可选节点(T, 贡献权威存储::接管字段);
+    检查因果读取停止(停止);
+    if (已接管) 核验任务贡献特征权威(T);
+    检查因果读取停止(停止);
+    for (const auto J : 贡献引用组(T, 贡献权威存储::阶段列表)) {
+        检查因果读取停止(停止);
         贡献要求(读取任务贡献动作阶段(J).has_value());
+    }
+    检查因果读取停止(停止);
     return facts;
 }
 
 新任务最终来源读取结果 新_任务类::读取任务最终消费来源(const 新服务值最终来源定位& loc) const noexcept {
     try {
         贡献要求(有效(loc.来源任务节点) && 有效(loc.完成结算节点) && 有效(loc.直接接收节点));
-        return 读取结算候选资格核心(loc.来源任务节点, loc).最终;
-    } catch (...) {
+        {
+            std::lock_guard 锁(新任务互斥);
+            const auto 槽=最终消费占用组_.find(loc.完成结算节点);
+            if(槽!=最终消费占用组_.end())if(const auto 活=槽->second.活令牌.lock()){
+                贡献要求(活->来源.来源==loc);
+                if(!活->已正式完成)return {新任务最终来源读取状态::等待同源工作,{},{}};
+            }
+            const auto U=提取已核验任务最终消费(loc.完成结算节点);
+            if(U){贡献要求(U->来源.来源==loc);return {U->收尾阶段节点 ? 新任务最终来源读取状态::已完成 : 新任务最终来源读取状态::已入账待收尾,U->来源,U};}
+            if(槽!=最终消费占用组_.end()&&槽->second.待续){
+                const auto& P=*槽->second.待续;
+                贡献要求(P.来源.来源==loc&&有效(P.准备节点)&&读取最终准备定位(loc.完成结算节点)==P.准备节点
+                    &&读取最终冻结来源(P.准备节点)==P.来源);
+                return {新任务最终来源读取状态::已准备待续,P.来源,{}};
+            }
+        }
+        const auto 批=读取任务需求准备保护批(loc.来源任务节点);
+        return 读取结算候选资格核心(loc.来源任务节点, loc, {}, 批).最终;
+    } catch(const std::bad_alloc&){return {新任务最终来源读取状态::资源延后,{},{}};}
+    catch(const std::length_error&){return {新任务最终来源读取状态::资源延后,{},{}};}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务最终消费来源", L"最终来源资格或正式材料不一致。");
     }
 }
 
 新_任务类::结算因果资格核心 新_任务类::读取结算候选资格核心(
-    稳定编码 T, const std::optional<新服务值最终来源定位>& expected) const {
+    稳定编码 T, const std::optional<新服务值最终来源定位>& expected, std::stop_token 停止,
+    const 新任务需求准备保护批& 准备批) const {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"结算候选资格核心", T);
+#endif
     using S = 新任务最终来源读取状态;
     try {
-        std::lock_guard 锁(新任务互斥);
+        检查因果读取停止(停止);
+        auto 锁 = 获取因果读取任务锁(停止);
         结算因果资格核心 core;
-        core.事实 = 读取结算候选身份(T);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"资格核心已取得任务锁，即将读取候选身份", T);
+#endif
+        core.事实 = 读取结算候选身份(T, 停止, 准备批);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"资格核心候选身份已返回", T);
+#endif
         const auto finish = [&](S status, std::optional<新任务最终来源信息> source = {},
             std::optional<新任务最终消费信息> consumed = {}) {
             core.最终 = {status, std::move(source), std::move(consumed)};
+            检查因果读取停止(停止);
             return core;
         };
+        if(core.事实.状态==新因果候选读取状态::来源已变化)return finish(S::来源已变化);
+        检查因果读取停止(停止);
         const auto t = 获取任务(T);
         if (!t) {
             贡献要求(!expected);
@@ -10711,8 +12369,14 @@ struct 新_任务类::结算因果资格核心 final {
         }
         std::optional<新服务值最终来源定位> actual;
         if (t->完成结算节点) {
+            检查因果读取停止(停止);
             const auto r = 贡献可选节点(*t->完成结算节点, 结算唯一接收字段);
-            if (r) { (void)读取贡献接收(*r); actual = 新服务值最终来源定位{T, *t->完成结算节点, *r}; }
+            检查因果读取停止(停止);
+            if (r) {
+                (void)读取贡献接收(*r);
+                检查因果读取停止(停止);
+                actual = 新服务值最终来源定位{T, *t->完成结算节点, *r};
+            }
         }
         using Gate = 新先天因果条件种类;
         const auto mark = [&](Gate kind, std::vector<稳定编码> evidence, 稳定编码 ft = {}) {
@@ -10722,52 +12386,95 @@ struct 新_任务类::结算因果资格核心 final {
             {T, core.事实.任务引用->虚拟存在节点, core.事实.任务引用->状态特征节点});
         if (core.事实.当前任务状态 == static_cast<std::int64_t>(新任务状态::已完成))
             mark(Gate::特征值域, {T, core.事实.任务引用->状态特征节点}, 任务状态特征概念);
-        if (core.事实.当前服务值)
+        if (core.事实.当前服务值) {
+            检查因果读取停止(停止);
             mark(Gate::特征值域, {T, *读取唯一节点字段(t->任务虚拟存在节点, 虚拟存在服务值特征字段)}, 任务服务值特征概念);
+            检查因果读取停止(停止);
+        }
         if (自我服务结算配置_) {
             const auto& config = *自我服务结算配置_;
+            检查因果读取停止(停止);
             const auto self = 存在服务_.获取存在(config.自我存在节点);
+            贡献要求(self && self->专属存在概念节点 == config.自我概念节点);
+            检查因果读取停止(停止);
             const auto value = 特征服务_.获取特征(config.服务值特征节点);
             贡献要求(self && value && self->专属存在概念节点 == config.自我概念节点);
             mark(Gate::存在有效, {self->节点, self->专属存在概念节点});
             if (value->当前值 && std::holds_alternative<std::int64_t>(*value->当前值))
                 mark(Gate::特征值域, {self->节点, value->节点}, config.服务值特征类型节点);
             if (服务需求取得合同_) {
+                检查因果读取停止(停止);
                 const auto set = 特征服务_.获取特征(服务需求取得合同_->服务任务集合特征节点);
                 贡献要求(set && set->当前值);
                 const auto* id = std::get_if<稳定编码>(&*set->当前值); 贡献要求(id != nullptr);
+                检查因果读取停止(停止);
                 const auto material = 特征值服务_.获取特征值(*id);
                 const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
                 贡献要求(members != nullptr);
                 if (std::find(members->begin(), members->end(), T.值) != members->end())
                     mark(Gate::集合包含角色, {self->节点, set->节点, *id, T});
             }
+            检查因果读取停止(停止);
             const auto d = 需求服务_.读取需求治理信息(t->需求节点);
             贡献要求(d.has_value());
             if (T != config.结算任务节点 && d->父需求节点 == config.结算需求节点)
                 mark(Gate::直接父子关联, {T, t->需求节点, config.结算需求节点, config.结算任务节点});
-            const auto all = 读取贡献对应(*this);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察因果构造阶段(L"资格核心即将读取首次贡献对应", T);
+#endif
+            检查因果读取停止(停止);
+            const auto all = 读取贡献对应(*this, 停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察因果构造阶段(L"资格核心首次贡献对应已返回，即将核验祖先", T);
+#endif
             std::set<稳定编码> ancestors;
             auto cursor = std::optional{t->需求节点};
+            检查因果读取停止(停止);
             while (cursor) {
+                检查因果读取停止(停止);
                 贡献要求(ancestors.insert(*cursor).second);
                 const auto entry = all.find(*cursor); 贡献要求(entry != all.end());
                 if (*cursor == config.服务根需求节点 && core.事实.原目标)
                     mark(Gate::需求任务关联, {T, t->需求节点, config.服务根需求节点});
                 cursor = entry->second.first.父需求节点;
             }
+            检查因果读取停止(停止);
             const auto boundary = 读取当前结算边界(); 贡献要求(boundary.has_value());
-            核验贡献结算边界(*boundary, all, 需求服务_, 方法服务_, *this);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察因果构造阶段(L"资格核心即将核验首次结算边界", T);
+#endif
+            核验贡献结算边界(*boundary, all, 需求服务_, 方法服务_, *this, 停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察因果构造阶段(L"资格核心首次结算边界核验已返回", T);
+#endif
             mark(Gate::当前治理边界一致,
                 {config.能力.节点, config.结算任务节点, config.结算需求节点, config.服务根需求节点});
             bool allReceived = true;
+            检查因果读取停止(停止);
             const auto receipts = 读取父贡献(T).second;
             std::vector<稳定编码> evidence{T, t->需求节点};
-            for (const auto& receipt : receipts) evidence.push_back(receipt.节点);
-            for (const auto& [dn, entry] : all) if (entry.first.父需求节点 == t->需求节点) {
+            检查因果读取停止(停止);
+            for (const auto& receipt : receipts) {
+                检查因果读取停止(停止);
+                evidence.push_back(receipt.节点);
+            }
+            检查因果读取停止(停止);
+            for (const auto& [dn, entry] : all) {
+                检查因果读取停止(停止);
+                if (entry.first.父需求节点 != t->需求节点) continue;
                 evidence.push_back(dn);
                 if (!entry.second) { allReceived = false; continue; }
                 const auto& child = *entry.second;
+                const auto receipt=std::find_if(receipts.begin(),receipts.end(),[&](const auto& r){return r.子任务节点==child.节点;});
+                if(是无完成来源的未执行满足子任务(child,receipt!=receipts.end()))continue;
+                if(child.当前状态==新任务状态::未执行但目标已满足&&child.完成结算节点){
+                    检查因果读取停止(停止);
+                    const auto k=读取完成结算信息(*child.完成结算节点,状态服务_);
+                    贡献要求(k&&k->任务节点==child.节点&&k->需求节点==dn);
+                    if(receipt==receipts.end()){allReceived=false;continue;}
+                    贡献要求(k->服务贡献&&receipt->来源完成结算节点==k->节点&&receipt->贡献值==k->服务贡献->贡献值);
+                    evidence.push_back(k->节点);
+                }
                 if (child.当前状态 == 新任务状态::已失败 || child.当前状态 == 新任务状态::已取消) continue;
                 if (!child.完成结算节点 || std::none_of(receipts.begin(), receipts.end(), [&](const auto& r) {
                     return r.子任务节点 == child.节点 && r.来源完成结算节点 == child.完成结算节点;
@@ -10776,7 +12483,10 @@ struct 新_任务类::结算因果资格核心 final {
             if (allReceived) mark(Gate::直接子接收完整, std::move(evidence));
         }
         if (core.事实.执行实例节点 && core.事实.影响评估节点) {
+            检查因果读取停止(停止);
             const auto x = 获取执行实例(*core.事实.执行实例节点);
+            贡献要求(x.has_value());
+            检查因果读取停止(停止);
             const auto a = 读取评估信息(*core.事实.影响评估节点);
             贡献要求(x && a && a->执行实例节点 == x->节点 && a->任务节点 == T);
             if (a->允许形成完成决议() && x->状态 == 新任务执行状态::已评估) {
@@ -10787,31 +12497,51 @@ struct 新_任务类::结算因果资格核心 final {
             }
         }
         if (t->完成结算节点) {
+            检查因果读取停止(停止);
             const auto k = 读取贡献严格结算(*t->完成结算节点, 状态服务_, 特征服务_, 特征概念服务_);
             if (k.服务贡献 && core.事实.当前服务值 == k.服务贡献->贡献值
                 && t->最近执行实例节点 == k.执行实例节点)
                 mark(Gate::完成来源一致, {T, k.节点, k.执行实例节点, k.影响评估节点});
-            if (!读取最终准备定位(k.节点) && !贡献可选节点(k.节点, 最终消费存储::消费关联))
-                mark(Gate::本来源未消费, {T, k.节点});
+            检查因果读取停止(停止);
+            const auto 准备 = 读取最终准备定位(k.节点);
+            检查因果读取停止(停止);
+            if (!准备) {
+                const auto 消费关联 = 贡献可选节点(k.节点, 最终消费存储::消费关联);
+                检查因果读取停止(停止);
+                if (!消费关联) mark(Gate::本来源未消费, {T, k.节点});
+            }
         }
         if (!expected && !actual) return finish(S::来源条件不具备);
         const auto loc = expected ? *expected : *actual;
         const auto it = 最终消费占用组_.find(loc.完成结算节点);
-        if (it != 最终消费占用组_.end()) if (const auto active = it->second.lock()) {
+        if (it != 最终消费占用组_.end()) if (const auto active = it->second.活令牌.lock()) {
             贡献要求(active->来源.来源 == loc);
             core.事实.状态 = 新因果候选读取状态::等待同源工作;
             return finish(S::等待同源工作);
         }
-        if (const auto u = 读取任务最终消费(loc.完成结算节点)) {
+        检查因果读取停止(停止);
+        const auto u = 提取已核验任务最终消费(loc.完成结算节点);
+        if (u) {
             贡献要求(u->来源.来源 == loc);
             return finish(u->收尾阶段节点 ? S::已完成 : S::已入账待收尾, u->来源, u);
         }
+        if(it!=最终消费占用组_.end()&&it->second.待续){
+            const auto& p=*it->second.待续;
+            贡献要求(p.来源.来源==loc&&有效(p.准备节点)&&读取最终准备定位(loc.完成结算节点)==p.准备节点
+                &&读取最终冻结来源(p.准备节点)==p.来源);
+            return finish(S::已准备待续,p.来源);
+        }
+        检查因果读取停止(停止);
         贡献要求(t.has_value() && t->节点 == loc.来源任务节点);
         // 部分历史事实必须先报工程错误，不能被配置/当前状态的正常等待吞掉。
+        检查因果读取停止(停止);
         for (const auto n : 贡献引用组(t->节点, 贡献权威存储::阶段列表)) {
+            检查因果读取停止(停止);
             贡献要求(贡献必需整数(n, 贡献权威存储::种类) != 5);
+            检查因果读取停止(停止);
             贡献要求(读取任务贡献动作阶段(n).has_value());
         }
+        检查因果读取停止(停止);
         const auto boundary = 读取当前结算边界();
         if (!boundary) {
             core.事实.状态 = 新因果候选读取状态::等待配置;
@@ -10819,31 +12549,55 @@ struct 新_任务类::结算因果资格核心 final {
         }
         if (t->完成结算节点 != loc.完成结算节点 || t->当前状态 != 新任务状态::已完成)
             return finish(S::来源已变化);
+        检查因果读取停止(停止);
         const auto k = 读取贡献严格结算(loc.完成结算节点, 状态服务_, 特征服务_, 特征概念服务_);
+        贡献要求(k.任务节点 == t->节点 && k.服务贡献);
+        检查因果读取停止(停止);
         const auto r = 读取贡献接收(loc.直接接收节点); const auto& cfg = *boundary;
         贡献要求(k.任务节点 == t->节点 && k.服务贡献 && r.子任务节点 == t->节点
             && r.来源完成结算节点 == k.节点 && r.贡献值 == k.服务贡献->贡献值);
         if (t->节点 == cfg.结算任务节点 || r.父任务节点 != cfg.结算任务节点) return finish(S::来源条件不具备);
-        const auto all = 读取贡献对应(*this);
-        核验贡献结算边界(cfg, all, 需求服务_, 方法服务_, *this);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"资格核心即将读取最终来源贡献对应", T);
+#endif
+        检查因果读取停止(停止);
+        const auto all = 读取贡献对应(*this, 停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"资格核心最终来源贡献对应已返回，即将核验最终边界", T);
+#endif
+        核验贡献结算边界(cfg, all, 需求服务_, 方法服务_, *this, 停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"资格核心最终来源边界核验已返回", T);
+#endif
+        检查因果读取停止(停止);
         const auto td = 需求服务_.获取需求(t->需求节点); 贡献要求(td && td->父需求节点 == cfg.结算需求节点);
         if (t->最近执行实例节点 != k.执行实例节点) return finish(S::来源已变化);
+        检查因果读取停止(停止);
         const auto vt = 获取任务虚拟存在(t->节点); 贡献要求(vt.has_value());
+        检查因果读取停止(停止);
         const auto fs = 读取任务虚拟存在特征组({t->节点, vt->节点, vt->任务状态特征节点});
         贡献要求(fs && fs->服务值 && fs->服务值->当前值 == r.贡献值);
+        检查因果读取停止(停止);
         const auto root = 需求服务_.获取需求(cfg.服务根需求节点); 贡献要求(root.has_value());
+        检查因果读取停止(停止);
         const auto self = 存在服务_.获取存在(root->目标存在节点); 贡献要求(self.has_value());
+        检查因果读取停止(停止);
         const auto scene = 场景服务_.查询所属场景(self->节点); 贡献要求(scene.has_value());
+        检查因果读取停止(停止);
         const auto innate = 特征概念服务_.获取先天特征概念(); 贡献要求(innate.has_value());
         std::optional<稳定编码> sf; bool member = false; std::size_t sets = 0;
+        检查因果读取停止(停止);
         for (const auto fn : self->特征节点组) {
+            检查因果读取停止(停止);
             const auto f = 特征服务_.获取特征(fn); 贡献要求(f.has_value());
+            检查因果读取停止(停止);
             const auto ft = 取得特征概念类型根(特征概念服务_, f->特征概念节点);
             if (ft == root->目标.目标特征类型概念节点) { 贡献要求(!sf); sf = fn; }
             if (ft == innate->服务任务集合) {
                 ++sets; 贡献要求(f->当前值.has_value());
                 const auto* id = std::get_if<稳定编码>(&*f->当前值);
                 贡献要求(id != nullptr);
+                检查因果读取停止(停止);
                 const auto material = 特征值服务_.获取特征值(*id);
                 const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
                 贡献要求(members != nullptr);
@@ -10857,14 +12611,27 @@ struct 新_任务类::结算因果资格核心 final {
         std::set<稳定编码> seen, anchors; bool eligible = true;
         std::function<void(稳定编码, std::optional<稳定编码>)> walk = [&](稳定编码 tn, std::optional<稳定编码> anchor) {
             贡献要求(seen.insert(tn).second);
+            检查因果读取停止(停止);
             const auto ct = 获取任务(tn); 贡献要求(ct && ct->完成结算节点);
+            检查因果读取停止(停止);
             const auto ck = 读取贡献严格结算(*ct->完成结算节点, 状态服务_, 特征服务_, 特征概念服务_);
             贡献要求(ck.服务贡献.has_value());
-            if (tn != t->节点) 贡献要求(!读取最终准备定位(ck.节点) && !贡献可选节点(ck.节点, 最终消费存储::消费关联));
-            const auto cd = 需求服务_.获取需求(ct->需求节点); const auto dg = 需求服务_.读取需求治理信息(ct->需求节点);
+            检查因果读取停止(停止);
+            if (tn != t->节点) {
+                贡献要求(!读取最终准备定位(ck.节点));
+                检查因果读取停止(停止);
+                贡献要求(!贡献可选节点(ck.节点, 最终消费存储::消费关联));
+            }
+            检查因果读取停止(停止);
+            const auto cd = 需求服务_.获取需求(ct->需求节点); 贡献要求(cd.has_value());
+            检查因果读取停止(停止);
+            const auto dg = 需求服务_.读取需求治理信息(ct->需求节点);
             贡献要求(cd && dg && dg->完整目标);
             if (!cd->服务要求确认组.empty()) {
-                const auto guard = 需求服务_.复核需求服务要求语义(cd->节点);
+                检查因果读取停止(停止);
+                const auto& guard=tn==T ? 准备批.守卫 : 准备批.后代守卫.at(tn);
+                if(guard.状态==新服务要求执行守卫状态::资源失败)throw std::bad_alloc{};
+                if(guard.状态==新服务要求执行守卫状态::前提已变化){eligible=false;return;}
                 if (guard.状态 == 新服务要求执行守卫状态::需重新确认) eligible = false;
                 else {
                     贡献要求(guard.状态 == 新服务要求执行守卫状态::当前有效);
@@ -10872,10 +12639,13 @@ struct 新_任务类::结算因果资格核心 final {
                         贡献要求(cd->父需求节点.has_value()); const auto pd = all.find(*cd->父需求节点);
                         贡献要求(pd != all.end() && pd->second.second && pd->second.second->节点 == *cd->来源承接节点);
                     } else 贡献要求(dg->来源类型 == 新需求来源类型::外部服务要求 && dg->外部要求节点);
+                    检查因果读取停止(停止);
                     for (const auto c : cd->服务要求确认组) {
+                        检查因果读取停止(停止);
                         const auto cr = 需求服务_.复核服务要求确认语义(c);
-                        贡献要求(cr.状态 == 新服务要求确认状态::当前有效 && cr.确认
-                            && 存在服务_.获取存在(cr.确认->来源人类节点).has_value());
+                        贡献要求(cr.状态 == 新服务要求确认状态::当前有效 && cr.确认);
+                        检查因果读取停止(停止);
+                        贡献要求(存在服务_.获取存在(cr.确认->来源人类节点).has_value());
                     }
                     anchor = tn;
                     if (anchors.insert(tn).second) s.人类服务锚点组.push_back({tn, cd->节点, ck.节点, cd->服务要求确认组});
@@ -10883,8 +12653,13 @@ struct 新_任务类::结算因果资格核心 final {
             }
             if (ck.服务贡献->类型 == 新任务贡献计值类型::服务叶子 && !anchor) eligible = false;
             s.贡献证明组.push_back({tn, ck.节点, anchor, ck.服务贡献->直接子接收节点组});
+            检查因果读取停止(停止);
             for (const auto rn : ck.服务贡献->直接子接收节点组) {
-                const auto rr = 读取贡献接收(rn); const auto child = 获取任务(rr.子任务节点);
+                检查因果读取停止(停止);
+                const auto rr = 读取贡献接收(rn);
+                检查因果读取停止(停止);
+                const auto child = 获取任务(rr.子任务节点); 贡献要求(child.has_value());
+                检查因果读取停止(停止);
                 const auto dd = child ? 需求服务_.获取需求(child->需求节点) : std::nullopt;
                 贡献要求(rr.父任务节点 == tn && dd && dd->父需求节点 == cd->节点);
                 walk(rr.子任务节点, anchor);
@@ -10892,38 +12667,81 @@ struct 新_任务类::结算因果资格核心 final {
         };
         walk(t->节点, {});
         std::vector<稳定编码> proofEvidence{T};
+        检查因果读取停止(停止);
         for (const auto& p : s.贡献证明组) {
+            检查因果读取停止(停止);
             proofEvidence.push_back(p.任务节点); proofEvidence.push_back(p.完成结算节点);
             proofEvidence.insert(proofEvidence.end(), p.直接子接收节点组.begin(), p.直接子接收节点组.end());
         }
         mark(Gate::下层贡献未消费, proofEvidence);
-        for (const auto& a : s.人类服务锚点组)
+        检查因果读取停止(停止);
+        for (const auto& a : s.人类服务锚点组) {
+            检查因果读取停止(停止);
             core.事实.人类确认锚点组.push_back({a.任务节点, a.需求节点, a.完成结算节点, a.服务确认节点组});
-        for (const auto& p : s.贡献证明组)
+        }
+        检查因果读取停止(停止);
+        for (const auto& p : s.贡献证明组) {
+            检查因果读取停止(停止);
             core.事实.下层贡献证明组.push_back({p.任务节点, p.完成结算节点, p.人类服务锚点任务节点, p.直接子接收节点组});
+        }
         if (!eligible || s.人类服务锚点组.empty()) return finish(S::来源条件不具备);
-        for (const auto& anchor : s.人类服务锚点组)
+        检查因果读取停止(停止);
+        for (const auto& anchor : s.人类服务锚点组) {
+            检查因果读取停止(停止);
             proofEvidence.insert(proofEvidence.end(), anchor.服务确认节点组.begin(), anchor.服务确认节点组.end());
+        }
         mark(Gate::人类确认锚点, std::move(proofEvidence));
         贡献要求(本能动作读取_ != nullptr);
+        检查因果读取停止(停止);
         const auto old = 本能动作读取_->按来源查询动作(t->节点);
         贡献要求(old.状态 == 新动态操作状态::已完成 && !old.动作);
-        for (const auto n : 贡献引用组(t->节点, 贡献权威存储::阶段列表))
+        检查因果读取停止(停止);
+        for (const auto n : 贡献引用组(t->节点, 贡献权威存储::阶段列表)) {
+            检查因果读取停止(停止);
             贡献要求(贡献必需整数(n, 贡献权威存储::种类) < 4);
+        }
+        检查因果读取停止(停止);
         std::sort(s.贡献证明组.begin(), s.贡献证明组.end(), [](const auto& a, const auto& b) { return a.任务节点 < b.任务节点; });
+        检查因果读取停止(停止);
         std::sort(s.人类服务锚点组.begin(), s.人类服务锚点组.end(), [](const auto& a, const auto& b) { return a.任务节点 < b.任务节点; });
         return finish(S::可新消费, std::move(s));
-    } catch (...) {
+    } catch (const 因果读取停止信号&) { throw; }
+    catch(const std::bad_alloc&){throw;}
+    catch(const std::length_error&){throw;}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务最终消费来源", L"最终来源资格或正式材料不一致。");
     }
 }
 
 新因果候选事实 新_任务类::读取结算因果候选事实(
     稳定编码 T, const 新先天因果信息& rule) const {
-    std::lock_guard 锁(新任务互斥);
+    return 提取无停止因果读取<新因果候选事实>(读取结算因果候选事实(T, rule, {}));
+}
+
+新结算因果候选可停止结果 新_任务类::读取结算因果候选事实(
+    稳定编码 T, const 新先天因果信息& rule, std::stop_token 停止) const {
+    try{
+        检查因果读取停止(停止);
+        const auto 批=读取任务需求准备保护批(T);
+        auto 锁=获取因果读取任务锁(停止);
+        return 读取结算因果候选事实已加锁(T,rule,停止,批);
+    }catch(const 因果读取停止信号&){return 新任务因果读取取消{};}
+}
+新结算因果候选可停止结果 新_任务类::读取结算因果候选事实已加锁(
+    稳定编码 T,const 新先天因果信息& rule,std::stop_token 停止,
+    const 新任务需求准备保护批& 准备批) const {
+    try {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"结算候选事实及16条件", T);
+#endif
+    检查因果读取停止(停止);
     贡献要求(有效(rule.节点) && 有效(rule.定义.合同版本概念)
         && rule.定义.触发方式 == 新因果动作触发方式::被动触发);
-    auto core = 读取结算候选资格核心(T, {});
+    检查因果读取停止(停止);
+    auto core = 读取结算候选资格核心(T, {}, 停止, 准备批);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"结算候选资格核心已返回，即将组织条件", T);
+#endif
     auto& facts = core.事实;
     if (!自我服务结算配置_) {
         if (facts.状态 != 新因果候选读取状态::来源已变化)
@@ -10932,7 +12750,9 @@ struct 新_任务类::结算因果资格核心 final {
     }
     std::set<std::int64_t> sequence;
     std::set<std::pair<新先天因果条件种类, 稳定编码>> shapes;
+    检查因果读取停止(停止);
     for (const auto& condition : rule.定义.全部条件) {
+        检查因果读取停止(停止);
         using K = 新先天因果条件种类;
         贡献要求(condition.序号 >= 0 && sequence.insert(condition.序号).second
             && 有效(condition.关系概念) && 节点仍存在(condition.关系概念));
@@ -10957,6 +12777,7 @@ struct 新_任务类::结算因果资格核心 final {
                     && ft == 自我服务结算配置_->服务值特征类型节点)
                 || (roles == std::vector<std::int64_t>{1}
                     && (ft == 任务状态特征概念 || ft == 任务服务值特征概念)));
+            检查因果读取停止(停止);
             const auto domain = 特征概念服务_.获取特征概念(condition.概念参数组[1]);
             const auto* intervals = domain ? std::get_if<std::vector<特征概念I64闭区间>>(&domain->值域) : nullptr;
             贡献要求(domain && intervals && intervals->size() == 1
@@ -10997,7 +12818,9 @@ struct 新_任务类::结算因果资格核心 final {
         facts.条件组.push_back(std::move(out));
     }
     贡献要求(rule.定义.全部条件.size() == 16 && shapes.size() == 16);
+    检查因果读取停止(停止);
     return facts;
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
 }
 
 void 新_任务类::配置因果筹办读取(const 新因果筹办读取接口& reader) {
@@ -11007,24 +12830,1147 @@ void 新_任务类::配置因果筹办读取(const 新因果筹办读取接口& 
     因果筹办读取_ = &reader;
 }
 
+std::optional<新因果派生源上下文> 新_任务类::构造因果派生源上下文(const 新需求信息& D, std::stop_token 停止,
+    std::vector<基础联合节点快照>* 完整保护输出,新来源前驱当前集合材料* 当前集合输出) const {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"派生源上下文", D.节点);
+#endif
+    // 调用者持task锁；跨owner材料使用前由原筹办入口完整fresh重建比较。
+    if (当前集合输出) *当前集合输出 = {};
+    新来源前驱当前集合材料 本次集合;
+    检查因果读取停止(停止);
+    std::vector<基础联合节点快照> 保护;
+    捕获因果节点保护(保护,{D.节点,D.目标存在节点,D.目标.目标特征类型概念节点});
+    新因果派生源上下文 result;
+    const auto 返回 = [&](新因果派生来源状态 s) -> std::optional<新因果派生源上下文> {
+        检查因果读取停止(停止);
+        result.构造状态 = s;
+        if (s != 新因果派生来源状态::已读取) { result.基准.reset(); result.正式投影.reset(); }
+        if(!核同因果节点保护(保护))throw 因果读取来源变化信号{};
+        if(完整保护输出&&!合并需求结果保护(*完整保护输出,保护))throw 因果读取来源变化信号{};
+        if (当前集合输出) {
+            if (s == 新因果派生来源状态::已读取) {
+                贡献要求(有效(本次集合.自我存在节点) && 有效(本次集合.源特征类型)
+                    && 本次集合.源特征节点 && 本次集合.源特征概念
+                    && 本次集合.当前准确值 && 本次集合.当前完整材料);
+                本次集合.状态 = 新来源前驱材料状态::已读取;
+                本次集合.完整保护 = 保护;
+            } else {
+                const auto E = 本次集合.自我存在节点;
+                const auto FT = 本次集合.源特征类型;
+                const auto F = 本次集合.源特征节点;
+                const auto C = 本次集合.源特征概念;
+                本次集合 = {};
+                本次集合.自我存在节点 = E; 本次集合.源特征类型 = FT;
+                if (s == 新因果派生来源状态::源特征尚未形成
+                    || s == 新因果派生来源状态::源当前值未形成) {
+                    本次集合.状态 = 新来源前驱材料状态::未形成;
+                    本次集合.源特征节点 = F; 本次集合.源特征概念 = C;
+                    本次集合.完整保护 = 保护;
+                } else if (s == 新因果派生来源状态::材料已变化) {
+                    本次集合.状态 = 新来源前驱材料状态::前提已变化;
+                }
+            }
+            // 原结果的复制可能分配；在发布out前完成，之后只允许不抛的移动。
+            auto 完整返回 = std::optional<新因果派生源上下文>{result};
+            static_assert(std::is_nothrow_move_constructible_v<decltype(完整返回)>);
+            static_assert(std::is_nothrow_move_assignable_v<新来源前驱当前集合材料>);
+            *当前集合输出 = std::move(本次集合);
+            return 完整返回;
+        }
+        return result;
+    };
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"派生源即将读取正式定义身份", D.节点);
+#endif
+    检查因果读取停止(停止);
+    const auto identity = 二次特征概念服务_.读取正式概念身份保护(D.目标.目标特征类型概念节点);
+    if (identity.状态 == 正式概念读取状态::前提已变化) return 返回(新因果派生来源状态::材料已变化);
+    if (identity.状态 == 正式概念读取状态::非本提供者概念) {
+        检查因果读取停止(停止); return {};
+    }
+    贡献要求(identity.状态 == 正式概念读取状态::已读取 && identity.身份
+        && identity.身份->概念节点 == D.目标.目标特征类型概念节点 && !identity.身份->完整保护组.empty());
+    if(!合并需求结果保护(保护,identity.身份->完整保护组))throw 因果读取来源变化信号{};
+    检查因果读取停止(停止);
+    const auto definition = 二次特征概念服务_.读取二次特征定义保护(D.目标.目标特征类型概念节点);
+    if (definition.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (definition.前提已变化 || definition.状态 == 基础结构操作状态::节点不存在)
+        return 返回(新因果派生来源状态::材料已变化);
+    贡献要求(definition.状态 == 基础结构操作状态::已完成 && definition.信息 && !definition.预期节点组.empty());
+    if(!合并需求结果保护(保护,definition.预期节点组))throw 因果读取来源变化信号{};
+    result.正式派生定义 = *definition.信息;
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"派生源正式定义已读取", D.节点);
+#endif
+    const auto& k = *result.正式派生定义;
+    贡献要求(k.节点 == D.目标.目标特征类型概念节点 && k.二次特征类型根节点 == k.节点);
+    if (k.算法 != 二次特征算法::服务任务来源新增数) return 返回(新因果派生来源状态::算法未支持);
+    if (k.参照特征概念节点 || k.输入定义组.size() != 2
+        || k.输出特征概念.材料类型 != 特征概念材料物理类型::I64标量 || k.输出特征概念.单位
+        || k.输出特征概念.值域 != 特征概念值域{std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}}}
+        || !是条件包含目标(D.目标, 特征概念服务_, 二次特征概念服务_))
+        return 返回(新因果派生来源状态::输入关系未支持);
+    const auto FT = k.输入定义组.front().特征类型概念节点;
+    检查因果读取停止(停止);
+    for (std::size_t i = 0; i < 2; ++i) {
+        检查因果读取停止(停止);
+        const auto& input = k.输入定义组[i];
+        if (!FT || input.特征类型概念节点 != FT || input.顺序 != static_cast<std::int64_t>(i)
+            || input.来源种类 != 二次特征输入来源种类::特征准确值
+            || input.角色 != (i == 0 ? 二次特征输入角色::左输入 : 二次特征输入角色::右输入))
+            return 返回(新因果派生来源状态::输入关系未支持);
+    }
+    if (!服务需求取得合同_) return 返回(新因果派生来源状态::源配置未装配);
+    const auto& contract = *服务需求取得合同_;
+    if (D.目标存在节点 != contract.自我存在节点 || *FT != contract.服务任务集合类型
+        || k.节点 != contract.数量变化量类型) return 返回(新因果派生来源状态::输入关系未支持);
+    if (当前集合输出) {
+        本次集合.自我存在节点 = contract.自我存在节点;
+        本次集合.源特征类型 = *FT;
+    }
+    检查因果读取停止(停止);
+    const auto E = 存在服务_.获取存在(D.目标存在节点);
+    if (!E) return 返回(新因果派生来源状态::材料已变化);
+    检查因果读取停止(停止);
+    const auto type = 特征概念服务_.读取特征概念定义保护(*FT);
+    if (type.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (type.前提已变化) return 返回(新因果派生来源状态::材料已变化);
+    贡献要求(type.状态 == 基础结构操作状态::已完成 && type.信息 && type.信息->类型根 == *FT);
+    if(!合并需求结果保护(保护,type.预期节点组))throw 因果读取来源变化信号{};
+    const auto& t = type.信息->定义;
+    if (t.材料类型 != 特征概念材料物理类型::U64数组 || t.单位
+        || !std::holds_alternative<特征概念全材料值域>(t.值域)
+        || t.比较规则 != 特征概念比较规则::服务任务集合身份判等
+        || t.聚合规则 != 特征概念聚合规则::不自动聚合)
+        return 返回(新因果派生来源状态::输入关系未支持);
+    std::optional<新特征信息> F;
+    std::set<稳定编码> seen;
+    检查因果读取停止(停止);
+    for (const auto n : E->特征节点组) {
+        检查因果读取停止(停止);
+        贡献要求(有效(n) && seen.insert(n).second);
+        检查因果读取停止(停止);
+        捕获因果材料保护(保护,{n});
+        const auto f = 特征服务_.获取特征(n); 贡献要求(f.has_value());
+        检查因果读取停止(停止);
+        const auto root = 特征概念服务_.读取特征概念定义保护(f->特征概念节点);
+        if (root.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (root.前提已变化) return 返回(新因果派生来源状态::材料已变化);
+        贡献要求(root.状态 == 基础结构操作状态::已完成 && root.信息);
+        if(!合并需求结果保护(保护,root.预期节点组))throw 因果读取来源变化信号{};
+        if (root.信息->类型根 == *FT) { 贡献要求(!F); F = f; }
+    }
+    检查因果读取停止(停止);
+    const auto configured = 特征服务_.获取特征(contract.服务任务集合特征节点);
+    if (configured) 贡献要求(seen.contains(configured->节点)); // 异主配置不能当缺基准。
+    if (!F) return 返回(新因果派生来源状态::源特征尚未形成);
+    if (F->节点 != contract.服务任务集合特征节点) return 返回(新因果派生来源状态::输入关系未支持);
+    贡献要求(!F->实例单位);
+    if (当前集合输出) { 本次集合.源特征节点 = F->节点; 本次集合.源特征概念 = F->特征概念节点; }
+    if (!F->当前值) return 返回(新因果派生来源状态::源当前值未形成);
+    const auto* id = std::get_if<稳定编码>(&*F->当前值); 贡献要求(id && 有效(*id));
+    检查因果读取停止(停止);
+    捕获因果节点保护(保护,{*id});
+    const auto material = 特征值服务_.获取特征值(*id);
+    const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
+    贡献要求(material && material->物理类型 == 材料物理类型::U64数组 && members);
+    新因果派生基准 baseline;
+    baseline.持有者节点 = E->节点; baseline.源特征节点 = F->节点; baseline.源特征类型 = *FT;
+    baseline.源特征概念 = F->特征概念节点; baseline.基准材料节点 = *id; baseline.源类型定义 = t;
+    检查因果读取停止(停止);
+    for (const auto n : *members) {
+        检查因果读取停止(停止);
+        const 稳定编码 member{n};
+        捕获因果节点保护(保护,{member});
+        贡献要求(有效(member) && 获取任务(member).has_value());
+        baseline.基准成员组.push_back(member);
+    }
+    检查因果读取停止(停止);
+    std::sort(baseline.基准成员组.begin(), baseline.基准成员组.end());
+    检查因果读取停止(停止);
+    baseline.基准成员组.erase(std::unique(baseline.基准成员组.begin(), baseline.基准成员组.end()), baseline.基准成员组.end());
+    // 此处仍是F当前S；下面见证分支会将baseline换成固定B，二者不得混用。
+    if (当前集合输出) {
+        本次集合.当前准确值 = F->当前值;
+        本次集合.当前完整材料 = *material;
+        本次集合.当前成员组 = baseline.基准成员组;
+    }
+    if(D.目标.新增成员来源见证) {
+        const auto& c=*D.目标.新增成员来源见证;
+        if(c.要求.源特征类型概念节点!=*FT)return 返回(新因果派生来源状态::输入关系未支持);
+        捕获因果节点保护(保护,{c.基准材料节点});
+        const auto fixed=特征值服务_.获取特征值(c.基准材料节点);
+        const auto* values=fixed?std::get_if<std::vector<std::uint64_t>>(&fixed->材料):nullptr;
+        贡献要求(values&&std::is_sorted(values->begin(),values->end())&&std::adjacent_find(values->begin(),values->end())==values->end());
+        baseline.基准材料节点=c.基准材料节点;baseline.基准成员组.clear();
+        for(const auto n:*values)baseline.基准成员组.push_back(稳定编码{n});
+    }
+    检查因果读取停止(停止);
+    result.基准 = baseline;
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"派生源基准已读取", D.节点);
+#endif
+    if (服务任务同步所有者_) {
+        贡献要求(服务任务同步_ && 有效(服务任务排除需求_) && 有效(服务根需求节点) && 有效(安全根需求节点));
+        检查因果读取停止(停止);
+        const auto sceneId = 场景服务_.查询所属场景(E->节点);
+        检查因果读取停止(停止);
+        const auto scene = sceneId ? 场景服务_.获取场景(*sceneId) : std::nullopt;
+        if (!scene) return 返回(新因果派生来源状态::材料已变化);
+        贡献要求(scene->节点 == *sceneId);
+        检查因果读取停止(停止);
+        const auto concepts = 存在概念服务_.读取先天需求任务方法概念();
+        if (concepts.状态 == 正式结构操作状态::前提已变化) return 返回(新因果派生来源状态::材料已变化);
+        贡献要求(concepts.状态 == 正式结构操作状态::已读取 && concepts.信息 && 有效(concepts.信息->需求));
+        检查因果读取停止(停止);
+        for (const auto n : {服务根需求节点, 服务任务排除需求_}) {
+            检查因果读取停止(停止);
+            const auto d = 需求服务_.读取正式信息参数保护(n, concepts.信息->需求);
+            if (d.状态 == 正式信息参数读取状态::前提已变化 || d.状态 == 正式信息参数读取状态::信息不存在)
+                return 返回(新因果派生来源状态::材料已变化);
+            贡献要求(d.状态 == 正式信息参数读取状态::已读取 && d.信息 && d.信息->信息节点 == n
+                && !d.完整保护组.empty());
+        }
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"派生源即将读取完整D/T对应", D.节点);
+#endif
+        检查因果读取停止(停止);
+        捕获因果贡献保护(*this,{D.节点},保护);
+        const auto mapping = 提取因果正常读取<新需求任务对应结果>(读取需求列表任务对应(停止));
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"派生源完整D/T对应已返回", D.节点);
+#endif
+        贡献要求(mapping.状态 == 新任务操作状态::已找到);
+        新因果正式投影上下文 projection;
+        projection.自我存在节点 = E->节点; projection.自我概念 = E->专属存在概念节点;
+        projection.自我场景节点 = scene->节点; projection.自我场景概念 = scene->专属存在概念节点;
+        auto root = *scene;
+        std::set<稳定编码> sceneChain;
+        检查因果读取停止(停止);
+        while (true) {
+            检查因果读取停止(停止);
+            贡献要求(有效(root.节点) && sceneChain.insert(root.节点).second);
+            if (!root.父场景节点) break;
+            贡献要求(有效(*root.父场景节点));
+            检查因果读取停止(停止);
+            const auto parent = 场景服务_.获取场景(*root.父场景节点);
+            if (!parent) return 返回(新因果派生来源状态::材料已变化);
+            贡献要求(parent->节点 == *root.父场景节点);
+            root = *parent;
+        }
+        projection.自我世界根节点 = root.节点;
+        projection.自我正式特征节点组 = E->特征节点组;
+        projection.服务根需求节点 = 服务根需求节点; projection.安全根需求节点 = 安全根需求节点;
+        projection.排除需求节点 = 服务任务排除需求_; projection.需求范围概念 = concepts.信息->需求;
+        projection.源特征节点 = F->节点; projection.源特征类型 = *FT;
+        std::map<稳定编码, const 新需求任务对应项*> indexed;
+        std::set<稳定编码> tasks;
+        检查因果读取停止(停止);
+        for (const auto& x : mapping.对应项组) {
+            检查因果读取停止(停止);
+            贡献要求(indexed.emplace(x.需求.节点, &x).second);
+            if (x.任务) 贡献要求(tasks.insert(x.任务->节点).second);
+            projection.完整对应项组.push_back({x.需求.节点, x.需求.父需求节点,
+                x.任务 ? std::optional{x.任务->节点} : std::nullopt, x.需求.根角色});
+        }
+        bool excluded = false;
+        检查因果读取停止(停止);
+        for (const auto& x : mapping.对应项组) {
+            检查因果读取停止(停止);
+            auto n = &x.需求;
+            std::set<稳定编码> chain;
+            检查因果读取停止(停止);
+            while (!n->根角色) {
+                检查因果读取停止(停止);
+                贡献要求(chain.insert(n->节点).second && n->父需求节点 && indexed.contains(*n->父需求节点));
+                n = &indexed.at(*n->父需求节点)->需求;
+            }
+            贡献要求(!n->父需求节点);
+            if (*n->根角色 == 新需求根角色::服务) {
+                贡献要求(n->节点 == 服务根需求节点);
+                if (x.需求.节点 == 服务任务排除需求_) excluded = x.需求.父需求节点.has_value();
+                else if (x.任务) projection.正式投影成员组.push_back(x.任务->节点);
+            } else 贡献要求(*n->根角色 == 新需求根角色::安全 && n->节点 == 安全根需求节点);
+        }
+        贡献要求(excluded);
+        检查因果读取停止(停止);
+        std::sort(projection.正式投影成员组.begin(), projection.正式投影成员组.end());
+        检查因果读取停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"派生源即将独立复核服务任务投影", D.节点);
+#endif
+        检查因果读取停止(停止);
+        const auto projected = 提取因果正常读取<新任务列表结果>(查询服务任务(服务任务排除需求_, 停止));
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"派生源独立服务任务投影已返回", D.节点);
+#endif
+        贡献要求(projected.状态 == 新任务操作状态::已找到);
+        if (projection.正式投影成员组 != projected.任务节点组) return 返回(新因果派生来源状态::材料已变化);
+        result.正式投影 = std::move(projection);
+    } else 贡献要求(!服务任务同步_ && !有效(服务任务排除需求_));
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"派生源即将末尾fresh核验", D.节点);
+#endif
+    检查因果读取停止(停止);
+    const auto freshE = 存在服务_.获取存在(E->节点);
+    检查因果读取停止(停止);
+    const auto freshF = 特征服务_.获取特征(F->节点);
+    检查因果读取停止(停止);
+    const auto freshK = 二次特征概念服务_.读取二次特征定义保护(k.节点);
+    if (freshK.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (!freshE || freshE->特征节点组 != E->特征节点组 || freshE->专属存在概念节点 != E->专属存在概念节点
+        || !freshF || freshF->特征概念节点 != F->特征概念节点 || freshF->当前值 != F->当前值
+        || freshK.前提已变化 || freshK.状态 == 基础结构操作状态::节点不存在)
+        return 返回(新因果派生来源状态::材料已变化);
+    贡献要求(freshK.状态 == 基础结构操作状态::已完成 && freshK.信息);
+    if (*freshK.信息 != k) return 返回(新因果派生来源状态::材料已变化);
+    return 返回(新因果派生来源状态::已读取);
+}
+
+新_任务类::来源前驱当前定义批可停止结果 新_任务类::读取来源前驱当前定义批(
+    const 新服务取得来源前驱配置& 配置,std::stop_token 停止) const {
+    return 读取来源前驱当前定义批内部(配置,停止,false);
+}
+
+新_任务类::来源前驱当前定义批可停止结果 新_任务类::读取来源前驱当前定义批内部(
+    const 新服务取得来源前驱配置& 配置,std::stop_token 停止,bool 允许首次配置) const {
+    using 状态=新来源前驱元数据读取状态;
+    using 规则状态=新来源前驱规则读取状态;
+    来源前驱当前定义批 结果;
+    const auto 返回=[&](状态 值)->来源前驱当前定义批可停止结果 {
+        结果.状态=值;
+        if(值!=状态::已读取){结果.元数据.reset();结果.链条件组.clear();结果.四规则.clear();
+            if(值!=状态::未找到)结果.完整保护.clear();}
+        return std::move(结果);
+    };
+    try {
+        检查因果读取停止(停止);
+        const 新因果筹办读取接口* 接口=nullptr;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(!因果筹办读取_)return 返回(状态::依赖未就绪);
+            if(服务取得来源前驱配置_){if(*服务取得来源前驱配置_!=配置)return 返回(状态::前提已变化);}
+            else if(!允许首次配置||已开始过执行_||!服务需求取得合同_)return 返回(状态::依赖未就绪);
+            接口=因果筹办读取_;
+        }
+        const auto 合并=[&](const auto& 批){if(!合并需求结果保护(结果.完整保护,批))throw 因果读取来源变化信号{};};
+        检查因果读取停止(停止);
+        const auto 元回=接口->读取服务取得来源前驱元数据(配置);
+        检查因果读取停止(停止);
+        if(元回.状态!=状态::已读取){
+            贡献要求(!元回.信息&&元回.链条件组.empty());
+            switch(元回.状态){
+            case 状态::未找到:贡献要求(!元回.完整保护.empty());合并(元回.完整保护);if(!核同因果节点保护(结果.完整保护))throw 因果读取来源变化信号{};break;
+            case 状态::前提已变化:case 状态::依赖未就绪:case 状态::资源失败:break;
+            default:throw std::logic_error("来源当前元数据状态非法");}
+            return 返回(元回.状态);
+        }
+        贡献要求(元回.信息&&!元回.完整保护.empty());
+        const auto& 元=*元回.信息;
+        贡献要求(元.配置==配置);
+        合并(元回.完整保护);
+        std::map<std::pair<新来源前驱治理步骤,新来源前驱发生分支>,新来源前驱规则信息> 已读;
+        for(const auto 关系:{新来源前驱关系结果::同源自我需求,新来源前驱关系结果::需求唯一任务}){
+            检查因果读取停止(停止);
+            const auto 查询=接口->查询来源前驱规则保护(配置.服务任务类型,关系);
+            检查因果读取停止(停止);
+            switch(查询.状态){
+            case 规则状态::资源失败:return 返回(状态::资源失败);
+            case 规则状态::依赖未就绪:return 返回(状态::依赖未就绪);
+            case 规则状态::前提已变化:return 返回(状态::前提已变化);
+            case 规则状态::未找到:贡献要求(查询.规则组.empty());break;
+            case 规则状态::已读取:贡献要求(!查询.规则组.empty()&&!查询.完整保护.empty());break;
+            default:throw std::logic_error("来源当前规则查询状态非法");}
+            贡献要求(!查询.完整保护.empty());合并(查询.完整保护);
+            for(const auto& 规则:查询.规则组){
+                if(std::find(元.规则概念组.begin(),元.规则概念组.end(),规则.定义.规则概念)
+                    ==元.规则概念组.end())continue;
+                检查因果读取停止(停止);
+                const auto& 定义=规则.定义;
+                const bool 采用=定义.步骤==新来源前驱治理步骤::自我采用请求;
+                贡献要求(定义.结果==关系
+                    &&定义.场景范围==(采用 ? 配置.自我采用场景范围 : 配置.管理关联场景范围));
+                贡献要求(已读.emplace(std::pair{定义.步骤,定义.分支},规则).second);
+            }
+        }
+        检查因果读取停止(停止);
+        if(!核同因果节点保护(结果.完整保护))throw 因果读取来源变化信号{};
+        if(已读.size()!=4)return 返回(状态::未找到);
+        for(const auto 步骤:{新来源前驱治理步骤::自我采用请求,新来源前驱治理步骤::管理关联任务})
+            for(const auto 分支:{新来源前驱发生分支::新建,新来源前驱发生分支::复用}){
+                const auto 项=已读.find({步骤,分支});贡献要求(项!=已读.end());结果.四规则.push_back(项->second);}
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(接口!=因果筹办读取_||(服务取得来源前驱配置_&&*服务取得来源前驱配置_!=配置)
+                ||(!服务取得来源前驱配置_&&(!允许首次配置||已开始过执行_||!服务需求取得合同_)))return 返回(状态::前提已变化);
+        }
+        结果.元数据=元;结果.链条件组=元回.链条件组;
+        贡献要求(!结果.完整保护.empty());检查因果读取停止(停止);return 返回(状态::已读取);
+    }catch(const 因果读取停止信号&){return 新任务因果读取取消{};}
+    catch(const 因果读取来源变化信号&){return 返回(状态::前提已变化);}
+    catch(const std::bad_alloc&){return 返回(状态::资源失败);}
+    catch(const std::length_error&){return 返回(状态::资源失败);}
+}
+
+bool 新_任务类::核验来源前驱静态支持(const 来源前驱当前定义批& 当前,
+    const 新任务因果筹办依据& 依据,const 新来源前驱内容模板& 模板) const {
+    using 状态=新来源前驱元数据读取状态;
+    if(当前.状态==状态::资源失败)throw std::bad_alloc{};
+    if(当前.状态!=状态::已读取)return false;
+    贡献要求(当前.元数据&&!当前.完整保护.empty());
+    if(!依据.请求.来源前驱上下文||!依据.读回.来源前驱读回)return false;
+    const auto& 原=*依据.读回.来源前驱读回;
+    if(!原.元数据读回||原.元数据读回->状态!=状态::已读取
+        ||依据.请求.来源前驱上下文->配置!=当前.元数据->配置
+        ||模板.支持OR路径序号组.empty()
+        ||std::find(原.行动前端组.begin(),原.行动前端组.end(),模板)==原.行动前端组.end())return false;
+    std::set<std::size_t> 路径序号;
+    for(const auto 序号:模板.支持OR路径序号组)
+        if(序号>=原.OR路径组.size()||!路径序号.insert(序号).second)return false;
+    const auto& 配置=当前.元数据->配置;
+    if(!模板.正式根路径.empty())return false;
+    if(模板.种类==新来源前驱前端种类::取得服务对象)
+        return 模板.目标槽类型==配置.交互者类型&&模板.要求概念==配置.交互者人类范围
+            &&!模板.H&&!模板.D;
+    if(模板.种类!=新来源前驱前端种类::既有需求内容
+        &&模板.种类!=新来源前驱前端种类::待实例化需求内容)return false;
+    return 模板.目标槽类型==配置.对象需求类型&&模板.要求概念==配置.完整被认知需求概念
+        &&模板.H&&有效(*模板.H)
+        &&(模板.种类==新来源前驱前端种类::既有需求内容 ? 模板.D&&有效(*模板.D) : !模板.D);
+}
+
+新_任务类::来源前驱本槽读取结果 新_任务类::读取来源前驱本槽实例可抛内部(
+    稳定编码 父T,稳定编码 槽,const std::vector<稳定编码>& 根路径) const {
+    using 状态=新服务取得目标实例状态;
+    来源前驱本槽读取结果 结果;
+    std::vector<基础联合节点快照> 父保护;
+    const auto 返回=[&](状态 当前状态) {
+        结果.实例.状态=当前状态;结果.父任务已绑定=false;
+        if(!结果.实例.信息)结果.实例.完整保护.clear();
+        return 结果;
+    };
+    try {
+        if(!有效(父T)||!有效(槽)||!根路径.empty())return 返回(状态::输入不适用);
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!有效(来源前驱目标实例字段))return 返回(状态::依赖未就绪);
+            if(!服务取得来源前驱配置_)return 返回(状态::依赖未就绪);
+            if(槽!=服务取得来源前驱配置_->对象需求类型)return 返回(状态::输入不适用);
+        }
+        const auto 源批=读取任务需求准备保护批(父T);
+        switch(源批.结果.状态) {
+        case 新任务需求准备状态::资源延后:throw std::bad_alloc{};
+        case 新任务需求准备状态::来源前提已变化:throw 因果读取来源变化信号{};
+        case 新任务需求准备状态::任务不存在:return 返回(状态::输入不适用);
+        case 新任务需求准备状态::待完善:case 新任务需求准备状态::可筹办:break;
+        default:贡献要求(false);
+        }
+        贡献要求(源批.任务&&源批.需求&&源批.任务->节点==父T
+            &&源批.任务->需求节点==源批.需求->节点&&源批.需求->完整目标&&!源批.保护.empty());
+        父保护=源批.保护;
+        std::optional<稳定编码> 已绑定记录;
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!核同任务需求准备保护批(源批))throw 因果读取来源变化信号{};
+            捕获因果节点保护(父保护,{父T,来源前驱目标实例字段});
+            const auto 已采=std::find_if(父保护.begin(),父保护.end(),[&](const auto& 项){return 项.结构.节点.编码==父T;});
+            贡献要求(已采!=父保护.end());
+            for(const auto& 字段:已采->结构.字段组)if(字段.字段节点==来源前驱目标实例字段) {
+                const auto* 引用=std::get_if<稳定编码>(&字段.内容);
+                贡献要求(!已绑定记录&&引用&&有效(*引用));已绑定记录=*引用;
+            }
+        }
+        // 最外task锁已释放；需求owner正式解码R，task不解释其私有schema。
+        结果.实例=需求服务_.读取服务取得目标槽实例(父T,槽,根路径);
+        if(结果.实例.信息) {
+            if(!合并需求结果保护(结果.实例.完整保护,父保护))throw 因果读取来源变化信号{};
+        }
+        switch(结果.实例.状态) {
+        case 状态::未找到:case 状态::已复用:case 状态::已出生待补骨架:break;
+        case 状态::资源失败:case 状态::依赖未就绪:case 状态::前提已变化:case 状态::输入不适用:
+            return 返回(结果.实例.状态);
+        default:贡献要求(false);
+        }
+        贡献要求(!结果.实例.完整保护.empty());
+        if(!合并需求结果保护(结果.实例.完整保护,父保护))throw 因果读取来源变化信号{};
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!核同因果节点保护(结果.实例.完整保护)||!核同任务需求准备保护批(源批))
+                throw 因果读取来源变化信号{};
+        }
+        if(!结果.实例.信息) {
+            贡献要求(结果.实例.状态==状态::未找到&&!已绑定记录);
+            return 结果;
+        }
+        const auto& 实例=*结果.实例.信息;
+        贡献要求(实例.键.父取得任务==父T&&实例.键.目标槽类型==槽&&实例.键.正式根路径==根路径
+            &&实例.父需求==源批.需求->节点&&实例.原父目标==*源批.需求->完整目标);
+        if(已绑定记录)贡献要求(*已绑定记录==实例.出生记录);
+        结果.父任务已绑定=已绑定记录.has_value();
+        return 结果;
+    } catch(const 因果读取来源变化信号&) {return 返回(状态::前提已变化);}
+    catch(const std::bad_alloc&) {return 返回(状态::资源失败);}
+    catch(const std::length_error&) {return 返回(状态::资源失败);}
+}
+
+新服务取得目标实例结果 新_任务类::读取来源前驱目标实例(const 新服务取得目标实例键& 键) const noexcept {
+    using 状态=新服务取得目标实例状态;
+    try {
+        if(!有效(键.服务对象))return {状态::输入不适用,{},{}};
+        auto 本槽=读取来源前驱本槽实例可抛内部(键.父取得任务,键.目标槽类型,键.正式根路径);
+        if(本槽.实例.信息) {
+            if(本槽.实例.信息->键!=键)本槽.实例.状态=状态::前提已变化;
+            else if(本槽.实例.状态==状态::已复用&&!本槽.父任务已绑定)本槽.实例.状态=状态::前提已变化;
+        } else if(本槽.实例.状态==状态::未找到)本槽.实例.完整保护.clear();
+        return std::move(本槽.实例);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取来源前驱目标实例",L"正式任务槽绑定读取工程故障。");}
+}
+
+新来源前驱实例可停止结果 新_任务类::建立或取得来源前驱目标实例(
+    const 新任务因果筹办依据& 依据,const 新来源前驱内容模板& 模板,std::stop_token 停止) {
+    using 状态=新服务取得目标实例状态;
+    新服务取得目标实例结果 前缀;
+    bool 进入写区=false,本次出生=false;
+    const auto 返回=[&](状态 当前状态)->新来源前驱实例可停止结果 {
+        前缀.状态=当前状态;if(!前缀.信息)前缀.完整保护.clear();return std::move(前缀);
+    };
+    try {
+        检查因果读取停止(停止);
+        if(!依据.请求.来源前驱上下文||!依据.读回.来源前驱读回||!模板.H||!有效(*模板.H)
+            ||!模板.正式根路径.empty()||模板.种类==新来源前驱前端种类::取得服务对象
+            ||依据.读回.来源前驱读回->行动前端组!=std::vector<新来源前驱内容模板>{模板})return 返回(状态::输入不适用);
+        新服务取得来源前驱配置 配置;
+        const 新因果筹办读取接口* 读取接口;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(!服务取得来源前驱配置_||!因果筹办读取_)return 返回(状态::依赖未就绪);
+            配置=*服务取得来源前驱配置_;读取接口=因果筹办读取_;
+        }
+        if(配置!=依据.请求.来源前驱上下文->配置||模板.目标槽类型!=配置.对象需求类型
+            ||模板.要求概念!=配置.完整被认知需求概念)return 返回(状态::前提已变化);
+        auto 本槽=读取来源前驱本槽实例可抛内部(依据.请求.父任务节点,模板.目标槽类型,模板.正式根路径);
+        前缀=std::move(本槽.实例);
+        if(前缀.状态!=状态::未找到&&前缀.状态!=状态::已复用&&前缀.状态!=状态::已出生待补骨架)return 返回(前缀.状态);
+        if(前缀.信息) {
+            const auto& 原实例=*前缀.信息;
+            if(原实例.键.服务对象!=*模板.H||原实例.父需求!=依据.请求.父需求节点
+                ||原实例.原父目标!=新需求完整目标{依据.请求.目标存在节点,依据.请求.目标}
+                ||原实例.人类概念!=配置.人类概念||原实例.需求身份概念!=配置.需求概念
+                ||原实例.完整内容概念!=配置.完整被认知需求概念
+                ||原实例.复用指定已有需求!=(模板.种类==新来源前驱前端种类::既有需求内容)
+                ||(原实例.复用指定已有需求 ? 模板.D!=原实例.需求节点 : 模板.D.has_value()))return 返回(状态::前提已变化);
+        }
+        std::vector<基础联合节点快照> 保护;
+        const auto 合并=[&](const auto& 来源){if(!合并需求结果保护(保护,来源))throw 因果读取来源变化信号{};};
+        合并(前缀.完整保护);
+        const auto 定义批=提取因果正常读取<来源前驱当前定义批>(读取来源前驱当前定义批(配置,停止));
+        if(定义批.状态==新来源前驱元数据读取状态::依赖未就绪)return 返回(状态::依赖未就绪);
+        if(!核验来源前驱静态支持(定义批,依据,模板))return 返回(状态::前提已变化);
+        合并(定义批.完整保护);
+        // 只取当前父目标/固定基准，不逆推出生前basis，也不要求缺骨架候选先完整。
+        const auto 恢复前当前=构造因果筹办请求(依据.请求.父任务节点,std::nullopt,
+            依据.请求.当前等待边组,停止,&保护);
+        if(恢复前当前.父需求节点!=依据.请求.父需求节点||恢复前当前.目标存在节点!=依据.请求.目标存在节点
+            ||恢复前当前.目标!=依据.请求.目标||!恢复前当前.派生源上下文||!依据.请求.派生源上下文
+            ||恢复前当前.派生源上下文->基准!=依据.请求.派生源上下文->基准)return 返回(状态::前提已变化);
+        // 恢复五F前，先独立核当前交互者；不依赖尚缺骨架的D候选域。
+        const auto 自我=存在服务_.读取存在顶层特征定位保护(依据.请求.目标存在节点);
+        if(自我.状态==新存在顶层特征定位状态::资源失败)throw std::bad_alloc{};
+        if(自我.状态==新存在顶层特征定位状态::依赖未就绪)return 返回(状态::依赖未就绪);
+        if(自我.状态!=新存在顶层特征定位状态::已读取)return 返回(状态::前提已变化);
+        贡献要求(自我.信息&&!自我.完整保护.empty());合并(自我.完整保护);
+        std::optional<稳定编码> 交互者F;
+        for(const auto F:自我.信息->顶层特征节点组) {
+            const auto 头=特征服务_.读取特征头保护(F);
+            if(头.状态==新特征头保护状态::资源失败)throw std::bad_alloc{};
+            if(头.状态==新特征头保护状态::依赖未就绪)return 返回(状态::依赖未就绪);
+            if(头.状态==新特征头保护状态::前提已变化)return 返回(状态::前提已变化);
+            if(头.状态!=新特征头保护状态::已读取) {
+                if(!核同因果节点保护(保护))throw 因果读取来源变化信号{};
+                贡献要求(false);
+            }
+            贡献要求(头.信息&&!头.信息->上级特征节点&&!头.完整保护.empty());合并(头.完整保护);
+            if(头.信息->特征类型根==配置.交互者类型){贡献要求(!交互者F);交互者F=F;}
+        }
+        if(!交互者F)return 返回(状态::前提已变化);
+        const auto 交互者=特征服务_.读取特征完整保护(*交互者F);
+        if(交互者.状态==新特征完整读取状态::资源失败)throw std::bad_alloc{};
+        if(交互者.状态==新特征完整读取状态::依赖未就绪)return 返回(状态::依赖未就绪);
+        if(交互者.状态!=新特征完整读取状态::已读取)return 返回(状态::前提已变化);
+        贡献要求(交互者.信息&&!交互者.信息->完整保护组.empty());合并(交互者.信息->完整保护组);
+        if(交互者.信息->特征.当前值!=std::optional<新特征准确值>{新特征准确值{*模板.H}})return 返回(状态::前提已变化);
+        // H的正式人类归属使用当前身份/上位概念，而不是旧上下文的判定结果。
+        const auto 人类=存在服务_.读取存在顶层特征定位保护(*模板.H);
+        if(人类.状态==新存在顶层特征定位状态::资源失败)throw std::bad_alloc{};
+        if(人类.状态==新存在顶层特征定位状态::依赖未就绪)return 返回(状态::依赖未就绪);
+        if(人类.状态!=新存在顶层特征定位状态::已读取)return 返回(状态::前提已变化);
+        贡献要求(人类.信息&&!人类.完整保护.empty());合并(人类.完整保护);
+        std::vector<稳定编码> 待核概念{人类.信息->专属存在概念节点};
+        std::set<稳定编码> 已核概念;
+        std::map<稳定编码,std::vector<稳定编码>> 概念邻接;
+        for(std::size_t 序号=0;序号<待核概念.size();++序号){
+            检查因果读取停止(停止);const auto 概念=待核概念[序号];
+            if(!已核概念.insert(概念).second)continue;
+            const auto 读取=存在概念服务_.读取普通存在概念定义保护(概念);
+            if(读取.状态==正式概念读取状态::依赖未就绪)return 返回(状态::依赖未就绪);
+            if(读取.状态==正式概念读取状态::前提已变化)return 返回(状态::前提已变化);
+            贡献要求(读取.状态==正式概念读取状态::已读取&&读取.信息&&!读取.完整保护组.empty());
+            合并(读取.完整保护组);
+            概念邻接.emplace(概念,读取.信息->上位概念组);
+            if(序号==0)贡献要求(读取.信息->种类==存在概念种类::专属&&读取.信息->对应存在节点==模板.H);
+            else 贡献要求(读取.信息->种类==存在概念种类::抽象&&!读取.信息->对应存在节点);
+            for(const auto 上位:读取.信息->上位概念组)待核概念.push_back(上位);
+        }
+        std::map<稳定编码,std::uint8_t> 颜色;
+        std::vector<std::pair<稳定编码,std::size_t>> 遍历栈{{人类.信息->专属存在概念节点,0}};
+        颜色[人类.信息->专属存在概念节点]=1;
+        while(!遍历栈.empty()){
+            检查因果读取停止(停止);auto& [概念,位置]=遍历栈.back();const auto& 上位=概念邻接.at(概念);
+            if(位置==上位.size()){颜色[概念]=2;遍历栈.pop_back();continue;}
+            const auto 上位节点=上位[位置++];贡献要求(颜色[上位节点]!=1);
+            if(颜色[上位节点]==0){颜色[上位节点]=1;遍历栈.emplace_back(上位节点,0);}
+        }
+        if(!已核概念.contains(配置.人类概念))return 返回(状态::前提已变化);
+        const auto 恢复前本槽=读取来源前驱本槽实例可抛内部(依据.请求.父任务节点,模板.目标槽类型,模板.正式根路径);
+        if(恢复前本槽.实例.状态==状态::资源失败)throw std::bad_alloc{};
+        if(恢复前本槽.实例.状态==状态::依赖未就绪)return 返回(状态::依赖未就绪);
+        if(恢复前本槽.实例.信息!=前缀.信息||恢复前本槽.父任务已绑定!=本槽.父任务已绑定)return 返回(状态::前提已变化);
+        if(恢复前本槽.实例.状态!=前缀.状态)return 返回(恢复前本槽.实例.状态);
+        合并(恢复前本槽.实例.完整保护);
+        新服务取得目标实例请求 请求;
+        请求.键.父取得任务=依据.请求.父任务节点;请求.键.目标槽类型=模板.目标槽类型;
+        请求.键.正式根路径=模板.正式根路径;请求.键.服务对象=*模板.H;
+        请求.父需求=依据.请求.父需求节点;请求.原父目标={依据.请求.目标存在节点,依据.请求.目标};
+        请求.人类概念=配置.人类概念;请求.需求身份概念=配置.需求概念;请求.完整内容概念=配置.完整被认知需求概念;
+        if(模板.种类==新来源前驱前端种类::既有需求内容)请求.指定已有需求=模板.D;
+        if(!前缀.信息||前缀.信息->骨架就绪) {
+            const auto 当前=构造来源前端自身发布后请求(依据,模板,前缀.信息,{},停止,&保护);
+            if(!当前)return 返回(状态::前提已变化);
+        }
+        请求.正式前驱保护=保护;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(服务取得来源前驱配置_!=std::optional{配置}||因果筹办读取_!=读取接口||!核同因果节点保护(保护))
+                return 返回(状态::前提已变化);
+            // 唯一写门；需求发布及其后正式读回不再响应本次token。
+            检查因果读取停止(停止);进入写区=true;
+            auto 出生=需求服务_.建立或取得服务取得目标实例(请求);
+            本次出生=出生.状态==状态::已建立;
+            if(前缀.信息&&前缀.信息->骨架就绪&&出生.信息
+                &&出生.状态!=状态::已建立&&出生.状态!=状态::已复用) {
+                auto 原身份=*前缀.信息,新身份=*出生.信息;
+                原身份.骨架就绪=false;新身份.骨架就绪=false;
+                贡献要求(原身份==新身份);出生.信息->骨架就绪=true;
+            }
+            if(出生.信息)前缀=std::move(出生);
+            else 前缀.状态=出生.状态;
+        }
+        // 写区不可拆断；写后停止保留同R/D事实，但不继续绑定或交执行许可。
+        if(停止.stop_requested())return 返回(状态::前提已变化);
+        if(前缀.状态!=状态::已建立&&前缀.状态!=状态::已复用)return 返回(前缀.状态);
+        贡献要求(前缀.信息&&前缀.信息->骨架就绪);
+        保护.clear();
+        const auto 当前=构造来源前端自身发布后请求(依据,模板,前缀.信息,{},停止,&保护);
+        if(!当前)return 返回(状态::前提已变化);
+        检查因果读取停止(停止);
+        const auto 实际读回=读取接口->逆推(*当前);
+        检查因果读取停止(停止);
+        if(实际读回.状态==新因果筹办读取状态::材料已变化||!实际读回.来源前驱读回
+            ||std::none_of(实际读回.来源前驱读回->行动前端组.begin(),实际读回.来源前驱读回->行动前端组.end(),
+                [&](const auto& 项){return 同一来源前端目标(项,模板);}))return 返回(状态::前提已变化);
+        合并(实际读回.来源前驱读回->完整保护);
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(服务取得来源前驱配置_!=std::optional{配置}||因果筹办读取_!=读取接口||!核同因果节点保护(保护))
+                return 返回(状态::前提已变化);
+            const auto 字段组=全局基础数据集.查询字段(请求.键.父取得任务,来源前驱目标实例字段);
+            贡献要求(字段组.size()<=1);
+            if(字段组.empty()) {
+                基础节点组追加请求 绑定;绑定.预期联合节点组=保护;
+                绑定.追加字段组.push_back({请求.键.父取得任务,来源前驱目标实例字段,前缀.信息->出生记录});
+                检查因果读取停止(停止);
+                const auto 发表=全局基础数据集.原子追加节点组(绑定);
+                if(发表.状态==基础节点组追加状态::资源失败)return 返回(状态::资源失败);
+                if(发表.状态==基础节点组追加状态::预期不符)return 返回(状态::前提已变化);
+                贡献要求(发表.状态==基础节点组追加状态::已完成&&发表.新节点组.empty());
+            } else {
+                const auto* 引用=std::get_if<稳定编码>(&字段组.front().内容);
+                贡献要求(引用&&*引用==前缀.信息->出生记录);
+            }
+        }
+        const auto 读回=读取来源前驱目标实例(请求.键);
+        if(读回.信息) {
+            auto 新前缀=读回;
+            if(前缀.信息&&前缀.信息->骨架就绪&&读回.状态!=状态::已复用&&读回.状态!=状态::已建立) {
+                auto 原身份=*前缀.信息,新身份=*读回.信息;
+                原身份.骨架就绪=false;新身份.骨架就绪=false;
+                贡献要求(原身份==新身份);新前缀.信息->骨架就绪=true;
+            }
+            前缀=std::move(新前缀);
+        } else return 返回(读回.状态);
+        if(停止.stop_requested())return 返回(状态::前提已变化);
+        if(前缀.状态!=状态::已复用)return 返回(前缀.状态);
+        return 返回(本次出生 ? 状态::已建立 : 状态::已复用);
+    } catch(const 因果读取停止信号&) {
+        if(进入写区) {
+            贡献要求(前缀.信息.has_value());
+            return 返回(状态::前提已变化);
+        }
+        return 新任务因果读取取消{};
+    } catch(const 因果读取来源变化信号&) {return 返回(状态::前提已变化);}
+    catch(const std::bad_alloc&) {return 返回(状态::资源失败);}
+    catch(const std::length_error&) {return 返回(状态::资源失败);}
+}
+
+新来源前驱查询上下文 新_任务类::构造来源前驱查询上下文(
+    const 新需求信息& 原需求,稳定编码 父T,const 新来源前驱当前集合材料& 当前集合,
+    std::stop_token 停止,std::vector<基础联合节点快照>* 完整保护输出) const {
+    struct 来源依赖未就绪 final {};
+    新来源前驱查询上下文 结果;
+    bool 集合依赖未就绪=false;
+    {
+        auto 锁=获取因果读取任务锁(停止);
+        贡献要求(服务取得来源前驱配置_&&服务需求取得合同_&&服务任务同步所有者_&&服务任务同步_);
+        结果.配置=*服务取得来源前驱配置_;
+        结果.完成服务父需求=服务任务排除需求_;
+        结果.服务根需求=服务根需求节点;结果.排除投影需求=服务任务排除需求_;
+        贡献要求(有效(父T)&&有效(结果.完成服务父需求)&&有效(结果.服务根需求)
+            &&原需求.目标存在节点==服务需求取得合同_->自我存在节点);
+        switch(当前集合.状态) {
+        case 新来源前驱材料状态::已读取: {
+            贡献要求(当前集合.自我存在节点==原需求.目标存在节点&&当前集合.源特征类型==结果.配置.服务任务类型
+                &&当前集合.源特征节点==服务需求取得合同_->服务任务集合特征节点
+                &&当前集合.源特征概念&&有效(*当前集合.源特征概念)
+                &&当前集合.当前准确值&&当前集合.当前完整材料&&!当前集合.完整保护.empty());
+            const auto* 材料引用=std::get_if<稳定编码>(&*当前集合.当前准确值);
+            const auto* 原成员=std::get_if<std::vector<std::uint64_t>>(&当前集合.当前完整材料->材料);
+            贡献要求(材料引用&&有效(*材料引用)&&*材料引用==当前集合.当前完整材料->节点
+                &&当前集合.当前完整材料->物理类型==材料物理类型::U64数组&&原成员);
+            std::vector<稳定编码> 规范成员;
+            for(const auto 编码:*原成员){贡献要求(编码!=0);规范成员.push_back(稳定编码{编码});}
+            std::sort(规范成员.begin(),规范成员.end());
+            规范成员.erase(std::unique(规范成员.begin(),规范成员.end()),规范成员.end());
+            贡献要求(规范成员==当前集合.当前成员组);
+            break;
+        }
+        case 新来源前驱材料状态::未形成:
+            贡献要求(当前集合.自我存在节点==原需求.目标存在节点&&当前集合.源特征类型==结果.配置.服务任务类型
+                &&!当前集合.当前准确值&&!当前集合.当前完整材料&&当前集合.当前成员组.empty()
+                &&当前集合.源特征节点.has_value()==当前集合.源特征概念.has_value()&&!当前集合.完整保护.empty());
+            if(当前集合.源特征节点)贡献要求(*当前集合.源特征节点==服务需求取得合同_->服务任务集合特征节点
+                &&有效(*当前集合.源特征概念));
+            break;
+        case 新来源前驱材料状态::前提已变化:throw 因果读取来源变化信号{};
+        case 新来源前驱材料状态::依赖未就绪:
+            if(有效(当前集合.自我存在节点))贡献要求(当前集合.自我存在节点==原需求.目标存在节点);
+            if(有效(当前集合.源特征类型))贡献要求(当前集合.源特征类型==结果.配置.服务任务类型);
+            贡献要求(!当前集合.当前准确值&&!当前集合.当前完整材料&&当前集合.当前成员组.empty());
+            if(当前集合.源特征节点)贡献要求(*当前集合.源特征节点==服务需求取得合同_->服务任务集合特征节点);
+            if(当前集合.源特征概念)贡献要求(当前集合.源特征节点&&有效(*当前集合.源特征概念));
+            集合依赖未就绪=true;break;
+        default:贡献要求(false);
+        }
+    }
+    结果.当前集合=当前集合;
+    auto& 交互者=结果.交互者;交互者.自我存在节点=原需求.目标存在节点;
+    交互者.状态=新来源前驱材料状态::未形成;
+    const auto 合并=[&](std::vector<基础联合节点快照>& 目标保护,const auto& 来源) {
+        if(!合并需求结果保护(目标保护,来源))throw 因果读取来源变化信号{};
+    };
+    合并(结果.完整保护,当前集合.完整保护);
+    if(完整保护输出)合并(结果.完整保护,*完整保护输出);
+    std::vector<新存在顶层特征定位信息> 存在材料;
+    std::optional<新存在顶层特征定位信息> 已核验人类;
+    const auto 读取存在=[&](稳定编码 存在,std::vector<基础联合节点快照>& 保护组) {
+        检查因果读取停止(停止);
+        const auto 定位=存在服务_.读取存在顶层特征定位保护(存在);
+        switch(定位.状态) {
+        case 新存在顶层特征定位状态::资源失败:throw std::bad_alloc{};
+        case 新存在顶层特征定位状态::前提已变化:throw 因果读取来源变化信号{};
+        case 新存在顶层特征定位状态::依赖未就绪:throw 来源依赖未就绪{};
+        case 新存在顶层特征定位状态::输入不适用:case 新存在顶层特征定位状态::存在不存在:
+            if(!核同因果节点保护(结果.完整保护)||!核同因果节点保护(保护组))throw 因果读取来源变化信号{};
+            贡献要求(false);break;
+        case 新存在顶层特征定位状态::已读取:break;
+        default:贡献要求(false);
+        }
+        贡献要求(定位.信息&&定位.信息->存在节点==存在&&!定位.完整保护.empty());
+        合并(保护组,定位.完整保护);
+        存在材料.push_back(*定位.信息);return *定位.信息;
+    };
+    const auto 定位引用特征=[&](const 新存在顶层特征定位信息& 存在,稳定编码 目标类型,std::vector<基础联合节点快照>& 保护组)
+        ->std::optional<新特征信息> {
+        std::optional<新特征头信息> 命中;
+        std::set<稳定编码> 已见;
+        for(const auto 特征:存在.顶层特征节点组) {
+            检查因果读取停止(停止);贡献要求(有效(特征)&&已见.insert(特征).second);
+            const auto 头=特征服务_.读取特征头保护(特征);
+            switch(头.状态) {
+            case 新特征头保护状态::资源失败:throw std::bad_alloc{};
+            case 新特征头保护状态::前提已变化:throw 因果读取来源变化信号{};
+            case 新特征头保护状态::特征不存在:
+                if(!核同因果节点保护(结果.完整保护)||!核同因果节点保护(保护组))throw 因果读取来源变化信号{};
+                贡献要求(false);break;
+            case 新特征头保护状态::依赖未就绪:throw 来源依赖未就绪{};
+            case 新特征头保护状态::已读取:break;
+            default:贡献要求(false);
+            }
+            贡献要求(头.信息&&头.信息->特征节点==特征&&!头.信息->上级特征节点&&!头.完整保护.empty());
+            合并(保护组,头.完整保护);
+            if(头.信息->特征类型根==目标类型){贡献要求(!命中);命中=*头.信息;}
+        }
+        if(!命中)return {};
+        const auto 读取=特征服务_.读取特征完整保护(命中->特征节点);
+        switch(读取.状态) {
+        case 新特征完整读取状态::资源失败:throw std::bad_alloc{};
+        case 新特征完整读取状态::前提已变化:throw 因果读取来源变化信号{};
+        case 新特征完整读取状态::特征不存在:
+            if(!核同因果节点保护(结果.完整保护)||!核同因果节点保护(保护组))throw 因果读取来源变化信号{};
+            贡献要求(false);break;
+        case 新特征完整读取状态::依赖未就绪:case 新特征完整读取状态::类型未支持:throw 来源依赖未就绪{};
+        case 新特征完整读取状态::已读取:break;
+        default:贡献要求(false);
+        }
+        贡献要求(读取.信息&&读取.信息->特征.节点==命中->特征节点&&读取.信息->特征类型根==目标类型
+            &&读取.信息->特征.特征概念节点==命中->特征概念节点&&!读取.信息->完整保护组.empty());
+        合并(保护组,读取.信息->完整保护组);return 读取.信息->特征;
+    };
+    try {
+        if(集合依赖未就绪)throw 来源依赖未就绪{};
+        // 先找旧槽及原H，再读当前交互者；旧H不能因消失或替换而隐身。
+        检查因果读取停止(停止);
+        auto 本槽=读取来源前驱本槽实例可抛内部(父T,结果.配置.对象需求类型,{});
+        if(本槽.实例.信息)结果.本槽既有实例=*本槽.实例.信息;
+        合并(结果.完整保护,本槽.实例.完整保护);
+        switch(本槽.实例.状态) {
+        case 新服务取得目标实例状态::未找到:case 新服务取得目标实例状态::已复用:break;
+        case 新服务取得目标实例状态::已出生待补骨架:case 新服务取得目标实例状态::依赖未就绪:throw 来源依赖未就绪{};
+        case 新服务取得目标实例状态::前提已变化:throw 因果读取来源变化信号{};
+        case 新服务取得目标实例状态::资源失败:throw std::bad_alloc{};
+        default:贡献要求(false);
+        }
+        const auto 存在=读取存在(交互者.自我存在节点,交互者.完整保护);
+        交互者.正式特征节点组=存在.顶层特征节点组;
+        const auto 特征=定位引用特征(存在,结果.配置.交互者类型,交互者.完整保护);
+        if(特征) {
+            交互者.交互者特征节点=特征->节点;交互者.当前准确值=特征->当前值;
+            if(特征->当前值) {
+                const auto* 人类节点=std::get_if<稳定编码>(&*特征->当前值);贡献要求(人类节点&&有效(*人类节点));
+                const auto 人类=读取存在(*人类节点,交互者.完整保护);
+                const auto 普通概念=[&](稳定编码 概念) {
+                    检查因果读取停止(停止);
+                    const auto 读取=存在概念服务_.读取普通存在概念定义保护(概念);
+                    if(读取.状态==正式概念读取状态::依赖未就绪)throw 来源依赖未就绪{};
+                    if(读取.状态==正式概念读取状态::前提已变化)throw 因果读取来源变化信号{};
+                    贡献要求(读取.状态==正式概念读取状态::已读取&&读取.信息&&读取.信息->节点==概念&&!读取.完整保护组.empty());
+                    合并(交互者.完整保护,读取.完整保护组);return *读取.信息;
+                };
+                (void)普通概念(结果.配置.人类概念);
+                std::map<稳定编码,std::vector<稳定编码>> 邻接;
+                std::vector<稳定编码> 待处理{人类.专属存在概念节点};
+                std::set<稳定编码> 已发现{人类.专属存在概念节点};
+                for(std::size_t 序号=0;序号<待处理.size();++序号) {
+                    const auto 概念=待处理[序号];const auto 定义=普通概念(概念);
+                    if(概念==人类.专属存在概念节点)贡献要求(定义.种类==存在概念种类::专属&&定义.对应存在节点==*人类节点);
+                    else 贡献要求(定义.种类==存在概念种类::抽象&&!定义.对应存在节点);
+                    const auto 上位=存在概念服务_.读取存在概念上位保护(概念);
+                    if(上位.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                    if(上位.前提已变化)throw 因果读取来源变化信号{};
+                    贡献要求(上位.状态==基础结构操作状态::已完成&&上位.信息&&上位.信息->概念节点==概念&&!上位.预期节点组.empty());
+                    合并(交互者.完整保护,上位.预期节点组);
+                    auto 实际=上位.信息->上位概念组,预期=定义.上位概念组;
+                    std::sort(实际.begin(),实际.end());std::sort(预期.begin(),预期.end());
+                    if(实际!=预期)throw 因果读取来源变化信号{};
+                    贡献要求(std::adjacent_find(实际.begin(),实际.end())==实际.end());邻接.emplace(概念,实际);
+                    for(const auto 上位节点:实际)if(已发现.insert(上位节点).second)待处理.push_back(上位节点);
+                }
+                std::map<稳定编码,std::uint8_t> 颜色;
+                std::vector<std::pair<稳定编码,std::size_t>> 遍历栈{{人类.专属存在概念节点,0}};
+                颜色[人类.专属存在概念节点]=1;
+                while(!遍历栈.empty()) {
+                    检查因果读取停止(停止);
+                    auto& [概念,位置]=遍历栈.back();const auto& 上位=邻接.at(概念);
+                    if(位置==上位.size()){颜色[概念]=2;遍历栈.pop_back();continue;}
+                    const auto 上位节点=上位[位置++];贡献要求(颜色[上位节点]!=1);
+                    if(颜色[上位节点]==0){颜色[上位节点]=1;遍历栈.emplace_back(上位节点,0);}
+                }
+                交互者.状态=新来源前驱材料状态::已读取;
+                if(已发现.contains(结果.配置.人类概念)) {
+                    已核验人类=人类;
+                    交互者.已验证人类组.push_back(*人类节点);
+                }
+            }
+        }
+        if(结果.本槽既有实例) {
+            const auto& 实例=*结果.本槽既有实例;
+            if(交互者.已验证人类组.size()!=1||交互者.已验证人类组.front()!=实例.键.服务对象)
+                throw 因果读取来源变化信号{};
+            贡献要求(原需求.目标.新增成员来源见证.has_value());
+            const auto& 要求=原需求.目标.新增成员来源见证->要求;
+            if((要求.指定来源主体&&要求.指定来源主体!=实例.键.服务对象)
+                ||(要求.指定被认知需求&&要求.指定被认知需求!=实例.需求节点))throw 因果读取来源变化信号{};
+        }
+        if(交互者.已验证人类组.size()==1) {
+            const auto 人类节点=交互者.已验证人类组.front();
+            检查因果读取停止(停止);
+            const auto 候选=需求服务_.读取服务取得主体被认知需求候选保护(人类节点);
+            检查因果读取停止(停止);
+            switch(候选.状态) {
+            case 新来源前驱候选枚举状态::资源失败:throw std::bad_alloc{};
+            case 新来源前驱候选枚举状态::前提已变化:case 新来源前驱候选枚举状态::输入不适用:throw 因果读取来源变化信号{};
+            case 新来源前驱候选枚举状态::依赖未就绪:throw 来源依赖未就绪{};
+            case 新来源前驱候选枚举状态::已读取:break;
+            default:贡献要求(false);
+            }
+            贡献要求(候选.主体存在节点==人类节点&&!候选.完整保护.empty());
+            合并(结果.完整保护,候选.完整保护);
+            贡献要求(已核验人类&&已核验人类->存在节点==人类节点);
+            const auto& 人类=*已核验人类;
+            std::vector<基础联合节点快照> 需求F保护;
+            const auto 需求特征=定位引用特征(人类,结果.配置.对象需求类型,需求F保护);
+            合并(结果.完整保护,需求F保护);
+            std::optional<稳定编码> 当前需求;
+            if(需求特征&&需求特征->当前值) {
+                const auto* 引用=std::get_if<稳定编码>(&*需求特征->当前值);贡献要求(引用&&有效(*引用));当前需求=*引用;
+            }
+            std::map<稳定编码,新需求治理信息> 全候选;
+            const auto 加候选=[&](const 新需求治理信息& 需求) {
+                检查因果读取停止(停止);贡献要求(有效(需求.节点));
+                贡献要求(需求.需求主体存在节点==人类节点&&需求.执行域==新需求执行域::被认知);
+                贡献要求(全候选.emplace(需求.节点,需求).second);
+            };
+            for(const auto& 需求:候选.需求组) {
+                贡献要求(需求.需求主体存在节点==人类节点&&需求.执行域==新需求执行域::被认知);
+                加候选(需求);
+            }
+            for(const auto& 需求:候选.待完善需求组) {
+                贡献要求(需求.需求主体存在节点==人类节点&&需求.执行域==新需求执行域::被认知
+                    &&需求.信息完善阶段==新需求信息完善阶段::待完善);
+                加候选(需求);
+            }
+            for(const auto& [节点,需求]:全候选) {
+                检查因果读取停止(停止);
+                新来源前驱需求材料 材料;材料.H=人类节点;材料.D=节点;材料.需求=需求;
+                材料.H正式特征节点组=人类.顶层特征节点组;材料.完整保护=候选.完整保护;
+                合并(材料.完整保护,交互者.完整保护);合并(材料.完整保护,需求F保护);
+                if(需求特征){材料.主体需求特征节点=需求特征->节点;材料.主体需求当前值=需求特征->当前值;}
+                材料.H当前需求特征引用本D=当前需求==节点;
+                材料.完整内容判定=需求服务_.判定被认知需求内容保护(节点,人类节点,结果.配置.完整被认知需求概念);
+                if(材料.完整内容判定.状态==新引用内容目标状态::资源失败)throw std::bad_alloc{};
+                if(材料.完整内容判定.状态==新引用内容目标状态::引用前提已变化)throw 因果读取来源变化信号{};
+                if(材料.完整内容判定.状态==新引用内容目标状态::依赖未就绪)throw 来源依赖未就绪{};
+                贡献要求(材料.完整内容判定.状态==新引用内容目标状态::已满足||材料.完整内容判定.状态==新引用内容目标状态::未满足
+                    ||材料.完整内容判定.状态==新引用内容目标状态::分支待定||材料.完整内容判定.状态==新引用内容目标状态::未支持
+                    ||材料.完整内容判定.状态==新引用内容目标状态::依赖未就绪);
+                合并(材料.完整保护,材料.完整内容判定.完整保护组);
+                if(需求.首次接收认知来源) {
+                    const 新行动请求承接来源 来源键{*需求.首次接收认知来源,节点,人类节点,交互者.自我存在节点};
+                    const auto 来源=需求服务_.读取行动请求承接来源保护(来源键);
+                    switch(来源.状态) {
+                    case 新行动请求来源读取状态::资源失败:throw std::bad_alloc{};
+                    case 新行动请求来源读取状态::前提已变化:throw 因果读取来源变化信号{};
+                    case 新行动请求来源读取状态::依赖未就绪:throw 来源依赖未就绪{};
+                    case 新行动请求来源读取状态::输入不适用:break;
+                    case 新行动请求来源读取状态::已读取: {
+                        贡献要求(来源.信息&&来源.信息->来源==来源键&&需求.完整目标
+                            &&来源.信息->目标==*需求.完整目标&&!来源.完整保护.empty());
+                        材料.正式请求=*来源.信息;合并(材料.完整保护,来源.完整保护);
+                        const auto 同源=需求服务_.查询行动请求自我需求(来源键);
+                        if(同源.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+                        if(同源.状态==新需求操作状态::前提已变化)throw 因果读取来源变化信号{};
+                        if(同源.状态==新需求操作状态::尚未初始化||同源.状态==新需求操作状态::目标内容依赖未就绪)
+                            throw 来源依赖未就绪{};
+                        if(同源.状态==新需求操作状态::认知来源不合法)throw 因果读取来源变化信号{};
+                        贡献要求(同源.状态==新需求操作状态::已找到||同源.状态==新需求操作状态::需求不存在);
+                        贡献要求(!同源.完整保护.empty());合并(材料.完整保护,同源.完整保护);
+                        if(同源.状态==新需求操作状态::已找到) {
+                            贡献要求(同源.信息&&同源.信息->完整目标&&同源.信息->行动请求来源==来源键
+                                &&同源.信息->需求主体存在节点==交互者.自我存在节点
+                                &&同源.信息->执行域==新需求执行域::自我执行
+                                &&同源.信息->父需求节点==结果.完成服务父需求&&*同源.信息->完整目标==来源.信息->目标);
+                            // 同源治理及其完整目标来自同一次受保护读取，只作全字段值式投影。
+                            const auto& 同源治理=*同源.信息;
+                            新需求信息 完整自我需求;
+                            完整自我需求.节点=同源治理.节点;
+                            完整自我需求.根角色=同源治理.根角色;
+                            完整自我需求.父需求节点=同源治理.父需求节点;
+                            完整自我需求.目标存在节点=同源治理.完整目标->目标存在节点;
+                            完整自我需求.目标=同源治理.完整目标->目标;
+                            完整自我需求.来源类型=同源治理.来源类型;
+                            完整自我需求.来源承接节点=同源治理.来源承接节点;
+                            完整自我需求.权重=同源治理.权重;
+                            完整自我需求.活动状态=同源治理.活动状态;
+                            完整自我需求.服务要求确认组=同源治理.服务要求确认组;
+                            完整自我需求.服务需求取得执行节点=同源治理.服务需求取得执行节点;
+                            完整自我需求.需求主体存在节点=同源治理.需求主体存在节点;
+                            完整自我需求.执行域=同源治理.执行域;
+                            完整自我需求.认知来源=同源治理.认知来源;
+                            完整自我需求.复合来源=同源治理.复合来源;
+                            完整自我需求.首次接收认知来源=同源治理.首次接收认知来源;
+                            完整自我需求.行动请求来源=同源治理.行动请求来源;
+                            const auto 自我需求=std::optional{std::move(完整自我需求)};
+                            材料.同源自我需求=*自我需求;
+                            auto 资格=需求服务_.读取行动请求自我需求筹办资格保护(来源键,自我需求->节点);
+                            if(资格.状态==新行动请求筹办资格读取状态::资源失败)throw std::bad_alloc{};
+                            if(资格.状态==新行动请求筹办资格读取状态::前提已变化)throw 因果读取来源变化信号{};
+                            if(资格.状态==新行动请求筹办资格读取状态::输入不适用) {
+                                const auto 重读来源=需求服务_.读取行动请求承接来源保护(来源键);
+                                const auto 重读自我需求=需求服务_.查询行动请求自我需求(来源键);
+                                if(重读来源.状态==新行动请求来源读取状态::资源失败||重读自我需求.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+                                if(重读来源.状态==新行动请求来源读取状态::依赖未就绪
+                                    ||重读自我需求.状态==新需求操作状态::尚未初始化
+                                    ||重读自我需求.状态==新需求操作状态::目标内容依赖未就绪)throw 来源依赖未就绪{};
+                                贡献要求(重读来源.状态==新行动请求来源读取状态::已读取
+                                    ||重读来源.状态==新行动请求来源读取状态::输入不适用
+                                    ||重读来源.状态==新行动请求来源读取状态::前提已变化);
+                                贡献要求(重读自我需求.状态==新需求操作状态::已找到||重读自我需求.状态==新需求操作状态::需求不存在
+                                    ||重读自我需求.状态==新需求操作状态::认知来源不合法||重读自我需求.状态==新需求操作状态::前提已变化);
+                                if(重读来源.状态!=新行动请求来源读取状态::已读取||!重读来源.信息
+                                    ||重读来源.信息->来源!=来源键||重读来源.信息->目标!=来源.信息->目标
+                                    ||重读自我需求.状态!=新需求操作状态::已找到||重读自我需求.信息!=同源.信息)throw 因果读取来源变化信号{};
+                                贡献要求(false);
+                            }
+                            贡献要求(资格.需求节点==自我需求->节点);
+                            if(资格.状态==新行动请求筹办资格读取状态::已读取) {
+                                贡献要求(资格.资格&&!资格.完整保护.empty()
+                                    &&资格.资格->状态!=新需求筹办资格状态::材料已变化
+                                    &&资格.资格->状态!=新需求筹办资格状态::资源失败
+                                    &&(!资格.资格->需求||资格.资格->需求==自我需求));
+                                合并(材料.完整保护,资格.完整保护);
+                            } else 贡献要求(资格.状态==新行动请求筹办资格读取状态::依赖未就绪&&!资格.资格);
+                            材料.同源筹办资格=std::move(资格);
+                            // 本D的入向任务引用决定唯一定位，不冻结其它任务的登记变化。
+                            捕获因果节点保护(材料.完整保护,{自我需求->节点});
+                            std::optional<稳定编码> 对应任务;
+                            {
+                                auto 锁=获取因果读取任务锁(停止);
+                                const auto 反查=全局基础数据集.查询目标字段(自我需求->节点,任务需求字段);
+                                贡献要求(反查.size()<=1);
+                                if(!反查.empty()) {
+                                    贡献要求(节点类型为(反查.front().所属节点,任务节点类型));对应任务=反查.front().所属节点;
+                                }
+                                if(查询需求任务(自我需求->节点)!=对应任务)throw 因果读取来源变化信号{};
+                            }
+                            if(对应任务) {
+                                const auto 准备批=读取任务需求准备保护批(*对应任务);
+                                if(准备批.结果.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+                                if(准备批.结果.状态==新任务需求准备状态::来源前提已变化||准备批.结果.状态==新任务需求准备状态::任务不存在)throw 因果读取来源变化信号{};
+                                贡献要求(准备批.任务&&准备批.需求&&准备批.任务->需求节点==自我需求->节点
+                                    &&准备批.需求->行动请求来源==来源键&&准备批.需求->完整目标==同源.信息->完整目标
+                                    &&(准备批.结果.状态==新任务需求准备状态::可筹办||准备批.结果.状态==新任务需求准备状态::待完善));
+                                合并(材料.完整保护,准备批.保护);
+                                const auto 虚拟存在=获取任务虚拟存在(*对应任务);if(!虚拟存在)throw 因果读取来源变化信号{};
+                                const 新任务虚拟存在引用 引用{*对应任务,虚拟存在->节点,虚拟存在->任务状态特征节点};
+                                if(!内部治理世界_)throw 来源依赖未就绪{};
+                                const auto 治理场景=内部治理世界_->读取任务治理场景(引用);贡献要求(治理场景&&治理场景->任务引用==引用);
+                                捕获因果节点保护(材料.完整保护,{治理场景->根场景节点,治理场景->场景节点});
+                                if(内部治理世界_->读取任务治理场景(引用)!=治理场景)throw 因果读取来源变化信号{};
+                                材料.唯一任务=新因果任务信息绑定{*对应任务,引用,治理场景->根场景节点,治理场景->场景节点};
+                            }
+                        } else 贡献要求(!同源.信息);
+                        break;
+                    }
+                    default:贡献要求(false);
+                    }
+                    合并(材料.完整保护,来源.完整保护);
+                }
+                合并(结果.完整保护,材料.完整保护);结果.完整候选组.push_back(std::move(材料));
+            }
+        }
+    } catch(const 来源依赖未就绪&) {
+        交互者.状态=新来源前驱材料状态::依赖未就绪;
+        交互者.已验证人类组.clear();结果.完整候选组.clear();
+    }
+    合并(结果.完整保护,交互者.完整保护);
+    if(结果.本槽既有实例&&交互者.状态!=新来源前驱材料状态::依赖未就绪) {
+        const auto& 实例=*结果.本槽既有实例;
+        const auto 数量=std::count_if(结果.完整候选组.begin(),结果.完整候选组.end(),[&](const auto& 材料) {
+            return 材料.D==实例.需求节点&&材料.H==实例.键.服务对象;
+        });
+        if(数量!=1) {
+            if(!核同因果节点保护(结果.完整保护))throw 因果读取来源变化信号{};
+            贡献要求(false);
+        }
+    }
+    for(const auto& 存在信息:存在材料) {
+        检查因果读取停止(停止);const auto 当前=存在服务_.读取存在顶层特征定位保护(存在信息.存在节点);
+        if(当前.状态==新存在顶层特征定位状态::资源失败)throw std::bad_alloc{};
+        if(当前.状态==新存在顶层特征定位状态::前提已变化)throw 因果读取来源变化信号{};
+        if(当前.状态!=新存在顶层特征定位状态::已读取) {
+            if(!核同因果节点保护(结果.完整保护))throw 因果读取来源变化信号{};
+            贡献要求(false);
+        }
+        贡献要求(当前.信息&&!当前.完整保护.empty());
+        if(*当前.信息!=存在信息)throw 因果读取来源变化信号{};
+        合并(结果.完整保护,当前.完整保护);
+    }
+    std::vector<稳定编码> 节点组;for(const auto& 保护组:结果.完整保护)节点组.push_back(保护组.结构.节点.编码);
+    std::sort(节点组.begin(),节点组.end());节点组.erase(std::unique(节点组.begin(),节点组.end()),节点组.end());
+    检查因果读取停止(停止);
+    if(节点组.empty()) {
+        // 仅依赖未就绪可无已采材料；不得给合法成功路径伪造空保护。
+        贡献要求(交互者.状态==新来源前驱材料状态::依赖未就绪);
+    } else {
+        const auto 当前=全局基础数据集.查询节点组完整结构(节点组);
+        if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        贡献要求(当前.状态==基础结构操作状态::已完成&&当前.节点组.size()==节点组.size());
+        for(std::size_t 序号=0;序号<节点组.size();++序号) {
+            const auto& 保护组=当前.节点组[序号];贡献要求(保护组.查询节点==节点组[序号]);
+            const auto 原保护=std::find_if(结果.完整保护.begin(),结果.完整保护.end(),[&](const auto& 项目){return 项目.结构.节点.编码==节点组[序号];});
+            if(!保护组.快照||原保护==结果.完整保护.end()||!贡献快照相同(*原保护,*保护组.快照))throw 因果读取来源变化信号{};
+        }
+    }
+    if(完整保护输出)合并(*完整保护输出,结果.完整保护);
+    检查因果读取停止(停止);return 结果;
+}
+
 新因果筹办请求 新_任务类::构造因果筹办请求(稳定编码 T,
-    const std::optional<新先天因果信息>& rule, const std::vector<新因果任务等待边>& edges) const {
-    std::lock_guard 锁(新任务互斥);
+    const std::optional<新先天因果信息>& rule, const std::vector<新因果任务等待边>& edges, std::stop_token 停止,
+    std::vector<基础联合节点快照>* 完整保护输出) const {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    因果构造观察范围 观察范围(L"因果请求构造", T);
+#endif
+    检查因果读取停止(停止);
+    const auto 源批=读取任务需求准备保护批(T);
+    if(源批.结果.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+    if(源批.结果.状态==新任务需求准备状态::来源前提已变化)throw 因果读取来源变化信号{};
+    auto 保护=源批.保护;
+    auto 锁 = 获取因果读取任务锁(停止);
+    if(!核同任务需求准备保护批(源批))throw 因果读取来源变化信号{};
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"请求构造已取得任务锁", T);
+#endif
+    检查因果读取停止(停止);
     const auto task = 获取任务(T);
+    贡献要求(task.has_value());
+    检查因果读取停止(停止);
     const auto demand = task ? 需求服务_.获取需求(task->需求节点) : std::nullopt;
+    if(demand){std::set<稳定编码> 定义{demand->节点,demand->目标存在节点,demand->目标.目标特征类型概念节点};
+        if(demand->目标.目标值域概念节点)定义.insert(*demand->目标.目标值域概念节点);
+        if(demand->目标.目标比较关系概念节点)定义.insert(*demand->目标.目标比较关系概念节点);
+        捕获因果材料保护(保护,定义);}
     贡献要求(task && demand && 查询需求任务(demand->节点) == T
         && demand->目标.目标形式 == 新需求目标形式::值 && demand->目标.目标值域概念节点
         && 是条件包含目标(demand->目标, 特征概念服务_, 二次特征概念服务_));
+    检查因果读取停止(停止);
     const auto existence = 存在服务_.获取存在(demand->目标存在节点);
+    检查因果读取停止(停止);
     const auto sceneTarget = 场景服务_.获取场景(demand->目标存在节点);
     贡献要求(existence || sceneTarget);
+    检查因果读取停止(停止);
     const auto sceneId = sceneTarget ? std::optional{sceneTarget->节点}
         : 场景服务_.查询所属场景(demand->目标存在节点);
     贡献要求(sceneId.has_value());
+    检查因果读取停止(停止);
     auto root = *sceneId;
     std::set<稳定编码> visited;
+    检查因果读取停止(停止);
     while (true) {
+        检查因果读取停止(停止);
         贡献要求(visited.insert(root).second);
+        检查因果读取停止(停止);
+        捕获因果节点保护(保护,{root});
         const auto scene = 场景服务_.获取场景(root); 贡献要求(scene.has_value());
         if (!scene->父场景节点) break;
         root = *scene->父场景节点;
@@ -11039,19 +13985,39 @@ void 新_任务类::配置因果筹办读取(const 新因果筹办读取接口& 
     request.通用查询.目标结果 = {目标参与者标识, demand->目标.目标特征类型概念节点,
         反向因果概念域约束{*demand->目标.目标值域概念节点}};
     request.通用查询.共同场景节点 = *sceneId;
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"请求基本T/D/目标及场景父链已读取，即将构造派生源", T);
+#endif
+    新来源前驱当前集合材料 当前集合;
+    request.派生源上下文 = 构造因果派生源上下文(*demand, 停止,&保护,&当前集合);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+    观察因果构造阶段(L"请求派生源构造已返回", T);
+#endif
     if (rule && 自我服务结算配置_ && 服务需求取得合同_
         && demand->目标存在节点 == 自我服务结算配置_->自我存在节点
         && demand->目标.目标特征类型概念节点 == 自我服务结算配置_->服务值特征类型节点) {
         const auto& config = *自我服务结算配置_;
         贡献要求(rule->定义.治理定义 == config.能力.节点);
+        捕获因果材料保护(保护,{config.能力.节点,config.服务值特征节点,
+            服务需求取得合同_->服务任务集合特征节点});
+        for(const auto& c:rule->定义.全部条件)if(c.种类==新先天因果条件种类::特征值域)
+            for(const auto C:c.概念参数组){const auto 定义=特征概念服务_.读取特征概念定义保护(C);
+                if(定义.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                if(定义.前提已变化)throw 因果读取来源变化信号{};
+                if(定义.状态!=基础结构操作状态::已完成||!定义.信息)throw std::logic_error("因果规则特征定义不可读");
+                if(!合并需求结果保护(保护,定义.预期节点组))throw 因果读取来源变化信号{};}
+        检查因果读取停止(停止);
         const auto f = 特征服务_.获取特征(config.服务值特征节点);
+        贡献要求(f && f->当前值 && std::holds_alternative<std::int64_t>(*f->当前值));
+        检查因果读取停止(停止);
         const auto set = 特征服务_.获取特征(服务需求取得合同_->服务任务集合特征节点);
-        贡献要求(f && f->当前值 && std::holds_alternative<std::int64_t>(*f->当前值)
-            && set && set->当前值 && std::holds_alternative<稳定编码>(*set->当前值)
+        贡献要求(set && set->当前值 && std::holds_alternative<稳定编码>(*set->当前值)
             && 取得特征概念类型根(特征概念服务_, set->特征概念节点) == 服务需求取得合同_->服务任务集合类型
             && existence && std::find(existence->特征节点组.begin(), existence->特征节点组.end(), set->节点)
                 != existence->特征节点组.end());
         const auto materialId = std::get<稳定编码>(*set->当前值);
+        检查因果读取停止(停止);
+        捕获因果节点保护(保护,{materialId});
         const auto material = 特征值服务_.获取特征值(materialId);
         const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
         贡献要求(members != nullptr);
@@ -11063,50 +14029,99 @@ void 新_任务类::配置因果筹办读取(const 新因果筹办读取接口& 
         context.服务任务集合特征节点 = set->节点;
         context.服务任务集合类型 = 服务需求取得合同_->服务任务集合类型;
         context.集合材料节点 = materialId; context.正式集合当前值 = *set->当前值;
+        检查因果读取停止(停止);
         context.任务范围概念 = 获取任务信息范围概念();
+        检查因果读取停止(停止);
         auto orderedMembers = *members;
         std::sort(orderedMembers.begin(), orderedMembers.end());
+        // 固定完整候选集合及其正式字段/材料预期，再完全解锁逐T取来源批。
+        const auto 集合保护=贡献完整快照({set->节点,materialId},true);
+        std::map<稳定编码,新任务需求准备保护批> 准备组;
+        锁.unlock();
+        for(const auto member:orderedMembers){检查因果读取停止(停止);const 稳定编码 节点{member};
+            贡献要求(有效(节点)&&!准备组.contains(节点));准备组.emplace(节点,读取任务需求准备保护批(节点));}
+        锁.lock();
+        const auto 集合今=贡献完整快照({set->节点,materialId},true);
+        if(集合保护.size()!=集合今.size()||!std::equal(集合保护.begin(),集合保护.end(),集合今.begin(),贡献快照相同)){
+            throw 因果读取来源变化信号{};
+        }
+        for(const auto& [节点,p]:准备组)if(!核同任务需求准备保护批(p)){
+            throw 因果读取来源变化信号{};
+        }
+        std::set<稳定编码> 贡献需求组;
+        for(const auto& [节点,p]:准备组){
+            if(!合并需求结果保护(保护,p.保护))throw 因果读取来源变化信号{};
+            if(p.需求)贡献需求组.insert(p.需求->节点);
+        }
+        捕获因果贡献保护(*this,贡献需求组,保护);
+        检查因果读取停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+        观察因果构造阶段(L"请求结算上下文材料已读取，即将枚举候选", T);
+#endif
         std::optional<稳定编码> last;
+        检查因果读取停止(停止);
         for (const auto member : orderedMembers) {
+            检查因果读取停止(停止);
             const 稳定编码 node{member};
             贡献要求(有效(node) && (!last || *last < node)); last = node;
             context.正式任务成员组.push_back(node);
-            context.候选事实组.push_back(读取结算因果候选事实(node, *rule));
+            context.候选事实组.push_back(提取因果正常读取<新因果候选事实>(读取结算因果候选事实已加锁(node, *rule, 停止, 准备组.at(node))));
         }
+        检查因果读取停止(停止);
         context.成员枚举完整 = true;
         request.结算上下文 = std::move(context);
     }
+    const bool 需来源前驱=服务取得来源前驱配置_&&demand->目标.新增成员来源见证
+        &&request.派生源上下文&&request.派生源上下文->构造状态==新因果派生来源状态::已读取
+        &&request.派生源上下文->基准&&request.派生源上下文->正式投影
+        &&request.派生源上下文->基准->源特征类型==服务取得来源前驱配置_->服务任务类型;
+    // 新来源材料必须锁外取；旧派生/结算构造及其输入不改。
+    if(需来源前驱) {
+        锁.unlock();
+        request.来源前驱上下文=构造来源前驱查询上下文(*demand,T,当前集合,停止,&保护);
+    }
+    检查因果读取停止(停止);
+    if(!核同因果节点保护(保护))throw 因果读取来源变化信号{};
+    if(完整保护输出&&!合并需求结果保护(*完整保护输出,保护))throw 因果读取来源变化信号{};
     return request;
 }
 
 std::optional<新任务条件子需求项> 新_任务类::转换因果静态状态目标(
-    const 新因果筹办请求& request, const 反向因果图节点& node) const {
-    std::lock_guard 锁(新任务互斥);
+    const 新因果筹办请求& request, const 反向因果图节点& node, std::stop_token 停止) const {
+    检查因果读取停止(停止);
+    auto 锁 = 获取因果读取任务锁(停止);
     if (!node.状态 || !node.参与者 || node.类型 != 反向因果端类型::状态) return {};
     稳定编码 E{};
     const auto& participant = *node.参与者;
     if (participant.类别 == 反向因果参与者键类::实际存在) E = participant.实际存在节点;
     else if (participant.类别 == 反向因果参与者键类::输入符号) {
+        检查因果读取停止(停止);
         const auto binding = std::find_if(request.通用查询.参与者组.begin(), request.通用查询.参与者组.end(),
             [&](const auto& item) { return item.标识 == participant.输入标识; });
         if (binding != request.通用查询.参与者组.end() && binding->实际存在节点) E = *binding->实际存在节点;
     }
     if (!有效(E)) return {}; // 不把Vt或规则局部未绑定符号伪装成普通存在。
+    检查因果读取停止(停止);
     const auto existence = 存在服务_.获取存在(E);
+    检查因果读取停止(停止);
     const auto scene = 场景服务_.获取场景(E);
     if (!existence && !scene) return {};
     const auto& features = existence ? existence->特征节点组 : scene->特征节点组;
     稳定编码 F{};
     const auto FT = node.状态->特征类型概念节点;
+    检查因果读取停止(停止);
     const auto type = 特征概念服务_.获取特征概念(FT);
     if (!type || 取得特征概念类型根(特征概念服务_, FT) != FT) return {};
+    检查因果读取停止(停止);
     for (const auto feature : features) {
+        检查因果读取停止(停止);
         const auto value = 特征服务_.获取特征(feature); 贡献要求(value.has_value());
         if (取得特征概念类型根(特征概念服务_, value->特征概念节点) == FT) {
             贡献要求(!有效(F)); F = feature;
         }
     }
     if (!有效(F)) return {};
+    检查因果读取停止(停止);
     稳定编码 domainId{};
     if (const auto* conceptDomain = std::get_if<反向因果概念域约束>(&node.状态->约束)) domainId = conceptDomain->值域概念节点;
     else {
@@ -11116,54 +14131,78 @@ std::optional<新任务条件子需求项> 新_任务类::转换因果静态状�
             if (const auto* integer = std::get_if<std::int64_t>(&exact->值)) range = 特征概念I64闭区间{*integer, *integer};
         if (!range || type->材料类型 != 特征概念材料物理类型::I64标量 || range->下界 > range->上界) return {};
         const 特征概念值域 wanted = std::vector<特征概念I64闭区间>{*range};
+        检查因果读取停止(停止);
         const auto relation = 特征概念服务_.比较值域(type->材料类型, type->值域, wanted);
         贡献要求(relation.状态 == 特征概念规则状态::已完成 && relation.关系);
+        检查因果读取停止(停止);
         if (*relation.关系 == 特征概念值域关系::相等) domainId = FT;
         else if (*relation.关系 == 特征概念值域关系::左包含右) {
             特征概念定义 definition{type->材料类型, wanted, type->单位, type->比较规则,
                 type->聚合规则, {}};
+            检查因果读取停止(停止);
             domainId = 特征概念服务_.建立或取得特征概念(definition, 特征值服务_, FT);
             贡献要求(有效(domainId));
+            检查因果读取停止(停止);
         } else return {};
     }
+    检查因果读取停止(停止);
     const auto domain = 特征概念服务_.获取特征概念(domainId);
     if (!domain || 取得特征概念类型根(特征概念服务_, domainId) != FT) return {};
     新任务条件子需求项 goal{node.编号, E, F, FT, domainId, {}, domain->单位, {}};
     if (const auto* intervals = std::get_if<std::vector<特征概念I64闭区间>>(&domain->值域)) goal.目标区间组 = *intervals;
     else if (const auto* members = std::get_if<特征概念任务集合值域>(&domain->值域)) goal.集合目标 = *members;
     else return {};
+    检查因果读取停止(停止);
     return goal;
 }
 
 bool 新_任务类::任务因果候选形成循环(稳定编码 T, 稳定编码 candidate,
-    const std::vector<新因果任务等待边>& edges) const {
+    const std::vector<新因果任务等待边>& edges, std::stop_token 停止) const {
+    检查因果读取停止(停止);
     if (candidate == T) return true;
-    std::lock_guard 锁(新任务互斥);
+    检查因果读取停止(停止);
+    auto 锁 = 获取因果读取任务锁(停止);
+    检查因果读取停止(停止);
     const auto task = 获取任务(T); 贡献要求(task.has_value());
+    检查因果读取停止(停止);
     const auto child = 获取任务(candidate); 贡献要求(child.has_value());
+    检查因果读取停止(停止);
     auto demand = 需求服务_.获取需求(task->需求节点);
     std::set<稳定编码> seen;
+    检查因果读取停止(停止);
     while (demand && demand->父需求节点) {
+        检查因果读取停止(停止);
         贡献要求(seen.insert(demand->节点).second);
         if (child->需求节点 == *demand->父需求节点) return true;
         demand = 需求服务_.获取需求(*demand->父需求节点);
+        检查因果读取停止(停止);
     }
     std::vector<稳定编码> pending{candidate}; seen.clear();
+    检查因果读取停止(停止);
     while (!pending.empty()) {
+        检查因果读取停止(停止);
         const auto n = pending.back(); pending.pop_back();
         if (n == T) return true;
         if (!seen.insert(n).second) continue;
-        for (const auto& edge : edges) if (edge.等待任务节点 == n) pending.push_back(edge.被等待任务节点);
+        检查因果读取停止(停止);
+        for (const auto& edge : edges) {
+            检查因果读取停止(停止);
+            if (edge.等待任务节点 == n) pending.push_back(edge.被等待任务节点);
+        }
     }
+    检查因果读取停止(停止);
     return false;
 }
 
-bool 新_任务类::结算因果需要取得来源(const 新任务因果筹办依据& basis) const {
+bool 新_任务类::结算因果需要取得来源(const 新任务因果筹办依据& basis, std::stop_token 停止) const {
+    检查因果读取停止(停止);
     if (!basis.请求.结算上下文 || !basis.请求.结算上下文->成员枚举完整
         || basis.读回.状态 != 新因果筹办读取状态::已逆推) return false;
     const auto& rule = basis.请求.结算上下文->所依据先天规则;
     bool 有可筹办被动分支 = false;
+    检查因果读取停止(停止);
     for (const auto& branch : basis.读回.分支组) {
+        检查因果读取停止(停止);
         if (branch.规则节点 != rule.节点 || branch.定义 != rule.定义
             || branch.触发方式 != 新因果动作触发方式::被动触发
             || branch.需要服务值区间组.empty()) continue;
@@ -11172,400 +14211,760 @@ bool 新_任务类::结算因果需要取得来源(const 新任务因果筹办�
         const auto& candidate = *branch.候选事实;
         if (candidate.既有消费 || !candidate.当前任务状态) continue;
         const auto state = static_cast<新任务状态>(*candidate.当前任务状态);
-        if (state == 新任务状态::已失败 || state == 新任务状态::已取消 || state == 新任务状态::已结算) continue;
-        if (!任务因果候选形成循环(basis.请求.父任务节点, candidate.任务节点, basis.请求.当前等待边组))
+        if (state == 新任务状态::已失败 || state == 新任务状态::已取消 || state == 新任务状态::已结算
+            ||state==新任务状态::未执行但目标已满足) continue;
+        if (!任务因果候选形成循环(basis.请求.父任务节点, candidate.任务节点, basis.请求.当前等待边组, 停止))
             return false; // 有独立可推进来源时先复用，不另造取得任务。
     }
+    检查因果读取停止(停止);
     return 有可筹办被动分支;
 }
 
 新任务因果子需求提议 新_任务类::提议任务因果子需求(
     稳定编码 T, const std::vector<新因果任务等待边>& edges) const {
+    return 提取无停止因果读取<新任务因果子需求提议>(提议任务因果子需求(T, edges, {}));
+}
+
+新任务因果提议可停止结果 新_任务类::提议任务因果子需求(
+    稳定编码 T, const std::vector<新因果任务等待边>& edges, std::stop_token 停止) const {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
     // 只缓冲观察；所有局部业务锁退出后才执行日志I/O。
-    struct 因果监控缓冲 {
-        std::wstring 内容;
-        ~因果监控缓冲() noexcept {
-            try { (void)记录调试日志(L"CAUSAL_PREPARATION", L"任务筹办", L"提议任务因果子需求", 内容); }
-            catch (...) {}
-        }
-    } 监控;
-    const auto 观察 = [&](auto 写入) noexcept {
-        try {
-            if (监控.内容.size() >= 32768) return;
-            std::wostringstream 文本; 写入(文本);
-            监控.内容 += 文本.str().substr(0, 4096); 监控.内容 += L'\n';
-        } catch (...) {}
-    };
+    因果阶段监控缓冲 监控;
+    const auto 观察 = [&](auto 写入) noexcept { 监控.观察(写入); };
     观察([&](auto& s) { s << L"进入因果子需求提议；任务定位=" << T.值; });
 #endif
-    const 新因果筹办读取接口* reader = nullptr;
-    稳定编码 featureType;
-    {
-        std::lock_guard 锁(新任务互斥);
-        const auto task = 获取任务(T);
-        const auto demand = task ? 需求服务_.获取需求(task->需求节点) : std::nullopt;
-        if (!task || !demand || demand->活动状态 == 新需求活动状态::失活 || !因果筹办读取_) {
+    try {
+    const auto 读取提议 = [&]() -> 新任务因果子需求提议 {
+        检查因果读取停止(停止);
+        const 新因果筹办读取接口* reader = nullptr;
+        稳定编码 featureType;
+        {
+            检查因果读取停止(停止);
+            auto 锁 = 获取因果读取任务锁(停止);
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-            观察([&](auto& s) { s << L"入口未进入逆推；任务存在=" << task.has_value()
-                << L"；需求存在=" << demand.has_value() << L"；读取接口已配置=" << (因果筹办读取_ != nullptr); });
+            观察([](auto& s) { s << L"已取得入口任务锁，即将读取任务与需求"; });
 #endif
-            return {};
-        }
-        // 无法表示成静态状态的目标保持真实能力边界，不填一个伪造的状态值。
-        if (!是条件包含目标(demand->目标, 特征概念服务_, 二次特征概念服务_)) {
+            检查因果读取停止(停止);
+            const auto task = 获取任务(T);
+            检查因果读取停止(停止);
+            const auto demand = task ? 需求服务_.获取需求(task->需求节点) : std::nullopt;
+            if (!task || !demand || demand->活动状态 == 新需求活动状态::失活 || !因果筹办读取_) {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-            观察([](auto& s) { s << L"未进入逆推：目标不能表示为条件包含的静态状态"; });
+                观察([&](auto& s) { s << L"入口未进入逆推；任务存在=" << task.has_value()
+                    << L"；需求存在=" << demand.has_value() << L"；读取接口已配置=" << (因果筹办读取_ != nullptr); });
 #endif
-            return {};
-        }
-        reader = 因果筹办读取_; featureType = demand->目标.目标特征类型概念节点;
-        for (const auto& edge : edges) {
-            贡献要求(有效(edge.等待任务节点) && 有效(edge.被等待任务节点)
-                && 获取任务(edge.等待任务节点) && 获取任务(edge.被等待任务节点));
-        }
-    }
-    const auto rules = reader->读取先天结果规则(featureType);
+                return {};
+            }
+            // 无法表示成静态状态的目标保持真实能力边界，不填一个伪造的状态值。
+            if (!是条件包含目标(demand->目标, 特征概念服务_, 二次特征概念服务_)) {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-    观察([&](auto& s) { s << L"先天结果规则数量=" << rules.size(); });
+                观察([](auto& s) { s << L"未进入逆推：目标不能表示为条件包含的静态状态"; });
 #endif
-    std::vector<std::optional<新先天因果信息>> options;
-    if (rules.empty()) options.push_back({});
-    else {
-        std::optional<稳定编码> last;
-        for (const auto& rule : rules) {
-            贡献要求(有效(rule.节点) && (!last || *last < rule.节点)
-                && rule.定义.唯一结果.结果特征类型 == featureType);
-            last = rule.节点; options.push_back(rule);
+                return {};
+            }
+            reader = 因果筹办读取_; featureType = demand->目标.目标特征类型概念节点;
+            检查因果读取停止(停止);
+            for (const auto& edge : edges) {
+                检查因果读取停止(停止);
+                贡献要求(有效(edge.等待任务节点) && 有效(edge.被等待任务节点)
+                    && 获取任务(edge.等待任务节点) && 获取任务(edge.被等待任务节点));
+            }
         }
-    }
-    std::vector<新任务因果子需求提议> alternatives;
-    for (const auto& rule : options) {
-        const auto request = 构造因果筹办请求(T, rule, edges);
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-        观察([&](auto& s) { s << L"即将调用因果逆推；先天规则=" << rule.has_value()
-            << L"；结算上下文=" << request.结算上下文.has_value();
-            if (request.结算上下文) s << L"；成员枚举完整=" << request.结算上下文->成员枚举完整
-                << L"；正式任务成员数量=" << request.结算上下文->正式任务成员组.size(); });
+        观察([](auto& s) { s << L"入口材料核验已完成，即将读取先天结果规则"; });
 #endif
-        auto readback = reader->逆推(request);
+        检查因果读取停止(停止);
+        const auto rules = reader->读取先天结果规则(featureType);
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-        观察([&](auto& s) { s << L"因果逆推已返回；结算分支数量=" << readback.分支组.size()
-            << L"；通用图分支数量=" << readback.通用反查图.分支组.size()
-            << L"；主动方法参考数量=" << readback.主动方法参考组.size()
-            << L"；能力缺口数量=" << readback.能力缺口组.size(); });
+        观察([&](auto& s) { s << L"先天结果规则数量=" << rules.size(); });
 #endif
-        if (readback.状态 == 新因果筹办读取状态::材料已变化) {
-            新任务因果子需求提议 changed; changed.状态 = 新任务因果子需求提议状态::材料已变化; return changed;
+        std::vector<std::optional<新先天因果信息>> options;
+        if (rules.empty()) options.push_back({});
+        else {
+            std::optional<稳定编码> last;
+            检查因果读取停止(停止);
+            for (const auto& rule : rules) {
+                检查因果读取停止(停止);
+                贡献要求(有效(rule.节点) && (!last || *last < rule.节点)
+                    && rule.定义.唯一结果.结果特征类型 == featureType);
+                last = rule.节点; options.push_back(rule);
+            }
         }
-        const auto freshRequest = 构造因果筹办请求(T, rule, edges);
-        if (!(新任务因果筹办依据{request, {}} == 新任务因果筹办依据{freshRequest, {}})) {
-            新任务因果子需求提议 changed; changed.状态 = 新任务因果子需求提议状态::材料已变化; return changed;
-        }
-        if (rule) {
-            const auto freshRules = reader->读取先天结果规则(featureType);
-            const auto match = std::find_if(freshRules.begin(), freshRules.end(),
-                [&](const auto& value) { return value.节点 == rule->节点; });
-            if (match == freshRules.end() || match->定义 != rule->定义) {
+        std::vector<新任务因果子需求提议> alternatives;
+        检查因果读取停止(停止);
+        for (const auto& rule : options) {
+            检查因果读取停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([](auto& s) { s << L"即将构造本次因果筹办请求"; });
+#endif
+            检查因果读取停止(停止);
+            const auto request = 构造因果筹办请求(T, rule, edges, 停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([&](auto& s) { s << L"即将调用因果逆推；先天规则=" << rule.has_value()
+                << L"；结算上下文=" << request.结算上下文.has_value();
+                if (request.结算上下文) s << L"；成员枚举完整=" << request.结算上下文->成员枚举完整
+                    << L"；正式任务成员数量=" << request.结算上下文->正式任务成员组.size(); });
+#endif
+            检查因果读取停止(停止);
+            auto readback = reader->逆推(request);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+            观察([&](auto& s) { s << L"因果逆推已返回；结算分支数量=" << readback.分支组.size()
+                << L"；通用图分支数量=" << readback.通用反查图.分支组.size()
+                << L"；主动方法参考数量=" << readback.主动方法参考组.size()
+                << L"；能力缺口数量=" << readback.能力缺口组.size(); });
+#endif
+            if (readback.状态 == 新因果筹办读取状态::材料已变化) {
                 新任务因果子需求提议 changed; changed.状态 = 新任务因果子需求提议状态::材料已变化; return changed;
             }
-        }
-        新任务因果子需求提议 proposal;
-        proposal.依据 = 新任务因果筹办依据{request, readback};
-        proposal.状态 = readback.状态 == 新因果筹办读取状态::无已知路径
-            ? 新任务因果子需求提议状态::无路径 : 新任务因果子需求提议状态::无需子需求;
-        const auto causesCycle = [&](稳定编码 candidate) {
-            return 任务因果候选形成循环(T, candidate, edges);
-        };
-        for (const auto& branch : readback.分支组) {
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-            观察([&](auto& s) { s << L"结算分支；状态枚举=" << static_cast<int>(branch.状态)
-                << L"；候选事实=" << branch.候选事实.has_value()
-                << L"；条件数量=" << branch.全部条件.size(); });
-#endif
-            for (const auto& condition : branch.全部条件)
-                if (condition.状态 != 新因果条件读回状态::满足) proposal.未满足关系组.push_back(condition);
-            if (branch.候选事实) {
-                const auto& candidate = *branch.候选事实;
-                const bool qReady = candidate.当前服务值 && std::any_of(
-                    branch.需要服务值区间组.begin(), branch.需要服务值区间组.end(), [&](const auto& range) {
-                        return range.下界 <= *candidate.当前服务值 && *candidate.当前服务值 <= range.上界;
-                    });
-                if (!qReady) {
-                    // 合法Q不等于满足本次反推所需Q；保留独立缺口，继续推进不表示已满足。
-                    for (const auto& condition : branch.定义.全部条件)
-                        if (condition.种类 == 新先天因果条件种类::特征值域
-                            && !condition.概念参数组.empty() && condition.概念参数组.front() == 任务服务值特征概念)
-                            proposal.未满足关系组.push_back({condition.序号, condition.种类,
-                                condition.关系概念, 新因果条件读回状态::尚未具备, {candidate.任务节点}});
+            检查因果读取停止(停止);
+            新任务因果子需求提议 proposal;
+            proposal.依据 = 新任务因果筹办依据{request, readback};
+            proposal.状态 = readback.状态 == 新因果筹办读取状态::无已知路径
+                ? 新任务因果子需求提议状态::无路径 : 新任务因果子需求提议状态::无需子需求;
+            if(readback.来源前驱读回) {
+                proposal.来源前驱前端组=readback.来源前驱读回->行动前端组;
+                if(proposal.来源前驱前端组.size()==1)proposal.状态=新任务因果子需求提议状态::已形成;
+                else if(proposal.来源前驱前端组.size()>1) {
+                    proposal.路径选择未确定=true;
+                    proposal.状态=新任务因果子需求提议状态::路径待选择;
                 }
-                if (candidate.既有消费 || !candidate.当前任务状态 || causesCycle(candidate.任务节点)) {
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-                    观察([&](auto& s) { s << L"不继续推进候选；已有消费=" << candidate.既有消费.has_value()
-                        << L"；有当前状态=" << candidate.当前任务状态.has_value()
-                        << L"；若两项均非阻断则为循环依赖"; });
-#endif
-                    continue;
-                }
-                const auto state = static_cast<新任务状态>(*candidate.当前任务状态);
-                if (state != 新任务状态::已失败 && state != 新任务状态::已取消 && state != 新任务状态::已结算)
-                    proposal.继续推进任务组.push_back(candidate.任务节点);
             }
-        }
-        if (结算因果需要取得来源(*proposal.依据)) {
-            const auto pending = std::find_if(readback.分支组.begin(), readback.分支组.end(), [&](const auto& branch) {
-                return branch.规则节点 == rule->节点 && branch.定义 == rule->定义
-                    && !branch.需要服务值区间组.empty() && branch.触发方式 == 新因果动作触发方式::被动触发;
-            });
-            if (pending != readback.分支组.end()) {
-                std::lock_guard 锁(新任务互斥);
-                贡献要求(服务需求取得合同_.has_value());
-                const auto& contract = *服务需求取得合同_;
-                const auto domain = 特征概念服务_.获取特征概念(contract.已新增值域);
-                const auto* ranges = domain ? std::get_if<std::vector<特征概念I64闭区间>>(&domain->值域) : nullptr;
-                贡献要求(domain && ranges);
-                const auto condition = std::find_if(pending->定义.全部条件.begin(), pending->定义.全部条件.end(),
-                    [](const auto& item) { return item.种类 == 新先天因果条件种类::集合包含角色; });
-                贡献要求(condition != pending->定义.全部条件.end());
-                proposal.子需求项组.push_back({static_cast<std::uint64_t>(condition->序号),
-                    contract.自我存在节点, {}, contract.数量变化量类型, contract.已新增值域,
-                    *ranges, domain->单位, {}});
-                proposal.状态 = 新任务因果子需求提议状态::已形成;
-            }
-        }
-        // 通用经验链只采用唯一可解释路径；主动端改写前端A为子目标，
-        // 不把改变A的方法直接装到目标C的父任务中。
-        if (proposal.子需求项组.empty() && proposal.继续推进任务组.empty()) {
-            const auto& graph = readback.通用反查图;
-            bool ambiguous = false, interpretable = true;
-            std::vector<std::size_t> leaves;
-            std::set<std::size_t> walking;
-            std::function<void(std::size_t)> trace = [&](std::size_t id) {
-                if (!walking.insert(id).second) { interpretable = false; return; }
-                const auto n = std::find_if(graph.节点组.begin(), graph.节点组.end(),
-                    [&](const auto& item) { return item.编号 == id; });
-                if (n == graph.节点组.end()) { interpretable = false; walking.erase(id); return; }
-                std::vector<const 反向因果图分支*> branches;
-                for (const auto& b : graph.分支组) if (b.结果节点 == id) branches.push_back(&b);
-                if (branches.size() > 1) ambiguous = true;
-                else if (branches.empty()) {
-                    if (id != graph.目标节点 && n->状态) leaves.push_back(id);
-                    else interpretable = false;
-                } else {
-                    const auto& b = *branches.front();
-                    if (b.筹办去向 == 反向因果筹办去向::追溯被动触发条件) {
-                        for (const auto premise : b.全部前提节点) trace(premise);
-                    } else if (b.筹办去向 == 反向因果筹办去向::追溯方法及条件) {
-                        const auto reference = std::find_if(readback.主动方法参考组.begin(), readback.主动方法参考组.end(),
-                            [&](const auto& item) { return item.图分支编号 == b.编号; });
-                        bool usable = false;
-                        if (n->状态 && reference != readback.主动方法参考组.end())
-                            for (const auto methodId : reference->正式方法节点组) {
-                                const auto method = 方法服务_.获取方法(methodId);
-                                贡献要求(method.has_value());
-                                usable = usable || (method->启用状态 == 新方法启用状态::启用
-                                    && !方法服务_.是历史服务结算方法(methodId)
-                                    && std::find(method->方法头.涉及特征类型概念组.begin(),
-                                        method->方法头.涉及特征类型概念组.end(), n->状态->特征类型概念节点)
-                                        != method->方法头.涉及特征类型概念组.end());
-                            }
-                        if (usable && id != graph.目标节点 && n->状态) leaves.push_back(id);
-                        else interpretable = false;
-                    } else interpretable = false;
-                }
-                walking.erase(id);
+            const auto causesCycle = [&](稳定编码 candidate) {
+                return 任务因果候选形成循环(T, candidate, edges, 停止);
             };
-            trace(graph.目标节点);
-            if (ambiguous) {
+            检查因果读取停止(停止);
+            for (const auto& branch : readback.分支组) {
+                检查因果读取停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                观察([&](auto& s) { s << L"结算分支；状态枚举=" << static_cast<int>(branch.状态)
+                    << L"；候选事实=" << branch.候选事实.has_value()
+                    << L"；条件数量=" << branch.全部条件.size(); });
+#endif
+                检查因果读取停止(停止);
+                for (const auto& condition : branch.全部条件) {
+                    检查因果读取停止(停止);
+                    if (condition.状态 != 新因果条件读回状态::满足) proposal.未满足关系组.push_back(condition);
+                }
+                if (branch.候选事实) {
+                    const auto& candidate = *branch.候选事实;
+                    const bool qReady = candidate.当前服务值 && std::any_of(
+                        branch.需要服务值区间组.begin(), branch.需要服务值区间组.end(), [&](const auto& range) {
+                            return range.下界 <= *candidate.当前服务值 && *candidate.当前服务值 <= range.上界;
+                        });
+                    if (!qReady) {
+                        // 合法Q不等于满足本次反推所需Q；保留独立缺口，继续推进不表示已满足。
+                        检查因果读取停止(停止);
+                        for (const auto& condition : branch.定义.全部条件) {
+                            检查因果读取停止(停止);
+                            if (condition.种类 == 新先天因果条件种类::特征值域
+                                && !condition.概念参数组.empty() && condition.概念参数组.front() == 任务服务值特征概念)
+                                proposal.未满足关系组.push_back({condition.序号, condition.种类,
+                                    condition.关系概念, 新因果条件读回状态::尚未具备, {candidate.任务节点}});
+                        }
+                    }
+                    if (candidate.既有消费 || !candidate.当前任务状态 || causesCycle(candidate.任务节点)) {
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
+                        观察([&](auto& s) { s << L"不继续推进候选；已有消费=" << candidate.既有消费.has_value()
+                            << L"；有当前状态=" << candidate.当前任务状态.has_value()
+                            << L"；若两项均非阻断则为循环依赖"; });
+#endif
+                        continue;
+                    }
+                    const auto state = static_cast<新任务状态>(*candidate.当前任务状态);
+                    if (state != 新任务状态::已失败 && state != 新任务状态::已取消 && state != 新任务状态::已结算
+                        &&state!=新任务状态::未执行但目标已满足)
+                        proposal.继续推进任务组.push_back(candidate.任务节点);
+                }
+            }
+            if (结算因果需要取得来源(*proposal.依据, 停止)) {
+                const auto pending = std::find_if(readback.分支组.begin(), readback.分支组.end(), [&](const auto& branch) {
+                    return branch.规则节点 == rule->节点 && branch.定义 == rule->定义
+                        && !branch.需要服务值区间组.empty() && branch.触发方式 == 新因果动作触发方式::被动触发;
+                });
+                if (pending != readback.分支组.end()) {
+                    检查因果读取停止(停止);
+                    auto 锁 = 获取因果读取任务锁(停止);
+                    贡献要求(服务需求取得合同_.has_value());
+                    const auto& contract = *服务需求取得合同_;
+                    检查因果读取停止(停止);
+                    const auto domain = 特征概念服务_.获取特征概念(contract.已新增值域);
+                    const auto* ranges = domain ? std::get_if<std::vector<特征概念I64闭区间>>(&domain->值域) : nullptr;
+                    贡献要求(domain && ranges);
+                    const auto condition = std::find_if(pending->定义.全部条件.begin(), pending->定义.全部条件.end(),
+                        [](const auto& item) { return item.种类 == 新先天因果条件种类::集合包含角色; });
+                    贡献要求(condition != pending->定义.全部条件.end());
+                    proposal.子需求项组.push_back({static_cast<std::uint64_t>(condition->序号),
+                        contract.自我存在节点, {}, contract.数量变化量类型, contract.已新增值域,
+                        *ranges, domain->单位, {}});
+                    proposal.子需求项组.back().新增成员见证要求=新需求新增成员见证要求{contract.服务任务集合类型,{},{}};
+                    proposal.状态 = 新任务因果子需求提议状态::已形成;
+                }
+            }
+            // 通用经验链只采用唯一可解释路径；主动端改写前端A为子目标，
+            // 不把改变A的方法直接装到目标C的父任务中。
+            if (proposal.子需求项组.empty() && proposal.继续推进任务组.empty()&&proposal.来源前驱前端组.empty()) {
+                const auto& graph = readback.通用反查图;
+                bool ambiguous = false, interpretable = true;
+                std::vector<std::size_t> leaves;
+                std::set<std::size_t> walking;
+                std::function<void(std::size_t)> trace = [&](std::size_t id) {
+                    检查因果读取停止(停止);
+                    if (!walking.insert(id).second) { interpretable = false; return; }
+                    const auto n = std::find_if(graph.节点组.begin(), graph.节点组.end(),
+                        [&](const auto& item) { return item.编号 == id; });
+                    if (n == graph.节点组.end()) { interpretable = false; walking.erase(id); return; }
+                    std::vector<const 反向因果图分支*> branches;
+                    检查因果读取停止(停止);
+                    for (const auto& b : graph.分支组) {
+                        检查因果读取停止(停止);
+                        if (b.结果节点 == id) branches.push_back(&b);
+                    }
+                    if (branches.size() > 1) ambiguous = true;
+                    else if (branches.empty()) {
+                        if (id != graph.目标节点 && n->状态) leaves.push_back(id);
+                        else interpretable = false;
+                    } else {
+                        const auto& b = *branches.front();
+                        if (b.筹办去向 == 反向因果筹办去向::追溯被动触发条件) {
+                            检查因果读取停止(停止);
+                            for (const auto premise : b.全部前提节点) {
+                                检查因果读取停止(停止);
+                                trace(premise);
+                            }
+                        } else if (b.筹办去向 == 反向因果筹办去向::追溯方法及条件) {
+                            const auto reference = std::find_if(readback.主动方法参考组.begin(), readback.主动方法参考组.end(),
+                                [&](const auto& item) { return item.图分支编号 == b.编号; });
+                            bool usable = false;
+                            if (n->状态 && reference != readback.主动方法参考组.end()) {
+                                检查因果读取停止(停止);
+                                for (const auto methodId : reference->正式方法节点组) {
+                                    检查因果读取停止(停止);
+                                    const auto method = 方法服务_.获取方法(methodId);
+                                    贡献要求(method.has_value());
+                                    usable = usable || (method->启用状态 == 新方法启用状态::启用
+                                        && std::find(method->方法头.涉及特征类型概念组.begin(),
+                                            method->方法头.涉及特征类型概念组.end(), n->状态->特征类型概念节点)
+                                            != method->方法头.涉及特征类型概念组.end());
+                                }
+                            }
+                            if (usable && id != graph.目标节点 && n->状态) leaves.push_back(id);
+                            else interpretable = false;
+                        } else interpretable = false;
+                    }
+                    walking.erase(id);
+                };
+                trace(graph.目标节点);
+                if (ambiguous) {
+                    proposal.路径选择未确定 = true;
+                    proposal.状态 = 新任务因果子需求提议状态::路径待选择;
+                } else if (interpretable) {
+                    检查因果读取停止(停止);
+                    std::sort(leaves.begin(), leaves.end());
+                    检查因果读取停止(停止);
+                    leaves.erase(std::unique(leaves.begin(), leaves.end()), leaves.end());
+                    检查因果读取停止(停止);
+                    for (const auto id : leaves) {
+                        检查因果读取停止(停止);
+                        const auto n = std::find_if(graph.节点组.begin(), graph.节点组.end(), [&](const auto& item) { return item.编号 == id; });
+                        const auto goal = 转换因果静态状态目标(request, *n, 停止);
+                        if (!goal || (goal->目标存在节点 == request.目标存在节点
+                            && goal->目标特征类型概念节点 == request.目标.目标特征类型概念节点
+                            && goal->目标值域概念节点 == request.目标.目标值域概念节点)) {
+                            interpretable = false;
+                            readback.能力缺口组.push_back({新因果能力缺口种类::值域暂不能转换,
+                                id, {}, {}, {}, n->状态, {}});
+                            break;
+                        }
+                        proposal.子需求项组.push_back(*goal);
+                    }
+                    if (!interpretable) proposal.子需求项组.clear();
+                    else if (!proposal.子需求项组.empty()) proposal.状态 = 新任务因果子需求提议状态::已形成;
+                }
+                proposal.依据->读回 = readback;
+            }
+            if (proposal.子需求项组.empty() && proposal.继续推进任务组.empty()
+                &&proposal.来源前驱前端组.empty()&& readback.派生关系读回) {
+                // 只交接未处理前提，不把辅助读回冒充行动项或前提成立。
+                proposal.状态 = 新任务因果子需求提议状态::无需子需求;
+                proposal.路径选择未确定 = false;
+            }
+            检查因果读取停止(停止);
+            std::sort(proposal.继续推进任务组.begin(), proposal.继续推进任务组.end());
+            检查因果读取停止(停止);
+            proposal.继续推进任务组.erase(std::unique(proposal.继续推进任务组.begin(), proposal.继续推进任务组.end()),
+                proposal.继续推进任务组.end());
+            检查因果读取停止(停止);
+            if (proposal.继续推进任务组.size() > 1) {
                 proposal.路径选择未确定 = true;
                 proposal.状态 = 新任务因果子需求提议状态::路径待选择;
-            } else if (interpretable) {
-                std::sort(leaves.begin(), leaves.end()); leaves.erase(std::unique(leaves.begin(), leaves.end()), leaves.end());
-                for (const auto id : leaves) {
-                    const auto n = std::find_if(graph.节点组.begin(), graph.节点组.end(), [&](const auto& item) { return item.编号 == id; });
-                    const auto goal = 转换因果静态状态目标(request, *n);
-                    if (!goal || (goal->目标存在节点 == request.目标存在节点
-                        && goal->目标特征类型概念节点 == request.目标.目标特征类型概念节点
-                        && goal->目标值域概念节点 == request.目标.目标值域概念节点)) {
-                        interpretable = false;
-                        readback.能力缺口组.push_back({新因果能力缺口种类::值域暂不能转换,
-                            id, {}, {}, {}, n->状态, {}});
-                        break;
-                    }
-                    proposal.子需求项组.push_back(*goal);
-                }
-                if (!interpretable) proposal.子需求项组.clear();
-                else if (!proposal.子需求项组.empty()) proposal.状态 = 新任务因果子需求提议状态::已形成;
+                proposal.继续推进任务组.clear();
             }
-            proposal.依据->读回 = readback;
-        }
-        std::sort(proposal.继续推进任务组.begin(), proposal.继续推进任务组.end());
-        proposal.继续推进任务组.erase(std::unique(proposal.继续推进任务组.begin(), proposal.继续推进任务组.end()),
-            proposal.继续推进任务组.end());
-        if (proposal.继续推进任务组.size() > 1) {
-            proposal.路径选择未确定 = true;
-            proposal.状态 = 新任务因果子需求提议状态::路径待选择;
-            proposal.继续推进任务组.clear();
-        }
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-        观察([&](auto& s) { s << L"本分支提议完成；子需求数量=" << proposal.子需求项组.size()
-            << L"；继续推进任务数量=" << proposal.继续推进任务组.size()
-            << L"；未满足关系数量=" << proposal.未满足关系组.size()
-            << L"；路径待选择=" << proposal.路径选择未确定; });
+            观察([&](auto& s) { s << L"本分支提议完成；子需求数量=" << proposal.子需求项组.size()
+                << L"；继续推进任务数量=" << proposal.继续推进任务组.size()
+                << L"；未满足关系数量=" << proposal.未满足关系组.size()
+                << L"；路径待选择=" << proposal.路径选择未确定; });
 #endif
-        alternatives.push_back(std::move(proposal));
-    }
-    // 多条真正可行OR路径没有既有唯一选择时，不擅自把全图合为AND。
-    const auto actionable = [](const auto& p) {
-        return !p.子需求项组.empty() || !p.继续推进任务组.empty();
-    };
-    const auto count = std::count_if(alternatives.begin(), alternatives.end(), actionable);
-    if (count == 1) {
-        auto result = *std::find_if(alternatives.begin(), alternatives.end(), actionable);
-        for (const auto& item : alternatives) if (item.依据) result.候选依据组.push_back(*item.依据);
+            alternatives.push_back(std::move(proposal));
+        }
+        // 多条真正可行OR路径没有既有唯一选择时，不擅自把全图合为AND。
+        const auto actionable = [](const auto& p) {
+            return !p.子需求项组.empty() || !p.继续推进任务组.empty()||!p.来源前驱前端组.empty();
+        };
+        if (alternatives.empty()) return {};
+        const auto count = std::count_if(alternatives.begin(), alternatives.end(), actionable);
+        const bool 待选择=count>1||std::any_of(alternatives.begin(),alternatives.end(),[](const auto& 项) {
+            return 项.路径选择未确定||项.状态==新任务因果子需求提议状态::路径待选择;
+        });
+        // 先判断候选自身是否待选，不能因只有一个带行动容器的alternative提前交付。
+        auto result=count==1&&!待选择
+            ? *std::find_if(alternatives.begin(),alternatives.end(),actionable) : alternatives.front();
+        const auto 保留候选依据=[&](const 新任务因果筹办依据& 依据) {
+            if(std::find(result.候选依据组.begin(),result.候选依据组.end(),依据)==result.候选依据组.end())
+                result.候选依据组.push_back(依据);
+        };
+        检查因果读取停止(停止);
+        for (const auto& item : alternatives) {
+            检查因果读取停止(停止);
+            if (item.依据) 保留候选依据(*item.依据);
+            for(const auto& 依据:item.候选依据组)保留候选依据(依据);
+        }
+        if (待选择) {
+            result.子需求项组.clear();result.继续推进任务组.clear();result.来源前驱前端组.clear();
+            result.依据.reset();
+            result.路径选择未确定 = true;
+            result.状态 = 新任务因果子需求提议状态::路径待选择;
+        }
         return result;
+    };
+    auto 结果 = 读取提议();
+    检查因果读取停止(停止);
+    return 结果;
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+    catch(const 因果读取来源变化信号&){新任务因果子需求提议 r;r.状态=新任务因果子需求提议状态::材料已变化;return r;}
+    catch(const std::bad_alloc&){新任务因果子需求提议 r;r.状态=新任务因果子需求提议状态::资源延后;return r;}
+    catch(const std::length_error&){新任务因果子需求提议 r;r.状态=新任务因果子需求提议状态::资源延后;return r;}
+}
+
+
+std::optional<新因果筹办请求> 新_任务类::构造来源前端自身发布后请求(
+    const 新任务因果筹办依据& 依据,const 新来源前驱内容模板& 模板,
+    const std::optional<新服务取得目标实例信息>& 实例,std::optional<稳定编码> 已确认子G,
+    std::stop_token 停止,std::vector<基础联合节点快照>* 完整保护输出) const {
+    检查因果读取停止(停止);
+    if(!依据.请求.来源前驱上下文||!依据.请求.派生源上下文||依据.请求.结算上下文
+        ||!依据.读回.来源前驱读回||std::find(依据.读回.来源前驱读回->行动前端组.begin(),
+            依据.读回.来源前驱读回->行动前端组.end(),模板)==依据.读回.来源前驱读回->行动前端组.end())return {};
+    std::vector<基础联合节点快照> 保护;
+    const auto 定义批=提取因果正常读取<来源前驱当前定义批>(
+        读取来源前驱当前定义批(依据.请求.来源前驱上下文->配置,停止));
+    if(!核验来源前驱静态支持(定义批,依据,模板))return {};
+    if(!合并需求结果保护(保护,定义批.完整保护))throw 因果读取来源变化信号{};
+    auto 当前=构造因果筹办请求(依据.请求.父任务节点,std::nullopt,依据.请求.当前等待边组,停止,&保护);
+    const auto 父需求=需求服务_.获取需求(当前.父需求节点);
+    if(!父需求||父需求->活动状态==新需求活动状态::失活
+        ||当前.父任务节点!=依据.请求.父任务节点||当前.父需求节点!=依据.请求.父需求节点
+        ||当前.目标存在节点!=依据.请求.目标存在节点||当前.目标!=依据.请求.目标
+        ||!当前.来源前驱上下文||!当前.派生源上下文||!当前.派生源上下文->正式投影
+        ||当前.派生源上下文->基准!=依据.请求.派生源上下文->基准
+        ||当前.来源前驱上下文->配置!=依据.请求.来源前驱上下文->配置)return {};
+    const auto 父满足=需求服务_.复核当前满足(当前.父需求节点);
+    if(父满足.状态==新需求当前满足状态::资源失败)throw std::bad_alloc{};
+    if(父满足.状态!=新需求当前满足状态::需增加&&父满足.状态!=新需求当前满足状态::需减少
+        &&父满足.状态!=新需求当前满足状态::未满足但无有向差值
+        &&父满足.状态!=新需求当前满足状态::需要执行前后比较)return {};
+    const auto& 语境=*当前.来源前驱上下文;
+    if(语境.当前集合.状态!=新来源前驱材料状态::已读取
+        ||语境.当前集合.当前成员组!=当前.派生源上下文->正式投影->正式投影成员组)return {};
+    std::optional<因果子需求采用> 已有采用;
+    if(已确认子G) {
+        auto 锁=获取因果读取任务锁(停止);
+        const auto 项=因果子需求依据_.find(*已确认子G);
+        if(项!=因果子需求依据_.end()) {
+            if(项->second.依据!=依据||项->second.来源前端!=std::optional{模板}
+                ||项->second.目标实例!=实例)return {};
+            已有采用=项->second;
+        }
     }
-    if (alternatives.empty()) return {};
-    auto result = alternatives.front();
-    for (const auto& item : alternatives) if (item.依据) result.候选依据组.push_back(*item.依据);
-    if (count > 1 || std::any_of(alternatives.begin(), alternatives.end(), [](const auto& p) { return p.路径选择未确定; })) {
-        result.子需求项组.clear(); result.继续推进任务组.clear();
-        result.路径选择未确定 = true;
-        result.状态 = 新任务因果子需求提议状态::路径待选择;
+    if(模板.种类==新来源前驱前端种类::取得服务对象) {
+        if(实例||模板.H||模板.D||语境.本槽既有实例)return {};
+    } else {
+        if((模板.种类!=新来源前驱前端种类::既有需求内容
+                &&模板.种类!=新来源前驱前端种类::待实例化需求内容)
+            ||!模板.H||语境.交互者.状态!=新来源前驱材料状态::已读取
+            ||语境.交互者.已验证人类组!=std::vector<稳定编码>{*模板.H})return {};
+        if(!实例) {
+            // 首次出生：当前前端提供本次目标，R/D尚待下游唯一槽位写入。
+            if(已确认子G||语境.本槽既有实例)return {};
+        } else {
+            if(!实例->骨架就绪||实例->键.父取得任务!=依据.请求.父任务节点
+                ||实例->键.服务对象!=*模板.H||实例->键.目标槽类型!=模板.目标槽类型
+                ||实例->键.正式根路径!=模板.正式根路径||实例->父需求!=依据.请求.父需求节点
+                ||实例->原父目标!=新需求完整目标{依据.请求.目标存在节点,依据.请求.目标}
+                ||实例->人类概念!=语境.配置.人类概念||实例->需求身份概念!=语境.配置.需求概念
+                ||实例->完整内容概念!=语境.配置.完整被认知需求概念
+                ||实例->复用指定已有需求!=(模板.种类==新来源前驱前端种类::既有需求内容)
+                ||(实例->复用指定已有需求 ? 模板.D!=实例->需求节点 : 模板.D.has_value())
+                ||语境.本槽既有实例!=实例)return {};
+            const auto 正式槽=读取来源前驱本槽实例可抛内部(实例->键.父取得任务,实例->键.目标槽类型,实例->键.正式根路径);
+            if(正式槽.实例.状态==新服务取得目标实例状态::资源失败)throw std::bad_alloc{};
+            if(正式槽.实例.状态!=新服务取得目标实例状态::已复用||正式槽.实例.信息!=实例
+                ||(已确认子G&&!正式槽.父任务已绑定))return {};
+            if(!合并需求结果保护(保护,正式槽.实例.完整保护))throw 因果读取来源变化信号{};
+            const auto 材料=std::find_if(语境.完整候选组.begin(),语境.完整候选组.end(),
+                [&](const auto& 项){return 项.D==实例->需求节点;});
+            if(材料==语境.完整候选组.end()||材料->H!=*模板.H
+                ||材料->需求.需求主体存在节点!=*模板.H||材料->需求.执行域!=新需求执行域::被认知
+                ||材料->需求.活动状态==新需求活动状态::失活)return {};
+            const auto 状态=材料->完整内容判定.状态;
+            if(状态!=新引用内容目标状态::已满足&&状态!=新引用内容目标状态::未满足
+                &&状态!=新引用内容目标状态::分支待定)return {};
+        }
     }
-    return result;
+    if(已确认子G) {
+        捕获因果节点保护(保护,{*已确认子G});
+        const auto 子需求=需求服务_.获取需求(*已确认子G);
+        if(!子需求||子需求->需求主体存在节点!=依据.请求.目标存在节点||子需求->执行域!=新需求执行域::自我执行
+            ||子需求->父需求节点!=依据.请求.父需求节点||子需求->来源类型!=新需求来源类型::任务子目标
+            ||子需求->来源承接节点!=依据.请求.父任务节点||子需求->根角色||子需求->活动状态==新需求活动状态::失活
+            ||(已有采用&&已有采用->子目标!=新需求完整目标{子需求->目标存在节点,子需求->目标}))return {};
+        if(模板.种类!=新来源前驱前端种类::取得服务对象) {
+            新需求目标定义 目标;目标.目标特征类型概念节点=模板.目标槽类型;目标.目标值域概念节点=模板.要求概念;
+            目标.引用内容定位=新需求引用内容定位{实例->需求节点,模板.正式根路径};
+            if(子需求->目标存在节点!=*模板.H||子需求->目标!=目标)return {};
+        } else {
+            if(子需求->目标存在节点!=依据.请求.目标存在节点||子需求->目标.目标特征类型概念节点!=模板.目标槽类型
+                ||子需求->目标.目标值域概念节点!=模板.要求概念||!子需求->目标.目标比较关系概念节点
+                ||子需求->目标.目标形式!=新需求目标形式::值||子需求->目标.引用内容定位
+                ||子需求->目标.新增成员来源见证||子需求->目标.目标变化方向)return {};
+            const auto 比较=二次特征概念服务_.读取二次特征定义保护(*子需求->目标.目标比较关系概念节点);
+            if(比较.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(比较.前提已变化||比较.状态!=基础结构操作状态::已完成||!比较.信息
+                ||比较.信息->算法!=二次特征算法::特征材料相似度||比较.信息->参照特征概念节点!=模板.要求概念
+                ||比较.信息->输入定义组!=std::vector<二次特征概念输入定义>{
+                    {0,二次特征输入角色::左输入,二次特征输入来源种类::特征准确值,模板.目标槽类型},
+                    {1,二次特征输入角色::右输入,二次特征输入来源种类::特征准确值,模板.目标槽类型}}
+                ||比较.信息->结果域种类组!=std::vector<二次特征结果域种类>{二次特征结果域种类::包含于参照值域})return {};
+            if(!合并需求结果保护(保护,比较.预期节点组))throw 因果读取来源变化信号{};
+        }
+    }
+    const 新因果筹办读取接口* 读取接口=nullptr;
+    {
+        auto 锁=获取因果读取任务锁(停止);
+        if(!服务取得来源前驱配置_||*服务取得来源前驱配置_!=语境.配置||!因果筹办读取_)return {};
+        读取接口=因果筹办读取_;
+    }
+    检查因果读取停止(停止);
+    const auto 完整读回=读取接口->逆推(当前);
+    检查因果读取停止(停止);
+    if(完整读回.状态==新因果筹办读取状态::材料已变化||!完整读回.来源前驱读回)return {};
+    const auto& 今=*完整读回.来源前驱读回;
+    const bool 已采用同D内容=已有采用&&实例;
+    if(!已采用同D内容&&std::none_of(今.行动前端组.begin(),今.行动前端组.end(),
+        [&](const auto& 项){return 同一来源前端目标(项,模板);}))return {};
+    if(今.完整保护.empty()||!合并需求结果保护(保护,今.完整保护)||!核同因果节点保护(保护))return {};
+    if(完整保护输出&&!合并需求结果保护(*完整保护输出,保护))throw 因果读取来源变化信号{};
+    检查因果读取停止(停止);
+    return 当前;
+}
+
+std::optional<新因果筹办请求> 新_任务类::构造已采用来源前端当前请求(
+    const 因果子需求采用& 采用,稳定编码 子G,std::stop_token 停止,
+    std::vector<基础联合节点快照>* 完整保护输出) const {
+    检查因果读取停止(停止);
+    if(!采用.来源前端||!采用.依据.请求.来源前驱上下文||!采用.依据.读回.来源前驱读回)return {};
+    {
+        auto 锁=获取因果读取任务锁(停止);
+        const auto 原采用=因果子需求依据_.find(子G);
+        if(原采用==因果子需求依据_.end()||原采用->second!=采用||!因果筹办读取_)return {};
+    }
+    // 只建立一次当前请求；同D内容由该请求的真实候选和本域采用记录读取。
+    return 构造来源前端自身发布后请求(采用.依据,*采用.来源前端,采用.目标实例,子G,停止,完整保护输出);
 }
 
 std::optional<新因果筹办请求> 新_任务类::构造自身发布后因果请求(
-    const 新任务因果筹办依据& basis, 稳定编码 D) const {
-    std::lock_guard 锁(新任务互斥);
-    if (!basis.请求.结算上下文 || !核验因果子需求身份(basis,D)) return {};
-    const auto& context = *basis.请求.结算上下文;
-    if (!结算因果需要取得来源(basis)) return {};
-    const auto child = 需求服务_.获取需求(D);
-    const auto createdT = 查询需求任务(D);
-    if (!child || !createdT || !是服务需求取得目标(*child)) return {};
-    const auto set = 特征服务_.获取特征(context.服务任务集合特征节点);
-    const auto before = 特征值服务_.获取特征值(context.集合材料节点);
-    const auto* previous = before ? std::get_if<std::vector<std::uint64_t>>(&before->材料) : nullptr;
-    std::vector<std::uint64_t> expectedBefore;
-    for (const auto member : context.正式任务成员组) expectedBefore.push_back(member.值);
-    if (!set || !set->当前值 || !previous || *previous != expectedBefore
-        || std::find(context.正式任务成员组.begin(), context.正式任务成员组.end(), *createdT) != context.正式任务成员组.end()
-        || (set->当前值 != context.正式集合当前值
-            && std::find(set->历史不同值.begin(),set->历史不同值.end(),context.正式集合当前值) == set->历史不同值.end())) return {};
-    auto current = 构造因果筹办请求(basis.请求.父任务节点, context.所依据先天规则, basis.请求.当前等待边组);
-    auto expected = context.正式任务成员组;
-    expected.push_back(*createdT); std::sort(expected.begin(), expected.end());
-    if (!current.结算上下文 || !current.结算上下文->成员枚举完整
-        || current.结算上下文->正式任务成员组 != expected) return {};
-    // 仅接受本次D/T使集合精确增加一个成员，旧成员事实及其他请求材料均不可顺带改变。
-    auto normalized = current;
-    auto& normalizedContext = *normalized.结算上下文;
-    auto& facts = normalizedContext.候选事实组;
-    facts.erase(std::remove_if(facts.begin(), facts.end(), [&](const auto& item) { return item.任务节点 == *createdT; }), facts.end());
-    normalizedContext.正式任务成员组 = context.正式任务成员组;
-    normalizedContext.集合材料节点 = context.集合材料节点;
-    normalizedContext.正式集合当前值 = context.正式集合当前值;
-    if (normalized != basis.请求) return {};
+    const 新任务因果筹办依据& basis, 稳定编码 D,std::vector<基础联合节点快照>* 完整保护输出,
+    std::stop_token 停止) const {
+    auto 锁=获取因果读取任务锁(停止);
+    const auto 未形成=[&]() -> std::optional<新因果筹办请求> {检查因果读取停止(停止);return {};};
+    std::vector<基础联合节点快照> 保护;
+    检查因果读取停止(停止);
+    捕获因果节点保护(保护,{D,basis.请求.父任务节点,basis.请求.父需求节点});
+    if(!basis.请求.结算上下文||basis.请求.派生源上下文||!自我服务结算配置_
+        ||basis.请求.目标.目标特征类型概念节点!=自我服务结算配置_->服务值特征类型节点
+        ||!核验因果子需求身份内部(basis,D,停止))return 未形成();
+    const auto& context=*basis.请求.结算上下文;
+    if(!context.成员枚举完整||!结算因果需要取得来源(basis,停止))return 未形成();
+    const auto child=需求服务_.获取需求(D);
+    检查因果读取停止(停止);
+    if(!child||!是服务需求取得目标(*child))return 未形成();
+    // 子D的完整目标包含固定新增见证B；只读使用，不以当前S替换或重签B。
+    const 新需求完整目标 固定子目标{child->目标存在节点,child->目标};
+    const auto createdT=查询需求任务(D);
+    const auto 排除需求=服务任务排除需求_;
+    const auto 同步所有者=服务任务同步所有者_;
+    if(!同步所有者||!服务任务同步_||!有效(排除需求))return 未形成();
+    if(createdT)捕获因果节点保护(保护,{*createdT});
+    锁.unlock();
+    检查因果读取停止(停止);
+    const auto projection=提取因果正常读取<新任务列表结果>(查询服务任务(排除需求,停止));
+    if(projection.状态==新任务操作状态::资源失败)throw std::bad_alloc{};
+    贡献要求(projection.状态==新任务操作状态::已找到);
+    auto current=构造因果筹办请求(basis.请求.父任务节点,context.所依据先天规则,basis.请求.当前等待边组,停止,&保护);
+    检查因果读取停止(停止);
+    const auto 父需求=需求服务_.获取需求(current.父需求节点);
+    if(!父需求||父需求->活动状态==新需求活动状态::失活
+        ||current.父任务节点!=basis.请求.父任务节点||current.父需求节点!=basis.请求.父需求节点
+        ||current.目标存在节点!=basis.请求.目标存在节点||current.目标!=basis.请求.目标
+        ||!current.结算上下文||!current.结算上下文->成员枚举完整)return 未形成();
+    const auto 父满足=需求服务_.复核当前满足(current.父需求节点);
+    if(父满足.状态==新需求当前满足状态::资源失败)throw std::bad_alloc{};
+    if(父满足.状态!=新需求当前满足状态::需增加&&父满足.状态!=新需求当前满足状态::需减少
+        &&父满足.状态!=新需求当前满足状态::未满足但无有向差值
+        &&父满足.状态!=新需求当前满足状态::需要执行前后比较)return 未形成();
+    const auto& actual=*current.结算上下文;
+    if(projection.任务节点组!=actual.正式任务成员组
+        ||actual.所依据先天规则.节点!=context.所依据先天规则.节点
+        ||actual.所依据先天规则.定义!=context.所依据先天规则.定义
+        ||actual.自我存在节点!=context.自我存在节点
+        ||actual.服务任务集合特征节点!=context.服务任务集合特征节点
+        ||actual.服务任务集合类型!=context.服务任务集合类型
+        ||actual.任务范围概念!=context.任务范围概念)return 未形成();
+    if(createdT&&std::find(actual.正式任务成员组.begin(),actual.正式任务成员组.end(),*createdT)
+        ==actual.正式任务成员组.end())return 未形成();
+    锁=获取因果读取任务锁(停止);
+    if(排除需求!=服务任务排除需求_||同步所有者!=服务任务同步所有者_||!服务任务同步_
+        ||查询需求任务(D)!=createdT||!核同因果节点保护(保护))return 未形成();
+    const auto 当前子需求=需求服务_.获取需求(D);
+    if(!当前子需求||当前子需求->活动状态==新需求活动状态::失活
+        ||固定子目标!=新需求完整目标{当前子需求->目标存在节点,当前子需求->目标})return 未形成();
+    if(完整保护输出&&!合并需求结果保护(*完整保护输出,保护))throw 因果读取来源变化信号{};
+    检查因果读取停止(停止);
     return current;
 }
 
-std::optional<新_任务类::因果执行许可> 新_任务类::读取因果执行许可(稳定编码 T) const {
-    因果执行许可 snapshot;
-    const 新因果筹办读取接口* reader = nullptr;
+std::optional<新_任务类::因果执行许可> 新_任务类::读取因果执行许可(
+    稳定编码 T,const 新任务需求准备保护批* 已读准备批) const {
+    try{
+    const bool 可借用=已读准备批&&(已读准备批->结果.状态==新任务需求准备状态::可筹办
+        ||已读准备批->结果.状态==新任务需求准备状态::待完善);
+    std::optional<新任务需求准备保护批> 自读准备批;
+    if(!可借用)自读准备批=读取任务需求准备保护批(T);
+    const auto& 源批=可借用 ? *已读准备批 : *自读准备批;
+    贡献要求(源批.T==T);
+    if(源批.结果.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+    if(源批.结果.状态==新任务需求准备状态::来源前提已变化)return {};
+    因果执行许可 许可;许可.T=T;许可.保护=源批.保护;
     {
         std::lock_guard 锁(新任务互斥);
-        const auto task = 获取任务(T); if (!task) return {};
-        auto d = 需求服务_.获取需求(task->需求节点);
-        std::set<稳定编码> seen;
-        while (d) {
-            贡献要求(seen.insert(d->节点).second);
-            const auto adopted = 因果子需求依据_.find(d->节点);
-            if (adopted != 因果子需求依据_.end()) snapshot.emplace(*adopted);
-            if (!d->父需求节点) break;
-            d = 需求服务_.获取需求(*d->父需求节点); 贡献要求(d.has_value());
+        if(!核同任务需求准备保护批(源批))return {};
+        许可.任务=获取任务(T);if(!许可.任务)return {};
+        许可.读取接口=因果筹办读取_;许可.取得合同=服务需求取得合同_;许可.结算配置=自我服务结算配置_;
+        许可.服务任务同步=static_cast<bool>(服务任务同步_);许可.排除需求=服务任务排除需求_;许可.同步所有者=服务任务同步所有者_;
+        auto D=std::optional<稳定编码>{许可.任务->需求节点};std::set<稳定编码> 已见;
+        while(D){
+            if(!已见.insert(*D).second)throw std::logic_error("因果许可父链成环");
+            捕获因果节点保护(许可.保护,{*D});
+            const auto d=需求服务_.读取需求治理信息(*D);贡献要求(d.has_value());许可.父链.push_back(*d);
+            const auto adopted=因果子需求依据_.find(*D);if(adopted!=因果子需求依据_.end())许可.采用组.emplace(*adopted);
+            D=d->父需求节点;
         }
-        reader = 因果筹办读取_;
     }
-    if (!snapshot.empty() && !reader) return {};
-    for (auto& [D, item] : snapshot) {
-        const auto& basis = item.依据;
-        if (basis.请求.结算上下文) {
-            const auto& old = basis.请求.结算上下文->所依据先天规则;
-            const auto rules = reader->读取先天结果规则(basis.请求.目标.目标特征类型概念节点);
-            const auto match = std::find_if(rules.begin(), rules.end(), [&](const auto& r) { return r.节点 == old.节点; });
-            if (match == rules.end() || match->定义 != old.定义) return {};
+    if(!许可.采用组.empty()&&!许可.读取接口)return {};
+    for(const auto& [D,item]:许可.采用组){
+        const auto& basis=item.依据;std::vector<基础联合节点快照> 本次保护;
+        if(item.来源前端) {
+            const auto 当前=构造已采用来源前端当前请求(item,D,{},&本次保护);
+            if(!当前)return {};
+            if(本次保护.empty()||!核同因果节点保护(本次保护)||!合并需求结果保护(许可.保护,本次保护))return {};
+            continue;
         }
-        const auto fresh = reader->逆推(basis.请求);
-        if (fresh.状态 == 新因果筹办读取状态::材料已变化
-            || fresh.通用反查图 != basis.读回.通用反查图) {
-            auto current = 构造自身发布后因果请求(basis,D);
-            if (!current) return {};
-            const auto actual = reader->逆推(*current);
-            if (actual.状态 == 新因果筹办读取状态::材料已变化) return {};
-            const auto& rule = current->结算上下文->所依据先天规则;
-            const auto createdT = 查询需求任务(D);
-            if (!createdT) return {};
-            if (std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b) {
-                return b.规则节点 == rule.节点 && b.定义 == rule.定义
-                    && b.状态 == 新因果筹办分支状态::有实际候选
-                    && b.触发方式 == 新因果动作触发方式::被动触发
-                    && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == *createdT;
-            })) return {};
-            item.执行核验请求 = std::move(current);
-        } else item.执行核验请求 = basis.请求;
-    }
-    std::lock_guard 锁(新任务互斥);
-    if (!核对因果执行许可(T, snapshot)) return {};
-    return snapshot;
-}
-
-bool 新_任务类::核对因果执行许可(稳定编码 T, const 因果执行许可& snapshot) const {
-    const auto task = 获取任务(T); if (!task) return false;
-    auto d = 需求服务_.获取需求(task->需求节点);
-    因果执行许可 current;
-    std::set<稳定编码> seen;
-    while (d) {
-        贡献要求(seen.insert(d->节点).second);
-        const auto adopted = 因果子需求依据_.find(d->节点);
-        if (adopted != 因果子需求依据_.end()) {
-            const auto& item = adopted->second;
-            const auto& request = item.依据.请求;
-            const auto parent = 获取任务(request.父任务节点);
-            const auto pd = parent ? 需求服务_.获取需求(parent->需求节点) : std::nullopt;
-            if (!pd || pd->节点 != request.父需求节点 || pd->目标存在节点 != request.目标存在节点
-                || pd->目标 != request.目标 || d->父需求节点 != pd->节点
-                || d->来源承接节点 != request.父任务节点 || d->来源类型 != 新需求来源类型::任务子目标
-                || d->目标存在节点 != item.子目标.目标存在节点 || d->目标 != item.子目标.目标) return false;
-            current.emplace(*adopted);
-        }
-        if (!d->父需求节点) break;
-        d = 需求服务_.获取需求(*d->父需求节点); 贡献要求(d.has_value());
-    }
-    auto normalized = snapshot;
-    for (auto& [D,item] : normalized) {
-        if (item.执行核验请求) {
-            const auto& checked = *item.执行核验请求;
-            const auto rule = checked.结算上下文
-                ? std::optional<新先天因果信息>{checked.结算上下文->所依据先天规则} : std::nullopt;
-            const auto actual = 构造因果筹办请求(checked.父任务节点, rule, checked.当前等待边组);
-            if (actual != checked) return false;
-            if (checked != item.依据.请求) {
-                const auto own = 构造自身发布后因果请求(item.依据,D);
-                if (!own || *own != checked) return false;
+        const auto 当前子目标仍受支持=[&]() -> bool {
+            // 原basis只保留采用身份；当前必要性不要求旧整图、旧绑定全集维持原样。
+            const auto 读治理=[&](稳定编码 节点) -> std::optional<新需求治理信息> {
+                auto r=需求服务_.读取来源准备单需求治理保护(节点,{});
+                贡献要求(std::holds_alternative<新_需求类::来源准备单需求治理保护结果>(r));
+                auto p=std::get<新_需求类::来源准备单需求治理保护结果>(std::move(r));
+                using DS=新_需求类::来源准备治理读取状态;
+                switch(p.状态) {
+                case DS::已读取:break;
+                case DS::需求不存在:case DS::前提已变化:
+                case DS::尚未初始化:case DS::依赖未就绪:return {};
+                case DS::资源失败:throw std::bad_alloc{};
+                default:throw std::logic_error("因果许可定点需求读取状态非法");
+                }
+                贡献要求(p.信息&&p.信息->节点==节点&&!p.完整保护.empty());
+                if(!合并需求结果保护(本次保护,p.完整保护))throw 因果读取来源变化信号{};
+                return std::move(p.信息);
+            };
+            const auto 父=读治理(basis.请求.父需求节点),子=读治理(D);
+            if(!父||!子||!父->完整目标||!子->完整目标
+                ||*父->完整目标!=新需求完整目标{basis.请求.目标存在节点,basis.请求.目标}
+                ||*子->完整目标!=item.子目标||父->活动状态==新需求活动状态::失活
+                ||子->活动状态==新需求活动状态::失活||子->根角色
+                ||子->需求主体存在节点!=父->需求主体存在节点
+                ||子->执行域!=新需求执行域::自我执行||子->执行域!=父->执行域
+                ||子->父需求节点!=std::optional{父->节点}
+                ||子->来源类型!=新需求来源类型::任务子目标
+                ||子->来源承接节点!=std::optional{basis.请求.父任务节点})return {};
+            {
+                std::lock_guard 锁(新任务互斥);
+                捕获因果节点保护(本次保护,{basis.请求.父任务节点});
+                const auto 父任务=读取任务信息(basis.请求.父任务节点,特征服务_);
+                贡献要求(父任务.has_value());
+                if(父任务->需求节点!=父->节点||是终结状态(父任务->当前状态))return {};
             }
-            item.执行核验请求.reset();
+            const auto 父满足=需求服务_.复核当前满足(父->节点);
+            if(父满足.状态==新需求当前满足状态::资源失败)throw std::bad_alloc{};
+            if(父满足.状态==新需求当前满足状态::结构不一致
+                ||父满足.状态==新需求当前满足状态::目标内容定义不合法)
+                throw std::logic_error("因果许可父目标读取损坏");
+            if(父满足.状态!=新需求当前满足状态::需增加&&父满足.状态!=新需求当前满足状态::需减少
+                &&父满足.状态!=新需求当前满足状态::未满足但无有向差值
+                &&父满足.状态!=新需求当前满足状态::目标特征尚未形成
+                &&父满足.状态!=新需求当前满足状态::当前值不存在
+                &&父满足.状态!=新需求当前满足状态::需要执行前后比较)return {};
+            const auto fresh=提议任务因果子需求(basis.请求.父任务节点,basis.请求.当前等待边组);
+            if(fresh.状态==新任务因果子需求提议状态::资源延后)throw std::bad_alloc{};
+            if(!fresh.依据||fresh.路径选择未确定||!fresh.来源前驱前端组.empty()
+                ||(fresh.状态!=新任务因果子需求提议状态::已形成
+                    &&fresh.状态!=新任务因果子需求提议状态::无需子需求))return {};
+            const auto& 当前请求=fresh.依据->请求;
+            if(当前请求.父任务节点!=basis.请求.父任务节点||当前请求.父需求节点!=父->节点
+                ||当前请求.目标存在节点!=父->完整目标->目标存在节点
+                ||当前请求.目标!=父->完整目标->目标)return {};
+            const auto& 目标=子->完整目标->目标;
+            if(!目标.目标值域概念节点||!目标.目标比较关系概念节点)return {};
+            const auto 域=特征概念服务_.读取特征概念定义保护(*目标.目标值域概念节点);
+            const auto 比较=二次特征概念服务_.读取二次特征定义保护(*目标.目标比较关系概念节点);
+            if(域.状态==基础结构操作状态::资源失败||比较.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(域.前提已变化||比较.前提已变化||域.状态==基础结构操作状态::节点不存在
+                ||比较.状态==基础结构操作状态::节点不存在)return {};
+            贡献要求(域.状态==基础结构操作状态::已完成&&域.信息
+                &&比较.状态==基础结构操作状态::已完成&&比较.信息);
+            if(!合并需求结果保护(本次保护,域.预期节点组)
+                ||!合并需求结果保护(本次保护,比较.预期节点组))return {};
+            if(!是条件包含目标(目标,特征概念服务_,二次特征概念服务_))return {};
+            bool 支持=std::any_of(fresh.子需求项组.begin(),fresh.子需求项组.end(),[&](const auto& 项) {
+                const auto& 见证=目标.新增成员来源见证;
+                return 项.目标存在节点==子->完整目标->目标存在节点
+                    &&项.目标特征类型概念节点==目标.目标特征类型概念节点
+                    &&项.目标值域概念节点==目标.目标值域概念节点
+                    &&项.引用内容定位==目标.引用内容定位&&条件投影一致(项,域.信息->定义)
+                    &&(项.新增成员见证要求 ? 见证&&见证->要求==*项.新增成员见证要求 : !见证);
+            });
+            if(!支持) {
+                std::lock_guard 锁(新任务互斥);
+                std::set<稳定编码> 子任务组;
+                for(const auto& 引用:全局基础数据集.查询目标字段(D,任务需求字段))子任务组.insert(引用.所属节点);
+                贡献要求(子任务组.size()<=1);
+                if(!子任务组.empty()&&std::find(fresh.继续推进任务组.begin(),fresh.继续推进任务组.end(),*子任务组.begin())
+                    !=fresh.继续推进任务组.end()) {
+                    const auto 子T=*子任务组.begin();捕获因果节点保护(本次保护,{子T});
+                    const auto 子任务=读取任务信息(子T,特征服务_);
+                    贡献要求(子任务&&子任务->需求节点==D);
+                    支持=!是终结状态(子任务->当前状态);
+                }
+            }
+            return 支持;
+        };
+        if(!basis.请求.结算上下文) {
+            if(!当前子目标仍受支持()||!核同因果节点保护(本次保护)
+                ||!合并需求结果保护(许可.保护,本次保护))return {};
+            continue;
         }
+        {
+            const auto& old=basis.请求.结算上下文->所依据先天规则;
+            const auto rules=许可.读取接口->读取先天结果规则(basis.请求.目标.目标特征类型概念节点);
+            if(std::none_of(rules.begin(),rules.end(),[&](const auto& r){return r.节点==old.节点&&r.定义==old.定义;}))return {};
+        }
+        auto current=构造自身发布后因果请求(basis,D,&本次保护);
+        if(current){
+            const auto actual=许可.读取接口->逆推(*current);if(actual.状态==新因果筹办读取状态::材料已变化)return {};
+            const auto& rule=current->结算上下文->所依据先天规则;const auto createdT=查询需求任务(D);
+            if(createdT && std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b){
+                return b.规则节点==rule.节点&&b.定义==rule.定义&&b.状态==新因果筹办分支状态::有实际候选
+                    &&b.触发方式==新因果动作触发方式::被动触发&&!b.需要服务值区间组.empty()
+                    &&b.候选事实&&b.候选事实->任务节点==*createdT;}))return {};
+            if(!createdT && !结算因果需要取得来源(新任务因果筹办依据{*current,actual}))return {};
+        }else if(!当前子目标仍受支持())return {};
+        if(本次保护.empty()||!核同因果节点保护(本次保护)||!合并需求结果保护(许可.保护,本次保护))return {};
     }
-    return current == normalized;
+    return 许可;
+    }catch(const 因果读取来源变化信号&){return {};}
+}
+bool 新_任务类::核对因果执行许可(稳定编码 T,const 因果执行许可& 许可) const {
+    // caller持task锁；只比较冻结map/配置及中性完整预期，不调用跨owner业务。
+    if(T!=许可.T||许可.读取接口!=因果筹办读取_||许可.取得合同!=服务需求取得合同_
+        ||许可.结算配置!=自我服务结算配置_||许可.服务任务同步!=static_cast<bool>(服务任务同步_)
+        ||许可.同步所有者!=服务任务同步所有者_
+        ||许可.排除需求!=服务任务排除需求_||!核同因果节点保护(许可.保护))return false;
+    for(const auto& d:许可.父链){
+        const auto 原=许可.采用组.find(d.节点),今=因果子需求依据_.find(d.节点);
+        if((原==许可.采用组.end())!=(今==因果子需求依据_.end()))return false;
+        if(原!=许可.采用组.end()&&原->second!=今->second)return false;
+    }
+    return true;
 }
 
 bool 新_任务类::核验因果子需求身份(
     const 新任务因果筹办依据& basis, 稳定编码 D) const {
-    std::lock_guard 锁(新任务互斥);
+    return 提取无停止因果读取<bool>(核验因果子需求身份(basis, D, {}));
+}
+
+新因果子需求身份可停止结果 新_任务类::核验因果子需求身份(
+    const 新任务因果筹办依据& basis, 稳定编码 D, std::stop_token 停止) const {
+    try {
+        const auto 结果 = 核验因果子需求身份内部(basis, D, 停止);
+        检查因果读取停止(停止);
+        return 结果;
+    } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
+}
+
+bool 新_任务类::核验因果子需求身份内部(
+    const 新任务因果筹办依据& basis, 稳定编码 D, std::stop_token 停止,
+    std::vector<基础联合节点快照>* 字面目标域保护输出) const {
+    if(basis.请求.来源前驱上下文) {
+        检查因果读取停止(停止);
+        if(!basis.读回.来源前驱读回||basis.读回.来源前驱读回->行动前端组.size()!=1)return false;
+        const auto& 模板=basis.读回.来源前驱读回->行动前端组.front();
+        const 新因果筹办读取接口* 读取接口;
+        std::optional<因果子需求采用> 已采用;
+        {
+            auto 锁=获取因果读取任务锁(停止);读取接口=因果筹办读取_;
+            const auto 旧=因果子需求依据_.find(D);if(旧!=因果子需求依据_.end())已采用=旧->second;
+        }
+        if(!读取接口)return false;
+        std::vector<基础联合节点快照> 保护;
+        if(已采用) {
+            if(已采用->依据!=basis||已采用->来源前端!=std::optional{模板})return false;
+            return 构造已采用来源前端当前请求(*已采用,D,停止,&保护).has_value();
+        }
+        std::optional<新服务取得目标实例信息> 实例;
+        if(模板.种类!=新来源前驱前端种类::取得服务对象) {
+            if(!模板.H)return false;
+            新服务取得目标实例键 键;键.父取得任务=basis.请求.父任务节点;键.目标槽类型=模板.目标槽类型;
+            键.服务对象=*模板.H;键.正式根路径=模板.正式根路径;
+            const auto 读回=读取来源前驱目标实例(键);
+            if(读回.状态==新服务取得目标实例状态::资源失败)throw std::bad_alloc{};
+            if(读回.状态!=新服务取得目标实例状态::已复用||!读回.信息)return false;
+            实例=读回.信息;
+        }
+        const auto 当前=构造来源前端自身发布后请求(basis,模板,实例,D,停止,&保护);
+        if(!当前)return false;
+        const auto 实际=读取接口->逆推(*当前);
+        if(实际.状态==新因果筹办读取状态::材料已变化||!实际.来源前驱读回
+            ||std::none_of(实际.来源前驱读回->行动前端组.begin(),实际.来源前驱读回->行动前端组.end(),
+                [&](const auto& 项){return 同一来源前端目标(项,模板);}))return false;
+        if(!合并需求结果保护(保护,实际.来源前驱读回->完整保护))return false;
+        return 核同因果节点保护(保护);
+    }
+    auto 锁 = 获取因果读取任务锁(停止);
+    检查因果读取停止(停止);
     const auto parent = 获取任务(basis.请求.父任务节点);
+    检查因果读取停止(停止);
     const auto pd = parent ? 需求服务_.获取需求(parent->需求节点) : std::nullopt;
+    检查因果读取停止(停止);
     const auto child = 需求服务_.获取需求(D);
     if (!pd || !child || pd->节点 != basis.请求.父需求节点
         || pd->目标存在节点 != basis.请求.目标存在节点 || pd->目标 != basis.请求.目标
@@ -11578,15 +14977,23 @@ bool 新_任务类::核验因果子需求身份(
     const 新需求完整目标 target{child->目标存在节点, child->目标};
     if (const auto old = 因果子需求依据_.find(D); old != 因果子需求依据_.end())
         return old->second.依据 == basis && old->second.子目标 == target;
-    if (是服务需求取得目标(*child) && 结算因果需要取得来源(basis)) return true;
+    检查因果读取停止(停止);
+    if (是服务需求取得目标(*child) && 结算因果需要取得来源(basis, 停止)) {
+        return 服务需求取得合同_&&child->目标.新增成员来源见证
+            &&child->目标.新增成员来源见证->要求==新需求新增成员见证要求{服务需求取得合同_->服务任务集合类型,{},{}};
+    }
+    if(child->目标.新增成员来源见证)return false;
     for (const auto& node : basis.读回.通用反查图.节点组) {
+        检查因果读取停止(停止);
         if (!node.状态 || !node.参与者 || node.类型 != 反向因果端类型::状态
             || node.状态->特征类型概念节点 != child->目标.目标特征类型概念节点) continue;
         稳定编码 E{};
         if (node.参与者->类别 == 反向因果参与者键类::实际存在) E = node.参与者->实际存在节点;
         else if (node.参与者->类别 == 反向因果参与者键类::输入符号) {
-            for (const auto& binding : basis.请求.通用查询.参与者组)
+            for (const auto& binding : basis.请求.通用查询.参与者组) {
+                检查因果读取停止(停止);
                 if (binding.标识 == node.参与者->输入标识 && binding.实际存在节点) E = *binding.实际存在节点;
+            }
         }
         if (E != child->目标存在节点) continue;
         if (const auto* domain = std::get_if<反向因果概念域约束>(&node.状态->约束)) {
@@ -11596,162 +15003,616 @@ bool 新_任务类::核验因果子需求身份(
             if (const auto* direct = std::get_if<反向因果直接I64区间约束>(&node.状态->约束)) range = direct->值域;
             if (const auto* exact = std::get_if<反向因果准确约束>(&node.状态->约束))
                 if (const auto* value = std::get_if<std::int64_t>(&exact->值)) range = 特征概念I64闭区间{*value,*value};
-            const auto actualDomain = 特征概念服务_.获取特征概念(*child->目标.目标值域概念节点);
-            if (actualDomain && range && actualDomain->值域 == 特征概念值域{std::vector<特征概念I64闭区间>{*range}}) return true;
+            if(!range)continue;
+            检查因果读取停止(停止);
+            const auto actualDomain=特征概念服务_.读取特征概念定义保护(*child->目标.目标值域概念节点);
+            检查因果读取停止(停止);
+            if(actualDomain.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(actualDomain.前提已变化||actualDomain.状态==基础结构操作状态::节点不存在) {
+                if(字面目标域保护输出)throw 因果读取来源变化信号{};
+                return false;
+            }
+            贡献要求(actualDomain.状态==基础结构操作状态::已完成&&actualDomain.信息);
+            if(actualDomain.信息->定义.值域==特征概念值域{std::vector<特征概念I64闭区间>{*range}}) {
+                if(字面目标域保护输出&&!合并需求结果保护(*字面目标域保护输出,actualDomain.预期节点组))
+                    throw 因果读取来源变化信号{};
+                return true;
+            }
         }
     }
+    检查因果读取停止(停止);
     return false;
+}
+
+新任务因果承接可停止结果 新_任务类::承接已确认来源前端子需求(
+    const 新任务因果筹办依据& 依据,稳定编码 子G,std::stop_token 停止) {
+    新任务治理承接结果 结果;结果.需求节点=子G;结果.状态=新任务治理承接状态::任务操作未完成;
+    bool 写区已进入=false;
+    try {
+        检查因果读取停止(停止);
+        if(!核验因果子需求身份内部(依据,子G,停止))return 结果;
+        贡献要求(依据.读回.来源前驱读回&&依据.读回.来源前驱读回->行动前端组.size()==1);
+        const auto 模板=依据.读回.来源前驱读回->行动前端组.front();
+        std::optional<新服务取得目标实例信息> 实例;
+        if(模板.种类!=新来源前驱前端种类::取得服务对象) {
+            贡献要求(模板.H.has_value());
+            新服务取得目标实例键 键;键.父取得任务=依据.请求.父任务节点;键.目标槽类型=模板.目标槽类型;
+            键.正式根路径=模板.正式根路径;键.服务对象=*模板.H;
+            const auto 读回=读取来源前驱目标实例(键);
+            if(读回.状态==新服务取得目标实例状态::资源失败)throw std::bad_alloc{};
+            if(读回.状态!=新服务取得目标实例状态::已复用||!读回.信息)return 结果;
+            实例=读回.信息;
+        }
+        const auto 子需求=需求服务_.获取需求(子G);if(!子需求)return 结果;
+        因果子需求采用 采用{依据,{子需求->目标存在节点,子需求->目标}};
+        采用.来源前端=模板;采用.目标实例=实例;
+        std::optional<因果子需求采用> 旧采用;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            const auto 旧=因果子需求依据_.find(子G);if(旧!=因果子需求依据_.end())旧采用=旧->second;
+        }
+        std::vector<基础联合节点快照> 保护;
+        const auto 当前=旧采用 ? 构造已采用来源前端当前请求(*旧采用,子G,停止,&保护)
+            : 构造来源前端自身发布后请求(依据,模板,实例,子G,停止,&保护);
+        if(!当前||保护.empty())return 结果;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(!核同因果节点保护(保护))return 结果;
+            const auto 旧=因果子需求依据_.find(子G);
+            if(旧!=因果子需求依据_.end()&&旧->second!=采用)return 结果;
+            // self已正式发布并确认该G；此处只承接同一G，不由task新建需求。
+            检查因果读取停止(停止);写区已进入=true;结果.写入已尝试=true;
+            因果子需求依据_.try_emplace(子G,采用);
+            结果=建立需求任务关联(子G);结果.写入已尝试=true;
+        }
+        if(!结果.任务||(结果.状态!=新任务治理承接状态::已读回&&结果.状态!=新任务治理承接状态::既有终结任务))return 结果;
+        const bool 既有终结=结果.状态==新任务治理承接状态::既有终结任务;
+        结果.状态=新任务治理承接状态::任务操作未完成;
+        const auto 子T=结果.任务->节点;
+        const auto 子批=读取任务需求准备保护批(子T);
+        const auto 许可=读取因果执行许可(子T,&子批);
+        结果.当前复核=复核任务需求(子T);
+        if(子批.结果.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+        if(结果.当前复核->状态==新需求当前满足状态::资源失败)throw std::bad_alloc{};
+        if(!许可||子批.结果.状态==新任务需求准备状态::来源前提已变化)return 结果;
+        std::lock_guard 锁(新任务互斥);
+        if(!核同任务需求准备保护批(子批)||!核对因果执行许可(子T,*许可))return 结果;
+        if(既有终结){结果.状态=新任务治理承接状态::既有终结任务;return 结果;}
+        if(结果.当前复核->状态==新需求当前满足状态::已满足){结果.状态=新任务治理承接状态::需求当前已满足;return 结果;}
+        const auto 任务=获取任务(子T);if(!任务)return 结果;
+        结果.状态=新任务治理承接状态::已读回;
+        if(任务->当前状态==新任务状态::已建立||任务->当前状态==新任务状态::等待条件) {
+            结果.状态=新任务治理承接状态::任务操作未完成;
+            auto 激活保护=子批.保护;
+            if(!合并需求结果保护(激活保护,许可->保护))return 结果;
+            结果.重新启用结果=修改任务状态受保护(子T,新任务状态::待查找方法,激活保护);
+            if(*结果.重新启用结果!=新任务操作状态::已修改&&*结果.重新启用结果!=新任务操作状态::无变化)return 结果;
+            const auto 读回=获取任务(子T);
+            if(!读回||读回->需求节点!=子G||读回->当前状态!=新任务状态::待查找方法) {
+                结果.状态=新任务治理承接状态::读回不一致;return 结果;
+            }
+            结果.任务=读回;结果.状态=新任务治理承接状态::已重新启用;
+        }
+        return 结果;
+    } catch(const 因果读取停止信号&) {
+        if(写区已进入)throw std::logic_error("来源前端承接写后错误响应停止");
+        return 新任务因果读取取消{};
+    } catch(const 因果读取来源变化信号&) {结果.状态=新任务治理承接状态::任务操作未完成;return 结果;}
+    catch(const std::bad_alloc&) {结果.状态=新任务治理承接状态::资源失败;return 结果;}
+    catch(const std::length_error&) {结果.状态=新任务治理承接状态::资源失败;return 结果;}
 }
 
 新任务治理承接结果 新_任务类::承接已确认因果子需求(
     const 新任务因果筹办依据& basis, 稳定编码 D) {
+    return 提取无停止因果读取<新任务治理承接结果>(承接已确认因果子需求(basis,D,{}));
+}
+
+新任务因果承接可停止结果 新_任务类::承接已确认因果子需求(
+    const 新任务因果筹办依据& basis, 稳定编码 D,std::stop_token 停止) {
+    if(basis.请求.来源前驱上下文)return 承接已确认来源前端子需求(basis,D,停止);
+    static_assert(std::is_nothrow_move_constructible_v<新任务治理承接结果>
+        &&std::is_nothrow_move_assignable_v<新任务治理承接结果>);
+    新任务治理承接结果 结果;结果.需求节点=D;结果.状态=新任务治理承接状态::任务操作未完成;
+    bool 承接写区已进入=false;
+    const auto 正常返回=[&]() -> 新任务因果承接可停止结果 {
+        if(!承接写区已进入&&停止.stop_requested())return 新任务因果读取取消{};
+        return 新任务因果承接可停止结果{std::in_place_type<新任务治理承接结果>,std::move(结果)};
+    };
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+    // 最外函数尚未取业务锁；嵌套准备/提交只填当前线程的固定大小样本。
+    struct 任务状态前提出口观察 final {
+        任务状态前提样本 样本;
+        任务状态前提样本* 原样本 = 当前任务状态前提样本;
+        任务状态前提出口观察() noexcept {
+            当前任务状态前提样本 = &样本;
+            调试内部::清空特征附加预期诊断();
+        }
+        ~任务状态前提出口观察() noexcept {
+            当前任务状态前提样本 = 原样本;
+            try {
+                const auto 差异 = 调试内部::取回特征附加预期诊断();
+                if (样本.阶段 == 0 && 样本.写入状态 == 0 && 差异.empty()) return;
+                std::wostringstream 文本;
+                文本 << L"任务=" << 样本.T.值 << L"；状态特征=" << 样本.F.值
+                    << L"；原状态=" << static_cast<int>(样本.原状态)
+                    << L"；新状态=" << static_cast<int>(样本.新状态)
+                    << L"；附加保护数=" << 样本.保护数 << L"；阶段=" << 样本.阶段
+                    << L"；前状态=" << 样本.前状态.值
+                    << L"；前状态字段数=" << 样本.前状态字段数
+                    << L"；准备状态=" << 样本.准备状态 << L"；提交状态=" << 样本.提交状态
+                    << L"；写入状态=" << 样本.写入状态 << 差异;
+                (void)记录调试日志(L"TASK_STATE_PREMISE", L"任务状态发表",
+                    L"承接已确认因果子需求", 文本.str());
+            } catch (...) {} // 日志分配/输出失败不改变正式返回或异常。
+        }
+    } 状态前提观察;
+#endif
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
+    // 早于try内业务锁创建，所有局部锁析构后只输出本次已持有材料。
+    struct 因果承接出口观察 final {
+        稳定编码 父任务, 父需求, 子需求;
+        int 退出行 = 0;
+        std::uint_least32_t 来源变化行 = 0;
+        const int 原异常数 = std::uncaught_exceptions();
+        const std::chrono::steady_clock::time_point 开始 = std::chrono::steady_clock::now();
+        ~因果承接出口观察() noexcept {
+            try {
+                std::wostringstream 文本;
+                文本 << L"父任务=" << 父任务.值 << L"；父需求=" << 父需求.值
+                    << L"；子需求=" << 子需求.值 << L"；退出行=" << 退出行
+                    << L"；来源变化抛出行=" << 来源变化行
+                    << L"；异常展开=" << (std::uncaught_exceptions() > 原异常数)
+                    << L"；耗时毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::steady_clock::now() - 开始).count();
+                (void)记录调试日志(L"CAUSAL_ADOPTION", L"任务因果承接",
+                    L"承接已确认因果子需求", 文本.str());
+            } catch (...) {} // 诊断不可改变正式返回或异常传播。
+        }
+    } 观察{basis.请求.父任务节点, basis.请求.父需求节点, D};
+#define HY_CAUSAL_ADOPTION_RETURN() do { 观察.退出行 = __LINE__; return 正常返回(); } while (false)
+#else
+#define HY_CAUSAL_ADOPTION_RETURN() return 正常返回()
+#endif
+    try{
+    检查因果读取停止(停止);
+    std::vector<基础联合节点快照> 保护;
+    捕获因果节点保护(保护,{D,basis.请求.父任务节点,basis.请求.父需求节点});
+    检查因果读取停止(停止);
     const 新因果筹办读取接口* reader;
     {
-        std::lock_guard 锁(新任务互斥); reader = 因果筹办读取_;
+        auto 锁=获取因果读取任务锁(停止); reader = 因果筹办读取_;
     }
     贡献要求(reader != nullptr);
-    // 锁外核正式规则/路径；原集合材料只保留为已经发布D的来源证据。
-    const auto ruleRead = reader->逆推(basis.请求);
-    新任务治理承接结果 refused; refused.需求节点 = D;
-    refused.状态 = 新任务治理承接状态::任务操作未完成;
-    if (!核验因果子需求身份(basis, D)) return refused;
-    const bool pathChanged = ruleRead.状态 == 新因果筹办读取状态::材料已变化
-        || ruleRead.通用反查图 != basis.读回.通用反查图;
-    // 旧集合材料可因本次D/T发布而失效，不能在核对这项唯一自身变化前提前拒绝。
+    // 原提议保留发布来源；本次是否仍需此目标由当前具体材料决定。
+    检查因果读取停止(停止);
+    // 结算来源仍须由当前正式规则支持，不以旧集合冻结其它任务变化。
     if (basis.请求.结算上下文) {
         const auto& priorRule = basis.请求.结算上下文->所依据先天规则;
+        检查因果读取停止(停止);
         const auto rules = reader->读取先天结果规则(basis.请求.目标.目标特征类型概念节点);
+        检查因果读取停止(停止);
         if (std::none_of(rules.begin(), rules.end(), [&](const auto& item) {
+            检查因果读取停止(停止);
             return item.节点 == priorRule.节点 && item.定义 == priorRule.定义;
-        })) return refused;
+        })) HY_CAUSAL_ADOPTION_RETURN();
     }
-    std::optional<新因果筹办请求> checkedOwn;
-    if (pathChanged) {
-        checkedOwn = 构造自身发布后因果请求(basis,D);
-        if (!checkedOwn) return refused;
+    检查因果读取停止(停止);
+    const auto checkedOwn=basis.请求.结算上下文
+        ? 构造自身发布后因果请求(basis,D,&保护,停止) : std::nullopt;
+    检查因果读取停止(停止);
+    if (!checkedOwn) {
+        检查因果读取停止(停止);
+        if (!核验因果子需求身份内部(basis,D,停止,&保护)) HY_CAUSAL_ADOPTION_RETURN();
+        检查因果读取停止(停止);
+    }
+    if (checkedOwn) {
         const auto actual = reader->逆推(*checkedOwn);
-        if (actual.状态 == 新因果筹办读取状态::材料已变化) return refused;
+        检查因果读取停止(停止);
+        if (actual.状态 == 新因果筹办读取状态::材料已变化) HY_CAUSAL_ADOPTION_RETURN();
         const auto& rule = checkedOwn->结算上下文->所依据先天规则;
-        const auto createdT = 查询需求任务(D);
-        if (!createdT) return refused;
-        if (std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b) {
+        const auto createdT = 提取因果正常读取<std::optional<稳定编码>>(查询需求任务(D,停止));
+        检查因果读取停止(停止);
+        if (createdT && std::none_of(actual.分支组.begin(),actual.分支组.end(),[&](const auto& b) {
+            检查因果读取停止(停止);
             return b.规则节点 == rule.节点 && b.定义 == rule.定义
                 && b.状态 == 新因果筹办分支状态::有实际候选
                 && b.触发方式 == 新因果动作触发方式::被动触发
                 && !b.需要服务值区间组.empty() && b.候选事实 && b.候选事实->任务节点 == *createdT;
-        })) return refused;
+        })) HY_CAUSAL_ADOPTION_RETURN();
+        if (!createdT && !结算因果需要取得来源(新任务因果筹办依据{*checkedOwn,actual},停止)) HY_CAUSAL_ADOPTION_RETURN();
     }
-    const auto fresh = 提议任务因果子需求(basis.请求.父任务节点, basis.请求.当前等待边组);
-    std::lock_guard 锁(新任务互斥);
-    if (checkedOwn) {
-        const auto currentOwn = 构造自身发布后因果请求(basis,D);
-        if (!currentOwn || *currentOwn != *checkedOwn) return refused;
-    } else {
-        const auto rule = basis.请求.结算上下文
-            ? std::optional<新先天因果信息>{basis.请求.结算上下文->所依据先天规则} : std::nullopt;
-        if (构造因果筹办请求(basis.请求.父任务节点,rule,basis.请求.当前等待边组) != basis.请求) return refused;
+    检查因果读取停止(停止);
+    const auto fresh = 提取因果正常读取<新任务因果子需求提议>(提议任务因果子需求(basis.请求.父任务节点,basis.请求.当前等待边组,停止));
+    if(fresh.状态==新任务因果子需求提议状态::资源延后){
+        结果.建立结果=新任务建立结果{};结果.建立结果->状态=新任务操作状态::资源失败;HY_CAUSAL_ADOPTION_RETURN();
     }
+    if(fresh.状态==新任务因果子需求提议状态::材料已变化)HY_CAUSAL_ADOPTION_RETURN();
+    检查因果读取停止(停止);
+    auto 锁=获取因果读取任务锁(停止);
+    if(reader!=因果筹办读取_||!核同因果节点保护(保护))HY_CAUSAL_ADOPTION_RETURN();
+    检查因果读取停止(停止);
     const auto parent = 获取任务(basis.请求.父任务节点);
+    检查因果读取停止(停止);
     const auto pd = parent ? 需求服务_.获取需求(parent->需求节点) : std::nullopt;
+    检查因果读取停止(停止);
     const auto child = 需求服务_.获取需求(D);
+    检查因果读取停止(停止);
     if (!pd || !child || pd->节点 != basis.请求.父需求节点 || pd->目标 != basis.请求.目标
         || pd->目标存在节点 != basis.请求.目标存在节点 || child->父需求节点 != pd->节点
         || child->来源类型 != 新需求来源类型::任务子目标 || child->来源承接节点 != parent->节点
         || pd->活动状态 == 新需求活动状态::失活 || child->活动状态 == 新需求活动状态::失活
-        || !是条件包含目标(child->目标, 特征概念服务_, 二次特征概念服务_)) return refused;
+        || !是条件包含目标(child->目标, 特征概念服务_, 二次特征概念服务_)) HY_CAUSAL_ADOPTION_RETURN();
+    检查因果读取停止(停止);
     const 新需求完整目标 target{child->目标存在节点, child->目标};
     const auto old = 因果子需求依据_.find(D);
-    bool ownPublication = false;
     bool approved = old != 因果子需求依据_.end() && old->second.依据 == basis && old->second.子目标 == target;
-    if (!approved && fresh.依据 && *fresh.依据 == basis)
+    if (!approved && fresh.依据
+        &&(fresh.状态==新任务因果子需求提议状态::已形成||fresh.状态==新任务因果子需求提议状态::无需子需求)
+        &&fresh.依据->请求.父任务节点==basis.请求.父任务节点
+        &&fresh.依据->请求.父需求节点==basis.请求.父需求节点
+        &&fresh.依据->请求.目标存在节点==basis.请求.目标存在节点
+        &&fresh.依据->请求.目标==basis.请求.目标)
         approved = std::any_of(fresh.子需求项组.begin(), fresh.子需求项组.end(), [&](const auto& goal) {
+            检查因果读取停止(停止);
+            if(goal.新增成员见证要求
+                ? (!child->目标.新增成员来源见证||child->目标.新增成员来源见证->要求!=*goal.新增成员见证要求)
+                : child->目标.新增成员来源见证.has_value())return false;
+            检查因果读取停止(停止);
+            const auto relation=child->目标.目标比较关系概念节点
+                ? 二次特征概念服务_.获取二次特征概念(*child->目标.目标比较关系概念节点) : std::nullopt;
+            检查因果读取停止(停止);
+            const auto domain=特征概念服务_.获取特征概念(goal.目标值域概念节点);
+            检查因果读取停止(停止);
+            if(!relation||!domain||!条件投影一致(goal,*domain)||relation->参照特征概念节点!=child->目标.目标值域概念节点)return false;
+            if(goal.新增成员见证要求&&(relation->结果域种类组.empty()
+                ||!std::all_of(relation->结果域种类组.begin(),relation->结果域种类组.end(),
+                    [&](auto r){检查因果读取停止(停止);return r==二次特征结果域种类::包含于参照值域;})))return false;
             return goal.目标存在节点 == child->目标存在节点
                 && goal.目标特征类型概念节点 == child->目标.目标特征类型概念节点
-                && goal.目标值域概念节点 == child->目标.目标值域概念节点;
+                && goal.目标值域概念节点 == child->目标.目标值域概念节点
+                && child->目标.引用内容定位==goal.引用内容定位&&child->目标.目标形式==新需求目标形式::值
+                &&!child->目标.目标变化方向;
         });
-    // 通用扫描可能已先为这个D建立唯一T；仅接受原集合精确增加该T。
-    if ((!approved || pathChanged) && 是服务需求取得目标(*child)) {
-        const auto own = 构造自身发布后因果请求(basis, D);
-        approved = own.has_value();
-        ownPublication = approved;
-    }
-    if (!approved || (pathChanged && !ownPublication)) return refused;
+    // 通用扫描可能已先为本D建立唯一T；沿用该分支的实际来源条件。
+    if (!approved && 是服务需求取得目标(*child)) approved = checkedOwn.has_value();
+    if (!approved) HY_CAUSAL_ADOPTION_RETURN();
     // 已采用的D不可改绑到另一条因果路径；尤其不能重解释已经发布的X/A/K。
     if (old != 因果子需求依据_.end()
-        && (old->second.依据 != basis || old->second.子目标 != target)) return refused;
+        && (old->second.依据 != basis || old->second.子目标 != target)) HY_CAUSAL_ADOPTION_RETURN();
+    if(old!=因果子需求依据_.end()) {
+        检查因果读取停止(停止);const auto 既有任务=查询需求任务(D);检查因果读取停止(停止);
+        if(既有任务) {
+            const auto 既有=读回需求任务(D,*既有任务);
+            if(既有.状态==新任务治理承接状态::资源失败) {
+                结果.状态=新任务治理承接状态::资源失败;HY_CAUSAL_ADOPTION_RETURN();
+            }
+            贡献要求((既有.状态==新任务治理承接状态::已读回||既有.状态==新任务治理承接状态::既有终结任务)
+                &&既有.任务&&既有.虚拟存在&&既有.任务->需求节点==D&&既有.任务->节点==*既有任务
+                &&既有.任务->任务虚拟存在节点==既有.虚拟存在->节点&&既有.虚拟存在->任务节点==*既有任务);
+            检查因果读取停止(停止);
+        }
+    }
+    // 唯一取消门。以下原有多步写后尾段必须完整返回真实前缀，不能再响应token。
+    检查因果读取停止(停止);承接写区已进入=true;结果.写入已尝试=true;
     因果子需求依据_.try_emplace(D, 因果子需求采用{basis, target});
-    auto result = 建立需求任务关联(D);
-    if (!result.任务 || (result.状态 != 新任务治理承接状态::已读回
-        && result.状态 != 新任务治理承接状态::既有终结任务)) return result;
-    result.当前复核 = 复核任务需求(result.任务->节点);
-    if (result.状态 == 新任务治理承接状态::既有终结任务) return result; // 不重开旧X/A/K/R/U。
-    if (result.当前复核->状态 == 新需求当前满足状态::已满足) {
-        result.状态 = 新任务治理承接状态::需求当前已满足; return result;
+    结果=建立需求任务关联(D);结果.写入已尝试=true;
+    if (!结果.任务 || (结果.状态 != 新任务治理承接状态::已读回
+        && 结果.状态 != 新任务治理承接状态::既有终结任务)) HY_CAUSAL_ADOPTION_RETURN();
+    const auto 子T=结果.任务->节点;
+    锁.unlock();
+    const auto 子批=读取任务需求准备保护批(子T);
+    const auto 子许可=读取因果执行许可(子T,&子批);
+    结果.当前复核 = 复核任务需求(子T);
+    锁.lock();
+    if(!子许可||!核对因果执行许可(子T,*子许可)||!核同任务需求准备保护批(子批)) {
+        结果.状态=新任务治理承接状态::任务操作未完成;HY_CAUSAL_ADOPTION_RETURN();
     }
-    if (result.任务->当前状态 == 新任务状态::已建立 || result.任务->当前状态 == 新任务状态::等待条件) {
-        result.重新启用结果 = 修改任务状态(result.任务->节点, 新任务状态::待查找方法);
-        if (*result.重新启用结果 != 新任务操作状态::已修改 && *result.重新启用结果 != 新任务操作状态::无变化)
-            return refused;
-        result.任务 = 获取任务(result.任务->节点);
-        result.状态 = 新任务治理承接状态::已重新启用;
+    if(子批.结果.状态==新任务需求准备状态::资源延后)throw std::bad_alloc{};
+    if(子批.结果.状态==新任务需求准备状态::来源前提已变化) {
+        结果.状态=新任务治理承接状态::任务操作未完成;HY_CAUSAL_ADOPTION_RETURN();
     }
-    return result;
+    if (结果.状态 == 新任务治理承接状态::既有终结任务) HY_CAUSAL_ADOPTION_RETURN(); // 不重开旧X/A/K/R/U。
+    if (结果.当前复核->状态 == 新需求当前满足状态::已满足) {
+        结果.状态 = 新任务治理承接状态::需求当前已满足; HY_CAUSAL_ADOPTION_RETURN();
+    }
+    if (结果.任务->当前状态 == 新任务状态::已建立 || 结果.任务->当前状态 == 新任务状态::等待条件) {
+        auto 激活保护=子批.保护;if(!合并需求结果保护(激活保护,子许可->保护)) {
+            结果.状态=新任务治理承接状态::任务操作未完成;HY_CAUSAL_ADOPTION_RETURN();
+        }
+        结果.重新启用结果 = 修改任务状态受保护(子T, 新任务状态::待查找方法,激活保护);
+#ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
+        状态前提观察.样本.写入状态 = static_cast<int>(*结果.重新启用结果);
+#endif
+        if (*结果.重新启用结果 != 新任务操作状态::已修改 && *结果.重新启用结果 != 新任务操作状态::无变化) {
+            结果.状态=新任务治理承接状态::任务操作未完成;HY_CAUSAL_ADOPTION_RETURN();
+        }
+        auto 任务读回=获取任务(子T);
+        if(!任务读回||任务读回->节点!=子T||任务读回->需求节点!=D
+            ||任务读回->任务虚拟存在节点!=结果.任务->任务虚拟存在节点||任务读回->当前状态!=新任务状态::待查找方法) {
+            结果.状态=新任务治理承接状态::读回不一致;HY_CAUSAL_ADOPTION_RETURN();
+        }
+        结果.任务=std::move(任务读回);结果.状态 = 新任务治理承接状态::已重新启用;
+    }
+    HY_CAUSAL_ADOPTION_RETURN();
+    }catch(const 因果读取停止信号&) {
+        if(承接写区已进入)throw std::logic_error("因果承接写后尾段错误响应停止");
+        return 新任务因果读取取消{};
+    }catch(const 因果读取来源变化信号& 变化){
+#ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
+        观察.来源变化行 = 变化.触发行;
+#else
+        (void)变化;
+#endif
+        结果.状态=新任务治理承接状态::任务操作未完成;HY_CAUSAL_ADOPTION_RETURN();
+    }
+    catch(const std::bad_alloc&) {
+        if(承接写区已进入)结果.状态=新任务治理承接状态::资源失败;
+        else {结果.建立结果=新任务建立结果{};结果.建立结果->状态=新任务操作状态::资源失败;}
+        HY_CAUSAL_ADOPTION_RETURN();
+    }
+    catch(const std::length_error&) {
+        if(承接写区已进入)结果.状态=新任务治理承接状态::资源失败;
+        else {结果.建立结果=新任务建立结果{};结果.建立结果->状态=新任务操作状态::资源失败;}
+        HY_CAUSAL_ADOPTION_RETURN();
+    }
+#undef HY_CAUSAL_ADOPTION_RETURN
 }
 
 新任务因果复核结果 新_任务类::复核任务因果等待(
     const 新任务因果等待依据& waiting, const std::vector<新因果任务等待边>& edges) const {
-    const auto& request = waiting.采用依据.请求;
-    bool satisfied = false;
-    {
-        std::lock_guard 锁(新任务互斥);
-        const auto d = 需求服务_.获取需求(request.父需求节点);
-        if (!d || d->活动状态 == 新需求活动状态::失活) return {新任务因果复核状态::原需求失活, {}, {request.父需求节点}};
-        if (d->目标存在节点 != request.目标存在节点 || d->目标 != request.目标)
-            return {新任务因果复核状态::条件发生变化需重新筹办, {}, {d->节点}};
-        satisfied = 复核任务需求(request.父任务节点).状态 == 新需求当前满足状态::已满足;
-        if (request.结算上下文) for (const auto& fact : request.结算上下文->候选事实组)
-            if (fact.完成结算节点) if (const auto u = 读取任务最终消费(*fact.完成结算节点); u && !u->收尾阶段节点)
-                return {新任务因果复核状态::既有入账待收尾, {}, {fact.任务节点, u->消费节点}};
-    }
-    if (satisfied) return {新任务因果复核状态::原目标当前满足待完成核验, {}, {request.父需求节点}};
-    auto fresh = 提议任务因果子需求(request.父任务节点, edges);
-    const bool same = fresh.依据 && *fresh.依据 == waiting.采用依据;
-    return {same ? 新任务因果复核状态::仍等条件 : 新任务因果复核状态::条件发生变化需重新筹办,
-        std::move(fresh), same ? std::vector<稳定编码>{} : std::vector<稳定编码>{request.父任务节点, request.父需求节点}};
+    return 提取无停止因果读取<新任务因果复核结果>(复核任务因果等待(waiting,edges,{}));
 }
 
-新任务最终消费准备结果 新_任务类::准备任务最终消费(
-    const 新服务值最终来源定位& loc, 稳定编码 method) noexcept {
-    return 准备任务最终消费(loc, 新结算能力引用{新结算能力类别::历史方法, method});
+// 无适用错误分支：仅解释本次值式读回，不查仓库、不授执行许可。
+bool 新_任务类::支持当前被动条件等待(const 新任务因果子需求提议& 当前) noexcept {
+    if(!当前.依据)return false;
+    const auto& 读回=当前.依据->读回;
+    const bool 普通被动=当前.状态==新任务因果子需求提议状态::无需子需求
+        &&std::any_of(读回.分支组.begin(),读回.分支组.end(),[](const auto& 分支) {
+            return 分支.触发方式==新因果动作触发方式::被动触发
+                &&(分支.状态==新因果筹办分支状态::有实际候选||分支.状态==新因果筹办分支状态::既有消费待收尾)
+                &&!分支.全部条件.empty()
+                &&std::all_of(分支.全部条件.begin(),分支.全部条件.end(),[](const auto& 条件) {
+                    return 条件.状态==新因果条件读回状态::满足||条件.状态==新因果条件读回状态::尚未具备;
+                });
+        });
+    if(普通被动)return true;
+    if(!读回.派生关系读回)return false;
+    const auto& 派生=*读回.派生关系读回;
+    return 派生.状态==新派生源反推状态::已形成
+        &&std::any_of(派生.关系分支组.begin(),派生.关系分支组.end(),[](const auto& 分支) {
+            return 分支.正式定义.触发方式==新因果动作触发方式::被动触发
+                &&!分支.全部条件.empty()
+                &&std::all_of(分支.全部条件.begin(),分支.全部条件.end(),[](const auto& 条件) {
+                    return 条件.状态==新关系筹办条件状态::满足||条件.状态==新关系筹办条件状态::尚未具备;
+                })&&std::none_of(分支.缺口组.begin(),分支.缺口组.end(),[](const auto& 缺口) {
+                    return 缺口.种类!=新关系筹办边界::前提尚未具备
+                        &&缺口.种类!=新关系筹办边界::后继投影成员目标未具备;
+                });
+        });
+}
+
+新任务因果复核可停止结果 新_任务类::复核任务因果等待(
+    const 新任务因果等待依据& waiting,const std::vector<新因果任务等待边>& edges,std::stop_token 停止) const {
+    const auto 正常返回=[&](新任务因果复核结果 结果) -> 新任务因果复核可停止结果 {
+        if(停止.stop_requested())return 新任务因果读取取消{};
+        return 新任务因果复核可停止结果{std::in_place_type<新任务因果复核结果>,std::move(结果)};
+    };
+    try{
+    检查因果读取停止(停止);
+    const auto& request = waiting.采用依据.请求;
+    const auto 当前需求=复核任务需求(request.父任务节点);
+    检查因果读取停止(停止);
+    bool satisfied = false;
+    {
+        auto 锁=获取因果读取任务锁(停止);
+        const auto d = 需求服务_.获取需求(request.父需求节点);
+        检查因果读取停止(停止);
+        if (!d || d->活动状态 == 新需求活动状态::失活) return 正常返回({新任务因果复核状态::原需求失活, {}, {request.父需求节点}});
+        if (d->目标存在节点 != request.目标存在节点 || d->目标 != request.目标)
+            return 正常返回({新任务因果复核状态::条件发生变化需重新筹办, {}, {d->节点}});
+        satisfied = 当前需求.状态 == 新需求当前满足状态::已满足;
+        if (request.结算上下文) for (const auto& fact : request.结算上下文->候选事实组) {
+            检查因果读取停止(停止);
+            if (fact.完成结算节点) {
+                const auto u = 提取已核验任务最终消费(*fact.完成结算节点);
+                检查因果读取停止(停止);
+                if(u&&!u->收尾阶段节点)return 正常返回({新任务因果复核状态::既有入账待收尾, {}, {fact.任务节点,u->消费节点}});
+            }
+        }
+    }
+    检查因果读取停止(停止);
+    if (satisfied) return 正常返回({新任务因果复核状态::原目标当前满足待完成核验, {}, {request.父需求节点}});
+    if(request.来源前驱上下文) {
+        bool 仍有效=false;
+        std::vector<基础联合节点快照> 保护;
+        if(waiting.来源前端&&waiting.采用依据.读回.来源前驱读回
+            &&waiting.采用依据.读回.来源前驱读回->行动前端组==std::vector<新来源前驱内容模板>{*waiting.来源前端}
+            &&waiting.子需求节点组.size()<=1) {
+            if(waiting.子需求节点组.empty()) {
+                仍有效=构造来源前端自身发布后请求(waiting.采用依据,*waiting.来源前端,
+                    waiting.目标实例,{},停止,&保护).has_value();
+            } else {
+                const auto 子G=waiting.子需求节点组.front();
+                std::optional<因果子需求采用> 采用;
+                {
+                    auto 锁=获取因果读取任务锁(停止);
+                    const auto 项=因果子需求依据_.find(子G);if(项!=因果子需求依据_.end())采用=项->second;
+                }
+                if(采用&&采用->依据==waiting.采用依据&&采用->来源前端==waiting.来源前端&&采用->目标实例==waiting.目标实例)
+                    仍有效=构造已采用来源前端当前请求(*采用,子G,停止,&保护).has_value();
+                else 仍有效=构造来源前端自身发布后请求(waiting.采用依据,*waiting.来源前端,
+                    waiting.目标实例,子G,停止,&保护).has_value();
+            }
+        }
+        auto 来源fresh=提取因果正常读取<新任务因果子需求提议>(提议任务因果子需求(request.父任务节点,edges,停止));
+        if(来源fresh.状态==新任务因果子需求提议状态::资源延后)仍有效=false;
+        if(仍有效&&!核同因果节点保护(保护))仍有效=false;
+        return 正常返回({仍有效 ? 新任务因果复核状态::仍等条件 : 新任务因果复核状态::条件发生变化需重新筹办,
+            std::move(来源fresh),仍有效 ? std::vector<稳定编码>{} : std::vector<稳定编码>{request.父任务节点,request.父需求节点}});
+    }
+    auto fresh = 提取因果正常读取<新任务因果子需求提议>(提议任务因果子需求(request.父任务节点,edges,停止));
+    if(fresh.状态==新任务因果子需求提议状态::资源延后)
+        return 正常返回({新任务因果复核状态::条件发生变化需重新筹办,std::move(fresh),{request.父任务节点}});
+    检查因果读取停止(停止);
+    const auto 按当前待办返回=[&](bool 已覆盖) {
+        return 正常返回({已覆盖 ? 新任务因果复核状态::仍等条件 : 新任务因果复核状态::条件发生变化需重新筹办,
+            std::move(fresh),已覆盖 ? std::vector<稳定编码>{} : std::vector<稳定编码>{request.父任务节点,request.父需求节点}});
+    };
+    if(!fresh.依据||(fresh.状态!=新任务因果子需求提议状态::已形成
+        &&fresh.状态!=新任务因果子需求提议状态::无需子需求))return 按当前待办返回(false);
+    const auto& 当前请求=fresh.依据->请求;
+    if(当前请求.父任务节点!=request.父任务节点||当前请求.父需求节点!=request.父需求节点
+        ||当前请求.目标存在节点!=request.目标存在节点||当前请求.目标!=request.目标)
+        return 按当前待办返回(false);
+    // 等待的是当前缺项对应的实际工作，不是整份旧请求或旧因果图。
+    std::vector<std::pair<新需求治理信息,新任务信息>> 当前子工作;
+    std::set<稳定编码> 已有子任务;
+    for(const auto D:waiting.子需求节点组) {
+        检查因果读取停止(停止);
+        std::optional<新需求治理信息> 需求读;
+        try { 需求读=需求服务_.读取当前需求治理信息(D); }
+        catch(新需求目标定义核验状态 状态) {
+            if(状态==新需求目标定义核验状态::资源失败)throw std::bad_alloc{};
+            if(状态!=新需求目标定义核验状态::前提已变化&&状态!=新需求目标定义核验状态::依赖未就绪)throw;
+            fresh.状态=新任务因果子需求提议状态::材料已变化;return 按当前待办返回(false);
+        }
+        检查因果读取停止(停止);
+        if(!需求读)return 按当前待办返回(false);
+        const auto& d=*需求读;
+        if(d.活动状态==新需求活动状态::失活||!d.完整目标||d.父需求节点!=request.父需求节点
+            ||d.来源承接节点!=request.父任务节点||d.来源类型!=新需求来源类型::任务子目标
+            ||d.执行域!=新需求执行域::自我执行)continue;
+        if(!是条件包含目标(d.完整目标->目标,特征概念服务_,二次特征概念服务_))continue;
+        auto 锁=获取因果读取任务锁(停止);
+        std::set<稳定编码> 任务组;
+        for(const auto& 引用:全局基础数据集.查询目标字段(D,任务需求字段))任务组.insert(引用.所属节点);
+        if(任务组.size()>1)throw std::logic_error("因果等待子需求对应多个任务");
+        if(任务组.empty())return 按当前待办返回(false);
+        const auto t=读取任务信息(*任务组.begin(),特征服务_);
+        if(!t||t->需求节点!=D)throw std::logic_error("因果等待子任务当前信息不可读");
+        已有子任务.insert(t->节点);
+        当前子工作.emplace_back(d,*t);
+    }
+    for(const auto& 目标:fresh.子需求项组) {
+        检查因果读取停止(停止);
+        const auto 域读=特征概念服务_.读取特征概念定义保护(目标.目标值域概念节点);
+        if(域读.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(域读.前提已变化||域读.状态==基础结构操作状态::节点不存在) {
+            fresh.状态=新任务因果子需求提议状态::材料已变化;return 按当前待办返回(false);
+        }
+        if(域读.状态!=基础结构操作状态::已完成||!域读.信息)
+            throw std::logic_error("因果等待当前目标域不可读");
+        if(!条件投影一致(目标,域读.信息->定义)) {
+            fresh.状态=新任务因果子需求提议状态::材料已变化;return 按当前待办返回(false);
+        }
+        const bool 已有工作=std::any_of(当前子工作.begin(),当前子工作.end(),[&](const auto& 工作) {
+            const auto& [d,t]=工作;const auto& 实际=*d.完整目标;
+            if(t.当前状态==新任务状态::已完成||t.当前状态==新任务状态::已失败
+                ||t.当前状态==新任务状态::已取消||t.当前状态==新任务状态::已结算
+                ||t.当前状态==新任务状态::未执行但目标已满足)return false;
+            const auto& 见证=实际.目标.新增成员来源见证;
+            return 实际.目标存在节点==目标.目标存在节点
+                &&实际.目标.目标特征类型概念节点==目标.目标特征类型概念节点
+                &&实际.目标.目标值域概念节点==目标.目标值域概念节点
+                &&实际.目标.引用内容定位==目标.引用内容定位
+                &&实际.目标.目标形式==新需求目标形式::值&&!实际.目标.目标变化方向
+                &&(目标.新增成员见证要求 ? 见证&&见证->要求==*目标.新增成员见证要求 : !见证);
+        });
+        if(!已有工作)return 按当前待办返回(false);
+    }
+    for(const auto T:fresh.继续推进任务组) {
+        检查因果读取停止(停止);
+        if(std::find(waiting.待推进任务组.begin(),waiting.待推进任务组.end(),T)==waiting.待推进任务组.end()
+            &&!已有子任务.contains(T))return 按当前待办返回(false);
+        auto 锁=获取因果读取任务锁(停止);
+        const auto t=读取任务信息(T,特征服务_);
+        if(!t)throw std::logic_error("因果等待推进任务当前信息不可读");
+        if(t->当前状态==新任务状态::已失败||t->当前状态==新任务状态::已取消
+            ||t->当前状态==新任务状态::已结算||t->当前状态==新任务状态::未执行但目标已满足)
+            return 按当前待办返回(false);
+    }
+    const bool 有当前工作=!fresh.子需求项组.empty()||!fresh.继续推进任务组.empty();
+    const auto& 读回=fresh.依据->读回;
+    if(!有当前工作&&读回.派生关系读回
+        &&读回.派生关系读回->状态==新派生源反推状态::材料已变化) {
+        fresh.状态=新任务因果子需求提议状态::材料已变化;return 按当前待办返回(false);
+    }
+    return 按当前待办返回(有当前工作||支持当前被动条件等待(fresh));
+    }catch(const 因果读取停止信号&){return 新任务因果读取取消{};}
+    catch(const std::bad_alloc&){新任务因果子需求提议 p;p.状态=新任务因果子需求提议状态::资源延后;return 正常返回({新任务因果复核状态::条件发生变化需重新筹办,std::move(p),{waiting.采用依据.请求.父任务节点}});}
+    catch(const std::length_error&){新任务因果子需求提议 p;p.状态=新任务因果子需求提议状态::资源延后;return 正常返回({新任务因果复核状态::条件发生变化需重新筹办,std::move(p),{waiting.采用依据.请求.父任务节点}});}
 }
 
 新任务最终消费准备结果 新_任务类::准备任务最终消费(
     const 新服务值最终来源定位& loc, const 新结算能力引用& ability) noexcept {
     using S = 新任务最终来源读取状态; using P = 新任务最终消费准备状态;
     try {
+        auto read=读取任务最终消费来源(loc);
+        std::optional<新任务需求准备保护批> 来源批;
+        if(read.状态==S::可新消费)来源批=读取任务需求准备保护批(loc.来源任务节点);
         std::lock_guard 锁(新任务互斥); namespace q = 最终消费存储;
-        const auto read = 读取任务最终消费来源(loc);
+        // 锁外资格读取后可能已有同源准备取得token或发表P/U；只读正式前缀优先分流。
+        const auto 现槽=最终消费占用组_.find(loc.完成结算节点);
+        if(现槽!=最终消费占用组_.end())if(const auto 活=现槽->second.活令牌.lock()){
+            贡献要求(活->来源.来源==loc);
+            if(!活->已正式完成)return {P::等待同源工作,{},{}};
+        }
+        const auto 现U=提取已核验任务最终消费(loc.完成结算节点);
+        if(现U){
+            贡献要求(现U->来源.来源==loc);
+            read={现U->收尾阶段节点 ? S::已完成:S::已入账待收尾,现U->来源,现U};
+        }else if(现槽!=最终消费占用组_.end()&&现槽->second.待续){
+            const auto& 原=*现槽->second.待续;
+            贡献要求(原.来源.来源==loc&&有效(原.准备节点)
+                &&读取最终准备定位(loc.完成结算节点)==原.准备节点&&读取最终冻结来源(原.准备节点)==原.来源);
+            read={S::已准备待续,原.来源,{}};
+        }
         switch (read.状态) {
         case S::已完成: return {P::已完成, {}, read.既有消费};
         case S::来源条件不具备: return {P::来源条件不具备, {}, {}};
         case S::来源已变化: return {P::来源已变化, {}, {}};
         case S::等待配置: return {P::等待配置, {}, {}};
         case S::等待同源工作: return {P::等待同源工作, {}, {}};
+        case S::资源延后: return {P::资源延后, {}, {}};
         default: break;
         }
         贡献要求(read.来源 && read.来源->边界.能力 == ability);
-        auto state = std::make_shared<最终消费占用>();
-        state->所有者 = this; state->线程 = std::this_thread::get_id(); state->来源 = *read.来源;
+        const bool 恢复P=read.状态==S::已准备待续;
+        auto& 槽=最终消费占用组_.try_emplace(loc.完成结算节点).first->second;
+        struct 空槽回收 final {
+            decltype(最终消费占用组_)& 槽组;
+            稳定编码 定位;
+            bool 可回收=true;
+            ~空槽回收() noexcept {
+                if(!可回收)return;
+                const auto it=槽组.find(定位);
+                if(it!=槽组.end()&&it->second.活令牌.expired()&&!it->second.待续)槽组.erase(it);
+            }
+        } 回收{最终消费占用组_,loc.完成结算节点};
+        贡献要求(槽.活令牌.expired());
+        const bool 复用状态=恢复P||(read.状态==S::已入账待收尾&&槽.待续);
+        auto state = 复用状态 ? 槽.待续 : std::make_shared<最终消费占用>();
+        贡献要求(state!=nullptr);
+        if(复用状态)贡献要求(state->来源==*read.来源&&state->所有者==this);
+        else{state->所有者 = this;state->来源 = *read.来源;}
+        state->线程 = std::this_thread::get_id();
+        auto impl = std::make_unique<新任务最终消费准备::实现>(); impl->占用 = state;
         const auto& s = state->来源;
-        if (read.状态 == S::已入账待收尾) {
+        if(恢复P){
+            贡献要求(读取最终准备定位(loc.完成结算节点)==state->准备节点&&读取最终冻结来源(state->准备节点)==s);
+            if(state->阶段==最终消费占用::准备阶段::已发表P待基线)完成最终准备基线(*state);
+            贡献要求(state->阶段==最终消费占用::准备阶段::可交付||state->阶段==最终消费占用::准备阶段::已入账收尾);
+        } else if (read.状态 == S::已入账待收尾) {
             贡献要求(read.既有消费.has_value()); state->消费 = read.既有消费;
             state->准备节点 = read.既有消费->准备节点; state->只收尾 = true;
+            state->阶段=最终消费占用::准备阶段::已入账收尾;
         } else {
             贡献要求(read.状态 == S::可新消费 && !read.既有消费 && !读取最终准备定位(loc.完成结算节点)
                 && ability.类别 == 新结算能力类别::自我服务值治理 && 自我服务结算配置_
                 && 自我服务结算配置_->能力 == ability);
             const auto all = 读取贡献对应(*this);
-            state->保护节点 = 贡献保护节点(*this, all, s.需求节点);
+            state->保护节点 = 贡献保护节点(*this, all, s.需求节点,true);
             std::set<稳定编码> seeds{s.边界.结算任务节点, s.边界.结算需求节点, s.边界.服务根需求节点,
                 ability.节点, s.自我场景节点, s.自我存在节点, s.自我特征节点,
                 q::准备类型, q::消费类型, q::证明类型, q::锚点类型};
@@ -11763,16 +15624,18 @@ bool 新_任务类::核验因果子需求身份(
                 seeds.insert(p.任务节点); seeds.insert(p.完成结算节点);
                 seeds.insert(p.直接子接收节点组.begin(), p.直接子接收节点组.end());
             }
-            补充贡献材料保护(state->保护节点, seeds);
-            const auto before = 贡献完整快照(state->保护节点);
+            补充贡献材料保护(state->保护节点, seeds,true);
+            const auto before = 贡献完整快照(state->保护节点,true);
             // 再次核验资格在保护抓取期间没有漂移；任何P之前的合法变化零动作退出。
-            const auto again = 读取任务最终消费来源(loc);
+            贡献要求(来源批.has_value());
+            const auto again = 读取结算候选资格核心(loc.来源任务节点,loc,{},*来源批).最终;
+            if(again.状态==S::资源延后)return {P::资源延后,{},{}};
             if (again.状态 != S::可新消费 || !again.来源 || *again.来源 != s)
                 return {P::来源已变化, {}, {}};
-            const auto after = 贡献完整快照(state->保护节点);
+            const auto after = 贡献完整快照(state->保护节点,true);
             if (before.size() != after.size() || !std::equal(before.begin(), before.end(), after.begin(), 贡献快照相同))
                 return {P::来源已变化, {}, {}};
-            基础节点组追加请求 req; 基础组内新节点 p;
+            auto& req=state->原追加请求; 基础组内新节点 p;
             p.字段组 = {{节点类型字段, q::准备类型}, {q::任务, loc.来源任务节点}, {q::结算, loc.完成结算节点},
                 {q::接收, loc.直接接收节点}, {q::需求, s.需求节点}, {q::执行, s.执行实例节点}, {q::评估, s.影响评估节点},
                 {q::虚拟存在, s.任务特征.引用.虚拟存在节点}, {q::状态特征, s.任务特征.状态.特征节点},
@@ -11801,82 +15664,40 @@ bool 新_任务类::核验因果子需求身份(
             }
             req.追加字段组.push_back({loc.完成结算节点, q::准备关联, 基础组内节点引用{0}});
             req.预期联合节点组 = after;
-            const auto publication = 全局基础数据集.原子追加节点组(req);
+            state->发表前预期=after;
+            回收.可回收=false; // 尚未取得明确零发表回执时保留原槽，不推断可清理。
+            auto publication = 全局基础数据集.原子追加节点组(req);
+            if(publication.状态==基础节点组追加状态::资源失败){回收.可回收=true;return {P::资源延后,{},{}};}
+            if(publication.状态==基础节点组追加状态::预期不符){回收.可回收=true;return {P::来源已变化,{},{}};}
             贡献要求(publication.状态 == 基础节点组追加状态::已完成 && publication.新节点组.size() == req.新节点组.size());
             state->准备节点 = publication.新节点组.front();
-            state->保护节点.insert(publication.新节点组.begin(), publication.新节点组.end());
-            state->基线 = 贡献完整快照(state->保护节点);
-            // P发表不能成为重新接受资格变化的窗口。旧快照只允许加入本次
-            // 已发布P/证明/锚点的精确引用，其它内容仍必须等于发表前材料。
-            const auto 取快照 = [&](稳定编码 id) -> const 基础联合节点快照& {
-                const auto it = std::find_if(state->基线.begin(), state->基线.end(),
-                    [&](const auto& n) { return n.结构.节点.编码 == id; });
-                贡献要求(it != state->基线.end()); return *it;
-            };
-            const auto 解析内容 = [&](const 基础组内字段内容& v) -> 基础字段内容 {
-                if (const auto* value = std::get_if<基础值>(&v)) return *value;
-                if (const auto* ref = std::get_if<稳定编码>(&v)) return *ref;
-                return publication.新节点组.at(std::get<基础组内节点引用>(v).索引);
-            };
-            std::vector<基础字段关系> 新增字段;
-            for (std::size_t i = 0; i < publication.新节点组.size(); ++i) {
-                const auto& node = 取快照(publication.新节点组[i]);
-                auto fields = node.结构.字段组;
-                贡献要求(fields.size() == req.新节点组[i].字段组.size()
-                    && node.入向外部关系组.empty() && node.出向外部关系组.empty());
-                for (const auto& expected : req.新节点组[i].字段组) {
-                    const auto content = 解析内容(expected.内容);
-                    const auto it = std::find_if(fields.begin(), fields.end(), [&](const auto& f) {
-                        return f.所属节点 == node.结构.节点.编码
-                            && f.字段节点 == expected.字段节点 && f.内容 == content;
-                    });
-                    贡献要求(it != fields.end()); 新增字段.push_back(*it); fields.erase(it);
-                }
-            }
-            贡献要求(publication.追加字段关系组.size() == req.追加字段组.size());
-            for (std::size_t i = 0; i < req.追加字段组.size(); ++i) {
-                const auto& f = req.追加字段组[i];
-                新增字段.push_back({publication.追加字段关系组[i], f.所属节点, f.字段节点, 解析内容(f.内容)});
-            }
-            for (const auto& current : state->基线) {
-                const auto id = current.结构.节点.编码;
-                const auto old = std::find_if(after.begin(), after.end(),
-                    [&](const auto& n) { return n.结构.节点.编码 == id; });
-                基础联合节点快照 expected{};
-                if (old != after.end()) expected = *old;
-                else expected.结构.节点 = current.结构.节点;
-                for (const auto& f : 新增字段) {
-                    if (f.所属节点 == id) expected.结构.字段组.push_back(f);
-                    if (const auto* ref = std::get_if<稳定编码>(&f.内容); ref && *ref == id)
-                        expected.入向字段组.push_back(f);
-                }
-                const auto 按编码 = [](const auto& l, const auto& r) { return l.编码 < r.编码; };
-                std::sort(expected.结构.字段组.begin(), expected.结构.字段组.end(), 按编码);
-                std::sort(expected.入向字段组.begin(), expected.入向字段组.end(), 按编码);
-                贡献要求(贡献快照相同(current, expected));
-            }
-            state->场景基线 = 场景服务_.获取场景(s.自我场景节点);
-            贡献要求(state->场景基线.has_value());
+            state->P发表回执=std::move(publication);
+            state->阶段=最终消费占用::准备阶段::已发表P待基线;
+            槽.待续=state; // 不分配：P成功后先钉住原state，再做可能失败的基线工作。
+            完成最终准备基线(*state);
         }
-        auto impl = std::make_unique<新任务最终消费准备::实现>(); impl->占用 = state;
-        最终消费占用组_[loc.完成结算节点] = state;
+        impl->已交付=true;槽.活令牌=state;槽.待续.reset();
         return {state->只收尾 ? P::已入账待收尾 : P::已准备,
             新任务最终消费准备{std::move(impl)}, read.既有消费};
-    } catch (...) {
+    } catch(const std::bad_alloc&){return {P::资源延后,{},{}};}
+    catch(const std::length_error&){return {P::资源延后,{},{}};}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"准备任务最终消费", L"最终消费准备发表不完整；不重新执行。");
     }
 }
 
-新任务最终消费准备材料 新_任务类::读取任务最终消费准备(const 新任务最终消费准备& token) const noexcept {
+新任务最终消费准备材料 新_任务类::读取任务最终消费准备(const 新任务最终消费准备& token) const {
     try {
         std::lock_guard 锁(新任务互斥);
         贡献要求(token.实现_ && token.实现_->占用);
         const auto& p = *token.实现_->占用;
         贡献要求(p.所有者 == this && p.线程 == std::this_thread::get_id()
-            && 最终消费占用组_.at(p.来源.来源.完成结算节点).lock() == token.实现_->占用
+            && 最终消费占用组_.at(p.来源.来源.完成结算节点).活令牌.lock() == token.实现_->占用
             && 读取最终准备定位(p.来源.来源.完成结算节点) == p.准备节点);
         return {p.来源, p.准备节点};
-    } catch (...) { 贡献要求(false); return {}; }
+    } catch (const std::bad_alloc&) { throw; }
+    catch (const std::length_error&) { throw; }
+    catch (...) { 贡献要求(false); return {}; }
 }
 
 基础封存追加片段 新_任务类::封存任务最终消费(新任务最终消费准备& token,
@@ -12096,6 +15917,7 @@ bool 新_任务类::核验因果子需求身份(
             u = 读取任务最终消费(u->来源.来源.完成结算节点); 贡献要求(u && u->收尾阶段节点 == j->节点);
         }
         p.消费 = u;
+        p.已正式完成=true;
         return {新服务值最终消费状态::已完成, u->来源.来源, u->消费节点, u->普通动作节点, u->收尾阶段节点};
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务最终收尾", L"最终状态收尾不完整；保留U与J5，不重新执行。");
@@ -12198,27 +16020,17 @@ bool 新_任务类::核验因果子需求身份(
         const auto vt = 获取任务虚拟存在(任务节点); 贡献要求(vt.has_value());
         const 新任务虚拟存在引用 引用{任务节点, vt->节点, vt->任务状态特征节点};
         const auto 场景 = 内部治理世界_->读取任务治理场景(引用); 贡献要求(场景.has_value());
-        std::optional<新方法信息> m;
         std::optional<新服务值治理定义> g;
         switch (边界.能力.类别) {
-        case 新结算能力类别::历史方法: m = 方法服务_.获取方法(边界.能力.节点); 贡献要求(m.has_value()); break;
         case 新结算能力类别::自我服务值治理: g = 读取服务值治理定义(边界.能力.节点); 贡献要求(g.has_value()); break;
         default: 贡献要求(false);
         }
         std::set<稳定编码> 材料{边界.结算任务节点, 边界.结算需求节点, 边界.服务根需求节点,
             边界.能力.节点,
             场景->根场景节点, 场景->场景节点, vt->节点, vt->任务状态特征节点, k.节点, r.节点};
-        if (m) {
-            材料.insert(m->方法头节点); 材料.insert(m->方法虚拟存在节点);
-            材料.insert(m->方法头.作用存在概念组.begin(), m->方法头.作用存在概念组.end());
-            材料.insert(m->方法头.涉及特征类型概念组.begin(), m->方法头.涉及特征类型概念组.end());
-            材料.insert(m->方法头.可能结果概念组.begin(), m->方法头.可能结果概念组.end());
-            for (const auto& 参数 : m->参数规格组) 材料.insert(参数.参数角色节点);
-        }
         if (g) { 材料.insert(g->自我概念节点); 材料.insert(g->服务值特征类型节点); }
         const auto 能力未变 = [&]() {
             switch (边界.能力.类别) {
-            case 新结算能力类别::历史方法: return 方法服务_.获取方法(边界.能力.节点) == m;
             case 新结算能力类别::自我服务值治理: return 读取服务值治理定义(边界.能力.节点) == g;
             default: 贡献要求(false); return false;
             }
@@ -12550,6 +16362,11 @@ void 新_任务类::核验任务贡献治理返回材料(const 新任务贡献�
                 for (const auto& [d, 项] : 读取贡献对应(*this)) {
                     if (项.first.父需求节点 != t->需求节点) continue;
                     const auto& 子 = 项.second;
+                    if(子){
+                        const auto 接收组=读取父贡献(t->节点).second;
+                        const bool 有接收=std::any_of(接收组.begin(),接收组.end(),[&](const auto& r){return r.子任务节点==子->节点;});
+                        if(是无完成来源的未执行满足子任务(*子,有接收))continue;
+                    }
                     if (子 && (子->当前状态 == 新任务状态::已失败 || 子->当前状态 == 新任务状态::已取消)) continue;
                     if (!子 || !子->完成结算节点
                         || !读取唯一节点字段(*子->完成结算节点, 结算唯一接收字段))
@@ -12660,31 +16477,26 @@ void 新_任务类::核验任务贡献治理返回材料(const 新任务贡献�
 新需求当前满足结果 新_任务类::复核任务需求(
     稳定编码 任务节点) const noexcept {
     try {
+        const auto 准备批=读取任务需求准备保护批(任务节点);
+        const auto before=获取任务(任务节点);
+        const auto d=before?需求服务_.获取需求(before->需求节点):std::nullopt;
+        新任务本次场景核验批 values;
+        if(d)读取新增成员目标组(values,{d->节点});
         std::lock_guard 锁(新任务互斥);
+        if(!核同任务需求准备保护批(准备批)||准备批.结果.状态==新任务需求准备状态::来源前提已变化)
+            return {新需求当前满足状态::目标引用前提已变化};
+        if(准备批.结果.状态==新任务需求准备状态::资源延后)return {新需求当前满足状态::资源失败};
         const auto 任务 = 读取任务信息(任务节点, 特征服务_);
         if (!任务) return {};
-        if (复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善)
+        if (准备批.结果.状态 == 新任务需求准备状态::待完善)
             return {新需求当前满足状态::需求信息待完善};
         const auto 需求 = 需求服务_.获取需求(任务->需求节点);
         if (!需求) return {新需求当前满足状态::结构不一致};
-        if (是服务需求取得目标(*需求)) {
-            新需求当前满足结果 结果{新需求当前满足状态::需增加,
-                服务需求取得合同_->服务任务集合特征节点, 1};
-            if (!任务->最近执行实例节点) return 结果;
-            const auto 取得 = 读回服务需求取得结果(任务节点, *任务->最近执行实例节点);
-            if (取得.状态 == 新任务操作状态::资源失败) 结果.状态 = 新需求当前满足状态::资源失败;
-            else if (取得.状态 == 新任务操作状态::结构不一致) 结果.状态 = 新需求当前满足状态::结构不一致;
-            else if (取得.状态 == 新任务操作状态::已找到 && 取得.来源新增数 == 1 && !取得.结果状态节点组.empty()) {
-                结果.状态 = 新需求当前满足状态::已满足; 结果.准确差异 = 0;
-            }
-            return 结果;
-        }
-        return 需求服务_.复核当前满足(任务->需求节点);
-    } catch (...) {
-        新需求当前满足结果 结果;
-        结果.状态 = 新需求当前满足状态::资源失败;
-        return 结果;
-    }
+        if(需求!=d||!核同因果节点保护(values.保护))return {新需求当前满足状态::目标引用前提已变化};
+        return 读取批需求满足(values,*需求);
+    } catch (const std::bad_alloc&) {return {新需求当前满足状态::资源失败};}
+    catch (const std::length_error&) {return {新需求当前满足状态::资源失败};}
+    catch (...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务需求",L"正式满足映射或目标来源读取工程故障");}
 }
 
 bool 新_任务类::初始化治理() noexcept {
@@ -12699,15 +16511,22 @@ bool 新_任务类::初始化治理() noexcept {
 新任务列表结果 新_任务类::查询可查找方法任务() const noexcept {
     新任务列表结果 结果;
     try {
-        std::lock_guard 锁(新任务互斥);
+        std::unique_lock 锁(新任务互斥);
         if (!治理已初始化_) {
             结果.状态 = 新任务操作状态::尚未初始化;
             return 结果;
         }
         结果 = 查询活动任务();
         if (结果.状态 != 新任务操作状态::已找到) return 结果;
+        const auto 原任务组=结果.任务节点组;
+        锁.unlock();
         std::vector<稳定编码> 可查找;
-        for (const auto 任务节点 : 结果.任务节点组) {
+        for (const auto 任务节点 : 原任务组) {
+            const auto 上下文=std::make_shared<新方法内容核验上下文>();
+            auto 批=准备本次场景核验批(任务节点,{},nullptr,false,false,上下文,true);
+            读取本次场景核验批(批);
+            std::lock_guard 候选锁(新任务互斥);
+            if(!核同本次场景核验批(批))continue;
             const auto 任务 = 获取任务(任务节点);
             if (!任务) {
                 结果.状态 = 新任务操作状态::结构不一致;
@@ -12716,6 +16535,14 @@ bool 新_任务类::初始化治理() noexcept {
             }
             if (任务->当前状态 == 新任务状态::已建立
                 || 任务->当前状态 == 新任务状态::待查找方法) {
+                const auto D=需求服务_.获取需求(任务->需求节点);
+                if(const auto it=批.内容必要性组.find(任务->需求节点);it!=批.内容必要性组.end()){
+                    const auto s=核同方法内容必要性投影已加锁(it->second);
+                    if(s==方法内容必要性状态::资源失败){结果.状态=新任务操作状态::资源失败;结果.任务节点组.clear();return 结果;}
+                    if(s!=方法内容必要性状态::仍必要)continue;
+                }
+                if(D&&D->复合来源&&批.复合必要性!=新任务复合分解状态::已形成
+                    &&批.已满足静态来源!=新任务复合分解状态::已形成)continue;
                 可查找.push_back(任务节点);
             }
         }
@@ -12915,7 +16742,7 @@ namespace {
         // optional 读取不区分已删除与读取失败；不可将不可解释的空值当可刷新候选。
         if (!方法 || 方法->节点 != 节点 || 方法->来源方法节点 || 方法->实例根节点)
             return 新任务前置方法状态::结构不一致;
-        if (方法->启用状态 != 新方法启用状态::启用 || 方法服务.是历史服务结算方法(节点)
+        if (方法->启用状态 != 新方法启用状态::启用
             || std::find(方法->方法头.涉及特征类型概念组.begin(),
                 方法->方法头.涉及特征类型概念组.end(), 特征类型)
                 == 方法->方法头.涉及特征类型概念组.end())
@@ -13023,12 +16850,601 @@ namespace {
     } catch (...) { return {状态::结构不一致, {}}; }
 }
 
+新任务复合分解状态 新_任务类::核验已满足内容目标静态来源(
+    新任务本次场景核验批& 批) const {
+    using S=新任务复合分解状态;
+    if(!批.需求||!批.任务)return S::来源已变化;
+    const auto& D=*批.需求;
+    const auto 源=取得提议源(批.内容核验上下文);
+    const auto 读取治理=[&](稳定编码 id) {
+        std::optional<新需求治理信息> g;
+        if(源)(void)需求服务_.读取提议源需求(id,*源,批.保护,&g);
+        else g=需求服务_.读取需求治理信息(id);
+        return g;
+    };
+    if(D.活动状态!=新需求活动状态::活动||D.执行域!=新需求执行域::自我执行
+        ||查询需求任务(D.节点)!=批.T)return S::来源已变化;
+    const auto 加保护=[&](const std::vector<基础联合节点快照>& p){批.保护.insert(批.保护.end(),p.begin(),p.end());};
+    // 正式父链资格与根登记均为状态CAS前提，不以某一次值式判断代替。
+    std::vector<新需求治理信息> 父链;
+    std::set<稳定编码> 父链节点{需求树根节点};
+    auto 祖先=读取治理(D.节点);
+    std::optional<std::pair<新需求根角色,稳定编码>> 登记根;
+    for(;;){
+        if(!祖先||!父链节点.insert(祖先->节点).second
+            ||祖先->执行域!=新需求执行域::自我执行||祖先->活动状态!=新需求活动状态::活动)return S::来源已变化;
+        父链.push_back(*祖先);
+        if(!祖先->父需求节点){
+            if(!祖先->根角色||需求服务_.查询根需求(*祖先->根角色)!=祖先->节点)return S::来源已变化;
+            登记根=std::pair{*祖先->根角色,祖先->节点};break;
+        }
+        if(祖先->根角色)return S::来源已变化;
+        祖先=读取治理(*祖先->父需求节点);
+    }
+    const std::vector<稳定编码> 根节点组=源 ? std::vector<稳定编码>{需求树根节点}
+        : std::vector<稳定编码>{父链节点.begin(),父链节点.end()};
+    const auto 根保护=全局基础数据集.查询节点组完整结构(根节点组);
+    if(根保护.状态==基础结构操作状态::资源失败)return S::资源失败;
+    if(根保护.状态!=基础结构操作状态::已完成||根保护.节点组.size()!=根节点组.size())
+        throw std::logic_error("已满足内容目标父链完整保护读取失败");
+    for(const auto& n:根保护.节点组){if(!n.快照)return S::来源已变化;批.保护.push_back(*n.快照);}
+    if(!源)for(const auto& p:父链)if(需求服务_.读取需求治理信息(p.节点)!=std::optional<新需求治理信息>{p})return S::来源已变化;
+    if(!登记根||需求服务_.查询根需求(登记根->first)!=登记根->second)return S::来源已变化;
+    const auto 服务门=需求服务_.复核需求服务要求语义内部(D.节点,源);
+    if(服务门.状态==新服务要求执行守卫状态::资源失败)return S::资源失败;
+    if(服务门.状态==新服务要求执行守卫状态::结构不一致)
+        return S::来源已变化;
+    if(服务门.状态==新服务要求执行守卫状态::需重新确认||服务门.状态==新服务要求执行守卫状态::需求不存在
+        ||服务门.状态==新服务要求执行守卫状态::前提已变化)return S::来源已变化;
+    if(服务门.状态!=新服务要求执行守卫状态::不涉及&&服务门.状态!=新服务要求执行守卫状态::当前有效)return S::依赖未就绪;
+    // 既有guard只返回确认身份，不提供其语义闭包的完整CAS保护；不得冒充已保护。
+    if(!服务门.确认节点组.empty())return S::依赖未就绪;
+    if(!合并需求结果保护(批.保护,服务门.完整保护))return S::来源已变化;
+    if(D.目标.新增成员来源见证){
+        if(!D.父需求节点||!D.来源承接节点||D.来源类型!=新需求来源类型::任务子目标
+            ||!批.需求准备||批.需求准备->结果.状态!=新任务需求准备状态::可筹办)return S::来源已变化;
+        const auto p=获取任务(*D.来源承接节点);
+        if(!p||p->需求节点!=*D.父需求节点||查询需求任务(*D.父需求节点)!=p->节点)return S::来源已变化;
+        const auto raw=全局基础数据集.查询节点组完整结构({p->节点,p->任务虚拟存在节点});
+        if(raw.状态==基础结构操作状态::资源失败)return S::资源失败;
+        贡献要求(raw.状态==基础结构操作状态::已完成&&raw.节点组.size()==2);
+        for(const auto& n:raw.节点组){if(!n.快照)return S::来源已变化;加保护({*n.快照});}
+        return S::已形成;
+    }
+    if(!D.复合来源){
+        if(D.来源类型==新需求来源类型::任务子目标){
+            if(!D.来源承接节点||!D.父需求节点)throw std::logic_error("已满足方法条件子D缺少静态来源");
+            const auto 父T=获取任务(*D.来源承接节点);
+            const auto 父D=读取本次提议需求(*D.父需求节点,批.内容核验上下文,批.保护);
+            if(!父T||!父D||父T->需求节点!=父D->节点||查询需求任务(父D->节点)!=父T->节点
+                ||父D->活动状态!=新需求活动状态::活动||父T->当前状态==新任务状态::已失败
+                ||父T->当前状态==新任务状态::已取消)return S::来源已变化;
+            if(!批.内容核验上下文||!批.内容核验上下文->当前递归任务栈.insert(父T->节点).second)return S::未支持;
+            struct 栈守卫 final{std::set<稳定编码>& 栈;稳定编码 T;~栈守卫(){栈.erase(T);}} guard{批.内容核验上下文->当前递归任务栈,父T->节点};
+            auto 父批=准备本次场景核验批(父T->节点,{},nullptr,false,true,批.内容核验上下文);
+            读取本次场景核验批(父批);
+            {std::lock_guard 锁(新任务互斥);if(!核同本次场景核验批(父批))return S::来源已变化;}
+            加保护(父批.保护);
+            // 核正式C声明及相同绑定，不依赖父任务当前尚缺行动的提议集合。
+            const 新需求完整目标 目标{D.目标存在节点,D.目标};
+            const auto c=std::find_if(父批.内容条件组.begin(),父批.内容条件组.end(),[&](const auto& x){
+                return x.参数已绑定&&x.目标==std::optional<新需求完整目标>{目标};});
+            if(c==父批.内容条件组.end())return S::来源已变化;
+            if(c->判定.状态==新引用内容目标状态::资源失败)return S::资源失败;
+            if(c->判定.状态==新引用内容目标状态::引用前提已变化)return S::来源已变化;
+            if(c->判定.状态!=新引用内容目标状态::已满足)return S::依赖未就绪;
+            if(获取任务(父T->节点)!=父T||!需求服务_.提议需求值相同(需求服务_.获取需求(父D->节点),父D,源))return S::来源已变化;
+        }
+        return S::已形成;
+    }
+    const auto& src=*D.复合来源;
+    if(D.父需求节点!=src.父需求节点||D.来源承接节点!=src.父任务节点
+        ||!D.目标.引用内容定位||D.目标.引用内容定位->正式内容路径!=src.子目标内容路径
+        ||D.目标.目标值域概念节点!=src.子目标要求概念)return S::来源已变化;
+    const auto 父T=获取任务(src.父任务节点);
+    const auto 父D=读取本次提议需求(src.父需求节点,批.内容核验上下文,批.保护);
+    if(!父T||!父D||父T->需求节点!=父D->节点||查询需求任务(父D->节点)!=父T->节点
+        ||父D->活动状态!=新需求活动状态::活动
+        ||父T->当前状态==新任务状态::已失败||父T->当前状态==新任务状态::已取消
+        ||父D->目标存在节点!=src.父目标存在节点||父D->目标!=src.父目标
+        ||!父D->目标.引用内容定位||父D->目标.引用内容定位->引用需求节点!=D.目标.引用内容定位->引用需求节点
+        ||父D->目标.目标特征类型概念节点!=D.目标.目标特征类型概念节点
+        ||父D->目标存在节点!=D.目标存在节点
+        ||父D->目标.目标值域概念节点!=src.结构概念节点)return S::来源已变化;
+    const auto 结构=存在概念服务_.读取正式结构有效内容保护(src.结构概念节点);
+    if(结构.状态==正式结构有效内容读取状态::资源失败)return S::资源失败;
+    if(结构.状态==正式结构有效内容读取状态::前提已变化)return S::来源已变化;
+    if(结构.状态!=正式结构有效内容读取状态::已读取||!结构.信息)return S::依赖未就绪;
+    加保护(结构.完整保护组);
+    if(src.子目标内容路径.size()!=1)return S::未支持;
+    auto 正式内容项=结构.信息->内容项组;
+    const auto 判=需求服务_.求值引用内容条件目标({父D->目标存在节点,父D->目标});
+    加保护(判.完整保护组);
+    if(判.状态==新引用内容目标状态::资源失败)return S::资源失败;
+    if(判.状态==新引用内容目标状态::引用前提已变化)return S::来源已变化;
+    if(判.状态==新引用内容目标状态::定义不合法)throw std::logic_error("已满足内容叶的父定义损坏");
+    if(判.状态!=新引用内容目标状态::已满足&&判.状态!=新引用内容目标状态::未满足)return S::依赖未就绪;
+    std::optional<稳定编码> 约束,分支;
+    for(const auto& b:判.分支组)if(b.所选分支){
+        if(分支)return S::未支持;约束=b.约束概念;分支=b.所选分支;
+    }
+    if(约束!=src.择一约束节点||分支!=src.所选分支概念)return S::来源已变化;
+    if(分支){
+        const auto 分支内容=存在概念服务_.读取正式结构有效内容保护(*分支);
+        if(分支内容.状态==正式结构有效内容读取状态::资源失败)return S::资源失败;
+        if(分支内容.状态==正式结构有效内容读取状态::前提已变化)return S::来源已变化;
+        if(分支内容.状态!=正式结构有效内容读取状态::已读取||!分支内容.信息)return S::依赖未就绪;
+        加保护(分支内容.完整保护组);
+        正式内容项.insert(正式内容项.end(),分支内容.信息->内容项组.begin(),分支内容.信息->内容项组.end());
+    }
+    const auto 项=std::find_if(正式内容项.begin(),正式内容项.end(),[&](const auto& x){
+        return x.特征类型==src.子目标内容路径.front()&&x.内容概念==src.子目标要求概念&&x.读取路径.empty();});
+    if(项==正式内容项.end())return S::来源已变化;
+    std::vector<稳定编码> 静态节点组{父T->节点,父T->任务虚拟存在节点};
+    if(!源)静态节点组.push_back(父D->节点);
+    const auto 原=全局基础数据集.查询节点组完整结构(静态节点组);
+    if(原.状态==基础结构操作状态::资源失败)return S::资源失败;
+    if(原.状态!=基础结构操作状态::已完成||原.节点组.size()!=静态节点组.size())throw std::logic_error("已满足叶静态来源保护读取失败");
+    for(const auto& n:原.节点组){if(!n.快照)return S::来源已变化;批.保护.push_back(*n.快照);}
+    if(获取任务(父T->节点)!=父T||!需求服务_.提议需求值相同(需求服务_.获取需求(父D->节点),父D,源))return S::来源已变化;
+    return S::已形成;
+}
+
+新任务复合分解状态 新_任务类::读取普通值目标满足保护(新任务本次场景核验批& 批) const {
+    using S=新任务复合分解状态;
+    if(!批.需求||批.需求->目标.引用内容定位||批.需求->目标.目标形式!=新需求目标形式::值)return S::依赖未就绪;
+    const auto& D=*批.需求;
+    const auto 源=取得提议源(批.内容核验上下文);
+    const auto 读取满足=[&] {
+        return 源 ? 需求服务_.复核当前满足可抛内部(D.节点,nullptr,源,&批.保护)
+            : 需求服务_.复核当前满足(D.节点);
+    };
+    if(D.目标.新增成员来源见证){
+        if(!批.新增成员目标判定)return S::来源已变化;
+        const auto current=映射新增成员目标满足(*批.新增成员目标判定);
+        if(current.状态==新需求当前满足状态::资源失败)return S::资源失败;
+        if(current.状态==新需求当前满足状态::目标引用前提已变化)return S::来源已变化;
+        if(批.新增成员目标判定->状态!=新需求新增成员读取状态::已读取)return S::依赖未就绪;
+        if(!需求服务_.提议需求值相同(需求服务_.获取需求(D.节点),批.需求,源))return S::来源已变化;
+        批.普通值目标当前满足=current;
+        return 核验已满足内容目标静态来源(批);
+    }
+    const auto 首=读取满足();
+    if(首.状态==新需求当前满足状态::资源失败)return S::资源失败;
+    if(首.状态==新需求当前满足状态::目标引用前提已变化)return S::来源已变化;
+    if(首.状态==新需求当前满足状态::结构不一致)throw std::logic_error("普通值目标满足读取正式结构损坏");
+    if(!首.实际特征节点)return S::依赖未就绪;
+    const auto 身份=存在服务_.读取存在身份保护(D.目标存在节点);
+    if(身份.状态==基础结构操作状态::资源失败)return S::资源失败;
+    if(身份.前提已变化||身份.状态==基础结构操作状态::节点不存在)return S::来源已变化;
+    if(身份.状态!=基础结构操作状态::已完成||!身份.信息)return S::依赖未就绪;
+    if(!合并需求结果保护(批.保护,身份.预期节点组))return S::来源已变化;
+    const auto E=存在服务_.获取存在(D.目标存在节点);
+    if(!E)return S::来源已变化;
+    const auto 定义=核验需求目标定义保护(D.目标,特征概念服务_,二次特征概念服务_);
+    if(定义.状态==新需求目标定义核验状态::资源失败)return S::资源失败;
+    if(定义.状态==新需求目标定义核验状态::前提已变化)return S::来源已变化;
+    if(定义.状态!=新需求目标定义核验状态::已完成)return S::依赖未就绪;
+    if(!合并需求结果保护(批.保护,定义.完整保护))return S::来源已变化;
+    std::size_t 同类型=0;
+    for(const auto F:E->特征节点组){
+        const auto 读=特征服务_.读取特征完整保护(F);
+        if(读.状态==新特征完整读取状态::资源失败)return S::资源失败;
+        if(读.状态==新特征完整读取状态::前提已变化||读.状态==新特征完整读取状态::特征不存在)return S::来源已变化;
+        if(读.状态!=新特征完整读取状态::已读取||!读.信息)return S::依赖未就绪;
+        if(!合并需求结果保护(批.保护,读.信息->完整保护组))return S::来源已变化;
+        if(读.信息->特征类型根==D.目标.目标特征类型概念节点){
+            ++同类型;if(F!=*首.实际特征节点)return S::来源已变化;
+            if(!读.信息->特征.当前值)return S::依赖未就绪;
+        }
+    }
+    if(同类型!=1)return S::依赖未就绪;
+    if(读取满足()!=首||!需求服务_.提议需求值相同(需求服务_.获取需求(D.节点),批.需求,源)
+        ||存在服务_.获取存在(E->节点)!=E)return S::来源已变化;
+    if(!批.需求准备||批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化)return S::来源已变化;
+    if(批.需求准备->结果.状态==新任务需求准备状态::资源延后)return S::资源失败;
+    if(批.需求准备->结果.状态!=新任务需求准备状态::可筹办)return S::依赖未就绪;
+    批.普通值目标当前满足=首;
+    return S::已形成;
+}
+
+新任务执行前目标收束结果 新_任务类::复核并收束执行前已满足目标(稳定编码 T) noexcept {
+    try {
+        auto 批=准备本次场景核验批(T,{},nullptr,false,true);
+        读取本次场景核验批(批);
+        return 收束执行前已满足目标内部(T,批);
+    }catch(const std::bad_alloc&){新任务执行前目标收束结果 r;r.任务节点=T;r.状态=新任务执行前目标收束状态::资源失败;return r;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"执行前目标收束",L"正式目标读取或收束工程故障");}
+}
+
+新任务执行前目标收束结果 新_任务类::收束执行前已满足目标内部(
+    稳定编码 T,const 新任务本次场景核验批& 批) noexcept {
+    using S=新任务执行前目标收束状态;
+    新任务执行前目标收束结果 r;r.任务节点=T;
+    新特征I64准备结果 准备;
+    std::optional<稳定编码> 前状态;
+    bool 已发表=false;
+    const auto 清理=[&]{
+        if(准备.准备)特征服务_.取消顶层I64更新(*准备.准备);
+        if(前状态){
+            const auto p=状态服务_.获取状态(*前状态);
+            if(!p||p->被引用次数!=0||状态服务_.删除状态(*前状态)!=新状态操作状态::已完成)
+                throw std::logic_error("未执行收束零发表前状态清理失败");
+            前状态.reset();
+        }
+    };
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){r.状态=S::来源已变化;return r;}
+        if(!批.任务||!批.需求)return r;
+        r.来源需求节点=批.需求->节点;r.来源目标=新需求完整目标{批.需求->目标存在节点,批.需求->目标};
+        const bool 普通值=!批.需求->目标.引用内容定位&&批.需求->目标.目标形式==新需求目标形式::值;
+        if(!批.需求->目标.引用内容定位&&!普通值){r.状态=S::等待材料;return r;}
+        const auto s=批.任务->当前状态;
+        if(s!=新任务状态::已建立&&s!=新任务状态::待查找方法&&s!=新任务状态::待检查条件
+            &&s!=新任务状态::待执行&&s!=新任务状态::等待条件&&s!=新任务状态::未执行但目标已满足)return r;
+        if(批.任务->最近执行实例节点){
+            const auto X=获取执行实例(*批.任务->最近执行实例节点);
+            if(!X||X->任务节点!=T)throw std::logic_error("未执行目标收束历史X身份损坏");
+            if(X->状态!=新任务执行状态::已评估||!X->影响评估节点){r.状态=S::状态不允许;return r;}
+            const auto A=获取影响评估(*X->影响评估节点);
+            if(!A||A->任务节点!=T||A->执行实例节点!=X->节点)throw std::logic_error("未执行目标收束历史A身份损坏");
+        }
+        if(普通值){
+            if(批.已满足静态来源==新任务复合分解状态::资源失败){r.状态=S::资源失败;return r;}
+            if(批.已满足静态来源==新任务复合分解状态::来源已变化){r.状态=S::来源已变化;return r;}
+            if(!批.普通值目标当前满足){r.状态=S::等待材料;return r;}
+            if(批.普通值目标当前满足->状态!=新需求当前满足状态::已满足){r.状态=S::目标尚未满足;return r;}
+        }else{
+        if(!批.内容目标判定||!批.内容目标资格){r.状态=S::等待材料;return r;}
+        const auto 判=批.内容目标判定->状态;
+        if(判==新引用内容目标状态::定义不合法)throw std::logic_error("未执行目标收束定义损坏");
+        if(判==新引用内容目标状态::资源失败){r.状态=S::资源失败;return r;}
+        if(判==新引用内容目标状态::引用前提已变化){r.状态=S::来源已变化;return r;}
+        if(判==新引用内容目标状态::未满足||判==新引用内容目标状态::分支待定){
+            r.状态=s==新任务状态::未执行但目标已满足 ? S::来源已变化 : S::目标尚未满足;return r;
+        }
+        if(判!=新引用内容目标状态::已满足){r.状态=S::等待材料;return r;}
+        if(批.已满足静态来源!=新任务复合分解状态::已形成){
+            r.状态=批.已满足静态来源==新任务复合分解状态::资源失败 ? S::资源失败
+                : 批.已满足静态来源==新任务复合分解状态::来源已变化 ? S::来源已变化 : S::等待材料;return r;
+        }
+        if(批.内容目标资格->状态!=新需求筹办资格状态::允许筹办
+            &&批.内容目标资格->状态!=新需求筹办资格状态::目标已满足){r.状态=S::来源已变化;return r;}
+        }
+        if(s==新任务状态::未执行但目标已满足){r.任务读回=批.任务;r.状态=S::已处该状态;return r;}
+        const auto V=获取任务虚拟存在(T);
+        if(!V||!内部治理世界_||!任务治理场景组织已就绪_)throw std::logic_error("未执行目标收束治理未就绪");
+        const 新任务虚拟存在引用 引用{T,V->节点,V->任务状态特征节点};
+        const auto 场景=内部治理世界_->读取任务治理场景(引用);
+        if(!场景)throw std::logic_error("未执行目标收束缺治理场景");
+        // 历史X/A及组织都进入同一核心CAS的完整前提。
+        auto 保护=批.保护;
+        std::set<稳定编码> 历史;
+        if(批.任务->最近执行实例节点){历史.insert(*批.任务->最近执行实例节点);
+            const auto X=获取执行实例(*批.任务->最近执行实例节点);历史.insert(*X->影响评估节点);}
+        if(!历史.empty()){
+            const auto p=全局基础数据集.查询节点组完整结构({历史.begin(),历史.end()});
+            if(p.状态==基础结构操作状态::资源失败){r.状态=S::资源失败;return r;}
+            if(p.状态!=基础结构操作状态::已完成)throw std::logic_error("未执行目标收束历史保护读取失败");
+            for(const auto& n:p.节点组){if(!n.快照){r.状态=S::来源已变化;return r;}保护.push_back(*n.快照);}
+        }
+        const auto 时间=当前实例UTC强时间();if(!时间)throw std::logic_error("收束前状态时间不可得");
+        新事实追加保护增量 增量;
+        const auto 前=状态服务_.建立状态(V->节点,V->任务状态特征节点,*时间,增量);
+        if(前.状态!=新状态操作状态::已完成||!前.状态节点)throw std::logic_error("收束前状态建立失败");
+        前状态=前.状态节点;
+        if(!增量.新增外部关系组.empty()||!增量.字段变化组.empty())throw std::logic_error("前状态回执包含非追加字段事实");
+        std::set<稳定编码> 字段身份;
+        for(const auto& f:增量.新增字段组){
+            if(f.所属节点!=*前状态||!字段身份.insert(f.编码).second)throw std::logic_error("前状态字段增量身份不合法");
+            const auto* ref=std::get_if<稳定编码>(&f.内容);if(!ref)continue;
+            for(auto& n:保护)if(n.结构.节点.编码==*ref){
+                if(std::any_of(n.入向字段组.begin(),n.入向字段组.end(),[&](const auto& x){return x.编码==f.编码;}))
+                    throw std::logic_error("前状态字段重复进入保护");
+                n.入向字段组.push_back(f);
+                std::sort(n.入向字段组.begin(),n.入向字段组.end(),[](const auto& a,const auto& b){return a.编码<b.编码;});
+            }
+        }
+        std::set<稳定编码> ids;for(const auto& n:保护)ids.insert(n.结构.节点.编码);
+        const auto fresh=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
+        if(fresh.状态==基础结构操作状态::资源失败){清理();r.状态=S::资源失败;return r;}
+        if(fresh.状态!=基础结构操作状态::已完成)throw std::logic_error("收束前状态保护重读失败");
+        for(const auto& n:保护){
+            const auto p=std::find_if(fresh.节点组.begin(),fresh.节点组.end(),[&](const auto& x){return x.快照&&x.快照->结构.节点.编码==n.结构.节点.编码;});
+            if(p==fresh.节点组.end()||p->快照->结构.节点!=n.结构.节点||p->快照->结构.字段组!=n.结构.字段组
+                ||p->快照->入向字段组!=n.入向字段组||p->快照->入向外部关系组!=n.入向外部关系组
+                ||p->快照->出向外部关系组!=n.出向外部关系组){清理();r.状态=S::来源已变化;return r;}
+        }
+        准备=特征服务_.准备顶层I64更新(V->任务状态特征节点,13,保护);
+        if(准备.状态==新特征I64准备状态::资源失败){清理();r.状态=S::资源失败;return r;}
+        if(准备.状态==新特征I64准备状态::预期已变化||准备.状态==新特征I64准备状态::联合更新占用){清理();r.状态=S::来源已变化;return r;}
+        if(准备.状态!=新特征I64准备状态::已准备||!准备.准备)throw std::logic_error("收束状态特征准备工程失败");
+        if(准备.准备->原当前值()!=static_cast<std::int64_t>(s)||!准备.准备->核心有变化())throw std::logic_error("收束状态准备非实际变化");
+        const auto 提交=特征服务_.提交顶层I64更新(*准备.准备,{});
+        if(提交.状态==基础节点组追加状态::资源失败){清理();r.状态=S::资源失败;return r;}
+        if(提交.状态==基础节点组追加状态::预期不符){清理();r.状态=S::来源已变化;return r;}
+        if(提交.状态!=基础节点组追加状态::已完成)throw std::logic_error("收束状态特征提交工程失败");
+        已发表=true;
+        const auto 完成=特征服务_.完成顶层I64更新(*准备.准备);
+        if(完成.状态!=新特征写入状态::已完成||!完成.当前值已改变)throw std::logic_error("收束特征聚合失败");
+        特征服务_.结束顶层I64更新(*准备.准备);
+        确保任务虚拟存在语义(T);
+        const auto 后时=当前实例UTC强时间();if(!后时||后时->纳秒<=时间->纳秒)throw std::logic_error("收束后状态时间不递增");
+        const auto 后=状态服务_.建立状态(V->节点,V->任务状态特征节点,*后时);
+        if(后.状态!=新状态操作状态::已完成||!后.状态节点)throw std::logic_error("收束后状态建立失败");
+        const 新任务虚拟存在特征引用 目标{引用,V->任务状态特征节点};
+        const auto 变化=内部治理世界_->完成任务特征变化(目标,*前状态,*后.状态节点);
+        const auto 回读=内部治理世界_->读取任务特征变化(目标,*前状态,*后.状态节点);
+        if(!回读||变化.目标!=目标||变化.治理场景节点!=场景->场景节点||!有效(变化.变化动态节点)
+            ||回读->变化动态节点!=变化.变化动态节点)throw std::logic_error("收束状态动态读回失败");
+        r.任务读回=获取任务(T);
+        if(!r.任务读回||r.任务读回->当前状态!=新任务状态::未执行但目标已满足)throw std::logic_error("收束状态独立读回失败");
+        r.状态=S::已标记未执行目标已满足;return r;
+    }catch(const std::bad_alloc&){
+        if(已发表)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"执行前目标收束",L"状态已发表后资源故障，保留事实");
+        try{清理();}catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"执行前目标收束",L"零发表前状态清理故障");}
+        r.状态=S::资源失败;return r;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"执行前目标收束",L"状态提交或治理组织工程故障，保留事实");}
+}
+
+新任务复合目标分解提议 新_任务类::提议任务复合目标(稳定编码 T) const noexcept {
+    return 读取当前复合目标提议(T,true).提议;
+}
+新_任务类::复合提议读取 新_任务类::读取当前复合目标提议(稳定编码 T,bool 完整源) const noexcept {
+    复合提议读取 本次;
+    本次.提议 = [&]() noexcept -> 新任务复合目标分解提议 {
+    using S=新任务复合分解状态;
+    新任务复合目标分解提议 输出;输出.任务节点=T;
+    try {
+        std::optional<新方法内容必要性投影> 必要性;
+        std::shared_ptr<新方法内容核验上下文> 提议上下文;
+        if(!完整源) {
+            提议上下文=std::make_shared<新方法内容核验上下文>();
+            提议上下文->提议源=std::make_shared<新_需求类::提议源收集批>();
+        }
+        if(完整源) {
+            const auto 上下文=std::make_shared<新方法内容核验上下文>();
+            auto 批=准备本次场景核验批(T,{},nullptr,false,true,上下文,true);
+            读取本次场景核验批(批);
+            {std::lock_guard 锁(新任务互斥);if(!核同本次场景核验批(批)){输出.状态=S::来源已变化;return 输出;}}
+            if(const auto it=批.内容必要性组.find(批.需求 ? 批.需求->节点 : 稳定编码{});it!=批.内容必要性组.end())
+                必要性=it->second;
+        }
+        const auto 任务=获取任务(T);if(!任务){输出.状态=S::任务状态已变化;return 输出;}
+        auto D=需求服务_.获取需求(任务->需求节点);
+        if(!D){输出.状态=S::来源已变化;return 输出;}
+        输出.父需求节点=D->节点;输出.父目标={D->目标存在节点,D->目标};
+        if(!D->目标.引用内容定位){输出.状态=S::非复合目标;return 输出;}
+        if(!完整源) {
+            本次.内容=需求服务_.读取引用内容提议(D->节点);
+            if(本次.内容.需求) {
+                D=本次.内容.需求;
+                输出.父需求节点=D->节点;输出.父目标={D->目标存在节点,D->目标};
+            }
+        }
+        if(!完整源 && !D->复合来源 && D->来源类型==新需求来源类型::任务子目标)
+            必要性=复核方法内容子需求必要性(D->节点,提议上下文);
+        if(必要性){
+            std::lock_guard 锁(新任务互斥);const auto s=核同方法内容必要性投影已加锁(*必要性);
+            if(s!=方法内容必要性状态::仍必要){输出.状态=s==方法内容必要性状态::资源失败 ? S::资源失败
+                : s==方法内容必要性状态::前提已变化||s==方法内容必要性状态::已不再必要 ? S::来源已变化 : S::依赖未就绪;return 输出;}
+        }
+        if(任务->当前状态!=新任务状态::已建立&&任务->当前状态!=新任务状态::待查找方法
+            &&任务->当前状态!=新任务状态::等待条件&&任务->当前状态!=新任务状态::待检查条件) {
+            输出.状态=S::任务状态已变化;return 输出;
+        }
+        if(完整源)输出.判定=需求服务_.复核引用内容目标(D->节点);
+        else 输出.判定=本次.内容.判定;
+        switch(输出.判定.状态) {
+        case 新引用内容目标状态::已满足:输出.状态=S::已满足;return 输出;
+        case 新引用内容目标状态::资源失败:输出.状态=S::资源失败;return 输出;
+        case 新引用内容目标状态::依赖未就绪:输出.状态=S::依赖未就绪;return 输出;
+        case 新引用内容目标状态::引用前提已变化:输出.状态=S::来源已变化;return 输出;
+        case 新引用内容目标状态::未支持:case 新引用内容目标状态::定义不合法:输出.状态=S::未支持;return 输出;
+        default:break;
+        }
+        if(D->复合来源&&复核复合子目标当前必要性(T)!=S::已形成){输出.状态=S::来源已变化;return 输出;}
+        const auto& 定位=*D->目标.引用内容定位;
+        if(!定位.正式内容路径.empty()){输出.状态=S::叶子目标;return 输出;}
+        // 内容检查独立于挂接判断；不能用内容已满足替代上面的父目标完成门。
+        auto 内容=需求服务_.求值指定需求内容目标(输出.父目标);
+        switch(内容.状态) {
+        case 新引用内容目标状态::已满足:case 新引用内容目标状态::未满足:
+        case 新引用内容目标状态::分支待定:break;
+        case 新引用内容目标状态::资源失败:输出.状态=S::资源失败;return 输出;
+        case 新引用内容目标状态::依赖未就绪:输出.状态=S::依赖未就绪;return 输出;
+        case 新引用内容目标状态::引用前提已变化:输出.状态=S::来源已变化;return 输出;
+        case 新引用内容目标状态::未支持:case 新引用内容目标状态::定义不合法:
+            输出.状态=S::未支持;return 输出;
+        }
+        if(!合并需求结果保护(输出.判定.完整保护组,内容.完整保护组)){
+            输出.状态=S::来源已变化;return 输出;
+        }
+        输出.判定.必要项目组=std::move(内容.必要项目组);
+        输出.判定.分支组=std::move(内容.分支组);
+        std::optional<稳定编码> 分支约束,所选;
+        for(const auto& 分支:输出.判定.分支组)if(分支.所选分支) {
+            if(所选){输出.状态=S::未支持;return 输出;}
+            分支约束=分支.约束概念;所选=分支.所选分支;
+        }
+        for(const auto& 项:输出.判定.必要项目组) {
+            if(项.状态==正式内容符合状态::符合)continue;
+            if(项.状态!=正式内容符合状态::不符合&&项.状态!=正式内容符合状态::当前未知){输出.状态=S::未支持;return 输出;}
+            新需求目标定义 目标{D->目标.目标特征类型概念节点,新需求目标形式::值,项.要求概念,{},{},
+                新需求引用内容定位{定位.引用需求节点,{项.特征类型}}};
+            新需求复合分解来源 来源{T,D->节点,D->目标存在节点,D->目标,*D->目标.目标值域概念节点,
+                分支约束,所选,{项.特征类型},项.要求概念};
+            新任务复合子目标 子{{D->目标存在节点,目标},来源};
+            if(std::find(输出.子目标组.begin(),输出.子目标组.end(),子)==输出.子目标组.end())输出.子目标组.push_back(std::move(子));
+        }
+        const auto 当前任务=获取任务(T);
+        if(!核同需求结果保护(输出.判定.完整保护组)||!当前任务
+            ||当前任务->节点!=任务->节点||当前任务->需求节点!=D->节点
+            ||当前任务->当前状态!=任务->当前状态
+            ||(完整源 ? 需求服务_.获取需求(D->节点)!=D : !需求服务_.核同引用内容提议源(本次.内容))){
+            输出.状态=S::来源已变化;输出.子目标组.clear();return 输出;
+        }
+        if(!完整源 && 必要性) {
+            std::lock_guard 锁(新任务互斥);
+            const auto s=核同方法内容必要性投影已加锁(*必要性);
+            if(s!=方法内容必要性状态::仍必要) {
+                输出.状态=s==方法内容必要性状态::资源失败 ? S::资源失败
+                    : s==方法内容必要性状态::前提已变化||s==方法内容必要性状态::已不再必要 ? S::来源已变化 : S::依赖未就绪;
+                输出.子目标组.clear();return 输出;
+            }
+        }
+        if(!完整源) {
+            本次.内容.判定=输出.判定;
+            需求服务_.合并提议源前提(本次.内容.源前提,提议上下文->提议源->前提);
+        }
+        输出.状态=输出.判定.状态==新引用内容目标状态::分支待定 ? S::分支待定 : S::已形成;
+        return 输出;
+    }catch(const std::bad_alloc&){输出.状态=S::资源失败;输出.子目标组.clear();return 输出;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复合目标提议",L"正式复合目标分解发生工程错误");}
+    }();
+    return 本次;
+}
+新任务复合分解状态 新_任务类::复核复合子目标当前必要性(稳定编码 T) const noexcept {
+    using S=新任务复合分解状态;
+    try {
+        const auto 任务=获取任务(T);if(!任务)return S::任务状态已变化;
+        const auto D=需求服务_.获取需求(任务->需求节点);if(!D)return S::来源已变化;
+        if(!D->复合来源)return S::非复合目标;
+        const auto& 来源=*D->复合来源;
+        if(D->活动状态!=新需求活动状态::活动||D->父需求节点!=来源.父需求节点||D->来源承接节点!=来源.父任务节点
+            ||查询需求任务(来源.父需求节点)!=来源.父任务节点)return S::来源已变化;
+        const auto 父=读取当前复合目标提议(来源.父任务节点).提议;
+        if(父.状态==S::资源失败||父.状态==S::依赖未就绪)return 父.状态;
+        if(父.状态!=S::已形成&&父.状态!=S::分支待定)return S::来源已变化;
+        const 新任务复合子目标 当前{{D->目标存在节点,D->目标},来源};
+        return std::find(父.子目标组.begin(),父.子目标组.end(),当前)!=父.子目标组.end() ? S::已形成 : S::来源已变化;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复合子目标必要性",L"正式来源核验发生工程错误");}
+}
+新任务操作状态 新_任务类::核验复合子目标采用(const 新任务复合采用请求& q) const noexcept {
+    try {
+        if(q.父任务节点!=q.原提议.任务节点)return 新任务操作状态::入口拒绝;
+        const auto 当前=读取当前复合目标提议(q.父任务节点).提议;
+        if(当前.状态==新任务复合分解状态::资源失败)return 新任务操作状态::资源失败;
+        if(当前.父需求节点!=q.原提议.父需求节点||当前.父目标!=q.原提议.父目标)return 新任务操作状态::任务状态不允许;
+        std::set<稳定编码> 已见;
+        for(const auto& 项:q.采用组) {
+            if(!已见.insert(项.子需求节点).second)return 新任务操作状态::入口拒绝;
+            const auto D=需求服务_.获取需求(项.子需求节点);
+            if(!D||D->活动状态!=新需求活动状态::活动||D->父需求节点!=当前.父需求节点
+                ||D->来源承接节点!=q.父任务节点||D->复合来源!=std::optional{项.原提议.来源}
+                ||新需求完整目标{D->目标存在节点,D->目标}!=项.原提议.目标
+                ||std::find(当前.子目标组.begin(),当前.子目标组.end(),项.原提议)==当前.子目标组.end())return 新任务操作状态::任务状态不允许;
+        }
+        return 新任务操作状态::已找到;
+    }catch(const std::bad_alloc&){return 新任务操作状态::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复合子目标采用",L"正式采用核验发生工程错误");}
+}
+新任务内容学习发现结果 新_任务类::查询内容叶方法学习发现(
+    稳定编码 T) const noexcept {
+    using S = 新任务内容学习发现状态;
+    try {
+        const auto 任务 = 获取任务(T);
+        if (!任务) return {S::来源已变化, {}};
+        const auto D = 需求服务_.获取需求(任务->需求节点);
+        if (!D) throw std::logic_error("内容学习发现的来源需求不可读");
+        if (!D->目标.引用内容定位
+            || D->目标.引用内容定位->正式内容路径.size() != 1) return {};
+        const auto 提议 = 读取当前复合目标提议(T).提议;
+        if (提议.状态 == 新任务复合分解状态::资源失败) return {S::资源失败, {}};
+        if (提议.状态 == 新任务复合分解状态::依赖未就绪) return {S::查询未完成, {}};
+        if (提议.状态 != 新任务复合分解状态::叶子目标) return {S::来源已变化, {}};
+        新任务内容方法学习发现 发现{T, D->节点, {D->目标存在节点, D->目标},
+            D->目标.引用内容定位->正式内容路径, {}, {}};
+        if (提议.父需求节点 != D->节点 || 提议.父目标 != 发现.来源目标)
+            return {S::来源已变化, {}};
+        新方法候选查询 查询;
+        查询.涉及特征类型概念组 = 发现.查询特征类型概念组;
+        const auto 规范化 = [](std::vector<稳定编码> 值) {
+            std::sort(值.begin(), 值.end());
+            值.erase(std::unique(值.begin(), 值.end()), 值.end());
+            return 值;
+        };
+        const auto 粗查 = 方法服务_.查询候选方法(查询);
+        if (粗查.状态 == 新方法操作状态::资源失败) return {S::资源失败, {}};
+        if (粗查.状态 == 新方法操作状态::结构不一致)
+            throw std::logic_error("内容学习发现方法头查询结构损坏");
+        if (粗查.状态 != 新方法操作状态::已找到) return {S::查询未完成, {}};
+        发现.粗召回方法节点组 = 规范化(粗查.方法节点组);
+        for (const auto M : 发现.粗召回方法节点组) {
+            const auto 方法 = 方法服务_.获取方法(M);
+            if (!方法) throw std::logic_error("内容学习发现的正式方法不可读");
+            if (!方法->来源方法节点 && !方法->实例根节点
+                && 方法->启用状态 == 新方法启用状态::启用
+                && 方法->实现方式 == 新方法实现方式::本能
+                && (!方法->本能函数登记名 || 方法->本能函数登记名->empty()))
+                throw std::logic_error("内容学习发现的正式本能方法缺少登记名");
+            if (方法->来源方法节点 || 方法->启用状态 != 新方法启用状态::启用
+                || !std::all_of(查询.涉及特征类型概念组.begin(), 查询.涉及特征类型概念组.end(),
+                    [&](稳定编码 FT) {
+                        return std::find(方法->方法头.涉及特征类型概念组.begin(),
+                            方法->方法头.涉及特征类型概念组.end(), FT)
+                            != 方法->方法头.涉及特征类型概念组.end();
+                    })) return {S::来源已变化, {}};
+            if (!方法->实例根节点 && 方法->实现方式 == 新方法实现方式::本能
+                && 方法->条件结果组.empty())
+                发现.可学习方法节点组.push_back(M);
+        }
+        // 锁外读取后保留同一目标及当前叶子资格，不冻结权重或无关判定投影。
+        const auto 重提议 = 读取当前复合目标提议(T).提议;
+        if (重提议.状态 == 新任务复合分解状态::资源失败) return {S::资源失败, {}};
+        if (重提议.状态 == 新任务复合分解状态::依赖未就绪) return {S::查询未完成, {}};
+        const auto 当前需求 = 需求服务_.获取需求(D->节点);
+        const auto 当前任务 = 获取任务(T);
+        if (!当前任务 || 当前任务->节点 != 任务->节点 || 当前任务->需求节点 != D->节点 || !当前需求
+            || 当前需求->节点 != D->节点
+            || 当前需求->目标存在节点 != D->目标存在节点 || 当前需求->目标 != D->目标
+            || 当前需求->需求主体存在节点 != D->需求主体存在节点
+            || 当前需求->执行域 != D->执行域 || 当前需求->活动状态 != D->活动状态
+            || 当前需求->父需求节点 != D->父需求节点 || 当前需求->来源类型 != D->来源类型
+            || 当前需求->来源承接节点 != D->来源承接节点 || 当前需求->复合来源 != D->复合来源
+            || 重提议.状态 != 新任务复合分解状态::叶子目标 || 重提议.任务节点 != T
+            || 重提议.父需求节点 != 发现.来源需求节点 || 重提议.父目标 != 发现.来源目标)
+            return {S::来源已变化, {}};
+        return {S::已形成, std::move(发现)};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"内容叶方法学习发现", L"正式来源或方法查询发生工程错误");
+    }
+}
+
 新任务治理方法召回结果 新_任务类::查询任务方法候选并发布(
     稳定编码 任务节点) noexcept {
     新任务治理方法召回结果 结果;
     结果.任务节点 = 任务节点;
     try {
-        std::lock_guard 锁(新任务互斥);
+        std::shared_ptr<新方法内容核验上下文> 提议上下文;
+        if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);D&&D->目标.引用内容定位){
+            提议上下文=std::make_shared<新方法内容核验上下文>();
+            提议上下文->提议源=std::make_shared<新_需求类::提议源收集批>();
+        }
+        auto 场景批=提议上下文
+            ? 准备本次场景核验批(任务节点,{},nullptr,false,true,提议上下文,true)
+            : 准备本次场景核验批(任务节点,{},nullptr,false,true);
+        读取本次场景核验批(场景批);
+        const bool 明确未满足=场景批.内容目标判定
+            &&(场景批.内容目标判定->状态==新引用内容目标状态::未满足
+                ||场景批.内容目标判定->状态==新引用内容目标状态::分支待定);
+        if(场景批.需求&&场景批.需求->目标.引用内容定位
+            &&(!明确未满足||!场景批.任务||场景批.任务->最近执行实例节点)){
+            const auto 收束=复核并收束执行前已满足目标(任务节点);
+            using S=新任务执行前目标收束状态;
+            if(收束.状态==S::已标记未执行目标已满足||收束.状态==S::已处该状态){
+                结果.需求节点=收束.来源需求节点;结果.执行前目标收束=收束;
+                结果.状态=新任务治理方法召回状态::未执行目标已满足;return 结果;
+            }
+            if(收束.状态==S::资源失败){结果.状态=新任务治理方法召回状态::资源失败;return 结果;}
+            if(收束.状态==S::来源已变化||收束.状态==S::状态不允许){结果.状态=新任务治理方法召回状态::任务状态已变化;return 结果;}
+            if(收束.状态!=S::目标尚未满足){结果.状态=新任务治理方法召回状态::方法查询未完成;return 结果;}
+        }
+        std::unique_lock 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){结果.状态=新任务治理方法召回状态::任务状态已变化;return 结果;}
         if (!治理已初始化_ || !有效(新方法组织根节点)) {
             结果.状态 = 新任务治理方法召回状态::尚未初始化;
             return 结果;
@@ -13039,7 +17455,9 @@ namespace {
             return 结果;
         }
         结果.需求节点 = 任务->需求节点;
-        if (复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善) {
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化){结果.状态=新任务治理方法召回状态::任务状态已变化;return 结果;}
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::资源延后){结果.状态=新任务治理方法召回状态::资源失败;return 结果;}
+        if (场景批.需求准备->结果.状态 == 新任务需求准备状态::待完善) {
             结果.状态 = 新任务治理方法召回状态::需求信息待完善;
             return 结果;
         }
@@ -13051,6 +17469,39 @@ namespace {
         if (!需求) {
             结果.状态 = 新任务治理方法召回状态::需求不存在;
             return 结果;
+        }
+        if(需求->目标.引用内容定位) {
+            const auto 资格=复核任务筹办资格已加锁(任务节点,场景批);
+            if(资格.状态!=新需求筹办资格状态::允许筹办&&资格.状态!=新需求筹办资格状态::目标已满足){
+                结果.状态=资格.状态==新需求筹办资格状态::资源失败 ? 新任务治理方法召回状态::资源失败 : 新任务治理方法召回状态::任务状态已变化;return 结果;}
+            锁.unlock();
+            结果.复合目标提议=读取当前复合目标提议(任务节点).提议;
+            const bool 可用本叶=是本叶内容目标(*需求)
+                &&结果.复合目标提议->状态==新任务复合分解状态::已形成
+                &&结果.复合目标提议->子目标组.empty();
+            if(可用本叶) {
+                锁.lock();
+                if(!核同本次场景核验批(场景批)
+                    ||!需求服务_.提议需求值相同(需求服务_.获取需求(需求->节点),需求,取得提议源(场景批.内容核验上下文))){
+                    结果.状态=新任务治理方法召回状态::任务状态已变化;return 结果;
+                }
+            } else if(结果.复合目标提议->状态==新任务复合分解状态::叶子目标) {
+                const auto 发现 = 查询内容叶方法学习发现(任务节点);
+                if (发现.状态 != 新任务内容学习发现状态::已形成 || !发现.发现) {
+                    结果.状态 = 发现.状态 == 新任务内容学习发现状态::资源失败
+                        ? 新任务治理方法召回状态::资源失败
+                        : 发现.状态 == 新任务内容学习发现状态::查询未完成
+                            ? 新任务治理方法召回状态::方法查询未完成 : 新任务治理方法召回状态::任务状态已变化;
+                    return 结果;
+                }
+                结果.内容学习发现 = 发现.发现;
+                新方法候选结果 查询结果;
+                查询结果.状态 = 新方法操作状态::已找到;
+                查询结果.方法节点组 = 发现.发现->粗召回方法节点组;
+                结果.方法查询 = std::move(查询结果);
+                结果.状态=新任务治理方法召回状态::内容结果定位未支持;
+            } else 结果.状态=新任务治理方法召回状态::复合目标需自我确认;
+            if(!可用本叶)return 结果; // 复合字段叶仍不发表普通E/FT候选。
         }
 
         新方法候选查询 查询;
@@ -13064,6 +17515,17 @@ namespace {
                     ? 新任务治理方法召回状态::结构不一致
                     : 新任务治理方法召回状态::方法查询未完成);
             return 结果;
+        }
+        if(需求->目标.引用内容定位) {
+            auto& 候选=结果.方法查询->方法节点组;
+            候选.erase(std::remove_if(候选.begin(),候选.end(),[&](稳定编码 M){
+                const auto m=方法服务_.获取方法(M);
+                if(!m)throw std::logic_error("content candidate method unreadable");
+                return !有本叶内容知识(*m,*需求,存在概念服务_);
+            }),候选.end());
+            if(候选.empty()){
+                结果.状态=新任务治理方法召回状态::内容结果定位未支持;return 结果;
+            }
         }
         for (const auto 方法节点 : 结果.方法查询->方法节点组) {
             if (!方法服务_.是方法节点(方法节点)) {
@@ -13081,7 +17543,9 @@ namespace {
         发布.查询完整 = true;
         发布.候选方法节点组 = 结果.方法查询->方法节点组;
         结果.发布已尝试 = true;
+        锁.unlock(); // 发布的新目标来源取材不得继承外层task递归锁。
         结果.发布结果 = 发布候选方法材料(std::move(发布));
+        锁.lock();
         if ((结果.发布结果->状态 != 新任务操作状态::已建立
                 && 结果.发布结果->状态 != 新任务操作状态::已修改
                 && 结果.发布结果->状态 != 新任务操作状态::精确重复)
@@ -13153,6 +17617,12 @@ namespace {
                 结果.状态 = 新任务治理候选读回状态::结构不一致;
                 return 结果;
             }
+            if(需求->目标.引用内容定位) {
+                const auto 方法=方法服务_.获取方法(方法节点);
+                if(!方法||!有本叶内容知识(*方法,*需求,存在概念服务_)){
+                    结果.状态=新任务治理候选读回状态::结构不一致;return 结果;
+                }
+            }
         }
         结果.状态 = 结果.材料->候选方法节点组.empty()
             ? 新任务治理候选读回状态::已读回完整无候选
@@ -13168,7 +17638,7 @@ namespace {
     稳定编码 任务节点, 稳定编码 材料节点) noexcept {
     新任务治理候选消费结果 结果;
     try {
-        std::lock_guard 锁(新任务互斥);
+        std::unique_lock 锁(新任务互斥);
         结果.读回 = 读回任务方法候选(任务节点, 材料节点);
         if (结果.读回.状态 == 新任务治理候选读回状态::任务状态已变化) {
             结果.状态 = 新任务治理候选消费状态::任务状态已变化;
@@ -13185,15 +17655,6 @@ namespace {
                     ? 新任务治理候选消费状态::资源失败
                     : 新任务治理候选消费状态::读回失败);
             return 结果;
-        }
-        if (结果.读回.材料 && std::any_of(结果.读回.材料->候选方法节点组.begin(),
-            结果.读回.材料->候选方法节点组.end(), [&](auto n) { return 方法服务_.是历史服务结算方法(n); })) {
-            const auto fresh = 查询任务方法候选并发布(任务节点);
-            if (!fresh.候选材料节点) {
-                结果.状态 = 新任务治理候选消费状态::读回失败;
-                return 结果;
-            }
-            return 消费任务方法候选(任务节点, *fresh.候选材料节点);
         }
         const auto 目标状态 = 有候选
             ? 新任务状态::待检查条件 : 新任务状态::等待条件;
@@ -13267,13 +17728,6 @@ namespace {
             材料=获取候选方法材料(*原任务->当前候选方法材料节点);
             if(!材料||材料->任务节点!=任务节点||材料->需求节点!=原任务->需求节点
                 ||!材料->查询完整||材料->查询状态!=新方法操作状态::已找到||材料->候选方法节点组.empty())throw std::logic_error("候选组织交付材料读取失败");
-            if (std::any_of(材料->候选方法节点组.begin(), 材料->候选方法节点组.end(),
-                [&](auto n) { return 方法服务_.是历史服务结算方法(n); })) {
-                const auto changed = 修改任务状态(任务节点, 新任务状态::待查找方法);
-                if (changed != 新任务操作状态::已修改 && changed != 新任务操作状态::无变化)
-                    throw std::logic_error("退出结算方法候选恢复筹办失败");
-                return {新任务执行组织状态::任务状态不允许,{}};
-            }
             const auto 需求=需求服务_.获取需求(原任务->需求节点);
             if(!需求||需求->目标!=材料->需求目标) return {新任务执行组织状态::任务状态不允许,{}};
         }
@@ -13361,15 +17815,804 @@ namespace {
 }
 }
 
+void 新_任务类::配置场景事实读取(const 新方法场景事实读取接口& 读取,
+    const 新方法场景事实构成读取接口& 构成读取) {
+    std::lock_guard 锁(新任务互斥);
+    if ((场景事实读取_ && 场景事实读取_ != &读取)
+        || (场景事实构成读取_ && 场景事实构成读取_ != &构成读取))
+        throw std::logic_error("任务场景事实提供者不得替换");
+    场景事实读取_=&读取;
+    场景事实构成读取_=&构成读取;
+}
+
+新_任务类::新任务本次场景核验批 新_任务类::准备本次场景核验批(
+    稳定编码 T,std::optional<稳定编码> X,const 新任务本能采用材料* 固定,
+    bool 允许执行,bool 部分) const {
+    return 准备本次场景核验批(T,X,固定,允许执行,部分,std::make_shared<新方法内容核验上下文>());
+}
+新_需求类::提议源收集批* 新_任务类::取得提议源(
+    const std::shared_ptr<新方法内容核验上下文>& 上下文) noexcept {
+    return 上下文 ? 上下文->提议源.get() : nullptr;
+}
+std::optional<新需求信息> 新_任务类::读取本次提议需求(稳定编码 D,
+    const std::shared_ptr<新方法内容核验上下文>& 上下文,std::vector<基础联合节点快照>& 保护) const {
+    const auto 源=取得提议源(上下文);
+    return 源 ? 需求服务_.读取提议源需求(D,*源,保护) : 需求服务_.获取需求(D);
+}
+新_任务类::方法内容必要性状态 新_任务类::核同方法内容必要性投影已加锁(
+    const 新方法内容必要性投影& p) const {
+    if(p.子需求&&!需求服务_.提议需求值相同(需求服务_.获取需求(p.子需求->节点),p.子需求,p.提议源.get()))return 方法内容必要性状态::前提已变化;
+    if(p.父需求&&!需求服务_.提议需求值相同(需求服务_.获取需求(p.父需求->节点),p.父需求,p.提议源.get()))return 方法内容必要性状态::前提已变化;
+    if(p.父任务&&获取任务(p.父任务->节点)!=p.父任务)return 方法内容必要性状态::前提已变化;
+    if(p.子需求){const auto t=查询需求任务(p.子需求->节点);
+        if(t!=(p.子任务 ? std::optional<稳定编码>{p.子任务->节点} : std::nullopt))return 方法内容必要性状态::前提已变化;}
+    if(p.子任务){
+        const auto 当前=获取任务(p.子任务->节点);
+        if(!当前||当前->节点!=p.子任务->节点||当前->需求节点!=p.子任务->需求节点
+            ||(!p.提议源&&当前!=p.子任务))return 方法内容必要性状态::前提已变化;
+    }
+    try {
+        if(!核同因果节点保护(p.保护)||!需求服务_.核同提议源(p.提议源.get()))return 方法内容必要性状态::前提已变化;
+    }catch(const std::bad_alloc&){return 方法内容必要性状态::资源失败;}
+    return p.状态;
+}
+新_任务类::新方法内容必要性投影 新_任务类::复核方法内容子需求必要性(
+    稳定编码 D,const std::shared_ptr<新方法内容核验上下文>& 上下文) const {
+    using S=方法内容必要性状态;
+    新方法内容必要性投影 p;
+    if(上下文)p.提议源=上下文->提议源;
+    try {
+        {
+            std::lock_guard 锁(新任务互斥);
+            p.子需求=读取本次提议需求(D,上下文,p.保护);
+            if(!p.子需求){p.状态=S::等待读取;return p;}
+            const auto& d=*p.子需求;
+            if(!d.目标.引用内容定位||d.复合来源||d.来源类型!=新需求来源类型::任务子目标){p.子需求.reset();return p;}
+            if(!d.来源承接节点||!d.父需求节点)throw std::logic_error("内容条件子需求缺正式来源");
+            p.父任务=获取任务(*d.来源承接节点);p.父需求=读取本次提议需求(*d.父需求节点,上下文,p.保护);
+            if(!p.父任务||!p.父需求||p.父任务->需求节点!=p.父需求->节点
+                ||查询需求任务(p.父需求->节点)!=p.父任务->节点)throw std::logic_error("内容条件父D-T身份损坏");
+            if(const auto t=查询需求任务(D)){p.子任务=获取任务(*t);if(!p.子任务||p.子任务->需求节点!=D)throw std::logic_error("内容子D-T身份损坏");}
+            std::set<稳定编码> ids{p.父任务->节点,p.父任务->任务虚拟存在节点};
+            if(!p.提议源){ids.insert(D);ids.insert(p.父需求->节点);}
+            if(p.子任务&&!p.提议源){ids.insert(p.子任务->节点);ids.insert(p.子任务->任务虚拟存在节点);}
+            const auto r=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
+            if(r.状态==基础结构操作状态::资源失败){p.状态=S::资源失败;return p;}
+            if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=ids.size())throw std::logic_error("必要性来源完整读取失败");
+            for(const auto& n:r.节点组){if(!n.快照){p.状态=S::前提已变化;return p;}p.保护.push_back(*n.快照);}
+            if(是终结状态(p.父任务->当前状态)||p.父需求->活动状态==新需求活动状态::失活
+                ||d.活动状态==新需求活动状态::失活){p.状态=S::已不再必要;return p;}
+        }
+        if(!上下文)throw std::logic_error("必要性缺递归上下文");
+        const auto 父T=p.父任务->节点;
+        if(!上下文->当前递归任务栈.insert(父T).second){p.状态=S::未支持;p.诊断=L"方法内容必要性父链循环";return p;}
+        struct 栈守卫 final{std::set<稳定编码>& 栈;稳定编码 T;~栈守卫(){栈.erase(T);}} guard{上下文->当前递归任务栈,父T};
+        std::vector<基础联合节点快照> 父保护;
+        auto 提议=提议任务条件子需求带上下文(父T,上下文,&父保护);
+        if(提议.状态==新任务条件子需求提议状态::资源失败){p.状态=S::资源失败;return p;}
+        if(提议.状态==新任务条件子需求提议状态::来源已变化||提议.状态==新任务条件子需求提议状态::任务状态已变化){p.状态=S::前提已变化;return p;}
+        if(提议.状态==新任务条件子需求提议状态::暂不支持||提议.状态==新任务条件子需求提议状态::形成循环依赖){p.状态=S::未支持;return p;}
+        if(提议.状态==新任务条件子需求提议状态::结构不一致)throw std::logic_error("父必要性提议结构损坏");
+        if((提议.状态!=新任务条件子需求提议状态::已形成&&提议.状态!=新任务条件子需求提议状态::无需子需求)
+            ||!提议.分解依据||父保护.empty()){p.状态=S::等待读取;return p;}
+        for(const auto& n:父保护){
+            const auto old=std::find_if(p.保护.begin(),p.保护.end(),[&](const auto& x){return x.结构.节点.编码==n.结构.节点.编码;});
+            if(old==p.保护.end())p.保护.push_back(n);
+            else if(old->结构.节点!=n.结构.节点||old->结构.字段组!=n.结构.字段组
+                ||old->入向外部关系组!=n.入向外部关系组||old->出向外部关系组!=n.出向外部关系组||old->入向字段组!=n.入向字段组){p.状态=S::前提已变化;return p;}
+        }
+        p.父提议=std::move(提议);
+        const auto& d=*p.子需求;
+        const auto 找到=std::find_if(p.父提议->已知条件项组.begin(),p.父提议->已知条件项组.end(),[&](const auto& x){
+            return x.引用内容定位==d.目标.引用内容定位&&x.目标存在节点==d.目标存在节点
+                &&x.目标特征类型概念节点==d.目标.目标特征类型概念节点&&std::optional<稳定编码>{x.目标值域概念节点}==d.目标.目标值域概念节点;});
+        p.状态=找到!=p.父提议->已知条件项组.end() ? S::仍必要
+            : p.父提议->分解依据->未解析条件序号组.empty() ? S::已不再必要 : S::等待读取;
+        std::lock_guard 锁(新任务互斥);p.状态=核同方法内容必要性投影已加锁(p);return p;
+    }catch(新需求目标定义核验状态 s){
+        if(s!=新需求目标定义核验状态::前提已变化)throw;
+        p.状态=S::前提已变化;return p;
+    }catch(const std::bad_alloc&){p.状态=S::资源失败;return p;}
+}
+新_任务类::新任务本次场景核验批 新_任务类::准备本次场景核验批(
+    稳定编码 T,std::optional<稳定编码> X,const 新任务本能采用材料* 固定,
+    bool 允许执行,bool 部分,const std::shared_ptr<新方法内容核验上下文>& 上下文,bool 仅查找目标) const {
+    新任务本次场景核验批 批;
+    try {
+    std::unique_lock 锁(新任务互斥);
+    if(!上下文)throw std::logic_error("内容核验缺调用上下文");
+    批.内容核验上下文=上下文;
+    批.T=T;批.X=X;批.允许当前执行=允许执行;批.允许部分绑定=部分;
+    批.仅查找目标=仅查找目标;
+    if (固定) 批.固定采用=*固定;
+    批.任务=获取任务(T);
+    if(!批.任务)return 批;
+    批.需求=读取本次提议需求(批.任务->需求节点,上下文,批.保护);
+    if(仅查找目标)return 批;
+    if(批.任务->方法执行组织节点)批.组织=读取任务方法执行组织(T).组织;
+    if(批.任务->当前候选方法材料节点)批.候选=获取候选方法材料(*批.任务->当前候选方法材料节点);
+    if(X) {
+        批.执行=获取执行实例(*X);
+        if(!批.执行 || 批.执行->任务节点!=T)return 批;
+        if(批.执行 && 批.执行->本能采用) {
+            if(批.固定采用 && *批.固定采用!=*批.执行->本能采用)
+                throw std::logic_error("场景核验固定采用与X不一致");
+            批.固定采用=批.执行->本能采用;
+        }
+        if(批.执行){
+            (void)任务执行组织存储::读取方案场景事实(*X,nullptr,nullptr,&批.保护);
+            (void)任务执行组织存储::读取执行场景事实(*X,nullptr,nullptr,&批.保护);
+        }
+    }
+    std::set<稳定编码> 方法身份;
+    if(批.固定采用)方法身份.insert(批.固定采用->来源方法节点);
+    if(批.组织)for(const auto& 域:批.组织->方法作用域组)方法身份.insert(域.来源方法节点);
+    // 原方法owner完整定义及保护只在完全离开task锁后读取。
+    锁.unlock();
+    if(!方法身份.empty()){
+        const auto 闭包=方法服务_.读取方法执行结构闭包({方法身份.begin(),方法身份.end()});
+        if(闭包.状态==新_方法类::执行结构读取状态::前提已变化){批.分支有效=false;return 批;}
+        if(闭包.状态!=新_方法类::执行结构读取状态::已读取)throw std::logic_error("场景核验来源方法完整闭包不可读");
+        批.方法组=闭包.方法组;批.保护.insert(批.保护.end(),闭包.完整保护组.begin(),闭包.完整保护组.end());
+    }
+    for(const auto& 方法:批.方法组) {
+        for(const auto& p:方法.参数规格组)if(p.有序规格&&p.有序规格->信息类型==新方法参数信息类型::存在) {
+            const auto& 规格=*p.有序规格;
+            const auto 定义=存在概念服务_.读取正式结构概念保护(规格.范围概念节点);
+            if(定义.状态==正式结构操作状态::前提已变化){批.分支有效=false;return 批;}
+            if(定义.状态!=正式结构操作状态::已读取||!定义.信息
+                ||!std::holds_alternative<信息结构概念定义>(定义.信息->定义))continue;
+            新任务本次场景核验批::正式参数项 q;q.方法=方法.节点;q.范围=规格.范围概念节点;q.位置=规格.序号;
+            if(!合并需求结果保护(批.保护,定义.完整保护组)){批.分支有效=false;return 批;}
+            if(批.需求&&批.需求->目标.引用内容定位)q.指定需求=批.需求->目标.引用内容定位->引用需求节点;
+            const auto 读=[&](稳定编码 C){
+                auto r=q.指定需求 ? 需求服务_.读取正式信息参数保护(*q.指定需求,C) : 正式信息参数读取结果{};
+                if(r.状态==正式信息参数读取状态::资源失败)throw std::bad_alloc{};
+                if(r.状态==正式信息参数读取状态::前提已变化||!合并需求结果保护(批.保护,r.完整保护组))批.分支有效=false;
+                return r;
+            };
+            q.读取=读(q.范围);
+            for(const auto& 对:方法.条件结果组)for(const auto& c:对.条件.条件项组)
+                if(c.参数序号==q.位置&&c.存在概念节点&&!q.条件范围组.contains(*c.存在概念节点))
+                    q.条件范围组.emplace(*c.存在概念节点,读(*c.存在概念节点));
+            批.正式参数组.push_back(std::move(q));
+        }
+        const auto 采集附属声明=[&](const auto& 项,std::optional<稳定编码> 支){
+            if(!项.参数序号||!项.特征类型概念节点||项.任务成员变量序号
+                ||项.参数序号>方法.参数规格组.size())return;
+            const auto& 规格=方法.参数规格组[项.参数序号-1];
+            if(!规格.有序规格||规格.有序规格->信息类型!=新方法参数信息类型::存在)return;
+            const auto 根=取得特征概念类型根(特征概念服务_,*项.特征类型概念节点);
+            if(!根)throw std::logic_error("E+FT声明类型根不可读");
+            if(std::any_of(批.附属声明组.begin(),批.附属声明组.end(),[&](const auto& x){return x.方法==方法.节点&&x.分支==支&&x.位置==项.参数序号&&x.特征类型根==*根;}))return;
+            auto 声明=方法服务_.读取存在参数特征声明(方法.节点,支,项.参数序号,*根);
+            if(声明.状态==新方法参数特征读取状态::定义前提已变化){批.分支有效=false;return;}
+            if(声明.状态!=新方法参数特征读取状态::已读取||!声明.特征定义)
+                throw std::logic_error("正式E+FT条件结果缺少原方法声明");
+            批.附属声明组.push_back({方法.节点,*根,支,项.参数序号,std::move(声明)});
+        };
+        for(const auto& 对:方法.条件结果组){
+            std::vector<std::optional<稳定编码>> 来源;
+            if(对.来源执行分支节点组.empty())来源.push_back({});
+            else for(const auto 支:对.来源执行分支节点组)来源.push_back(支);
+            for(const auto 支:来源){
+                if(批.固定采用&&(批.固定采用->来源方法节点!=方法.节点||批.固定采用->来源配对节点!=对.配对节点||批.固定采用->执行分支节点!=支))continue;
+                for(const auto& 项:对.条件.条件项组)采集附属声明(项,支);
+                for(const auto& 项:对.结果.结果项组)采集附属声明(项,支);
+                for(const auto& 项:对.结果.确认要求.禁止结果项组)采集附属声明(项,支);
+            }
+        }
+        for(const auto& 支:方法.执行分支组){
+            if(批.固定采用&&(批.固定采用->来源方法节点!=方法.节点||批.固定采用->执行分支节点!=支.节点))continue;
+            批.分支定义组.emplace_back(方法.节点,支);
+        }
+    }
+    锁.lock();
+    if(批.任务!=获取任务(T)||!需求服务_.提议需求值相同(批.需求,需求服务_.获取需求(批.任务->需求节点),取得提议源(上下文))
+        ||(批.组织&&批.组织!=读取任务方法执行组织(T).组织)
+        ||(X&&批.执行!=获取执行实例(*X))){批.分支有效=false;return 批;}
+    // 内部只用已捕获完整方法值采集绑定和缺项，不发表任何事实。
+    批.纯筹办=核验任务条件和参数内部(T,批.固定采用 ? &*批.固定采用:nullptr,允许执行,部分,批);
+    std::set<稳定编码> 需保护{T,批.任务->任务虚拟存在节点};
+    if(!取得提议源(上下文))需保护.insert(批.任务->需求节点);
+    if(X)需保护.insert(*X);
+    if(批.执行) {
+        for(const auto& 阶段:批.执行->预计变化阶段组)for(const auto& v:阶段.变化组)if(v.预期引用内容) {
+            需保护.insert(v.预期引用内容->需求节点);需保护.insert(v.预期引用内容->要求概念节点);
+            需保护.insert(v.预期引用内容->正式内容路径.begin(),v.预期引用内容->正式内容路径.end());
+            if(v.预期引用内容->认知来源确认)收集认知来源引用(*v.预期引用内容->认知来源确认,需保护);
+        }
+        for(const auto& g:批.执行->结果获取方案.目标组)if(g.认知来源确认)收集认知来源引用(*g.认知来源确认,需保护);
+    }
+    if(批.任务->当前候选方法材料节点)需保护.insert(*批.任务->当前候选方法材料节点);
+    if(批.任务->方法执行组织节点)需保护.insert(*批.任务->方法执行组织节点);
+    if(批.固定采用) {
+        const auto& 采用=*批.固定采用;
+        for(const auto& 限定:采用.需要条件.场景事实限定组)
+            批.项组.push_back({批.任务->方法执行组织节点,采用.来源方法节点,采用.来源配对节点,限定,采用.参数绑定组,新交互求值状态::材料不足,采用.执行分支节点});
+        for(const auto& 绑定:采用.参数绑定组) {
+            if(绑定.有序引用)需保护.insert(绑定.有序引用->信息节点);
+            if(绑定.实际存在节点)需保护.insert(*绑定.实际存在节点);
+            if(绑定.世界场景节点)需保护.insert(*绑定.世界场景节点);
+            for(const auto& F:绑定.实际特征组)需保护.insert(F.特征节点);
+        }
+    }
+    for(const auto& 方法:批.方法组) {
+        需保护.insert(方法.节点);
+        for(const auto& 配对:方法.条件结果组) {
+            需保护.insert(配对.配对节点);需保护.insert(配对.条件节点);需保护.insert(配对.结果节点);
+        }
+    }
+    for(const auto& 方法项:批.纯筹办.方法筹办组) {
+        const auto 方法=std::find_if(批.方法组.begin(),批.方法组.end(),[&](const auto& m){return m.节点==方法项.方法节点;});
+        if(方法==批.方法组.end())throw std::logic_error("场景核验缺少方法定义");
+        for(const auto& 配对:方法->条件结果组) {
+            if(批.固定采用)continue;
+            const auto& 条件=配对.条件;
+            const auto& 绑定=方法项.参数绑定组;
+            for(const auto& 限定:条件.场景事实限定组){
+                if(配对.来源执行分支节点组.empty())批.项组.push_back({批.任务->方法执行组织节点,方法项.方法节点,配对.配对节点,限定,绑定});
+                else for(const auto 支:配对.来源执行分支节点组)批.项组.push_back({批.任务->方法执行组织节点,方法项.方法节点,配对.配对节点,限定,绑定,新交互求值状态::材料不足,支});
+            }
+        }
+        for(const auto& 绑定:方法项.参数绑定组) {
+            if(绑定.有序引用)需保护.insert(绑定.有序引用->信息节点);
+            if(绑定.实际存在节点)需保护.insert(*绑定.实际存在节点);
+            if(绑定.世界场景节点)需保护.insert(*绑定.世界场景节点);
+            for(const auto& F:绑定.实际特征组)需保护.insert(F.特征节点);
+        }
+    }
+    const auto 联合=全局基础数据集.查询节点组完整结构({需保护.begin(),需保护.end()});
+    if(联合.状态!=基础结构操作状态::已完成 || 联合.节点组.size()!=需保护.size())
+        throw std::logic_error("场景核验完整保护读取失败");
+    for(const auto& 项:联合.节点组){if(!项.快照)throw std::logic_error("场景核验保护节点缺失");批.保护.push_back(*项.快照);}
+    return 批;
+    } catch(新需求目标定义核验状态 s){
+        if(s!=新需求目标定义核验状态::前提已变化)throw;
+        批.分支有效=false;return 批;
+    } catch(const std::bad_alloc&){throw;}
+    catch(const std::length_error&){throw;}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备任务场景核验批",L"完整定义与保护读取工程故障");}
+}
+void 新_任务类::读取新增成员目标组(新任务本次场景核验批& 批,const std::vector<稳定编码>& ids) const {
+    std::set<稳定编码> unique(ids.begin(),ids.end());
+    for(const auto id:unique){
+        const auto found=std::find_if(批.新增成员目标组.begin(),批.新增成员目标组.end(),[&](const auto& x){return x.需求.节点==id;});
+        if(found!=批.新增成员目标组.end())continue;
+        const auto d=需求服务_.获取需求(id);if(!d){批.分支有效=false;return;}
+        新任务本次场景核验批::新增成员目标预读项 item{*d,{},{}};
+        if(d->目标.新增成员来源见证){
+            item.判定=需求服务_.读取新增成员来源见证内部(id,取得提议源(批.内容核验上下文));
+            item.当前满足=映射新增成员目标满足(*item.判定);
+            if(!合并需求结果保护(批.保护,item.判定->完整保护)){批.分支有效=false;return;}
+        }
+        批.新增成员目标组.push_back(std::move(item));
+    }
+}
+void 新_任务类::读取冲突候选目标组(新任务本次场景核验批& 批) const {
+    const auto all=需求服务_.查询全部需求();
+    if(all.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+    if(all.状态!=新需求操作状态::已找到){批.分支有效=false;return;}
+    批.冲突候选需求清单=all.需求节点组;
+    std::vector<稳定编码> ids;
+    for(const auto id:all.需求节点组){const auto g=需求服务_.读取需求治理信息(id);
+        if(!g){批.分支有效=false;return;}
+        if(g->完整目标&&(g->活动状态==新需求活动状态::活动||g->活动状态==新需求活动状态::等待))ids.push_back(id);}
+    读取新增成员目标组(批,ids);
+}
+新需求当前满足结果 新_任务类::读取批需求满足(const 新任务本次场景核验批& 批,const 新需求信息& d) const {
+    if(!批.分支有效)return {新需求当前满足状态::目标引用前提已变化};
+    const auto found=std::find_if(批.新增成员目标组.begin(),批.新增成员目标组.end(),[&](const auto& x){return x.需求.节点==d.节点;});
+    if(found!=批.新增成员目标组.end()){
+        if(!需求服务_.提议需求值相同(found->需求,d,取得提议源(批.内容核验上下文)))return {新需求当前满足状态::目标引用前提已变化};
+        if(d.目标.新增成员来源见证){
+            // 缓存判定只依赖该项见证的完整材料，不重核其它需求及方法材料。
+            if(!核同因果节点保护(found->判定.value().完整保护))return {新需求当前满足状态::目标引用前提已变化};
+            return found->当前满足;
+        }
+        return 取得提议源(批.内容核验上下文)
+            ? 需求服务_.复核当前满足可抛内部(d.节点,nullptr,取得提议源(批.内容核验上下文))
+            : 需求服务_.复核当前满足(d.节点);
+    }
+    if(d.目标.新增成员来源见证)return {新需求当前满足状态::目标引用前提已变化};
+    return 取得提议源(批.内容核验上下文)
+        ? 需求服务_.复核当前满足可抛内部(d.节点,nullptr,取得提议源(批.内容核验上下文))
+        : 需求服务_.复核当前满足(d.节点);
+}
+void 新_任务类::读取本次场景核验批(新任务本次场景核验批& 批) const {
+    // 调用者必须已经退出全部任务递归锁；此函数自身不取任务锁。
+    const wchar_t* 步骤 = L"读取需求准备保护";
+    const auto 报告工程故障 = [&](const char* 说明) noexcept {
+        wchar_t 原因[512]{};
+        (void)_snwprintf_s(原因, _TRUNCATE,
+            L"场景核验批读取工程故障；步骤=%ls；任务=%llu；需求=%llu",
+            步骤, static_cast<unsigned long long>(批.T.值),
+            static_cast<unsigned long long>(批.需求 ? 批.需求->节点.值 : 0));
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务场景核验批", 原因, 说明);
+    };
+    try {
+    if(!批.分支有效){批.已读取=true;return;}
+    批.需求准备=读取任务需求准备保护批(批.T,批.内容核验上下文);
+    步骤 = L"合并需求准备保护";
+    if(!合并需求结果保护(批.保护,批.需求准备->保护)){
+        批.分支有效=false;批.已读取=true;return;
+    }
+    步骤 = L"复核当前需求满足";
+    if(批.需求){
+        读取新增成员目标组(批,{批.需求->节点});
+        if(!批.分支有效){批.已读取=true;return;}
+        批.当前需求满足=读取批需求满足(批,*批.需求);
+        const auto& entry=批.新增成员目标组.front();
+        if(entry.判定)批.新增成员目标判定=entry.判定;
+    }
+    步骤 = L"读取引用内容目标";
+    const auto 源=取得提议源(批.内容核验上下文);
+    if(批.需求&&批.需求->目标.新增成员来源见证)批.内容目标资格=源
+        ? 需求服务_.复核筹办资格可抛内部(批.需求->节点,nullptr,源,&批.保护)
+        : 需求服务_.复核筹办资格(批.需求->节点);
+    if(批.需求&&批.需求->目标.引用内容定位){
+        批.内容目标资格=源 ? 需求服务_.复核筹办资格可抛内部(批.需求->节点,nullptr,源,&批.保护)
+            : 需求服务_.复核筹办资格(批.需求->节点);
+        if(源) {
+            auto 内容=需求服务_.读取引用内容提议(批.需求->节点);
+            if(内容.需求) {
+                需求服务_.合并提议源前提(源->前提,内容.源前提);源->需求节点组.insert(批.需求->节点);
+            }
+            批.内容目标判定=std::move(内容.判定);
+        } else 批.内容目标判定=需求服务_.复核引用内容目标(批.需求->节点);
+        批.保护.insert(批.保护.end(),批.内容目标判定->完整保护组.begin(),批.内容目标判定->完整保护组.end());
+        if(!需求服务_.提议需求值相同(批.内容目标资格->需求,批.需求,源)
+            ||!需求服务_.提议需求值相同(需求服务_.获取需求(批.需求->节点),批.需求,源)){批.分支有效=false;批.已读取=true;return;}
+    }
+    步骤 = L"读取普通值目标满足保护";
+    if(批.需求&&!批.需求->目标.引用内容定位&&批.需求->目标.目标形式==新需求目标形式::值)
+        批.已满足静态来源=读取普通值目标满足保护(批);
+    步骤 = L"复核内容与复合目标必要性";
+    const bool 内容已满足=批.内容目标判定&&批.内容目标判定->状态==新引用内容目标状态::已满足;
+    if(内容已满足)批.已满足静态来源=核验已满足内容目标静态来源(批);
+    else if(批.需求&&批.需求->复合来源)批.复合必要性=复核复合子目标当前必要性(批.T);
+    if(批.需求&&批.需求->目标.引用内容定位&&!批.需求->复合来源
+        &&批.需求->来源类型==新需求来源类型::任务子目标&&!内容已满足){
+        auto p=复核方法内容子需求必要性(批.需求->节点,批.内容核验上下文);
+        批.保护.insert(批.保护.end(),p.保护.begin(),p.保护.end());
+        批.内容必要性组.emplace(批.需求->节点,std::move(p));
+    }
+    // 内容条件只在退出任务锁后求值；先按正式关系固定E/F，再从F.current固定D。
+    const auto 读取认知来源限定=[&](新任务本次场景核验批::内容条件项& 项,稳定编码 D,稳定编码 H) {
+        if(!项.声明.要求认知来源当前有效)return true;
+        if(批.执行&&批.执行->状态==新任务执行状态::已评估)return true;
+        const auto 先天=存在概念服务_.读取引用内容筹办概念();
+        if(先天.状态==正式结构操作状态::前提已变化)return false;
+        if(先天.状态!=正式结构操作状态::已读取||!先天.信息)return true;
+        if(项.声明.作用点!=新方法内容作用点::参数自身||!项.声明.正式内容路径.empty()
+            ||项.声明.要求概念节点!=先天.信息->完整被认知需求)
+            throw std::logic_error("recognition source qualification has unsupported predicate shape");
+        const auto 原=需求服务_.读取需求治理信息(D);
+        if(!原)throw std::logic_error("bound recognition demand governance missing");
+        项.固定认知来源=原;
+        if(原->执行域!=新需求执行域::被认知||原->需求主体存在节点!=H
+            ||!原->完整目标||!原->认知来源)return !批.执行.has_value();
+        const auto& 来源=*原->认知来源;
+        const 新服务要求确认目标 预期{来源.内容确认节点,来源.理解节点,H,
+            原->完整目标->目标存在节点,原->完整目标->目标,来源.来源要求节点};
+        std::optional<新服务要求确认目标> 冻结来源;
+        if(批.执行) {
+            for(const auto& 阶段:批.执行->预计变化阶段组)for(const auto& v:阶段.变化组)
+                if(v.作用对象节点==H&&v.预期引用内容&&v.预期引用内容->需求节点==D) {
+                    if(!v.预期引用内容->认知来源确认)return true;
+                    if(冻结来源&&冻结来源!=v.预期引用内容->认知来源确认)
+                        throw std::logic_error("same execution contains conflicting frozen recognition sources");
+                    冻结来源=v.预期引用内容->认知来源确认;
+                }
+            if(!冻结来源)return true; // 旧X不回填动作前来源。
+            if(*冻结来源!=预期)return false; // D合法更新也已不再是本次冻结来源。
+        }
+        const auto 确认节点=冻结来源 ? 冻结来源->确认节点 : 来源.内容确认节点;
+        auto 准备=需求服务_.准备服务要求确认语义保护(确认节点);
+        项.认知来源资格=准备.状态;
+        if(准备.状态==新服务要求确认保护状态::资源失败)throw std::bad_alloc{};
+        if(准备.状态==新服务要求确认保护状态::结构不一致)
+            throw std::logic_error("bound demand confirmation protection malformed");
+        if(准备.状态==新服务要求确认保护状态::前提已变化)return false;
+        if(准备.状态==新服务要求确认保护状态::确认不存在) {
+            const auto 再读=需求服务_.读取需求治理信息(D);
+            const auto 再准备=需求服务_.准备服务要求确认语义保护(确认节点);
+            if(再准备.状态==新服务要求确认保护状态::资源失败)throw std::bad_alloc{};
+            if(再读==原&&再准备.状态==新服务要求确认保护状态::确认不存在)
+                throw std::logic_error("stable bound demand references absent confirmation");
+            return false;
+        }
+        if(准备.状态!=新服务要求确认保护状态::已准备) {
+            if(准备.保护)throw std::logic_error("unprepared confirmation returned protection");
+            return 需求服务_.读取需求治理信息(D)==原;
+        }
+        if(!准备.保护||准备.保护->预期节点组().empty())
+            throw std::logic_error("prepared confirmation missing complete protection");
+        if(准备.保护->确认()!=预期) {
+            const auto 再读=需求服务_.读取需求治理信息(D);
+            auto 再准备=需求服务_.准备服务要求确认语义保护(确认节点);
+            if(再准备.状态==新服务要求确认保护状态::资源失败)throw std::bad_alloc{};
+            if(再读==原&&再准备.状态==新服务要求确认保护状态::已准备&&再准备.保护
+                &&再准备.保护->确认()!=预期&&核同需求结果保护(再准备.保护->预期节点组()))
+                throw std::logic_error("stable demand confirmation source or target mismatch");
+            return false;
+        }
+        if(!合并需求结果保护(批.保护,准备.保护->预期节点组())
+            ||需求服务_.读取需求治理信息(D)!=原||!核同需求结果保护(准备.保护->预期节点组()))return false;
+        项.认知来源确认=准备.保护->确认();
+        std::set<稳定编码> 来源引用;
+        收集认知来源引用(*项.认知来源确认,来源引用);
+        if(!合并需求结果保护(批.保护,贡献完整快照(来源引用)))return false;
+        return true;
+    };
+    步骤 = L"读取方法内容条件与关系";
+    std::map<稳定编码,稳定编码> 本批固定需求;
+    if(批.组织)for(const auto& 方法项:批.纯筹办.方法筹办组) {
+        const auto 方法=任务执行组织存储::读取来源视图(*批.组织,方法项.方法节点,批.方法组,
+            批.固定采用 ? &*批.固定采用 : nullptr);
+        if(!方法)throw std::logic_error("内容条件缺少来源方法视图");
+        for(const auto& 配对:方法->条件结果组) {
+            const auto 分支=任务执行组织存储::配对执行分支(配对);
+            const auto& 条件=配对.条件;
+            std::map<std::uint32_t,std::uint32_t> 别名;
+            for(const auto& 规格:方法->参数规格组)if(规格.有序规格)别名.emplace(规格.有序规格->序号,规格.有序规格->序号);
+            const auto 根=[&](std::uint32_t n){std::set<std::uint32_t> seen;
+                while(别名.contains(n)&&别名.at(n)!=n){if(!seen.insert(n).second)throw std::logic_error("参数别名循环");n=别名.at(n);}return n;};
+            for(const auto& r:条件.参数关系组)if(r.种类==新方法参数关系种类::同一){const auto l=根(r.左参数序号),v=根(r.右参数序号);别名[(std::max)(l,v)]=(std::min)(l,v);}
+            const auto 查绑定=[&](std::uint32_t n,新方法参数信息类型 k)->std::optional<稳定编码>{
+                std::optional<稳定编码> found;
+                for(const auto& b:方法项.参数绑定组)if(b.有序引用&&根(b.有序引用->序号)==根(n)){
+                    if(b.有序引用->信息类型!=k)throw std::logic_error("内容条件参数类型矛盾");
+                    if(found&&*found!=b.有序引用->信息节点)return {};found=b.有序引用->信息节点;
+                }return found;};
+            for(std::size_t i=0;i<条件.条件项组.size();++i) {
+                const auto& c=条件.条件项组[i];if(!c.引用内容条件)continue;
+                新任务本次场景核验批::内容条件项 项;
+                项.方法=方法项.方法节点;项.配对=配对.配对节点;项.分支=分支;项.序号=i;项.声明=*c.引用内容条件;
+                if(项.声明.作用点==新方法内容作用点::参数自身) {
+                    const auto D=查绑定(c.参数序号,新方法参数信息类型::存在);
+                    std::optional<std::uint32_t> 主体,特征;
+                    for(const auto& rel:条件.参数关系组)if(rel.种类==新方法参数关系种类::内容引用参数&&根(rel.左参数序号)==根(c.参数序号)) {
+                        if(主体&&根(*主体)!=根(rel.右参数序号))throw std::logic_error("direct demand content has ambiguous subject");
+                        主体=rel.右参数序号;
+                    }
+                    for(const auto& rel:配对.结果.参数关系组)if(rel.种类==新方法参数关系种类::特征引用存在&&根(rel.右参数序号)==根(c.参数序号)) {
+                        if(特征&&根(*特征)!=根(rel.左参数序号))throw std::logic_error("direct demand content has ambiguous result feature");
+                        特征=rel.左参数序号;
+                    }
+                    if(D&&主体&&特征) {
+                        项.主体=查绑定(*主体,新方法参数信息类型::存在);项.特征=查绑定(*特征,新方法参数信息类型::特征);
+                        if(项.主体&&项.特征) {
+                            const auto F=特征服务_.捕获特征匹配实例(*项.特征);
+                            if(!F)throw std::logic_error("direct demand feature identity missing");
+                            项.固定需求=*D;项.参数已绑定=true;
+                            新需求目标定义 目标;目标.目标特征类型概念节点=F->定义.特征类型根;
+                            目标.目标形式=新需求目标形式::值;目标.目标值域概念节点=项.声明.要求概念节点;
+                            目标.引用内容定位=新需求引用内容定位{*D,项.声明.正式内容路径};
+                            项.目标=新需求完整目标{*项.主体,目标};
+                            项.判定=需求服务_.求值指定需求内容目标(*项.目标);
+                            if(项.判定.状态==新引用内容目标状态::资源失败)throw std::bad_alloc{};
+                            if(项.判定.状态==新引用内容目标状态::引用前提已变化){批.分支有效=false;批.已读取=true;return;}
+                            批.保护.insert(批.保护.end(),项.判定.完整保护组.begin(),项.判定.完整保护组.end());
+                            if(!读取认知来源限定(项,*D,*项.主体)){批.分支有效=false;批.已读取=true;return;}
+                        }
+                    }
+                    批.内容条件组.push_back(std::move(项));continue;
+                }
+                std::optional<std::uint32_t> 主体位置;
+                for(const auto& r:条件.参数关系组)if(r.种类==新方法参数关系种类::特征所属存在&&根(r.左参数序号)==根(c.参数序号)){
+                    const auto e=根(r.右参数序号);if(主体位置&&*主体位置!=e)throw std::logic_error("内容条件所属主体不唯一");主体位置=e;
+                }
+                if(!主体位置)throw std::logic_error("正式内容条件缺唯一所属关系");
+                项.主体=查绑定(*主体位置,新方法参数信息类型::存在);项.特征=查绑定(c.参数序号,新方法参数信息类型::特征);
+                if(项.主体&&项.特征) {
+                    项.参数已绑定=true;
+                    const auto F=特征服务_.捕获特征匹配实例(*项.特征);
+                    if(!F)throw std::logic_error("内容条件正式F不可读");
+                    if(F->当前值) {
+                        const auto* D=std::get_if<稳定编码>(&*F->当前值);
+                        if(!D||!有效(*D))throw std::logic_error("内容条件F当前值非需求引用");
+                        const auto [it,added]=本批固定需求.emplace(*项.特征,*D);
+                        if(!added&&it->second!=*D){批.分支有效=false;批.已读取=true;return;}
+                        项.固定需求=*D;
+                        std::vector<稳定编码> G;
+                        if(场景服务_.是场景节点(*项.主体)){
+                            const auto S=场景服务_.获取场景(*项.主体);if(!S)throw std::logic_error("内容条件主体场景不可读");G=S->特征节点组;
+                        }else{
+                            const auto E=存在服务_.获取存在(*项.主体);if(!E)throw std::logic_error("内容条件主体存在不可读");G=E->特征节点组;
+                        }
+                        if(std::count(G.begin(),G.end(),*项.特征)!=1)throw std::logic_error("内容条件F不属于绑定E");
+                        新需求目标定义 定义;定义.目标特征类型概念节点=F->定义.特征类型根;
+                        定义.目标形式=新需求目标形式::值;定义.目标值域概念节点=项.声明.要求概念节点;
+                        定义.引用内容定位=新需求引用内容定位{*D,项.声明.正式内容路径};
+                        项.目标=新需求完整目标{*项.主体,定义};
+                        项.判定=需求服务_.求值引用内容条件目标(*项.目标);
+                        if(项.判定.实际特征节点&&项.判定.实际特征节点!=项.特征)项.判定.状态=新引用内容目标状态::引用前提已变化;
+                        if(项.判定.状态==新引用内容目标状态::定义不合法)throw std::logic_error("已发表内容条件定义或主体矛盾");
+                        if(项.判定.状态==新引用内容目标状态::引用前提已变化){批.分支有效=false;批.已读取=true;return;}
+                        批.保护.insert(批.保护.end(),项.判定.完整保护组.begin(),项.判定.完整保护组.end());
+                    }
+                }
+                批.内容条件组.push_back(std::move(项));
+            }
+            for(const auto& rel:条件.参数关系组)if(rel.种类==新方法参数关系种类::内容引用参数) {
+                新任务本次场景核验批::内容关系项 q{方法项.方法节点,配对.配对节点,分支,rel,{}};
+                const auto D=查绑定(rel.左参数序号,新方法参数信息类型::存在),H=查绑定(rel.右参数序号,新方法参数信息类型::存在);
+                const auto 槽=特征概念服务_.读取先天特征类型槽(先天特征类型槽::需求主体);
+                if(D&&H&&槽.类型根&&rel.左正式内容路径==std::vector<稳定编码>{*槽.类型根}) {
+                    const auto d=需求服务_.读取被认知需求直接内容保护(*D,*H,rel.左正式内容路径);
+                    if(d.状态==新需求内容读取状态::资源失败)throw std::bad_alloc{};
+                    if(d.状态==新需求内容读取状态::前提已变化){批.分支有效=false;批.已读取=true;return;}
+                    if(d.状态==新需求内容读取状态::主体不符)q.符合=false;
+                    else if(d.状态==新需求内容读取状态::已读取&&d.信息) {
+                        const auto f=std::find_if(d.信息->内容项组.begin(),d.信息->内容项组.end(),[&](const auto& x){return x.特征类型==rel.左正式内容路径.front();});
+                        if(f==d.信息->内容项组.end()||f->内容.种类!=正式内容值种类::存在引用)throw std::logic_error("demand subject content type invalid");
+                        if(f->内容.状态==正式内容值状态::已知&&f->内容.值) {
+                            const auto* e=std::get_if<稳定编码>(&*f->内容.值);
+                            if(!e)throw std::logic_error("demand subject is not typed reference");q.符合=*e==*H;
+                        }
+                        批.保护.insert(批.保护.end(),d.完整保护组.begin(),d.完整保护组.end());
+                    }
+                }
+                批.内容关系组.push_back(std::move(q));
+            }
+        }
+    }
+    步骤 = L"读取本次需求执行结果";
+    if(批.执行&&批.X) {
+        const auto& X=*批.执行;
+        bool 含内容预计=false;
+        for(const auto& 阶段:X.预计变化阶段组)for(const auto& v:阶段.变化组)含内容预计=含内容预计||v.预期引用内容.has_value();
+        if(含内容预计&&X.状态!=新任务执行状态::已评估) {
+            // 动作后只独立核同本次实际发布及内容；未知/空历史不是后置不变量。
+            批.正式需求执行结果=读取执行已发布需求(批.T,*批.X);
+            const auto& 正式=*批.正式需求执行结果;
+            if(正式.状态==新任务需求结果读取状态::资源失败)throw std::bad_alloc{};
+            if(正式.状态==新任务需求结果读取状态::前提已变化){批.分支有效=false;批.已读取=true;return;}
+            if(正式.状态==新任务需求结果读取状态::已读取) {
+                if(!正式.结果||!X.已发布需求||正式.结果!=X.已发布需求)
+                    throw std::logic_error("content result differs from same execution report");
+                const auto& r=*正式.结果;
+                const auto 六引用=贡献完整快照({r.需求节点,r.主体存在节点,r.需求特征节点,r.结果场景节点,r.本次动作节点,r.首次发布动作节点});
+                if(!合并需求结果保护(批.保护,六引用)){批.分支有效=false;批.已读取=true;return;}
+                for(const auto& 阶段:X.预计变化阶段组)for(const auto& v:阶段.变化组)if(v.预期引用内容) {
+                    const auto& 内容=*v.预期引用内容;
+                    新引用内容目标判定 判定;
+                    const auto F=特征服务_.捕获特征匹配实例(r.需求特征节点);
+                    const auto H=存在服务_.获取存在(r.主体存在节点);
+                    if(!F||!H)throw std::logic_error("published content owner or feature unreadable");
+                    if(v.作用对象节点!=r.主体存在节点||内容.需求节点!=r.需求节点
+                        ||F->定义.特征类型根!=取得特征概念类型根(特征概念服务_,v.特征类型概念节点)
+                        ||std::find(H->特征节点组.begin(),H->特征节点组.end(),r.需求特征节点)==H->特征节点组.end()
+                        ||F->当前值!=std::optional<新特征准确值>{新特征准确值{r.需求节点}}) {
+                        判定.状态=新引用内容目标状态::未满足;
+                    } else {
+                        新需求目标定义 目标;
+                        目标.目标特征类型概念节点=F->定义.特征类型根;目标.目标形式=新需求目标形式::值;
+                        目标.目标值域概念节点=内容.要求概念节点;
+                        目标.引用内容定位=新需求引用内容定位{内容.需求节点,内容.正式内容路径};
+                        判定=需求服务_.求值指定需求内容目标({v.作用对象节点,目标});
+                        if(判定.状态==新引用内容目标状态::资源失败)throw std::bad_alloc{};
+                        if(判定.状态==新引用内容目标状态::引用前提已变化){批.分支有效=false;批.已读取=true;return;}
+                        if(!合并需求结果保护(批.保护,判定.完整保护组)){批.分支有效=false;批.已读取=true;return;}
+                    }
+                    批.内容后置组.emplace_back(v,std::move(判定));
+                }
+                const auto 重读=读取执行已发布需求(批.T,*批.X);
+                if(重读.状态==新任务需求结果读取状态::资源失败)throw std::bad_alloc{};
+                if(重读.状态!=正式.状态||重读.结果!=正式.结果){批.分支有效=false;批.已读取=true;return;}
+            }
+        }
+    }
+    步骤 = L"读取执行分支条件";
+    for(const auto& [M,支]:批.分支定义组){
+        auto 投影=方法服务_.读取执行分支必要条件(M,支.节点);
+        if(投影.状态!=新方法执行分支读取状态::已读取||投影.分支!=std::optional<新方法执行分支信息>{支})批.分支有效=false;
+        批.分支投影组.push_back(std::move(投影));
+    }
+    步骤 = L"读取场景事实条件";
+    for(auto& 项:批.项组)项.状态=场景事实读取_
+        ?场景事实读取_->读取场景事实(项.限定,项.绑定组):新交互求值状态::材料不足;
+    步骤 = L"读取本次结果场景事实";
+    std::vector<新方法初始场景事实限定> 本次限定组;
+    if(批.固定采用)本次限定组=批.固定采用->结果.场景事实限定组;
+    for(const auto& r:批.待记录引用组)if(std::find(本次限定组.begin(),本次限定组.end(),r.限定)==本次限定组.end())本次限定组.push_back(r.限定);
+    if(!本次限定组.empty()&&!批.固定采用)throw std::logic_error("场景报告缺少固定采用");
+    if(批.固定采用)for(const auto& 限定:本次限定组){
+        新任务本次场景核验批::结果场景项 项;项.限定=限定;
+        const auto& 采用=*批.固定采用;
+        const auto 保护=方法服务_.读取初始场景事实概念保护(限定.关系概念节点);
+        if(保护.状态==正式结构操作状态::前提已变化){批.分支有效=false;break;}
+        if(保护.状态!=正式结构操作状态::已读取||!保护.信息)throw std::logic_error("结果场景正式关系定义不可读");
+        const auto* 定义=std::get_if<基础范围概念定义>(&保护.信息->定义);
+        if(!定义||定义->原语!=基础概念原语::具名领域身份||定义->整数参数!=std::vector<std::int64_t>{14}||!定义->引用参数.empty())
+            throw std::logic_error("结果场景关系不是已支持的正式关系14");
+        for(const auto& p:保护.完整保护组)批.保护.push_back(p);
+        const auto 绑定=[&](std::uint32_t n)->const 新方法有序参数引用*{
+            const 新方法有序参数引用* 命中=nullptr;
+            for(const auto& b:采用.参数绑定组)if(b.有序引用&&b.有序引用->序号==n){if(命中)throw std::logic_error("结果场景重复位置绑定");命中=&*b.有序引用;}
+            return 命中;
+        };
+        const std::uint32_t 位置[]={限定.场景参数序号,限定.主体参数序号,限定.对象参数序号,限定.特征参数序号};
+        for(std::size_t i=0;i<4;++i){const auto* b=绑定(位置[i]);
+            if(!b||b->信息类型!=(i==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在))throw std::logic_error("结果场景位置类型与冻结绑定不一致");}
+        if(场景事实构成读取_&&场景事实读取_){
+            const auto 构成=场景事实构成读取_->读取场景事实构成(限定.关系概念节点);
+            项.构成状态=构成.状态;
+            if(构成.状态==新交互求值状态::前提变化){批.分支有效=false;break;}
+            if(构成.状态==新交互求值状态::已取得){
+                if(!构成.构成||构成.完整保护.empty()||构成.构成->关系概念!=限定.关系概念节点
+                    ||构成.构成->连接方法!=采用.来源方法节点)throw std::logic_error("结果场景构成声明不完整或不同方法");
+                for(const auto& p:构成.完整保护)批.保护.push_back(p);
+                // 六参数仅核正式窗口和接收数量特征绑定，不查询活网页。
+                const auto* W=绑定(5);const auto* Fr=绑定(6);
+                if(!W||!Fr||W->信息类型!=新方法参数信息类型::存在
+                    ||Fr->信息类型!=新方法参数信息类型::特征)
+                    throw std::logic_error("结果场景构成无法映射六参数绑定");
+                const auto 接收=特征服务_.捕获特征匹配实例(Fr->信息节点);
+                const auto 接收根=取得特征概念类型根(特征概念服务_,构成.构成->接收数量特征概念);
+                if(!接收||!接收根)throw std::logic_error("结果场景构成数量特征不可读");
+                if(接收->定义.特征类型根!=*接收根)
+                    throw std::logic_error("结果场景构成数量特征与固定绑定不同义");
+            }
+        }
+        if(批.执行){
+            const auto& X=*批.执行;
+            const auto it=std::find_if(X.本次场景事实组.begin(),X.本次场景事实组.end(),[&](const auto& r){return r.限定==限定;});
+            if(it!=X.本次场景事实组.end()){
+                项.引用=*it;
+                if(!X.普通动作节点||!批.X||it->事实来源身份!=*批.X||it->动作节点!=*X.普通动作节点)
+                    项.事实状态=新交互求值状态::不符合;
+                else if(场景事实读取_){
+                    新交互连接过程 过程;
+                    项.事实状态=场景事实读取_->读取本次结果场景事实(*it,采用.参数绑定组,*批.X,*X.普通动作节点,过程);
+                    if(项.事实状态==新交互求值状态::已取得){
+                        std::set<稳定编码> 节点组{过程.过程节点,过程.来源身份,过程.动作节点,
+                            过程.基准状态.节点,过程.更新状态.节点,
+                            过程.绑定.场景,过程.绑定.自我,过程.绑定.对端,过程.绑定.交互者特征,
+                            过程.绑定.窗口,过程.绑定.接收数量特征,过程.绑定.外设场景};
+                        const auto 读=全局基础数据集.查询节点组完整结构({节点组.begin(),节点组.end()});
+                        if(读.状态!=基础结构操作状态::已完成||读.节点组.size()!=节点组.size())throw std::logic_error("本次场景结果完整保护读取故障");
+                        for(const auto& p:读.节点组){if(!p.快照){批.分支有效=false;break;}批.保护.push_back(*p.快照);}
+                        新交互连接过程 复读;
+                        const auto 再读=场景事实读取_->读取本次结果场景事实(*it,采用.参数绑定组,*批.X,*X.普通动作节点,复读);
+                        if(再读!=新交互求值状态::已取得||复读.过程节点!=过程.过程节点||复读.来源身份!=过程.来源身份
+                            ||复读.动作节点!=过程.动作节点||复读.动作!=过程.动作
+                            ||复读.预期连接方法!=过程.预期连接方法||复读.预期动作概念!=过程.预期动作概念
+                            ||复读.基准状态!=过程.基准状态||复读.更新状态!=过程.更新状态
+                            ||复读.接收数量定义!=过程.接收数量定义)批.分支有效=false;
+                        else 项.过程=std::move(过程);
+                    }
+                    if(项.事实状态==新交互求值状态::前提变化)批.分支有效=false;
+                }
+            }
+        }
+        批.结果场景组.push_back(std::move(项));
+    }
+    if(!批.方法组.empty())读取冲突候选目标组(批);
+    批.已读取=true;
+    } catch(新需求目标定义核验状态 s){
+        if(s!=新需求目标定义核验状态::前提已变化)throw;
+        批.分支有效=false;批.已读取=true;
+    } catch(const std::bad_alloc&){throw;}
+    catch(const std::length_error&){throw;}
+    catch(const std::exception& e) {报告工程故障(e.what());}
+    catch(...) {报告工程故障(nullptr);}
+}
+新方法参数特征读取结果 新_任务类::读取本次存在参数特征(
+    const 新任务本次场景核验批& 批,稳定编码 M,std::optional<稳定编码> 支,
+    std::uint32_t 位置,稳定编码 FT,稳定编码 E) const {
+    新方法参数特征读取结果 结果;
+    const auto 根=取得特征概念类型根(特征概念服务_,FT);
+    if(!根)throw std::logic_error("任务E+FT类型定义不可读");
+    std::optional<新特征匹配定义快照> 声明定义;
+    if(位置){
+        const auto 声明=std::find_if(批.附属声明组.begin(),批.附属声明组.end(),[&](const auto& x){return x.方法==M&&x.分支==支&&x.位置==位置&&x.特征类型根==*根;});
+        if(声明==批.附属声明组.end()||声明->声明.状态!=新方法参数特征读取状态::已读取||!声明->声明.特征定义)
+            throw std::logic_error("任务E+FT读取缺少本次锁外声明");
+        声明定义=声明->声明.特征定义;
+    }
+    const bool 场景参数=场景服务_.是场景节点(E);
+    std::optional<新存在信息> 原存在;
+    std::optional<新场景信息> 原场景;
+    std::optional<新存在身份保护结果> 身份;
+    std::vector<稳定编码> 成员;
+    const auto 变化=[&](){结果.状态=新方法参数特征读取状态::定义前提已变化;结果.特征.reset();结果.当前完整材料.reset();return 结果;};
+    if(声明定义&&特征服务_.捕获特征匹配定义(*根)!=声明定义)return 变化();
+    if(场景参数){原场景=场景服务_.获取场景(E);if(!原场景)return 变化();成员=原场景->特征节点组;}
+    else{
+        身份=存在服务_.读取存在身份保护(E);
+        if(身份->前提已变化||身份->状态==基础结构操作状态::节点不存在)return 变化();
+        if(身份->状态!=基础结构操作状态::已完成||!身份->信息)throw std::logic_error("任务E+FT存在身份读取故障");
+        原存在=存在服务_.获取存在(E);if(!原存在)return 变化();
+        if(身份->信息->存在节点!=E||身份->信息->专属存在概念节点!=原存在->专属存在概念节点)return 变化();
+        成员=原存在->特征节点组;
+    }
+    std::vector<新特征匹配实例快照> 候选快照;
+    std::optional<新特征匹配实例快照> 命中;
+    std::size_t 数量=0;
+    const auto 成员已变化=[&](){
+        if(场景参数){const auto 今=场景服务_.获取场景(E);return !今||今->专属存在概念节点!=原场景->专属存在概念节点||今->特征节点组!=成员;}
+        const auto 今=存在服务_.获取存在(E);return !今||今->专属存在概念节点!=原存在->专属存在概念节点||今->特征节点组!=成员;
+    };
+    std::set<稳定编码> 唯一成员;
+    for(const auto F:成员){
+        if(!唯一成员.insert(F).second)throw std::logic_error("任务E+FT存在重复特征成员");
+        const auto 快照=特征服务_.捕获特征匹配实例(F);
+        if(!快照){if(成员已变化())return 变化();throw std::logic_error("任务E+FT正式成员特征读取失败");}
+        候选快照.push_back(*快照);
+        if(快照->定义.特征类型根==*根){++数量;命中=*快照;}
+    }
+    if(数量==1){
+        新特征信息 投影;
+        投影.节点=命中->特征节点;投影.上级特征节点=命中->上级特征节点;
+        投影.特征概念节点=命中->定义.概念节点;投影.实例单位=命中->实例单位;投影.当前值=命中->当前值;
+        // 只交付本次定位和准确值，不将未捕获的历史/聚合材料冒充受保护结果。
+        结果.特征=std::move(投影);
+        结果.当前完整材料=命中->当前完整材料;
+    }
+    // 所有候选均重读归类；不能只保护命中的F而漏掉新出现的第二个同FT。
+    for(const auto& 原:候选快照){
+        const auto 今=特征服务_.捕获特征匹配实例(原.特征节点);
+        if(!今){if(成员已变化())return 变化();throw std::logic_error("任务E+FT预期成员复读失败");}
+        if(*今!=原)return 变化();
+    }
+    if(场景参数){const auto 今=场景服务_.获取场景(E);if(!今||今->专属存在概念节点!=原场景->专属存在概念节点||今->特征节点组!=成员)return 变化();}
+    else{
+        const auto 今=存在服务_.获取存在(E);const auto 新身份=存在服务_.读取存在身份保护(E);
+        if(新身份.前提已变化||新身份.状态==基础结构操作状态::节点不存在)return 变化();
+        if(新身份.状态!=基础结构操作状态::已完成||!新身份.信息)throw std::logic_error("任务E+FT存在身份复核故障");
+        if(!今||今->专属存在概念节点!=原存在->专属存在概念节点||今->特征节点组!=成员
+            ||新身份.信息->存在节点!=身份->信息->存在节点||新身份.信息->专属存在概念节点!=身份->信息->专属存在概念节点)return 变化();
+    }
+    if(声明定义&&特征服务_.捕获特征匹配定义(*根)!=声明定义)return 变化();
+    结果.状态=数量==0 ? 新方法参数特征读取状态::特征未取得
+        :数量>1 ? 新方法参数特征读取状态::特征匹配不唯一
+        :!结果.特征->当前值 ? 新方法参数特征读取状态::当前值未取得:新方法参数特征读取状态::已读取;
+    return 结果;
+}
+bool 新_任务类::核同本次场景核验批(const 新任务本次场景核验批& 批) const {
+    if(!批.已读取||!批.分支有效||批.任务!=获取任务(批.T))return false;
+    if(!批.任务)return true;
+    const auto 源=取得提议源(批.内容核验上下文);
+    for(const auto& x:批.新增成员目标组)
+        if(!需求服务_.提议需求值相同(需求服务_.获取需求(x.需求.节点),x.需求,源))return false;
+    if(批.冲突候选需求清单&&需求服务_.查询全部需求().需求节点组!=*批.冲突候选需求清单)return false;
+    if(批.需求准备&&!核同任务需求准备保护批(*批.需求准备))return false;
+    for(const auto& [D,p]:批.内容必要性组){
+        const auto s=核同方法内容必要性投影已加锁(p);
+        if(s==方法内容必要性状态::资源失败)throw std::bad_alloc{};
+        if(s==方法内容必要性状态::前提已变化)return false;
+    }
+    if(!需求服务_.提议需求值相同(批.需求,需求服务_.获取需求(批.任务->需求节点),源))return false;
+    if(!批.仅查找目标&&((批.X&&批.执行!=获取执行实例(*批.X))
+        ||(批.组织&&批.组织!=读取任务方法执行组织(批.T).组织)
+        ||(批.任务->当前候选方法材料节点&&批.候选!=获取候选方法材料(*批.任务->当前候选方法材料节点))))return false;
+    // 锁内只复核基座完整保护，不再回调方法owner或外部事实提供者。
+    if(!核同因果节点保护(批.保护)||!需求服务_.核同提议源(源))return false;
+    if(批.仅查找目标)return true;
+    auto 纯批=批;纯批.已读取=false;
+    return 批.纯筹办==核验任务条件和参数内部(批.T,批.固定采用 ? &*批.固定采用:nullptr,
+        批.允许当前执行,批.允许部分绑定,纯批);
+}
+
 新任务治理条件筹办结果 新_任务类::筹办任务条件和参数(
     稳定编码 任务节点) const noexcept {
     try {
+        if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);
+            D&&D->目标.引用内容定位&&!是本叶内容目标(*D)) {
+            新任务治理条件筹办结果 r;r.任务节点=任务节点;r.状态=新任务治理条件筹办状态::已完成;
+            r.方法选择状态=新任务方法选择状态::结果定义暂不支持;r.候选已完整核验=false;return r;
+        }
+        auto 场景批=准备本次场景核验批(任务节点);
+        读取本次场景核验批(场景批);
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){新任务治理条件筹办结果 变化;变化.任务节点=任务节点;变化.状态=新任务治理条件筹办状态::任务状态已变化;return 变化;}
         const auto 任务 = 获取任务(任务节点);
         if (!治理已初始化_ || !任务 || !任务->方法执行组织节点
-            || 任务->当前状态 != 新任务状态::待检查条件) return 核验任务条件和参数(任务节点);
-        const auto 选择 = 选择任务方法结果(任务节点);
-        auto 结果 = 选择.本能采用 ? 核验任务条件和参数内部(任务节点,&*选择.本能采用,false) : 核验任务条件和参数(任务节点);
+            || 任务->当前状态 != 新任务状态::待检查条件) return 核验任务条件和参数内部(任务节点,nullptr,false,false,场景批);
+        const auto 选择 = 选择任务方法结果内部(任务节点,场景批);
+        auto 结果 = 核验任务条件和参数内部(任务节点,选择.本能采用 ? &*选择.本能采用 : nullptr,false,false,场景批);
         结果.方法选择状态 = 选择.状态;
         // 等待条件只有携带完整选定配对时才完成候选核验。
         const bool 已定位 = 选择.方法节点 && 选择.配对节点 && 选择.条件节点 && 选择.结果节点;
@@ -13391,11 +18634,17 @@ namespace {
 
 新任务治理条件筹办结果 新_任务类::核验任务条件和参数(
     稳定编码 任务节点) const noexcept {
-    return 核验任务条件和参数内部(任务节点,nullptr,false);
+    try {
+        auto 批=准备本次场景核验批(任务节点);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务治理条件筹办结果 变化;变化.任务节点=任务节点;变化.状态=新任务治理条件筹办状态::任务状态已变化;return 变化;}
+        return 核验任务条件和参数内部(任务节点,nullptr,false,false,批);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"任务场景事实核验",L"锁外场景核验故障");}
 }
 新任务治理条件筹办结果 新_任务类::核验任务条件和参数内部(
     稳定编码 任务节点,const 新任务本能采用材料* 固定采用,bool 允许当前执行中,
-    bool 允许未实现条件形状) const noexcept {
+    bool 允许未实现条件形状,const 新任务本次场景核验批& 场景批) const noexcept {
     新任务治理条件筹办结果 结果;
     结果.任务节点 = 任务节点;
     try {
@@ -13590,13 +18839,13 @@ namespace {
         for (const auto 方法节点 : 筹办方法组) {
             新任务候选方法筹办项 方法项;
             方法项.方法节点 = 方法节点;
-            const auto 方法 = 任务执行组织存储::读取来源视图(组织,方法节点,方法服务_,固定采用);
+            const auto 方法 = 任务执行组织存储::读取来源视图(组织,方法节点,场景批.方法组,固定采用);
             if (!方法) {
                 结果.状态 = 新任务治理条件筹办状态::结构不一致;
                 return 结果;
             }
             方法项.方法作用域节点=方法->作用域节点;
-            if(方法->启用状态!=新方法启用状态::启用 || 方法服务_.是历史服务结算方法(方法节点)){
+            if(方法->启用状态!=新方法启用状态::启用){
                 方法项.状态=新任务候选方法筹办状态::条件不具备;
                 for(const auto& 对:方法->条件结果组)方法项.条件结果组.push_back({对.配对节点,对.条件节点,对.结果节点,新任务方法条件项核验状态::不具备,{}});
                 结果.方法筹办组.push_back(std::move(方法项));continue;
@@ -13623,6 +18872,7 @@ namespace {
                         throw std::logic_error("条件缺口定位与参数角色不一致");
                     缺口.相关条件结果组.push_back(*当前配对);
                     缺口.来源配对节点 = 当前配对->配对节点;
+                    缺口.执行分支节点=任务执行组织存储::配对执行分支(*当前配对);
                     缺口.条件项序号 = 条件项序号;
                 }
                 else for (const auto& 配对 : 方法->条件结果组) {
@@ -13649,6 +18899,20 @@ namespace {
                     std::set<稳定编码> 已查信息, 已查场景层;
                     std::set<稳定编码> 已有概念实例;
                     if (有序.信息类型 == 新方法参数信息类型::存在) {
+                        const auto 正式=std::find_if(场景批.正式参数组.begin(),场景批.正式参数组.end(),[&](const auto& p){return p.方法==方法节点&&p.位置==有序.序号&&p.范围==有序.范围概念节点;});
+                        if(正式!=场景批.正式参数组.end()) {
+                            const auto D=正式->指定需求;
+                            if(D) {
+                                const auto& 身份=正式->读取;
+                                if(身份.状态==正式信息参数读取状态::已读取&&身份.信息&&身份.信息->信息节点==*D
+                                    &&(!固定绑定||(固定绑定->有序引用&&固定绑定->有序引用->信息节点==*D))) {
+                                    新方法参数角色绑定 b;b.有序引用=新方法有序参数引用{有序.序号,有序.信息类型,*D};
+                                    方法项.参数绑定组.push_back(std::move(b));continue;
+                                }
+                            }
+                            参数不唯一=参数材料未到=true;
+                            记录缺口(规格,新任务方法条件缺口种类::参数对象未取得,{});continue;
+                        }
                         const auto 反查 = 存在概念服务_.读取下位专属实例候选完整(有序.范围概念节点);
                         if (反查.状态 == 存在概念实例候选读取状态::读取已变化
                             || 反查.状态 == 存在概念实例候选读取状态::资源失败) {
@@ -13672,6 +18936,15 @@ namespace {
                             const auto 对象 = 读取对象(对象节点);
                             if (!对象) throw std::logic_error("有序参数查询的场景成员不可读");
                             const auto 接纳 = [&](稳定编码 信息) {
+                                if(需求->目标.引用内容定位)for(const auto& 对:方法->条件结果组)for(const auto& r:对.结果.结果项组)if(r.引用内容结果) {
+                                    if(有序.序号==r.参数序号) {
+                                        const auto f=特征服务_.获取特征(信息);
+                                        if(!f||取得特征概念类型根(特征概念服务_,f->特征概念节点)!=std::optional{需求->目标.目标特征类型概念节点})return;
+                                    }
+                                    for(const auto& rel:对.条件.参数关系组)if(rel.种类==新方法参数关系种类::特征所属存在
+                                        &&rel.左参数序号==r.参数序号&&rel.右参数序号==有序.序号
+                                        &&信息!=需求->目标存在节点)return;
+                                }
                                 if (!已查信息.insert(信息).second) return;
                                 if (固定绑定 && (!固定绑定->有序引用 || 固定绑定->有序引用->信息节点 != 信息)) return;
                                 新方法参数角色绑定 绑定;
@@ -13704,77 +18977,6 @@ namespace {
                             : 候选组.empty() ? 新任务方法条件缺口种类::参数对象未取得
                                 : 新任务方法条件缺口种类::参数匹配不唯一, std::move(候选组));
                     } else 方法项.参数绑定组.push_back(std::move(候选组.front()));
-                    continue;
-                }
-                if (规格.对象种类 == 新方法参数对象种类::任务虚拟存在) {
-                    if (规格.存在概念节点 || 规格.要求场景 || 规格.特征规格组.empty()
-                        || 规格.特征规格组.size() > 2
-                        || std::any_of(规格.特征规格组.begin(), 规格.特征规格组.end(),
-                            [](const auto& f) { return !f.二次特征概念组.empty(); })) {
-                        参数结构缺口 = true;
-                        break;
-                    }
-                    if (!任务->服务结算来源) {
-                        参数材料未到 = 参数不唯一 = true;
-                        记录缺口(规格, 新任务方法条件缺口种类::参数对象未取得, {});
-                        continue;
-                    }
-                    const auto 来源 = 读取任务虚拟存在引用(任务->服务结算来源->来源任务);
-                    if(固定绑定&&(!来源||固定绑定->任务虚拟存在引用!=来源->引用)){
-                        参数不唯一=true;记录缺口(规格,新任务方法条件缺口种类::条件值不满足,{*固定绑定});continue;
-                    }
-                    const auto 特征组 = 来源 ? 读取任务虚拟存在特征组(来源->引用) : std::nullopt;
-                    if (!来源 || !特征组) {
-                        参数结构缺口 = true;
-                        break;
-                    }
-                    新方法参数角色绑定 绑定;
-                    绑定.参数角色节点 = 规格.参数角色节点;
-                    绑定.任务虚拟存在引用 = 来源->引用;
-                    bool 有状态 = false, 有服务值 = false, 值不满足 = false;
-                    std::vector<新任务方法条件缺口种类> 虚拟存在缺口种类;
-                    for (const auto& 特征规格 : 规格.特征规格组) {
-                        const 新任务虚拟存在特征读回* f = nullptr;
-                        if (特征规格.特征类型概念节点 == 特征组->状态.特征类型概念节点 && !有状态) {
-                            f = &特征组->状态; 有状态 = true;
-                        } else if (特征组->服务值 && !有服务值
-                            && 特征规格.特征类型概念节点 == 特征组->服务值->特征类型概念节点) {
-                            f = &*特征组->服务值; 有服务值 = true;
-                        }
-                        if (!f) {
-                            if ((有状态 && 特征规格.特征类型概念节点 == 特征组->状态.特征类型概念节点)
-                                || (特征组->服务值 && 有服务值
-                                    && 特征规格.特征类型概念节点 == 特征组->服务值->特征类型概念节点)) {
-                                参数结构缺口 = true; break;
-                            }
-                            值不满足 = 参数不唯一 = 参数材料未到 = true;
-                            虚拟存在缺口种类.push_back(新任务方法条件缺口种类::参数特征类型未取得);
-                            continue;
-                        }
-                        const auto 特征 = 特征服务_.获取特征(f->特征节点);
-                        if (!特征 || (固定绑定 && std::none_of(固定绑定->实际特征组.begin(),
-                                固定绑定->实际特征组.end(), [&](const auto& v) { return v.特征节点 == f->特征节点; }))) {
-                            参数结构缺口 = true; break;
-                        }
-                        绑定.实际特征组.push_back({f->特征节点});
-                        if (特征规格.值域概念节点) {
-                            const auto 命中 = 当前值命中概念(*特征, *特征规格.值域概念节点);
-                            if (命中 == 值域核验::结构缺口) { 参数结构缺口 = true; break; }
-                            if (命中 != 值域核验::命中) {
-                                值不满足 = 参数不唯一 = true;
-                                参数材料未到 = 参数材料未到 || 命中 == 值域核验::材料未到;
-                                虚拟存在缺口种类.push_back(命中 == 值域核验::材料未到
-                                    ? 新任务方法条件缺口种类::参数特征值未取得
-                                    : 新任务方法条件缺口种类::条件值不满足);
-                            }
-                        }
-                    }
-                    if (!有状态 || 参数结构缺口) { 参数结构缺口 = true; break; }
-                    if (值不满足) {
-                        for (const auto 种类 : 虚拟存在缺口种类) 记录缺口(规格, 种类, {绑定});
-                        continue;
-                    }
-                    方法项.参数绑定组.push_back(std::move(绑定));
                     continue;
                 }
                 if (std::any_of(规格.特征规格组.begin(), 规格.特征规格组.end(),
@@ -14017,7 +19219,7 @@ namespace {
             for(auto& 绑定:方法项.参数绑定组)std::sort(绑定.实际特征组.begin(),绑定.实际特征组.end(),[](const auto& 左,const auto& 右){return 左.特征节点<右.特征节点;});
             if(!参数不唯一&&固定采用&&方法项.参数绑定组!=固定采用->参数绑定组){方法项.状态=新任务候选方法筹办状态::条件不具备;结果.方法筹办组.push_back(std::move(方法项));continue;}
             // 缺口解释可以继续，但不完整参数不得进入执行参数场景。
-            if (!参数不唯一) {
+            if (!参数不唯一 && 方法->执行分支组.empty()) {
                 const auto 参数场景 = 方法服务_.建立参数场景(
                     方法节点, 方法项.参数绑定组, this);
                 if (参数场景.状态 != 新方法操作状态::已建立
@@ -14102,6 +19304,9 @@ namespace {
                 const auto 要求=std::find_if(域->配对要求组.begin(),域->配对要求组.end(),[&](const auto& 项){return 项.来源配对节点==配对.配对节点;});
                 if(要求==域->配对要求组.end())throw std::logic_error("筹办来源配对无任务要求");
                 配对结果.执行要求定位=新任务本能采用定位{组织.节点,域->节点,要求->节点};
+                配对结果.执行分支节点=任务执行组织存储::配对执行分支(配对);
+                // 有支来源已由锁外完整M/有效投影及本批纯绑定比较核实，
+                // 不在task锁内重复建场景回调方法owner。
                 std::vector<新任务方法条件项核验状态> 项状态组;
                 std::vector<std::optional<新任务方法条件缺口种类>> 项缺口种类组(配对.条件.条件项组.size());
                 std::optional<std::uint32_t> 成员参数;
@@ -14117,8 +19322,11 @@ namespace {
                         throw std::logic_error("member conditions require conjunction");
                     const auto 绑定组 = 查找已知角色绑定({}, *成员参数);
                     if (绑定组.size() == 1 && 绑定组.front().有序引用) {
-                        const auto 场景 = 方法服务_.建立参数场景(方法节点, 方法项.参数绑定组, this);
-                        if (!场景.参数场景) throw std::logic_error("member parameter scene unavailable");
+                        新方法参数场景结果 场景;
+                        if(!配对结果.执行分支节点) {
+                            场景=方法服务_.建立参数场景(方法节点,方法项.参数绑定组,this);
+                            if(!场景.参数场景)throw std::logic_error("member parameter scene unavailable");
+                        }
                         const auto F = 特征服务_.获取特征(绑定组.front().有序引用->信息节点);
                         const auto 定义 = F ? 特征服务_.捕获特征匹配定义(F->特征概念节点) : std::nullopt;
                         if (!定义 || 定义->比较规则 != 特征概念比较规则::服务任务集合身份判等)
@@ -14131,13 +19339,20 @@ namespace {
                             if (固定采用->任务成员绑定->集合参数序号 != *成员参数)
                                 throw std::logic_error("adopted member collection differs");
                             指定 = 固定采用->任务成员绑定->任务引用;
-                        } else if (任务->服务结算来源) 指定 = 任务->服务结算来源->来源任务;
+                        }
                         std::vector<新方法任务成员绑定> 命中组;
                         std::set<稳定编码> 已查成员;
                         if (全部) for (const auto 编码 : *全部) {
                             const 稳定编码 T{编码};
                             if (!已查成员.insert(T).second || (指定 && 指定->任务节点 != T)) continue;
-                            const auto 组 = 场景.参数场景->读取绑定集合任务特征组(*成员参数, T);
+                            const auto 组 = [&]() -> std::optional<新任务虚拟存在特征组> {
+                                if(场景.参数场景)return 场景.参数场景->读取绑定集合任务特征组(*成员参数,T);
+                                const auto ref=查找任务虚拟存在引用(T);
+                                if(!ref||ref->任务节点!=T)return {};
+                                const auto value=读取任务虚拟存在特征组(*ref);
+                                if(!value||value->引用!=*ref||value->状态.特征节点!=ref->状态特征节点)return {};
+                                return value;
+                            }();
                             if (!组) continue; // 成员在本次读取中已退出或改变，等待重新筹办。
                             if (指定 && 组->引用 != *指定) continue;
                             const 新方法任务成员绑定 绑定{*成员参数, 组->引用,
@@ -14174,6 +19389,40 @@ namespace {
                 }
                 for (std::size_t 条件序号 = 0; 条件序号 < 配对.条件.条件项组.size(); ++条件序号) {
                     const auto& 条件项 = 配对.条件.条件项组[条件序号];
+                    if(条件项.特征前态限定) {
+                        const auto* b=内容参数绑定(方法项.参数绑定组,条件项.参数序号,新方法参数信息类型::特征);
+                        const auto f=b ? 特征服务_.获取特征(b->信息节点) : std::nullopt;
+                        if(b&&!f)throw std::logic_error("bound precondition feature unreadable");
+                        const auto& p=*条件项.特征前态限定;
+                        const bool 支持=p.当前值状态==新方法当前值状态::未知&&p.历史不同值数量==std::optional<std::uint64_t>{0};
+                        const bool 命中=f&&支持&&!f->当前值&&f->历史不同值.empty()
+                            &&(!条件项.特征类型概念节点||特征概念兼容(f->特征概念节点,*条件项.特征类型概念节点));
+                        项状态组.push_back(!f ? 新任务方法条件项核验状态::材料未到 : 命中 ? 新任务方法条件项核验状态::具备 : 新任务方法条件项核验状态::不具备);
+                        // 前态不符不是清空现实F或历史的子需求，不生成条件缺口。
+                        continue;
+                    }
+                    if(条件项.引用内容条件) {
+                        const auto 内容=std::find_if(场景批.内容条件组.begin(),场景批.内容条件组.end(),[&](const auto& x){
+                            return x.方法==方法节点&&x.配对==配对.配对节点&&x.分支==配对结果.执行分支节点&&x.序号==条件序号&&x.声明==*条件项.引用内容条件;});
+                        auto 状态=新任务方法条件项核验状态::材料未到;
+                        if(场景批.已读取&&内容!=场景批.内容条件组.end()&&内容->目标){
+                            switch(内容->判定.状态){
+                            case 新引用内容目标状态::已满足:状态=新任务方法条件项核验状态::具备;break;
+                            case 新引用内容目标状态::未满足:状态=新任务方法条件项核验状态::不具备;break;
+                            case 新引用内容目标状态::分支待定:break;
+                            case 新引用内容目标状态::引用前提已变化:结果.状态=新任务治理条件筹办状态::任务状态已变化;结果.方法筹办组.clear();return 结果;
+                            case 新引用内容目标状态::定义不合法:throw std::logic_error("内容条件定义损坏");
+                            case 新引用内容目标状态::资源失败:结果.状态=新任务治理条件筹办状态::资源失败;结果.方法筹办组.clear();return 结果;
+                            case 新引用内容目标状态::未支持:case 新引用内容目标状态::依赖未就绪:break;
+                            }
+                            if(条件项.引用内容条件->要求认知来源当前有效
+                                &&内容->认知来源资格!=std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::已准备}) {
+                                状态=内容->认知来源资格==std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::需重新确认}
+                                    ? 新任务方法条件项核验状态::不具备 : 新任务方法条件项核验状态::材料未到;
+                            }
+                        }else if(场景批.已读取)项缺口种类组[条件序号]=新任务方法条件缺口种类::参数特征值未取得;
+                        项状态组.push_back(状态);continue;
+                    }
                     if (条件项.任务成员变量序号) {
                         const bool 唯一 = 配对结果.任务成员候选组.size() == 1;
                         项状态组.push_back(唯一 ? 新任务方法条件项核验状态::具备
@@ -14200,11 +19449,24 @@ namespace {
                             [&](const auto& 项) { return 参数定位相同(项, {}, 条件项.参数序号); });
                         if (规格 == 方法->参数规格组.end()) throw std::logic_error("有序条件参数位置未声明");
                         if (规格->有序规格->信息类型 == 新方法参数信息类型::存在
-                            && (条件项.特征类型概念节点 || 条件项.特征值域概念节点 || 条件项.精确数值域))
-                            throw std::logic_error("存在参数条件不能隐式读取未绑定特征");
+                            && (条件项.特征值域概念节点 || 条件项.精确数值域)&&!条件项.特征类型概念节点)
+                            throw std::logic_error("存在参数取值条件缺少明确特征类型");
                         if (规格->有序规格->信息类型 == 新方法参数信息类型::特征 && 条件项.存在概念节点)
                             throw std::logic_error("特征参数条件不能冒充存在约束");
                         const auto 绑定组 = 查找已知角色绑定({}, 条件项.参数序号);
+                        const auto 正式=std::find_if(场景批.正式参数组.begin(),场景批.正式参数组.end(),[&](const auto& p){return p.方法==方法节点&&p.位置==条件项.参数序号;});
+                        if(正式!=场景批.正式参数组.end()) {
+                            if(条件项.特征类型概念节点||条件项.特征值域概念节点||条件项.精确数值域)
+                                throw std::logic_error("formal parameter scalar condition unsupported");
+                            const auto r=条件项.存在概念节点 ? 正式->条件范围组.find(*条件项.存在概念节点) : 正式->条件范围组.end();
+                            const auto* 身份=条件项.存在概念节点
+                                ? (r==正式->条件范围组.end() ? nullptr : &r->second) : &正式->读取;
+                            const bool 具备=身份&&身份->状态==正式信息参数读取状态::已读取&&身份->信息
+                                &&绑定组.size()==1&&绑定组.front().有序引用
+                                &&身份->信息->信息节点==绑定组.front().有序引用->信息节点;
+                            项状态组.push_back(具备 ? 新任务方法条件项核验状态::具备 : 新任务方法条件项核验状态::材料未到);
+                            continue;
+                        }
                         if (绑定组.size() == 1 && 绑定组.front().有序引用
                             && 绑定组.front().有序引用->信息类型 == 新方法参数信息类型::特征) {
                             if (条件项.存在概念节点) throw std::logic_error("特征参数条件不能冒充存在约束");
@@ -14253,6 +19515,25 @@ namespace {
                         项状态组.push_back(
                             新任务方法条件项核验状态::具备);
                         continue;
+                    }
+                    if(条件项.参数序号&&条件项.特征类型概念节点){
+                        const auto 角色绑定=查找已知角色绑定({},条件项.参数序号);
+                        if(角色绑定.size()==1&&角色绑定.front().有序引用
+                            &&角色绑定.front().有序引用->信息类型==新方法参数信息类型::存在){
+                            const auto 读=读取本次存在参数特征(场景批,方法节点,配对结果.执行分支节点,条件项.参数序号,*条件项.特征类型概念节点,对象->节点);
+                            if(读.状态==新方法参数特征读取状态::定义前提已变化){结果.状态=新任务治理条件筹办状态::任务状态已变化;结果.方法筹办组.clear();return 结果;}
+                            auto 命中=值域核验::命中;
+                            if(读.状态==新方法参数特征读取状态::特征未取得||读.状态==新方法参数特征读取状态::特征匹配不唯一){
+                                项缺口种类组[条件序号]=读.状态==新方法参数特征读取状态::特征未取得 ? 新任务方法条件缺口种类::参数特征类型未取得 : 新任务方法条件缺口种类::参数匹配不唯一;
+                                项状态组.push_back(新任务方法条件项核验状态::材料未到);continue;
+                            }
+                            if(!读.特征)throw std::logic_error("任务附属特征成功投影缺失");
+                            if(条件项.精确数值域)命中=当前I64命中值域(*读.特征,{*条件项.特征类型概念节点,读.特征->实例单位,新特征直接I64值域比较材料{*条件项.精确数值域}});
+                            else if(条件项.特征值域概念节点)命中=当前值命中概念(*读.特征,*条件项.特征值域概念节点);
+                            if(命中==值域核验::结构缺口)throw std::logic_error("任务附属特征正式值域比较失败");
+                            if(命中!=值域核验::命中)项缺口种类组[条件序号]=命中==值域核验::材料未到 ? 新任务方法条件缺口种类::参数特征值未取得 : 新任务方法条件缺口种类::条件值不满足;
+                            项状态组.push_back(命中==值域核验::命中 ? 新任务方法条件项核验状态::具备 : 命中==值域核验::材料未到 ? 新任务方法条件项核验状态::材料未到 : 新任务方法条件项核验状态::不具备);continue;
+                        }
                     }
                     bool 命中特征 = false;
                     bool 有要求类型 = false;
@@ -14336,12 +19617,32 @@ namespace {
                         方法项.条件缺口组.back().任务成员候选组 = 配对结果.任务成员候选组;
                 }
                 for (const auto& 关系 : 配对.条件.参数关系组) {
+                    if(关系.种类==新方法参数关系种类::内容引用参数) {
+                        const auto q=std::find_if(场景批.内容关系组.begin(),场景批.内容关系组.end(),[&](const auto& x){
+                            return x.方法==方法节点&&x.配对==配对.配对节点&&x.分支==配对结果.执行分支节点&&x.关系==关系;});
+                        const auto v=场景批.已读取&&q!=场景批.内容关系组.end() ? q->符合 : std::nullopt;
+                        项状态组.push_back(!v ? 新任务方法条件项核验状态::材料未到 : *v ? 新任务方法条件项核验状态::具备 : 新任务方法条件项核验状态::不具备);
+                        continue;
+                    }
                     const auto 核验 = 核验参数位置关系(方法项.参数绑定组, 关系,
-                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_);
+                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_, &需求服务_);
                     项状态组.push_back(!核验 ? 新任务方法条件项核验状态::材料未到
                         : *核验 ? 新任务方法条件项核验状态::具备
                             : 新任务方法条件项核验状态::不具备);
-                }                switch (配对.条件.关系规则) {
+                }
+                for(const auto& 限定:配对.条件.场景事实限定组) {
+                    const auto 命中=std::find_if(场景批.项组.begin(),场景批.项组.end(),[&](const auto& 项){
+                        return 项.执行组织节点==任务->方法执行组织节点 && 项.方法节点==方法项.方法节点
+                            && 项.来源配对节点==配对.配对节点 && 项.限定==限定 && 项.绑定组==方法项.参数绑定组
+                            &&项.执行分支节点==配对结果.执行分支节点;
+                    });
+                    const auto 状态=场景批.已读取 && 命中!=场景批.项组.end()
+                        ?命中->状态:新交互求值状态::材料不足;
+                    项状态组.push_back(状态==新交互求值状态::已取得 ? 新任务方法条件项核验状态::具备
+                        :状态==新交互求值状态::尚未具备||状态==新交互求值状态::不符合
+                            ?新任务方法条件项核验状态::不具备:新任务方法条件项核验状态::材料未到);
+                }
+                switch (配对.条件.关系规则) {
                 case 新方法项关系规则::单项:
                     if (项状态组.size() == 1) 配对结果.状态 = 项状态组.front();
                     break;
@@ -14411,11 +19712,24 @@ namespace {
 }
 
 新任务方法选择结果 新_任务类::选择任务方法结果(稳定编码 任务节点) const noexcept {
+    try {
+        if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);
+            D&&D->复合来源) {
+            新任务方法选择结果 r;r.任务节点=任务节点;r.状态=新任务方法选择状态::结果定义暂不支持;return r;
+        }
+        auto 批=准备本次场景核验批(任务节点);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务方法选择结果 变化;变化.任务节点=任务节点;变化.状态=新任务方法选择状态::任务状态已变化;return 变化;}
+        return 选择任务方法结果内部(任务节点,批);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"选择任务方法结果",L"锁外场景核验故障");}
+}
+新任务方法选择结果 新_任务类::选择任务方法结果内部(稳定编码 任务节点,const 新任务本次场景核验批& 场景批) const noexcept {
     新任务方法选择结果 结果;
     结果.任务节点 = 任务节点;
     try {
         std::lock_guard 锁(新任务互斥);
-        const auto 分支 = 选择任务结果分支内部(任务节点, false);
+        const auto 分支 = 选择任务结果分支内部(任务节点, false,场景批);
         switch (分支.状态) {
         case 新任务条件分解状态::已确定: break;
         case 新任务条件分解状态::等待材料: 结果.状态 = 新任务方法选择状态::等待条件; return 结果;
@@ -14435,7 +19749,11 @@ namespace {
             依据.来源条件节点, 依据.来源结果节点, 依据.参数要求组, 依据.原始条件,
             依据.需要条件, 依据.结果, 依据.线性关系组, 依据.已知参数绑定组};
         采用.任务成员绑定 = 依据.任务成员绑定;
-        const auto 新筹办 = 核验任务条件和参数内部(任务节点, &采用, false);
+        采用.执行分支节点=依据.执行分支节点;
+        const auto& 域=*std::find_if(场景批.组织->方法作用域组.begin(),场景批.组织->方法作用域组.end(),[&](const auto& x){return x.节点==依据.定位.方法作用域节点;});
+        const auto& 来源配对=*std::find_if(域.配对要求组.begin(),域.配对要求组.end(),[&](const auto& x){return x.节点==依据.定位.配对要求节点;});
+        采用.来源执行分支节点组=来源配对.来源执行分支节点组;
+        const auto 新筹办 = 核验任务条件和参数内部(任务节点, &采用, false,false,场景批);
         if (新筹办.状态 != 新任务治理条件筹办状态::已完成 || !新筹办.候选已完整核验) {
             结果.状态 = 新筹办.状态 == 新任务治理条件筹办状态::资源失败
                 ? 新任务方法选择状态::资源失败
@@ -14447,7 +19765,7 @@ namespace {
         const auto& 方法 = 新筹办.方法筹办组.front();
         const auto 条件 = std::find_if(方法.条件结果组.begin(), 方法.条件结果组.end(), [&](const auto& 项) {
             return 项.配对节点 == 依据.来源配对节点 && 项.条件节点 == 依据.来源条件节点
-                && 项.结果节点 == 依据.来源结果节点;
+                && 项.结果节点 == 依据.来源结果节点 && 项.执行分支节点==依据.执行分支节点;
         });
         if (条件 == 方法.条件结果组.end() || 条件->状态 == 新任务方法条件项核验状态::结构缺口) return 结果;
         if (条件->状态 == 新任务方法条件项核验状态::资源失败) {
@@ -14460,6 +19778,7 @@ namespace {
         结果.条件核验组 = {*条件};
         结果.方法节点 = 依据.来源方法节点; 结果.配对节点 = 依据.来源配对节点;
         结果.条件节点 = 依据.来源条件节点; 结果.结果节点 = 依据.来源结果节点;
+        结果.执行分支节点=依据.执行分支节点;
         结果.保证满足目标 = 依据.保证满足目标; 结果.有利结果端点 = 依据.有利结果端点;
         结果.状态 = 条件->状态 == 新任务方法条件项核验状态::具备
             ? 新任务方法选择状态::已选定 : 新任务方法选择状态::等待条件;
@@ -14469,7 +19788,7 @@ namespace {
     }
 }
 
-新任务条件分解结果 新_任务类::选择任务结果分支内部(稳定编码 任务节点, bool 允许部分条件绑定) const noexcept {
+新任务条件分解结果 新_任务类::选择任务结果分支内部(稳定编码 任务节点, bool 允许部分条件绑定,const 新任务本次场景核验批& 场景批) const noexcept {
     std::optional<新任务条件分解依据> 分解依据;
     const auto 选择 = [&]() -> 新任务方法选择结果 {
     新任务方法选择结果 结果;
@@ -14478,10 +19797,12 @@ namespace {
         std::lock_guard 锁(新任务互斥);
         const auto 任务 = 获取任务(任务节点);
         if (!治理已初始化_ || !任务) return 结果;
-        const auto 来源守卫 = 需求服务_.复核需求服务要求语义(任务->需求节点);
+        const auto& 来源守卫 = 场景批.需求准备->守卫;
         if (来源守卫.状态 != 新服务要求执行守卫状态::不涉及
             && 来源守卫.状态 != 新服务要求执行守卫状态::当前有效) {
-            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
+            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::前提已变化
+                ? 新任务方法选择状态::任务状态已变化
+                : 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
                 ? 新任务方法选择状态::等待条件
                 : 来源守卫.状态 == 新服务要求执行守卫状态::资源失败
                     ? 新任务方法选择状态::资源失败 : 新任务方法选择状态::结构不一致;
@@ -14504,7 +19825,18 @@ namespace {
             结果.状态 = 新任务方法选择状态::无适用结果; return 结果;
         }
         const bool 取得目标 = 是服务需求取得目标(*需求);
-        const auto 当前 = 复核任务需求(任务节点);
+        const auto 资格 = 复核任务筹办资格已加锁(任务节点,场景批);
+        if (资格.状态 == 新需求筹办资格状态::资源失败) {
+            结果.状态 = 新任务方法选择状态::资源失败; return 结果;
+        }
+        if (资格.状态 == 新需求筹办资格状态::结构不一致
+            || 资格.状态 == 新需求筹办资格状态::目标定义不合法) {
+            结果.状态 = 新任务方法选择状态::结构不一致; return 结果;
+        }
+        if (资格.状态 == 新需求筹办资格状态::材料已变化 || 资格.需求 != 需求) {
+            结果.状态 = 新任务方法选择状态::任务状态已变化; return 结果;
+        }
+        const auto 当前 = 资格.当前满足 ? *资格.当前满足 : 场景批.当前需求满足.value_or(新需求当前满足结果{});
         if (当前.状态 == 新需求当前满足状态::已满足) {
             结果.状态 = 新任务方法选择状态::目标已满足; return 结果;
         }
@@ -14514,18 +19846,24 @@ namespace {
         if (当前.状态 == 新需求当前满足状态::结构不一致) {
             结果.状态 = 新任务方法选择状态::结构不一致; return 结果;
         }
-        if (!当前.实际特征节点) {
+        const bool 内容目标=需求->目标.引用内容定位.has_value();
+        const bool 派生无前值 = 内容目标 || (资格.状态 == 新需求筹办资格状态::允许筹办
+            && 资格.派生定义 && 需求->目标.目标形式 == 新需求目标形式::值
+            && (当前.状态 == 新需求当前满足状态::目标特征尚未形成
+                || 当前.状态 == 新需求当前满足状态::当前值不存在
+                || (!当前.实际特征节点 && 当前.状态 == 新需求当前满足状态::未满足但无有向差值)));
+        if (!当前.实际特征节点 && !派生无前值) {
             结果.状态 = 新任务方法选择状态::等待条件; return 结果;
         }
-        const auto 特征 = 特征服务_.获取特征(*当前.实际特征节点);
+        const auto 特征 = 当前.实际特征节点 ? 特征服务_.获取特征(*当前.实际特征节点) : std::nullopt;
         const bool 允许无前值静态分解 = 需求->目标.目标形式 == 新需求目标形式::值
-            && 当前.状态 == 新需求当前满足状态::当前值不存在;
-        if (!特征 || (!特征->当前值 && !允许无前值静态分解)) {
+            && (当前.状态 == 新需求当前满足状态::当前值不存在 || 派生无前值);
+        if ((!特征 && !派生无前值) || (特征 && !特征->当前值 && !允许无前值静态分解)) {
             结果.状态 = 新任务方法选择状态::等待条件; return 结果;
         }
-        const std::int64_t 取得初值 = 0;
-        const auto* 当前I64 = 允许无前值静态分解 ? nullptr : 取得目标 ? &取得初值
-            : 特征->当前值 ? std::get_if<std::int64_t>(&*特征->当前值) : nullptr;
+        const auto* 当前I64 = 允许无前值静态分解 ? nullptr
+            : 特征 && 特征->当前值 ? std::get_if<std::int64_t>(&*特征->当前值) : nullptr;
+        const auto 目标单位 = 内容目标 ? std::optional<稳定编码>{} : 派生无前值 ? 资格.派生定义->输出特征概念.单位 : 特征->实例单位;
         auto 所需方向 = 预计变化方向::不明确;
         if (需求->目标.目标形式 == 新需求目标形式::变化方向) {
             所需方向 = 需求->目标.目标变化方向 == 新需求变化方向::增加
@@ -14535,7 +19873,7 @@ namespace {
         else if (当前.状态 != 新需求当前满足状态::未满足但无有向差值
             && !允许无前值静态分解) return 结果;
 
-        auto 筹办 = 核验任务条件和参数内部(任务节点, nullptr, false, 允许部分条件绑定);
+        auto 筹办 = 核验任务条件和参数内部(任务节点, nullptr, false, 允许部分条件绑定,场景批);
         if (筹办.状态 != 新任务治理条件筹办状态::已完成 || !筹办.候选已完整核验) {
             结果.状态 = 筹办.状态 == 新任务治理条件筹办状态::资源失败
                 ? 新任务方法选择状态::资源失败
@@ -14580,12 +19918,12 @@ namespace {
         std::vector<来源配对视图> 配对组;
         for(const auto& 域:组织.方法作用域组){
             if(std::find(组织.根方法作用域节点组.begin(),组织.根方法作用域节点组.end(),域.节点)==组织.根方法作用域节点组.end())continue;
-            const auto 来源 = 任务执行组织存储::读取来源视图(组织, 域.来源方法节点, 方法服务_);
+            const auto 来源 = 任务执行组织存储::读取来源视图(组织, 域.来源方法节点, 场景批.方法组);
             if (!来源) throw std::logic_error("完整C/R来源方法不可读");
-            for(const auto& 对:域.配对要求组){
-                新方法条件结果信息 投影;投影.配对节点=对.来源配对节点;投影.条件节点=对.来源条件节点;投影.结果节点=对.来源结果节点;
-                投影.条件=对.条件;投影.结果=对.结果;投影.线性关系组=对.线性关系组;
-                配对组.push_back({域.来源方法节点,std::move(投影),{组织.节点,域.节点,对.节点},来源->参数规格组});
+            for(const auto& 对:来源->条件结果组){
+                const auto 定位=std::find_if(域.配对要求组.begin(),域.配对要求组.end(),[&](const auto& x){return x.来源配对节点==对.配对节点;});
+                if(定位==域.配对要求组.end())throw std::logic_error("expanded branch lost task pair");
+                配对组.push_back({域.来源方法节点,对,{组织.节点,域.节点,定位->节点},来源->参数规格组});
             }
         }
         struct 适用项 {
@@ -14602,20 +19940,15 @@ namespace {
             if (!行为方法) throw std::logic_error("分支方法行为不可读");
             const bool 读取行为 = 行为方法->行为 == 新方法行为::读取;
             if (读取行为 && (需求->目标.目标形式 != 新需求目标形式::值 || 取得目标)) continue;
-            if (允许无前值静态分解 && !允许部分条件绑定 && !读取行为) continue;
+            if (允许无前值静态分解 && !派生无前值 && !允许部分条件绑定 && !读取行为) continue;
             if (读取行为 && std::any_of(项.配对.结果.结果项组.begin(), 项.配对.结果.结果项组.end(),
                     [](const auto& 结果项) { return 结果项.变化方向概念节点.has_value(); }))
                 throw std::logic_error("读取方法声明了变化方向");
-            if (取得目标) {
-                const auto 方法 = 方法服务_.获取方法(项.方法节点);
-                if (!方法) throw std::logic_error("取得候选方法不可读");
-                if (!是服务需求取得方法(*方法)) continue;
-            }
             const auto 方法筹办 = std::find_if(筹办.方法筹办组.begin(), 筹办.方法筹办组.end(),
                 [&](const auto& x) { return x.方法节点 == 项.方法节点; });
             if (方法筹办 == 筹办.方法筹办组.end()) return 结果;
             const auto 成员配对 = std::find_if(方法筹办->条件结果组.begin(),方法筹办->条件结果组.end(),
-                [&](const auto& 对){return 对.配对节点 == 项.配对.配对节点;});
+                [&](const auto& 对){return 对.配对节点 == 项.配对.配对节点 && 对.执行分支节点==任务执行组织存储::配对执行分支(项.配对);});
             if (成员配对 != 方法筹办->条件结果组.end() && 成员配对->任务成员候选组.size() > 1) {
                 结果.状态 = 新任务方法选择状态::匹配不唯一; return 结果;
             }
@@ -14632,6 +19965,18 @@ namespace {
                 有未支持 = true; continue;
             }
             const auto& 定义 = 项.配对.结果;
+            if(内容目标) {
+                if(!需求->目标.目标值域概念节点||定义.结果项组.size()!=1
+                    ||!定义.确认要求.禁止结果项组.empty()){有未支持=true;continue;}
+                const auto x=绑定内容结果(定义.结果项组.front(),定义,项.配对.条件,方法筹办->参数绑定组);
+                if(!x){有未支持=true;continue;}
+                if(x->D!=需求->目标.引用内容定位->引用需求节点||x->H!=需求->目标存在节点
+                    ||!需求->目标.引用内容定位->正式内容路径.empty()||!是首值条件(项.配对.条件,x->特征位置))continue;
+                const auto f=特征服务_.获取特征(x->F);
+                if(!f||取得特征概念类型根(特征概念服务_,f->特征概念节点)!=std::optional{需求->目标.目标特征类型概念节点})continue;
+                if(!内容概念保证(x->C,*需求->目标.目标值域概念节点,存在概念服务_)){有未支持=true;continue;}
+                适用组.push_back({&项,&*方法筹办,true,std::nullopt,{}});continue;
+            }
             if (定义.关系规则 != 新方法项关系规则::单项
                 && 定义.关系规则 != 新方法项关系规则::全部成立
                 && 定义.关系规则 != 新方法项关系规则::主要结果及允许副作用) {
@@ -14642,6 +19987,43 @@ namespace {
                 && (定义.关系规则 == 新方法项关系规则::单项 || 定义.关系规则 == 新方法项关系规则::全部成立)
                 && 是条件包含目标(需求->目标, 特征概念服务_, 二次特征概念服务_)) {
                 const auto 域 = 特征概念服务_.获取特征概念(*需求->目标.目标值域概念节点);
+                const auto* 单引用目标 = 域 ? std::get_if<特征概念存在引用值域>(&域->值域) : nullptr;
+                if (单引用目标) {
+                    if (域->材料类型 != 特征概念材料物理类型::存在节点引用
+                        || 域->比较规则 != 特征概念比较规则::存在身份精确)
+                        throw std::logic_error("单引用需求目标域类型不一致");
+                    std::map<稳定编码,稳定编码> 已绑定引用;
+                    std::optional<bool> 保证;
+                    bool 找到关系 = false;
+                    for (const auto& 关系 : 定义.参数关系组) {
+                        if (关系.种类 != 新方法参数关系种类::特征引用存在) continue;
+                        const auto 左 = std::find_if(方法筹办->参数绑定组.begin(), 方法筹办->参数绑定组.end(),
+                            [&](const auto& 绑定) { return 参数定位相同(绑定, 稳定编码{}, 关系.左参数序号); });
+                        const auto 右 = std::find_if(方法筹办->参数绑定组.begin(), 方法筹办->参数绑定组.end(),
+                            [&](const auto& 绑定) { return 参数定位相同(绑定, 稳定编码{}, 关系.右参数序号); });
+                        if (左 == 方法筹办->参数绑定组.end() || 右 == 方法筹办->参数绑定组.end()
+                            || !左->有序引用 || !右->有序引用) { 有未支持 = true; continue; }
+                        if (左->有序引用->信息类型 != 新方法参数信息类型::特征
+                            || 右->有序引用->信息类型 != 新方法参数信息类型::存在)
+                            throw std::logic_error("引用结果参数类型不符");
+                        const auto [位置, 新增] = 已绑定引用.emplace(左->有序引用->信息节点, 右->有序引用->信息节点);
+                        if (!新增 && 位置->second != 右->有序引用->信息节点)
+                            throw std::logic_error("同一结果特征声明了矛盾存在引用");
+                        if (读取参数作用对象(*左, 存在服务_, 场景服务_) != std::optional<稳定编码>{需求->目标存在节点}) continue;
+                        const auto 左特征 = 特征服务_.获取特征(左->有序引用->信息节点);
+                        if (!左特征) throw std::logic_error("引用结果特征不可读");
+                        if (取得特征概念类型根(特征概念服务_, 左特征->特征概念节点)
+                            != std::optional<稳定编码>{需求->目标.目标特征类型概念节点}) continue;
+                        找到关系 = true;
+                        保证 = 证明真实存在引用范围(右->有序引用->信息节点,
+                            单引用目标->存在概念节点, 存在服务_, 存在概念服务_);
+                    }
+                    if (找到关系) {
+                        if (保证 && *保证) 适用组.push_back({&项, &*方法筹办, true, std::nullopt, {}});
+                        else if (!保证) 有未支持 = true;
+                        continue;
+                    }
+                }
                 const auto* 集合目标 = 域 ? std::get_if<特征概念存在集合值域>(&域->值域) : nullptr;
                 if (集合目标) {
                     std::set<稳定编码> 保证成员;
@@ -14681,7 +20063,7 @@ namespace {
                     return 结果;
                 }
                 const auto 成员对 = std::find_if(方法筹办->条件结果组.begin(), 方法筹办->条件结果组.end(),
-                    [&](const auto& 值) { return 值.配对节点 == 项.配对.配对节点; });
+                    [&](const auto& 值) { return 值.配对节点 == 项.配对.配对节点&&值.执行分支节点==任务执行组织存储::配对执行分支(项.配对); });
                 const auto 目标对象 = 预期.任务成员变量序号
                     ? (成员对 != 方法筹办->条件结果组.end() && 成员对->任务成员绑定
                         ? std::optional<稳定编码>{成员对->任务成员绑定->任务引用.虚拟存在节点} : std::nullopt)
@@ -14719,13 +20101,13 @@ namespace {
                 结果域输入.材料 = 新特征概念值域比较材料{域->节点};
                 区间组 = std::get_if<std::vector<特征概念I64闭区间>>(&域->值域);
             }
-            if (类型->单位 != 特征->实例单位) { 有未支持 = true; continue; }
+            if (类型->单位 != 目标单位) { 有未支持 = true; continue; }
             std::optional<bool> 保证;
             std::vector<特征概念I64闭区间> 所需条件域组;
             if (类型->材料类型 == 特征概念材料物理类型::I64标量
                 && 是条件包含目标(需求->目标, 特征概念服务_, 二次特征概念服务_)) {
                 const auto 比较 = 特征服务_.比较特征值域(结果域输入,
-                    {需求->目标.目标特征类型概念节点, 特征->实例单位,
+                    {需求->目标.目标特征类型概念节点, 目标单位,
                         新特征概念值域比较材料{*需求->目标.目标值域概念节点}});
                 if (比较.状态 == 新特征比较状态::资源失败) {
                     结果.状态 = 新任务方法选择状态::资源失败; return 结果;
@@ -14843,6 +20225,29 @@ namespace {
             }
             std::erase_if(适用组, [&](const auto& x) { return x.端点 != 最优端点; });
         }
+        // 原结果合法性/保证及端点筛选完成后，才裁决同等候选的OR路径。
+        std::map<稳定编码,std::optional<稳定编码>> 选中分支;
+        for(const auto& 域:组织.方法作用域组){
+            if(域.来源执行分支组.empty())continue;
+            std::optional<稳定编码> 冻结;
+            if(任务->最近执行实例节点){const auto X=获取执行实例(*任务->最近执行实例节点);
+                if(X&&X->本能采用&&X->本能采用->来源方法节点==域.来源方法节点)冻结=X->本能采用->执行分支节点;}
+            const 适用项* 最佳=nullptr;int 最佳级=3;std::uint32_t 最佳序=0;
+            for(const auto& 候选:适用组){
+                if(候选.配对->方法节点!=域.来源方法节点)continue;
+                const auto 支=任务执行组织存储::配对执行分支(候选.配对->配对);
+                const auto 定义=std::find_if(域.来源执行分支组.begin(),域.来源执行分支组.end(),[&](const auto& x){return 支==x.节点;});
+                if(定义==域.来源执行分支组.end())throw std::logic_error("candidate branch not in source method");
+                const auto 核验=std::find_if(候选.筹办->条件结果组.begin(),候选.筹办->条件结果组.end(),[&](const auto& x){return x.配对节点==候选.配对->配对.配对节点&&x.执行分支节点==支;});
+                if(核验==候选.筹办->条件结果组.end()||核验->状态==新任务方法条件项核验状态::材料未到){结果.状态=新任务方法选择状态::等待条件;return 结果;}
+                if(核验->状态==新任务方法条件项核验状态::结构缺口||核验->状态==新任务方法条件项核验状态::资源失败)return 结果;
+                const bool 满足=核验->状态==新任务方法条件项核验状态::具备;
+                const int 级=满足&&冻结==支 ? 0:满足 ? 1:2;
+                if(!最佳||级<最佳级||(级==最佳级&&定义->定义.顺序<最佳序)){最佳=&候选;最佳级=级;最佳序=定义->定义.顺序;}
+            }
+            if(最佳)选中分支.emplace(域.来源方法节点,任务执行组织存储::配对执行分支(最佳->配对->配对));
+        }
+        std::erase_if(适用组,[&](const auto& x){const auto p=选中分支.find(x.配对->方法节点);return p!=选中分支.end()&&p->second!=任务执行组织存储::配对执行分支(x.配对->配对);});
         if (适用组.empty()) { 结果.状态 = 新任务方法选择状态::无适用结果; return 结果; }
         if (适用组.size() != 1) { 结果.状态 = 新任务方法选择状态::匹配不唯一; return 结果; }
         const auto& 最优 = 适用组.front();
@@ -14855,13 +20260,14 @@ namespace {
         依据.来源配对节点 = 配对.配对节点;
         依据.来源条件节点 = 配对.条件节点;
         依据.来源结果节点 = 配对.结果节点;
+        依据.执行分支节点=任务执行组织存储::配对执行分支(配对);
         for (const auto& 参数 : 域.参数要求组) 依据.参数要求组.push_back(参数.规格);
         依据.原始条件 = 配对.条件;
         依据.结果 = 配对.结果;
         依据.线性关系组 = 配对.线性关系组;
         依据.已知参数绑定组 = 最优.筹办->参数绑定组;
         const auto 成员核验 = std::find_if(最优.筹办->条件结果组.begin(), 最优.筹办->条件结果组.end(),
-            [&](const auto& 项) { return 项.配对节点 == 配对.配对节点; });
+            [&](const auto& 项) { return 项.配对节点 == 配对.配对节点 && 项.执行分支节点==依据.执行分支节点; });
         if (成员核验 != 最优.筹办->条件结果组.end()) {
             if (成员核验->任务成员候选组.size() > 1) {
                 结果.状态 = 新任务方法选择状态::匹配不唯一; return 结果;
@@ -14902,6 +20308,34 @@ namespace {
 
 新任务条件子需求提议 新_任务类::提议任务条件子需求(
     稳定编码 任务节点) const noexcept {
+    try{return 提议任务条件子需求带上下文(任务节点,std::make_shared<新方法内容核验上下文>());}
+    catch(const std::bad_alloc&){新任务条件子需求提议 r;r.任务节点=任务节点;r.状态=新任务条件子需求提议状态::资源失败;return r;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"提议任务条件子需求",L"创建调用核验上下文故障");}
+}
+新任务条件子需求提议 新_任务类::提议任务条件子需求带上下文(
+    稳定编码 任务节点,const std::shared_ptr<新方法内容核验上下文>& 上下文,
+    std::vector<基础联合节点快照>* 完整保护输出) const {
+    if(完整保护输出)完整保护输出->clear();
+    try {
+        if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);
+            D&&(D->复合来源||(D->目标.引用内容定位&&!是本叶内容目标(*D)))) {
+            新任务条件子需求提议 r;r.任务节点=任务节点;r.状态=新任务条件子需求提议状态::暂不支持;return r;
+        }
+        auto 批=准备本次场景核验批(任务节点,{},nullptr,false,true,上下文);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务条件子需求提议 r;r.任务节点=任务节点;r.状态=新任务条件子需求提议状态::任务状态已变化;return r;}
+        auto 结果=提议任务条件子需求内部(任务节点,批);
+        if(完整保护输出&&结果.分解依据&&(结果.状态==新任务条件子需求提议状态::已形成
+            ||结果.状态==新任务条件子需求提议状态::无需子需求)){
+            auto 保护=批.保护;完整保护输出->swap(保护);
+        }
+        return 结果;
+    } catch(const std::bad_alloc&){新任务条件子需求提议 r;r.任务节点=任务节点;r.状态=新任务条件子需求提议状态::资源失败;return r;}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"提议任务条件子需求",L"锁外场景核验故障");}
+}
+新任务条件子需求提议 新_任务类::提议任务条件子需求内部(
+    稳定编码 任务节点,const 新任务本次场景核验批& 场景批) const noexcept {
     新任务条件子需求提议 结果;
     结果.任务节点 = 任务节点;
     const auto 拒绝 = [&](新任务条件子需求提议状态 状态) {
@@ -14914,7 +20348,9 @@ namespace {
         std::lock_guard 锁(新任务互斥);
         const auto 任务 = 获取任务(任务节点);
         if (!治理已初始化_ || !任务) return 结果;
-        if (复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善)
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化)return 拒绝(新任务条件子需求提议状态::来源已变化);
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::资源延后)return 拒绝(新任务条件子需求提议状态::资源失败);
+        if (场景批.需求准备->结果.状态 == 新任务需求准备状态::待完善)
             return 拒绝(新任务条件子需求提议状态::需求信息待完善);
         if (任务->当前状态 != 新任务状态::待检查条件)
             return 拒绝(新任务条件子需求提议状态::任务状态已变化);
@@ -14923,7 +20359,7 @@ namespace {
         结果.父需求节点 = 需求->节点;
         结果.父需求目标存在节点 = 需求->目标存在节点;
         结果.父需求目标 = 需求->目标;
-        const auto 分支 = 选择任务结果分支内部(任务节点, true);
+        const auto 分支 = 选择任务结果分支内部(任务节点, true,场景批);
         switch (分支.状态) {
         case 新任务条件分解状态::已确定: break;
         case 新任务条件分解状态::等待材料:
@@ -14946,6 +20382,7 @@ namespace {
         结果.条件结果.结果节点 = 依据.来源结果节点;
         结果.条件结果.条件 = 依据.需要条件; 结果.条件结果.结果 = 依据.结果;
         结果.条件结果.线性关系组 = 依据.线性关系组;
+        if(依据.执行分支节点)结果.条件结果.来源执行分支节点组={*依据.执行分支节点};
         结果.参数绑定组 = 依据.已知参数绑定组;
         const auto* 配对 = &结果.条件结果;
         const auto& 条件 = 配对->条件;
@@ -14959,11 +20396,53 @@ namespace {
             return 左.目标存在节点 == 右.目标存在节点
                 && 左.目标特征类型概念节点 == 右.目标特征类型概念节点
                 && 左.目标区间组 == 右.目标区间组 && 左.单位 == 右.单位
-                && 左.集合目标 == 右.集合目标;
+                && 左.集合目标 == 右.集合目标 && 左.引用内容定位==右.引用内容定位
+                && 左.新增成员见证要求==右.新增成员见证要求
+                &&(!左.引用内容定位||左.目标值域概念节点==右.目标值域概念节点);
         };
         for (std::size_t 序号 = 0; 序号 < 条件.条件项组.size(); ++序号) {
             const auto& 条件项 = 条件.条件项组[序号];
             const auto 未解析 = [&]() { 依据.未解析条件序号组.push_back(static_cast<std::uint64_t>(序号)); };
+            if(条件项.特征前态限定) {
+                const auto* b=内容参数绑定(结果.参数绑定组,条件项.参数序号,新方法参数信息类型::特征);
+                const auto F=b ? 特征服务_.获取特征(b->信息节点) : std::nullopt;
+                const auto& p=*条件项.特征前态限定;
+                if(!F||p.当前值状态!=新方法当前值状态::未知||p.历史不同值数量!=std::optional<std::uint64_t>{0}
+                    ||F->当前值||!F->历史不同值.empty())未解析();
+                continue; // 不为适用范围派生清空当前值/删除历史的需求。
+            }
+            if(条件项.引用内容条件) {
+                if(条件项.引用内容条件->作用点==新方法内容作用点::参数自身) {
+                    const bool 主体不符=std::any_of(场景批.内容关系组.begin(),场景批.内容关系组.end(),[&](const auto& q){
+                        return q.方法==依据.来源方法节点&&q.配对==依据.来源配对节点&&q.分支==依据.执行分支节点
+                            &&q.关系.种类==新方法参数关系种类::内容引用参数&&q.符合==std::optional<bool>{false};
+                    });
+                    if(主体不符){未解析();continue;} // 不修改D主体以迁就方法H绑定。
+                }
+                const auto 内容=std::find_if(场景批.内容条件组.begin(),场景批.内容条件组.end(),[&](const auto& x){
+                    return x.方法==依据.来源方法节点&&x.配对==依据.来源配对节点&&x.分支==依据.执行分支节点&&x.序号==序号&&x.声明==*条件项.引用内容条件;});
+                if(内容==场景批.内容条件组.end()||!场景批.已读取||!内容->目标){未解析();continue;}
+                const auto s=内容->判定.状态;
+                if(s==新引用内容目标状态::资源失败)return 拒绝(新任务条件子需求提议状态::资源失败);
+                if(s==新引用内容目标状态::引用前提已变化)return 拒绝(新任务条件子需求提议状态::来源已变化);
+                if(s==新引用内容目标状态::定义不合法)throw std::logic_error("内容子目标条件损坏");
+                if(s==新引用内容目标状态::未支持||s==新引用内容目标状态::依赖未就绪){未解析();continue;}
+                if(条件项.引用内容条件->要求认知来源当前有效
+                    &&内容->认知来源资格!=std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::已准备}
+                    &&(s==新引用内容目标状态::已满足
+                        ||内容->认知来源资格==std::optional<新服务要求确认保护状态>{新服务要求确认保护状态::需重新确认})) {
+                    未解析();continue; // 等待正式确认；不发明确认FT或无正式目标的子需求。
+                }
+                const auto& t=*内容->目标;
+                新任务条件子需求项 项{static_cast<std::uint64_t>(序号),t.目标存在节点,*内容->特征,
+                    t.目标.目标特征类型概念节点,*t.目标.目标值域概念节点,{},{},{},t.目标.引用内容定位};
+                for(const auto& old:结果.已知条件项组)if(old.引用内容定位==项.引用内容定位
+                    &&old.目标存在节点==项.目标存在节点&&old.目标特征类型概念节点==项.目标特征类型概念节点
+                    &&old.目标值域概念节点!=项.目标值域概念节点)return 拒绝(新任务条件子需求提议状态::暂不支持);
+                if(std::none_of(结果.已知条件项组.begin(),结果.已知条件项组.end(),[&](const auto& x){return 同目标语义(x,项);}))结果.已知条件项组.push_back(项);
+                if(s!=新引用内容目标状态::已满足&&std::none_of(结果.子需求项组.begin(),结果.子需求项组.end(),[&](const auto& x){return 同目标语义(x,项);}))结果.子需求项组.push_back(项);
+                continue;
+            }
             if (条件项.二次特征概念节点 || 条件项.状态或动态概念节点) { 未解析(); continue; }
             const 新方法参数角色绑定* 绑定 = nullptr;
             for (const auto& 候选 : 结果.参数绑定组) {
@@ -14977,7 +20456,14 @@ namespace {
                 : 读取参数作用对象(*绑定, 存在服务_, 场景服务_);
             if (!作用对象) { 未解析(); continue; }
             std::vector<稳定编码> 特征节点组;
-            if (const auto F = 条件项.任务成员变量序号
+            if(条件项.参数序号&&条件项.特征类型概念节点&&绑定->有序引用
+                &&绑定->有序引用->信息类型==新方法参数信息类型::存在&&!条件项.任务成员变量序号){
+                const auto 读=读取本次存在参数特征(场景批,依据.来源方法节点,依据.执行分支节点,条件项.参数序号,*条件项.特征类型概念节点,*作用对象);
+                if(读.状态==新方法参数特征读取状态::定义前提已变化)return 拒绝(新任务条件子需求提议状态::来源已变化);
+                if(读.状态==新方法参数特征读取状态::特征未取得||读.状态==新方法参数特征读取状态::特征匹配不唯一){未解析();continue;}
+                if(!读.特征)throw std::logic_error("分解E+FT条件缺少唯一特征投影");
+                特征节点组.push_back(读.特征->节点);
+            }else if (const auto F = 条件项.任务成员变量序号
                     ? (依据.任务成员绑定 && 条件项.特征类型概念节点
                         ? 读取成员实际特征(*依据.任务成员绑定, *条件项.特征类型概念节点, *this, 特征概念服务_) : std::nullopt)
                     : 参数直接特征(*绑定)) {
@@ -15074,10 +20560,11 @@ namespace {
         // 全部成立必须在每个对象/FT上有共同可达的值域；不把矛盾条件发布为子D。
         for (std::size_t 序号 = 0; 序号 < 结果.已知条件项组.size(); ++序号) {
             const auto& 起项 = 结果.已知条件项组[序号];
-            if (起项.集合目标) continue;
+            if (起项.集合目标||起项.引用内容定位) continue;
             auto 交集 = 起项.目标区间组;
             for (std::size_t 后序号 = 序号 + 1; 后序号 < 结果.已知条件项组.size(); ++后序号) {
                 const auto& 后项 = 结果.已知条件项组[后序号];
+                if(后项.引用内容定位)continue;
                 if (起项.目标存在节点 != 后项.目标存在节点
                     || 起项.目标特征类型概念节点 != 后项.目标特征类型概念节点) continue;
                 if (起项.单位 != 后项.单位) return 拒绝(新任务条件子需求提议状态::结构不一致);
@@ -15099,20 +20586,9 @@ namespace {
         for (const auto& 首项 : 结果.已知条件项组) {
             if (!首项.集合目标 || !已合并集合.insert(
                     {首项.目标存在节点, 首项.目标特征类型概念节点}).second) continue;
-            auto 合并 = *首项.集合目标;
-            for (const auto& 其他 : 结果.已知条件项组) {
-                if (其他.目标存在节点 != 首项.目标存在节点
-                    || 其他.目标特征类型概念节点 != 首项.目标特征类型概念节点) continue;
-                if (!其他.集合目标 || 其他.单位 || 其他.实际特征节点 != 首项.实际特征节点)
-                    return 拒绝(新任务条件子需求提议状态::结构不一致);
-                合并.至少一个任务 = 合并.至少一个任务 || 其他.集合目标->至少一个任务;
-                合并.必含任务节点组.insert(合并.必含任务节点组.end(),
-                    其他.集合目标->必含任务节点组.begin(), 其他.集合目标->必含任务节点组.end());
-                合并.必含需求任务组.insert(合并.必含需求任务组.end(),
-                    其他.集合目标->必含需求任务组.begin(), 其他.集合目标->必含需求任务组.end());
-                合并.必含服务要求任务组.insert(合并.必含服务要求任务组.end(),
-                    其他.集合目标->必含服务要求任务组.begin(), 其他.集合目标->必含服务要求任务组.end());
-            }
+            const auto 归并=合并同槽任务集合条件(结果.已知条件项组,首项);
+            if(!归并)return 拒绝(新任务条件子需求提议状态::结构不一致);
+            const auto& 合并=*归并;
             const auto 类型 = 特征概念服务_.获取特征概念(首项.目标特征类型概念节点);
             if (!类型) return 拒绝(新任务条件子需求提议状态::结构不一致);
             const 特征概念定义 定义{类型->材料类型, 合并, 类型->单位,
@@ -15159,6 +20635,13 @@ namespace {
             const auto 祖先 = 需求服务_.获取需求(*祖先节点);
             if (!祖先) return 拒绝(新任务条件子需求提议状态::结构不一致);
             if (祖先->目标.目标形式 == 新需求目标形式::值) {
+                if(祖先->目标.引用内容定位) {
+                    for(const auto& 项:结果.子需求项组)if(项.引用内容定位==祖先->目标.引用内容定位
+                        &&项.目标存在节点==祖先->目标存在节点&&项.目标特征类型概念节点==祖先->目标.目标特征类型概念节点
+                        &&std::optional<稳定编码>{项.目标值域概念节点}==祖先->目标.目标值域概念节点)
+                        return 拒绝(新任务条件子需求提议状态::形成循环依赖);
+                    祖先节点=祖先->父需求节点;continue;
+                }
                 if (!祖先->目标.目标值域概念节点 || !祖先->目标.目标比较关系概念节点)
                     return 拒绝(新任务条件子需求提议状态::结构不一致);
                 const auto 域 = 特征概念服务_.获取特征概念(*祖先->目标.目标值域概念节点);
@@ -15166,6 +20649,7 @@ namespace {
                 if (!域 || !比较) return 拒绝(新任务条件子需求提议状态::结构不一致);
                 if (是条件包含目标(祖先->目标, 特征概念服务_, 二次特征概念服务_)) {
                     for (const auto& 项 : 结果.子需求项组) {
+                        if(项.引用内容定位)continue;
                         if (祖先->目标存在节点 == 项.目标存在节点
                             && 祖先->目标.目标特征类型概念节点 == 项.目标特征类型概念节点) {
                             bool 等价 = 条件投影一致(项, *域);
@@ -15198,8 +20682,376 @@ namespace {
     }
 }
 
+新_任务类::方法条件准备身份可停止结果 新_任务类::读取方法条件准备静态身份(
+    const 方法条件准备承接凭据& 输入,std::stop_token 停止) const {
+    using S=方法条件准备身份状态;
+    struct 静态退回 final { S 状态; };
+    方法条件准备静态批 批;
+    const auto 返回=[](S s)->方法条件准备身份可停止结果 {return 方法条件准备身份结果{s,{}};};
+    const auto 合并=[&](const auto& 保护) {
+        if(!合并需求结果保护(批.完整保护,保护))throw 因果读取来源变化信号{};
+    };
+    try {
+        检查因果读取停止(停止);
+        批.原凭据=输入;
+        const auto& 原=输入.原提议;const auto& 确认=输入.已确认项;const auto& 项=确认.原提议;
+        贡献要求(有效(原.任务节点)&&有效(原.父需求节点)&&有效(确认.需求节点)
+            &&原.状态==新任务条件子需求提议状态::已形成&&原.分解依据
+            &&std::count(原.子需求项组.begin(),原.子需求项组.end(),项)==1);
+        const auto& 依据=*原.分解依据;
+        贡献要求(有效(依据.定位.组织节点)&&有效(依据.定位.方法作用域节点)&&有效(依据.定位.配对要求节点)
+            &&原.方法节点==依据.来源方法节点&&原.配对节点==依据.来源配对节点
+            &&原.条件结果.配对节点==依据.来源配对节点&&原.条件结果.条件节点==依据.来源条件节点
+            &&原.条件结果.结果节点==依据.来源结果节点&&原.条件结果.条件==依据.需要条件
+            &&原.条件结果.结果==依据.结果&&原.条件结果.线性关系组==依据.线性关系组
+            &&原.参数绑定组==依据.已知参数绑定组
+            &&任务执行组织存储::配对执行分支(原.条件结果)==依据.执行分支节点);
+        std::optional<新任务方法执行组织> 当前组织;
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            if(!治理已初始化_||!结构仍存在())return 返回(S::依赖未就绪);
+            if(!节点类型为(原.任务节点,任务节点类型)
+                ||读取唯一节点字段(原.任务节点,任务需求字段)!=std::optional{原.父需求节点})return 返回(S::来源已变化);
+            const auto Vt=读取唯一节点字段(原.任务节点,任务虚拟存在字段);
+            贡献要求(Vt&&节点类型为(*Vt,任务虚拟存在节点类型)
+                &&读取唯一节点字段(*Vt,虚拟存在所属任务字段)==std::optional{原.任务节点});
+            const auto 父Vt持有=全局基础数据集.查询目标字段(*Vt,任务虚拟存在字段);
+            贡献要求(父Vt持有.size()==1&&父Vt持有.front().所属节点==原.任务节点);
+            批.父任务虚拟存在节点=*Vt;
+            const auto 父登记=全局基础数据集.查询目标字段(原.任务节点,任务成员字段);
+            贡献要求(父登记.size()==1&&父登记.front().所属节点==任务集合根节点);
+            std::set<稳定编码> 保护节点{任务需求字段,任务成员字段,原.任务节点,*Vt};
+            const auto 子引用=全局基础数据集.查询目标字段(确认.需求节点,任务需求字段);
+            贡献要求(子引用.size()<=1);
+            for(const auto& 引用:子引用) {
+                检查因果读取停止(停止);
+                const auto T=引用.所属节点;
+                const auto v=读取唯一节点字段(T,任务虚拟存在字段);
+                const auto 登记=全局基础数据集.查询目标字段(T,任务成员字段);
+                贡献要求(节点类型为(T,任务节点类型)
+                    &&读取唯一节点字段(T,任务需求字段)==std::optional{确认.需求节点}
+                    &&v&&节点类型为(*v,任务虚拟存在节点类型)
+                    &&读取唯一节点字段(*v,虚拟存在所属任务字段)==std::optional{T}
+                    &&登记.size()==1&&登记.front().所属节点==任务集合根节点);
+                const auto Vt持有=全局基础数据集.查询目标字段(*v,任务虚拟存在字段);
+                贡献要求(Vt持有.size()==1&&Vt持有.front().所属节点==T);
+                保护节点.insert(T);保护节点.insert(*v);
+                批.子任务节点=T;
+            }
+            const auto 父引用=全局基础数据集.查询目标字段(原.父需求节点,任务需求字段);
+            贡献要求(父引用.size()==1&&父引用.front().所属节点==原.任务节点);
+            std::map<稳定编码,基础节点结构> 组织原始;
+            当前组织=任务执行组织存储::读取已加锁(原.任务节点,*Vt,&组织原始);
+            for(const auto& [n,v]:组织原始)保护节点.insert(n);
+            捕获因果节点保护(批.完整保护,保护节点);
+        }
+        const auto 读治理=[&](稳定编码 D) {
+            检查因果读取停止(停止);
+            auto r=需求服务_.读取来源准备单需求治理保护(D,停止);
+            if(std::holds_alternative<新需求读取取消>(r))throw 因果读取停止信号{};
+            auto p=std::get<新_需求类::来源准备单需求治理保护结果>(std::move(r));
+            using DS=新_需求类::来源准备治理读取状态;
+            switch(p.状态) {
+            case DS::已读取:break;
+            case DS::需求不存在:case DS::前提已变化:throw 静态退回{S::来源已变化};
+            case DS::尚未初始化:case DS::依赖未就绪:throw 静态退回{S::依赖未就绪};
+            case DS::资源失败:throw std::bad_alloc{};
+            default:throw std::logic_error("方法条件静态治理读取状态非法");
+            }
+            贡献要求(p.信息&&p.信息->节点==D&&!p.完整保护.empty());合并(p.完整保护);
+            return *p.信息;
+        };
+        const auto 父=读治理(原.父需求节点),子=读治理(确认.需求节点);
+        if(!父.完整目标||!子.完整目标)return 返回(S::依赖未就绪);
+        批.父目标=*父.完整目标;批.子目标=*子.完整目标;
+        if(父.完整目标!=std::optional{新需求完整目标{原.父需求目标存在节点,原.父需求目标}}
+            ||子.父需求节点!=std::optional{原.父需求节点}||子.来源类型!=新需求来源类型::任务子目标
+            ||子.来源承接节点!=std::optional{原.任务节点}||子.执行域!=新需求执行域::自我执行
+            ||子.行动请求来源||子.外部要求节点||子.复合来源
+            ||子.完整目标->目标存在节点!=项.目标存在节点)return 返回(S::来源已变化);
+        const auto& 目标=子.完整目标->目标;
+        if(目标.目标形式!=新需求目标形式::值||目标.目标变化方向
+            ||目标.目标特征类型概念节点!=项.目标特征类型概念节点
+            ||目标.目标值域概念节点!=std::optional{项.目标值域概念节点}
+            ||目标.引用内容定位!=项.引用内容定位
+            ||(项.新增成员见证要求 ? (!目标.新增成员来源见证
+                ||目标.新增成员来源见证->要求!=*项.新增成员见证要求) : 目标.新增成员来源见证.has_value()))return 返回(S::来源已变化);
+        if(目标.引用内容定位) {
+            if(目标.目标比较关系概念节点||目标.新增成员来源见证||!项.目标区间组.empty()
+                ||项.单位||项.集合目标)return 返回(S::来源已变化);
+        } else {
+        const auto 目标定义=目标.新增成员来源见证
+            ? 需求服务_.核验新增成员目标定义保护(*子.完整目标)
+            : 核验需求目标定义保护(目标,特征概念服务_,二次特征概念服务_);
+        switch(目标定义.状态) {
+        case 新需求目标定义核验状态::已完成:贡献要求(!目标定义.完整保护.empty());合并(目标定义.完整保护);break;
+        case 新需求目标定义核验状态::前提已变化:return 返回(S::来源已变化);
+        case 新需求目标定义核验状态::依赖未就绪:return 返回(S::依赖未就绪);
+        case 新需求目标定义核验状态::未支持:return 返回(S::未支持);
+        case 新需求目标定义核验状态::资源失败:throw std::bad_alloc{};
+        default:throw std::logic_error("正式方法条件子目标定义损坏");
+        }
+        }
+        检查因果读取停止(停止);
+        const auto 方法读=方法服务_.读取方法执行结构闭包({依据.来源方法节点});
+        using MS=新_方法类::执行结构读取状态;
+        if(方法读.状态==MS::尚未初始化)return 返回(S::依赖未就绪);
+        if(方法读.状态==MS::方法不存在||方法读.状态==MS::前提已变化)return 返回(S::来源已变化);
+        贡献要求(方法读.状态==MS::已读取&&!方法读.完整保护组.empty());合并(方法读.完整保护组);
+        const auto M=std::find_if(方法读.方法组.begin(),方法读.方法组.end(),[&](const auto& m){return m.节点==依据.来源方法节点;});
+        贡献要求(M!=方法读.方法组.end());
+        const auto CR=std::find_if(M->条件结果组.begin(),M->条件结果组.end(),[&](const auto& c){return c.配对节点==依据.来源配对节点;});
+        if(M->参数规格组!=依据.参数要求组||CR==M->条件结果组.end()
+            ||CR->条件节点!=依据.来源条件节点||CR->结果节点!=依据.来源结果节点
+            ||CR->条件!=依据.原始条件||CR->结果!=依据.结果||CR->线性关系组!=依据.线性关系组)return 返回(S::来源已变化);
+        for(const auto 支:原.条件结果.来源执行分支节点组)
+            if(std::find(CR->来源执行分支节点组.begin(),CR->来源执行分支节点组.end(),支)==CR->来源执行分支节点组.end())return 返回(S::来源已变化);
+        if(依据.执行分支节点&&std::count_if(M->执行分支组.begin(),M->执行分支组.end(),
+            [&](const auto& b){return b.节点==*依据.执行分支节点;})!=1)return 返回(S::来源已变化);
+        新任务本能采用材料 采用;
+        采用.定位=依据.定位;采用.来源方法节点=依据.来源方法节点;采用.来源配对节点=依据.来源配对节点;
+        采用.来源条件节点=依据.来源条件节点;采用.来源结果节点=依据.来源结果节点;采用.参数要求组=依据.参数要求组;
+        采用.原始条件=依据.原始条件;采用.需要条件=依据.需要条件;采用.结果=依据.结果;采用.线性关系组=依据.线性关系组;
+        采用.参数绑定组=依据.已知参数绑定组;采用.任务成员绑定=依据.任务成员绑定;采用.执行分支节点=依据.执行分支节点;
+        采用.来源执行分支节点组=原.条件结果.来源执行分支节点组;
+        if(原.本能采用&&*原.本能采用!=采用)throw std::logic_error("条件提议的本能采用与原分解依据异义");
+        // 仅构造值式声明视图复用静态核对算法；不发表组织，不把历史定位解释成当前组织。
+        新任务方法执行组织 声明视图;声明视图.节点=依据.定位.组织节点;
+        声明视图.任务节点=原.任务节点;声明视图.任务虚拟存在节点=批.父任务虚拟存在节点;
+        声明视图.根方法作用域节点组={依据.定位.方法作用域节点};
+        新任务执行方法作用域 域视图;域视图.节点=依据.定位.方法作用域节点;
+        域视图.来源方法节点=M->节点;域视图.来源方法虚拟存在节点=M->方法虚拟存在节点;
+        域视图.实现方式=M->实现方式;域视图.作用域=M->作用域;域视图.来源执行分支组=M->执行分支组;
+        for(const auto& p:M->参数规格组)域视图.参数要求组.push_back({{},p});
+        域视图.配对要求组.push_back({依据.定位.配对要求节点,CR->配对节点,CR->条件节点,CR->结果节点,
+            CR->条件,CR->结果,CR->线性关系组,CR->来源执行分支节点组});
+        声明视图.方法作用域组.push_back(std::move(域视图));
+        if(M->实现方式!=新方法实现方式::本能)return 返回(S::未支持);
+        任务执行组织存储::核对采用定义(声明视图,采用);
+        if(当前组织&&当前组织->节点==依据.定位.组织节点) {
+            const auto 域=std::find_if(当前组织->方法作用域组.begin(),当前组织->方法作用域组.end(),
+                [&](const auto& d){return d.节点==依据.定位.方法作用域节点;});
+            if(域!=当前组织->方法作用域组.end()&&std::any_of(域->配对要求组.begin(),域->配对要求组.end(),
+                [&](const auto& c){return c.节点==依据.定位.配对要求节点;}))任务执行组织存储::核对采用定义(*当前组织,采用);
+        }
+        const auto 读域=[&](稳定编码 C) {
+            检查因果读取停止(停止);const auto r=特征概念服务_.读取特征概念定义保护(C);
+            if(r.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(r.前提已变化||r.状态==基础结构操作状态::节点不存在)throw 静态退回{S::来源已变化};
+            贡献要求(r.状态==基础结构操作状态::已完成&&r.信息&&!r.预期节点组.empty());合并(r.预期节点组);return *r.信息;
+        };
+        const auto 读头=[&](稳定编码 F) {
+            检查因果读取停止(停止);const auto r=特征服务_.读取特征头保护(F);
+            switch(r.状态) {
+            case 新特征头保护状态::已读取:break;
+            case 新特征头保护状态::特征不存在:case 新特征头保护状态::前提已变化:throw 静态退回{S::来源已变化};
+            case 新特征头保护状态::依赖未就绪:throw 静态退回{S::依赖未就绪};
+            case 新特征头保护状态::资源失败:throw std::bad_alloc{};
+            default:throw std::logic_error("条件静态特征头状态非法");
+            }
+            贡献要求(r.信息&&r.信息->特征节点==F&&!r.完整保护.empty());合并(r.完整保护);return *r.信息;
+        };
+        const auto 核槽=[&](const 新任务条件子需求项& x) {
+            贡献要求(有效(x.目标存在节点)&&有效(x.实际特征节点)&&有效(x.目标特征类型概念节点)&&有效(x.目标值域概念节点));
+            const auto F=读头(x.实际特征节点);
+            if(F.特征类型根!=x.目标特征类型概念节点)throw 静态退回{S::来源已变化};
+            auto 顶F=F;std::set<稳定编码> 已见{F.特征节点};
+            while(顶F.上级特征节点) {
+                贡献要求(已见.insert(*顶F.上级特征节点).second);顶F=读头(*顶F.上级特征节点);
+            }
+            bool 本域Vt=false;
+            {
+                auto 锁=获取因果读取任务锁(停止);
+                if(节点类型为(x.目标存在节点,任务虚拟存在节点类型)) {
+                    const auto T=读取唯一节点字段(x.目标存在节点,虚拟存在所属任务字段);
+                    贡献要求(T&&读取唯一节点字段(*T,任务虚拟存在字段)==std::optional{x.目标存在节点});
+                    if(顶F.特征节点!=读取唯一节点字段(x.目标存在节点,虚拟存在状态特征字段)
+                        &&顶F.特征节点!=读取唯一节点字段(x.目标存在节点,虚拟存在服务值特征字段))throw 静态退回{S::来源已变化};
+                    捕获因果节点保护(批.完整保护,{*T,x.目标存在节点});本域Vt=true;
+                }
+            }
+            if(本域Vt)return;
+            检查因果读取停止(停止);
+            if(场景服务_.是场景节点(x.目标存在节点)) {
+                const auto s=场景服务_.获取场景(x.目标存在节点);
+                if(!s)throw 静态退回{S::来源已变化};
+                捕获因果节点保护(批.完整保护,{x.目标存在节点});
+                if(场景服务_.获取场景(x.目标存在节点)!=s)throw 因果读取来源变化信号{};
+                if(std::count(s->特征节点组.begin(),s->特征节点组.end(),顶F.特征节点)!=1)throw 静态退回{S::来源已变化};
+            } else {
+                const auto e=存在服务_.读取存在顶层特征定位保护(x.目标存在节点);
+                switch(e.状态) {
+                case 新存在顶层特征定位状态::已读取:break;
+                case 新存在顶层特征定位状态::资源失败:throw std::bad_alloc{};
+                case 新存在顶层特征定位状态::依赖未就绪:throw 静态退回{S::依赖未就绪};
+                case 新存在顶层特征定位状态::前提已变化:case 新存在顶层特征定位状态::存在不存在:throw 静态退回{S::来源已变化};
+                default:throw std::logic_error("正式条件E身份不可用");
+                }
+                贡献要求(e.信息&&e.信息->存在节点==x.目标存在节点&&!e.完整保护.empty());合并(e.完整保护);
+                if(std::count(e.信息->顶层特征节点组.begin(),e.信息->顶层特征节点组.end(),顶F.特征节点)!=1)throw 静态退回{S::来源已变化};
+            }
+        };
+        const auto 同目标=[](const 新任务条件子需求项& l,const 新任务条件子需求项& r) {
+            return l.目标存在节点==r.目标存在节点&&l.目标特征类型概念节点==r.目标特征类型概念节点
+                &&l.目标区间组==r.目标区间组&&l.单位==r.单位&&l.集合目标==r.集合目标
+                &&l.引用内容定位==r.引用内容定位&&l.新增成员见证要求==r.新增成员见证要求
+                &&(!l.引用内容定位||l.目标值域概念节点==r.目标值域概念节点);
+        };
+        const auto 证明项=std::find_if(原.已知条件项组.begin(),原.已知条件项组.end(),[&](const auto& x){
+            return 项.集合目标
+                ? x.目标存在节点==项.目标存在节点&&x.目标特征类型概念节点==项.目标特征类型概念节点&&x.集合目标.has_value()
+                : x.条件项序号==项.条件项序号&&x.实际特征节点==项.实际特征节点&&同目标(x,项);
+        });
+        检查因果读取停止(停止);
+        if(证明项==原.已知条件项组.end())return 返回(S::来源已变化);
+        for(const auto& x:原.已知条件项组) {
+            if(项.集合目标
+                ? x.目标存在节点!=项.目标存在节点||x.目标特征类型概念节点!=项.目标特征类型概念节点
+                : &x!=&*证明项)continue;
+            检查因果读取停止(停止);核槽(x);
+            贡献要求(x.条件项序号<依据.需要条件.条件项组.size());
+            const auto& c=依据.需要条件.条件项组[static_cast<std::size_t>(x.条件项序号)];
+            if(c.引用内容条件) {
+                if(!x.引用内容定位||x.目标值域概念节点!=c.引用内容条件->要求概念节点
+                    ||x.引用内容定位->正式内容路径!=c.引用内容条件->正式内容路径
+                    ||!x.目标区间组.empty()||x.单位||x.集合目标||x.新增成员见证要求)return 返回(S::来源已变化);
+                const auto d=读治理(x.引用内容定位->引用需求节点);
+                if(d.需求主体存在节点!=x.目标存在节点)return 返回(S::来源已变化);
+                const auto C=存在概念服务_.读取正式概念身份保护(x.目标值域概念节点);
+                if(C.状态==正式概念读取状态::依赖未就绪)return 返回(S::依赖未就绪);
+                if(C.状态==正式概念读取状态::前提已变化)return 返回(S::来源已变化);
+                贡献要求(C.状态==正式概念读取状态::已读取&&C.身份&&!C.身份->完整保护组.empty());合并(C.身份->完整保护组);
+            } else {
+                if(x.引用内容定位)return 返回(S::来源已变化);
+                const auto 域=读域(x.目标值域概念节点);
+                if(域.类型根!=x.目标特征类型概念节点||!条件投影一致(x,域.定义))return 返回(S::来源已变化);
+                if(c.精确数值域) {
+                    if(c.特征值域概念节点||x.目标区间组!=std::vector<特征概念I64闭区间>{*c.精确数值域})return 返回(S::来源已变化);
+                } else if(c.特征值域概念节点!=std::optional{x.目标值域概念节点})return 返回(S::来源已变化);
+            }
+            if(c.特征类型概念节点&&读域(*c.特征类型概念节点).类型根!=x.目标特征类型概念节点)return 返回(S::来源已变化);
+            const 新方法参数角色绑定* b=nullptr;
+            for(const auto& 候选:依据.已知参数绑定组)if(参数定位相同(候选,c.参数角色节点,c.参数序号)){
+                贡献要求(!b);b=&候选;
+            }
+            if(!b)return 返回(S::来源已变化);
+            if(c.任务成员变量序号) {
+                if(!依据.任务成员绑定||依据.任务成员绑定->任务引用.虚拟存在节点!=x.目标存在节点)return 返回(S::来源已变化);
+            } else if(c.引用内容条件&&c.引用内容条件->作用点==新方法内容作用点::参数自身) {
+                if(!b->有序引用||b->有序引用->信息类型!=新方法参数信息类型::存在
+                    ||!x.引用内容定位||b->有序引用->信息节点!=x.引用内容定位->引用需求节点)return 返回(S::来源已变化);
+            } else if(b->有序引用) {
+                if(b->有序引用->信息类型==新方法参数信息类型::存在) {
+                    if(b->有序引用->信息节点!=x.目标存在节点)return 返回(S::来源已变化);
+                } else if(b->有序引用->信息类型==新方法参数信息类型::特征) {
+                    if(b->有序引用->信息节点!=x.实际特征节点)return 返回(S::来源已变化);
+                } else throw std::logic_error("原方法条件参数类型非法");
+            } else if(b->实际存在节点!=std::optional{x.目标存在节点})return 返回(S::来源已变化);
+        }
+        if(项.集合目标) {
+            const auto 合并值=合并同槽任务集合条件(原.已知条件项组,*证明项);if(!合并值)return 返回(S::来源已变化);
+            auto 期望=*证明项;期望.目标值域概念节点=项.目标值域概念节点;期望.集合目标=*合并值;
+            const auto 域=读域(项.目标值域概念节点);
+            if(期望!=项||域.类型根!=项.目标特征类型概念节点||!条件投影一致(项,域.定义))return 返回(S::来源已变化);
+        }
+        if(!项.引用内容定位&&!是条件包含目标(目标,特征概念服务_,二次特征概念服务_))return 返回(S::来源已变化);
+        检查因果读取停止(停止);
+        {auto 锁=获取因果读取任务锁(停止);if(!核同方法条件准备静态批已加锁(批))return 返回(S::来源已变化);}
+        检查因果读取停止(停止);
+        return 方法条件准备身份结果{S::身份一致,std::move(批)};
+    } catch(const 静态退回& e){return 返回(e.状态);}
+    catch(const 因果读取停止信号&){return 新任务因果读取取消{};}
+    catch(const 因果读取来源变化信号&){return 返回(S::来源已变化);}
+    catch(const std::bad_alloc&){return 返回(S::资源失败);}
+    catch(const std::length_error&){return 返回(S::资源失败);}
+}
+
+bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条件准备静态批& 批) const {
+    const auto& 提议=批.原凭据.原提议;const auto 子D=批.原凭据.已确认项.需求节点;
+    if(!结构仍存在()||批.完整保护.empty()||!核同因果节点保护(批.完整保护))return false;
+    if(读取唯一节点字段(提议.任务节点,任务需求字段)!=std::optional{提议.父需求节点}
+        ||读取唯一节点字段(提议.任务节点,任务虚拟存在字段)!=std::optional{批.父任务虚拟存在节点}
+        ||读取唯一节点字段(批.父任务虚拟存在节点,虚拟存在所属任务字段)!=std::optional{提议.任务节点})return false;
+    const auto 引用组=全局基础数据集.查询目标字段(子D,任务需求字段);
+    if(引用组.size()!=(批.子任务节点 ? 1u : 0u))return false;
+    if(批.子任务节点&&(引用组.front().所属节点!=*批.子任务节点
+        ||读取唯一节点字段(*批.子任务节点,任务需求字段)!=std::optional{子D}))return false;
+    const auto 已有=条件准备承接依据_.find(子D.值);
+    if(已有!=条件准备承接依据_.end()){
+        贡献要求(static_cast<bool>(已有->second));
+        if(*已有->second!=批.原凭据)throw std::logic_error("同一条件准备需求的正式承接凭据异义");
+    }
+    return true;
+}
+
+新_任务类::条件准备交付结果 新_任务类::接收已确认方法条件准备依据(
+    const 新任务条件子需求提议& 原提议,const 新任务已确认条件子需求& 已确认项,std::stop_token 停止) {
+    using 状态=条件准备交付状态;
+    try{
+        检查因果读取停止(停止);
+        方法条件准备承接凭据 输入{原提议,已确认项};
+        {
+            auto 锁=获取因果读取任务锁(停止);
+            const auto 原=条件准备承接依据_.find(已确认项.需求节点.值);
+            if(原!=条件准备承接依据_.end()){
+                贡献要求(static_cast<bool>(原->second));
+                if(*原->second!=输入)throw std::logic_error("同一条件准备需求重投异父或异提议");
+            }
+        }
+        auto 读取=读取方法条件准备静态身份(输入,停止);
+        if(std::holds_alternative<新任务因果读取取消>(读取))return 新任务因果读取取消{};
+        auto 结果=std::get<方法条件准备身份结果>(std::move(读取));
+        switch(结果.状态){
+        case 方法条件准备身份状态::来源已变化:return 状态::来源已变化;
+        case 方法条件准备身份状态::依赖未就绪:return 状态::依赖未就绪;
+        case 方法条件准备身份状态::未支持:return 状态::未支持;
+        case 方法条件准备身份状态::资源失败:return 状态::资源失败;
+        case 方法条件准备身份状态::身份一致:break;
+        default:throw std::logic_error("条件准备交付静态身份状态非法");}
+        贡献要求(结果.静态批&&!结果.静态批->完整保护.empty()&&结果.静态批->原凭据==输入);
+        // 预分配完整不可变凭据与map节点；唯一发表段只有整数比较和node handle移入。
+        auto 凭据=std::make_shared<const 方法条件准备承接凭据>(std::move(输入));
+        std::map<std::uint64_t,条件准备凭据指针> 预备;
+        预备.emplace(已确认项.需求节点.值,凭据);
+        auto 节点=预备.extract(已确认项.需求节点.值);
+        auto 锁=获取因果读取任务锁(停止);
+        if(!核同方法条件准备静态批已加锁(*结果.静态批))return 状态::来源已变化;
+        const auto 原=条件准备承接依据_.find(已确认项.需求节点.值);
+        if(原!=条件准备承接依据_.end()){
+            贡献要求(原->second&&*原->second==*凭据);return 状态::已复用;
+        }
+        检查因果读取停止(停止);
+        const auto 插入=条件准备承接依据_.insert(std::move(节点));
+        贡献要求(插入.inserted);
+        // 已发生交付不再响应token，回执供manager精确收口其outbox。
+        return 状态::已交付;
+    }catch(const 因果读取停止信号&){return 新任务因果读取取消{};}
+    catch(const 因果读取来源变化信号&){return 状态::来源已变化;}
+    catch(const std::bad_alloc&){return 状态::资源失败;}
+    catch(const std::length_error&){return 状态::资源失败;}
+}
+
 新任务已发布条件子需求核验状态 新_任务类::复核已发布条件子需求身份(
     稳定编码 父任务节点, const 新任务已确认条件子需求& 关联) const noexcept {
+    try {
+        const auto 上下文=std::make_shared<新方法内容核验上下文>();
+        auto 批=准备本次场景核验批(父任务节点,{},nullptr,false,true,上下文,true);
+        读取本次场景核验批(批);
+        读取新增成员目标组(批,{关联.需求节点});
+        if(关联.原提议.引用内容定位){
+            auto p=复核方法内容子需求必要性(关联.需求节点,批.内容核验上下文);
+            批.保护.insert(批.保护.end(),p.保护.begin(),p.保护.end());批.内容必要性组.emplace(关联.需求节点,std::move(p));
+            auto r=需求服务_.复核引用内容目标(关联.需求节点);
+            批.保护.insert(批.保护.end(),r.完整保护组.begin(),r.完整保护组.end());批.子内容判定组.emplace(关联.需求节点,std::move(r));
+        }
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批))return 新任务已发布条件子需求核验状态::材料已变化;
+        return 复核已发布条件子需求身份已加锁(父任务节点,关联,批);
+    }catch(const std::bad_alloc&){return 新任务已发布条件子需求核验状态::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核已发布条件子需求身份",L"锁外已发布子目标读取故障");}
+}
+新任务已发布条件子需求核验状态 新_任务类::复核已发布条件子需求身份已加锁(
+    稳定编码 父任务节点,const 新任务已确认条件子需求& 关联,const 新任务本次场景核验批& 场景批) const {
     using 状态 = 新任务已发布条件子需求核验状态;
     try {
         std::lock_guard 锁(新任务互斥);
@@ -15208,6 +21060,28 @@ namespace {
         const auto 父需求 = 需求服务_.获取需求(父任务->需求节点);
         const auto 子需求 = 需求服务_.获取需求(关联.需求节点);
         const auto& 项 = 关联.原提议;
+        if(项.引用内容定位){
+            if(!父需求||!子需求||查询需求任务(父需求->节点)!=父任务节点
+                ||子需求->父需求节点!=父需求->节点||子需求->来源类型!=新需求来源类型::任务子目标
+                ||子需求->来源承接节点!=父任务节点||子需求->目标存在节点!=项.目标存在节点
+                ||子需求->目标.目标特征类型概念节点!=项.目标特征类型概念节点||子需求->目标.目标值域概念节点!=项.目标值域概念节点
+                ||子需求->目标.引用内容定位!=项.引用内容定位||子需求->复合来源
+                ||子需求->目标.目标形式!=新需求目标形式::值||子需求->目标.目标比较关系概念节点||子需求->目标.目标变化方向
+                ||!项.目标区间组.empty()||项.单位||项.集合目标)return 状态::结构不一致;
+            const auto it=场景批.内容必要性组.find(关联.需求节点),end=场景批.内容必要性组.end();
+            if(it==end)return 状态::任务状态已变化;
+            const auto s=核同方法内容必要性投影已加锁(it->second);
+            if(s==方法内容必要性状态::资源失败)return 状态::资源失败;
+            if(s==方法内容必要性状态::前提已变化||s==方法内容必要性状态::已不再必要)return 状态::材料已变化;
+            if(s!=方法内容必要性状态::仍必要)return 状态::任务状态已变化;
+            const auto r=场景批.子内容判定组.find(关联.需求节点);
+            if(r==场景批.子内容判定组.end())return 状态::任务状态已变化;
+            if(r->second.状态==新引用内容目标状态::资源失败)return 状态::资源失败;
+            if(r->second.状态==新引用内容目标状态::引用前提已变化||r->second.实际特征节点!=std::optional<稳定编码>{项.实际特征节点})return 状态::材料已变化;
+            if(r->second.状态==新引用内容目标状态::定义不合法)throw std::logic_error("正式内容子目标定义损坏");
+            return (r->second.状态==新引用内容目标状态::已满足||r->second.状态==新引用内容目标状态::未满足||r->second.状态==新引用内容目标状态::分支待定)
+                ? 状态::身份一致 : 状态::任务状态已变化;
+        }
         if (!父需求 || !子需求 || 查询需求任务(父需求->节点) != 父任务节点
             || 子需求->父需求节点 != 父需求->节点
             || 子需求->来源类型 != 新需求来源类型::任务子目标
@@ -15216,19 +21090,32 @@ namespace {
             || 子需求->目标.目标特征类型概念节点 != 项.目标特征类型概念节点
             || 子需求->目标.目标值域概念节点 != 项.目标值域概念节点
             || !是条件包含目标(子需求->目标, 特征概念服务_, 二次特征概念服务_)) return 状态::结构不一致;
-        const auto 全部任务 = 查询全部任务();
-        if (全部任务.状态 != 新任务操作状态::已找到)
-            return 全部任务.状态 == 新任务操作状态::资源失败 ? 状态::资源失败 : 状态::结构不一致;
-        std::optional<稳定编码> 已有子任务;
-        for (const auto T : 全部任务.任务节点组) {
-            const auto 信息 = 获取任务(T);
-            if (!信息) throw std::logic_error("子D任务唯一性核验遇不可读T");
-            if (信息->需求节点 != 关联.需求节点) continue;
-            if (已有子任务) return 状态::结构不一致;
-            已有子任务 = T;
+        if(项.新增成员见证要求
+            ?(!子需求->目标.新增成员来源见证||子需求->目标.新增成员来源见证->要求!=*项.新增成员见证要求)
+            :子需求->目标.新增成员来源见证.has_value())return 状态::结构不一致;
+        const auto 任务引用=全局基础数据集.查询目标字段(关联.需求节点,任务需求字段);
+        if(任务引用.size()>1)return 状态::结构不一致;
+        if(!任务引用.empty()) {
+            const auto T=任务引用.front().所属节点;
+            const auto Vt=读取唯一节点字段(T,任务虚拟存在字段);
+            const auto 登记=全局基础数据集.查询目标字段(T,任务成员字段);
+            if(!节点类型为(T,任务节点类型)
+                ||读取唯一节点字段(T,任务需求字段)!=std::optional{关联.需求节点}
+                ||登记.size()!=1||登记.front().所属节点!=任务集合根节点
+                ||!Vt||!节点类型为(*Vt,任务虚拟存在节点类型)
+                ||读取唯一节点字段(*Vt,虚拟存在所属任务字段)!=std::optional{T})
+                throw std::logic_error("子D任务唯一性核验遇无效本地T/Vt身份");
+            const auto 持有=全局基础数据集.查询目标字段(*Vt,任务虚拟存在字段);
+            if(持有.size()!=1||持有.front().所属节点!=T)
+                throw std::logic_error("子D任务虚拟存在不是本T唯一持有");
         }
         if (是终结状态(父任务->当前状态) || 父需求->活动状态 == 新需求活动状态::失活
             || 子需求->活动状态 == 新需求活动状态::失活) return 状态::任务状态已变化;
+        if(项.新增成员见证要求){
+            const auto current=读取批需求满足(场景批,*子需求);
+            return current.状态==新需求当前满足状态::目标引用前提已变化 ? 状态::材料已变化
+                : current.状态==新需求当前满足状态::资源失败 ? 状态::资源失败 : 状态::身份一致;
+        }
         const auto 域 = 特征概念服务_.获取特征概念(项.目标值域概念节点);
         if (!域) throw std::logic_error("已发布条件域不可读");
         if (!条件投影一致(项, *域)) return 状态::材料已变化;
@@ -15246,6 +21133,8 @@ namespace {
                 != std::optional<稳定编码>{项.目标特征类型概念节点}
             || 特征->实例单位 != 项.单位 || 域->单位 != 项.单位) return 状态::材料已变化;
         return 状态::身份一致;
+    } catch(const std::bad_alloc&) {
+        return 状态::资源失败;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复核已发布条件子需求身份", L"已发布子需求身份读取工程故障");
     }
@@ -15256,7 +21145,18 @@ namespace {
     const std::vector<新任务已确认条件子需求>& 子需求组) const noexcept {
     新任务条件子需求就绪结果 结果;
     try {
+        auto 场景批=准备本次场景核验批(任务节点);
+        读取本次场景核验批(场景批);
+        std::vector<稳定编码> 子D组;for(const auto& x:子需求组)子D组.push_back(x.需求节点);
+        读取新增成员目标组(场景批,子D组);
+        for(const auto& 关联:子需求组)if(关联.原提议.引用内容定位){
+            auto p=复核方法内容子需求必要性(关联.需求节点,场景批.内容核验上下文);
+            场景批.保护.insert(场景批.保护.end(),p.保护.begin(),p.保护.end());场景批.内容必要性组.emplace(关联.需求节点,std::move(p));
+            auto r=需求服务_.复核引用内容目标(关联.需求节点);
+            场景批.保护.insert(场景批.保护.end(),r.完整保护组.begin(),r.完整保护组.end());场景批.子内容判定组.emplace(关联.需求节点,std::move(r));
+        }
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){结果.状态=新任务条件子需求就绪状态::任务状态已变化;return 结果;}
         const auto 任务 = 获取任务(任务节点);
         if (!治理已初始化_ || !任务) return 结果;
         if (任务->当前状态 != 新任务状态::待检查条件) {
@@ -15268,7 +21168,7 @@ namespace {
         bool 全部满足 = true;
         std::set<稳定编码> 已查需求;
         for (const auto& 关联 : 子需求组) {
-            const auto 身份 = 复核已发布条件子需求身份(任务节点, 关联);
+            const auto 身份 = 复核已发布条件子需求身份已加锁(任务节点,关联,场景批);
             if (身份 != 新任务已发布条件子需求核验状态::身份一致) {
                 结果.状态 = 身份 == 新任务已发布条件子需求核验状态::任务状态已变化
                     ? 新任务条件子需求就绪状态::任务状态已变化
@@ -15279,6 +21179,12 @@ namespace {
                 return 结果;
             }
             const auto& 项 = 关联.原提议;
+            if(项.引用内容定位){
+                if(!已查需求.insert(关联.需求节点).second)return 结果;
+                const auto& r=场景批.子内容判定组.at(关联.需求节点);
+                全部满足=全部满足&&r.状态==新引用内容目标状态::已满足;
+                continue;
+            }
             const auto 子需求 = 需求服务_.获取需求(关联.需求节点);
             if (!已查需求.insert(关联.需求节点).second || !子需求
                 || 子需求->父需求节点 != 父需求->节点
@@ -15293,7 +21199,7 @@ namespace {
                 结果.状态 = 新任务条件子需求就绪状态::来源已变化;
                 return 结果;
             }
-            const auto 当前 = 需求服务_.复核当前满足(关联.需求节点);
+            const auto 当前 = 读取批需求满足(场景批,*子需求);
             if (当前.实际特征节点 && 当前.实际特征节点 != 项.实际特征节点) {
                 结果.状态 = 新任务条件子需求就绪状态::来源已变化;
                 return 结果;
@@ -15312,7 +21218,7 @@ namespace {
             }
             if (子需求->活动状态 == 新需求活动状态::失活) 全部满足 = false;
         }
-        结果.当前选择 = 选择任务方法结果(任务节点);
+        结果.当前选择 = 选择任务方法结果内部(任务节点,场景批);
         switch (结果.当前选择->状态) {
         case 新任务方法选择状态::已选定:
             结果.全部需求已满足 = 全部满足;
@@ -15336,6 +21242,8 @@ namespace {
             结果.状态 = 新任务条件子需求就绪状态::来源已变化; return 结果;
         default: return 结果;
         }
+    } catch (const std::bad_alloc&) {
+        结果.状态=新任务条件子需求就绪状态::资源失败;return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复核条件子需求就绪", L"条件子需求复核工程故障");
     }
@@ -15344,6 +21252,40 @@ namespace {
 新需求方向一致性结果 新_任务类::判断父子需求方向一致(
     稳定编码 父需求节点,
     稳定编码 子需求节点) const noexcept {
+    try {
+        const auto 子=需求服务_.获取需求(子需求节点);
+        if(子&&(子->复合来源||子->目标.引用内容定位)) {
+            新需求方向一致性结果 r;r.父需求节点=父需求节点;r.子需求节点=子需求节点;
+            r.状态=新需求方向一致性状态::内容执行定位未支持;return r;
+        }
+        const auto 父T=查询需求任务(父需求节点),子T=查询需求任务(子需求节点);
+        std::optional<新任务本次场景核验批> 父批,子批;
+        新任务本次场景核验批 空批;读取新增成员目标组(空批,{父需求节点,子需求节点});
+        if(父T){父批=准备本次场景核验批(*父T,{},nullptr,false,true);读取本次场景核验批(*父批);}
+        if(子T){子批=准备本次场景核验批(*子T,{},nullptr,false,true);读取本次场景核验批(*子批);}
+        std::lock_guard 锁(新任务互斥);
+        if(!空批.分支有效||!核同因果节点保护(空批.保护)
+            ||std::any_of(空批.新增成员目标组.begin(),空批.新增成员目标组.end(),[&](const auto& x){
+                return 需求服务_.获取需求(x.需求.节点)!=std::optional{x.需求};})){
+            新需求方向一致性结果 r;r.父需求节点=父需求节点;r.子需求节点=子需求节点;
+            r.状态=新需求方向一致性状态::来源前提已变化;return r;
+        }
+        if((父批&&父批->需求准备&&父批->需求准备->结果.状态==新任务需求准备状态::来源前提已变化)
+            ||(子批&&子批->需求准备&&子批->需求准备->结果.状态==新任务需求准备状态::来源前提已变化)){
+            新需求方向一致性结果 r;r.父需求节点=父需求节点;r.子需求节点=子需求节点;
+            r.状态=新需求方向一致性状态::来源前提已变化;return r;
+        }
+        if(父T!=查询需求任务(父需求节点)||子T!=查询需求任务(子需求节点)
+            ||(父批&&!核同本次场景核验批(*父批))||(子批&&!核同本次场景核验批(*子批))){
+            新需求方向一致性结果 r;r.父需求节点=父需求节点;r.子需求节点=子需求节点;
+            r.状态=新需求方向一致性状态::父方法材料未到;return r;
+        }
+        return 判断父子需求方向一致内部(父需求节点,子需求节点,父批 ? *父批 : 空批,子批 ? *子批 : 空批);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"父子需求方向",L"锁外场景核验故障");}
+}
+新需求方向一致性结果 新_任务类::判断父子需求方向一致内部(
+    稳定编码 父需求节点,稳定编码 子需求节点,const 新任务本次场景核验批& 父批,
+    const 新任务本次场景核验批& 子批) const noexcept {
     新需求方向一致性结果 结果;
     结果.父需求节点 = 父需求节点;
     结果.子需求节点 = 子需求节点;
@@ -15379,9 +21321,30 @@ namespace {
             结果.状态 = 新需求方向一致性状态::子需求失活;
             return 结果;
         }
+        if(子需求->来源类型==新需求来源类型::行动请求){
+            const auto 边界=读取当前结算边界();
+            const auto 父T=查询需求任务(父需求节点),子T=查询需求任务(子需求节点);
+            if(!边界||父需求节点!=边界->结算需求节点||父T!=边界->结算任务节点
+                ||!子T||子T==父T||!子治理->行动请求来源||!子治理->完整目标
+                ||子治理->执行域!=新需求执行域::自我执行
+                ||子治理->需求主体存在节点!=子治理->行动请求来源->受请求者节点)
+                throw std::logic_error("行动请求父子定义关联身份不一致");
+            if(!子批.需求准备||子批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化
+                ||!核同任务需求准备保护批(*子批.需求准备)){
+                结果.状态=新需求方向一致性状态::来源前提已变化;return 结果;}
+            if(子批.需求准备->结果.状态==新任务需求准备状态::资源延后){结果.状态=新需求方向一致性状态::资源失败;return 结果;}
+            if(子批.需求准备->结果.状态!=新任务需求准备状态::可筹办
+                ||std::find(子批.需求准备->守卫.行动请求来源组.begin(),子批.需求准备->守卫.行动请求来源组.end(),
+                    *子治理->行动请求来源)==子批.需求准备->守卫.行动请求来源组.end())
+                throw std::logic_error("行动请求父子定义关联缺正式来源保护");
+            结果.来源任务节点=父T;结果.子任务节点=子T;
+            结果.行动请求来源=子治理->行动请求来源;
+            结果.判定依据=新需求方向判定依据::行动请求承接定义;
+            结果.状态=新需求方向一致性状态::方向推进但不保证满足;return 结果;
+        }
         const auto 父任务身份 = 查询需求任务(父需求节点);
-        const auto 父当前 = 父任务身份 && 是服务需求取得目标(*父需求)
-            ? 复核任务需求(*父任务身份) : 需求服务_.复核当前满足(父需求节点);
+        const auto 父当前 = 父任务身份 ? 父批.当前需求满足.value_or(新需求当前满足结果{})
+            : 读取批需求满足(父批,*父需求);
         if (父当前.状态 == 新需求当前满足状态::已满足) {
             结果.状态 = 新需求方向一致性状态::父需求已满足;
             return 结果;
@@ -15494,32 +21457,6 @@ namespace {
                     结果.状态 = 新需求方向一致性状态::方向推进但不保证满足;
                     return 结果;
                 }
-                贡献要求(当前使用历史结算方法());
-                const auto& 配置 = *服务结算配置_;
-                const auto 域 = 特征概念服务_.获取特征概念(配置.目标值域概念节点);
-                const auto* 区间 = 域 ? std::get_if<std::vector<特征概念I64闭区间>>(&域->值域) : nullptr;
-                if (配置.冻结前值 == (std::numeric_limits<std::int64_t>::max)()) {
-                    结果.状态 = 新需求方向一致性状态::定义依据未就绪; return 结果;
-                }
-                const auto 目标值 = 配置.冻结前值 + 1;
-                if (父需求->根角色 != 新需求根角色::服务
-                    || 子需求->来源类型 != 新需求来源类型::本能定义 || 子需求->来源承接节点
-                    || *子任务 != 配置.结算任务节点
-                    || 父需求->目标.目标形式 != 新需求目标形式::变化方向
-                    || 父需求->目标.目标变化方向 != 新需求变化方向::增加
-                    || 子需求->目标存在节点 != 父需求->目标存在节点
-                    || 子需求->目标.目标特征类型概念节点 != 父需求->目标.目标特征类型概念节点
-                    || 子需求->目标.目标形式 != 新需求目标形式::值
-                    || 子需求->目标.目标值域概念节点 != 配置.目标值域概念节点
-                    || !域 || 域->材料类型 != 特征概念材料物理类型::I64标量
-                    || !区间 || 区间->size() != 1
-                    || 区间->front().下界 != 目标值 || 区间->front().上界 != 目标值
-                    || 取得特征概念类型根(特征概念服务_, 域->节点) != 子需求->目标.目标特征类型概念节点)
-                    throw std::logic_error("服务结算定义方向桥与冻结配置不一致");
-                结果.子任务节点 = 子任务;
-                结果.判定依据 = 新需求方向判定依据::服务结算定义;
-                结果.状态 = 新需求方向一致性状态::方向推进但不保证满足;
-                return 结果;
             }
             if (子需求->来源类型 == 新需求来源类型::外部服务要求) {
                 bool 多 = false; std::optional<新需求方向一致性状态> 失败;
@@ -15592,15 +21529,15 @@ namespace {
                 return 父侧 ? 新需求方向一致性状态::父方法材料未到 : 新需求方向一致性状态::子方法材料未到;
             }
         };
-        const auto 父分支 = 选择任务结果分支内部(*父任务节点, true);
+        const auto 父分支 = 选择任务结果分支内部(*父任务节点, true,父批);
         if (父分支.状态 != 新任务条件分解状态::已确定 || !父分支.依据) {
             结果.状态 = 映射分支(父分支.状态, true); return 结果;
         }
-        const auto 子分支 = 选择任务结果分支内部(*子任务节点, true);
+        const auto 子分支 = 选择任务结果分支内部(*子任务节点, true,子批);
         if (子分支.状态 != 新任务条件分解状态::已确定 || !子分支.依据) {
             结果.状态 = 映射分支(子分支.状态, false); return 结果;
         }
-        const auto 父投影 = 提议任务条件子需求(*父任务节点);
+        const auto 父投影 = 提议任务条件子需求内部(*父任务节点,父批);
         auto 父投影模型 = 父投影.分解依据;
         if (父投影模型) 父投影模型->未解析条件序号组.clear();
         if (!父投影.分解依据
@@ -15629,7 +21566,7 @@ namespace {
         }
         if (!已对应) { 结果.状态 = 新需求方向一致性状态::未找到对应条件; return 结果; }
         const auto 有相反结果 = [&](const 新任务条件分解依据& 依据, const 新需求信息& 需求) {
-            const auto 当前 = 需求服务_.复核当前满足(需求.节点);
+            const auto 当前 = 读取批需求满足(需求.节点==父需求节点 ? 父批 : 子批,需求);
             std::optional<预计变化方向> 所需;
             if (需求.目标.目标形式 == 新需求目标形式::变化方向)
                 所需 = 需求.目标.目标变化方向 == 新需求变化方向::增加 ? 预计变化方向::增加 : 预计变化方向::减少;
@@ -15681,7 +21618,29 @@ namespace {
     稳定编码 叶需求节点) const noexcept {
     新需求根链方向一致性结果 结果;
     try {
+        std::map<稳定编码,新任务本次场景核验批> 场景批组;
+        std::vector<稳定编码> 原链;
+        std::set<稳定编码> 采集已见;
+        auto 采集节点=叶需求节点;
+        while(采集已见.insert(采集节点).second){
+            原链.push_back(采集节点);
+            const auto 当前D=需求服务_.获取需求(采集节点);
+            if(当前D&&(当前D->复合来源||当前D->目标.引用内容定位)) {
+                结果.状态=新需求方向一致性状态::内容执行定位未支持;return 结果;
+            }
+            const auto T=查询需求任务(采集节点);
+            if(T){auto 批=准备本次场景核验批(*T,{},nullptr,false,true);读取本次场景核验批(批);场景批组.emplace(采集节点,std::move(批));}
+            const auto D=需求服务_.读取需求治理信息(采集节点);
+            if(!D||!D->父需求节点)break;
+            采集节点=*D->父需求节点;
+        }
+        新任务本次场景核验批 空批;读取新增成员目标组(空批,原链);
         std::lock_guard 锁(新任务互斥);
+        if(!空批.分支有效||!核同因果节点保护(空批.保护)
+            ||std::any_of(空批.新增成员目标组.begin(),空批.新增成员目标组.end(),[&](const auto& x){
+                return 需求服务_.获取需求(x.需求.节点)!=std::optional{x.需求};})){
+            结果.状态=新需求方向一致性状态::来源前提已变化;return 结果;
+        }
         std::set<稳定编码> 已见;
         auto 当前节点 = 叶需求节点;
         while (true) {
@@ -15710,15 +21669,31 @@ namespace {
         }
         std::reverse(结果.根到叶需求节点组.begin(),
             结果.根到叶需求节点组.end());
+        std::reverse(原链.begin(),原链.end());
+        if(原链!=结果.根到叶需求节点组){结果.状态=新需求方向一致性状态::父方法材料未到;return 结果;}
+        for(const auto& [D,批]:场景批组){
+            if(批.需求准备&&批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化){
+                结果.状态=新需求方向一致性状态::来源前提已变化;
+                结果.失败子需求节点=D;结果.失败父需求节点=批.需求 ? 批.需求->父需求节点 : std::nullopt;
+                结果.根到叶需求节点组.clear();return 结果;
+            }
+            if(查询需求任务(D)!=std::optional<稳定编码>{批.T}||!核同本次场景核验批(批)){
+                结果.状态=批.需求准备&&!批.需求准备->守卫.行动请求来源组.empty()
+                    ? 新需求方向一致性状态::来源前提已变化 : 新需求方向一致性状态::父方法材料未到;
+                结果.失败子需求节点=D;结果.失败父需求节点=批.需求 ? 批.需求->父需求节点 : std::nullopt;return 结果;
+            }
+        }
         if (结果.根到叶需求节点组.size() == 1) {
             结果.状态 = 新需求方向一致性状态::一致;
             return 结果;
         }
         bool 有弱推进 = false;
         for (std::size_t i = 1; i < 结果.根到叶需求节点组.size(); ++i) {
-            const auto 局部 = 判断父子需求方向一致(
-                结果.根到叶需求节点组[i - 1],
-                结果.根到叶需求节点组[i]);
+            const auto 父批=场景批组.find(结果.根到叶需求节点组[i-1]);
+            const auto 子批=场景批组.find(结果.根到叶需求节点组[i]);
+            const auto 局部 = 判断父子需求方向一致内部(
+                结果.根到叶需求节点组[i - 1],结果.根到叶需求节点组[i],
+                父批==场景批组.end()?空批:父批->second,子批==场景批组.end()?空批:子批->second);
             if (局部.状态 != 新需求方向一致性状态::一致
                 && 局部.状态
                     != 新需求方向一致性状态::方向推进但不保证满足) {
@@ -15726,6 +21701,7 @@ namespace {
                 结果.失败父需求节点 = 局部.父需求节点;
                 结果.失败子需求节点 = 局部.子需求节点;
                 结果.局部结果 = 局部;
+                if(局部.状态==新需求方向一致性状态::来源前提已变化)结果.根到叶需求节点组.clear();
                 return 结果;
             }
             有弱推进 = 有弱推进
@@ -15748,16 +21724,28 @@ namespace {
 新冲突需求查找结果 新_任务类::查找冲突需求(
     稳定编码 任务节点,
     const std::vector<新任务预计变化阶段>& 预计变化阶段组) const noexcept {
+    try{
+        const auto 批=读取任务需求准备保护批(任务节点);
+        新任务本次场景核验批 targets;读取冲突候选目标组(targets);
+        std::lock_guard 锁(新任务互斥);
+        return 查找冲突需求已加锁(任务节点,预计变化阶段组,批,targets);
+    }catch(const std::bad_alloc&){新冲突需求查找结果 r;r.任务节点=任务节点;r.状态=新冲突需求查找状态::资源失败;return r;}
+    catch(const std::length_error&){新冲突需求查找结果 r;r.任务节点=任务节点;r.状态=新冲突需求查找状态::资源失败;return r;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"查找冲突需求",L"任务来源读取故障");}
+}
+新冲突需求查找结果 新_任务类::查找冲突需求已加锁(稳定编码 任务节点,
+    const std::vector<新任务预计变化阶段>& 预计变化阶段组,const 新任务需求准备保护批& 准备批,const 新任务本次场景核验批& 目标批) const noexcept {
     新冲突需求查找结果 结果;
     结果.任务节点 = 任务节点;
     try {
-        std::lock_guard 锁(新任务互斥);
         const auto 任务 = 获取任务(任务节点);
         if (!任务) {
             结果.状态 = 新冲突需求查找状态::任务不存在;
             return 结果;
         }
-        if (复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善) {
+        if(!核同任务需求准备保护批(准备批)||准备批.结果.状态==新任务需求准备状态::来源前提已变化){结果.状态=新冲突需求查找状态::来源前提已变化;return 结果;}
+        if(准备批.结果.状态==新任务需求准备状态::资源延后){结果.状态=新冲突需求查找状态::资源失败;return 结果;}
+        if (准备批.结果.状态 == 新任务需求准备状态::待完善) {
             结果.状态 = 新冲突需求查找状态::需求信息待完善; return 结果;
         }
         if (!预计变化定义有效(预计变化阶段组)) {
@@ -15772,6 +21760,12 @@ namespace {
         if (全部需求.状态 != 新需求操作状态::已找到) {
             结果.状态 = 新冲突需求查找状态::结构不一致;
             return 结果;
+        }
+        if(!目标批.分支有效||!目标批.冲突候选需求清单||全部需求.需求节点组!=*目标批.冲突候选需求清单
+            ||!核同因果节点保护(目标批.保护)
+            ||std::any_of(目标批.新增成员目标组.begin(),目标批.新增成员目标组.end(),[&](const auto& x){
+                return 需求服务_.获取需求(x.需求.节点)!=std::optional{x.需求};})){
+            结果.状态=新冲突需求查找状态::来源前提已变化;return 结果;
         }
 
         for (const auto 需求节点 : 全部需求.需求节点组) {
@@ -15816,6 +21810,29 @@ namespace {
             }
             if (!有相关预计变化) continue;
 
+            const bool 涉及内容=std::any_of(预计变化阶段组.begin(),预计变化阶段组.end(),[&](const auto& 阶段){
+                return std::any_of(阶段.变化组.begin(),阶段.变化组.end(),[&](const auto& v){
+                    return v.作用对象节点==需求->目标存在节点&&v.预期引用内容
+                        &&取得特征概念类型根(特征概念服务_,v.特征类型概念节点)==需求类型根;
+                });
+            });
+            if(涉及内容) {
+                // 内容身份不参与数值增减；只能证明相同指定D/概念保证，不能猜无冲突。
+                bool 全部保证=true;
+                for(const auto& 阶段:预计变化阶段组)for(const auto& v:阶段.变化组)
+                    if(v.作用对象节点==需求->目标存在节点
+                        &&取得特征概念类型根(特征概念服务_,v.特征类型概念节点)==需求类型根) {
+                        const bool 保证=v.预期引用内容&&需求->目标.引用内容定位
+                            &&需求->目标.引用内容定位->引用需求节点==v.预期引用内容->需求节点
+                            &&需求->目标.引用内容定位->正式内容路径==v.预期引用内容->正式内容路径
+                            &&需求->目标.目标值域概念节点
+                            &&内容概念保证(v.预期引用内容->要求概念节点,*需求->目标.目标值域概念节点,存在概念服务_);
+                        全部保证=全部保证&&保证;
+                    }
+                if(!全部保证)结果.等待材料需求节点组.push_back(需求节点);
+                continue;
+            }
+
             std::optional<新需求变化方向> 需求方向;
             if (需求->目标.目标形式 == 新需求目标形式::变化方向) {
                 if (!需求->目标.目标变化方向
@@ -15830,7 +21847,7 @@ namespace {
                     结果.状态 = 新冲突需求查找状态::结构不一致;
                     return 结果;
                 }
-                const auto 当前 = 需求服务_.复核当前满足(需求节点);
+                const auto 当前 = 读取批需求满足(目标批,*需求);
                 if (当前.状态 == 新需求当前满足状态::资源失败) {
                     结果.状态 = 新冲突需求查找状态::资源失败;
                     return 结果;
@@ -15882,7 +21899,7 @@ namespace {
                     }
                     auto 预期方向 = 预计.预期方向;
                     if (!预期方向) {
-                        const auto 当前 = 需求服务_.复核当前满足(需求节点);
+                        const auto 当前 = 读取批需求满足(目标批,*需求);
                         if (当前.状态 == 新需求当前满足状态::资源失败) {
                             结果.状态 = 新冲突需求查找状态::资源失败; return 结果;
                         }
@@ -15971,6 +21988,23 @@ namespace {
     稳定编码 自我存在节点,
     稳定编码 安全需求节点,
     稳定编码 服务需求节点) const noexcept {
+    try {
+        const auto 当前任务=获取任务(任务节点);
+        const auto 当前需求=当前任务 ? 需求服务_.获取需求(当前任务->需求节点) : std::nullopt;
+        if(当前需求&&当前需求->复合来源) {
+            新任务治理执行方向核验结果 r;r.任务节点=任务节点;
+            r.状态=新任务治理执行方向核验状态::结果定义暂不支持;return r;
+        }
+        auto 批=准备本次场景核验批(任务节点,{},&本能采用);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务治理执行方向核验结果 r;r.任务节点=任务节点;r.状态=新任务治理执行方向核验状态::定位已变化;return r;}
+        return 核验任务执行方向内部(任务节点,本能采用,自我存在节点,安全需求节点,服务需求节点,批);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"任务执行方向",L"锁外场景核验故障");}
+}
+新任务治理执行方向核验结果 新_任务类::核验任务执行方向内部(
+    稳定编码 任务节点,const 新任务本能采用材料& 本能采用,稳定编码 自我存在节点,
+    稳定编码 安全需求节点,稳定编码 服务需求节点,const 新任务本次场景核验批& 场景批) const noexcept {
     const auto 方法节点=本能采用.来源方法节点,配对节点=本能采用.来源配对节点,结果节点=本能采用.来源结果节点;
     新任务治理执行方向核验结果 结果;
     结果.任务节点 = 任务节点;
@@ -15990,22 +22024,26 @@ namespace {
             结果.状态 = 新任务治理执行方向核验状态::任务状态已变化;
             return 结果;
         }
-        if (复核任务需求准备(任务节点).状态 == 新任务需求准备状态::待完善) {
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化){结果.状态=新任务治理执行方向核验状态::定位已变化;return 结果;}
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::资源延后){结果.状态=新任务治理执行方向核验状态::资源失败;return 结果;}
+        if (场景批.需求准备->结果.状态 == 新任务需求准备状态::待完善) {
             结果.状态 = 新任务治理执行方向核验状态::需求信息待完善; return 结果;
         }
         const auto 组织=读取任务方法执行组织(任务节点);
         if (!组织.组织) throw std::logic_error("方向核验任务组织不可读");
-        const auto 方法 = 组织.组织 ? 任务执行组织存储::读取来源视图(*组织.组织,方法节点,方法服务_,&本能采用) : std::nullopt;
+        const auto 方法 = 组织.组织 ? 任务执行组织存储::读取来源视图(*组织.组织,方法节点,场景批.方法组,&本能采用) : std::nullopt;
         if (!方法) throw std::logic_error("方向核验来源方法不可读");
         const bool 读取行为 = 方法->行为 == 新方法行为::读取;
-        if (方法->启用状态 != 新方法启用状态::启用 || 方法服务_.是历史服务结算方法(方法节点)) {
+        if (方法->启用状态 != 新方法启用状态::启用) {
             结果.状态 = 新任务治理执行方向核验状态::定位已变化;
             return 结果;
         }
-        const auto 来源守卫 = 需求服务_.复核需求服务要求语义(任务->需求节点);
+        const auto& 来源守卫 = 场景批.需求准备->守卫;
         if (来源守卫.状态 != 新服务要求执行守卫状态::不涉及
             && 来源守卫.状态 != 新服务要求执行守卫状态::当前有效) {
-            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
+            结果.状态 = 来源守卫.状态 == 新服务要求执行守卫状态::前提已变化
+                ? 新任务治理执行方向核验状态::定位已变化
+                : 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
                 ? 新任务治理执行方向核验状态::等待材料
                 : 来源守卫.状态 == 新服务要求执行守卫状态::资源失败
                     ? 新任务治理执行方向核验状态::资源失败 : 新任务治理执行方向核验状态::结构不一致;
@@ -16020,7 +22058,7 @@ namespace {
             return 结果;
         }
 
-        const auto 当前筹办 = 核验任务条件和参数内部(任务节点,&本能采用,false);
+        const auto 当前筹办 = 核验任务条件和参数内部(任务节点,&本能采用,false,false,场景批);
         if (当前筹办.状态 == 新任务治理条件筹办状态::任务状态已变化) {
             结果.状态 = 新任务治理执行方向核验状态::任务状态已变化;
             return 结果;
@@ -16054,10 +22092,6 @@ namespace {
         if (读取行为 && (取得需求->目标.目标形式 != 新需求目标形式::值 || 取得目标)) {
             结果.状态 = 新任务治理执行方向核验状态::结果定义暂不支持; return 结果;
         }
-        if (取得目标 && !是服务需求取得方法(*方法)) {
-            结果.状态 = 新任务治理执行方向核验状态::结果定义暂不支持; return 结果;
-        }
-
         struct 已绑定预计变化 final {
             新任务预计特征变化 变化;
             稳定编码 特征类型根;
@@ -16069,11 +22103,85 @@ namespace {
         阶段.顺序 = 0;
         for (const auto& 原项 : 配对位置->结果.结果项组) {
             auto 项 = 原项;
+            if(项.引用内容结果) {
+                const auto x=绑定内容结果(项,配对位置->结果,本能采用.需要条件,唯一方法->参数绑定组);
+                if(!x||读取行为||!是首值条件(本能采用.需要条件,x->特征位置)
+                    ||!取得需求->目标.引用内容定位||取得需求->目标.引用内容定位->引用需求节点!=x->D
+                    ||取得需求->目标存在节点!=x->H||!取得需求->目标.目标值域概念节点
+                    ||!内容概念保证(x->C,*取得需求->目标.目标值域概念节点,存在概念服务_)
+                    ||!配对位置->结果.确认要求.禁止结果项组.empty()) {
+                    结果.状态=新任务治理执行方向核验状态::结果定义暂不支持;return 结果;
+                }
+                const auto F=特征服务_.捕获特征匹配实例(x->F);
+                const auto 完整F=特征服务_.获取特征(x->F);
+                if(!F||!完整F||F->当前值||!完整F->历史不同值.empty()) {
+                    结果.状态=新任务治理执行方向核验状态::等待材料;return 结果;
+                }
+                const auto 来源=读取本批内容来源(本能采用,场景批);
+                if(!来源){结果.状态=新任务治理执行方向核验状态::等待材料;return 结果;}
+                新任务预计特征变化 v;v.作用对象节点=x->H;v.特征类型概念节点=F->定义.特征类型根;
+                v.预期引用内容=新任务预计引用内容{x->D,x->C,{},*来源};
+                阶段.变化组.push_back(v);已绑定组.push_back({v,F->定义.特征类型根,预计变化方向::不明确,x->F});continue;
+            }
             // 将关系模板按本次固定实参实例化为正式结果域，供既有预计/观察流程消费。
             if (项.参数序号 && 项.特征类型概念节点 && !项.特征值域概念节点
                 && !项.精确数值域 && !项.变化方向概念节点
                 && (配对位置->结果.关系规则 == 新方法项关系规则::单项
                     || 配对位置->结果.关系规则 == 新方法项关系规则::全部成立)) {
+                std::optional<稳定编码> 引用存在;
+                for (const auto& 关系 : 配对位置->结果.参数关系组) {
+                    if (关系.种类 != 新方法参数关系种类::特征引用存在
+                        || 关系.左参数序号 != 项.参数序号) continue;
+                    if (项.任务成员变量序号) throw std::logic_error("单存在引用结果不得使用任务成员变量");
+                    const auto 绑定 = std::find_if(唯一方法->参数绑定组.begin(), 唯一方法->参数绑定组.end(),
+                        [&](const auto& 值) { return 参数定位相同(值, 稳定编码{}, 关系.右参数序号); });
+                    if (绑定 == 唯一方法->参数绑定组.end() || !绑定->有序引用) {
+                        结果.状态 = 新任务治理执行方向核验状态::等待材料; return 结果;
+                    }
+                    if (绑定->有序引用->信息类型 != 新方法参数信息类型::存在)
+                        throw std::logic_error("单引用结果右参数不是存在");
+                    if (引用存在 && *引用存在 != 绑定->有序引用->信息节点)
+                        throw std::logic_error("单引用结果声明了不同实际存在");
+                    引用存在 = 绑定->有序引用->信息节点;
+                }
+                if (引用存在) {
+                    const auto 根码 = 取得特征概念类型根(特征概念服务_, *项.特征类型概念节点);
+                    const auto 根 = 根码 ? 特征概念服务_.获取特征概念(*根码) : std::nullopt;
+                    if (!根 || 根->材料类型 != 特征概念材料物理类型::存在节点引用
+                        || 根->比较规则 != 特征概念比较规则::存在身份精确)
+                        throw std::logic_error("单引用关系结果特征类型不符");
+                    const auto 规格 = std::find_if(方法->参数规格组.begin(), 方法->参数规格组.end(),
+                        [&](const auto& 值) { return 值.有序规格 && 值.有序规格->序号 == 项.参数序号; });
+                    if (规格 == 方法->参数规格组.end() || 规格->有序规格->信息类型 != 新方法参数信息类型::特征)
+                        throw std::logic_error("单引用关系结果缺少正式特征规格");
+                    const auto 范围 = 特征概念服务_.获取特征概念(规格->有序规格->范围概念节点);
+                    const auto* 引用域 = 范围 ? std::get_if<特征概念存在引用值域>(&范围->值域) : nullptr;
+                    if (!引用域 || 取得特征概念类型根(特征概念服务_, 范围->节点) != 根码)
+                        throw std::logic_error("单引用关系结果与规格特征范围不一致");
+                    const auto 包含 = 证明真实存在引用范围(*引用存在, 引用域->存在概念节点, 存在服务_, 存在概念服务_);
+                    if (!包含 || !*包含) {
+                        结果.状态 = !包含 ? 新任务治理执行方向核验状态::等待材料
+                            : 新任务治理执行方向核验状态::结果定义暂不支持; return 结果;
+                    }
+                    const auto 存在 = 存在服务_.获取存在(*引用存在);
+                    if (!存在) throw std::logic_error("单引用预计真实存在不可读");
+                    特征概念定义 定义;
+                    定义.材料类型 = 根->材料类型; 定义.单位 = 根->单位;
+                    定义.比较规则 = 根->比较规则; 定义.聚合规则 = 根->聚合规则;
+                    定义.值域 = 特征概念存在引用值域{存在->专属存在概念节点};
+                    if (根->值域 == 定义.值域) 项.特征值域概念节点 = *根码;
+                    else {
+                        const auto* 根引用域 = std::get_if<特征概念存在引用值域>(&根->值域);
+                        if (!根引用域) throw std::logic_error("单引用类型根缺少存在范围");
+                        // 实例匹配成立不等于既有域提供者支持分类子域；不以技术拒绝冒充业务失败。
+                        if (!存在服务_.存在概念包含(根引用域->存在概念节点, 存在->专属存在概念节点)) {
+                            结果.状态 = 新任务治理执行方向核验状态::结果定义暂不支持; return 结果;
+                        }
+                        const auto 域 = 特征概念服务_.建立或取得特征概念(定义, 特征值服务_, *根码);
+                        if (!有效(域)) throw std::logic_error("单引用预计严格子域建立失败");
+                        项.特征值域概念节点 = 域;
+                    }
+                }
                 特征概念存在集合值域 成员域;
                 for (const auto& 关系 : 配对位置->结果.参数关系组) {
                     if (关系.种类 != 新方法参数关系种类::集合包含存在
@@ -16177,7 +22285,16 @@ namespace {
                     != 新方法项关系规则::主要结果及允许副作用
                 || 项.主要结果;
             阶段.变化组.push_back(变化);
-            已绑定组.push_back({变化, *类型根, 方向, 项.任务成员变量序号 ? 成员F : 参数直接特征(*绑定位置)});
+            auto 定位F=项.任务成员变量序号 ? 成员F : 参数直接特征(*绑定位置);
+            if(!项.任务成员变量序号&&项.参数序号&&绑定位置->有序引用
+                &&绑定位置->有序引用->信息类型==新方法参数信息类型::存在){
+                const auto 读=读取本次存在参数特征(场景批,方法节点,本能采用.执行分支节点,项.参数序号,*类型根,*作用对象);
+                if(读.状态==新方法参数特征读取状态::定义前提已变化){结果.状态=新任务治理执行方向核验状态::定位已变化;return 结果;}
+                if(读.状态==新方法参数特征读取状态::特征未取得||读.状态==新方法参数特征读取状态::特征匹配不唯一){结果.状态=新任务治理执行方向核验状态::等待材料;return 结果;}
+                if(!读.特征)throw std::logic_error("预计E+FT结果缺少唯一特征投影");
+                定位F=读.特征->节点;
+            }
+            已绑定组.push_back({变化, *类型根, 方向, 定位F});
         }
         if (阶段.变化组.empty()) {
             结果.状态 = 新任务治理执行方向核验状态::结果定义暂不支持;
@@ -16186,6 +22303,11 @@ namespace {
         结果.预计变化阶段组.push_back(std::move(阶段));
 
         新任务结果获取方案 获取方案;
+        获取方案.必需场景事实组=配对位置->结果.场景事实限定组;
+        if(场景批.结果场景组.size()!=获取方案.必需场景事实组.size()
+            ||std::any_of(场景批.结果场景组.begin(),场景批.结果场景组.end(),[](const auto& x){return x.构成状态!=新交互求值状态::已取得;})){
+            结果.状态=新任务治理执行方向核验状态::结果定义暂不支持;return 结果;
+        }
         const auto& 确认要求 = 配对位置->结果.确认要求;
         // 当前生产链只接通了状态owner正式通知这一条直接事实渠道。方法若
         // 要求共同/备用多渠道、固定等待上限或具名等待条件，不能伪装可执行。
@@ -16215,6 +22337,14 @@ namespace {
                 && 预计.特征类型根 == 服务需求取得合同_->数量变化量类型) {
                 const auto F = 特征服务_.获取特征(服务需求取得合同_->服务任务集合特征节点);
                 if (!F || !F->当前值) throw std::logic_error("取得目标真实集合基准缺失");
+                const auto E = 存在服务_.获取存在(服务需求取得合同_->自我存在节点);
+                const auto 检验 = 特征服务_.计算任务集合新增数(服务需求取得合同_->服务任务集合类型,
+                    *F->当前值, *F->当前值);
+                if (!E || std::find(E->特征节点组.begin(), E->特征节点组.end(), F->节点) == E->特征节点组.end()
+                    || 取得特征概念类型根(特征概念服务_, F->特征概念节点)
+                        != std::optional<稳定编码>{服务需求取得合同_->服务任务集合类型}
+                    || 检验.状态 != 新特征比较状态::已完成 || !检验.比较值 || *检验.比较值 != 0)
+                    throw std::logic_error("取得目标真实集合基准合同不符");
                 获取方案.服务需求取得数量类型 = 服务需求取得合同_->数量变化量类型;
                 获取方案.渠道方案组.front().渠道 = 新任务结果获取渠道::内部Owner正式读回;
                 获取方案.目标组.push_back({服务需求取得合同_->自我存在节点, F->节点,
@@ -16261,7 +22391,7 @@ namespace {
                 return 结果;
             }
             const auto 特征 = 特征服务_.获取特征(*实际特征);
-            if (!特征 || (!特征->当前值 && !读取行为)) {
+            if (!特征 || (!特征->当前值 && !读取行为 && !预计.变化.预期引用内容)) {
                 结果.状态 = 新任务治理执行方向核验状态::等待材料;
                 return 结果;
             }
@@ -16278,7 +22408,7 @@ namespace {
                     return 结果;
                 }
             }
-            if (!读取行为 && !预计.变化.预期变化关系节点) {
+            if (!读取行为 && !预计.变化.预期变化关系节点 && !预计.变化.预期引用内容) {
                 预计.方向 = 从任务值域推导方向(特征服务_, 特征概念服务_, 预计.特征类型根,
                     预计.变化.预期值域概念节点, 预计.变化.预期精确数值域, *特征);
                 if (预计.方向 == 预计变化方向::增加) 预计.变化.预期方向 = 新任务预期变化方向::增加;
@@ -16287,7 +22417,9 @@ namespace {
             }
             获取方案.目标组.push_back({预计.变化.作用对象节点,
                 *实际特征, 预计.特征类型根, 特征->当前值,
-                预计.变化.必须出现});
+                预计.变化.必须出现,预计.变化.预期引用内容.has_value()&&!特征->当前值,
+                预计.变化.预期引用内容 ? 预计.变化.预期引用内容->认知来源确认 : std::optional<新服务要求确认目标>{}});
+            if(预计.变化.预期引用内容)获取方案.渠道方案组.front().渠道=新任务结果获取渠道::内部Owner正式读回;
         }
         结果.预计变化阶段组.front().变化组.clear();
         for (const auto& 预计 : 已绑定组) {
@@ -16347,13 +22479,30 @@ namespace {
                 }
             }
 
+            auto 禁止定位F = 禁止项.任务成员变量序号 ? 成员F : 参数直接特征(*绑定位置);
+            if (!禁止项.任务成员变量序号 && 禁止项.参数序号 && 绑定位置->有序引用
+                && 绑定位置->有序引用->信息类型 == 新方法参数信息类型::存在) {
+                const auto 读 = 读取本次存在参数特征(场景批, 方法节点,
+                    本能采用.执行分支节点, 禁止项.参数序号, *类型根, *作用对象);
+                if (读.状态 == 新方法参数特征读取状态::定义前提已变化) {
+                    结果.状态 = 新任务治理执行方向核验状态::定位已变化;
+                    return 结果;
+                }
+                if (读.状态 == 新方法参数特征读取状态::特征未取得
+                    || 读.状态 == 新方法参数特征读取状态::特征匹配不唯一
+                    || 读.状态 == 新方法参数特征读取状态::当前值未取得) {
+                    结果.状态 = 新任务治理执行方向核验状态::等待材料;
+                    return 结果;
+                }
+                if (!读.特征) throw std::logic_error("禁止E+FT结果缺少唯一特征投影");
+                禁止定位F = 读.特征->节点;
+            }
             const auto 目标位置 = std::find_if(
                 获取方案.目标组.begin(), 获取方案.目标组.end(),
                 [&](const 新任务结果获取目标& 目标) {
-                    const auto F = 禁止项.任务成员变量序号 ? 成员F : 参数直接特征(*绑定位置);
                     return 目标.作用对象节点 == *作用对象
                         && 目标.特征类型根概念节点 == *类型根
-                        && (!F || 目标.实际特征节点 == *F);
+                        && (!禁止定位F || 目标.实际特征节点 == *禁止定位F);
                 });
             if (目标位置 == 获取方案.目标组.end() || !目标位置->动作前准确值) {
                 // 单一“状态通知”渠道只能在同一必需结果状态上同时核验禁止
@@ -16394,7 +22543,9 @@ namespace {
             结果.状态 = 新任务治理执行方向核验状态::结构不一致;
             return 结果;
         }
-        结果.任务目标当前结果 = 复核任务需求(任务节点);
+        结果.任务目标当前结果 = 场景批.当前需求满足.value_or(新需求当前满足结果{});
+        const auto safeRoot=需求服务_.获取需求(安全需求节点),serviceRoot=需求服务_.获取需求(服务需求节点);
+        贡献要求(safeRoot&&serviceRoot&&!safeRoot->目标.新增成员来源见证&&!serviceRoot->目标.新增成员来源见证);
         结果.安全当前结果 = 需求服务_.复核当前满足(安全需求节点);
         结果.服务当前结果 = 需求服务_.复核当前满足(服务需求节点);
         const auto 当前结果可用 = [](const 新需求当前满足结果& 当前) {
@@ -16417,7 +22568,29 @@ namespace {
         const bool 读取目标缺少前值 = 读取行为
             && 需求->目标.目标形式 == 新需求目标形式::值
             && 结果.任务目标当前结果->状态 == 新需求当前满足状态::当前值不存在;
-        if ((当前结果等待(*结果.任务目标当前结果) && !读取目标缺少前值)
+        const auto 派生资格 = 复核任务筹办资格已加锁(任务节点,场景批);
+        bool 取得派生目标缺本次结果 = false;
+        if (取得目标 && 派生资格.状态 == 新需求筹办资格状态::允许筹办 && 派生资格.派生定义
+            && 当前结果等待(*结果.任务目标当前结果) && !任务->最近执行实例节点
+            && 结果.结果获取方案 && 结果.结果获取方案->目标组.size() == 1
+            && 结果.结果获取方案->渠道方案组.size() == 1) {
+            const auto& plan = *结果.结果获取方案;
+            const auto& item = plan.目标组.front();
+            const auto F = 特征服务_.获取特征(服务需求取得合同_->服务任务集合特征节点);
+            const auto E = 存在服务_.获取存在(服务需求取得合同_->自我存在节点);
+            取得派生目标缺本次结果 = F && F->当前值 && E
+                && std::find(E->特征节点组.begin(), E->特征节点组.end(), F->节点) != E->特征节点组.end()
+                && 取得特征概念类型根(特征概念服务_, F->特征概念节点)
+                    == std::optional<稳定编码>{服务需求取得合同_->服务任务集合类型}
+                && plan.服务需求取得数量类型 == 服务需求取得合同_->数量变化量类型
+                && plan.渠道方案组.front().渠道 == 新任务结果获取渠道::内部Owner正式读回
+                && item.作用对象节点 == 服务需求取得合同_->自我存在节点
+                && item.实际特征节点 == F->节点 && item.特征类型根概念节点 == 服务需求取得合同_->服务任务集合类型
+                && item.动作前准确值 == F->当前值 && item.必须出现;
+            if (!取得派生目标缺本次结果) { 结果.状态 = 新任务治理执行方向核验状态::定位已变化; return 结果; }
+        }
+        const bool 内容首值目标=需求->目标.引用内容定位&&std::any_of(已绑定组.begin(),已绑定组.end(),[](const auto& x){return x.变化.预期引用内容.has_value();});
+        if ((当前结果等待(*结果.任务目标当前结果) && !读取目标缺少前值 && !取得派生目标缺本次结果 && !内容首值目标)
             || 当前结果等待(*结果.安全当前结果)
             || 当前结果等待(*结果.服务当前结果)) {
             结果.状态 = 新任务治理执行方向核验状态::等待材料;
@@ -16427,6 +22600,13 @@ namespace {
         bool 采用保证满足目标 = false;
         bool 采用方向推进 = false;
         for (const auto& 项 : 本能采用.结果.结果项组) {
+            if(项.引用内容结果) {
+                const auto x=绑定内容结果(项,本能采用.结果,本能采用.需要条件,本能采用.参数绑定组);
+                采用保证满足目标=x&&需求->目标.引用内容定位&&x->D==需求->目标.引用内容定位->引用需求节点
+                    &&x->H==需求->目标存在节点&&需求->目标.目标值域概念节点
+                    &&内容概念保证(x->C,*需求->目标.目标值域概念节点,存在概念服务_);
+                continue;
+            }
             if (!项.特征类型概念节点
                 || (本能采用.结果.关系规则 == 新方法项关系规则::主要结果及允许副作用 && !项.主要结果)
                 || 取得特征概念类型根(特征概念服务_, *项.特征类型概念节点)
@@ -16495,7 +22675,7 @@ namespace {
         }
         const bool 无向目标已获保证 = 采用保证满足目标
             && (结果.任务目标当前结果->状态 == 新需求当前满足状态::未满足但无有向差值
-                || 读取目标缺少前值);
+                || 读取目标缺少前值 || 取得派生目标缺本次结果 || 内容首值目标);
         if ((!当前结果可用(*结果.任务目标当前结果) && !无向目标已获保证)
             || !当前结果可用(*结果.安全当前结果)
             || !当前结果可用(*结果.服务当前结果)) {
@@ -16505,34 +22685,6 @@ namespace {
         if (结果.任务目标当前结果->状态 == 新需求当前满足状态::已满足) {
             结果.状态 = 新任务治理执行方向核验状态::任务目标已满足;
             return 结果;
-        }
-
-        const bool 是结算任务 = 当前使用历史结算方法()
-            && 服务结算配置_->结算任务节点 == 任务节点;
-        if (是结算任务) {
-            if (!任务->服务结算来源) {
-                结果.状态 = 新任务治理执行方向核验状态::等待材料; return 结果;
-            }
-            const auto 准入 = 核验直接服务结算来源(任务->服务结算来源->来源任务.任务节点);
-            if (准入.状态 != 新直接服务结算来源状态::允许结算) {
-                结果.状态 = 准入.状态 == 新直接服务结算来源状态::资源失败
-                    ? 新任务治理执行方向核验状态::资源失败
-                    : 准入.状态 == 新直接服务结算来源状态::结构不一致
-                        || 准入.状态 == 新直接服务结算来源状态::尚未配置
-                        ? 新任务治理执行方向核验状态::结构不一致 : 新任务治理执行方向核验状态::等待材料;
-                return 结果;
-            }
-            const auto 来源 = 任务->服务结算来源
-                ? 读取任务虚拟存在引用(任务->服务结算来源->来源任务) : std::nullopt;
-            const auto 特征 = 结果.任务目标当前结果->实际特征节点
-                ? 特征服务_.获取特征(*结果.任务目标当前结果->实际特征节点) : std::nullopt;
-            if (!来源 || 来源->当前状态 != static_cast<std::int64_t>(新任务状态::已完成)
-                || !特征 || 特征->当前值
-                    != std::optional<新特征准确值>{新特征准确值{服务结算配置_->冻结前值}}
-                || 需求->目标.目标值域概念节点 != 服务结算配置_->目标值域概念节点) {
-                结果.状态 = 新任务治理执行方向核验状态::定位已变化;
-                return 结果;
-            }
         }
 
         const auto 任务目标对象 = 需求->目标存在节点;
@@ -16547,10 +22699,6 @@ namespace {
             找到任务目标 = true;
             // 已按冻结采用和同一D复核正式目标比较关系。
             const bool 值域保证 = 采用保证满足目标;
-            if (是结算任务 && !值域保证) {
-                结果.状态 = 新任务治理执行方向核验状态::任务目标方向不一致;
-                return 结果;
-            }
             const bool 需要增加 = 需求->目标.目标形式
                     == 新需求目标形式::变化方向
                 ? 需求->目标.目标变化方向 == 新需求变化方向::增加
@@ -16564,11 +22712,6 @@ namespace {
                 ? 预计.方向 == 预计变化方向::减少
                 : 预计.方向 == 预计变化方向::增加);
             if (值域保证 && 方向相反) {
-                结果.状态 = 新任务治理执行方向核验状态::结构不一致;
-                return 结果;
-            }
-            if (是结算任务 && 预计.方向 == 预计变化方向::不变) {
-                // A0 已在执行前读回，固定目标 B>A0，不能同时声明服务值不变。
                 结果.状态 = 新任务治理执行方向核验状态::结构不一致;
                 return 结果;
             }
@@ -16593,8 +22736,8 @@ namespace {
             结果.状态 = 新任务治理执行方向核验状态::已核验可执行;
             return 结果;
         }
-        结果.冲突需求查找 = 查找冲突需求(
-            任务节点, 结果.预计变化阶段组);
+        结果.冲突需求查找 = 查找冲突需求已加锁(
+            任务节点, 结果.预计变化阶段组,*场景批.需求准备,场景批);
         switch (结果.冲突需求查找->状态) {
         case 新冲突需求查找状态::无冲突:
             break;
@@ -16605,7 +22748,9 @@ namespace {
             结果.状态 = 新任务治理执行方向核验状态::等待材料;
             return 结果;
         case 新冲突需求查找状态::任务不存在:
+        case 新冲突需求查找状态::来源前提已变化:
             结果.状态 = 新任务治理执行方向核验状态::定位已变化;
+            结果.预计变化阶段组.clear();结果.结果获取方案.reset();
             return 结果;
         case 新冲突需求查找状态::资源失败:
             结果.状态 = 新任务治理执行方向核验状态::资源失败;
@@ -16687,14 +22832,20 @@ namespace {
     try {
         const auto permit = 读取因果执行许可(任务节点);
         if (!permit) return 新任务治理待执行确认状态::定位已变化;
-        return 确认任务进入待执行内部(任务节点, 本能采用, *permit);
-    } catch (...) {
+        auto 批=准备本次场景核验批(任务节点,{},&本能采用);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批))return 新任务治理待执行确认状态::定位已变化;
+        return 确认任务进入待执行内部(任务节点, 本能采用, *permit,批);
+    }catch(const std::bad_alloc&){return 新任务治理待执行确认状态::资源失败;}
+    catch(const std::length_error&){return 新任务治理待执行确认状态::资源失败;}
+    catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确认任务进入待执行", L"因果路径执行前读取故障");
     }
 }
 
 新任务治理待执行确认状态 新_任务类::确认任务进入待执行内部(
-    稳定编码 任务节点, const 新任务本能采用材料& 本能采用, const 因果执行许可& permit) noexcept {
+    稳定编码 任务节点, const 新任务本能采用材料& 本能采用, const 因果执行许可& permit,const 新任务本次场景核验批& 场景批) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
         if (!核对因果执行许可(任务节点, permit)) return 新任务治理待执行确认状态::定位已变化;
@@ -16703,10 +22854,11 @@ namespace {
         }
         const auto 任务 = 获取任务(任务节点);
         if (!任务) return 新任务治理待执行确认状态::结构不一致;
-        const auto 来源守卫 = 需求服务_.复核需求服务要求语义(任务->需求节点);
+        const auto& 来源守卫 = 场景批.需求准备->守卫;
         if (来源守卫.状态 != 新服务要求执行守卫状态::不涉及
             && 来源守卫.状态 != 新服务要求执行守卫状态::当前有效) {
             return 来源守卫.状态 == 新服务要求执行守卫状态::需重新确认
+                    ||来源守卫.状态==新服务要求执行守卫状态::前提已变化
                 ? 新任务治理待执行确认状态::定位已变化
                 : 来源守卫.状态 == 新服务要求执行守卫状态::资源失败
                     ? 新任务治理待执行确认状态::资源失败 : 新任务治理待执行确认状态::结构不一致;
@@ -16714,11 +22866,13 @@ namespace {
         if (任务->当前状态 != 新任务状态::待检查条件) {
             return 新任务治理待执行确认状态::任务状态已变化;
         }
-        const auto 当前筹办=核验任务条件和参数内部(任务节点,&本能采用,false);
+        const auto 当前筹办=核验任务条件和参数内部(任务节点,&本能采用,false,false,场景批);
         if (!核验采用筹办就绪(当前筹办, 本能采用))
             return 新任务治理待执行确认状态::定位已变化;
-        const auto 修改 = 修改任务状态(
-            任务节点, 新任务状态::待执行);
+        auto 保护=场景批.保护;
+        if(!合并需求结果保护(保护,permit.保护))return 新任务治理待执行确认状态::定位已变化;
+        const auto 修改 = 修改任务状态受保护(
+            任务节点, 新任务状态::待执行,保护);
         if (修改 == 新任务操作状态::已修改) {
             return 新任务治理待执行确认状态::已确认;
         }
@@ -16729,7 +22883,9 @@ namespace {
             ? 新任务治理待执行确认状态::任务状态已变化
             : 新任务治理待执行确认状态::结构不一致;
     } catch (const std::bad_alloc&) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确认任务进入待执行", L"执行采用复核资源故障");
+        return 新任务治理待执行确认状态::资源失败;
+    } catch(const std::length_error&){
+        return 新任务治理待执行确认状态::资源失败;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确认任务进入待执行", L"执行采用复核工程故障");
     }
@@ -16743,7 +22899,6 @@ namespace {
 
     std::shared_ptr<const 方法参数场景> 参数场景;
     std::optional<新任务信息> 开始前任务;
-    bool 是服务结算执行 = false;
     try {
         结果.原请求 = 请求;
         const auto 恢复零动作 = [&]() {
@@ -16796,27 +22951,41 @@ namespace {
             结果.状态 = 新任务治理本能执行状态::零动作已回筹办;
         };
         const auto 因果许可 = 读取因果执行许可(请求.任务节点);
+        auto 场景批=准备本次场景核验批(请求.任务节点,{},&*请求.本能采用);
+        读取本次场景核验批(场景批);
         if (!因果许可) {
             开始前任务 = 获取任务(请求.任务节点);
             if (!开始前任务) { 结果.状态 = 新任务治理本能执行状态::任务状态已变化; return 结果; }
             恢复零动作(); return 结果;
         }
         {
-            std::lock_guard 锁(新任务互斥);
-            是服务结算执行 = 当前使用历史结算方法()
-                && 服务结算配置_->结算任务节点 == 请求.任务节点;
+            std::unique_lock 锁(新任务互斥);
             if (!治理已初始化_) {
                 throw std::logic_error("本能执行治理尚未初始化");
             }
             开始前任务 = 获取任务(请求.任务节点);
             if (!开始前任务) throw std::logic_error("本能执行开始前T不可读");
+            if(!核同本次场景核验批(场景批)){恢复零动作();return 结果;}
             if (!核对因果执行许可(请求.任务节点, *因果许可)) { 恢复零动作(); return 结果; }
             if (开始前任务->最近方法节点.has_value() != 开始前任务->最近执行实例节点.has_value())
                 throw std::logic_error("本能执行开始前定位不完整");
+            if(场景批.需求&&场景批.需求->目标.引用内容定位){
+                const auto 收束=收束执行前已满足目标内部(请求.任务节点,场景批);
+                if(收束.状态==新任务执行前目标收束状态::已标记未执行目标已满足
+                    ||收束.状态==新任务执行前目标收束状态::已处该状态){
+                    结果.执行前目标收束=收束;结果.状态=新任务治理本能执行状态::未执行目标已满足;return 结果;
+                }
+                if(收束.状态!=新任务执行前目标收束状态::目标尚未满足){
+                    结果.状态=收束.状态==新任务执行前目标收束状态::资源失败 ? 新任务治理本能执行状态::资源失败
+                        :收束.状态==新任务执行前目标收束状态::来源已变化||收束.状态==新任务执行前目标收束状态::状态不允许
+                            ?新任务治理本能执行状态::任务状态已变化:新任务治理本能执行状态::执行依赖未就绪;
+                    return 结果;
+                }
+            }
 
-            结果.临近方向核验 = 核验任务执行方向(
+            结果.临近方向核验 = 核验任务执行方向内部(
                 请求.任务节点, *请求.本能采用, 请求.自我存在节点,
-                请求.安全需求节点, 请求.服务需求节点);
+                请求.安全需求节点, 请求.服务需求节点,场景批);
             if (结果.临近方向核验->状态
                     != 新任务治理执行方向核验状态::已核验可执行
                 || 结果.临近方向核验->预计变化阶段组
@@ -16843,29 +23012,37 @@ namespace {
                 return 结果;
             }
 
-            const auto 当前筹办 = 核验任务条件和参数内部(请求.任务节点,&*请求.本能采用,false);
+            const auto 当前筹办 = 核验任务条件和参数内部(请求.任务节点,&*请求.本能采用,false,false,场景批);
             if (!核验采用筹办就绪(当前筹办, *请求.本能采用)) {
                 恢复零动作();
                 return 结果;
             }
 
-            const auto 方法 = 方法服务_.获取方法(请求.方法节点);
+            const auto 方法 = [&]() -> std::optional<新方法信息> {
+                if(!请求.本能采用->执行分支节点)return 方法服务_.获取方法(请求.方法节点);
+                const auto it=std::find_if(场景批.方法组.begin(),场景批.方法组.end(),
+                    [&](const auto& x){return x.节点==请求.方法节点;});
+                return it==场景批.方法组.end() ? std::nullopt : std::optional{*it};
+            }();
             if (!方法 || 方法->实现方式 != 新方法实现方式::本能
                 || !方法->本能函数登记名) {
                 throw std::logic_error("源本能方法结构不可读");
             }
-            if (方法->启用状态 != 新方法启用状态::启用
-                || 方法服务_.是历史服务结算方法(方法->节点)) { 恢复零动作(); return 结果; }
+            if (方法->启用状态 != 新方法启用状态::启用) { 恢复零动作(); return 结果; }
             const auto 可用 = 新_本能函数管理类::检查可用(
                 *方法->本能函数登记名);
             if (可用 != 新本能函数可用状态::可调用) {
                 throw std::logic_error("本能函数未登记或装配工程故障");
             }
 
+            锁.unlock();
             const auto 场景结果 = 方法服务_.建立参数场景(
-                请求.方法节点, 请求.参数绑定组, this, nullptr, 请求.本能采用->任务成员绑定);
+                请求.方法节点, 请求.参数绑定组, this, nullptr, 请求.本能采用->任务成员绑定,请求.本能采用->执行分支节点);
+            锁.lock();
+            if(!核同本次场景核验批(场景批)) { 恢复零动作();return 结果; }
             if (场景结果.状态 == 新方法操作状态::参数材料未到
-                || 场景结果.状态 == 新方法操作状态::参数概念不相容) {
+                || 场景结果.状态 == 新方法操作状态::参数概念不相容
+                || 场景结果.状态 == 新方法操作状态::定义前提已变化) {
                 恢复零动作();
                 return 结果;
             }
@@ -16880,7 +23057,7 @@ namespace {
                 throw std::logic_error("本能执行取得强时间失败");
             }
             const auto 确认 = 确认任务进入待执行内部(
-                请求.任务节点, *请求.本能采用, *因果许可);
+                请求.任务节点, *请求.本能采用, *因果许可,场景批);
             if (确认 != 新任务治理待执行确认状态::已确认) {
                 if (确认 != 新任务治理待执行确认状态::定位已变化
                     && 确认 != 新任务治理待执行确认状态::任务状态已变化)
@@ -16897,7 +23074,7 @@ namespace {
             结果.执行开始 = 开始方法执行内部({
                 请求.任务节点, 请求.方法节点,
                 *开始时间, 请求.预计变化阶段组,
-                请求.结果获取方案,请求.本能采用}, *因果许可);
+                请求.结果获取方案,请求.本能采用}, *因果许可,场景批);
             if (结果.执行开始->状态 != 新任务操作状态::已开始执行
                 || !结果.执行开始->执行实例节点) {
                 if (结果.执行开始->执行实例节点) {
@@ -16915,13 +23092,47 @@ namespace {
             }
         }
 
+        新本能需求任务参数工厂* 需求工厂 = nullptr;
+        {
+            std::lock_guard 锁(新任务互斥);
+            需求工厂 = 本能需求任务参数工厂_;
+        }
+        // 工厂生存期由宿主覆盖全部worker；所有跨owner构造均在任务锁外执行。
+        if (需求工厂 && 需求工厂->支持任务方法(请求.方法节点)) {
+            const 新本能需求任务参数请求 工厂请求{请求.方法节点,
+                *结果.执行开始->执行实例节点, 请求.参数绑定组, 请求.本能采用->执行分支节点};
+            try {
+                const auto 新场景 = 需求工厂->建立任务参数场景(
+                    工厂请求, this, 请求.本能采用->任务成员绑定);
+                if (新场景.状态 != 新方法操作状态::已建立 || !新场景.参数场景)
+                    throw std::logic_error("需求任务工厂未生成完整参数场景");
+                if (新场景.参数场景->方法节点() != 请求.方法节点
+                    || 新场景.参数场景->全部角色绑定() != 请求.参数绑定组
+                    || 新场景.参数场景->执行分支节点() != 请求.本能采用->执行分支节点
+                    || !新场景.参数场景->获取需求运行接口())
+                    throw std::logic_error("需求任务工厂改变冻结绑定或未提供运行能力");
+                参数场景 = 新场景.参数场景;
+            } catch (const 新本能需求任务前提变化&) {
+                const auto 核验 = 复核执行本能输入(*结果.执行开始->执行实例节点, *参数场景);
+                const auto 执行 = 获取执行实例(*结果.执行开始->执行实例节点);
+                if ((核验 != 新任务本能输入复核状态::条件已变化
+                        && 核验 != 新任务本能输入复核状态::执行不在当前位)
+                    || (执行 && 执行->普通动作节点))
+                    throw std::logic_error("需求工厂前提变化未获正式零动作读回证明");
+                恢复零动作();
+                return 结果;
+            }
+        }
+
         准备执行问题材料(请求, *结果.执行开始->执行实例节点);
         // 场景采集可能耗时。不得沿用筹办或X建立前的确认，也不持领域锁调用动作。
         // 这是临近调用的fresh检查，不是与概念变更跨owner原子互斥的许可。
         const auto 来源守卫 = 需求服务_.复核需求服务要求语义(开始前任务->需求节点);
         if (来源守卫.状态 != 新服务要求执行守卫状态::不涉及
             && 来源守卫.状态 != 新服务要求执行守卫状态::当前有效) {
-            if (来源守卫.状态 != 新服务要求执行守卫状态::需重新确认)
+            if (来源守卫.状态 != 新服务要求执行守卫状态::需重新确认
+                &&来源守卫.状态!=新服务要求执行守卫状态::前提已变化
+                &&来源守卫.状态!=新服务要求执行守卫状态::资源失败)
                 throw std::logic_error("临近来源语义读取工程故障");
             恢复零动作();
             return 结果;
@@ -16950,6 +23161,10 @@ namespace {
                 == 新方法本能调用状态::已调用
             && 结果.方法调用->本次条件结果对.has_value();
         if (!已调用) {
+            if(结果.方法调用->状态==新方法本能调用状态::定义前提已变化
+                &&!结果.方法调用->本次条件结果对) {
+                恢复零动作();return 结果;
+            }
             if (结果.方法调用->状态 == 新方法本能调用状态::方法停用
                 && !结果.方法调用->本次条件结果对) {
                 const auto 方法 = 方法服务_.获取方法(请求.方法节点);
@@ -16969,17 +23184,14 @@ namespace {
             throw std::logic_error("普通W3不得接收贡献治理专用运行材料");
         if (函数结果.服务需求信息包)
             throw std::logic_error("本能返回废弃服务需求信息包，执行内操作合同不允许后处理采用");
+        if(函数结果.已发布需求&&(!函数结果.动作动态节点
+            ||函数结果.动作阶段==新本能函数动作阶段::未进入动作
+            ||函数结果.结果取得状态!=新本能函数结果取得状态::已取得
+            ||函数结果.服务值消费节点||函数结果.服务对象观察材料||函数结果.任务贡献治理))
+            throw std::logic_error("普通W3已发布需求缺少正式动作或混入专用负载");
         保存执行问题运行对(请求.任务节点,
             *结果.执行开始->执行实例节点, 条件结果对);
         if (函数结果.动作动态节点) {
-            const auto 执行依据 = 获取执行实例(*结果.执行开始->执行实例节点);
-            if (!执行依据) throw std::logic_error("本能返回后执行实例不可读");
-            if (执行依据->结果获取方案.服务需求取得数量类型
-                && (函数结果.状态 == 新本能函数执行状态::已按合同返回
-                    || 函数结果.状态 == 新本能函数执行状态::异步已受理
-                    || 执行依据->服务需求返回确认)
-                && (!执行依据->服务需求返回确认 || 执行依据->普通动作节点 != 函数结果.动作动态节点))
-                throw std::logic_error("取得本能已动作但未在本次调用内登记执行依据");
             // 动作后条件可能变化；未知结果仍关联真实动作，不补造采用确认。
             const auto 记录 = 本能动作读取_
                 ? 记录本能动作身份(请求.任务节点, *结果.执行开始->执行实例节点,
@@ -16990,6 +23202,11 @@ namespace {
                     L"本能方法已返回明确动作，无法关联本次执行实例。");
             }
         }
+        if((条件结果对.条件.执行分支节点&&条件结果对.条件.执行分支节点!=请求.本能采用->执行分支节点)
+            ||(函数结果.动作阶段!=新本能函数动作阶段::未进入动作
+                &&条件结果对.条件.执行分支节点!=请求.本能采用->执行分支节点))
+            throw std::logic_error("本能函数实际使用分支与冻结采用不一致");
+        if(函数结果.动作动态节点)记录执行本能结果(请求.任务节点,*结果.执行开始->执行实例节点,函数结果);
         if (函数结果.动作阶段 == 新本能函数动作阶段::未进入动作) {
             const bool 严格零动作 = 函数结果.状态 == 新本能函数执行状态::参数不匹配
                 && 函数结果.结果取得状态 == 新本能函数结果取得状态::未取得
@@ -16997,6 +23214,8 @@ namespace {
                 && 函数结果.已形成状态节点组.empty()
                 && 函数结果.已形成动态节点组.empty()
                 && 函数结果.已形成二次特征结果组.empty()
+                && 函数结果.已取得场景事实组.empty()
+                && !函数结果.已发布需求
                 && 函数结果.建议观察特征节点组.empty()
                 && !函数结果.服务需求信息包 && !函数结果.服务对象观察材料;
             if (!严格零动作)
@@ -17038,11 +23257,6 @@ namespace {
         default:
             throw std::logic_error("本能方法工程故障，保留X及已知动作事实");
         }
-        if (是服务结算执行
-            && (函数结果.状态 != 新本能函数执行状态::已按合同返回
-                || 函数结果.结果取得状态 != 新本能函数结果取得状态::已取得
-                || 函数结果.已形成状态节点组.empty()))
-            throw std::logic_error("服务结算已动作但结果合同不完整");
         结果.状态 = 函数结果.结果取得状态
                     == 新本能函数结果取得状态::已取得
                 && !函数结果.已形成状态节点组.empty()
@@ -17050,6 +23264,7 @@ namespace {
             : 新任务治理本能执行状态::动作已发出等待结果;
         return 结果;
     } catch (const std::bad_alloc&) {
+        if(!结果.执行开始||!结果.执行开始->执行实例节点){结果.状态=新任务治理本能执行状态::资源失败;return 结果;}
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"执行任务本能方法", L"本能执行资源故障，保留已有事实");
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"执行任务本能方法", L"本能执行工程故障，保留已有事实");
@@ -17060,7 +23275,21 @@ namespace {
     稳定编码 任务节点,
     稳定编码 执行实例节点,
     const std::vector<稳定编码>& 状态节点组) const noexcept {
+    try {
+        auto 批=准备本次场景核验批(任务节点,执行实例节点,nullptr,true);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新任务治理结果材料核验结果 r;r.状态=新任务治理结果材料核验状态::任务或执行已变化;return r;}
+        return 核验任务结果材料内部(任务节点,执行实例节点,状态节点组,批);
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"核验任务结果材料",L"锁外场景核验故障");}
+}
+新任务治理结果材料核验结果 新_任务类::核验任务结果材料内部(
+    稳定编码 任务节点,稳定编码 执行实例节点,const std::vector<稳定编码>& 状态节点组,
+    const 新任务本次场景核验批& 场景批) const noexcept {
     新任务治理结果材料核验结果 结果;
+    if(!场景批.已读取 || 场景批.T!=任务节点 || 场景批.X!=执行实例节点){
+        结果.状态=新任务治理结果材料核验状态::任务或执行已变化;return 结果;
+    }
     if (!有效(任务节点) || !有效(执行实例节点)
         || 状态节点组.empty()
         || std::any_of(状态节点组.begin(), 状态节点组.end(),
@@ -17097,17 +23326,6 @@ namespace {
         };
         std::vector<已读状态> 已读组;
         std::set<std::uint64_t> 已见;
-        if (执行->结果获取方案.服务需求取得数量类型) {
-            const auto 取得 = 读回服务需求取得结果(任务节点, 执行实例节点);
-            if (取得.状态 != 新任务操作状态::已找到 || 取得.来源新增数 != 1 || 取得.结果状态节点组.empty()) {
-                结果.状态 = 取得.状态 == 新任务操作状态::资源失败 ? 新任务治理结果材料核验状态::资源失败
-                    : 取得.状态 == 新任务操作状态::结构不一致 ? 新任务治理结果材料核验状态::结构不一致
-                    : 新任务治理结果材料核验状态::已接受但仍不足; return 结果;
-            }
-            if (状态节点组 != 取得.结果状态节点组) {
-                结果.状态 = 新任务治理结果材料核验状态::已接受但仍不足; return 结果;
-            }
-        }
         for (const auto 状态节点 : 状态节点组) {
             if (!有效(状态节点) || !已见.insert(状态节点.值).second) continue;
             const auto 状态 = 状态服务_.获取状态(状态节点);
@@ -17137,6 +23355,12 @@ namespace {
                     && 目标.特征类型根概念节点 == *类型根
                     && 实际特征->特征概念节点
                         == 状态->特征类型概念节点) {
+                    bool 内容已核验=!目标.动作前明确无值;
+                    if(目标.动作前明确无值)for(const auto& 阶段:执行->预计变化阶段组)for(const auto& v:阶段.变化组)
+                        if(v.作用对象节点==目标.作用对象节点&&v.预期引用内容
+                            &&取得特征概念类型根(特征概念服务_,v.特征类型概念节点)==std::optional<稳定编码>{目标.特征类型根概念节点}
+                            &&核验本次内容后状态(*执行,场景批,v,目标,*状态))内容已核验=true;
+                    if(!内容已核验)continue;
                     相关 = true;
                     break;
                 }
@@ -17187,14 +23411,24 @@ namespace {
                 }
                 for (const auto& 关系 : 采用.结果.参数关系组) {
                     const auto 核验 = 核验参数位置关系(采用.参数绑定组, 关系,
-                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_);
+                        存在服务_, 场景服务_, 特征服务_, 特征值服务_, 特征概念服务_, &需求服务_);
                     if (!核验 || !*核验) {
                         结果.状态 = 新任务治理结果材料核验状态::已接受但仍不足;
                         return 结果;
                     }
                 }
             }
-        }        结果.状态 = 新任务治理结果材料核验状态::材料已足够;
+        }
+        if(场景批.结果场景组.size()!=执行->结果获取方案.必需场景事实组.size()){
+            结果.状态=新任务治理结果材料核验状态::已接受但仍不足;return 结果;
+        }
+        for(const auto& 项:场景批.结果场景组){
+            if(项.事实状态==新交互求值状态::不符合){结果.状态=新任务治理结果材料核验状态::与本次执行无关;return 结果;}
+            if(项.构成状态!=新交互求值状态::已取得||项.事实状态!=新交互求值状态::已取得||!项.过程){
+                结果.状态=新任务治理结果材料核验状态::已接受但仍不足;return 结果;
+            }
+        }
+        结果.状态 = 新任务治理结果材料核验状态::材料已足够;
         return 结果;
     } catch (const std::bad_alloc&) {
         结果.状态 = 新任务治理结果材料核验状态::资源失败;
@@ -17210,7 +23444,10 @@ namespace {
     新任务治理结果材料核验结果 结果;
     if (!有效(任务节点) || !有效(执行实例节点)) return 结果;
     try {
+        auto 场景批=准备本次场景核验批(任务节点,执行实例节点,nullptr,true);
+        读取本次场景核验批(场景批);
         std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){结果.状态=新任务治理结果材料核验状态::任务或执行已变化;return 结果;}
         if (!治理已初始化_) return 结果;
         const auto 读回 = 读回任务执行(任务节点, 执行实例节点);
         if (读回.状态 != 新任务治理执行读回状态::已读回等待观察) {
@@ -17225,17 +23462,6 @@ namespace {
 
         std::set<std::uint64_t> 已见状态;
         std::vector<稳定编码> 候选状态组;
-        if (执行->结果获取方案.服务需求取得数量类型) {
-            const auto 取得 = 读回服务需求取得结果(任务节点, 执行实例节点);
-            if (取得.状态 == 新任务操作状态::资源失败 || 取得.状态 == 新任务操作状态::结构不一致) {
-                结果.状态 = 取得.状态 == 新任务操作状态::资源失败 ? 新任务治理结果材料核验状态::资源失败
-                    : 新任务治理结果材料核验状态::结构不一致; return 结果;
-            }
-            if (取得.状态 != 新任务操作状态::已找到 || 取得.来源新增数 != 1 || 取得.结果状态节点组.empty()) {
-                结果.状态 = 新任务治理结果材料核验状态::已接受但仍不足; return 结果;
-            }
-            return 核验任务结果材料(任务节点, 执行实例节点, 取得.结果状态节点组);
-        }
         for (const auto& 目标 : 执行->结果获取方案.目标组) {
             for (const auto 状态节点 :
                     状态服务_.按实例特征查询状态(目标.实际特征节点)) {
@@ -17248,8 +23474,8 @@ namespace {
             结果.状态 = 新任务治理结果材料核验状态::与本次执行无关;
             return 结果;
         }
-        return 核验任务结果材料(
-            任务节点, 执行实例节点, 候选状态组);
+        return 核验任务结果材料内部(
+            任务节点, 执行实例节点, 候选状态组,场景批);
     } catch (const std::bad_alloc&) {
         结果.状态 = 新任务治理结果材料核验状态::资源失败;
     } catch (...) {
@@ -17267,8 +23493,11 @@ namespace {
         return 结果;
     }
     try {
+        auto 场景批=准备本次场景核验批(请求.任务节点,请求.执行实例节点,nullptr,true);
+        读取本次场景核验批(场景批);
         const auto 当前结束时间 = 当前实例UTC强时间();
         std::unique_lock 锁(新任务互斥);
+        if(!核同本次场景核验批(场景批)){结果.状态=新任务治理结果获取状态::任务状态已变化;return 结果;}
         if (!治理已初始化_) return 结果;
         const auto 读回 = 读回任务执行(请求.任务节点, 请求.执行实例节点);
         if (读回.状态 != 新任务治理执行读回状态::已读回等待观察
@@ -17282,8 +23511,8 @@ namespace {
         }
         const auto& 执行 = 读回.执行;
         if (执行->状态 == 新任务执行状态::执行中) {
-            const auto 材料核验 = 核验任务结果材料(
-                请求.任务节点, 请求.执行实例节点, 请求.状态节点组);
+            const auto 材料核验 = 核验任务结果材料内部(
+                请求.任务节点, 请求.执行实例节点, 请求.状态节点组,场景批);
             if (材料核验.状态
                     != 新任务治理结果材料核验状态::材料已足够) {
                 结果.状态 = 材料核验.状态
@@ -17338,6 +23567,7 @@ namespace {
                     : 新任务治理结果获取状态::执行结束失败);
             return 结果;
         }
+        锁.unlock();
         结果.影响评估 = 评估方法执行影响(
             请求.任务节点, 请求.执行实例节点);
         if (结果.影响评估->状态 != 新任务操作状态::已完成评估
@@ -17349,7 +23579,6 @@ namespace {
             return 结果;
         }
         结果.状态 = 新任务治理结果获取状态::已完成影响评估;
-        锁.unlock();
         if (结果.影响评估->评估) {
             完成执行问题采集(请求.任务节点, 请求.执行实例节点,
                 *结果.影响评估->评估);
@@ -17442,14 +23671,14 @@ namespace {
 新需求当前满足结果 新_任务类::复核任务当前需求(
     稳定编码 任务节点) const noexcept {
     try {
-        std::lock_guard 锁(新任务互斥);
-        if (!治理已初始化_) return {};
+        {std::lock_guard 锁(新任务互斥);if (!治理已初始化_) return {};}
         return 复核任务需求(任务节点);
-    } catch (...) {
+    } catch (const std::bad_alloc&) {
         新需求当前满足结果 结果;
         结果.状态 = 新需求当前满足状态::资源失败;
         return 结果;
-    }
+    } catch (const std::length_error&) {return {新需求当前满足状态::资源失败};}
+    catch (...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务当前需求",L"正式需求复核工程故障");}
 }
 
 新任务治理后继发布结果 新_任务类::发布自我任务后继决议(
@@ -17459,11 +23688,14 @@ namespace {
     if (!有效(决议.任务节点) || !有效(决议.执行实例节点)
         || !有效(决议.影响评估节点)) return 结果;
     try {
+        const auto 准备批=读取任务需求准备保护批(决议.任务节点);
         std::lock_guard 锁(新任务互斥);
+        if(!核同任务需求准备保护批(准备批)||准备批.结果.状态==新任务需求准备状态::来源前提已变化){结果.状态=新任务治理后继发布状态::定位已变化;return 结果;}
+        if(准备批.结果.状态==新任务需求准备状态::资源延后){结果.状态=新任务治理后继发布状态::资源失败;return 结果;}
         if (!治理已初始化_) return 结果;
         const auto 任务 = 获取任务(决议.任务节点);
         if (任务 && 决议.类型 == 新自我任务后继类型::完成
-            && 复核任务需求准备(任务->节点).状态 == 新任务需求准备状态::待完善) {
+            && 准备批.结果.状态 == 新任务需求准备状态::待完善) {
             结果.状态 = 新任务治理后继发布状态::需求信息待完善; return 结果;
         }
         const auto 执行 = 获取执行实例(决议.执行实例节点);
@@ -17488,16 +23720,6 @@ namespace {
             // 证明完整结果闭包允许完成。
             结果.状态 = 新任务治理后继发布状态::状态发布失败;
             return 结果;
-        }
-        if (决议.类型 == 新自我任务后继类型::完成 && 执行->结果获取方案.服务需求取得数量类型
-            && !任务->完成结算节点) {
-            const auto fresh = 复核任务需求(决议.任务节点);
-            if (fresh.状态 != 新需求当前满足状态::已满足) {
-                结果.状态 = fresh.状态 == 新需求当前满足状态::资源失败 ? 新任务治理后继发布状态::资源失败
-                    : fresh.状态 == 新需求当前满足状态::结构不一致 ? 新任务治理后继发布状态::结构不一致
-                    : 新任务治理后继发布状态::定位已变化;
-                return 结果;
-            }
         }
         新任务状态 目标状态 = 新任务状态::等待条件;
         switch (决议.类型) {
@@ -17524,8 +23746,8 @@ namespace {
             结果.状态 = 新任务治理后继发布状态::任务状态已变化;
             return 结果;
         }
-        const auto 写入 = 修改任务状态(
-            决议.任务节点, 目标状态);
+        const auto 写入 = 修改任务状态受保护(
+            决议.任务节点, 目标状态,准备批.保护);
         if (写入 != 新任务操作状态::已修改
             && 写入 != 新任务操作状态::无变化) {
             结果.状态 = 写入 == 新任务操作状态::资源失败
@@ -17555,8 +23777,7 @@ namespace {
     稳定编码 执行实例节点,
     稳定编码 影响评估节点) noexcept {
     try {
-        std::lock_guard 锁(新任务互斥);
-        if (!治理已初始化_) return {};
+        {std::lock_guard 锁(新任务互斥);if (!治理已初始化_) return {};}
         return 结算已完成任务(
             任务节点, 执行实例节点, 影响评估节点);
     } catch (...) {
@@ -17596,25 +23817,23 @@ std::optional<新任务完成结算信息>
             结果.状态 = 新任务治理承接状态::尚未初始化;
             return 结果;
         }
-        if (!需求服务_.读取需求治理信息(需求节点)) {
+        const auto 需求 = 需求服务_.读取需求治理信息(需求节点);
+        if (!需求) {
             结果.状态 = 新任务治理承接状态::需求不存在;
             return 结果;
         }
         结果.任务 = 获取任务(任务节点);
         结果.虚拟存在 = 获取任务虚拟存在(任务节点);
-        const auto 集合 = 查询全部任务();
-        if (集合.状态 == 新任务操作状态::资源失败) {
-            结果.状态 = 新任务治理承接状态::资源失败;
-            return 结果;
-        }
-        if (集合.状态 != 新任务操作状态::已找到 || !结果.任务 || !结果.虚拟存在
+        const auto 登记 = 全局基础数据集.查询目标字段(任务节点, 任务成员字段);
+        const auto 登记数 = std::count_if(登记.begin(), 登记.end(), [](const auto& 项) {
+            return 项.所属节点 == 任务集合根节点;
+        });
+        if (需求->执行域 != 新需求执行域::自我执行 || 登记数 != 1 || !结果.任务 || !结果.虚拟存在
             || 查询需求任务(需求节点) != 任务节点
             || 结果.任务->节点 != 任务节点 || 结果.任务->需求节点 != 需求节点
             || 结果.任务->任务虚拟存在节点 != 结果.虚拟存在->节点
             || 结果.虚拟存在->任务节点 != 任务节点
-            || 结果.任务->当前状态 != 结果.虚拟存在->当前状态
-            || std::find(集合.任务节点组.begin(), 集合.任务节点组.end(), 任务节点)
-                == 集合.任务节点组.end()) return 结果;
+            || 结果.任务->当前状态 != 结果.虚拟存在->当前状态) return 结果;
         const auto 状态 = 结果.任务->当前状态;
         结果.状态 = 是终结状态(状态)
             ? 新任务治理承接状态::既有终结任务 : 新任务治理承接状态::已读回;
@@ -17631,7 +23850,12 @@ std::optional<新任务完成结算信息>
     新任务治理承接结果 结果;
     结果.需求节点 = 需求节点;
     try {
-        std::lock_guard 锁(新任务互斥);
+        const auto beforeGov=自我新鲜自动决议 ? 需求服务_.读取需求治理信息(需求节点)
+            : std::optional<新需求治理信息>{};
+        const auto before=自我新鲜自动决议 ? 需求服务_.获取需求(需求节点)
+            : std::optional<新需求信息>{};
+        新任务本次场景核验批 values;if(before)读取新增成员目标组(values,{需求节点});
+        std::unique_lock 锁(新任务互斥);
         if (!治理已初始化_) {
             结果.状态 = 新任务治理承接状态::尚未初始化;
             return 结果;
@@ -17647,14 +23871,24 @@ std::optional<新任务完成结算信息>
             结果.建立结果->状态 = 新任务操作状态::需求非执行域;
             return 结果;
         }
-        if (治理->外部要求节点) return 承接外部服务要求(需求节点, *治理->外部要求节点);
+        if(自我新鲜自动决议&&(治理!=beforeGov||需求服务_.获取需求(需求节点)!=before)){
+            结果.状态=新任务治理承接状态::任务操作未完成;return 结果;
+        }
+        if(治理->来源类型==新需求来源类型::行动请求){
+            if(!治理->行动请求来源)throw std::logic_error("行动请求需求缺正式来源");
+            const auto 来源=*治理->行动请求来源;锁.unlock();return 承接行动请求需求(需求节点,来源);
+        }
+        if (治理->外部要求节点){const auto R=*治理->外部要求节点;锁.unlock();return 承接外部服务要求(需求节点,R);}
         if (自我新鲜自动决议) {
-            结果.当前复核 = 需求服务_.复核当前满足(需求节点);
+            if(!before){结果.当前复核=新需求当前满足结果{新需求当前满足状态::需求信息待完善};
+                结果.状态=新任务治理承接状态::任务操作未完成;return 结果;}
+            结果.当前复核 = 读取批需求满足(values,*before);
             if (结果.当前复核->状态 == 新需求当前满足状态::已满足) {
                 结果.状态 = 新任务治理承接状态::需求当前已满足;
                 return 结果;
             }
-            if (结果.当前复核->状态 != 新需求当前满足状态::需增加) {
+            if (结果.当前复核->状态 != 新需求当前满足状态::需增加
+                &&!(before&&before->目标.新增成员来源见证&&结果.当前复核->状态==新需求当前满足状态::未满足但无有向差值)) {
                 结果.状态 = 新任务治理承接状态::任务操作未完成;
                 return 结果;
             }
@@ -17707,12 +23941,14 @@ std::optional<新任务完成结算信息>
 
         // 旧消息本身不能复活任务。即使上层声明这是新鲜决议，仍在同一
         // 在任务 owner 串行区内重新读取当前需求，只接受根需求的正向缺口。
-        读回.当前复核 = 需求服务_.复核当前满足(需求节点);
+        if(!before){读回.状态=新任务治理承接状态::任务操作未完成;return 读回;}
+        读回.当前复核 = 读取批需求满足(values,*before);
         if (读回.当前复核->状态 == 新需求当前满足状态::已满足) {
             读回.状态 = 新任务治理承接状态::需求当前已满足;
             return 读回;
         }
-        if (读回.当前复核->状态 != 新需求当前满足状态::需增加) {
+        if (读回.当前复核->状态 != 新需求当前满足状态::需增加
+            &&!(before&&before->目标.新增成员来源见证&&读回.当前复核->状态==新需求当前满足状态::未满足但无有向差值)) {
             读回.状态 = 新任务治理承接状态::任务操作未完成;
             return 读回;
         }
@@ -17741,17 +23977,56 @@ std::optional<新任务完成结算信息>
 }
 
 新任务治理承接结果 新_任务类::承接已确认条件子需求(
-    稳定编码 父任务节点, 稳定编码 子需求节点) noexcept {
+    稳定编码 父任务节点,const 新任务已确认条件子需求& 已确认项) noexcept {
+    const auto 子需求节点=已确认项.需求节点;
     新任务治理承接结果 结果;
     结果.需求节点 = 子需求节点;
     try {
-        std::lock_guard 锁(新任务互斥);
-        if (!治理已初始化_) {
-            结果.状态 = 新任务治理承接状态::尚未初始化;
-            return 结果;
+        条件准备凭据指针 凭据;
+        {
+            std::lock_guard 锁(新任务互斥);
+            const auto 项=条件准备承接依据_.find(子需求节点.值);
+            if(项==条件准备承接依据_.end()){结果.状态=新任务治理承接状态::任务操作未完成;return 结果;}
+            凭据=项->second;贡献要求(static_cast<bool>(凭据));
+            if(凭据->原提议.任务节点!=父任务节点||凭据->已确认项!=已确认项)
+                throw std::logic_error("条件准备承接与正式确认凭据异义");
+        }
+        auto 静态读回=提取因果正常读取<方法条件准备身份结果>(读取方法条件准备静态身份(*凭据,{}));
+        if(静态读回.状态!=方法条件准备身份状态::身份一致){
+            结果.状态=静态读回.状态==方法条件准备身份状态::资源失败
+                ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 结果;
+        }
+        贡献要求(静态读回.静态批.has_value());
+        const auto 当前身份=复核已发布条件子需求身份(父任务节点,已确认项);
+        if(当前身份!=新任务已发布条件子需求核验状态::身份一致){
+            结果.状态=当前身份==新任务已发布条件子需求核验状态::资源失败
+                ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 结果;
+        }
+        auto 场景批=准备本次场景核验批(父任务节点,{},nullptr,false,true);读取本次场景核验批(场景批);
+        const auto 原子需求=需求服务_.获取需求(子需求节点);
+        if(原子需求)读取新增成员目标组(场景批,{子需求节点});
+        std::optional<新需求筹办资格结果> 内容资格;
+        if(原子需求&&原子需求->目标.引用内容定位){
+            auto p=复核方法内容子需求必要性(子需求节点,场景批.内容核验上下文);
+            场景批.保护.insert(场景批.保护.end(),p.保护.begin(),p.保护.end());场景批.内容必要性组.emplace(子需求节点,std::move(p));
+            auto r=需求服务_.复核引用内容目标(子需求节点);
+            场景批.保护.insert(场景批.保护.end(),r.完整保护组.begin(),r.完整保护组.end());场景批.子内容判定组.emplace(子需求节点,std::move(r));
+            内容资格=需求服务_.复核筹办资格(子需求节点);
+        }
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!核同方法条件准备静态批已加锁(*静态读回.静态批)
+                ||!场景批.已读取||!场景批.分支有效||!核同因果节点保护(场景批.保护)){
+                结果.状态=新任务治理承接状态::任务操作未完成;return 结果;
+            }
+            if (!治理已初始化_) {
+                结果.状态 = 新任务治理承接状态::尚未初始化;
+                return 结果;
+            }
         }
         const auto 父任务 = 获取任务(父任务节点);
         const auto 子需求 = 需求服务_.获取需求(子需求节点);
+        if(子需求!=原子需求){结果.状态=新任务治理承接状态::任务操作未完成;return 结果;}
         if (!子需求) {
             结果.状态 = 新任务治理承接状态::需求不存在;
             return 结果;
@@ -17761,12 +24036,23 @@ std::optional<新任务完成结算信息>
             || 子需求->父需求节点 != 父任务->需求节点
             || 子需求->来源类型 != 新需求来源类型::任务子目标
             || 子需求->来源承接节点 != 父任务节点
-            || !是条件包含目标(子需求->目标, 特征概念服务_, 二次特征概念服务_)) return 结果;
+            || (!子需求->目标.引用内容定位&&!是条件包含目标(子需求->目标, 特征概念服务_, 二次特征概念服务_))) return 结果;
         if (子需求->活动状态 == 新需求活动状态::失活) {
             结果.状态 = 新任务治理承接状态::任务操作未完成;
             return 结果;
         }
-        结果.当前复核 = 需求服务_.复核当前满足(子需求节点);
+        if(子需求->目标.引用内容定位){
+            const auto it=场景批.内容必要性组.find(子需求节点);
+            if(it==场景批.内容必要性组.end()){结果.状态=新任务治理承接状态::任务操作未完成;return 结果;}
+            const auto s=it->second.状态;
+            if(s!=方法内容必要性状态::仍必要||!内容资格||!内容资格->当前满足){
+                结果.状态=s==方法内容必要性状态::资源失败 ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 结果;
+            }
+            if(内容资格->状态!=新需求筹办资格状态::允许筹办&&内容资格->状态!=新需求筹办资格状态::目标已满足){
+                结果.状态=内容资格->状态==新需求筹办资格状态::资源失败 ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 结果;
+            }
+            结果.当前复核=内容资格->当前满足;
+        }else 结果.当前复核 = 读取批需求满足(场景批,*子需求);
         const auto 当前状态 = 结果.当前复核->状态;
         if (当前状态 == 新需求当前满足状态::资源失败) {
             结果.状态 = 新任务治理承接状态::资源失败;
@@ -17775,11 +24061,13 @@ std::optional<新任务完成结算信息>
         if (当前状态 != 新需求当前满足状态::已满足
             && 当前状态 != 新需求当前满足状态::需增加
             && 当前状态 != 新需求当前满足状态::需减少
-            && 当前状态 != 新需求当前满足状态::未满足但无有向差值) {
+            && 当前状态 != 新需求当前满足状态::未满足但无有向差值
+            && !(子需求->目标.引用内容定位&&当前状态==新需求当前满足状态::目标内容分支待定)) {
             结果.状态 = 新任务治理承接状态::任务操作未完成;
             return 结果;
         }
-        if (!结果.当前复核->实际特征节点) return 结果;
+        if (!结果.当前复核->实际特征节点&&!子需求->目标.新增成员来源见证) return 结果;
+        if(!子需求->目标.引用内容定位&&!子需求->目标.新增成员来源见证){
         const auto 当前特征 = 特征服务_.获取特征(*结果.当前复核->实际特征节点);
         const auto 域 = 特征概念服务_.获取特征概念(*子需求->目标.目标值域概念节点);
         if (!当前特征 || !当前特征->当前值 || !域
@@ -17793,20 +24081,82 @@ std::optional<新任务完成结算信息>
                 return 结果;
             }
         } else if (!std::holds_alternative<std::int64_t>(*当前特征->当前值)) return 结果;
+        }
+        {
+            // owner读回均已结束；回锁只核本域映射及中性完整预期。
+            std::lock_guard 锁(新任务互斥);
+            if(!核同方法条件准备静态批已加锁(*静态读回.静态批)
+                ||!场景批.已读取||!场景批.分支有效||!核同因果节点保护(场景批.保护)){
+                结果.状态=新任务治理承接状态::任务操作未完成;return 结果;
+            }
+        }
         auto 关联 = 建立需求任务关联(子需求节点);
         关联.当前复核 = 结果.当前复核;
+        结果=关联; // 后读资源/变化也必须携带已经发生的D-T关联前缀。
         if (关联.状态 != 新任务治理承接状态::已读回
             && 关联.状态 != 新任务治理承接状态::既有终结任务) return 关联;
-        // 已满足只补关联；终结任务只读回，不把旧采用回执当作重新启用决议。
+        // 关联只保存唯一D-T/等待前缀，不等于取得当前启用许可。
         if (关联.状态 == 新任务治理承接状态::既有终结任务) return 关联;
-        if (当前状态 == 新需求当前满足状态::已满足) {
-            关联.状态 = 新任务治理承接状态::需求当前已满足;
-            return 关联;
-        }
         if (!关联.任务) return 结果;
         if (关联.任务->当前状态 != 新任务状态::已建立
             && 关联.任务->当前状态 != 新任务状态::等待条件) return 关联;
-        关联.重新启用结果 = 修改任务状态(关联.任务->节点, 新任务状态::待查找方法);
+        if(关联.任务->方法实例节点||关联.任务->方法执行组织节点||关联.任务->最近执行实例节点)return 关联;
+        // 自身关联改变了T根/类型及D入向关系；重新读取所有owner，不能删除旧保护冲突伪fresh。
+        auto 新静态=提取因果正常读取<方法条件准备身份结果>(读取方法条件准备静态身份(*凭据,{}));
+        if(新静态.状态!=方法条件准备身份状态::身份一致){
+            关联.状态=新静态.状态==方法条件准备身份状态::资源失败
+                ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 关联;
+        }
+        贡献要求(新静态.静态批&&新静态.静态批->子任务节点==std::optional{关联.任务->节点});
+        const auto 新身份=复核已发布条件子需求身份(父任务节点,已确认项);
+        if(新身份!=新任务已发布条件子需求核验状态::身份一致){
+            关联.状态=新身份==新任务已发布条件子需求核验状态::资源失败
+                ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 关联;
+        }
+        auto 新场景=准备本次场景核验批(父任务节点,{},nullptr,false,true);读取本次场景核验批(新场景);
+        读取新增成员目标组(新场景,{子需求节点});
+        const auto 新子需求=需求服务_.获取需求(子需求节点);
+        if(!新子需求||新子需求!=原子需求){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+        if(新子需求->目标.引用内容定位){
+            auto p=复核方法内容子需求必要性(子需求节点,新场景.内容核验上下文);
+            if(p.状态!=方法内容必要性状态::仍必要){
+                关联.状态=p.状态==方法内容必要性状态::资源失败
+                    ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 关联;
+            }
+            if(!合并需求结果保护(新场景.保护,p.保护)){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+            auto r=需求服务_.复核引用内容目标(子需求节点);
+            if(!合并需求结果保护(新场景.保护,r.完整保护组)){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+            新场景.子内容判定组.emplace(子需求节点,std::move(r));
+            const auto q=需求服务_.复核筹办资格(子需求节点);
+            if((q.状态!=新需求筹办资格状态::允许筹办&&q.状态!=新需求筹办资格状态::目标已满足)||!q.当前满足){
+                关联.状态=q.状态==新需求筹办资格状态::资源失败
+                    ? 新任务治理承接状态::资源失败 : 新任务治理承接状态::任务操作未完成;return 关联;
+            }
+            关联.当前复核=q.当前满足;
+        }else 关联.当前复核=读取批需求满足(新场景,*新子需求);
+        if(!关联.当前复核){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+        const auto 新满足=关联.当前复核->状态;
+        if(新满足==新需求当前满足状态::资源失败){关联.状态=新任务治理承接状态::资源失败;return 关联;}
+        if(新满足!=新需求当前满足状态::已满足&&新满足!=新需求当前满足状态::需增加
+            &&新满足!=新需求当前满足状态::需减少&&新满足!=新需求当前满足状态::未满足但无有向差值
+            &&!(新子需求->目标.引用内容定位&&新满足==新需求当前满足状态::目标内容分支待定)){
+            关联.状态=新任务治理承接状态::任务操作未完成;return 关联;
+        }
+        auto 激活保护=新静态.静态批->完整保护;
+        if(!合并需求结果保护(激活保护,新场景.保护)){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+        // 子T当前资格也进入同一次CAS；不按旧回执覆盖并发执行/组织或终结状态。
+        捕获因果材料保护(激活保护,{关联.任务->节点,关联.任务->任务虚拟存在节点});
+        const auto 新任务=获取任务(关联.任务->节点);
+        if(!新任务||*新任务!=*关联.任务){关联.状态=新任务治理承接状态::任务操作未完成;return 关联;}
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!核同方法条件准备静态批已加锁(*新静态.静态批)
+                ||!新场景.已读取||!新场景.分支有效||!核同因果节点保护(激活保护)){
+                关联.状态=新任务治理承接状态::任务操作未完成;return 关联;
+            }
+        }
+        if(新满足==新需求当前满足状态::已满足){关联.状态=新任务治理承接状态::需求当前已满足;return 关联;}
+        关联.重新启用结果 = 修改任务状态受保护(关联.任务->节点, 新任务状态::待查找方法,激活保护);
         if (*关联.重新启用结果 != 新任务操作状态::已修改
             && *关联.重新启用结果 != 新任务操作状态::无变化) {
             关联.状态 = 新任务治理承接状态::任务操作未完成;
@@ -17824,9 +24174,17 @@ std::optional<新任务完成结算信息>
         }
         已唤醒.状态 = 新任务治理承接状态::已重新启用;
         return 已唤醒;
-    } catch (...) {
+    } catch (const 因果读取来源变化信号&) {
+        结果.状态 = 新任务治理承接状态::任务操作未完成;
+        return 结果;
+    } catch (const std::bad_alloc&) {
         结果.状态 = 新任务治理承接状态::资源失败;
         return 结果;
+    } catch (const std::length_error&) {
+        结果.状态 = 新任务治理承接状态::资源失败;
+        return 结果;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"承接已确认条件子需求",L"正式条件准备承接工程故障");
     }
 }
 
@@ -17891,37 +24249,300 @@ std::optional<新任务完成结算信息>
     }
 }
 
-新任务需求准备结果 新_任务类::复核任务需求准备(稳定编码 任务节点) const noexcept {
-    新任务需求准备结果 r;
-    r.任务节点 = 任务节点;
+新需求筹办资格结果 新_任务类::复核任务筹办资格(稳定编码 任务节点) const noexcept {
+    try {
+        const auto 上下文=std::make_shared<新方法内容核验上下文>();
+        auto 批=准备本次场景核验批(任务节点,{},nullptr,false,false,上下文,true);
+        读取本次场景核验批(批);
+        std::lock_guard 锁(新任务互斥);
+        if(!核同本次场景核验批(批)){新需求筹办资格结果 r;r.状态=新需求筹办资格状态::材料已变化;return r;}
+        return 复核任务筹办资格已加锁(任务节点,批);
+    }catch(const std::bad_alloc&){新需求筹办资格结果 r;r.状态=新需求筹办资格状态::资源失败;return r;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务筹办资格",L"锁外资格材料读取故障");}
+}
+新需求筹办资格结果 新_任务类::复核任务筹办资格已加锁(
+    稳定编码 任务节点,const 新任务本次场景核验批& 场景批) const {
+    using S = 新需求筹办资格状态;
+    新需求筹办资格结果 r;
     try {
         std::lock_guard 锁(新任务互斥);
+        const auto 源=取得提议源(场景批.内容核验上下文);
         const auto t = 获取任务(任务节点);
-        if (!t) { r.状态 = 新任务需求准备状态::任务不存在; return r; }
-        const auto d = 需求服务_.读取需求治理信息(t->需求节点);
-        if (!d || 查询需求任务(d->节点) != 任务节点)
-            throw std::logic_error("任务需求身份不一致");
-        r.需求节点 = d->节点; r.外部要求节点 = d->外部要求节点;
-        if (!d->完整目标) {
-            throw std::logic_error("正式需求缺少完整目标，不能作为材料完善任务");
-        }
-        const auto 守卫 = 需求服务_.复核需求服务要求语义(d->节点);
-        if (守卫.状态 == 新服务要求执行守卫状态::需重新确认) {
-            r.状态 = 新任务需求准备状态::待完善;
-            r.缺项 = {新服务要求缺项::明确确认};
+        if (!t || 查询需求任务(t->需求节点) != 任务节点) { r.状态 = S::结构不一致; return r; }
+        if(!场景批.需求准备||场景批.需求准备->结果.状态==新任务需求准备状态::来源前提已变化){r.状态=S::材料已变化;return r;}
+        if(!场景批.需求||场景批.需求->节点!=t->需求节点
+            ||!需求服务_.提议需求值相同(需求服务_.获取需求(t->需求节点),场景批.需求,源)){r.状态=S::材料已变化;return r;}
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::资源延后){r.状态=S::资源失败;return r;}
+        if(场景批.需求准备->结果.状态==新任务需求准备状态::待完善){r.状态=S::需求待完善;return r;}
+        if(场景批.需求&&(场景批.需求->目标.引用内容定位||场景批.需求->目标.新增成员来源见证)){
+            if(!场景批.内容目标资格){r.状态=S::等待普通材料;return r;}
+            r=*场景批.内容目标资格;
+            if(场景批.需求->复合来源&&场景批.复合必要性!=新任务复合分解状态::已形成
+                &&场景批.已满足静态来源!=新任务复合分解状态::已形成){
+                r.状态=场景批.复合必要性==新任务复合分解状态::资源失败 ? S::资源失败 : S::等待普通材料;return r;
+            }
+            if(const auto it=场景批.内容必要性组.find(t->需求节点);it!=场景批.内容必要性组.end()){
+                const auto s=核同方法内容必要性投影已加锁(it->second);
+                if(s!=方法内容必要性状态::仍必要)r.状态=s==方法内容必要性状态::资源失败 ? S::资源失败
+                    : s==方法内容必要性状态::前提已变化 ? S::材料已变化 : S::等待普通材料;
+            }
             return r;
         }
-        if (守卫.状态 != 新服务要求执行守卫状态::当前有效
-            && 守卫.状态 != 新服务要求执行守卫状态::不涉及)
-            throw std::logic_error("需求执行语义守卫读取故障");
-        r.状态 = 新任务需求准备状态::可筹办;
+        r = 源 ? 需求服务_.复核筹办资格可抛内部(t->需求节点,nullptr,源)
+            : 需求服务_.复核筹办资格(t->需求节点);
+        if(r.需求&&r.需求->复合来源) {
+            const auto 来源状态=场景批.复合必要性.value_or(新任务复合分解状态::依赖未就绪);
+            if(来源状态!=新任务复合分解状态::已形成) {
+                r.状态=来源状态==新任务复合分解状态::资源失败 ? S::资源失败 : S::等待普通材料;
+                return r;
+            }
+        }
+        bool 正式来源H前提=false;
+        if(r.需求&&服务取得来源前驱配置_) {
+            const auto 采用=因果子需求依据_.find(t->需求节点);
+            if(采用!=因果子需求依据_.end()&&采用->second.来源前端
+                &&采用->second.来源前端->种类==新来源前驱前端种类::取得服务对象&&!采用->second.目标实例
+                &&采用->second.依据.请求.来源前驱上下文
+                &&采用->second.依据.请求.来源前驱上下文->配置==*服务取得来源前驱配置_
+                &&采用->second.子目标==新需求完整目标{r.需求->目标存在节点,r.需求->目标}
+                &&r.需求->目标.目标特征类型概念节点==服务取得来源前驱配置_->交互者类型
+                &&r.需求->目标.目标值域概念节点==服务取得来源前驱配置_->交互者人类范围) {
+                正式来源H前提=true;
+                const auto 当前=场景批.普通值目标当前满足 ? *场景批.普通值目标当前满足
+                    : 源 ? 需求服务_.复核当前满足可抛内部(t->需求节点,nullptr,源) : 需求服务_.复核当前满足(t->需求节点);
+                if(r.状态==S::等待普通材料&&(当前.状态==新需求当前满足状态::目标特征尚未形成
+                    ||当前.状态==新需求当前满足状态::当前值不存在)) {
+                    r.当前满足=当前;r.状态=S::允许筹办;return r;
+                }
+            }
+        }
+        if (r.状态 != S::允许筹办 && r.状态 != S::目标已满足) return r;
+        const auto 当前 = 场景批.普通值目标当前满足 ? *场景批.普通值目标当前满足
+            : 源 ? 需求服务_.复核当前满足可抛内部(t->需求节点,nullptr,源) : 需求服务_.复核当前满足(t->需求节点);
+        r.当前满足 = 当前;
+        if (当前.状态 == 新需求当前满足状态::已满足) r.状态 = S::目标已满足;
+        else if (当前.状态 == 新需求当前满足状态::资源失败) r.状态 = S::资源失败;
+        else if (当前.状态 == 新需求当前满足状态::结构不一致) r.状态 = S::结构不一致;
+        else if (当前.状态 == 新需求当前满足状态::目标特征尚未形成
+            || 当前.状态 == 新需求当前满足状态::当前值不存在) {
+            r.状态 = 正式来源H前提||(r.派生定义 && r.需求 && !r.需求->根角色
+                && r.需求->目标.目标形式 == 新需求目标形式::值) ? S::允许筹办 : S::等待普通材料;
+        } else if (当前.状态 == 新需求当前满足状态::需增加
+            || 当前.状态 == 新需求当前满足状态::需减少
+            || 当前.状态 == 新需求当前满足状态::未满足但无有向差值
+            || 当前.状态 == 新需求当前满足状态::需要执行前后比较) r.状态 = S::允许筹办;
+        else if (当前.状态==新需求当前满足状态::目标内容分支待定) r.状态=S::允许筹办;
+        else if (当前.状态==新需求当前满足状态::目标内容依赖未就绪
+            ||当前.状态==新需求当前满足状态::目标内容未支持) r.状态=S::等待普通材料;
+        else if (当前.状态==新需求当前满足状态::目标引用前提已变化) r.状态=S::材料已变化;
+        else r.状态 = S::目标定义不合法;
+        if (t->最近执行实例节点 && r.状态 == S::允许筹办) {
+            const auto x = 获取执行实例(*t->最近执行实例节点);
+            if (!x || x->任务节点 != 任务节点) r.状态 = S::结构不一致;
+            else if (x->状态 != 新任务执行状态::已评估 || !x->结束时间
+                || 当前.状态 == 新需求当前满足状态::目标特征尚未形成
+                || 当前.状态 == 新需求当前满足状态::当前值不存在)
+                r.状态 = S::等待普通材料;
+        }
+        if (获取任务(任务节点) != t || !需求服务_.提议需求值相同(需求服务_.获取需求(t->需求节点),r.需求,源))
+            r.状态 = S::材料已变化;
         return r;
-    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复核任务需求准备", L"正式需求或任务身份读取故障"); }
+    } catch(const std::bad_alloc&) {
+        if(取得提议源(场景批.内容核验上下文)){r.状态=S::资源失败;return r;}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务筹办资格",L"任务需求资格读取故障");
+    } catch(新需求目标定义核验状态 s) {
+        if(取得提议源(场景批.内容核验上下文)&&s==新需求目标定义核验状态::前提已变化){r.状态=S::材料已变化;return r;}
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务筹办资格",L"任务需求资格读取故障");
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复核任务筹办资格", L"任务需求资格读取故障"); }
+}
+
+新_任务类::新任务需求准备保护批 新_任务类::读取任务需求准备保护批(稳定编码 T,
+    const std::shared_ptr<新方法内容核验上下文>& 上下文) const {
+    新任务需求准备保护批 批;批.T=T;批.结果.任务节点=T;
+    if(上下文)批.提议源=上下文->提议源;
+    std::map<稳定编码,稳定编码> 后代需求;
+    {
+        std::lock_guard 锁(新任务互斥);
+        批.任务=获取任务(T);
+        if(!批.任务){批.结果.状态=新任务需求准备状态::任务不存在;return 批;}
+        if(批.提议源)
+            (void)需求服务_.读取提议源需求(批.任务->需求节点,*批.提议源,批.保护,&批.需求);
+        else 批.需求=需求服务_.读取需求治理信息(批.任务->需求节点);
+        if(!批.需求||查询需求任务(批.需求->节点)!=T||!批.需求->完整目标){
+            // 治理读受阻或身份暂不可用：旧布局受阻，不工程终止。
+            批.结果.状态=新任务需求准备状态::工程故障;return 批;
+        }
+        批.结果.需求节点=批.需求->节点;批.结果.外部要求节点=批.需求->外部要求节点;
+        const auto V=获取任务虚拟存在(T);if(!V)throw std::logic_error("任务需求准备缺正式Vt");
+        std::set<稳定编码> 任务保护{T,批.任务->任务虚拟存在节点,V->任务状态特征节点};
+        if(!批.提议源)任务保护.insert(批.需求->节点);
+        if(const auto F=读取唯一节点字段(V->节点,虚拟存在服务值特征字段))任务保护.insert(*F);
+        const auto p=全局基础数据集.查询节点组完整结构({任务保护.begin(),任务保护.end()});
+        if(p.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(p.状态!=基础结构操作状态::已完成||p.节点组.size()!=任务保护.size())throw std::logic_error("任务需求准备保护读取失败");
+        for(const auto& n:p.节点组){if(!n.快照)throw std::logic_error("任务需求准备正式节点缺失");批.保护.push_back(*n.快照);}
+        if(批.任务->完成结算节点){
+            std::vector<稳定编码> 待读{T};std::set<稳定编码> 已见{T};
+            for(std::size_t i=0;i<待读.size();++i)for(const auto& r:读取父贡献(待读[i]).second){
+                if(!已见.insert(r.子任务节点).second)throw std::logic_error("最终来源后代贡献形成环或重复");
+                const auto 子=获取任务(r.子任务节点);if(!子)throw std::logic_error("最终来源后代任务缺失");
+                后代需求.emplace(子->节点,子->需求节点);待读.push_back(子->节点);
+                std::vector<稳定编码> 子节点组{子->节点,子->任务虚拟存在节点};
+                if(批.提议源)(void)需求服务_.读取提议源需求(子->需求节点,*批.提议源,批.保护);
+                else 子节点组.push_back(子->需求节点);
+                const auto 子保护=全局基础数据集.查询节点组完整结构(子节点组);
+                if(子保护.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                if(子保护.状态!=基础结构操作状态::已完成||子保护.节点组.size()!=子节点组.size())throw std::logic_error("最终来源后代保护读取失败");
+                for(const auto& n:子保护.节点组){if(!n.快照)throw std::logic_error("最终来源后代节点缺失");批.保护.push_back(*n.快照);}
+            }
+        }
+    }
+    // 这里已经离开最外层task锁，guard可安全调用语言读取。
+    批.守卫=需求服务_.复核需求服务要求语义内部(批.需求->节点,批.提议源.get());
+#ifdef HY_EGO_DEBUG_LOG_DEMAND_SOURCE_GUARD
+    if(批.守卫.状态==新服务要求执行守卫状态::结构不一致
+        ||批.守卫.状态==新服务要求执行守卫状态::需求不存在
+        ||批.守卫.状态==新服务要求执行守卫状态::未装配){
+        try{
+            std::wostringstream 文;
+            文 << L"任务需求准备守卫受阻；T=" << T.值
+                << L"；D=" << 批.需求->节点.值
+                << L"；状态=" << static_cast<unsigned>(批.守卫.状态)
+                << L"；diag=" << 需求守卫诊断内部::最近故障;
+            (void)记录运行日志(L"任务准备", L"读取任务需求准备保护批", 文.str());
+        }catch(...){}
+    }
+#endif
+    for(const auto& [子T,子D]:后代需求){
+        auto 守卫=需求服务_.复核需求服务要求语义内部(子D,批.提议源.get());
+        if(!合并需求结果保护(批.保护,守卫.完整保护))守卫.状态=新服务要求执行守卫状态::前提已变化;
+        批.后代守卫.emplace(子T,std::move(守卫));
+    }
+    if(!合并需求结果保护(批.保护,批.守卫.完整保护)){
+        批.结果.状态=新任务需求准备状态::来源前提已变化;return 批;
+    }
+    switch(批.守卫.状态){
+    case 新服务要求执行守卫状态::不涉及:case 新服务要求执行守卫状态::当前有效:
+        if(!批.守卫.行动请求来源组.empty()&&批.守卫.完整保护.empty())throw std::logic_error("行动请求guard成功缺完整保护");
+        批.结果.状态=新任务需求准备状态::可筹办;break;
+    case 新服务要求执行守卫状态::需重新确认:
+        批.结果.状态=新任务需求准备状态::待完善;批.结果.缺项={新服务要求缺项::明确确认};break;
+    case 新服务要求执行守卫状态::前提已变化:
+        批.结果.状态=新任务需求准备状态::来源前提已变化;break;
+    case 新服务要求执行守卫状态::资源失败:
+        批.结果.状态=新任务需求准备状态::资源延后;break;
+    case 新服务要求执行守卫状态::需求信息待完善:
+        批.结果.状态=新任务需求准备状态::待完善;break;
+    case 新服务要求执行守卫状态::结构不一致:
+    case 新服务要求执行守卫状态::需求不存在:
+    case 新服务要求执行守卫状态::未装配:
+        // 旧/损坏布局或未装配：受阻为工程故障状态，不升级为代码工程终止。
+        批.结果.状态=新任务需求准备状态::工程故障;break;
+    default:
+        throw std::logic_error("需求执行语义守卫返回未约定状态");
+    }
+    for(const auto& [子T,守卫]:批.后代守卫){
+        if(守卫.状态==新服务要求执行守卫状态::资源失败){批.结果.状态=新任务需求准备状态::资源延后;批.结果.缺项.clear();break;}
+        if(守卫.状态==新服务要求执行守卫状态::前提已变化){批.结果.状态=新任务需求准备状态::来源前提已变化;批.结果.缺项.clear();}
+    }
+    {std::lock_guard 锁(新任务互斥);if(获取任务(T)!=批.任务||!核同任务需求准备保护批(批)){
+        批.结果.状态=新任务需求准备状态::来源前提已变化;批.结果.缺项.clear();}}
+    return 批;
+}
+
+bool 新_任务类::核同任务需求准备保护批(const 新任务需求准备保护批& 批) const {
+    // caller持task锁；只读中性完整预期，不回调需求业务或语言。
+    if(!批.任务)return !全局基础数据集.查询节点(批.T);
+    return 核同因果节点保护(批.保护)&&需求服务_.核同提议源(批.提议源.get());
+}
+
+新任务需求准备结果 新_任务类::复核任务需求准备(稳定编码 T) const noexcept {
+    try{return 读取任务需求准备保护批(T).结果;}
+    catch(const std::bad_alloc&){新任务需求准备结果 r;r.任务节点=T;r.状态=新任务需求准备状态::资源延后;return r;}
+    catch(const std::length_error&){新任务需求准备结果 r;r.任务节点=T;r.状态=新任务需求准备状态::资源延后;return r;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核任务需求准备",L"正式需求或任务身份读取故障");}
+}
+
+新任务治理承接结果 新_任务类::承接行动请求需求(稳定编码 Ds,
+    const 新行动请求承接来源& 来源) noexcept {
+    新任务治理承接结果 r;r.需求节点=Ds;
+    const auto 延后=[&](新任务操作状态 状态){
+        r.状态=新任务治理承接状态::任务操作未完成;
+        if(!r.建立结果)r.建立结果=新任务建立结果{};r.建立结果->状态=状态;return r;
+    };
+    try{
+        const auto 源=需求服务_.读取行动请求承接来源保护(来源);
+        if(源.状态==新行动请求来源读取状态::资源失败)return 延后(新任务操作状态::资源失败);
+        if(源.状态==新行动请求来源读取状态::前提已变化)return 延后(新任务操作状态::预期已变化);
+        if(源.状态==新行动请求来源读取状态::依赖未就绪){r.状态=新任务治理承接状态::尚未初始化;return r;}
+        if(源.状态!=新行动请求来源读取状态::已读取||!源.信息)throw std::logic_error("行动请求承接正式来源不适用");
+        {
+            std::lock_guard 锁(新任务互斥);
+            const auto D=需求服务_.读取需求治理信息(Ds);const auto 边界=读取当前结算边界();
+            if(!D||!D->完整目标||!边界||D->来源类型!=新需求来源类型::行动请求
+                ||D->完整目标->目标.新增成员来源见证
+                ||D->行动请求来源!=std::optional<新行动请求承接来源>{来源}
+                ||D->需求主体存在节点!=来源.受请求者节点||D->执行域!=新需求执行域::自我执行
+                ||D->父需求节点!=边界->结算需求节点||*D->完整目标!=源.信息->目标
+                ||D->外部要求节点||!D->服务要求确认组.empty()||D->来源承接节点||D->服务需求取得执行节点)
+                throw std::logic_error("行动请求Ds正式来源/父/主体/目标不一致");
+            // 扫描可能已建立等待T；无论先后只复用这一个正式关联。
+            r=建立需求任务关联(Ds);
+            if(r.状态==新任务治理承接状态::资源失败)return r;
+            if((r.状态!=新任务治理承接状态::已读回&&r.状态!=新任务治理承接状态::既有终结任务)||!r.任务)
+                throw std::logic_error("行动请求唯一T关联读回失败");
+        }
+        const auto T=r.任务->节点;
+        if(r.状态==新任务治理承接状态::既有终结任务)return r;
+        const auto 批=读取任务需求准备保护批(T);
+        if(批.结果.状态==新任务需求准备状态::来源前提已变化)return 延后(新任务操作状态::任务状态不允许);
+        if(批.结果.状态==新任务需求准备状态::资源延后)return 延后(新任务操作状态::资源失败);
+        if(批.结果.状态==新任务需求准备状态::待完善)return r;
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!核同任务需求准备保护批(批))return 延后(新任务操作状态::预期已变化);
+            if(!批.任务||批.需求->行动请求来源!=std::optional<新行动请求承接来源>{来源})return 延后(新任务操作状态::预期已变化);
+            const auto& t=*批.任务;
+            if(t.当前状态!=新任务状态::已建立&&t.当前状态!=新任务状态::等待条件)return 读回需求任务(Ds,T);
+            if(t.最近执行实例节点||t.当前候选方法材料节点||t.方法执行组织节点||t.方法实例节点)return 读回需求任务(Ds,T);
+        }
+        const auto 资格=复核任务筹办资格(T);
+        r.当前复核=资格.当前满足;
+        if(资格.状态==新需求筹办资格状态::资源失败)return 延后(新任务操作状态::资源失败);
+        if(资格.状态==新需求筹办资格状态::材料已变化)return 延后(新任务操作状态::预期已变化);
+        if(资格.状态==新需求筹办资格状态::目标已满足){
+            const auto 收束=复核并收束执行前已满足目标(T);
+            if(收束.状态==新任务执行前目标收束状态::资源失败)return 延后(新任务操作状态::资源失败);
+            if(收束.状态==新任务执行前目标收束状态::来源已变化)return 延后(新任务操作状态::预期已变化);
+            if(收束.状态!=新任务执行前目标收束状态::已标记未执行目标已满足
+                &&收束.状态!=新任务执行前目标收束状态::已处该状态)return 延后(新任务操作状态::任务状态不允许);
+            auto 回读=读回需求任务(Ds,T);
+            if(!回读.任务||回读.任务->当前状态!=新任务状态::未执行但目标已满足
+                ||回读.任务->最近执行实例节点||回读.任务->完成结算节点)
+                throw std::logic_error("行动请求零动作已满足收束读回失败");
+            回读.状态=新任务治理承接状态::需求当前已满足;回读.当前复核=r.当前复核;回读.建立结果=r.建立结果;return 回读;
+        }
+        if(资格.状态!=新需求筹办资格状态::允许筹办){
+            if(资格.状态==新需求筹办资格状态::等待普通材料||资格.状态==新需求筹办资格状态::需求待完善
+                ||资格.状态==新需求筹办资格状态::需求非活动)return r;
+            throw std::logic_error("行动请求任务筹办资格正式结构不合法");
+        }
+        std::lock_guard 锁(新任务互斥);
+        if(!核同任务需求准备保护批(批))return 延后(新任务操作状态::预期已变化);
+        r.重新启用结果=修改任务状态受保护(T,新任务状态::待查找方法,批.保护);
+        if(*r.重新启用结果!=新任务操作状态::已修改&&*r.重新启用结果!=新任务操作状态::无变化)return 延后(*r.重新启用结果);
+        auto 回读=读回需求任务(Ds,T);回读.写入已尝试=true;回读.建立结果=r.建立结果;
+        回读.当前复核=r.当前复核;回读.重新启用结果=r.重新启用结果;
+        if(!回读.任务||回读.任务->当前状态!=新任务状态::待查找方法)throw std::logic_error("行动请求激活读回失败");
+        回读.状态=新任务治理承接状态::已重新启用;return 回读;
+    }catch(const std::bad_alloc&){return 延后(新任务操作状态::资源失败);}
+    catch(const std::length_error&){return 延后(新任务操作状态::资源失败);}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"承接行动请求需求",L"正式来源或唯一D/T接续工程故障");}
 }
 
 新任务治理承接结果 新_任务类::承接外部服务要求(稳定编码 需求节点, 稳定编码 要求节点) noexcept {
     try {
-        std::lock_guard 锁(新任务互斥);
+        std::unique_lock 锁(新任务互斥);
         const auto d = 需求服务_.读取需求治理信息(需求节点);
         if (d && d->执行域 != 新需求执行域::自我执行) {
             新任务治理承接结果 拒绝;
@@ -17933,6 +24554,7 @@ std::optional<新任务完成结算信息>
         }
         const auto 边界 = 读取当前结算边界();
         if (!d || !d->完整目标 || d->来源类型 != 新需求来源类型::外部服务要求
+            || d->完整目标->目标.新增成员来源见证
             || d->外部要求节点 != 要求节点 || !边界
             || d->父需求节点 != 边界->结算需求节点
             || d->来源承接节点 || d->服务需求取得执行节点
@@ -17944,8 +24566,16 @@ std::optional<新任务完成结算信息>
         auto r = 建立需求任务关联(需求节点);
         if ((r.状态 != 新任务治理承接状态::已读回 && r.状态 != 新任务治理承接状态::既有终结任务) || !r.任务)
             throw std::logic_error("外部服务要求唯一任务承接故障");
-        const auto& t = *r.任务;
-        const auto 准备 = 复核任务需求准备(t.节点);
+        const auto t = *r.任务;
+        锁.unlock();const auto 准备批=读取任务需求准备保护批(t.节点);锁.lock();
+        const auto& 准备=准备批.结果;
+        if(准备.状态==新任务需求准备状态::来源前提已变化||准备.状态==新任务需求准备状态::资源延后
+            ||!核同任务需求准备保护批(准备批)){
+            r.状态=新任务治理承接状态::任务操作未完成;
+            if(!r.建立结果)r.建立结果=新任务建立结果{};
+            r.建立结果->状态=准备.状态==新任务需求准备状态::资源延后 ? 新任务操作状态::资源失败 : 新任务操作状态::预期已变化;
+            return r;
+        }
         if (准备.状态 == 新任务需求准备状态::待完善) return r;
         if (准备.状态 != 新任务需求准备状态::可筹办) throw std::logic_error("任务准备身份不一致");
         if (r.状态 == 新任务治理承接状态::既有终结任务
@@ -17963,9 +24593,14 @@ std::optional<新任务完成结算信息>
             || r.当前复核->状态 == 新需求当前满足状态::入口拒绝
             || r.当前复核->状态 == 新需求当前满足状态::读取接口未装配)
             throw std::logic_error("服务需求当前值复核工程故障");
-        r.重新启用结果 = 修改任务状态(t.节点, 新任务状态::待查找方法);
-        if (*r.重新启用结果 != 新任务操作状态::已修改 && *r.重新启用结果 != 新任务操作状态::无变化)
+        r.重新启用结果 = 修改任务状态受保护(t.节点, 新任务状态::待查找方法,准备批.保护);
+        if (*r.重新启用结果 != 新任务操作状态::已修改 && *r.重新启用结果 != 新任务操作状态::无变化){
+            if(*r.重新启用结果==新任务操作状态::资源失败||*r.重新启用结果==新任务操作状态::任务状态不允许){
+                r.状态=新任务治理承接状态::任务操作未完成;if(!r.建立结果)r.建立结果=新任务建立结果{};
+                r.建立结果->状态=*r.重新启用结果==新任务操作状态::资源失败 ? 新任务操作状态::资源失败 : 新任务操作状态::预期已变化;return r;
+            }
             throw std::logic_error("正式服务任务筹办推进故障");
+        }
         auto 已激活 = 读回需求任务(需求节点, t.节点);
         if (已激活.状态 != 新任务治理承接状态::已读回 || !已激活.任务
             || 已激活.任务->当前状态 != 新任务状态::待查找方法) throw std::logic_error("服务任务激活读回不一致");
@@ -17973,7 +24608,9 @@ std::optional<新任务完成结算信息>
         已激活.当前复核 = r.当前复核; 已激活.重新启用结果 = r.重新启用结果;
         已激活.状态 = 新任务治理承接状态::已重新启用;
         return 已激活;
-    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"承接外部服务要求", L"正式D/T承接或激活故障"); }
+    }catch(const std::bad_alloc&){新任务治理承接结果 r;r.需求节点=需求节点;r.状态=新任务治理承接状态::任务操作未完成;r.建立结果=新任务建立结果{};r.建立结果->状态=新任务操作状态::资源失败;return r;}
+    catch(const std::length_error&){新任务治理承接结果 r;r.需求节点=需求节点;r.状态=新任务治理承接状态::任务操作未完成;r.建立结果=新任务建立结果{};r.建立结果->状态=新任务操作状态::资源失败;return r;}
+    catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"承接外部服务要求", L"正式D/T承接或激活故障"); }
 }
 
 } // namespace 海中鱼巣

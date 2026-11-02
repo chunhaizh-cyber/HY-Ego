@@ -2,11 +2,19 @@
 #include "转换.语言场景共同.h"
 #include "../领域/新_自然语言世界树类.h"
 
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+#include "../核心/日志系统.h"
+#include <atomic>
+#include <chrono>
+#include <exception>
+#endif
+
 #include <algorithm>
 #include <array>
 #include <functional>
 #include <limits>
 #include <map>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -15,6 +23,39 @@
 
 namespace 海中鱼巣 {
 namespace {
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+std::atomic_uint64_t 统一解释诊断序号{0};
+class 统一解释阶段观察 final {
+public:
+    explicit 统一解释阶段观察(const 语言基础统一输入请求& 请求) noexcept
+        : 序号_(统一解释诊断序号.fetch_add(1, std::memory_order_relaxed) + 1),
+          语言_(请求.语言节点), 来源_(请求.未核验来源语言记录节点),
+          开始_(std::chrono::steady_clock::now()), 上次_(开始_) {}
+    ~统一解释阶段观察() noexcept {
+        记录(L"统一入口离开", std::uncaught_exceptions());
+    }
+    void 记录(const wchar_t* 阶段, int 状态 = -1, std::size_t 候选数 = 0) noexcept {
+        if (序号_ > 64) return;
+        try {
+            const auto 当前 = std::chrono::steady_clock::now();
+            std::wostringstream 文本;
+            文本 << L"调用序号=" << 序号_ << L"；语言=" << 语言_.值
+                << L"；源语言记录=" << (来源_ ? 来源_->值 : 0)
+                << L"；阶段=" << 阶段 << L"；状态或离开时异常展开数=" << 状态
+                << L"；候选数=" << 候选数
+                << L"；累计毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 开始_).count()
+                << L"；阶段间隔毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 上次_).count();
+            上次_ = 当前;
+            (void)记录调试日志(L"LANGUAGE_INPUT_PHASE", L"统一语言解释", L"只读解释单句基础语言实现", 文本.str());
+        } catch (...) {} // 诊断失败不改变原解析、返回或工程异常传播。
+    }
+private:
+    std::uint64_t 序号_;
+    稳定编码 语言_;
+    std::optional<稳定编码> 来源_;
+    std::chrono::steady_clock::time_point 开始_, 上次_;
+};
+#endif
 using namespace 语言场景转换内部;
 using I = 语言场景基础输入状态;
 using O = 语言场景基础输出状态;
@@ -152,6 +193,8 @@ struct 只读上下文 final {
     const 新_语言类& 语言服务; const 新_词类& 词服务;
     const 概念_名称关系类& 名称服务; const 概念_存在类& 存在概念服务;
     const 概念_特征类& 特征概念服务;
+    语言解释读取模式 模式=语言解释读取模式::显式额度;
+    解释读取依据* 依据=nullptr;
 };
 struct 叶布局 final { 解释原文范围 范围; std::string 文本; std::optional<稳定编码> 词条; };
 struct 布局结果 final { I 状态 = I::结构未支持; std::vector<叶布局> 项组; };
@@ -186,11 +229,11 @@ std::vector<叶项> 展开知识(const 新语言知识信息& k, const std::vect
     const auto map=解码语言场景原文(text);
     if(!map||text.empty()||leaves.empty()){failure.状态=I::格式失败;return failure;}
     if(text.front()==' '||text.back()==' ')return failure;
-    const auto match=c.语言服务.按已登记词条最长匹配(lang,text,c.词服务);
+    const auto match=c.依据 ? c.依据->匹配词条(lang,text):c.语言服务.按已登记词条最长匹配(lang,text,c.词服务);
     if(match.状态!=新语言查询状态::已找到){failure.状态=match.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return failure;}
     std::vector<新词条信息> fixed;
     for(const auto&leaf:leaves)if(leaf.固定词){
-        const auto word=c.词服务.获取词条(*leaf.固定词);
+        const auto word=c.依据 ? c.依据->读词(*leaf.固定词):c.词服务.获取词条(*leaf.固定词);
         if(word.状态!=新词条查询状态::已找到||!word.信息){failure.状态=word.状态==新词条查询状态::资源失败 ? I::工程未完成:I::引用不可读;return failure;}
         if(word.信息->节点!=*leaf.固定词||word.信息->语言节点!=lang){failure.状态=I::读取漂移;return failure;}
         fixed.push_back(*word.信息);
@@ -261,12 +304,12 @@ I 根状态(特征概念规则状态 s){
 }
 只读结果 解释一个构式(const 语言场景基础输入请求& q,const 只读上下文& c,U form){
     只读结果 r;
-    if(!有效(q.语言节点)||q.固定原文.empty()||!q.最大知识条目数)return r;
+    if(!有效(q.语言节点)||q.固定原文.empty()||(c.模式==语言解释读取模式::显式额度&&!q.最大知识条目数))return r;
     if(!解码语言场景原文(q.固定原文)){r.状态=I::格式失败;return r;}
     const auto lang=c.语言服务.获取语言(q.语言节点);
     if(lang.状态!=新语言查询状态::已找到||!lang.信息||lang.信息->节点!=q.语言节点){r.状态=lang.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return r;}
     r.快照.语言=lang.信息;
-    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,c.语言服务,c.词服务,c.存在概念服务);
+    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,c.语言服务,c.词服务,c.存在概念服务,c.模式);
     if(ks.状态!=读取状态::已完成){r.状态=输入映射(ks.状态);return r;}
     r.快照.知识=ks.完整知识组; r.状态=I::结构未支持;
     bool 有规则=false;
@@ -283,7 +326,7 @@ I 根状态(特征概念规则状态 s){
              ? std::vector<std::pair<std::size_t,std::string>>{{1,"是"},{3,"的"},{4,"一部分"}}
             :std::vector<std::pair<std::size_t,std::string>>{{1,"的"},{3,"是"},{4,form==U::S03整数 ? "整数":"概念"}};
         for(const auto&[i,word]:expected){
-            const auto term=c.词服务.获取词条(*leaves[i].固定词);
+            const auto term=c.依据 ? c.依据->读词(*leaves[i].固定词):c.词服务.获取词条(*leaves[i].固定词);
             if(term.状态!=新词条查询状态::已找到||!term.信息){r.状态=I::引用不可读;r.完整候选组.clear();return r;}
             r.快照.固定词.push_back(*term.信息);
             if(ps[i].文本!=word)固定语义=false;
@@ -295,7 +338,7 @@ I 根状态(特征概念规则状态 s){
             :form==U::S03整数 ? std::vector<std::size_t>{0,2}:std::vector<std::size_t>{0,2,5};
         std::vector<std::vector<普通名称材料>> choices;
         for(const auto i:named){
-            const auto all=读取词条普通名称完整(*ps[i].词条,q.语言节点,c.词服务,c.名称服务,c.存在概念服务,c.特征概念服务);
+            const auto all=读取词条普通名称完整(*ps[i].词条,q.语言节点,c.词服务,c.名称服务,c.存在概念服务,c.特征概念服务,c.依据);
             if(all.状态!=读取状态::已完成){r.状态=输入映射(all.状态);r.完整候选组.clear();return r;}
             r.快照.名称.insert(r.快照.名称.end(),all.完整普通名称材料组.begin(),all.完整普通名称材料组.end());
             std::vector<普通名称材料> filtered;
@@ -328,6 +371,7 @@ I 根状态(特征概念规则状态 s){
             if(form!=U::S05组成){
                 const auto ft=selected[1].名称关系.概念节点;
                 const auto root=c.特征概念服务.比较单特征概念(ft,ft);
+                if(c.依据){c.依据->读特征(ft);if(root.特征类型根)c.依据->读特征(*root.特征类型根);if(root.最近共同上位)c.依据->读特征(*root.最近共同上位);}
                 r.快照.根.push_back({ft,ft,root});
                 if(root.状态!=特征概念规则状态::已完成){failure=根状态(root.状态);return;}
                 if(!root.关系||!root.特征类型根){failure=I::内部不一致;return;}
@@ -337,6 +381,7 @@ I 根状态(特征概念规则状态 s){
                 }else{
                     const auto target=selected[2].名称关系.概念节点;
                     const auto relation=c.特征概念服务.比较单特征概念(ft,target);
+                    if(c.依据){c.依据->读特征(target);if(relation.特征类型根)c.依据->读特征(*relation.特征类型根);if(relation.最近共同上位)c.依据->读特征(*relation.最近共同上位);}
                     r.快照.根.push_back({ft,target,relation});
                     if(relation.状态!=特征概念规则状态::已完成){failure=根状态(relation.状态);return;}
                     if(!relation.关系){failure=I::内部不一致;return;}
@@ -648,6 +693,7 @@ I S09状态(基础概念归类确认输入状态 s){
 U 图构式(const 语言图含义材料& 图) {
     const auto 根=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==图.定义图.根含义编号;});
     if(根==图.定义图.节点组.end())throw std::logic_error("language graph root missing");
+    if(根->操作==M::行动请求)return U::行动请求;
     if(根->操作==M::需求描述)return U::需求陈述;
     if(根->操作==M::信息请求) {
         if(根->子含义组.size()!=1)throw std::logic_error("language question graph child missing");
@@ -655,6 +701,7 @@ U 图构式(const 语言图含义材料& 图) {
         if(子==图.定义图.节点组.end())throw std::logic_error("language question graph child dangling");
         if(子->操作==M::需求描述)return U::需求确认;
         if(子->操作==M::概念归类)return U::S09归类确认;
+        if(子->操作==M::特征描述&&根->确认范围==新语言知识确认范围::填项内容)return U::S10字段填项;
         throw std::logic_error("language question graph operation unsupported");
     }
     if(根->操作==M::特征区间描述)return U::目标闭区间;
@@ -695,11 +742,14 @@ std::string 图词面语义键(const 语言图含义材料& 图) {
             键+="/"+std::to_string(static_cast<int>(参数.参数))+"=";
             if(const auto* 引用=std::get_if<语言图引用值>(&绑定->值))键+=std::to_string(static_cast<int>(引用->类别))+":"+std::to_string(引用->节点.值);
             else if(const auto* 数=std::get_if<语言图整数值>(&绑定->值))键+=数->规范十进制+":"+(数->单位 ? std::to_string(数->单位->值):"-");
+            else if(const auto* 待求=std::get_if<语言图待求值>(&绑定->值))键+="?"+std::to_string(待求->内容范围概念.值);
             else 键+=自身(自身,std::get<语言图子出现引用>(绑定->值).出现编号);
         }
         活动.erase(编号);return 键+")";
     };
-    return 展开(展开,图.根出现编号);
+    auto 键=展开(展开,图.根出现编号);
+    if(图.被询正式内容){键+="@"+std::to_string(图.被询正式内容->信息节点.值);for(auto FT:图.被询正式内容->正式内容路径)键+="/"+std::to_string(FT.值);}
+    return 键;
 }
 U 候选构式(const 语言基础统一候选& v){return std::visit([](const auto&x)->U{
     using T=std::decay_t<decltype(x)>;
@@ -739,15 +789,16 @@ bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统�
 }
 语言基础统一输入结果 只读识别六类基础句型(const 语言基础统一输入请求& q,
     const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
-    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
+    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances,解释读取依据* 依据=nullptr){
     语言基础统一输入结果 result;
-    if(!有效(q.语言节点)||q.固定原文.empty()||!q.最大原文标量数||!q.最大知识条目数||!q.最大名称候选数||!q.最大组合候选数||!q.最大确认候选数)return result;
+    const bool 限额=q.读取模式==语言解释读取模式::显式额度;
+    if(!有效(q.语言节点)||q.固定原文.empty()||(限额&&(!q.最大原文标量数||!q.最大知识条目数||!q.最大名称候选数||!q.最大组合候选数||!q.最大确认候选数)))return result;
     const auto map=解码语言场景原文(q.固定原文);if(!map){result.状态=I::格式失败;return result;}
-    if(map->标量字节边界.size()-1>q.最大原文标量数){result.状态=I::额度不足;return result;}
+    if(限额&&map->标量字节边界.size()-1>q.最大原文标量数){result.状态=I::额度不足;return result;}
     const auto language=lang.获取语言(q.语言节点);if(language.状态!=新语言查询状态::已找到||!language.信息||language.信息->节点!=q.语言节点){result.状态=language.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return result;}
-    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es);
+    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es,q.读取模式);
     if(ks.状态!=读取状态::已完成){result.状态=输入映射(ks.状态);return result;}
-    const 只读上下文 c{lang,words,names,es,fs};std::set<U> applicable;
+    const 只读上下文 c{lang,words,names,es,fs,q.读取模式,依据};std::set<U> applicable;
     for(const auto&k:ks.完整知识组){const auto form=知识构式(k,q.语言节点);if(!form)continue;
         const auto leaves=展开知识(k,ks.完整知识组);if(leaves.empty())continue;
         const auto layout=匹配叶布局(q.固定原文,q.语言节点,leaves,c);
@@ -764,11 +815,13 @@ bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统�
         return true;
     };
     if(applicable.contains(U::S01归类)){
-        const auto r=只读识别语言场景S01({q.语言节点,q.固定原文,q.未核验来源语言记录节点,q.最大知识条目数},lang,words,names,es,fs);
+        const auto r=只读识别语言场景S01({q.语言节点,q.固定原文,q.未核验来源语言记录节点,q.最大知识条目数},lang,words,names,es,fs,q.读取模式);
+        if(依据)依据->合并依据(r.特征概念依据组,r.词面查询依据组,r.名称候选依据组);
         if(!collect(S01状态(r.状态),r.完整候选组))return result;
     }
     if(applicable.contains(U::S02上下位)){
-        const auto r=解释单句概念上下位({q.固定原文,q.语言节点,q.未核验来源语言记录节点,q.最大原文标量数,q.最大知识条目数,q.最大名称候选数,q.最大组合候选数},lang,words,names,es,fs);
+        const auto r=解释单句概念上下位({q.固定原文,q.语言节点,q.未核验来源语言记录节点,q.最大原文标量数,q.最大知识条目数,q.最大名称候选数,q.最大组合候选数,q.读取模式},lang,words,names,es,fs);
+        if(依据)依据->合并依据(r.特征概念依据组,r.词面查询依据组,r.名称候选依据组);
         if(!collect(S02状态(r.状态),r.候选组))return result;
     }
     if(applicable.contains(U::S03整数)||applicable.contains(U::S03特征概念条件)||applicable.contains(U::S05组成)){
@@ -776,7 +829,8 @@ bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统�
         if(!collect(r.状态,r.完整候选组))return result;
     }
     if(applicable.contains(U::S09归类确认)){
-        const auto r=解释单句概念归类确认({q.固定原文,q.语言节点,q.未核验来源语言记录节点,{},q.最大原文标量数,q.最大知识条目数,q.最大名称候选数,q.最大组合候选数,q.最大确认候选数},lang,words,names,es,fs,instances);
+        const auto r=解释单句概念归类确认({q.固定原文,q.语言节点,q.未核验来源语言记录节点,{},q.最大原文标量数,q.最大知识条目数,q.最大名称候选数,q.最大组合候选数,q.最大确认候选数,q.读取模式},lang,words,names,es,fs,instances);
+        if(依据)依据->合并依据(r.特征概念依据组,r.词面查询依据组,r.名称候选依据组);
         if(std::any_of(r.候选组.begin(),r.候选组.end(),[](const auto&x){return x.受询者存在节点.has_value();}))throw std::logic_error("unexpected S09 addressee");
         if(!collect(S09状态(r.状态),r.候选组))return result;
     }
@@ -830,6 +884,7 @@ I 核验纯概念来源(const 语言基础纯概念含义& p,稳定编码 lang,
         ||(b.类别!=K::存在概念&&b.类别!=K::特征概念))return I::输入拒绝;
     for(const auto id:{b.主体概念节点,b.归类概念节点}){
         const auto E=c.存在概念服务.获取存在概念(id);const auto Finfo=c.特征概念服务.获取特征概念(id);
+        if(Finfo&&c.依据)c.依据->核特征读取(id,*Finfo);
         if(E.has_value()==Finfo.has_value())return I::引用不可读;
         if((b.类别==K::存在概念)!=E.has_value())return I::角色不相容;
     }
@@ -890,12 +945,28 @@ O 图表达输出状态(基础表达状态 状态) {
 }
 } // namespace
 
-语言基础统一输入结果 转换单句基础语言到信息(const 语言基础统一输入请求& q,
-    新_自然语言世界树类& world,const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
-    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
-    auto result=只读识别六类基础句型(q,lang,words,names,es,fs,instances);
+static 语言基础统一输入结果 只读解释单句基础语言实现(const 语言基础统一输入请求& q,
+    const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
+    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances,解释读取依据* 依据){
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+    统一解释阶段观察 观察(q);
+    观察.记录(L"旧六构式识别前");
+#endif
+    auto result=只读识别六类基础句型(q,lang,words,names,es,fs,instances,依据);
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+    观察.记录(L"旧六构式识别后", static_cast<int>(result.状态), result.完整候选组.size());
+#endif
     if(技术未完成(result.状态))return result;
-    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{}},lang,words,names,es,fs,instances);
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+    观察.记录(L"含义图解释前");
+#endif
+    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文},lang,words,names,es,fs,instances);
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+    观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
+#endif
+    result.图角色原文定位组=图解释.图角色原文定位组;
+    if(依据){依据->合并依据(图解释.特征概念依据组,图解释.词面查询依据组,图解释.名称候选依据组);if(!图解释.对象绑定保护.empty())依据->并保护(图解释.对象绑定保护);}
+    else result.对象绑定保护=图解释.对象绑定保护;
     result.图解释状态=图解释.状态;result.未覆盖范围组=图解释.未覆盖范围组;result.受阻节点组=图解释.受阻节点组;
     const auto 图状态=图输入状态(图解释.状态);
     const auto 清含义=[&](I 状态) {
@@ -922,7 +993,15 @@ O 图表达输出状态(基础表达状态 状态) {
         if(!知识.信息)throw std::logic_error("graph knowledge success missing material");
         // 同一旧知识的图适配不是第二个解释。保留原六构式的完整消歧、载荷和后续物化合同。
         if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);兼容构式&&*兼容构式==图构式(图))continue;
-        if(新图语义.insert(图词面语义键(图)).second)新图候选.push_back(图);
+        if(图构式(图)==U::行动请求) {
+            const bool 已有=std::any_of(新图候选.begin(),新图候选.end(),[&](const auto& 原) {
+                return 原.语言节点==图.语言节点&&原.定义图==图.定义图&&原.根出现编号==图.根出现编号
+                    &&原.出现组==图.出现组&&原.固定原文==图.固定原文
+                    &&原.未核验来源语言记录节点==图.未核验来源语言记录节点&&原.正式指称作用域==图.正式指称作用域
+                    &&!原.正式需求来源&&!图.正式需求来源&&!原.被询正式内容&&!图.被询正式内容;
+            });
+            if(!已有)新图候选.push_back(图);
+        }else if(新图语义.insert(图词面语义键(图)).second)新图候选.push_back(图);
     }
     if(!新图候选.empty()) {
         const bool 旧有候选=!result.完整候选组.empty();
@@ -962,10 +1041,57 @@ O 图表达输出状态(基础表达状态 状态) {
         }
     }
     if(result.状态!=I::已形成且读回)return result;
-    const auto again=只读识别六类基础句型(q,lang,words,names,es,fs,instances);
+    const auto again=只读识别六类基础句型(q,lang,words,names,es,fs,instances,依据);
     if(again.状态!=I::已形成且读回||result.完整候选组.size()!=1||again.完整候选组.size()!=1
         ||!统一候选相同(result.完整候选组[0],again.完整候选组[0])){result.状态=I::读取漂移;result.完整候选组.clear();return result;}
     const auto selected=result.完整候选组[0];result.构式=候选构式(selected);
+    if(std::holds_alternative<语言场景归类候选>(selected)
+        ||std::holds_alternative<语言场景基础候选>(selected)) {
+        result.状态=I::已形成只读候选;
+        return result;
+    }
+    语言基础纯概念含义 meaning;meaning.固定原文=q.固定原文;meaning.未核验来源语言记录节点=q.未核验来源语言记录节点;
+    if(const auto*b=std::get_if<基础概念上下位候选>(&selected))meaning.解释=*b;
+    else meaning.解释=std::get<基础概念归类确认候选>(selected);
+    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es,q.读取模式);
+    if(ks.状态!=读取状态::已完成){result.状态=输入映射(ks.状态);result.完整候选组.clear();return result;}
+    const auto*k=找知识(ks.完整知识组,纯概念知识(meaning));if(!k){result.状态=I::读取漂移;result.完整候选组.clear();return result;}
+    const 只读上下文 c{lang,words,names,es,fs,q.读取模式,依据};
+    auto alignment=构造纯概念对齐(q.固定原文,q.语言节点,meaning.解释,*k,ks.完整知识组,c);
+    if(alignment.状态!=I::已形成且读回){result.状态=alignment.状态;result.完整候选组.clear();return result;}
+    meaning.来源对齐组=std::move(alignment.对齐组);
+    result.状态=核验纯概念来源(meaning,q.语言节点,ks.完整知识组,c);
+    if(result.状态==I::已形成且读回){result.含义=std::move(meaning);result.状态=I::已形成只读候选;}
+    else result.完整候选组.clear();
+    return result;
+}
+
+语言基础统一输入结果 只读解释单句基础语言(const 语言基础统一输入请求& q,
+    const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
+    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances) {
+    解释读取依据 依据{lang,words,names,fs};
+    try {
+        auto r=只读解释单句基础语言实现(q,lang,words,names,es,fs,instances,
+            q.读取模式==语言解释读取模式::本次正式有限集完整读取 ? &依据:nullptr);
+        if(依据.失败!=读取状态::已完成){r.状态=输入映射(依据.失败);r.完整候选组.clear();r.含义.reset();r.图角色原文定位组.clear();return r;}
+        if(!技术未完成(r.状态)) {
+            if(q.读取模式==语言解释读取模式::本次正式有限集完整读取)r.对象绑定保护=std::move(依据.完整保护);
+            r.特征概念依据组=std::move(依据.特征概念依据组);
+            r.词面查询依据组=std::move(依据.词面查询依据组);r.名称候选依据组=std::move(依据.名称候选依据组);
+        }
+        else {r.图角色原文定位组.clear();r.对象绑定保护.clear();}
+        return r;
+    }catch(const std::bad_alloc&){语言基础统一输入结果 r;r.状态=I::工程未完成;return r;}
+    catch(const std::length_error&){语言基础统一输入结果 r;r.状态=I::工程未完成;return r;}
+}
+
+语言基础统一输入结果 转换单句基础语言到信息(const 语言基础统一输入请求& q,
+    新_自然语言世界树类& world,const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
+    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
+    auto result=只读解释单句基础语言(q,lang,words,names,es,fs,instances);
+    if(result.状态!=I::已形成只读候选)return result;
+    if(result.完整候选组.size()!=1)throw std::logic_error("pure interpretation success without unique candidate");
+    const auto selected=result.完整候选组[0];
     if(std::holds_alternative<语言场景归类候选>(selected)){
         auto r=转换单句归类到空白语言场景({q.语言节点,q.固定原文,q.未核验来源语言记录节点,q.最大知识条目数},world,lang,words,names,es,fs);
         result.状态=S01状态(r.状态);result.已取得场景节点=r.已取得场景节点;
@@ -987,19 +1113,7 @@ O 图表达输出状态(基础表达状态 状态) {
         if(r.含义){if(!统一候选相同(selected,r.含义->解释)){result.状态=I::写后读回未完成;result.完整候选组.clear();return result;}result.含义=*r.含义;}
         return result;
     }
-    语言基础纯概念含义 meaning;meaning.固定原文=q.固定原文;meaning.未核验来源语言记录节点=q.未核验来源语言记录节点;
-    if(const auto*b=std::get_if<基础概念上下位候选>(&selected))meaning.解释=*b;
-    else meaning.解释=std::get<基础概念归类确认候选>(selected);
-    const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es);
-    if(ks.状态!=读取状态::已完成){result.状态=输入映射(ks.状态);result.完整候选组.clear();return result;}
-    const auto*k=找知识(ks.完整知识组,纯概念知识(meaning));if(!k){result.状态=I::读取漂移;result.完整候选组.clear();return result;}
-    const 只读上下文 c{lang,words,names,es,fs};
-    auto alignment=构造纯概念对齐(q.固定原文,q.语言节点,meaning.解释,*k,ks.完整知识组,c);
-    if(alignment.状态!=I::已形成且读回){result.状态=alignment.状态;result.完整候选组.clear();return result;}
-    meaning.来源对齐组=std::move(alignment.对齐组);
-    result.状态=核验纯概念来源(meaning,q.语言节点,ks.完整知识组,c);
-    if(result.状态==I::已形成且读回)result.含义=std::move(meaning);
-    else result.完整候选组.clear();
+    result.状态=I::已形成且读回;
     return result;
 }
 
@@ -1099,15 +1213,18 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
 
 语言基础统一输出结果 从基础信息生成可回读单句(const 语言基础统一输出请求&q,
     const 新_自然语言世界树类& world,const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
-    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances){
+    const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances,const 正式信息参数读取接口* 正式读取){
     语言基础统一输出结果 result;
     if(const auto* 图=std::get_if<语言图含义材料>(&q.含义)) {
         const auto 根=std::find_if(图->定义图.节点组.begin(),图->定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==图->定义图.根含义编号;});
         if(根==图->定义图.节点组.end())return result;
+        if(根->操作==M::行动请求) {
+            result.状态=O::结构未支持;result.构式=U::行动请求;return result;
+        }
         基础表达请求 请求{};请求.语言节点=q.语言节点;请求.目的=根->操作==M::信息请求 ? 新语言知识表达目的::提问:新语言知识表达目的::陈述;
         请求.操作=根->操作;请求.作用域=根->作用域;请求.含义图=*图;
         请求.最大知识条目数=q.最大知识条目数;请求.最大名称条目数=q.最大名称候选数;请求.最大输出标量数=q.最大输出标量数;
-        const auto 表达=生成基础语言表达(请求,lang,words,names,es,fs,instances);
+        const auto 表达=生成基础语言表达(请求,lang,words,names,es,fs,instances,正式读取);
         if(表达.状态!=基础表达状态::已生成){result.状态=图表达输出状态(表达.状态);return result;}
         if(!表达.已用含义图)throw std::logic_error("graph expression success has no meaning material");
         语言图解释请求 回读请求{q.语言节点,表达.文本,{}, {}};
@@ -1120,9 +1237,17 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
                 for(auto 参数:定义->参数组)if(参数.参数==*对齐.参数)for(const auto& 绑定:出现.角色组)if(绑定.角色编号==参数.规则角色)
                     if(const auto* 引用=std::get_if<语言图引用值>(&绑定.值);引用&&引用->类别==K::存在)
                         回读请求.对象绑定组.push_back({{对齐.起始标量,对齐.结束标量},引用->节点});
+                    else if(引用&&引用->类别==K::正式信息节点&&引用->来源概念&&对齐.指代名称关系节点) {
+                        const auto 指代=names.获取指代名称关系(*对齐.指代名称关系节点);
+                        if(指代.状态!=指代名称读取状态::已读取||!指代.信息)throw std::logic_error("formal graph pronoun alignment unreadable");
+                        // 这里只传指称，不传FT、变量或源含义图。
+                        if(!图->正式指称作用域||!有效(*图->正式指称作用域)){result.状态=O::输入拒绝;return result;}
+                        回读请求.正式信息绑定组.push_back({{对齐.起始标量,对齐.结束标量},引用->节点,*引用->来源概念,
+                            *图->正式指称作用域,指代.信息->概念.节点});
+                    }
             }
         }
-        const auto 回读=解释单句含义图(回读请求,lang,words,names,es,fs,instances);
+        const auto 回读=解释单句含义图(回读请求,lang,words,names,es,fs,instances,正式读取);
         if(回读.状态!=基础语言输入状态::已形成唯一含义){result.状态=输出映射(图输入状态(回读.状态));return result;}
         if(回读.完整候选组.size()!=1)throw std::logic_error("graph readback success has no unique material");
         if(图词面语义键(*图)!=图词面语义键(回读.完整候选组[0])){result.状态=O::回读含义不一致;return result;}

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -85,6 +86,205 @@ namespace {
 }
 } // namespace
 
+namespace {
+bool 依据快照相同(const 基础联合节点快照& a,const 基础联合节点快照& b) {
+    return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组
+        &&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组
+        &&a.出向外部关系组==b.出向外部关系组;
+}
+bool 正式候选相同(const 概念名称候选正式信息& a,const 概念名称候选正式信息& b) {
+    if(a.index()!=b.index())return false;
+    if(const auto*x=std::get_if<概念名称关系信息>(&a))return *x==std::get<概念名称关系信息>(b);
+    const auto&x=std::get<指代名称关系信息>(a);const auto&y=std::get<指代名称关系信息>(b);
+    return x.节点==y.节点&&x.概念==y.概念&&x.词条==y.词条&&x.语言==y.语言&&x.角色==y.角色
+        &&x.来源.节点==y.来源.节点&&x.来源.种类==y.来源.种类
+        &&x.来源.语言节点==y.来源.语言节点&&x.来源.固定原文==y.来源.固定原文;
+}
+bool 正式候选组相同(const std::vector<概念名称候选正式信息>& a,
+    const std::vector<概念名称候选正式信息>& b) {
+    return a.size()==b.size()&&std::equal(a.begin(),a.end(),b.begin(),正式候选相同);
+}
+}
+bool 特征定义语义相同(const 特征概念信息& a,const 特征概念信息& b) {
+    auto left=a,right=b;
+    left.当前引用实例数量=0;right.当前引用实例数量=0;
+    return left==right;
+}
+bool 特征依据语义相同(const 语言特征概念读取依据& a,const 语言特征概念读取依据& b) {
+    if(a.概念节点!=b.概念节点||a.信息.类型根!=b.信息.类型根
+        ||!特征定义语义相同(a.信息.定义,b.信息.定义)
+        ||!有效(a.分类根节点)||a.分类根节点!=b.分类根节点
+        ||a.根链组.empty()||a.根链组.size()!=b.根链组.size())return false;
+    return std::equal(a.根链组.begin(),a.根链组.end(),b.根链组.begin(),[](const auto& x,const auto& y) {
+        return x.信息.定义==y.信息.定义&&x.信息.类型根==y.信息.类型根
+            &&x.直接上位概念节点==y.直接上位概念节点;
+    });
+}
+void 解释读取依据::并保护(const std::vector<基础联合节点快照>& 输入) {
+    if(输入.empty()){失败=读取状态::内部不一致;return;}
+    for(const auto& s:输入) {
+        const auto i=std::find_if(完整保护.begin(),完整保护.end(),[&](const auto&x){return x.结构.节点.编码==s.结构.节点.编码;});
+        if(i==完整保护.end())完整保护.push_back(s);
+        else if(!依据快照相同(*i,s))失败=读取状态::读取漂移;
+    }
+}
+新词条查询结果 解释读取依据::查词(稳定编码 lang,稳定编码 contract,const std::string& text) {
+    const auto p=词.按规范化词面查询保护(lang,contract,text);
+    if(p.状态!=新词条保护状态::已读取&&p.状态!=新词条保护状态::未找到) {
+        if(p.状态==新词条保护状态::前提已变化)失败=读取状态::读取漂移;
+        else if(p.状态==新词条保护状态::资源失败)失败=读取状态::工程未完成;
+        else 失败=读取状态::输入拒绝;
+        return {p.状态==新词条保护状态::资源失败 ? 新词条查询状态::资源失败:新词条查询状态::结构不一致,{}};
+    }
+    并保护(p.完整保护);
+    const auto i=std::find_if(词面查询依据组.begin(),词面查询依据组.end(),[&](const auto&x){return x.语言节点==lang&&x.规范化合同节点==contract&&x.规范化词面==text;});
+    if(i==词面查询依据组.end())词面查询依据组.push_back({lang,contract,text,p.信息});
+    else if(i->命中词条!=p.信息)失败=读取状态::读取漂移;
+    return {p.状态==新词条保护状态::已读取 ? 新词条查询状态::已找到:新词条查询状态::未找到,p.信息};
+}
+新词条查询结果 解释读取依据::读词(稳定编码 id) {
+    const auto p=词.读取词条保护(id);
+    if(p.状态==新词条保护状态::已读取&&p.信息) {
+        并保护(p.完整保护);
+        const auto r=查词(p.信息->语言节点,p.信息->规范化合同节点,p.信息->规范化词面);
+        if(r.信息!=p.信息)失败=读取状态::读取漂移;
+        return {新词条查询状态::已找到,p.信息};
+    }
+    if(p.状态==新词条保护状态::资源失败){失败=读取状态::工程未完成;return {新词条查询状态::资源失败,{}};}
+    if(p.状态==新词条保护状态::前提已变化)失败=读取状态::读取漂移;
+    else 失败=读取状态::引用不可读;
+    return {新词条查询状态::结构不一致,{}};
+}
+概念名称关系列表查询结果 解释读取依据::读名称(稳定编码 term) {
+    const auto p=名称.读取词条名称候选保护(term);
+    if(p.状态!=概念名称关系查询状态::已找到&&p.状态!=概念名称关系查询状态::未找到) {
+        失败=名称状态(p.状态);return {p.状态,{}};
+    }
+    并保护(p.完整保护);
+    const auto i=std::find_if(名称候选依据组.begin(),名称候选依据组.end(),[&](const auto&x){return x.词条节点==term;});
+    if(i==名称候选依据组.end())名称候选依据组.push_back({term,p.候选组});
+    else if(!正式候选组相同(i->完整候选组,p.候选组))失败=读取状态::读取漂移;
+    std::vector<稳定编码> ids;
+    for(const auto& item:p.候选组)ids.push_back(std::visit([](const auto&v){return v.节点;},item));
+    return {p.状态,std::move(ids)};
+}
+void 解释读取依据::读特征(稳定编码 id) {
+    if(失败!=读取状态::已完成)return;
+    if(!有效(id))throw std::logic_error("feature evidence requires a valid located concept");
+    try {
+        语言特征概念读取依据 result;result.概念节点=id;
+        const auto merge=[&](const std::vector<基础联合节点快照>& nodes) {
+            if(nodes.empty())throw std::logic_error("feature chain reader returned no protection");
+            并保护(nodes);
+            if(失败!=读取状态::已完成)throw 失败;
+            for(const auto& n:nodes) {
+                const auto i=std::find_if(result.完整保护.begin(),result.完整保护.end(),
+                    [&](const auto& x){return x.结构.节点.编码==n.结构.节点.编码;});
+                if(i==result.完整保护.end())result.完整保护.push_back(n);
+                else if(!依据快照相同(*i,n))throw 读取状态::读取漂移;
+            }
+        };
+        const auto category=特征.读取特征类别根概念保护();
+        if(category.状态==正式概念读取状态::前提已变化)throw 读取状态::读取漂移;
+        if(category.状态==正式概念读取状态::依赖未就绪)throw 读取状态::引用不可读;
+        if(category.状态!=正式概念读取状态::已读取||!category.信息||!有效(category.信息->节点))
+            throw std::logic_error("feature category root evidence is corrupt");
+        result.分类根节点=category.信息->节点;merge(category.完整保护组);
+        const auto readDefinition=[&](稳定编码 current) {
+            const auto p=特征.读取特征概念定义保护(current);
+            if(p.前提已变化)throw 读取状态::读取漂移;
+            if(p.状态==基础结构操作状态::资源失败)throw 读取状态::工程未完成;
+            if(p.状态==基础结构操作状态::节点不存在||p.状态==基础结构操作状态::引用不存在)
+                throw 读取状态::读取漂移;
+            if(p.状态!=基础结构操作状态::已完成||!p.信息
+                ||p.信息->定义.节点!=current||!有效(p.信息->类型根))
+                throw std::logic_error("feature chain definition evidence is corrupt");
+            merge(p.预期节点组);return *p.信息;
+        };
+        result.信息=readDefinition(id);
+        std::set<稳定编码> seen;
+        auto current=id;
+        for(;;) {
+            if(current==result.分类根节点||!seen.insert(current).second)
+                throw std::logic_error("feature chain has a cycle or a category definition");
+            auto definition=readDefinition(current);
+            if(definition.类型根!=result.信息.类型根)
+                throw std::logic_error("feature chain changes its type root");
+            if(current==id&&!特征定义语义相同(definition.定义,result.信息.定义))throw 读取状态::读取漂移;
+            const auto relation=特征.读取特征分类关系保护(current);
+            if(relation.状态==特征概念规则状态::前提已变化)throw 读取状态::读取漂移;
+            if(relation.状态==特征概念规则状态::资源失败)throw 读取状态::工程未完成;
+            if(relation.状态==特征概念规则状态::读取接口未装配)throw 读取状态::引用不可读;
+            if(relation.状态==特征概念规则状态::入口拒绝)throw 读取状态::读取漂移;
+            if(relation.状态!=特征概念规则状态::已完成||!relation.信息
+                ||relation.信息->概念节点!=current||relation.信息->是类别根
+                ||relation.信息->直接上位概念组.size()!=1||!有效(relation.信息->直接上位概念组.front()))
+                throw std::logic_error("feature chain direct parent evidence is corrupt");
+            merge(relation.完整保护组);
+            const auto parent=relation.信息->直接上位概念组.front();
+            definition.定义.当前引用实例数量=0;
+            result.根链组.push_back({std::move(definition),parent});
+            if(current==result.信息.类型根) {
+                if(parent!=result.分类根节点)throw std::logic_error("feature type root has a non-category parent");
+                break;
+            }
+            if(parent==result.分类根节点)throw std::logic_error("feature chain ended before its type root");
+            current=parent;
+        }
+        const auto i=std::find_if(特征概念依据组.begin(),特征概念依据组.end(),[&](const auto& x){return x.概念节点==id;});
+        if(i==特征概念依据组.end())特征概念依据组.push_back(std::move(result));
+        else if(!特征依据语义相同(*i,result))失败=读取状态::读取漂移;
+    }catch(读取状态 state){失败=state;}
+    catch(const std::bad_alloc&){失败=读取状态::工程未完成;}
+    catch(const std::length_error&){失败=读取状态::工程未完成;}
+}
+void 解释读取依据::核特征读取(稳定编码 id,const 特征概念信息& 原读) {
+    读特征(id);
+    if(失败!=读取状态::已完成)return;
+    const auto i=std::find_if(特征概念依据组.begin(),特征概念依据组.end(),[&](const auto&x){return x.概念节点==id;});
+    if(i==特征概念依据组.end()||!特征定义语义相同(i->信息.定义,原读))失败=读取状态::读取漂移;
+}
+新语言词条匹配结果 解释读取依据::匹配词条(稳定编码 lang,const std::string& text) {
+    const auto r=语言.按已登记词条最长匹配(lang,text,词);
+    if(r.状态!=新语言查询状态::已找到)return r;
+    // 最长匹配实际读取本语言全词典；保留其成员/负查询依据，而非只保留选中的词。
+    const auto all=词.查询语言词条(lang);
+    if(all.状态!=新词条查询状态::已找到&&all.状态!=新词条查询状态::未找到){失败=all.状态==新词条查询状态::资源失败 ? 读取状态::工程未完成:读取状态::引用不可读;return r;}
+    for(auto id:all.词条节点组)(void)读词(id);
+    for(const auto& p:r.片段组)if(!p.词条节点&&!p.原文.empty())
+        (void)查词(lang,严格UTF8字节精确规范化合同节点,p.原文);
+    const auto 再读=语言.按已登记词条最长匹配(lang,text,词);
+    if(再读.状态!=新语言查询状态::已找到||再读.片段组!=r.片段组)
+        失败=再读.状态==新语言查询状态::资源失败 ? 读取状态::工程未完成:读取状态::读取漂移;
+    return r;
+}
+void 解释读取依据::合并依据(const std::vector<语言特征概念读取依据>& fs,
+    const std::vector<语言词面查询依据>& ws,const std::vector<语言名称候选读取依据>& ns) {
+    for(const auto& p:ws) {
+        const auto r=查词(p.语言节点,p.规范化合同节点,p.规范化词面);
+        if(失败!=读取状态::已完成)return;
+        if(r.信息!=p.命中词条){失败=读取状态::读取漂移;return;}
+    }
+    for(const auto& p:ns) {
+        (void)读名称(p.词条节点);
+        if(失败!=读取状态::已完成)return;
+        const auto i=std::find_if(名称候选依据组.begin(),名称候选依据组.end(),
+            [&](const auto&x){return x.词条节点==p.词条节点;});
+        if(i==名称候选依据组.end()||!正式候选组相同(i->完整候选组,p.完整候选组)) {
+            失败=读取状态::读取漂移;return;
+        }
+    }
+    for(const auto& p:fs) {
+        读特征(p.概念节点);
+        if(失败!=读取状态::已完成)return;
+        const auto i=std::find_if(特征概念依据组.begin(),特征概念依据组.end(),
+            [&](const auto&x){return x.概念节点==p.概念节点;});
+        if(i==特征概念依据组.end()||!特征依据语义相同(*i,p)) {
+            失败=读取状态::读取漂移;return;
+        }
+    }
+}
+
 std::optional<原文映射> 解码语言场景原文(const std::string& 原文) {
     if (!新_语言类::严格UTF8字节串有效(原文)) return std::nullopt;
     原文映射 结果{原文, {0}};
@@ -103,7 +303,21 @@ std::string 读取语言场景原文范围(const 原文映射& 原文, 解释原
 }
 名称读取结果 读取词条普通名称完整(稳定编码 词条节点, 稳定编码 语言节点,
     const 新_词类& 词服务, const 概念_名称关系类& 名称服务,
-    const 概念_存在类& 存在服务, const 概念_特征类& 特征服务) {
+    const 概念_存在类& 存在服务, const 概念_特征类& 特征服务,解释读取依据* 依据) {
+    if(依据) {
+        const auto term=依据->读词(词条节点);if(!term.信息||term.信息->语言节点!=语言节点)return {读取状态::引用不可读,{}};
+        const auto all=依据->读名称(词条节点);if(all.状态!=概念名称关系查询状态::已找到)return {名称状态(all.状态),{}};
+        名称读取结果 r{读取状态::已完成,{}};
+        const auto stored=std::find_if(依据->名称候选依据组.begin(),依据->名称候选依据组.end(),[&](const auto&x){return x.词条节点==词条节点;});
+        for(const auto& v:stored->完整候选组)if(const auto* name=std::get_if<概念名称关系信息>(&v)) {
+            const auto e=存在服务.获取存在概念(name->概念节点);const auto f=特征服务.获取特征概念(name->概念节点);
+            if(f)依据->核特征读取(name->概念节点,*f);
+            if(e)r.完整普通名称材料组.push_back({*term.信息,*name,*e});
+            else if(f)r.完整普通名称材料组.push_back({*term.信息,*name,*f});
+            else return {读取状态::引用不可读,{}};
+        }
+        return r;
+    }
     const auto 词 = 词服务.获取词条(词条节点);
     if (词.状态 != 新词条查询状态::已找到 || !词.信息)
         return {词.状态 == 新词条查询状态::资源失败 ? 读取状态::工程未完成 : 读取状态::引用不可读, {}};
@@ -123,7 +337,12 @@ std::string 读取语言场景原文范围(const 原文映射& 原文, 解释原
     return 结果;
 }
 知识读取结果 读取语言场景基础知识完整(稳定编码 语言节点, std::size_t 最大条目数,
-    const 新_语言类& 语言服务, const 新_词类& 词服务, const 概念_存在类& 存在服务) {
+    const 新_语言类& 语言服务, const 新_词类& 词服务, const 概念_存在类& 存在服务,语言解释读取模式 模式) {
+    if(模式==语言解释读取模式::本次正式有限集完整读取) {
+        const auto p=语言服务.读取解释资源保护(语言节点,词服务,存在服务);
+        if(p.状态==新语言解释资源保护状态::已读取)return {读取状态::已完成,p.候选知识组};
+        return {p.状态==新语言解释资源保护状态::前提已变化 ? 读取状态::读取漂移:p.状态==新语言解释资源保护状态::资源失败 ? 读取状态::工程未完成:读取状态::引用不可读,{}};
+    }
     const auto 全部 = 语言服务.枚举语言知识候选(语言节点, 最大条目数, 词服务, 存在服务);
     if (全部.状态 != 新语言知识状态::已完成) return {知识状态(全部.状态), {}};
     std::set<稳定编码> 已见;
@@ -235,9 +454,9 @@ struct 名称候选 final { 稳定编码 概念节点, 名称关系节点, 词�
 输入状态 读取类名候选(稳定编码 词条节点, 稳定编码 语言节点,
     const 新_词类& 词服务, const 概念_名称关系类& 名称服务,
     const 概念_存在类& 存在概念服务, const 概念_特征类& 特征概念服务,
-    std::vector<名称候选>& 结果) {
+    std::vector<名称候选>& 结果,解释读取依据* 依据=nullptr) {
     const auto 全部 = 读取词条普通名称完整(词条节点, 语言节点,
-        词服务, 名称服务, 存在概念服务, 特征概念服务);
+        词服务, 名称服务, 存在概念服务, 特征概念服务,依据);
     if (全部.状态 != 读取状态::已完成) return 映射读取失败(全部.状态);
     for (const auto& 名称 : 全部.完整普通名称材料组) {
         const auto* 概念 = std::get_if<存在概念信息>(&名称.目标概念);
@@ -288,15 +507,15 @@ bool 候选顺序(const 语言场景归类候选& 左,
 }
 
 } // namespace
-S01只读结果 只读识别语言场景S01(
+static S01只读结果 只读识别语言场景S01实现(
     const 语言场景归类输入请求& 请求,
     const 新_语言类& 语言服务, const 新_词类& 词服务,
     const 概念_名称关系类& 名称服务,
     const 概念_存在类& 存在概念服务,
-    const 概念_特征类& 特征概念服务) {
+    const 概念_特征类& 特征概念服务,语言解释读取模式 模式,解释读取依据* 依据) {
     S01只读结果 结果{输入状态::输入拒绝, {}};
     if (!有效(请求.语言节点) || 请求.固定原文.empty()
-        || 请求.最大知识条目数 == 0) return 结果;
+        || (模式==语言解释读取模式::显式额度&&请求.最大知识条目数 == 0)) return 结果;
     if (!新_语言类::严格UTF8字节串有效(请求.固定原文)) {
         结果.状态 = 输入状态::格式失败; return 结果;
     }
@@ -305,8 +524,8 @@ S01只读结果 只读识别语言场景S01(
         || 语言.信息->节点 != 请求.语言节点) {
         结果.状态 = 映射语言失败(语言.状态); return 结果;
     }
-    const auto 匹配 = 语言服务.按已登记词条最长匹配(
-        请求.语言节点, 请求.固定原文, 词服务);
+    const auto 匹配 = 依据 ? 依据->匹配词条(请求.语言节点,请求.固定原文)
+        :语言服务.按已登记词条最长匹配(请求.语言节点, 请求.固定原文, 词服务);
     if (匹配.状态 != 新语言查询状态::已找到) {
         结果.状态 = 映射语言失败(匹配.状态); return 结果;
     }
@@ -319,7 +538,7 @@ S01只读结果 只读识别语言场景S01(
     }
     std::array<新词条信息, 3> 词;
     for (std::size_t i = 0; i != 3; ++i) {
-        const auto 读回 = 词服务.获取词条(*(*布局)[i].词条节点);
+        const auto 读回 = 依据 ? 依据->读词(*(*布局)[i].词条节点):词服务.获取词条(*(*布局)[i].词条节点);
         if (读回.状态 != 新词条查询状态::已找到 || !读回.信息) {
             结果.状态 = 读回.状态 == 新词条查询状态::资源失败
                 ? 输入状态::工程未完成 : 输入状态::引用不可读;
@@ -335,7 +554,7 @@ S01只读结果 只读识别语言场景S01(
         结果.状态 = 输入状态::结构未支持; return 结果;
     }
     const auto 知识组 = 读取语言场景基础知识完整(
-        请求.语言节点, 请求.最大知识条目数, 语言服务, 词服务, 存在概念服务);
+        请求.语言节点, 请求.最大知识条目数, 语言服务, 词服务, 存在概念服务,模式);
     if (知识组.状态 != 读取状态::已完成) {
         结果.状态 = 映射读取失败(知识组.状态); return 结果;
     }
@@ -344,7 +563,7 @@ S01只读结果 只读识别语言场景S01(
         if (!是S01知识(知识, 请求.语言节点)) continue;
         const auto 固定 = std::get<新语言知识固定词项>(
             知识.定义.结构.有序项组[1].载荷).词条节点;
-        const auto 固定词 = 词服务.获取词条(固定);
+        const auto 固定词 = 依据 ? 依据->读词(固定):词服务.获取词条(固定);
         if (固定词.状态 != 新词条查询状态::已找到 || !固定词.信息) {
             结果.状态 = 输入状态::引用不可读; return 结果;
         }
@@ -354,10 +573,10 @@ S01只读结果 只读识别语言场景S01(
     if (规则组.empty()) { 结果.状态 = 输入状态::缺规则; return 结果; }
     std::vector<名称候选> 左, 右;
     结果.状态 = 读取类名候选(词[0].节点, 请求.语言节点, 词服务, 名称服务,
-        存在概念服务, 特征概念服务, 左);
+        存在概念服务, 特征概念服务, 左,依据);
     if (结果.状态 != 输入状态::已形成且读回) return 结果;
     结果.状态 = 读取类名候选(词[2].节点, 请求.语言节点, 词服务, 名称服务,
-        存在概念服务, 特征概念服务, 右);
+        存在概念服务, 特征概念服务, 右,依据);
     if (结果.状态 != 输入状态::已形成且读回) return 结果;
     const auto 左范围 = 解释原文范围{(*布局)[0].原文码点起点,
         (*布局)[0].原文码点起点 + (*布局)[0].原文码点数量};
@@ -375,6 +594,17 @@ S01只读结果 只读识别语言场景S01(
     else if (结果.完整候选组.size() != 1)
         结果.状态 = 输入状态::概念多义待解;
     return 结果;
+}
+
+S01只读结果 只读识别语言场景S01(const 语言场景归类输入请求& 请求,
+    const 新_语言类& 语言服务,const 新_词类& 词服务,const 概念_名称关系类& 名称服务,
+    const 概念_存在类& 存在服务,const 概念_特征类& 特征服务,语言解释读取模式 模式) {
+    解释读取依据 依据{语言服务,词服务,名称服务,特征服务};
+    auto r=只读识别语言场景S01实现(请求,语言服务,词服务,名称服务,存在服务,特征服务,模式,
+        模式==语言解释读取模式::本次正式有限集完整读取 ? &依据:nullptr);
+    if(依据.失败!=读取状态::已完成){r.状态=映射读取失败(依据.失败);r.完整候选组.clear();return r;}
+    r.特征概念依据组=std::move(依据.特征概念依据组);r.词面查询依据组=std::move(依据.词面查询依据组);
+    r.名称候选依据组=std::move(依据.名称候选依据组);return r;
 }
 
 

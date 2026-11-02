@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <type_traits>
 #include <utility>
+#include <unordered_map>
 
 namespace 海中鱼巣 {
 
@@ -94,6 +95,65 @@ bool 按编码规范排序(std::vector<项>& 组) {
     return true;
 }
 
+bool 只读预期为空(const 基础只读预期& 预期) noexcept {
+    return 预期.节点组.empty() && 预期.字段集合组.empty() && 预期.外部关系集合组.empty();
+}
+
+// selector结果是完整集合；相同selector只能同义合并，重叠selector保留AND。
+基础节点组追加状态 规范化只读预期(基础只读预期& 预期) {
+    using 状态 = 基础节点组追加状态;
+    if (只读预期为空(预期)) return 状态::入口拒绝;
+    std::sort(预期.节点组.begin(), 预期.节点组.end(), [](const auto& a, const auto& b) { return a.编码 < b.编码; });
+    std::set<稳定编码> 身份;
+    for (const auto& n : 预期.节点组) {
+        if (!有效(n.编码)) return 状态::入口拒绝;
+        身份.insert(n.编码);
+    }
+    预期.节点组.erase(std::unique(预期.节点组.begin(), 预期.节点组.end()), 预期.节点组.end());
+    using 字段键 = std::tuple<稳定编码, std::optional<稳定编码>, std::vector<稳定编码>>;
+    std::map<字段键, std::vector<基础字段关系>> 字段集合;
+    for (auto& s : 预期.字段集合组) {
+        if (!身份.contains(s.节点) || (s.字段节点 && (!身份.contains(*s.字段节点) || !s.排除字段键组.empty())))
+            return 状态::入口拒绝;
+        std::sort(s.排除字段键组.begin(), s.排除字段键组.end());
+        s.排除字段键组.erase(std::unique(s.排除字段键组.begin(), s.排除字段键组.end()), s.排除字段键组.end());
+        for (const auto key : s.排除字段键组) if (!身份.contains(key)) return 状态::入口拒绝;
+        if (!按编码规范排序(s.字段组)) return 状态::入口拒绝;
+        for (const auto& f : s.字段组) {
+            if (f.所属节点 != s.节点 || !有效(f.字段节点) || !封存字段内容合法(f.内容)
+                || (s.字段节点 && f.字段节点 != *s.字段节点)
+                || std::binary_search(s.排除字段键组.begin(), s.排除字段键组.end(), f.字段节点))
+                return 状态::入口拒绝;
+        }
+        const auto [it, added] = 字段集合.emplace(字段键{s.节点, s.字段节点, s.排除字段键组}, s.字段组);
+        if (!added && it->second != s.字段组) return 状态::预期不符;
+    }
+    预期.字段集合组.clear();
+    for (auto& [key, fields] : 字段集合)
+        预期.字段集合组.push_back({std::get<0>(key), std::get<1>(key), std::get<2>(key), std::move(fields)});
+    using 关系键 = std::tuple<稳定编码, bool, 基础外部关系类型,
+        std::optional<std::int64_t>, std::optional<稳定编码>>;
+    std::map<关系键, std::vector<基础外部关系>> 关系集合;
+    for (auto& s : 预期.外部关系集合组) {
+        if (!身份.contains(s.节点) || !有效(s.类型) || (s.对端节点 && !身份.contains(*s.对端节点))
+            || !按编码规范排序(s.关系组)) return 状态::入口拒绝;
+        for (const auto& r : s.关系组) {
+            if (!有效(r.源节点) || !有效(r.目标节点) || r.类型 != s.类型
+                || (s.出向 ? r.源节点 : r.目标节点) != s.节点
+                || (s.角色或顺序 && r.角色或顺序 != *s.角色或顺序)
+                || (s.对端节点 && (s.出向 ? r.目标节点 : r.源节点) != *s.对端节点))
+                return 状态::入口拒绝;
+        }
+        const auto [it, added] = 关系集合.emplace(关系键{s.节点, s.出向, s.类型, s.角色或顺序, s.对端节点}, s.关系组);
+        if (!added && it->second != s.关系组) return 状态::预期不符;
+    }
+    预期.外部关系集合组.clear();
+    for (auto& [key, relations] : 关系集合)
+        预期.外部关系集合组.push_back({std::get<0>(key), std::get<1>(key), std::get<2>(key),
+            std::get<3>(key), std::get<4>(key), std::move(relations)});
+    return 状态::已完成;
+}
+
 // 仅核验值式结构，不访问或修改数据集；fresh相等仍由唯一原子提交点核验。
 基础节点组追加状态 规范化封存请求(基础节点组追加请求& 请求) {
     using 状态 = 基础节点组追加状态;
@@ -101,6 +161,10 @@ bool 按编码规范排序(std::vector<项>& 组) {
         || (请求.新节点组.empty() && 请求.追加字段组.empty()
             && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
             && 请求.删除字段关系组.empty())) return 状态::入口拒绝;
+    if (!只读预期为空(请求.只读预期)) {
+        const auto 状态值 = 规范化只读预期(请求.只读预期);
+        if (状态值 != 状态::已完成) return 状态值;
+    }
     for (auto& 快照 : 请求.预期联合节点组) {
         const auto 宿主 = 快照.结构.节点.编码;
         if (!有效(宿主) || !按编码规范排序(快照.结构.字段组)
@@ -138,10 +202,12 @@ bool 按编码规范排序(std::vector<项>& 组) {
         for (const auto& 字段 : 快照.结构.字段组)
             if (!字段映射.emplace(字段.编码, &字段).second) return 状态::入口拒绝;
     }
+    std::set<稳定编码> 只读引用目标;
+    for (const auto& n : 请求.只读预期.节点组) 只读引用目标.insert(n.编码);
     const auto 检查内容 = [&](const 基础组内字段内容& 内容) {
         if (内容.valueless_by_exception()) return false;
         if (const auto* 引用 = std::get_if<稳定编码>(&内容))
-            return 有效(*引用) && 宿主组.contains(*引用);
+            return 有效(*引用) && (宿主组.contains(*引用) || 只读引用目标.contains(*引用));
         if (const auto* 内部 = std::get_if<基础组内节点引用>(&内容))
             return 内部->索引 < 请求.新节点组.size();
         return !std::get<基础值>(内容).材料.valueless_by_exception();
@@ -625,6 +691,94 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
     return 结果;
 }
 
+基础节点组追加状态 基础数据集::核验只读预期已加锁(const 基础只读预期& 预期) const {
+    using 状态 = 基础节点组追加状态;
+    auto 正规 = 预期;
+    const auto 形状 = 规范化只读预期(正规);
+    if (形状 != 状态::已完成) return 形状;
+    std::set<稳定编码> 宿主, 显式引用;
+    for (const auto& s : 正规.字段集合组) {
+        宿主.insert(s.节点);
+        if (s.字段节点) 显式引用.insert(*s.字段节点);
+        显式引用.insert(s.排除字段键组.begin(), s.排除字段键组.end());
+    }
+    for (const auto& s : 正规.外部关系集合组) {
+        宿主.insert(s.节点);
+        if (s.对端节点) 显式引用.insert(*s.对端节点);
+    }
+    for (const auto& n : 正规.节点组) if (!节点存在(n.编码)) {
+        if (显式引用.contains(n.编码) && !宿主.contains(n.编码)) return 状态::引用不存在;
+        return 状态::节点不存在;
+    }
+    const auto 检查预期材料 = [&](const 基础字段关系& f) {
+        if (!节点存在(f.字段节点)) return false;
+        const auto* ref = std::get_if<稳定编码>(&f.内容);
+        return !ref || 节点存在(*ref);
+    };
+    for (const auto& s : 正规.字段集合组) {
+        for (const auto& f : s.字段组) if (!检查预期材料(f)) return 状态::引用不存在;
+        const auto 键命中 = [&](稳定编码 key) {
+            return (!s.字段节点 || key == *s.字段节点)
+                && !std::binary_search(s.排除字段键组.begin(), s.排除字段键组.end(), key);
+        };
+        std::vector<基础字段关系> 当前;
+        std::set<std::uint64_t> 当前字段码;
+        // 扫描本selector材料并核其索引；不能让丢失索引把未知新增字段藏掉。
+        for (const auto& [id, f] : 字段关系_) if (f.所属节点 == s.节点 && 键命中(f.字段节点)) {
+            if (!有效(f.编码) || f.编码.值 != id || !有效(f.字段节点)
+                || !封存字段内容合法(f.内容) || !检查预期材料(f))
+                throw std::logic_error("readonly field selector current material damaged");
+            核验字段索引已加锁(f);
+            当前.push_back(f);
+            当前字段码.insert(id);
+        }
+        for (auto it = 所属字段索引_.lower_bound({s.节点.值, 0, 0});
+            it != 所属字段索引_.end() && std::get<0>(*it) == s.节点.值; ++it) {
+            if (!键命中(稳定编码{std::get<1>(*it)}) && !当前字段码.contains(std::get<2>(*it))) continue;
+            const auto f = 字段关系_.find(std::get<2>(*it));
+            if (f == 字段关系_.end() || f->second.所属节点 != s.节点
+                || f->second.字段节点.值 != std::get<1>(*it) || f->second.编码.值 != std::get<2>(*it))
+                throw std::logic_error("readonly field selector forward index damaged");
+        }
+        for (const auto& [key, target, id] : 目标字段索引_) if (当前字段码.contains(id)) {
+            const auto& f = 字段关系_.at(id);
+            const auto* ref = std::get_if<稳定编码>(&f.内容);
+            if (!ref || f.字段节点.值 != key || ref->值 != target)
+                throw std::logic_error("readonly field selector reverse index damaged");
+        }
+        if (当前 != s.字段组) return 状态::预期不符;
+    }
+    for (const auto& s : 正规.外部关系集合组) {
+        for (const auto& r : s.关系组)
+            if (!节点存在(r.源节点) || !节点存在(r.目标节点)) return 状态::引用不存在;
+        std::vector<基础外部关系> 当前;
+        for (const auto& [id, r] : 外部关系_) {
+            if ((s.出向 ? r.源节点 : r.目标节点) != s.节点 || r.类型 != s.类型
+                || (s.角色或顺序 && r.角色或顺序 != *s.角色或顺序)
+                || (s.对端节点 && (s.出向 ? r.目标节点 : r.源节点) != *s.对端节点)) continue;
+            if (!有效(r.编码) || r.编码.值 != id || !节点存在(r.源节点) || !节点存在(r.目标节点))
+                throw std::logic_error("readonly relation selector current material damaged");
+            当前.push_back(r);
+        }
+        if (当前 != s.关系组) return 状态::预期不符;
+    }
+    return 状态::已完成;
+}
+
+基础节点组追加状态 基础数据集::核验只读预期(const 基础只读预期& 预期) const noexcept {
+    using 状态 = 基础节点组追加状态;
+    try {
+        std::shared_lock 锁(互斥_);
+        return 核验只读预期已加锁(预期);
+    } catch (const std::bad_alloc&) { return 状态::资源失败;
+    } catch (const std::length_error&) { return 状态::资源失败;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验只读预期", L"只读集合或当前索引损坏。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验只读预期", L"未知只读集合核验异常。");
+    }
+}
+
 基础节点组追加结果 基础数据集::原子追加节点组(
     const 基础节点组追加请求& 请求) noexcept {
     using 状态 = 基础节点组追加状态;
@@ -634,6 +788,10 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
             && 请求.删除字段关系组.empty())
             return {状态::入口拒绝, {}, {}};
+        if (!只读预期为空(请求.只读预期)) {
+            const auto 校验 = 核验只读预期已加锁(请求.只读预期);
+            if (校验 != 状态::已完成) return {校验, {}, {}};
+        }
         const auto 检查字段 = [&](稳定编码 键, const 基础组内字段内容& 内容) {
             if (!有效(键) || 内容.valueless_by_exception()) return 状态::入口拒绝;
             if (!节点存在(键)) return 状态::引用不存在;
@@ -905,6 +1063,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 || !已用片段.insert(片段.内容_.get()).second)
                 return {状态::入口拒绝, {}};
             const auto& 请求 = 片段.内容_->请求;
+            联合.只读预期.节点组.insert(联合.只读预期.节点组.end(), 请求.只读预期.节点组.begin(), 请求.只读预期.节点组.end());
+            联合.只读预期.字段集合组.insert(联合.只读预期.字段集合组.end(), 请求.只读预期.字段集合组.begin(), 请求.只读预期.字段集合组.end());
+            联合.只读预期.外部关系集合组.insert(联合.只读预期.外部关系集合组.end(), 请求.只读预期.外部关系集合组.begin(), 请求.只读预期.外部关系集合组.end());
             for (const auto& 快照 : 请求.预期联合节点组) {
                 const auto [位置, 新增] = 联合预期.emplace(快照.结构.节点.编码, &快照);
                 if (!新增 && !联合快照相等(*位置->second, 快照))
@@ -975,6 +1136,10 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             回执内容.push_back(std::move(回执));
         }
         // 不持有外层数据集锁；所有回执和映射已分配，仅此处调用一次原事务。
+        if (!只读预期为空(联合.只读预期)) {
+            const auto 规范化 = 规范化只读预期(联合.只读预期);
+            if (规范化 != 状态::已完成) return {规范化, {}};
+        }
         const auto 发布 = 原子追加节点组(联合);
         if (发布.状态 != 状态::已完成) return {发布.状态, {}};
         已发布 = true;
@@ -1073,6 +1238,91 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 return {状态::入口拒绝, {}};
         基础联合节点查询结果 结果{状态::已完成, {}};
         结果.节点组.reserve(身份.size());
+        if (身份.size() >= 32) {
+            // 仅本次共享锁内保存表项指针；先分桶、不提前裁决任何逻辑故障。
+            struct 收集槽 final {
+                稳定编码 身份;
+                const 基础节点* 节点 = nullptr;
+                bool 有真实悬挂 = false;
+                std::vector<const 基础字段关系*> 自有字段, 入向字段;
+                std::vector<const 基础外部关系*> 入向边, 出向边;
+                std::vector<const 字段索引键*> 所属索引, 目标索引;
+            };
+            std::vector<收集槽> 槽组;
+            槽组.reserve(身份.size());
+            std::unordered_map<std::uint64_t, std::size_t> 位置组;
+            位置组.reserve(身份.size());
+            for (const auto 编码 : 身份) {
+                const auto it = 节点_.find(编码);
+                收集槽 槽;
+                槽.身份 = 稳定编码{编码};
+                if (it != 节点_.end()) 槽.节点 = &it->second;
+                位置组.emplace(编码, 槽组.size());
+                槽组.push_back(std::move(槽));
+            }
+            const auto 查槽 = [&](std::uint64_t 编码) -> 收集槽* {
+                const auto it = 位置组.find(编码);
+                return it == 位置组.end() ? nullptr : &槽组[it->second];
+            };
+            for (const auto& [_, 字段] : 字段关系_) {
+                if (auto* 槽 = 查槽(字段.所属节点.值)) {
+                    槽->自有字段.push_back(&字段); 槽->有真实悬挂 = true;
+                }
+                if (auto* 槽 = 查槽(字段.字段节点.值)) 槽->有真实悬挂 = true;
+                if (const auto* 引用 = std::get_if<稳定编码>(&字段.内容))
+                    if (auto* 槽 = 查槽(引用->值)) {
+                        槽->入向字段.push_back(&字段); 槽->有真实悬挂 = true;
+                    }
+            }
+            for (const auto& 项 : 所属字段索引_)
+                if (auto* 槽 = 查槽(std::get<0>(项))) 槽->所属索引.push_back(&项);
+            for (const auto& [_, 关系] : 外部关系_) {
+                if (auto* 槽 = 查槽(关系.目标节点.值)) {
+                    槽->入向边.push_back(&关系); 槽->有真实悬挂 = true;
+                }
+                if (auto* 槽 = 查槽(关系.源节点.值)) {
+                    槽->出向边.push_back(&关系); 槽->有真实悬挂 = true;
+                }
+            }
+            for (const auto& 项 : 目标字段索引_)
+                if (auto* 槽 = 查槽(std::get<1>(项))) 槽->目标索引.push_back(&项);
+
+            // 桶保留原map/set顺序；故障裁决保持原升序节点和原helper阶段。
+            for (const auto& 槽 : 槽组) {
+                if (!槽.节点) {
+                    if (槽.有真实悬挂) return {状态::内部不一致, {}};
+                    结果.节点组.push_back({槽.身份, std::nullopt});
+                    continue;
+                }
+                基础联合节点快照 快照;
+                快照.结构.节点 = *槽.节点;
+                for (const auto* 字段 : 槽.自有字段) {
+                    核验字段索引已加锁(*字段);
+                    快照.结构.字段组.push_back(*字段);
+                }
+                for (const auto* 项 : 槽.所属索引) {
+                    const auto it = 字段关系_.find(std::get<2>(*项));
+                    if (it == 字段关系_.end() || it->second.所属节点 != 槽.身份
+                        || it->second.字段节点.值 != std::get<1>(*项))
+                        throw std::logic_error("union forward field index inconsistent");
+                }
+                for (const auto* 关系 : 槽.入向边) 快照.入向外部关系组.push_back(*关系);
+                for (const auto* 关系 : 槽.出向边) 快照.出向外部关系组.push_back(*关系);
+                for (const auto* 字段 : 槽.入向字段) {
+                    核验字段索引已加锁(*字段);
+                    快照.入向字段组.push_back(*字段);
+                }
+                for (const auto* 项 : 槽.目标索引) {
+                    const auto it = 字段关系_.find(std::get<2>(*项));
+                    if (it == 字段关系_.end() || it->second.字段节点.值 != std::get<0>(*项)
+                        || !std::holds_alternative<稳定编码>(it->second.内容)
+                        || std::get<稳定编码>(it->second.内容) != 槽.身份)
+                        throw std::logic_error("union reverse field index inconsistent");
+                }
+                结果.节点组.push_back({槽.身份, std::move(快照)});
+            }
+            return 结果;
+        }
         for (const auto 编码 : 身份) {
             const 稳定编码 节点{编码};
             if (节点存在(节点)) {

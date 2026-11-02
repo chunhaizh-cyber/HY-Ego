@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <exception>
 #include <optional>
+#include <variant>
 #include <vector>
 
 #include "../核心/基础数据集.h"
@@ -91,6 +92,14 @@ struct 指代名称关系信息 final {
     指代名称角色 角色;
     新语言知识来源信息 来源;
 };
+
+using 概念名称候选正式信息 =
+    std::variant<概念名称关系信息, 指代名称关系信息>;
+struct 概念名称候选保护结果 final {
+    概念名称关系查询状态 状态 = 概念名称关系查询状态::输入不合法;
+    std::vector<概念名称候选正式信息> 候选组;
+    std::vector<基础联合节点快照> 完整保护;
+};
 enum class 指代名称读取状态 : std::uint8_t {
     已读取 = 1, 未找到, 输入拒绝, 依赖缺失, 依赖已变化,
     读取未完成, 读取漂移, 结构不一致, 资源失败, 工程未完成
@@ -151,6 +160,8 @@ public:
         稳定编码 概念节点) const noexcept;
     概念名称关系列表查询结果 查询词条候选概念(
         稳定编码 词条节点) const noexcept;
+    概念名称候选保护结果 读取词条名称候选保护(
+        稳定编码 词条) const noexcept;
     bool 是概念名称关系节点(稳定编码 节点) const noexcept;
 
 private:

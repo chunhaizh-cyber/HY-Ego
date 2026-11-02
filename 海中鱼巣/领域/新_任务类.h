@@ -7,6 +7,8 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stop_token>
+#include <variant>
 #include <vector>
 
 #include "新_需求类.h"
@@ -27,7 +29,9 @@ class 概念_二次特征类;
 class 概念_存在类;
 class 新_动态类;
 class 新_任务管理线程类;
-class 服务需求本能运行服务;
+class 新方法场景事实读取接口;
+class 新方法场景事实构成读取接口;
+class 新本能需求任务参数工厂;
 struct 新世界I64组合结果;
 struct 新任务最终消费边界 final {
     稳定编码 结算任务节点, 结算需求节点, 服务根需求节点;
@@ -67,7 +71,7 @@ struct 新任务最终消费信息 final {
     bool 零额结果已确认 = false;
 };
 enum class 新任务最终来源读取状态 : std::uint8_t {
-    可新消费 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作
+    可新消费 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作, 资源延后 = 8, 已准备待续=9
 };
 struct 新任务最终来源读取结果 final {
     新任务最终来源读取状态 状态;
@@ -75,7 +79,7 @@ struct 新任务最终来源读取结果 final {
     std::optional<新任务最终消费信息> 既有消费;
 };
 enum class 新任务最终消费准备状态 : std::uint8_t {
-    已准备 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作
+    已准备 = 1, 已完成, 已入账待收尾, 来源条件不具备, 来源已变化, 等待配置, 等待同源工作, 资源延后 = 8
 };
 class 新任务最终消费准备 final {
 public:
@@ -125,6 +129,7 @@ struct 新任务执行配对要求 final {
     新方法条件定义 条件;
     新方法结果定义 结果;
     std::vector<新方法条件结果线性关系> 线性关系组;
+    std::vector<稳定编码> 来源执行分支节点组;
     friend bool operator==(const 新任务执行配对要求&, const 新任务执行配对要求&) = default;
 };
 struct 新任务执行调用步骤 final {
@@ -147,6 +152,7 @@ struct 新任务执行方法作用域 final {
     std::vector<新任务执行调用步骤> 步骤组;
     std::optional<稳定编码> 入口步骤节点;
     std::vector<新任务执行分支> 分支组;
+    std::vector<新方法执行分支信息> 来源执行分支组;
     friend bool operator==(const 新任务执行方法作用域&, const 新任务执行方法作用域&) = default;
 };
 struct 新任务方法执行组织 final {
@@ -159,7 +165,7 @@ enum class 新任务执行组织状态 : std::uint8_t {
     已建立 = 1, 已读取, 精确重复, 尚未建立, 入口拒绝,
     尚未初始化, 任务不存在, 任务状态不允许,
     来源方法不存在, 来源不是抽象方法, 已有组织不同,
-    已增补, 增补结构暂不支持
+    已增补, 增补结构暂不支持, 定义前提已变化
 };
 struct 新任务执行组织结果 final {
     新任务执行组织状态 状态 = 新任务执行组织状态::入口拒绝;
@@ -224,7 +230,8 @@ enum class 新任务状态 : std::int64_t {
     已完成 = 9,
     已失败 = 10,
     已取消 = 11,
-    已结算 = 12
+    已结算 = 12,
+    未执行但目标已满足 = 13
 };
 
 enum class 新任务执行状态 : std::int64_t {
@@ -274,12 +281,19 @@ enum class 新任务操作状态 : std::uint8_t {
     需求信息待完善 = 32,
     等待直接子结算, 等待目标分类, 历史结算缺贡献, 最终贡献消费尚未装配,
     预期已变化,
-    需求非执行域
+    需求非执行域,
+    未执行目标已满足
 };
 
 using 新服务任务集合同步函数 =
     std::function<bool(const std::vector<稳定编码>&)>;
 
+struct 新任务预计引用内容 final {
+    稳定编码 需求节点, 要求概念节点;
+    std::vector<稳定编码> 正式内容路径;
+    std::optional<新服务要求确认目标> 认知来源确认;
+    friend bool operator==(const 新任务预计引用内容&, const 新任务预计引用内容&) = default;
+};
 struct 新任务预计特征变化 final {
     // 这里保存本次执行已经绑定的实际作用对象，不保存抽象角色。
     稳定编码 作用对象节点;
@@ -290,6 +304,7 @@ struct 新任务预计特征变化 final {
     std::optional<稳定编码> 预期值域概念节点;
     bool 必须出现 = true;
     std::optional<特征概念I64闭区间> 预期精确数值域;
+    std::optional<新任务预计引用内容> 预期引用内容;
     friend bool operator==(const 新任务预计特征变化&,
         const 新任务预计特征变化&) = default;
 };
@@ -333,6 +348,8 @@ struct 新任务结果获取目标 final {
     // 改变行为冻结前值；显式读取静态事实可以没有前值，不能以零补齐。
     std::optional<新特征准确值> 动作前准确值;
     bool 必须出现 = true;
+    bool 动作前明确无值 = false;
+    std::optional<新服务要求确认目标> 认知来源确认;
     friend bool operator==(const 新任务结果获取目标&,
         const 新任务结果获取目标&) = default;
 };
@@ -357,6 +374,7 @@ struct 新任务结果获取方案 final {
     新方法项关系规则 禁止结果关系规则 = 新方法项关系规则::任一成立;
     std::vector<新任务禁止结果目标> 禁止结果组;
     std::optional<稳定编码> 服务需求取得数量类型;
+    std::vector<新方法初始场景事实限定> 必需场景事实组;
 
     bool 完整() const noexcept;
     friend bool operator==(const 新任务结果获取方案&,
@@ -434,21 +452,9 @@ struct 新任务候选方法发布结果 final {
     std::optional<稳定编码> 材料节点;
 };
 
-struct 新任务服务结算来源绑定 final {
-    新任务虚拟存在引用 来源任务;
-    std::int64_t 冻结前值 = 0;
-    稳定编码 目标值域概念节点;
-    friend bool operator==(const 新任务服务结算来源绑定&,
-        const 新任务服务结算来源绑定&) = default;
-};
 
-struct 新任务服务结算配置 final {
-    稳定编码 结算任务节点, 登记方法校验节点, 服务根需求, 结算需求;
-    std::int64_t 冻结前值 = 0;
-    稳定编码 目标值域概念节点;
-    friend bool operator==(const 新任务服务结算配置&,
-        const 新任务服务结算配置&) = default;
-};
+
+
 
 struct 新自我服务结算配置 final {
     稳定编码 结算任务节点, 结算需求节点, 服务根需求节点;
@@ -471,13 +477,23 @@ struct 新任务执行信息 final {
     std::vector<稳定编码> 动作输出状态节点组;
     std::vector<稳定编码> 实际状态节点组;
     std::optional<稳定编码> 影响评估节点;
-    std::optional<新任务服务结算来源绑定> 服务结算来源;
     std::optional<稳定编码> 普通动作节点;
     std::optional<新任务本能采用材料> 本能采用;
     // 本次执行实际采用的正式确认；保留字段名兼容旧身份，不再表示返回包。
     std::optional<稳定编码> 服务需求返回确认;
+    std::vector<新方法本次场景事实引用> 本次场景事实组;
+    // 原函数当次实际报告的六引用；保存不自证当前世界效果，公开正式读取另行核验。
+    std::optional<新本能已发布需求结果> 已发布需求;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
+};
+
+enum class 新任务需求结果读取状态 : std::uint8_t {
+    已读取=1, 无此结果, 执行不存在, 前提已变化, 依赖未装配, 资源失败
+};
+struct 新任务需求结果读取结果 final {
+    新任务需求结果读取状态 状态=新任务需求结果读取状态::执行不存在;
+    std::optional<新本能已发布需求结果> 结果;
 };
 
 struct 新任务信息 final {
@@ -492,10 +508,23 @@ struct 新任务信息 final {
     std::optional<稳定编码> 完成结算节点;
     // 正式采用的完整方法副本根，不是最近执行记录或来源抽象方法。
     std::optional<稳定编码> 方法实例节点;
-    std::optional<新任务服务结算来源绑定> 服务结算来源;
     // 从执行组织根的所属任务反查，不另持久化第二条真源关联。
     std::optional<稳定编码> 方法执行组织节点;
     friend bool operator==(const 新任务信息&, const 新任务信息&) = default;
+};
+
+enum class 新任务执行前目标收束状态 : std::uint8_t {
+    目标尚未满足=1, 已标记未执行目标已满足, 已处该状态,
+    等待材料, 需同次执行比较, 来源已变化, 状态不允许, 资源失败
+};
+struct 新任务执行前目标收束结果 final {
+    新任务执行前目标收束状态 状态=新任务执行前目标收束状态::状态不允许;
+    稳定编码 任务节点;
+    std::optional<稳定编码> 来源需求节点;
+    std::optional<新需求完整目标> 来源目标;
+    std::optional<新任务信息> 任务读回;
+    friend bool operator==(const 新任务执行前目标收束结果&,
+        const 新任务执行前目标收束结果&) = default;
 };
 
 enum class 新任务完成来源 : std::int64_t {
@@ -606,13 +635,6 @@ struct 新任务服务需求取得合同 final {
     friend bool operator==(const 新任务服务需求取得合同&,
         const 新任务服务需求取得合同&) = default;
 };
-struct 新任务服务需求取得读回结果 final {
-    新任务操作状态 状态 = 新任务操作状态::结构不一致;
-    std::optional<稳定编码> 确认节点, 采用需求节点, 采用任务节点;
-    std::optional<std::int64_t> 来源新增数;
-    std::vector<稳定编码> 结果状态节点组;
-    std::optional<稳定编码> 来源需求节点;
-};
 enum class 新直接服务结算来源状态 : std::uint8_t {
     允许结算 = 1, 非直接服务, 尚未完成, 需重新确认,
     尚未配置, 结构不一致, 资源失败, 最终贡献消费尚未装配
@@ -679,6 +701,33 @@ struct 新任务治理承接结果 final {
     std::optional<新任务虚拟存在信息> 虚拟存在;
 };
 
+enum class 新任务复合分解状态 : std::uint8_t {
+    非复合目标=1, 已满足, 已形成, 叶子目标, 分支待定,
+    来源已变化, 任务状态已变化, 未支持, 依赖未就绪, 资源失败
+};
+struct 新任务复合子目标 final {
+    新需求完整目标 目标;
+    新需求复合分解来源 来源;
+    friend bool operator==(const 新任务复合子目标&,const 新任务复合子目标&)=default;
+};
+struct 新任务复合目标分解提议 final {
+    新任务复合分解状态 状态=新任务复合分解状态::依赖未就绪;
+    稳定编码 任务节点, 父需求节点;
+    新需求完整目标 父目标;
+    新引用内容目标判定 判定;
+    std::vector<新任务复合子目标> 子目标组;
+    friend bool operator==(const 新任务复合目标分解提议&,const 新任务复合目标分解提议&)=default;
+};
+struct 新任务复合子目标采用 final {
+    新任务复合子目标 原提议;
+    稳定编码 子需求节点;
+    friend bool operator==(const 新任务复合子目标采用&,const 新任务复合子目标采用&)=default;
+};
+struct 新任务复合采用请求 final {
+    稳定编码 父任务节点;
+    新任务复合目标分解提议 原提议;
+    std::vector<新任务复合子目标采用> 采用组;
+};
 enum class 新任务治理方法召回状态 : std::uint8_t {
     已发布有候选 = 1,
     已发布完整无候选,
@@ -690,7 +739,25 @@ enum class 新任务治理方法召回状态 : std::uint8_t {
     候选发布未完成,
     结构不一致,
     资源失败,
-    需求信息待完善
+    需求信息待完善, 复合目标需自我确认, 内容结果定位未支持, 未执行目标已满足
+};
+
+struct 新任务内容方法学习发现 final {
+    稳定编码 任务节点;
+    稳定编码 来源需求节点;
+    新需求完整目标 来源目标;
+    std::vector<稳定编码> 查询特征类型概念组;
+    std::vector<稳定编码> 粗召回方法节点组;
+    std::vector<稳定编码> 可学习方法节点组;
+    friend bool operator==(const 新任务内容方法学习发现&,
+        const 新任务内容方法学习发现&) = default;
+};
+enum class 新任务内容学习发现状态 : std::uint8_t {
+    已形成 = 1, 不涉及, 来源已变化, 查询未完成, 资源失败
+};
+struct 新任务内容学习发现结果 final {
+    新任务内容学习发现状态 状态 = 新任务内容学习发现状态::不涉及;
+    std::optional<新任务内容方法学习发现> 发现;
 };
 
 struct 新任务治理方法召回结果 final {
@@ -701,6 +768,9 @@ struct 新任务治理方法召回结果 final {
     std::optional<新方法候选结果> 方法查询;
     std::optional<新任务候选方法发布结果> 发布结果;
     std::optional<稳定编码> 候选材料节点;
+    std::optional<新任务复合目标分解提议> 复合目标提议;
+    std::optional<新任务内容方法学习发现> 内容学习发现;
+    std::optional<新任务执行前目标收束结果> 执行前目标收束;
 };
 
 // 独立前置目标只用于筹办，不改写任务对应的正式需求。
@@ -797,6 +867,7 @@ struct 新任务方法条件结果核验 final {
     std::optional<新任务本能采用定位> 执行要求定位;
     std::optional<新方法任务成员绑定> 任务成员绑定;
     std::vector<新任务虚拟存在引用> 任务成员候选组;
+    std::optional<稳定编码> 执行分支节点;
     friend bool operator==(const 新任务方法条件结果核验&,
         const 新任务方法条件结果核验&) = default;
 };
@@ -824,6 +895,7 @@ struct 新任务方法条件缺口 final {
     std::optional<稳定编码> 来源配对节点;
     std::optional<std::uint64_t> 条件项序号;
     std::vector<新任务虚拟存在引用> 任务成员候选组;
+    std::optional<稳定编码> 执行分支节点;
     friend bool operator==(const 新任务方法条件缺口&,
         const 新任务方法条件缺口&) = default;
 };
@@ -886,6 +958,7 @@ struct 新任务方法选择结果 final {
     std::vector<新方法参数角色绑定> 参数绑定组;
     std::vector<新任务方法条件结果核验> 条件核验组;
     std::optional<新任务本能采用材料> 本能采用;
+    std::optional<稳定编码> 执行分支节点;
 };
 
 struct 新任务条件分解依据 final {
@@ -900,6 +973,7 @@ struct 新任务条件分解依据 final {
     bool 保证满足目标 = false;
     std::optional<std::int64_t> 有利结果端点;
     std::optional<新方法任务成员绑定> 任务成员绑定;
+    std::optional<稳定编码> 执行分支节点;
     friend bool operator==(const 新任务条件分解依据&, const 新任务条件分解依据&) = default;
 };
 
@@ -929,6 +1003,8 @@ struct 新任务条件子需求项 final {
     std::vector<特征概念I64闭区间> 目标区间组;
     std::optional<稳定编码> 单位;
     std::optional<特征概念任务集合值域> 集合目标;
+    std::optional<新需求引用内容定位> 引用内容定位;
+    std::optional<新需求新增成员见证要求> 新增成员见证要求;
     friend bool operator==(const 新任务条件子需求项&,
         const 新任务条件子需求项&) = default;
 };
@@ -939,7 +1015,7 @@ struct 新任务因果筹办依据 final {
     新因果筹办读回 读回;
     friend bool operator==(const 新任务因果筹办依据&, const 新任务因果筹办依据&);
 };
-enum class 新任务因果子需求提议状态 : std::uint8_t { 已形成=1, 无需子需求, 材料已变化, 无路径, 路径待选择 };
+enum class 新任务因果子需求提议状态 : std::uint8_t { 已形成=1, 无需子需求, 材料已变化, 无路径, 路径待选择, 资源延后=6 };
 struct 新任务因果子需求提议 final {
     新任务因果子需求提议状态 状态 = 新任务因果子需求提议状态::无路径;
     std::optional<新任务因果筹办依据> 依据;
@@ -948,11 +1024,26 @@ struct 新任务因果子需求提议 final {
     std::vector<新任务条件子需求项> 子需求项组;
     std::vector<稳定编码> 继续推进任务组;
     std::vector<新因果条件读回> 未满足关系组;
+    std::vector<新来源前驱内容模板> 来源前驱前端组;
     friend bool operator==(const 新任务因果子需求提议&, const 新任务因果子需求提议&) = default;
 };
+// 调用期工程控制，不参与任务状态、因果依据或业务相等。
+struct 新任务因果读取取消 final {
+    friend bool operator==(const 新任务因果读取取消&, const 新任务因果读取取消&) = default;
+};
+using 新任务因果提议可停止结果 = std::variant<新任务因果子需求提议, 新任务因果读取取消>;
+using 新来源前驱实例可停止结果=std::variant<新服务取得目标实例结果,新任务因果读取取消>;
+using 新需求任务对应可停止结果 = std::variant<新需求任务对应结果, 新任务因果读取取消>;
+using 新任务列表可停止结果 = std::variant<新任务列表结果, 新任务因果读取取消>;
+using 新结算因果候选可停止结果 = std::variant<新因果候选事实, 新任务因果读取取消>;
+using 新因果子需求身份可停止结果 = std::variant<bool, 新任务因果读取取消>;
+using 新需求任务定位可停止结果 = std::variant<std::optional<稳定编码>, 新任务因果读取取消>;
+using 新任务单读可停止结果 = std::variant<std::optional<新任务信息>, 新任务因果读取取消>;
 struct 新任务因果等待依据 final {
     新任务因果筹办依据 采用依据;
     std::vector<稳定编码> 子需求节点组, 待推进任务组;
+    std::optional<新来源前驱内容模板> 来源前端;
+    std::optional<新服务取得目标实例信息> 目标实例;
     friend bool operator==(const 新任务因果等待依据&, const 新任务因果等待依据&) = default;
 };
 enum class 新任务因果复核状态 : std::uint8_t {
@@ -963,6 +1054,8 @@ struct 新任务因果复核结果 final {
     std::optional<新任务因果子需求提议> fresh提议;
     std::vector<稳定编码> 变化正式定位组;
 };
+using 新任务因果承接可停止结果 = std::variant<新任务治理承接结果, 新任务因果读取取消>;
+using 新任务因果复核可停止结果 = std::variant<新任务因果复核结果, 新任务因果读取取消>;
 
 // 分解依据保留完整条件定义；已知条件项组只投影已定位的真实E/F，不保存当前值。
 // 子需求项组只是当前未满足项；部分实际绑定不构成需求发布或执行许可。
@@ -1030,11 +1123,11 @@ enum class 新需求方向一致性状态 : std::uint8_t {
     资源失败,
     需求信息待完善,
     定义依据未就绪,
-    来源确认未就绪
+    来源确认未就绪, 内容执行定位未支持, 来源前提已变化 = 25
 };
 
 enum class 新需求方向判定依据 : std::uint8_t {
-    方法条件结果 = 1, 服务结算定义 = 2, 外部服务完成结算定义 = 3, 先天被动因果 = 4
+    方法条件结果 = 1, 服务结算定义 = 2, 外部服务完成结算定义 = 3, 先天被动因果 = 4, 行动请求承接定义 = 5
 };
 
 // 只读的执行前方向证明。它只证明候选方法的预计结果能够满足或推动
@@ -1053,6 +1146,7 @@ struct 新需求方向一致性结果 final {
     std::optional<稳定编码> 子结果节点;
     std::optional<新需求方向判定依据> 判定依据;
     std::optional<稳定编码> 外部要求节点;
+    std::optional<新行动请求承接来源> 行动请求来源{};
 };
 
 struct 新需求根链方向一致性结果 final {
@@ -1070,7 +1164,8 @@ enum class 新冲突需求查找状态 : std::uint8_t {
     任务不存在,
     结构不一致,
     资源失败,
-    需求信息待完善
+    需求信息待完善,
+    来源前提已变化 = 8
 };
 
 struct 新冲突需求项 final {
@@ -1169,7 +1264,7 @@ enum class 新任务治理本能执行状态 : std::uint8_t {
     结构不一致,
     资源失败,
     工程停止,
-    零动作已回筹办
+    零动作已回筹办, 未执行目标已满足
 };
 
 struct 新任务零动作恢复信息 final {
@@ -1194,6 +1289,7 @@ struct 新任务治理本能执行结果 final {
     // 仅当函数没有进入动作时填写；已修改表示空执行已由task owner撤销。
     std::optional<新任务操作状态> 未进入动作撤销状态;
     std::optional<新任务零动作恢复信息> 零动作恢复;
+    std::optional<新任务执行前目标收束结果> 执行前目标收束;
 };
 
 struct 新任务治理结果获取请求 final {
@@ -1371,9 +1467,10 @@ struct 新任务调度材料项 final {
     std::optional<新任务执行信息> 执行;
     std::optional<新任务影响评估信息> 影响评估;
     std::optional<新需求治理信息> 需求治理;
+    std::optional<新需求新增成员判定结果> 新增成员目标判定;
 };
 
-enum class 新任务需求准备状态 : std::uint8_t { 待完善=1, 可筹办, 任务不存在, 工程故障 };
+enum class 新任务需求准备状态 : std::uint8_t { 待完善=1, 可筹办, 任务不存在, 工程故障, 来源前提已变化=5, 资源延后=6 };
 struct 新任务需求准备结果 final {
     新任务需求准备状态 状态 = 新任务需求准备状态::工程故障;
     稳定编码 任务节点;
@@ -1391,13 +1488,21 @@ struct 新任务调度材料读取结果 final {
 };
 
 class 新_任务类 final : public 新内部治理对象读取接口,
-    public 特征任务成员读取接口 {
+    public 特征任务成员读取接口, public 新需求新增成员读取接口 {
 public:
+    新需求新增成员基准结果 读取新增成员目标基准(稳定编码,稳定编码) const noexcept override;
+    新需求新增成员判定结果 判定新增成员来源(const 新需求完整目标&) const noexcept override;
     新任务需求准备结果 复核任务需求准备(稳定编码 任务节点) const noexcept;
+    新需求筹办资格结果 复核任务筹办资格(稳定编码 任务节点) const noexcept;
     新任务治理承接结果 承接外部服务要求(稳定编码 需求节点, 稳定编码 要求节点) noexcept;
+    新任务治理承接结果 承接行动请求需求(稳定编码 自我需求节点,
+        const 新行动请求承接来源&) noexcept;
     新任务操作状态 配置服务需求取得合同(const 新任务服务需求取得合同&) noexcept;
-    新任务服务需求取得读回结果 读回服务需求取得结果(
-        稳定编码 任务节点, 稳定编码 执行实例节点) const noexcept;
+    // 只在开放使用线程前装配；相同配置复用，不替换现行业务根或目标。
+    新任务操作状态 配置服务取得来源前驱(const 新服务取得来源前驱配置&) noexcept;
+    新服务取得目标实例结果 读取来源前驱目标实例(const 新服务取得目标实例键&) const noexcept;
+    新来源前驱实例可停止结果 建立或取得来源前驱目标实例(
+        const 新任务因果筹办依据&,const 新来源前驱内容模板&,std::stop_token);
     新直接服务结算来源结果 核验直接服务结算来源(稳定编码 来源任务节点) const noexcept;
     新任务执行组织结果 建立或取得任务方法执行组织(
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组) noexcept;
@@ -1421,16 +1526,13 @@ public:
     static 新任务线性条件输入结果 按线性关系计算任务条件输入(
         const 新任务线性条件输入请求& 请求) noexcept;
 
-    新任务操作状态 配置服务结算任务(const 新任务服务结算配置&) noexcept;
     新服务值治理定义 确保服务值治理定义(稳定编码 自我概念, 稳定编码 服务值类型);
     std::optional<新服务值治理定义> 读取服务值治理定义(稳定编码) const;
     新任务操作状态 配置自我服务结算(const 新自我服务结算配置&) noexcept;
-    新任务操作状态 接纳服务结算来源(
-        稳定编码 结算任务节点, const 新任务服务结算来源绑定& 绑定) noexcept;
-    std::optional<新任务服务结算来源绑定> 读取服务结算来源(
-        稳定编码 结算任务节点) const noexcept;
-    新任务操作状态 准备服务结算筹办(稳定编码 结算任务节点) noexcept;
     bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
+    // 非拥有外层工厂；仅启动前配置，所有使用线程join后由同一所有者卸载。
+    bool 配置本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
+    bool 卸载本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
     std::optional<稳定编码> 获取任务已结算动作定义() const noexcept override;
     std::optional<新任务贡献动作定义> 读取任务贡献动作定义(稳定编码) const noexcept override;
     std::optional<新任务贡献动作阶段> 读取任务贡献动作阶段(稳定编码) const noexcept override;
@@ -1472,14 +1574,25 @@ public:
     稳定编码 获取任务信息范围概念() const;
     新因果候选事实 读取结算因果候选事实(
         稳定编码 任务节点, const 新先天因果信息& 所依据规则) const;
+    新结算因果候选可停止结果 读取结算因果候选事实(
+        稳定编码, const 新先天因果信息&, std::stop_token) const;
     void 配置因果筹办读取(const 新因果筹办读取接口&);
+    void 配置场景事实读取(const 新方法场景事实读取接口&, const 新方法场景事实构成读取接口&);
     新任务因果子需求提议 提议任务因果子需求(
         稳定编码 任务节点, const std::vector<新因果任务等待边>& 当前边) const;
+    新任务因果提议可停止结果 提议任务因果子需求(
+        稳定编码, const std::vector<新因果任务等待边>&, std::stop_token) const;
     新任务因果复核结果 复核任务因果等待(
         const 新任务因果等待依据&, const std::vector<新因果任务等待边>& 当前边) const;
+    新任务因果复核可停止结果 复核任务因果等待(
+        const 新任务因果等待依据&, const std::vector<新因果任务等待边>& 当前边, std::stop_token) const;
     bool 核验因果子需求身份(const 新任务因果筹办依据&, 稳定编码 正式需求节点) const;
+    新因果子需求身份可停止结果 核验因果子需求身份(
+        const 新任务因果筹办依据&, 稳定编码, std::stop_token) const;
     新任务治理承接结果 承接已确认因果子需求(
         const 新任务因果筹办依据&, 稳定编码 子需求节点);
+    新任务因果承接可停止结果 承接已确认因果子需求(
+        const 新任务因果筹办依据&, 稳定编码 子需求节点, std::stop_token);
 
     // 通知只表示关联结构可能变化；在owner锁内调用，不得反入owner或读写领域。
     bool 绑定关联检查通知(const void* 所有者, std::function<void()> 通知) noexcept;
@@ -1501,6 +1614,11 @@ public:
         稳定编码 任务节点, const 新任务前置方法材料& 预期材料) noexcept;
     新任务治理方法召回结果 查询任务方法候选并发布(
         稳定编码 任务节点) noexcept;
+    新任务复合目标分解提议 提议任务复合目标(稳定编码 任务节点) const noexcept;
+    新任务执行前目标收束结果 复核并收束执行前已满足目标(稳定编码 任务节点) noexcept;
+    新任务内容学习发现结果 查询内容叶方法学习发现(稳定编码 任务节点) const noexcept;
+    新任务复合分解状态 复核复合子目标当前必要性(稳定编码 任务节点) const noexcept;
+    新任务操作状态 核验复合子目标采用(const 新任务复合采用请求&) const noexcept;
     新任务治理候选读回结果 读回任务方法候选(
         稳定编码 任务节点, 稳定编码 材料节点) const noexcept;
     新任务治理候选消费结果 消费任务方法候选(
@@ -1582,10 +1700,13 @@ public:
 
     std::optional<新任务信息> 获取任务(
         稳定编码 任务节点) const noexcept;
+    新任务单读可停止结果 获取任务(稳定编码, std::stop_token) const;
     std::optional<新任务虚拟存在信息> 获取任务虚拟存在(
         稳定编码 任务节点) const noexcept;
     std::optional<新任务执行信息> 获取执行实例(
         稳定编码 执行实例节点) const noexcept;
+    新任务需求结果读取结果 读取执行已发布需求(
+        稳定编码 任务节点, 稳定编码 执行实例节点) const noexcept;
     std::optional<新任务本能采用材料> 读取执行本能采用(稳定编码 执行实例节点) const noexcept;
     新任务本能输入复核状态 复核执行本能输入(稳定编码 执行实例节点,
         const 方法参数场景&) const noexcept;
@@ -1600,6 +1721,7 @@ public:
 
     std::optional<稳定编码> 查询需求任务(
         稳定编码 需求节点) const noexcept;
+    新需求任务定位可停止结果 查询需求任务(稳定编码, std::stop_token) const;
     新任务列表结果 查询全部任务() const noexcept;
     新任务调度材料读取结果 读取任务调度材料() const noexcept;
     新任务调度材料读取结果 读取任务调度材料(稳定编码 任务节点) const noexcept;
@@ -1613,8 +1735,10 @@ public:
     // 不筛选业务资格或终结状态；成功项的空任务只表示确实尚未建立T。
     // 返回的是本次完整读回副本，不是后续写入或服务结算许可。
     新需求任务对应结果 读取需求列表任务对应() const noexcept;
+    新需求任务对应可停止结果 读取需求列表任务对应(std::stop_token) const noexcept;
     // 仅按需求父链的正式根分类；排除结算需求自身，不排除其后代。
     新任务列表结果 查询服务任务(稳定编码 排除需求) const noexcept;
+    新任务列表可停止结果 查询服务任务(稳定编码, std::stop_token) const noexcept;
     新任务操作状态 绑定服务任务集合同步(
         const void* 所有者, 稳定编码 排除需求,
         新服务任务集合同步函数 同步) noexcept;
@@ -1674,22 +1798,31 @@ public:
         稳定编码 任务节点) const noexcept;
 
     新任务最终来源读取结果 读取任务最终消费来源(const 新服务值最终来源定位&) const noexcept;
-    新任务最终消费准备结果 准备任务最终消费(const 新服务值最终来源定位&, 稳定编码 当前方法节点) noexcept;
     新任务最终消费准备结果 准备任务最终消费(const 新服务值最终来源定位&, const 新结算能力引用&) noexcept;
-    新任务最终消费准备材料 读取任务最终消费准备(const 新任务最终消费准备&) const noexcept;
+    新任务最终消费准备材料 读取任务最终消费准备(const 新任务最终消费准备&) const;
     基础封存追加片段 封存任务最终消费(新任务最终消费准备&, const 新任务最终入账见证&) noexcept;
     新任务最终消费信息 接收任务最终消费核心(新任务最终消费准备&, const 基础片段发布回执&) noexcept;
     新服务值最终消费结果 完成任务最终消费(新任务最终消费准备&, const 新世界I64组合结果&) noexcept;
     新服务值最终消费结果 完成已入账任务最终收尾(新任务最终消费准备&) noexcept;
     std::optional<新任务最终消费信息> 读取任务最终消费(稳定编码 完成结算节点) const noexcept;
-    std::optional<稳定编码> 读取任务已结算动作方法() const noexcept;
 
 private:
+    friend class 新_需求类;
+    新需求新增成员基准结果 读取新增成员目标基准内部(稳定编码,稳定编码,
+        新_需求类::提议源收集批*) const noexcept;
+    新需求新增成员判定结果 判定新增成员来源内部(const 新需求完整目标&,
+        新_需求类::提议源收集批*) const noexcept;
     新服务值最终消费结果 完成任务最终收尾(新任务最终消费准备&) noexcept;
     新任务贡献推进结果 推进任务完成贡献(稳定编码 任务节点) noexcept;
     void 初始化任务最终消费结构() noexcept;
     struct 最终消费占用;
-    std::map<稳定编码, std::weak_ptr<最终消费占用>> 最终消费占用组_;
+    struct 最终消费占用槽 final {
+        std::weak_ptr<最终消费占用> 活令牌;
+        std::shared_ptr<最终消费占用> 待续;
+    };
+    std::map<稳定编码, 最终消费占用槽> 最终消费占用组_;
+    void 完成最终准备基线(最终消费占用&);
+    std::optional<新任务最终消费信息> 提取已核验任务最终消费(稳定编码) const;
     friend class 新任务最终消费准备;
     新任务直属收尾读回 读取任务直属收尾(稳定编码 任务节点) const noexcept;
     新任务直属收尾读回 完成任务直属收尾(
@@ -1704,47 +1837,177 @@ private:
         新任务因果筹办依据 依据;
         新需求完整目标 子目标;
         std::optional<新因果筹办请求> 执行核验请求;
+        std::optional<新来源前驱内容模板> 来源前端;
+        std::optional<新服务取得目标实例信息> 目标实例;
         friend bool operator==(const 因果子需求采用&, const 因果子需求采用&) = default;
     };
-    using 因果执行许可 = std::map<稳定编码, 因果子需求采用>;
-    std::optional<因果执行许可> 读取因果执行许可(稳定编码) const;
+    using 因果子需求采用组 = std::map<稳定编码, 因果子需求采用>;
+    struct 方法条件准备承接凭据 final {
+        新任务条件子需求提议 原提议;
+        新任务已确认条件子需求 已确认项;
+        friend bool operator==(const 方法条件准备承接凭据&,const 方法条件准备承接凭据&)=default;
+    };
+    using 条件准备凭据指针=std::shared_ptr<const 方法条件准备承接凭据>;
+    std::map<std::uint64_t,条件准备凭据指针> 条件准备承接依据_;
+    enum class 条件准备交付状态 : std::uint8_t {
+        已交付=1,已复用,来源已变化,依赖未就绪,未支持,资源失败
+    };
+    using 条件准备交付结果=std::variant<条件准备交付状态,新任务因果读取取消>;
+    条件准备交付结果 接收已确认方法条件准备依据(const 新任务条件子需求提议&,
+        const 新任务已确认条件子需求&,std::stop_token);
+    enum class 方法条件准备身份状态 : std::uint8_t {
+        身份一致=1,来源已变化,依赖未就绪,未支持,资源失败
+    };
+    struct 方法条件准备静态批 final {
+        方法条件准备承接凭据 原凭据;
+        稳定编码 父任务虚拟存在节点;
+        新需求完整目标 父目标,子目标;
+        std::optional<稳定编码> 子任务节点;
+        std::vector<基础联合节点快照> 完整保护;
+    };
+    struct 方法条件准备身份结果 final {
+        方法条件准备身份状态 状态=方法条件准备身份状态::依赖未就绪;
+        std::optional<方法条件准备静态批> 静态批;
+    };
+    using 方法条件准备身份可停止结果=std::variant<方法条件准备身份结果,新任务因果读取取消>;
+    方法条件准备身份可停止结果 读取方法条件准备静态身份(
+        const 方法条件准备承接凭据&,std::stop_token) const;
+    bool 核同方法条件准备静态批已加锁(const 方法条件准备静态批&) const;
+    struct 因果执行许可;
+    struct 新任务本次场景核验批;
+    struct 新任务需求准备保护批;
+    struct 新方法内容核验上下文;
+    static 新_需求类::提议源收集批* 取得提议源(const std::shared_ptr<新方法内容核验上下文>&) noexcept;
+    std::optional<新需求信息> 读取本次提议需求(稳定编码,
+        const std::shared_ptr<新方法内容核验上下文>&,std::vector<基础联合节点快照>&) const;
+    新任务需求准备保护批 读取任务需求准备保护批(稳定编码,
+        const std::shared_ptr<新方法内容核验上下文>& = {}) const;
+    bool 核同任务需求准备保护批(const 新任务需求准备保护批&) const;
+    新冲突需求查找结果 查找冲突需求已加锁(稳定编码,
+        const std::vector<新任务预计变化阶段>&,const 新任务需求准备保护批&,const 新任务本次场景核验批&) const noexcept;
+    新任务执行前目标收束结果 收束执行前已满足目标内部(
+        稳定编码, const 新任务本次场景核验批&) noexcept;
+    新任务复合分解状态 核验已满足内容目标静态来源(
+        新任务本次场景核验批&) const;
+    新任务复合分解状态 读取普通值目标满足保护(新任务本次场景核验批&) const;
+    enum class 方法内容必要性状态 : std::uint8_t {
+        仍必要=1, 已不再必要, 前提已变化, 等待读取, 未支持, 资源失败
+    };
+    struct 新方法内容必要性投影;
+    新方法内容必要性投影 复核方法内容子需求必要性(稳定编码,
+        const std::shared_ptr<新方法内容核验上下文>&) const;
+    方法内容必要性状态 核同方法内容必要性投影已加锁(const 新方法内容必要性投影&) const;
+    新任务条件子需求提议 提议任务条件子需求带上下文(稳定编码,
+        const std::shared_ptr<新方法内容核验上下文>&,
+        std::vector<基础联合节点快照>* 完整保护输出=nullptr) const;
+    新需求筹办资格结果 复核任务筹办资格已加锁(稳定编码,
+        const 新任务本次场景核验批&) const;
+    新任务已发布条件子需求核验状态 复核已发布条件子需求身份已加锁(稳定编码,
+        const 新任务已确认条件子需求&,const 新任务本次场景核验批&) const;
+    std::optional<因果执行许可> 读取因果执行许可(稳定编码,
+        const 新任务需求准备保护批* 已读准备批=nullptr) const;
     std::optional<新因果筹办请求> 构造自身发布后因果请求(
-        const 新任务因果筹办依据&, 稳定编码) const;
+        const 新任务因果筹办依据&, 稳定编码,
+        std::vector<基础联合节点快照>* 完整保护输出=nullptr,
+        std::stop_token 停止 = {}) const;
+    std::optional<新因果筹办请求> 构造来源前端自身发布后请求(
+        const 新任务因果筹办依据&,const 新来源前驱内容模板&,
+        const std::optional<新服务取得目标实例信息>&,std::optional<稳定编码> 已确认子G,
+        std::stop_token,std::vector<基础联合节点快照>*) const;
+    std::optional<新因果筹办请求> 构造已采用来源前端当前请求(
+        const 因果子需求采用&,稳定编码,std::stop_token,std::vector<基础联合节点快照>*) const;
+    新任务因果承接可停止结果 承接已确认来源前端子需求(
+        const 新任务因果筹办依据&,稳定编码,std::stop_token);
     bool 任务因果候选形成循环(稳定编码, 稳定编码,
-        const std::vector<新因果任务等待边>&) const;
-    bool 结算因果需要取得来源(const 新任务因果筹办依据&) const;
+        const std::vector<新因果任务等待边>&, std::stop_token 停止 = {}) const;
+    bool 结算因果需要取得来源(const 新任务因果筹办依据&, std::stop_token 停止 = {}) const;
+    static bool 支持当前被动条件等待(const 新任务因果子需求提议&) noexcept;
+    bool 核验因果子需求身份内部(const 新任务因果筹办依据&, 稳定编码, std::stop_token,
+        std::vector<基础联合节点快照>* 字面目标域保护输出=nullptr) const;
     bool 核对因果执行许可(稳定编码, const 因果执行许可&) const;
-    新任务执行结果 开始方法执行内部(const 新任务执行开始请求&, const 因果执行许可&) noexcept;
+    新任务执行结果 开始方法执行内部(const 新任务执行开始请求&, const 因果执行许可&,
+        const 新任务本次场景核验批&) noexcept;
     新任务治理待执行确认状态 确认任务进入待执行内部(
-        稳定编码, const 新任务本能采用材料&, const 因果执行许可&) noexcept;
-    新因果候选事实 读取结算候选身份(稳定编码) const;
+        稳定编码, const 新任务本能采用材料&, const 因果执行许可&,
+        const 新任务本次场景核验批&) noexcept;
+    新因果候选事实 读取结算候选身份(稳定编码, std::stop_token,
+        const 新任务需求准备保护批&) const;
     结算因果资格核心 读取结算候选资格核心(
-        稳定编码, const std::optional<新服务值最终来源定位>&) const;
+        稳定编码, const std::optional<新服务值最终来源定位>&, std::stop_token,
+        const 新任务需求准备保护批&) const;
+    新结算因果候选可停止结果 读取结算因果候选事实已加锁(稳定编码,
+        const 新先天因果信息&,std::stop_token,const 新任务需求准备保护批&) const;
     新因果筹办请求 构造因果筹办请求(稳定编码,
-        const std::optional<新先天因果信息>&, const std::vector<新因果任务等待边>&) const;
+        const std::optional<新先天因果信息>&, const std::vector<新因果任务等待边>&, std::stop_token 停止 = {},
+        std::vector<基础联合节点快照>* 完整保护输出=nullptr) const;
+    std::optional<新因果派生源上下文> 构造因果派生源上下文(const 新需求信息&, std::stop_token 停止 = {},
+        std::vector<基础联合节点快照>* 完整保护输出=nullptr,
+        新来源前驱当前集合材料* 当前集合输出=nullptr) const;
+    // 只读本族材料；调用者必须已释放最外task锁，不出生D或采用需求。
+    新来源前驱查询上下文 构造来源前驱查询上下文(const 新需求信息&,稳定编码,
+        const 新来源前驱当前集合材料&,std::stop_token,std::vector<基础联合节点快照>*) const;
+    struct 来源前驱本槽读取结果 final {
+        新服务取得目标实例结果 实例;
+        bool 父任务已绑定=false;
+    };
+    来源前驱本槽读取结果 读取来源前驱本槽实例可抛内部(稳定编码 父T,稳定编码 槽,
+        const std::vector<稳定编码>& 根路径) const;
+    struct 来源前驱当前定义批 final {
+        新来源前驱元数据读取状态 状态=新来源前驱元数据读取状态::依赖未就绪;
+        std::optional<新服务取得来源前驱元数据> 元数据;
+        std::vector<新来源前驱链条件定义> 链条件组;
+        std::vector<新来源前驱规则信息> 四规则;
+        std::vector<基础联合节点快照> 完整保护;
+    };
+    using 来源前驱当前定义批可停止结果=std::variant<来源前驱当前定义批,新任务因果读取取消>;
+    来源前驱当前定义批可停止结果 读取来源前驱当前定义批(
+        const 新服务取得来源前驱配置&,std::stop_token) const;
+    来源前驱当前定义批可停止结果 读取来源前驱当前定义批内部(
+        const 新服务取得来源前驱配置&,std::stop_token,bool 允许首次配置) const;
+    bool 核验来源前驱静态支持(const 来源前驱当前定义批&,
+        const 新任务因果筹办依据&,const 新来源前驱内容模板&) const;
     std::optional<新任务条件子需求项> 转换因果静态状态目标(
-        const 新因果筹办请求&, const 反向因果图节点&) const;
+        const 新因果筹办请求&, const 反向因果图节点&, std::stop_token 停止 = {}) const;
     std::optional<新任务贡献计值类型> 判定完成贡献叶子类别(const 新需求信息&) const;
     std::optional<新任务服务需求取得合同> 服务需求取得合同_;
+    std::optional<新服务取得来源前驱配置> 服务取得来源前驱配置_;
     bool 是服务需求取得目标(const 新需求信息& 需求) const;
-    friend class 服务需求本能运行服务;
-    void 记录服务需求执行依据(稳定编码 任务节点, 稳定编码 执行实例节点,
-        const 方法参数场景&, 稳定编码 动作节点, std::optional<稳定编码> 来源需求节点 = {});
     新任务条件分解结果 选择任务结果分支内部(
-        稳定编码 任务节点, bool 允许部分条件绑定) const noexcept;
+        稳定编码 任务节点, bool 允许部分条件绑定,
+        const 新任务本次场景核验批&) const noexcept;
+    新任务方法选择结果 选择任务方法结果内部(稳定编码,
+        const 新任务本次场景核验批&) const noexcept;
+    新任务条件子需求提议 提议任务条件子需求内部(稳定编码,
+        const 新任务本次场景核验批&) const noexcept;
+    新需求方向一致性结果 判断父子需求方向一致内部(稳定编码,稳定编码,
+        const 新任务本次场景核验批&,const 新任务本次场景核验批&) const noexcept;
+    新任务治理执行方向核验结果 核验任务执行方向内部(稳定编码,
+        const 新任务本能采用材料&,稳定编码,稳定编码,稳定编码,
+        const 新任务本次场景核验批&) const noexcept;
+    新任务治理结果材料核验结果 核验任务结果材料内部(稳定编码,稳定编码,
+        const std::vector<稳定编码>&,const 新任务本次场景核验批&) const noexcept;
+    新任务影响评估结果 评估方法执行影响内部(稳定编码,稳定编码,
+        const 新任务本次场景核验批&) noexcept;
+    void 记录执行本能结果(稳定编码,稳定编码,const 新本能函数本次结果&) noexcept;
     新任务执行组织结果 实施任务方法执行组织(
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组, bool 允许增补) noexcept;
     void 确保任务虚拟存在语义(稳定编码 任务节点) noexcept;
     新任务操作状态 写入任务状态(
-        const 新任务虚拟存在信息&, 新任务状态) noexcept;
+        const 新任务虚拟存在信息&, 新任务状态,
+        const std::vector<基础联合节点快照>& 附加完整预期={}) noexcept;
     新任务操作状态 写入已核验任务状态值(
-        const 新任务虚拟存在信息&, 新任务状态) noexcept;
-    void 提交已核验任务状态特征值(const 新任务虚拟存在信息&, 新任务状态,
-        std::optional<稳定编码> 可撤销前状态) noexcept;
+        const 新任务虚拟存在信息&, 新任务状态,
+        const std::vector<基础联合节点快照>& 附加完整预期={}) noexcept;
+    新任务操作状态 提交已核验任务状态特征值(const 新任务虚拟存在信息&, 新任务状态,
+        std::optional<稳定编码> 可撤销前状态,
+        const std::vector<基础联合节点快照>& 附加完整预期={}) noexcept;
+    新任务操作状态 修改任务状态受保护(稳定编码,新任务状态,
+        const std::vector<基础联合节点快照>&) noexcept;
     新任务治理世界协作接口* 内部治理世界_ = nullptr;
     bool 任务治理场景组织已就绪_ = false;
     新任务调度材料项 读取任务调度项已加锁(
-        稳定编码 任务节点, bool& 资源失败) const;
+        稳定编码 任务节点, bool& 资源失败,
+        const 新任务本次场景核验批&) const;
     新_方法类::新方法实例交付状态 切换学习方法实例(
         稳定编码 任务节点, 稳定编码 旧根, 稳定编码 新根) noexcept;
     std::map<稳定编码, 稳定编码> 方法实例采用待核查_;
@@ -1758,11 +2021,27 @@ private:
         const 新本能函数本次条件结果对&) noexcept;
     void 完成执行问题采集(稳定编码 任务节点, 稳定编码 执行实例节点,
         const 新任务影响评估信息&) noexcept;
+    新任务本次场景核验批 准备本次场景核验批(稳定编码,
+        std::optional<稳定编码> = {}, const 新任务本能采用材料* = nullptr,
+        bool = false, bool = false) const;
+    新任务本次场景核验批 准备本次场景核验批(稳定编码,
+        std::optional<稳定编码>,const 新任务本能采用材料*,bool,bool,
+        const std::shared_ptr<新方法内容核验上下文>&,bool 仅查找目标 = false) const;
+    void 读取本次场景核验批(新任务本次场景核验批&) const;
+    void 读取新增成员目标组(新任务本次场景核验批&,const std::vector<稳定编码>&) const;
+    void 读取冲突候选目标组(新任务本次场景核验批&) const;
+    新需求当前满足结果 读取批需求满足(const 新任务本次场景核验批&,const 新需求信息&) const;
+    bool 核同本次场景核验批(const 新任务本次场景核验批&) const;
+    新方法参数特征读取结果 读取本次存在参数特征(const 新任务本次场景核验批&,
+        稳定编码,std::optional<稳定编码>,std::uint32_t,稳定编码,稳定编码) const;
+    const 新方法场景事实读取接口* 场景事实读取_ = nullptr;
+    const 新方法场景事实构成读取接口* 场景事实构成读取_ = nullptr;
     // 纯读核验，供公开筹办与选择复用，避免互相递归。
     新任务治理条件筹办结果 核验任务条件和参数(稳定编码 任务节点) const noexcept;
     新任务治理条件筹办结果 核验任务条件和参数内部(稳定编码 任务节点,
         const 新任务本能采用材料* 固定采用, bool 允许当前执行中,
-        bool 允许未实现条件形状 = false) const noexcept;
+        bool 允许未实现条件形状,
+        const 新任务本次场景核验批&) const noexcept;
     // 受新任务互斥保护；销毁即释放，不是需求、方法或执行事实的第二账。
     std::map<稳定编码, std::shared_ptr<const 新任务前置方法材料>> 前置方法筹办材料组_;
     bool 同步服务任务集合已加锁() noexcept;
@@ -1773,9 +2052,16 @@ private:
     新服务任务集合同步函数 服务任务同步_;
 
     friend class 新_任务管理线程类;
+    friend class 新_自我线程类;
+    struct 复合提议读取 final {
+        新任务复合目标分解提议 提议;
+        新_需求类::引用内容提议读取 内容;
+    };
+    // 公开旧口保完整保护合同；friend生产消费分开源前提与外部完整材料。
+    复合提议读取 读取当前复合目标提议(稳定编码, bool 完整源 = false) const noexcept;
     // 仅消费self已确认且manager已读回的子D；不创建需求、不重启终结T。
     新任务治理承接结果 承接已确认条件子需求(
-        稳定编码 父任务节点, 稳定编码 子需求节点) noexcept;
+        稳定编码 父任务节点,const 新任务已确认条件子需求&) noexcept;
 
     // 任务域每建立一条正式状态引用都必须同步增加状态引用计数；写事务
     // 尚未发布时使用撤销入口回滚，不能让任务关系与状态生命周期分账。
@@ -1796,15 +2082,14 @@ private:
     概念_二次特征类& 二次特征概念服务_;
     概念_存在类& 存在概念服务_;
     bool 治理已初始化_ = false;
-    std::optional<新任务服务结算配置> 服务结算配置_;
     std::optional<新自我服务结算配置> 自我服务结算配置_;
     const 新因果筹办读取接口* 因果筹办读取_ = nullptr;
-    因果执行许可 因果子需求依据_;
+    因果子需求采用组 因果子需求依据_;
     std::optional<新任务结算边界证据> 读取当前结算边界() const;
-    bool 当前使用历史结算方法() const;
     struct 服务值治理读取上下文;
     std::atomic<std::shared_ptr<const 服务值治理读取上下文>> 服务值治理读取上下文_;
     新_动态类* 本能动作读取_ = nullptr;
+    新本能需求任务参数工厂* 本能需求任务参数工厂_ = nullptr;
 };
 
 } // namespace 海中鱼巣

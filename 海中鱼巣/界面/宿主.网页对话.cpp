@@ -1,3 +1,4 @@
+#include <fstream>
 #include "宿主.网页对话.h"
 #include "../核心/容错检查.h"
 
@@ -30,6 +31,13 @@
 
 namespace 海中鱼巣 {
 namespace {
+
+using 网页对话消息接收函数 = std::function<bool(
+    std::string_view, std::string_view, std::uint64_t, std::string_view)>;
+struct 网页对话框事实回调组 final {
+    std::function<bool(const 网页对话框目标&)> 确认页面;
+    std::function<void(const 网页定向发送事实&)> 发送完成;
+};
 
 constexpr std::size_t 最大请求头字节数 = 64U * 1024U;
 constexpr std::size_t 最大消息字节数 = 1024U * 1024U;
@@ -95,6 +103,9 @@ struct HTTP请求 final {
     std::string 正文;
     std::string 内容类型;
     std::optional<std::string> 对话框标识;
+    std::optional<std::string> 主机, 来源, 控制输出标记;
+    bool 控制安全头无效 = false;
+    bool 有正文长度 = false;
 };
 
 struct 网页待发送项 final {
@@ -118,7 +129,6 @@ struct 网页对话共享状态 final {
     std::string 会话标识;
     std::vector<网页对话框传输状态> 页面组;
     std::uint64_t 下一上行序号 = 1;
-    std::uint64_t 下一提交序号 = 1;
     const 网页输出队列回调组* 输出队列 = nullptr;
 };
 
@@ -168,7 +178,6 @@ public:
             共享状态.会话标识.assign(会话标识);
             共享状态.页面组.clear();
             共享状态.下一上行序号 = 1;
-            共享状态.下一提交序号 = 1;
             共享状态.停止信号 = &停止请求;
             共享状态.输出队列 = &输出队列;
             共享状态.接纳提交 = 停止请求 == 0;
@@ -207,6 +216,27 @@ public:
     网页对话会话租约& operator=(const 网页对话会话租约&) = delete;
 
 private:
+    bool 已开始_ = false;
+};
+
+class 网页外设会话租约 final {
+public:
+    网页外设会话租约(std::string_view 标识, const 网页外设运行回调组& 回调)
+        : 标识_(标识), 回调_(回调) {}
+    bool 开始() { 已开始_ = 回调_.会话开始(标识_); return 已开始_; }
+    ~网页外设会话租约() {
+        if (!已开始_) return;
+        try { 回调_.会话结束(标识_); }
+        catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"结束网页外设会话",
+                L"外设会话回收工程异常，不把它作为业务状态继续运行。");
+        }
+    }
+    网页外设会话租约(const 网页外设会话租约&) = delete;
+    网页外设会话租约& operator=(const 网页外设会话租约&) = delete;
+private:
+    std::string_view 标识_;
+    const 网页外设运行回调组& 回调_;
     bool 已开始_ = false;
 };
 
@@ -361,6 +391,7 @@ bool 是合法对话框标识(std::string_view 值) noexcept {
                 return 请求读取状态::请求无效;
             }
             正文长度 = 解析值;
+            请求.有正文长度 = true;
         } else if (名称 == "content-type") {
             if (已有内容类型) return 请求读取状态::请求无效;
             已有内容类型 = true;
@@ -369,6 +400,13 @@ bool 是合法对话框标识(std::string_view 值) noexcept {
             if (请求.对话框标识 || 标识含控制字符 || !是合法对话框标识(值))
                 return 请求读取状态::请求无效;
             请求.对话框标识 = std::string(值);
+        } else if (名称 == "host" || 名称 == "origin" || 名称 == "x-hy-control-output") {
+            auto& 目标头 = 名称 == "host" ? 请求.主机
+                : 名称 == "origin" ? 请求.来源 : 请求.控制输出标记;
+            if (目标头 || 值.empty() || std::any_of(值.begin(), 值.end(), [](unsigned char 字符) {
+                    return 字符 < 0x20U || 字符 == 0x7fU;
+                })) 请求.控制安全头无效 = true;
+            if (!目标头) 目标头 = std::string(值);
         } else if (名称 == "transfer-encoding") {
             return 请求读取状态::请求无效;
         }
@@ -861,13 +899,34 @@ footer{grid-column:1/-1;font-size:12px;color:#8d9aac}
 label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,select{min-width:0;padding:9px;border:1px solid #405773;border-radius:8px;background:#0f1823;color:inherit;font:inherit}input[readonly]{color:#a5b6c9}
 #service p{font-size:13px;color:#a5b6c9;overflow-wrap:anywhere}.service-actions{display:flex;gap:10px;margin-top:12px}.service-actions button{min-height:40px}
 #service-preview{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit;font-size:14px;max-height:45vh;overflow:auto}#service-status{white-space:pre-wrap}
+body{display:block;background:#0e1520}main{width:min(1760px,96vw);margin:20px auto;display:block;min-height:0}header{gap:16px;flex-wrap:wrap}
+.workspace{display:grid;grid-template-columns:minmax(240px,.8fr) minmax(300px,1fr) minmax(360px,1.25fr);gap:14px;padding:14px;align-items:start}.panel{min-width:0;background:#121d2a;border:1px solid #304157;border-radius:12px;overflow:hidden}.panel h2{font-size:16px;margin:0;padding:14px 16px;border-bottom:1px solid #304157}.panel-body{padding:14px 16px}.muted,.hint{font-size:12px;color:#9badc1;line-height:1.7}.hint{margin:8px 0}.overview{padding:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}.metric{border:1px solid #304157;border-radius:10px;padding:12px;background:#121d2a}.metric .caption{color:#9badc1;font-size:12px}.metric .value{font-size:16px;margin-top:6px;overflow-wrap:anywhere}.tree{max-height:68vh;overflow:auto}.tree ul{padding-left:18px;list-style:none}.tree button{width:100%;padding:9px;text-align:left;margin:3px 0;background:#233449;font-size:13px;overflow-wrap:anywhere}.tree button.selected{background:#2e6595;outline:1px solid #87b8e4}.tree .task{background:#1b2a3d}.detail{max-height:68vh;overflow:auto}dl{margin:0}dt{font-size:12px;color:#94abc2;margin-top:12px}dd{margin:4px 0;overflow-wrap:anywhere;white-space:pre-wrap;font-size:13px;line-height:1.6}.object{border-left:2px solid #365573;padding-left:10px;margin:5px 0}.object>summary{cursor:pointer;font-size:13px;color:#b9cbe0}.stack{display:grid;gap:14px}#messages{height:27vh;max-height:380px}#service{padding:14px}#service-fields{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.service-actions{flex-wrap:wrap}.service-actions button{padding:8px 12px;font-size:13px}#form{grid-template-columns:1fr auto auto;padding:12px;gap:8px}#form button{padding:0 12px}#control-status{color:#b4c6db;font-size:12px}#control-meta{padding:0 16px 12px}.section-label{font-size:13px;color:#b4c6db;margin:16px 0 8px}.notice{padding:10px;border:1px dashed #41556d;border-radius:8px;color:#a4b5c8;font-size:12px;line-height:1.7}.warning{color:#f1c47b}
+@media(max-width:1120px){.workspace{grid-template-columns:minmax(240px,1fr) minmax(340px,1.4fr)}.interaction-column{grid-column:1/-1}.tree,.detail{max-height:50vh}#messages{height:30vh}}@media(max-width:680px){main{width:98vw;margin:5px auto}.workspace{grid-template-columns:1fr;padding:8px}.interaction-column{grid-column:auto}header{padding:14px}h1{font-size:17px}.overview{padding:8px;grid-template-columns:1fr 1fr}.tree,.detail{max-height:40vh}#form{grid-template-columns:1fr auto}#input{grid-column:1/-1}.message{max-width:90%}}
 </style>
+)HTML";
+    页面 += R"HTML(
 </head>
 <body>
 <main>
-<header><h1>海中鱼巣 · 网页交互窗口</h1><span class="status" id="status">正在访问本机服务</span></header>
+<header><div><h1>海中鱼巣 · 运行控制台</h1><div class="muted">正式数据只读投影 · 交互与治理分账</div></div><div><div id="control-status">控制快照：等待首次采集</div><span class="status" id="status">正在访问本机服务</span></div></header>
+<section class="overview" id="overview"><div class="notice">运行总览等待正式快照；不以页面可达表示业务正常。</div></section>
+<div id="control-meta" class="muted">分项只读，非跨服务原子快照；采集时间不是业务推进时间。</div>
+<div class="workspace">
+<section class="panel"><h2>需求与任务</h2><div id="control-tree" class="panel-body tree"><p class="muted">尚无快照</p></div></section>
+<section class="panel"><h2 id="detail-title">选中项详情</h2><div id="control-detail" class="panel-body detail"><p class="muted">选择需求或任务，查看目标、筹办和执行材料。</p></div></section>
+<div class="stack interaction-column"><section class="panel"><h2>当前窗口交互</h2>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
 <form id="form"><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
+<section id="output-control" style="padding:14px;border-top:1px solid #304157">
+<h2>控制台提交输出</h2>
+<p class="notice">操作员供稿：将正文提交到当前窗口的正式输出队列。不是交互入站，不表示自我自主生成意图，不生成需求或本能动作。对话历史中的出站方向也不证明内容自主生成。</p>
+<form id="output-form" style="display:grid;gap:8px">
+<label for="output-input">待输出正文</label><textarea id="output-input" maxlength="1048576" placeholder="输入要从本窗口输出的正文"></textarea>
+<button id="output-submit" type="submit" disabled>控制台提交输出</button>
+<label id="output-unknown-confirm" hidden><input id="output-unknown-ack" type="checkbox">我已核对，知道新提交可能重复；下一次明确点击将作为新输出提交</label>
+</form><p id="output-status" class="hint" aria-live="polite">等待本窗口完成登记</p>
+<div id="output-receipts" aria-live="polite"></div>
+</section>
 <section id="service">
 <h2>结构化服务要求</h2>
 <p>目标人由本次本机启动配置指定。可先提交已知部分，随后补齐同一要求；已保存字段不能换义，新诉求请点“新要求”。完整重述后再明确确认。</p>
@@ -886,6 +945,9 @@ label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,
 </form>
 <p id="service-status">正在核对本次会话绑定</p><pre id="service-preview"></pre>
 </section>
+</section><section class="panel"><h2>方法与学习</h2><div class="panel-body" id="control-learning"><p class="muted">等待快照</p></div></section></div>
+</div><section class="panel" style="margin:0 14px 14px"><h2>方法目录与能力缺口</h2><div class="panel-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px"><div class="tree" id="control-method-catalog">等待正式方法目录</div><div class="tree" id="control-missing-methods">等待缺失方法列表</div><div class="detail" id="control-method-detail">选择方法或缺失方法头查看详情</div></div></section>
+<section class="panel" style="margin:0 14px 14px"><h2>任务执行证据时间线</h2><div class="panel-body" id="control-timeline"><div class="notice">等待正式执行引用；本区不表示三世界完整历史。</div></div></section>
 </main>
 <script>
 const base=')HTML";
@@ -896,13 +958,116 @@ const input=document.getElementById('input');
 const form=document.getElementById('form');
 const status=document.getElementById('status');
 const dialogueId=globalThis.crypto?.randomUUID?.();
+const outputForm=document.getElementById('output-form'),outputInput=document.getElementById('output-input');
+const outputButton=document.getElementById('output-submit'),outputReceipts=document.getElementById('output-receipts');
+const outputStatus=document.getElementById('output-status'),outputUnknownConfirm=document.getElementById('output-unknown-confirm');
+const outputUnknownAck=document.getElementById('output-unknown-ack'),outputRows=[];
+const outputStates=new Set(['已排队','正在写出','已完整写出','写出未完成','已取消']);
+const outputTerminalStates=new Set(['已完整写出','写出未完成','已取消']);
+let outputReady=false,outputClosed=false,outputPosting=false,outputQuerying=false,outputUnknown=false,outputFault=false;
+let outputSubmitAbort=null,outputStateAbort=null;
+function renderOutputReceipts(){
+  outputButton.disabled=!dialogueId||!outputReady||outputClosed||outputPosting||outputFault||(outputUnknown&&!outputUnknownAck.checked);
+  outputUnknownConfirm.hidden=!outputUnknown;
+  outputStatus.textContent=outputClosed?'输出操作已停止':outputFault?'控制操作界面错误，已禁用提交':outputPosting?'处理中，不重复提交':outputUnknown?'提交结果不确定，可能已经入列；不会自动重发':outputReady?'当前窗口已登记；排队不等于发送完成':'等待本窗口完成登记';
+  outputReceipts.replaceChildren();
+  for(const row of outputRows){
+    const article=document.createElement('article');article.className='notice';
+    const title=document.createElement('p');title.textContent='控制台提交（操作员供稿） · '+(row.submissionId?'正式提交 #'+row.submissionId:'尚无已知正式序号');
+    const body=document.createElement('pre');body.style.whiteSpace='pre-wrap';body.textContent=row.text;
+    const detail=document.createElement('p');detail.textContent=row.state+(row.queryError?'；本次查询失败，保留上次状态：'+row.queryError:'');
+    if(row.state==='已完整写出')detail.textContent+='；完整HTTP已写出，不证明对方阅读或理解';
+    if(row.state==='写出未完成')detail.textContent+='；可能部分写出，不自动补发';
+    if(row.uncertaintyAcknowledged)detail.textContent+='；操作员已确认后续新提交可能重复，本条结果仍不确定';
+    article.append(title,body,detail);outputReceipts.append(article);
+  }
+}
+async function outputRefreshStates(){
+  if(outputClosed||outputQuerying||outputFault)return;
+  outputQuerying=true;
+  try{
+    for(const row of outputRows){
+      if(outputClosed||outputFault)break;
+      if(!row.submissionId||outputTerminalStates.has(row.state))continue;
+      const abort=new AbortController();outputStateAbort=abort;const timer=setTimeout(()=>abort.abort(),4000);
+      try{
+        const response=await fetch(base+'/api/control/output/status?id='+encodeURIComponent(row.submissionId),{cache:'no-store',headers:{'X-HY-Dialogue-Id':dialogueId,'X-HY-Control-Output':'1'},signal:abort.signal});
+        if(!response.ok)throw new Error('HTTP '+response.status);
+        let data;
+        try{data=await response.json();}catch(error){if(error instanceof SyntaxError){outputFault=true;throw new Error('正式状态回执JSON格式错误');}throw error;}
+        if(!data||data.accepted!==true||data.automaticRetry!==false||data.submissionId!==row.submissionId||!outputStates.has(data.status)||typeof data.httpBytes!=='string'||!/^\d+$/.test(data.httpBytes)||!Number.isInteger(data.systemError)){outputFault=true;throw new Error('正式状态回执结构不一致');}
+        if(outputClosed)break;
+        row.state=data.status;row.queryError='';
+      }catch(error){if(!outputClosed)row.queryError=error.name==='AbortError'?'请求超时':error.message;}
+      finally{clearTimeout(timer);if(outputStateAbort===abort)outputStateAbort=null;}
+    }
+  }catch(error){outputFault=true;outputStatus.textContent='控制操作界面错误：'+error.message;}
+  finally{outputQuerying=false;if(!outputClosed)renderOutputReceipts();}
+}
+outputUnknownAck.addEventListener('change',()=>renderOutputReceipts());
+outputForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(outputClosed||outputPosting||outputFault||!outputReady||!dialogueId||(outputUnknown&&!outputUnknownAck.checked))return;
+  const text=outputInput.value;
+  if(!text||new TextEncoder().encode(text).length>1048576){outputStatus.textContent='正文必须非空且不超过1 MiB UTF-8字节；未提交';return;}
+  if(outputUnknown){for(const row of outputRows)if(row.unknown)row.uncertaintyAcknowledged=true;outputUnknown=false;}
+  outputUnknownAck.checked=false;
+  const row={text,submissionId:null,state:'处理中，不重复提交',queryError:'',unknown:false};outputRows.push(row);
+  const abort=new AbortController();outputSubmitAbort=abort;outputPosting=true;renderOutputReceipts();
+  try{
+    const response=await fetch(base+'/api/control/output',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId,'X-HY-Control-Output':'1'},body:text,signal:abort.signal});
+    const data=await response.json();
+    if(outputClosed)return;
+    if(response.status===202&&data.accepted===true&&data.automaticRetry===false&&data.status==='已排队'&&typeof data.submissionId==='string'&&/^[1-9]\d{0,19}$/.test(data.submissionId)&&BigInt(data.submissionId)<=18446744073709551615n&&data.httpBytes==='0'&&data.systemError===0){
+      row.submissionId=data.submissionId;row.state=data.status;if(outputInput.value===text)outputInput.value='';
+    }else if(!response.ok&&data.accepted===false&&data.automaticRetry===false&&data.submissionId===null&&typeof data.status==='string'){
+      row.state='未入列：HTTP '+response.status+' · '+data.status;
+    }else throw new Error('提交回执结构不一致');
+  }catch(error){row.state='提交结果不确定，可能已经入列：'+(error.name==='AbortError'?'客户端取消等待':error.message);row.unknown=true;outputUnknown=true;}
+  finally{if(outputSubmitAbort===abort)outputSubmitAbort=null;outputPosting=false;if(!outputClosed)renderOutputReceipts();}
+});
+const controlLabels={status:'状态',reason:'原因',id:'身份',parentId:'父需求',subject:'需求主体',executionDomain:'执行域',activity:'活动状态',weight:'权重',sourceType:'来源类型',sourceTaskId:'来源任务',complete:'字段完整',target:'目标',existence:'目标存在',featureType:'特征类型',form:'目标形式',valueDomain:'目标范围',comparison:'比较要求',direction:'方向',referencedDemand:'引用需求',contentPath:'内容路径',demandId:'承接需求',state:'任务状态',waitReason:'等待原因',schedulingStatus:'调度状态',lastMethodId:'最近方法',executionId:'执行实例',executionOrganizationId:'执行组织',queryComplete:'候选查询完整',candidates:'候选方法',conditionReview:'条件核验',execution:'执行材料',preparation:'最近筹办摘要',conditionProposalCount:'条件提议数',causalProposalCount:'因果提议数',compositeProposalCount:'复合目标提议数',self:'自我线程',manager:'任务管理线程',serviceValue:'自我服务值',lastBusinessProgressAt:'最近业务推进时间',threadStatus:'学习线程状态',methods:'当前候选方法（非全量目录）',parameterCount:'参数数量',pairCount:'条件结果对数量',enabled:'启用',parameters:'参数规格',position:'参数位置',informationType:'信息类型',range:'范围概念',lifecycle:'生命周期',activeMessageCount:'活动消息数',activeWorkCount:'活动工作数',pendingFeedbackTaskCount:'待反馈任务数',schedulingInFlight:'调度扫描在途',pendingLearningMethodCount:'待学习方法数',stopRequested:'停止已请求',completed:'已完成',recentLearningEnd:'最近学习结束',recentLearningError:'最近学习运行异常',waitingMethodInstanceConsumed:'等待方法实例消费'};
+)HTML";
+    页面 += R"HTML(
+Object.assign(controlLabels,{activeMessages:'活动消息数',activeWork:'活动工作数',pendingFeedback:'待反馈任务数',pendingReview:'待复核任务数',pendingMethods:'自我待学习方法数',finished:'线程已完成',lastSelfCompletionMethodId:'自我最近学习结束的方法',completionDeliveredToManager:'学习结束已交接管理',lastManagerCompletionMethodId:'管理最近学习结束的方法',waitingMethodInstance:'等待方法实例消费',lastSelfError:'自我最近学习运行异常',lastManagerError:'管理最近学习运行异常',methodId:'方法引用',kind:'缺口种类',sourcePairId:'来源条件结果对',conditionIndex:'条件项序号',decompositionSource:'分解来源',childRelation:'子需求组织关系',startupStage:'装配阶段',scene:'自我所在场景',source:'材料来源',gaps:'条件缺口',roleId:'旧参数角色',selection:'方法选择',actionId:'正式动作引用',actualStateIds:'实际状态引用',assessmentId:'影响评估引用',diagnostic:'工程诊断',concept:'存在概念',retained:'保留上次成功材料',lastSuccessfulAt:'本区块上次成功采集时间'});
+let controlSnapshot=null,controlSelection=null,controlRefreshing=false,controlClosed=false,controlAbort=null;
+Object.assign(controlLabels,{feature:'实例特征引用',value:'实际值',scope:'覆盖范围',workSnapshot:'学习活动工作',thread:'学习线程',items:'工作/记录列表',queuedCount:'排队中数量',runningCount:'执行中数量',awaitingAcknowledgementCount:'已结束待确认数量',currentMethodId:'当前方法引用',queuePosition:'FIFO排队位置',archiveId:'问题归档引用',taskId:'任务引用',timeSemantic:'时间语义',timeNs:'发生或区间结束时间（纳秒）',startTimeNs:'区间开始（UTC纳秒）',endTimeNs:'区间结束（UTC纳秒）',latestEvidenceAt:'本次范围最近执行证据（UTC纳秒）',subjectId:'被描述存在/动作主体引用',fixedValue:'固定准确值',stateIds:'正式状态引用',memberDynamicIds:'成员动态引用',actionDefinitionId:'动作定义引用',actionSourceId:'动作来源引用',targetKind:'动作目标类别',targetId:'动作目标引用',targetFeatureId:'动作目标特征引用',actionResults:'动作显式结果',relation:'关联类型',resultDynamicId:'结果动态引用',taskIds:'来源任务引用',executionIds:'来源执行引用',sources:'任务与执行来源配对'});
+const controlStatus=document.getElementById('control-status');
+controlLabels.kind='类别';
+let controlMethodSelection=null;
+Object.assign(controlLabels,{methodCatalog:'正式方法目录',missingMethods:'缺失方法列表',headId:'方法头引用',head:'方法头声明（不推断与/或）',virtualExistence:'方法虚拟存在引用',implementation:'实现方式',behavior:'读取/改变',registrationName:'正式函数登记名',sourceMethodId:'来源方法引用',instanceRootId:'实例组织根引用',parentMethodId:'父代方法引用',pairCount:'配对引用数量（未逐对核验）',root:'正式方法组织根',format:'参数规格格式',requiresScene:'要求场景',objectKind:'旧规格对象种类',features:'旧特征规格',secondaryConcepts:'二次特征概念',collectionConstraint:'集合成员约束',collectionRoleId:'集合参数角色',existenceConcepts:'作用存在概念',featureTypes:'涉及特征类型',possibleResults:'可能结果概念',sourceDemandId:'来源需求引用'});
+function controlText(value){if(value===null||value===undefined)return '尚无材料';if(typeof value==='boolean')return value?'是':'否';if(typeof value==='object'&&typeof value.id==='string'&&typeof value.label==='string')return value.label+' · #'+value.id;return String(value);}
+function controlNode(tag,text,cls){const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;}
+function controlFields(container,value,depth=0){if(depth>14){container.append(controlNode('p','内容层级过深，停止页面展开','warning'));return;}if(value===null||typeof value!=='object'){container.append(controlNode('p',controlText(value),'muted'));return;}if(typeof value.id==='string'&&typeof value.label==='string'&&Object.keys(value).length===2){container.append(controlNode('p',controlText(value)));return;}if(Array.isArray(value)){if(!value.length)container.append(controlNode('p','已取得：无项目','muted'));for(const item of value){const part=controlNode('div',undefined,'object');controlFields(part,item,depth+1);container.append(part);}return;}const dl=controlNode('dl');for(const [key,item] of Object.entries(value)){dl.append(controlNode('dt',controlLabels[key]||key));const dd=controlNode('dd');if(item!==null&&typeof item==='object'){const detail=controlNode('details',undefined,'object');detail.open=depth<2;detail.append(controlNode('summary',Array.isArray(item)?'查看项目（'+item.length+'）':'查看材料'));controlFields(detail,item,depth+1);dd.append(detail);}else dd.textContent=controlText(item);dl.append(dd);}container.append(dl);}
+function controlTime(ns){if(typeof ns!=='string')return '无可比较实际时刻';try{const ms=BigInt(ns)/1000000n;if(ms>=-8640000000000000n&&ms<=8640000000000000n)return new Date(Number(ms)).toISOString()+' · '+ns+' ns';}catch{}return ns+' ns';}
+function controlLearning(snapshot){const area=document.getElementById('control-learning');area.replaceChildren();const block=snapshot.learning?.workSnapshot;area.append(controlNode('p','学习活动工作：'+controlText(block?.status),'notice'));if(block?.reason)area.append(controlNode('p',block.reason,'warning'));if(block?.scope)area.append(controlNode('p',block.scope,'hint'));if(block?.retained)area.append(controlNode('p','以下为上次成功材料，采集于 '+controlText(block.lastSuccessfulAt),'warning'));if(block){const {items,...meta}=block;controlFields(area,meta);}if(Array.isArray(block?.items)){if(!block.items.length)area.append(controlNode('p',block.retained?'上次读取没有活动工作':'已取得：当前没有活动学习工作','muted'));for(const item of block.items){const detail=controlNode('details',undefined,'object');detail.append(controlNode('summary',controlText(item.state)+' · '+controlText(item.kind)+' · '+controlText(item.methodId)+(item.queuePosition?' · FIFO #'+item.queuePosition:'')));controlFields(detail,item);area.append(detail);}}area.append(controlNode('p','“已结束待确认”只表示工作已返回或异常结束，不表示学习成功或条件结果对已发表。','notice'));if(snapshot.learning){const {workSnapshot,...feedback}=snapshot.learning;const detail=controlNode('details',undefined,'object');detail.append(controlNode('summary','自我／任务管理线程的学习反馈'));controlFields(detail,feedback);area.append(detail);}area.append(controlNode('p','正式方法目录与缺失方法头在独立区域展示；完整学习历史仍未接入。','notice'));}
+function controlTimeline(snapshot){const area=document.getElementById('control-timeline');area.replaceChildren();const block=snapshot.timeline;area.append(controlNode('p','执行证据读取：'+controlText(block?.status),'notice'));if(block?.scope)area.append(controlNode('p',block.scope,'hint'));if(block?.reason)area.append(controlNode('p',block.reason,'warning'));if(block?.retained)area.append(controlNode('p','本轮暂不可用，以下为上次成功材料，采集于 '+controlText(block.lastSuccessfulAt),'warning'));area.append(controlNode('p','本次范围最近执行证据：'+controlTime(block?.latestEvidenceAt),'hint'));area.append(controlNode('p','按正式UTC时刻倒序；同刻排序不表示因果。动作不等于效果，记录不等于任务完成。三世界完整历史未接入。','notice'));if(!Array.isArray(block?.items))return;if(!block.items.length)area.append(controlNode('p',block.retained?'上次读取范围内没有执行证据':'已取得：本轮任务引用范围内没有执行证据','muted'));for(const item of block.items){const detail=controlNode('details',undefined,'object');const when=item.timeSemantic==='实例绝对UTC'?controlTime(item.timeNs):'无可比较实际时刻（'+controlText(item.timeSemantic)+'）';detail.append(controlNode('summary',controlText(item.kind)+' · '+when+' · #'+item.id));controlFields(detail,item);area.append(detail);}}
+)HTML";
+    页面 += R"HTML(
+function controlMethodDirectory(snapshot){const areas=[['methodCatalog','control-method-catalog','正式方法目录'],['missingMethods','control-missing-methods','待形成能力／缺失方法头']];for(const [key,id,title] of areas){const area=document.getElementById(id),block=snapshot[key];area.replaceChildren();area.append(controlNode('h3',title,'section-label'));area.append(controlNode('p','读取状态：'+controlText(block?.status),'notice'));if(block?.scope)area.append(controlNode('p',block.scope,'hint'));if(block?.reason)area.append(controlNode('p',block.reason,'warning'));if(block?.retained)area.append(controlNode('p','显示上次成功材料，采集于 '+controlText(block.lastSuccessfulAt),'warning'));const items=Array.isArray(block?.items)?block.items:null;if(items){area.append(controlNode('p','本份材料共 '+items.length+' 项','hint'));if(!items.length)area.append(controlNode('p',block.retained?'上次成功材料中无项目':'已取得：当前无项目','muted'));for(const item of items){let label;if(key==='methodCatalog')label=controlText(item.label)+' · '+(item.enabled?'启用':'停用')+' · '+(item.sourceMethodId?'执行副本':'长期方法')+' · '+(item.pairCount==='0'?'尚无配对引用':item.pairCount+' 个配对引用');else label=(item.head?.featureTypes||[]).map(controlText).join('／')+' · 待形成能力';const button=controlNode('button',label+' · #'+item.id,'task');button.type='button';if(controlMethodSelection?.key===key&&controlMethodSelection.id===item.id)button.classList.add('selected');button.addEventListener('click',()=>{controlMethodSelection={key,id:item.id};controlMethodDirectory(controlSnapshot);});area.append(button);}}area.append(controlNode('p',key==='methodCatalog'?'启用不等于适用或可执行；配对只计已发布引用，未逐对核验。':'仅缺失能力记录，尚非已掌握方法；未进入方法树，不提供执行或晋升操作。','notice'));}const detail=document.getElementById('control-method-detail');detail.replaceChildren();if(!controlMethodSelection){detail.append(controlNode('p','选择方法或缺失方法头，查看同份快照的详情。','muted'));return;}const block=snapshot[controlMethodSelection.key],item=block?.items?.find(x=>x.id===controlMethodSelection.id);if(!item){detail.append(controlNode('p','本次快照未包含原选中对象；不改选其它对象。','notice'));return;}detail.append(controlNode('h3',(controlMethodSelection.key==='methodCatalog'?'方法':'缺失方法头')+' · #'+item.id));if(block.retained)detail.append(controlNode('p','以下为上次成功材料，采集于 '+controlText(block.lastSuccessfulAt),'warning'));controlFields(detail,item);if(controlMethodSelection.key==='methodCatalog'&&Array.isArray(item.parameters)&&!item.parameters.length)detail.append(controlNode('p','正式参数规格：无参数。','hint'));}
+)HTML";
+    页面 += R"HTML(
+function controlSummary(d){const t=d.target;if(!t)return '待完善目标';return [controlText(t.existence),controlText(t.featureType),t.form,t.direction||controlText(t.valueDomain)].filter(Boolean).join(' · ');}
+function controlDetail(){const area=document.getElementById('control-detail');area.replaceChildren();if(!controlSelection){area.append(controlNode('p','选择需求或任务查看详情。','muted'));return;}const source=controlSelection.kind==='demand'?controlSnapshot?.demands:controlSnapshot?.tasks;const item=source?.items?.find(x=>x.id===controlSelection.id);document.getElementById('detail-title').textContent=(controlSelection.kind==='demand'?'需求':'任务')+' · #'+controlSelection.id;if(!item){area.append(controlNode('p','本次快照未包含该对象；保留原选择，不替换为其它对象。','notice'));return;}controlFields(area,item);if(controlSelection.kind==='task'){area.append(controlNode('p','方法返回不等于目标满足。候选排除理由、完整因果轨迹尚未接入。','notice'));}}
+function controlButton(item,kind,text){const button=controlNode('button',text,kind==='task'?'task':'');button.type='button';if(controlSelection?.kind===kind&&controlSelection.id===item.id)button.classList.add('selected');button.addEventListener('click',()=>{controlSelection={kind,id:item.id};controlRender(controlSnapshot);});return button;}
+function controlRender(snapshot){controlSnapshot=snapshot;const overview=document.getElementById('overview');overview.replaceChildren();for(const [key,value] of Object.entries(snapshot.overview||{})){const card=controlNode('div',undefined,'metric');card.append(controlNode('div',controlLabels[key]||key,'caption'));if(value!==null&&typeof value==='object'){controlFields(card,value);}else card.append(controlNode('div',controlText(value),'value'));overview.append(card);}if(snapshot.receivedDemandCognition){const card=controlNode('div',undefined,'metric');card.append(controlNode('div','真实接收需求认知','caption'));controlFields(card,snapshot.receivedDemandCognition);overview.append(card);}if(!overview.childNodes.length)overview.append(controlNode('p','运行总览尚无材料','notice'));document.getElementById('control-meta').textContent='采集开始：'+controlText(snapshot.readStartedAt)+' ｜ 完成：'+controlText(snapshot.readCompletedAt)+' ｜ '+controlText(snapshot.consistency);
+const tree=document.getElementById('control-tree');tree.replaceChildren();const demands=snapshot.demands,tasks=snapshot.tasks;tree.append(controlNode('p','需求：'+controlText(demands?.status)+'；任务：'+controlText(tasks?.status),'hint'));if(demands?.reason)tree.append(controlNode('p',demands.reason,'warning'));if(tasks?.reason)tree.append(controlNode('p',tasks.reason,'warning'));const ds=Array.isArray(demands?.items)?demands.items:[],ts=Array.isArray(tasks?.items)?tasks.items:[],shownTasks=new Set();const self=ds.filter(d=>d.executionDomain==='自我执行');const index=new Map(self.map(d=>[d.id,d]));const visited=new Set();
+function addDemand(parent,d,path){const li=controlNode('li');parent.append(li);if(path.has(d.id)){li.append(controlNode('p','父关系出现循环，停止展开 #'+d.id,'warning'));return;}if(visited.has(d.id))return;visited.add(d.id);li.append(controlButton(d,'demand',controlSummary(d)));li.append(controlNode('div',(d.complete?'完整':'待完善')+' · '+controlText(d.activity)+' · '+controlText(d.sourceType),'hint'));const children=controlNode('ul');for(const t of ts.filter(t=>t.demandId===d.id)){children.append(controlButton(t,'task','任务 #'+t.id+' · '+controlText(t.state)));shownTasks.add(t.id);}const next=new Set(path);next.add(d.id);for(const child of self.filter(x=>x.parentId===d.id))addDemand(children,child,next);if(children.childNodes.length)li.append(children);}
+tree.append(controlNode('h3','自我需求树','section-label'));const roots=controlNode('ul');for(const d of self.filter(d=>d.parentId===null||d.parentId===undefined||!index.has(d.parentId))){if(d.parentId)roots.append(controlNode('p','本轮未定位父节点 #'+d.parentId,'warning'));addDemand(roots,d,new Set());}for(const d of self)if(!visited.has(d.id))addDemand(roots,d,new Set());tree.append(roots);if(!self.length)tree.append(controlNode('p',demands?.status==='已取得'?'已取得：无自我需求':'尚无可用自我需求材料','muted'));tree.append(controlNode('p','子需求“与／或”组织关系未接入；不由树形排列推断。','notice'));const others=ds.filter(d=>d.executionDomain!=='自我执行');if(others.length){tree.append(controlNode('h3','被认知需求 / 其它执行域（不入自我树）','section-label'));for(const d of others)tree.append(controlButton(d,'demand',controlText(d.executionDomain)+' · '+controlSummary(d)));}const unbound=ts.filter(t=>!shownTasks.has(t.id));if(unbound.length){tree.append(controlNode('h3','本轮未关联到自我树的任务','section-label'));for(const t of unbound)tree.append(controlButton(t,'task','任务 #'+t.id+' · '+controlText(t.state)));}
+controlDetail();controlLearning(snapshot);controlMethodDirectory(snapshot);controlTimeline(snapshot);}
+function controlRetainSections(snapshot){const retain=(block,previous)=>{if(block?.status==='已取得'){block.lastSuccessfulAt=snapshot.readCompletedAt;}else if(block&&Array.isArray(previous?.items)){block.items=previous.items;block.retained=true;block.lastSuccessfulAt=previous.lastSuccessfulAt||controlSnapshot.readCompletedAt;for(const key of ['thread','queuedCount','runningCount','awaitingAcknowledgementCount','latestEvidenceAt','root'])if(key in previous)block[key]=previous[key];block.reason=(block.reason||'本次读取未完成')+'；本区块保留上次成功材料，采集于 '+block.lastSuccessfulAt;}};for(const key of ['demands','tasks','timeline','methodCatalog','missingMethods'])retain(snapshot[key],controlSnapshot?.[key]);retain(snapshot.learning?.workSnapshot,controlSnapshot?.learning?.workSnapshot);return snapshot;}
+async function controlRefresh(){if(controlRefreshing||controlClosed)return;controlRefreshing=true;const abort=new AbortController();controlAbort=abort;const timer=setTimeout(()=>abort.abort(),4000);try{const response=await fetch(base+'/api/control',{cache:'no-store',signal:abort.signal});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(typeof data.status!=='string'||typeof data.sequence!=='string'||typeof data.ageMs!=='string')throw new Error('快照结构不一致');controlStatus.textContent='控制快照：'+data.status+' · #'+data.sequence+' · 距采集 '+data.ageMs+' ms'+(data.collecting?' · 正在采集':'')+(data.stale?' · 快照已陈旧':'');controlStatus.className=data.stale||data.status==='采集失败'?'warning':'';if(data.snapshot!==null)controlRender(controlRetainSections(data.snapshot));}catch(error){controlStatus.textContent='控制快照读取失败：'+(error.name==='AbortError'?'请求超时':error.message)+'；保留上次显示，不影响消息交互';controlStatus.className='warning';}finally{clearTimeout(timer);if(controlAbort===abort)controlAbort=null;controlRefreshing=false;if(!controlClosed)setTimeout(controlRefresh,2000);}}
+window.addEventListener('pagehide',()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();});
+controlRefresh();
 function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message '+item.role;e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
 let refreshing=false;
-async function refresh(){if(refreshing)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);status.textContent='本机服务可访问';}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
-async function poll(){await refresh();setTimeout(poll,750);}
+async function refresh(){if(refreshing||outputClosed)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);outputReady=true;renderOutputReceipts();status.textContent='本机服务可访问';await outputRefreshStates();}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
+async function poll(){if(outputClosed)return;await refresh();if(!outputClosed)setTimeout(poll,750);}
 form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;if(!dialogueId){status.textContent='浏览器不支持安全对话框标识，不能提交';return;}const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
-document.getElementById('close').addEventListener('click',async()=>{try{await fetch(base+'/api/close',{method:'POST'});}finally{document.body.innerHTML='<main style="height:auto;padding:28px"><h1>交互宿主已结束</h1><p>现在可以关闭此页面。</p></main>';}});
+document.getElementById('close').addEventListener('click',async()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();try{await fetch(base+'/api/close',{method:'POST'});}finally{const ended=controlNode('main');ended.append(controlNode('h1','交互宿主已结束'),controlNode('p','现在可以关闭此页面。'));document.body.replaceChildren(ended);}});
+)HTML";
+    页面 += R"HTML(
 const serviceForm=document.getElementById('service-form');
 const serviceFields=document.getElementById('service-fields');
 const serviceMode=document.getElementById('service-mode');
@@ -998,7 +1163,7 @@ void 追加页面消息(网页对话框传输状态& 页面, 网页对话消息�
 }
 
 bool 确认传输页面(const 网页对话框目标& 目标, const 网页对话框事实回调组& 回调) {
-    // 不持宿主锁进入普通应用锁；返回后再核验运行身份。
+    // 不持宿主锁进入外设适配器；返回后再核验运行身份。
     if (!回调.确认页面(目标)) return false;
     std::lock_guard 操作锁(队列操作互斥);
     std::lock_guard 锁(共享状态.互斥);
@@ -1028,7 +1193,7 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
         bool 请求停止 = false, 可领取 = true;
         {
             std::lock_guard 锁(共享状态.互斥);
-            const auto* 页面 = 查找传输页面(目标);
+            auto* 页面 = 查找传输页面(目标);
             if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识 || !页面)
                 throw std::runtime_error("outbound dialogue identity invalid");
             if (!共享状态.停止信号 || !共享状态.输出队列)
@@ -1037,14 +1202,18 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
             队列 = 共享状态.输出队列;
             可领取 = 共享状态.接纳提交 && std::none_of(页面->提交组.begin(), 页面->提交组.end(),
                 [](const auto& 项) { return 项.结果.状态 == 网页定向发送状态::正在写出; });
+            if (可领取) 页面->提交组.reserve(页面->提交组.size() + 1);
         }
         if (请求停止) { 停止接纳提交_已持队列锁(); 可领取 = false; }
         if (可领取) {
+            // 在正式出列之前准备新投影的目标字符串及容器空间。
+            网页待发送项 新索引{目标};
             auto 领取 = 队列->领取(目标);
             if (领取.状态 != 网页输出队列状态::空) {
                 if (领取.状态 != 网页输出队列状态::已领取 || !领取.项
                     || 领取.项->目标 != 目标 || !领取.项->提交序号
-                    || !领取.项->正式消息编码 || 领取.项->UTF8正文.empty())
+                    || !领取.项->正式消息编码 || 领取.项->UTF8正文.empty()
+                    || !是有效UTF8(领取.项->UTF8正文))
                     throw std::runtime_error("outbound formal queue receipt invalid");
                 事实 = std::move(领取.项);
                 std::lock_guard 锁(共享状态.互斥);
@@ -1055,11 +1224,19 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
                     if (命中) throw std::runtime_error("outbound submission duplicated");
                     命中 = &项;
                 }
-                if (!命中 || 命中->目标 != 目标 || 命中->正式消息编码 != 事实->正式消息编码
-                    || 命中->结果.提交序号 != 事实->提交序号
-                    || 命中->结果.状态 != 网页定向发送状态::已排队)
-                    throw std::runtime_error("outbound formal queue and transport index disagree");
-                命中->结果.状态 = 网页定向发送状态::正在写出;
+                if (命中) {
+                    if (命中->目标 != 目标 || 命中->正式消息编码 != 事实->正式消息编码
+                        || 命中->结果.提交序号 != 事实->提交序号
+                        || 命中->结果.状态 != 网页定向发送状态::已排队)
+                        throw std::runtime_error("outbound formal queue and transport index disagree");
+                    命中->结果.状态 = 网页定向发送状态::正在写出;
+                } else {
+                    // 正式队列允许普通外设调用者直接生产；传输索引不是发送资格。
+                    新索引.提交序号 = 事实->提交序号;
+                    新索引.正式消息编码 = 事实->正式消息编码;
+                    新索引.结果 = {网页定向发送状态::正在写出, 事实->提交序号};
+                    页面->提交组.push_back(std::move(新索引));
+                }
             } else if (领取.项) throw std::runtime_error("empty outbound queue carried a message");
         }
     }
@@ -1093,14 +1270,106 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
     }
 }
 
+// 只投影正式回执；工程异常向上送出到宿主唯一诊断边界。
+std::string 构造控制输出JSON(const 网页定向发送结果& 结果, bool 已接纳) {
+    using S = 网页定向发送状态;
+    std::string_view 状态;
+    switch (结果.状态) {
+    case S::已排队: 状态 = "已排队"; break;
+    case S::正在写出: 状态 = "正在写出"; break;
+    case S::已完整写出: 状态 = "已完整写出"; break;
+    case S::写出未完成: 状态 = "写出未完成"; break;
+    case S::已取消: 状态 = "已取消"; break;
+    case S::输入拒绝: 状态 = "输入拒绝"; break;
+    case S::宿主未运行: 状态 = "宿主未运行"; break;
+    case S::会话失效: 状态 = "会话失效"; break;
+    case S::对话框未登记: 状态 = "对话框未登记"; break;
+    case S::提交不存在: 状态 = "提交不存在"; break;
+    case S::页面被占用: 状态 = "页面被占用"; break;
+    default: throw std::runtime_error("control output unknown formal state");
+    }
+    const bool 正式记录 = 结果.状态 == S::已排队 || 结果.状态 == S::正在写出
+        || 结果.状态 == S::已完整写出 || 结果.状态 == S::写出未完成 || 结果.状态 == S::已取消;
+    if (已接纳 != 正式记录 || (已接纳 && (!结果.提交序号 || !*结果.提交序号))
+        || (!已接纳 && 结果.提交序号))
+        throw std::runtime_error("control output receipt identity/state mismatch");
+    return "{\"status\":\"" + std::string(状态) + "\",\"submissionId\":"
+        + (结果.提交序号 ? "\"" + std::to_string(*结果.提交序号) + "\"" : "null")
+        + ",\"httpBytes\":\"" + std::to_string(结果.HTTP已写字节数)
+        + "\",\"systemError\":" + std::to_string(结果.系统错误)
+        + ",\"accepted\":" + (已接纳 ? "true" : "false") + ",\"automaticRetry\":false}";
+}
+
+// 不持宿主/队列锁调用正式提交或查询；不创建页面、不生成发送事实。
+bool 处理控制台输出请求(SOCKET 客户端, const HTTP请求& 请求,
+    std::string_view 基础路径, std::string_view 公开会话标识, std::string_view 页面Origin) {
+    const std::string 提交路径 = std::string(基础路径) + "/api/control/output";
+    const std::string 状态路径 = 提交路径 + "/status";
+    const bool 提交 = 请求.目标 == 提交路径;
+    if (!提交 && !请求.目标.starts_with(状态路径)) return false;
+    const auto 拒绝 = [&](std::string_view HTTP状态, const 网页定向发送结果& 结果 = {}) {
+        (void)发送响应(客户端, HTTP状态, "application/json;charset=utf-8",
+            构造控制输出JSON(结果, false));
+        return true;
+    };
+    if ((提交 && 请求.方法 != "POST") || (!提交 && 请求.方法 != "GET"))
+        return 拒绝("400 Bad Request");
+    if (!页面Origin.starts_with("http://127.0.0.1:"))
+        throw std::runtime_error("control output trusted origin missing");
+    if (请求.控制安全头无效 || !请求.对话框标识 || !请求.主机 || !请求.控制输出标记)
+        return 拒绝("400 Bad Request");
+    if (*请求.主机 != 页面Origin.substr(7) || *请求.控制输出标记 != "1"
+        || (请求.来源 && *请求.来源 != 页面Origin)
+        || (提交 && !请求.来源)) return 拒绝("403 Forbidden");
+    std::uint64_t 序号 = 0;
+    if (提交) {
+        if (!请求.有正文长度) return 拒绝("400 Bad Request");
+        if (请求.内容类型 != "text/plain;charset=utf-8") return 拒绝("415 Unsupported Media Type");
+        if (请求.正文.size() > 最大消息字节数) return 拒绝("413 Payload Too Large");
+        if (请求.正文.empty() || !是有效UTF8(请求.正文)) return 拒绝("422 Unprocessable Content");
+    } else {
+        if (!请求.正文.empty()) return 拒绝("400 Bad Request");
+        const std::string 前缀 = 状态路径 + "?id=";
+        if (!请求.目标.starts_with(前缀)) return 拒绝("400 Bad Request");
+        const std::string_view ID = std::string_view(请求.目标).substr(前缀.size());
+        if (ID.empty() || ID.front() < '1' || ID.front() > '9'
+            || !std::all_of(ID.begin(), ID.end(), [](char 字符) { return 字符 >= '0' && 字符 <= '9'; }))
+            return 拒绝("400 Bad Request");
+        const auto 转换 = std::from_chars(ID.data(), ID.data() + ID.size(), 序号);
+        if (转换.ec != std::errc{} || 转换.ptr != ID.data() + ID.size() || !序号)
+            return 拒绝("400 Bad Request");
+    }
+    const 网页对话框目标 目标{std::string(公开会话标识), *请求.对话框标识};
+    const auto 结果 = 提交 ? 提交网页对话框消息({目标, 请求.正文, std::nullopt})
+        : 查询网页对话框发送(目标, 序号);
+    using S = 网页定向发送状态;
+    switch (结果.状态) {
+    case S::已排队: case S::正在写出: case S::已完整写出: case S::写出未完成: case S::已取消:
+        if ((提交 && 结果.状态 != S::已排队)
+            || (!提交 && 结果.提交序号 != std::optional<std::uint64_t>{序号}))
+            throw std::runtime_error("control output returned another submission or unexpected transition");
+        (void)发送响应(客户端, 提交 ? "202 Accepted" : "200 OK", "application/json;charset=utf-8",
+            构造控制输出JSON(结果, true));
+        return true;
+    case S::输入拒绝: return 拒绝("422 Unprocessable Content", 结果);
+    case S::宿主未运行: return 拒绝("503 Service Unavailable", 结果);
+    case S::会话失效: return 拒绝("410 Gone", 结果);
+    case S::对话框未登记: case S::提交不存在: return 拒绝("404 Not Found", 结果);
+    case S::页面被占用: return 拒绝("409 Conflict", 结果);
+    default: throw std::runtime_error("control output invalid formal operation result");
+    }
+}
+
 bool 处理请求(SOCKET 客户端,
     std::string_view 基础路径,
     std::string_view 会话标识,
+    std::string_view 页面Origin,
     const std::string& 页面,
     bool& 请求结束,
-    网页对话消息接收函数 消息接收,
+    const 网页对话消息接收函数& 消息接收,
     const 网页服务输入回调组& 服务输入,
-    const 网页对话框事实回调组& 对话框事实) {
+    const 网页对话框事实回调组& 对话框事实,
+    const 网页控制面板回调组& 控制面板) {
     HTTP请求 请求;
     const auto 读取状态 = 读取请求(客户端, 请求);
     if (读取状态 == 请求读取状态::请求过大) {
@@ -1112,9 +1381,39 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
 
+    if (处理控制台输出请求(客户端, 请求, 基础路径, 会话标识, 页面Origin)) return true;
     const std::string 消息路径 = std::string(基础路径) + "/api/messages";
     const std::string 取件路径 = std::string(基础路径) + "/api/outbound";
     const std::string 结束路径 = std::string(基础路径) + "/api/close";
+    if (请求.目标 == std::string(基础路径) + "/api/control") {
+        if (请求.方法 != "GET" || !请求.正文.empty()) {
+            发送响应(客户端, "400 Bad Request", "text/plain;charset=utf-8", "控制快照只接受空正文GET");
+            return true;
+        }
+        const auto 快照 = 控制面板.读取 ? 控制面板.读取() : 网页控制快照读取结果{};
+        std::string_view 状态 = "未知";
+        switch (快照.状态) {
+        case 网页控制快照状态::未接入: 状态 = "未接入"; break;
+        case 网页控制快照状态::采集中: 状态 = "采集中"; break;
+        case 网页控制快照状态::已取得: 状态 = "已取得"; break;
+        case 网页控制快照状态::采集失败: 状态 = "采集失败"; break;
+        case 网页控制快照状态::已停止: 状态 = "已停止"; break;
+        default: throw std::runtime_error("control snapshot state invalid");
+        }
+        // 采集中或快照过大时不回传正文，避免单线程 accept 被控制轮询占满而饿死 /api/messages。
+        const bool 回传快照 = 快照.UTF8JSON && !快照.正在采集
+            && 快照.UTF8JSON->size() <= 8192;
+        const bool 陈旧 = !回传快照
+            || (快照.UTF8JSON && 快照.距采集完成毫秒 > 10000);
+        const std::string 正文 = "{\"status\":\"" + std::string(状态)
+            + "\",\"sequence\":\"" + std::to_string(快照.序号)
+            + "\",\"ageMs\":\"" + std::to_string(快照.距采集完成毫秒)
+            + "\",\"collecting\":" + (快照.正在采集 ? "true" : "false")
+            + ",\"stale\":" + (陈旧 ? "true" : "false")
+            + ",\"snapshot\":" + (回传快照 ? *快照.UTF8JSON : "null") + "}";
+        发送响应(客户端, "200 OK", "application/json;charset=utf-8", 正文);
+        return true;
+    }
     if (处理服务输入请求(客户端, 请求, 基础路径, 会话标识, 服务输入)) return true;
     if (请求.方法 == "GET" && 请求.目标 == 基础路径) {
         发送响应(客户端, "200 OK", "text/html;charset=utf-8", 页面);
@@ -1173,6 +1472,8 @@ bool 处理请求(SOCKET 客户端,
                 "{\"accepted\":false,\"retryable\":true}");
             return true;
         }
+        if(消息接收&&服务输入.接收事实已记录)
+            服务输入.接收事实已记录(会话标识,*请求.对话框标识,*上行序号);
         try {
             追加交互者消息(*目标, *上行序号, std::move(请求.正文));
         } catch (...) {
@@ -1228,7 +1529,6 @@ bool 网页对话宿主结果::成功() const noexcept {
     try {
         std::lock_guard 操作锁(队列操作互斥);
         const 网页输出队列回调组* 队列 = nullptr;
-        std::uint64_t 序号 = 0;
         bool 请求停止 = false;
         {
             std::lock_guard 锁(共享状态.互斥);
@@ -1243,11 +1543,7 @@ bool 网页对话宿主结果::成功() const noexcept {
                 if (!页面) return {网页定向发送状态::对话框未登记};
                 if (页面->出站占用身份 != 请求.出站占用身份)
                     return {网页定向发送状态::页面被占用};
-                if (!共享状态.下一提交序号
-                    || 共享状态.下一提交序号 == (std::numeric_limits<std::uint64_t>::max)())
-                    throw std::runtime_error("outbound submission sequence exhausted");
                 页面->提交组.reserve(页面->提交组.size() + 1);
-                序号 = 共享状态.下一提交序号;
                 队列 = 共享状态.输出队列;
             }
         }
@@ -1255,22 +1551,25 @@ bool 网页对话宿主结果::成功() const noexcept {
             停止接纳提交_已持队列锁();
             return {网页定向发送状态::宿主未运行};
         }
-        网页定向发送结果 结果{网页定向发送状态::已排队, 序号};
-        网页待发送项 索引{请求.目标, 序号, 0, 结果};
-        const 网页定向发送事实 输入{请求.目标, 序号, 请求.UTF8正文};
+        网页待发送项 索引{请求.目标};
+        const 网页输出入列请求 输入{请求.目标, 请求.UTF8正文};
         const auto 入列 = 队列->入列(输入);
-        if ((入列.状态 != 网页输出队列状态::已入列 && 入列.状态 != 网页输出队列状态::已复用)
-            || !入列.项 || 入列.项->目标 != 请求.目标 || 入列.项->提交序号 != 序号
+        if (入列.状态 != 网页输出队列状态::已入列
+            || !入列.项 || 入列.项->目标 != 请求.目标 || !入列.项->提交序号
             || !入列.项->正式消息编码 || 入列.项->UTF8正文 != 请求.UTF8正文)
             throw std::runtime_error("outbound formal enqueue receipt invalid");
+        const auto 序号 = 入列.项->提交序号;
+        网页定向发送结果 结果{网页定向发送状态::已排队, 序号};
+        索引.提交序号 = 序号;
         索引.正式消息编码 = 入列.项->正式消息编码;
+        索引.结果 = 结果;
         {
             std::lock_guard 锁(共享状态.互斥);
             auto* 页面 = 查找传输页面(请求.目标);
-            if (!页面 || 共享状态.下一提交序号 != 序号)
+            if (!页面 || std::any_of(页面->提交组.begin(), 页面->提交组.end(),
+                    [&](const auto& 项) { return 项.提交序号 == 序号; }))
                 throw std::runtime_error("outbound transport index changed during enqueue");
             页面->提交组.push_back(std::move(索引));
-            ++共享状态.下一提交序号;
         }
         return 结果;
     } catch (...) {
@@ -1437,38 +1736,17 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
 
 网页对话宿主结果 运行本地网页对话宿主(
     const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收) noexcept {
-    (void)停止请求; (void)消息接收;
-    return {网页对话宿主状态::会话绑定失败};
-}
-
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
-    const 网页服务输入回调组& 服务输入) noexcept {
-    (void)停止请求; (void)消息接收; (void)服务输入;
-    return {网页对话宿主状态::会话绑定失败};
-}
-
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
+    const 网页外设运行回调组& 外设,
     const 网页服务输入回调组& 服务输入,
-    const 网页对话框事实回调组& 对话框事实) noexcept {
-    (void)停止请求; (void)消息接收; (void)服务输入; (void)对话框事实;
-    return {网页对话宿主状态::内部错误};
-}
-
-网页对话宿主结果 运行本地网页对话宿主(
-    const volatile std::sig_atomic_t& 停止请求,
-    网页对话消息接收函数 消息接收,
-    const 网页服务输入回调组& 服务输入,
-    const 网页对话框事实回调组& 对话框事实,
-    const 网页输出队列回调组& 输出队列) noexcept {
+    const 网页控制面板回调组& 控制面板) noexcept {
     try {
+        const auto& 输出队列 = 外设.输出队列;
+        const auto& 消息接收 = 外设.接收消息;
+        const 网页对话框事实回调组 对话框事实{外设.确认页面, 外设.发送完成};
         if (!输出队列.入列 || !输出队列.领取 || !输出队列.取消 || !输出队列.清空)
             return {网页对话宿主状态::内部错误};
-        if (!消息接收 || !对话框事实.确认页面 || !对话框事实.发送完成)
+        if (!外设.会话开始 || !外设.会话结束 || !消息接收
+            || !对话框事实.确认页面 || !对话框事实.发送完成)
             return {网页对话宿主状态::会话绑定失败};
         const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
             || 服务输入.查询目标提示 || 服务输入.预览 || 服务输入.读取预览 || 服务输入.确认;
@@ -1508,15 +1786,22 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         }
         const std::string 基础路径 = "/session/" + 令牌;
         const std::string 页面 = 构造页面(基础路径);
-        const std::string 浏览器地址 = "http://127.0.0.1:"
-            + std::to_string(ntohs(地址.sin_port)) + 基础路径;
+        const std::string 页面Origin = "http://127.0.0.1:" + std::to_string(ntohs(地址.sin_port));
+        const std::string 浏览器地址 = 页面Origin + 基础路径;
+        // 逆序析构：传输收束/队列清空 → 可选业务会话 → 外设会话。
+        网页外设会话租约 外设会话(公开会话标识, 外设);
         网页服务会话租约 服务会话(公开会话标识, 服务输入);
         网页对话会话租约 会话;
+        if (!外设会话.开始()) return {网页对话宿主状态::会话绑定失败};
         if (!会话.开始(公开会话标识, 停止请求, 输出队列)) return {网页对话宿主状态::运行失败};
         if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
-        if (!启动系统浏览器(浏览器地址)) {
-            return {网页对话宿主状态::浏览器启动失败};
-        }
+        try {
+            std::ofstream 会话旁路("D:/TEMP/海中鱼巣/last-session-url.txt", std::ios::trunc);
+            if (会话旁路) 会话旁路 << 浏览器地址 << std::flush;
+        } catch (...) {}
+        // 不自动打开浏览器：页面轮询会在单线程 accept 上与启动期任务承接争用外设/场景锁，导致入站饿死甚至死锁。
+        // 会话地址已写入旁路文件，由外部按同一 /api/messages 契约提交。
+        (void)浏览器地址;
 
         bool 请求结束 = false;
         while (停止请求 == 0 && !请求结束) {
@@ -1540,8 +1825,8 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
             (void)setsockopt(客户端.取得(), SOL_SOCKET, SO_SNDTIMEO,
                 reinterpret_cast<const char*>(&超时毫秒), sizeof(超时毫秒));
-            (void)处理请求(客户端.取得(), 基础路径, 公开会话标识, 页面,
-                请求结束, 消息接收, 服务输入, 对话框事实);
+            (void)处理请求(客户端.取得(), 基础路径, 公开会话标识, 页面Origin, 页面,
+                请求结束, 消息接收, 服务输入, 对话框事实, 控制面板);
         }
         停止接纳提交();
         return {请求结束

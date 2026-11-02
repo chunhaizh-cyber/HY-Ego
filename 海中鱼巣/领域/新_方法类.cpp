@@ -2,11 +2,13 @@
 #include "../核心/容错检查.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -24,6 +26,7 @@
 #include "概念_存在类.h"
 #include "概念_特征类.h"
 #include "概念_二次特征类.h"
+#include "消息交互.数据.h"
 #include "../核心/容错检查.h"
 
 namespace 海中鱼巣 {
@@ -35,13 +38,17 @@ namespace {
 std::recursive_mutex 新方法互斥;
 
 bool 同一学习条件(const 新方法条件定义& 左, const 新方法条件定义& 右) {
-    if (左.关系规则 != 右.关系规则 || !std::is_permutation(左.参数关系组.begin(), 左.参数关系组.end(), 右.参数关系组.begin(), 右.参数关系组.end())) return false;
+    if (左.关系规则 != 右.关系规则 || !std::is_permutation(左.场景事实限定组.begin(), 左.场景事实限定组.end(), 右.场景事实限定组.begin(), 右.场景事实限定组.end()) || !std::is_permutation(左.参数关系组.begin(), 左.参数关系组.end(), 右.参数关系组.begin(), 右.参数关系组.end())) return false;
     if (左.关系规则 == 新方法项关系规则::全部成立
         || 左.关系规则 == 新方法项关系规则::任一成立) {
         return std::is_permutation(左.条件项组.begin(), 左.条件项组.end(),
             右.条件项组.begin(), 右.条件项组.end());
     }
     return 左 == 右;
+}
+bool 同义结果(const 新方法结果定义& 左,const 新方法结果定义& 右) {
+    if(!std::is_permutation(左.场景事实限定组.begin(),左.场景事实限定组.end(),右.场景事实限定组.begin(),右.场景事实限定组.end()))return false;
+    auto a=左,b=右;a.场景事实限定组.clear();b.场景事实限定组.clear();return a==b;
 }
 
 稳定编码 节点类型字段{};
@@ -96,14 +103,19 @@ bool 同一学习条件(const 新方法条件定义& 左, const 新方法条件�
 稳定编码 直接调用根{}, 直接调用根类型{}, 直接调用类型{}, 直接调用参数类型{};
 稳定编码 直接调用成员字段{}, 直接调用方法字段{}, 直接调用现实场景字段{};
 稳定编码 直接调用外设场景字段{}, 直接调用参数字段{}, 直接调用序号字段{};
-稳定编码 直接调用信息类型字段{}, 直接调用信息引用字段{}, 直接调用动作字段{};
+稳定编码 直接调用信息类型字段{}, 直接调用类别概念字段{}, 直接调用信息引用字段{}, 直接调用动作字段{};
 稳定编码 直接调用收束字段{};
 
 void 确保直接调用结构() {
+    if (有效(直接调用根) && !有效(直接调用类别概念字段)) {
+        直接调用类别概念字段 = 全局基础数据集.新建节点();
+        if (!有效(直接调用类别概念字段))
+            throw std::runtime_error("direct invocation category key unavailable");
+    }
     std::vector<稳定编码*> 键{&直接调用根类型, &直接调用类型, &直接调用参数类型,
         &直接调用成员字段, &直接调用方法字段, &直接调用现实场景字段,
         &直接调用外设场景字段, &直接调用参数字段, &直接调用序号字段,
-        &直接调用信息类型字段, &直接调用信息引用字段,
+        &直接调用信息类型字段, &直接调用类别概念字段, &直接调用信息引用字段,
         &直接调用动作字段, &直接调用收束字段};
     if (!有效(直接调用根)) {
         if (std::any_of(键.begin(), 键.end(), [](auto* p) { return 有效(*p); }))
@@ -119,6 +131,10 @@ void 确保直接调用结构() {
     for (auto* p : 键)
         if (!全局基础数据集.查询节点(*p))
             throw std::runtime_error("direct invocation schema key missing");
+    std::set<稳定编码> 唯一键;
+    for (const auto* p : 键)
+        if (!唯一键.insert(*p).second || *p == 直接调用根 || *p == 节点类型字段)
+            throw std::runtime_error("direct invocation schema key collision");
     const auto 类型 = 全局基础数据集.查询字段(直接调用根, 节点类型字段);
     if (类型.size() != 1 || 类型.front().内容 != 基础字段内容{直接调用根类型}
         || !全局基础数据集.查询目标关系(直接调用根, 基础外部关系类型::父子).empty())
@@ -163,7 +179,7 @@ void 确保缺失方法列表() {
 稳定编码 参数集合角色字段{};
 稳定编码 参数集合特征类型字段{};
 // 独立扩展键；旧结构不因缺少新格式字段而被重新分配或解释。
-稳定编码 有序参数序号字段{}, 有序参数类型字段{}, 有序参数范围字段{};
+稳定编码 有序参数序号字段{}, 有序参数类型字段{}, 有序参数类别概念字段{}, 有序参数范围字段{};
 
 稳定编码 配对条件字段{};
 稳定编码 配对结果字段{};
@@ -172,12 +188,24 @@ void 确保缺失方法列表() {
 稳定编码 配对来源字段{};
 稳定编码 关系规则字段{};
 稳定编码 参数位置关系字段{}, 模拟事件位置字段{}, 配对知识来源字段{};
+稳定编码 模拟输入方案字段{},模拟输入方案节点类型{},模拟消息输入字段{},模拟消息输入节点类型{};
+稳定编码 模拟消息参数位置字段{},模拟消息方向字段{},模拟正文范围字段{},模拟正文非空字段{},模拟输入时机字段{},模拟触发位置方向字段{};
+稳定编码 初始必要条件字段{}, 初始声明节点类型{}, 初始声明项节点类型{}, 初始场景限定节点类型{};
+稳定编码 执行分支字段{},分支节点类型{},分支所属方法字段{},分支所属虚拟字段{},分支条件字段{},配对分支来源字段{};
+稳定编码 结果场景限定字段{},结果场景限定节点类型{},结果场景所属字段{},结果场景关系概念字段{},结果场景四位置字段{};
+稳定编码 初始声明格式字段{}, 初始声明所属字段{}, 初始场景限定字段{}, 初始关系概念字段{}, 初始四位置字段{};
 稳定编码 条件项字段{};
 稳定编码 条件项存在概念字段{};
 稳定编码 条件项特征类型字段{};
 稳定编码 条件项特征值域字段{};
 稳定编码 条件项二次特征字段{};
 稳定编码 条件项状态动态字段{};
+稳定编码 条件引用内容要求字段{}, 条件引用内容项字段{};
+稳定编码 条件内容作用点字段{}, 条件前态当前字段{}, 条件前态历史数字段{};
+稳定编码 条件内容认知有效字段{};
+稳定编码 结果引用内容要求字段{}, 结果引用内容项字段{}, 结果内容作用点字段{};
+稳定编码 内容关系成员字段{}, 内容关系节点类型{}, 内容关系所属字段{};
+稳定编码 内容关系左字段{}, 内容关系右字段{}, 内容关系路径字段{};
 稳定编码 结果项字段{};
 稳定编码 结果项特征类型字段{};
 稳定编码 结果项特征值域字段{};
@@ -261,8 +289,10 @@ bool 行为结果相容(const std::optional<新方法行为>& 行为, const 新�
         结果.结果项组.end(), [](const auto& 项) { return 项.变化方向概念节点.has_value(); });
 }
 
+bool 通用概念必要声明形状有效(const 新方法初始必要条件定义&);
 bool 行为声明有效(const 新方法知识建立请求& 请求) {
-    return (!请求.行为 || 是方法行为(static_cast<std::int64_t>(*请求.行为)))
+    return (!请求.初始必要条件 || 通用概念必要声明形状有效(*请求.初始必要条件))
+        && (!请求.行为 || 是方法行为(static_cast<std::int64_t>(*请求.行为)))
         && std::all_of(请求.条件结果组.begin(), 请求.条件结果组.end(),
             [&](const auto& 配对) { return 行为结果相容(请求.行为, 配对.结果); });
 }
@@ -358,30 +388,71 @@ std::optional<std::string> 读取唯一字符串字段(
 }
 
 
+bool 参数关系顺序(const 新方法参数关系& a,const 新方法参数关系& b) {
+    return std::tie(a.种类,a.左参数序号,a.右参数序号,a.左正式内容路径)
+        <std::tie(b.种类,b.左参数序号,b.右参数序号,b.左正式内容路径);
+}
+bool 含内容关系(const std::vector<新方法参数关系>& 组) {
+    return std::any_of(组.begin(),组.end(),[](const auto& r){return r.种类==新方法参数关系种类::内容引用参数;});
+}
+void 规范内容关系配对(新方法条件结果定义& d) {
+    if(!含内容关系(d.条件.参数关系组)&&!含内容关系(d.结果.参数关系组))return;
+    std::sort(d.条件.参数关系组.begin(),d.条件.参数关系组.end(),参数关系顺序);
+    std::sort(d.结果.参数关系组.begin(),d.结果.参数关系组.end(),参数关系顺序);
+}
+void 规范内容关系声明(新方法知识建立请求& r) {
+    if(含内容关系(r.初始模拟关系组))std::sort(r.初始模拟关系组.begin(),r.初始模拟关系组.end(),参数关系顺序);
+    for(auto& p:r.条件结果组)规范内容关系配对(p);
+    for(auto& b:r.执行分支组)if(含内容关系(b.必要条件.参数关系组))
+        std::sort(b.必要条件.参数关系组.begin(),b.必要条件.参数关系组.end(),参数关系顺序);
+}
 bool 参数关系结构有效(const std::vector<新方法参数关系>& 关系) {
     for (std::size_t i=0;i<关系.size();++i) {
         const auto& r=关系[i];
         const auto k=static_cast<std::int64_t>(r.种类);
-        if(k<1||k>5||!r.左参数序号||!r.右参数序号) return false;
+        if(k<1||k>8||!r.左参数序号||!r.右参数序号
+            ||(r.种类==新方法参数关系种类::场景包含存在&&r.左参数序号==r.右参数序号)) return false;
+        if(r.种类==新方法参数关系种类::内容引用参数) {
+            if(r.左正式内容路径.size()!=1||!节点仍存在(r.左正式内容路径.front()))return false;
+        } else if(!r.左正式内容路径.empty())return false;
         if(std::find(关系.begin(),关系.begin()+i,r)!=关系.begin()+i) return false;
     }
     return true;
 }
 std::optional<std::vector<新方法参数关系>> 读取参数关系(稳定编码 n) {
     const auto 组=全局基础数据集.查询字段(n,参数位置关系字段);
-    if(组.empty()) return std::vector<新方法参数关系>{};
-    if(组.size()!=1) return {};
+    if(组.size()>1) return {};
+    std::vector<新方法参数关系> r;
+    if(!组.empty()) {
     const auto* v=std::get_if<基础值>(&组.front().内容);
     const auto* a=v?std::get_if<std::vector<std::int64_t>>(&v->材料):nullptr;
     if(!a||a->size()%3) return {};
-    std::vector<新方法参数关系> r;
     for(std::size_t i=0;i<a->size();i+=3) {
-        if((*a)[i+1]<=0||(*a)[i+2]<=0
+        if((*a)[i]<1||(*a)[i]>7||(*a)[i+1]<=0||(*a)[i+2]<=0
             ||(*a)[i+1]>(std::numeric_limits<std::uint32_t>::max)()
             ||(*a)[i+2]>(std::numeric_limits<std::uint32_t>::max)()) return {};
         r.push_back({static_cast<新方法参数关系种类>((*a)[i]),
             static_cast<std::uint32_t>((*a)[i+1]),static_cast<std::uint32_t>((*a)[i+2])});
     }
+    }
+    for(const auto& f:全局基础数据集.查询字段(n,内容关系成员字段)) {
+        const auto* child=std::get_if<稳定编码>(&f.内容);
+        if(!child||读取唯一节点字段(*child,节点类型字段)!=std::optional{内容关系节点类型}
+            ||读取唯一节点字段(*child,内容关系所属字段)!=std::optional{n})return {};
+        const auto parents=全局基础数据集.查询目标字段(*child,内容关系成员字段);
+        if(parents.size()!=1||parents.front().所属节点!=n)return {};
+        const auto l=读取唯一I64字段(*child,内容关系左字段),v=读取唯一I64字段(*child,内容关系右字段);
+        const auto ft=读取唯一节点字段(*child,内容关系路径字段);
+        if(!l||!v||!ft||*l<=0||*v<=0||*l>(std::numeric_limits<std::uint32_t>::max)()
+            ||*v>(std::numeric_limits<std::uint32_t>::max)())return {};
+        const auto snapshot=全局基础数据集.查询完整节点结构(*child);
+        if(!snapshot.结构)return {};
+        for(const auto& x:snapshot.结构->字段组)
+            if(x.字段节点!=节点类型字段&&x.字段节点!=内容关系所属字段&&x.字段节点!=内容关系左字段
+                &&x.字段节点!=内容关系右字段&&x.字段节点!=内容关系路径字段)return {};
+        r.push_back({新方法参数关系种类::内容引用参数,static_cast<std::uint32_t>(*l),static_cast<std::uint32_t>(*v),{*ft}});
+    }
+    if(含内容关系(r))std::sort(r.begin(),r.end(),参数关系顺序);
     return 参数关系结构有效(r)?std::optional{std::move(r)}:std::nullopt;
 }
 
@@ -465,15 +536,26 @@ bool 写入I64字段(
 }
 
 
+稳定编码 新建类型化节点(稳定编码,std::vector<稳定编码>&,std::vector<稳定编码>&);
 bool 写入参数关系(稳定编码 n,const std::vector<新方法参数关系>& r,
-    std::vector<稳定编码>& 已写) {
+    std::vector<稳定编码>& 已建,std::vector<稳定编码>& 已写) {
     if(r.empty()) return true;
     if(!参数关系结构有效(r)) return false;
     std::vector<std::int64_t> a;
     for(const auto& x:r) {
+        if(x.种类==新方法参数关系种类::内容引用参数) {
+            const auto child=新建类型化节点(内容关系节点类型,已建,已写);
+            if(!有效(child)||!写入节点字段(child,内容关系所属字段,n,已写)
+                ||!写入I64字段(child,内容关系左字段,x.左参数序号,已写)
+                ||!写入I64字段(child,内容关系右字段,x.右参数序号,已写)
+                ||!写入节点字段(child,内容关系路径字段,x.左正式内容路径.front(),已写)
+                ||!写入节点字段(n,内容关系成员字段,child,已写))return false;
+            continue;
+        }
         a.push_back(static_cast<std::int64_t>(x.种类));
         a.push_back(x.左参数序号);a.push_back(x.右参数序号);
     }
+    if(a.empty())return true;
     已写.reserve(已写.size()+1);
     const auto f=全局基础数据集.添加字段值(n,参数位置关系字段,基础值{std::move(a)});
     if(!有效(f)) return false;
@@ -670,6 +752,14 @@ bool 精确数值域有效(const std::optional<特征概念I64闭区间>& 域,
 }
 
 bool 结果项有效(const 新方法结果项定义& 项, const 概念_特征类& 概念服务) noexcept {
+    if(项.引用内容结果) {
+        const auto& c=*项.引用内容结果;
+        return 项.参数序号&&!有效(项.参数角色节点)&&!项.任务成员变量序号
+            &&!项.特征类型概念节点&&!项.特征值域概念节点&&!项.精确数值域
+            &&!项.变化方向概念节点&&!项.状态或动态概念节点
+            &&c.作用点==新方法内容作用点::特征当前引用
+            &&!c.要求认知来源当前有效&&c.正式内容路径.empty()&&节点仍存在(c.要求概念节点);
+    }
     return 项.任务成员变量序号 <= 1 && (!项.任务成员变量序号 || 项.参数序号)
         && (项.参数序号 ? !有效(项.参数角色节点) : 节点仍存在(项.参数角色节点))
         && 可选引用有效(项.特征类型概念节点)
@@ -766,7 +856,9 @@ bool 线性关系有效(const 新方法条件结果定义& 定义,
         const auto [R, 新R] = 结果域组.emplace(关系.结果序号, 关系.原结果域);
         if ((!新C && C->second != 关系.原条件域) || (!新R && R->second != 关系.原结果域)) return false;
         const auto& 条件 = 定义.条件.条件项组[关系.条件序号];
+        if (条件.引用内容条件||条件.特征前态限定) return false;
         const auto& 结果 = 定义.结果.结果项组[关系.结果序号];
+        if(结果.引用内容结果)return false;
         if (条件.二次特征概念节点 || 条件.状态或动态概念节点 || 结果.状态或动态概念节点) return false;
         const auto 当前C = 读取线性项域(条件.特征类型概念节点,
             条件.特征值域概念节点, 条件.精确数值域, 服务);
@@ -802,7 +894,7 @@ std::optional<std::vector<新方法条件结果线性关系>> 读取线性关系
 }
 
 bool 条件结果有效(const 新方法条件结果定义& 定义, const 概念_特征类& 概念服务,
-    bool 实例 = false) {
+    bool 实例 = false,bool 仅条件声明 = false) {
     std::optional<std::uint32_t> 成员参数;
     const auto 成员项有效 = [&](const auto& 项, bool 条件) {
         if (!项.任务成员变量序号) return true;
@@ -821,12 +913,34 @@ bool 条件结果有效(const 新方法条件结果定义& 定义, const 概念_
     for (const auto& 项 : 定义.结果.结果项组) if (!成员项有效(项, false)) return false;
     for (const auto& 项 : 定义.结果.确认要求.禁止结果项组) if (!成员项有效(项, false)) return false;
     if (!线性关系有效(定义, 概念服务, 实例)) return false;
-    if (!关系定义有效(
-            定义.条件.关系规则, 定义.条件.条件项组.size()+定义.条件.参数关系组.size())
-        || !关系定义有效(
-            定义.结果.关系规则, 定义.结果.结果项组.size()+定义.结果.参数关系组.size())) return false;
+    const auto 条件数=定义.条件.条件项组.size()+定义.条件.参数关系组.size()+定义.条件.场景事实限定组.size();
+    if (!(仅条件声明&&条件数==0&&定义.条件.关系规则==新方法项关系规则::全部成立)
+        && !关系定义有效(定义.条件.关系规则,条件数))return false;
+    if(!仅条件声明&&!关系定义有效(定义.结果.关系规则,定义.结果.结果项组.size()+定义.结果.参数关系组.size()))return false;
     if(!参数关系结构有效(定义.条件.参数关系组)||!参数关系结构有效(定义.结果.参数关系组)) return false;
     for (const auto& 项 : 定义.条件.条件项组) {
+        if(项.特征前态限定) {
+            const auto& p=*项.特征前态限定;
+            if(!项.参数序号||有效(项.参数角色节点)||项.任务成员变量序号
+                ||项.存在概念节点||项.特征值域概念节点||项.精确数值域
+                ||项.引用内容条件||项.二次特征概念节点||项.状态或动态概念节点
+                ||!可选引用有效(项.特征类型概念节点)
+                ||p.当前值状态!=新方法当前值状态::未知
+                ||p.历史不同值数量!=std::optional<std::uint64_t>{0})return false;
+            continue;
+        }
+        if (项.引用内容条件) {
+            const auto& 内容=*项.引用内容条件;
+            if (!项.参数序号 || 有效(项.参数角色节点) || 项.任务成员变量序号
+                || 项.存在概念节点 || 项.特征类型概念节点 || 项.特征值域概念节点
+                || 项.精确数值域 || 项.二次特征概念节点 || 项.状态或动态概念节点
+                || (内容.作用点!=新方法内容作用点::特征当前引用&&内容.作用点!=新方法内容作用点::参数自身)
+                || (内容.要求认知来源当前有效&&(内容.作用点!=新方法内容作用点::参数自身||!内容.正式内容路径.empty()))
+                || !节点仍存在(内容.要求概念节点) || 内容.正式内容路径.size()>1
+                || std::any_of(内容.正式内容路径.begin(),内容.正式内容路径.end(),
+                    [](稳定编码 FT){return !节点仍存在(FT);})) return false;
+            continue;
+        }
         if (项.任务成员变量序号 > 1 || (项.任务成员变量序号 && !项.参数序号)
             || !(项.参数序号 ? !有效(项.参数角色节点) : 节点仍存在(项.参数角色节点))
             || !可选引用有效(项.存在概念节点)
@@ -866,9 +980,366 @@ bool 条件结果有效(const 新方法条件结果定义& 定义, const 概念_
         || 主要结果数量 == 1;
 }
 
+struct 引用内容定义前提变化 final {};
+
+// 范围定义属于概念owner；正式信息实例由注入reader读取，不投影为普通E。
+bool 追加方法存在范围保护(稳定编码 C,const 概念_存在类& owner,
+    std::vector<基础联合节点快照>& protection) {
+    std::set<稳定编码> seen;
+    const auto read=[&](auto&& self,稳定编码 n)->bool {
+        if(!seen.insert(n).second)return true;
+        const auto ordinary=owner.读取普通存在概念定义保护(n);
+        if(ordinary.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
+        if(ordinary.状态==正式概念读取状态::已读取) {
+            if(!ordinary.信息||ordinary.完整保护组.empty())throw std::runtime_error("ordinary parameter range proof incomplete");
+            protection.insert(protection.end(),ordinary.完整保护组.begin(),ordinary.完整保护组.end());
+            for(const auto up:ordinary.信息->上位概念组)if(!self(self,up))return false;
+            return true;
+        }
+        if(ordinary.状态!=正式概念读取状态::非本提供者概念)
+            throw std::runtime_error("ordinary parameter range owner unavailable");
+        const auto formal=owner.读取正式结构概念保护(n);
+        if(formal.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+        if(formal.状态==正式结构操作状态::未找到||formal.状态==正式结构操作状态::输入拒绝)return false;
+        if(formal.状态!=正式结构操作状态::已读取||!formal.信息||formal.完整保护组.empty())
+            throw std::runtime_error("formal parameter range proof unavailable");
+        if(!std::holds_alternative<信息结构概念定义>(formal.信息->定义))return false;
+        protection.insert(protection.end(),formal.完整保护组.begin(),formal.完整保护组.end());
+        return true;
+    };
+    return read(read,C);
+}
+
+bool 方法存在范围有效(稳定编码 C,const 概念_存在类& owner) {
+    std::vector<基础联合节点快照> protection;
+    return 追加方法存在范围保护(C,owner,protection);
+}
+
+bool 方法联合保护仍成立(const std::vector<基础联合节点快照>& proof) {
+    std::map<稳定编码,基础联合节点快照> expected;
+    const auto same=[](const auto& a,const auto& b) {
+        return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组
+            &&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组
+            &&a.出向外部关系组==b.出向外部关系组;
+    };
+    for(const auto& p:proof) {
+        const auto [it,added]=expected.emplace(p.结构.节点.编码,p);
+        if(!added&&!same(it->second,p))return false;
+    }
+    std::vector<稳定编码> ids;for(const auto& [id,p]:expected)ids.push_back(id);
+    if(ids.empty())return true;
+    const auto current=全局基础数据集.查询节点组完整结构(ids);
+    if(current.状态!=基础结构操作状态::已完成||current.节点组.size()!=ids.size())
+        throw std::runtime_error("method parameter protection read unavailable");
+    for(const auto& p:current.节点组)if(!p.快照||!same(expected.at(p.快照->结构.节点.编码),*p.快照))return false;
+    return true;
+}
+
+新方法操作状态 正式参数状态(const 正式信息参数读取结果& r,稳定编码 N) {
+    using S=正式信息参数读取状态;
+    switch(r.状态) {
+    case S::已读取:
+        if(!r.信息||r.信息->信息节点!=N||!有效(r.信息->类别概念)||r.完整保护组.empty())
+            throw std::runtime_error("formal information parameter success projection incomplete");
+        return 新方法操作状态::已找到;
+    case S::信息不存在:return 新方法操作状态::参数引用失效;
+    case S::范围未支持:return 新方法操作状态::参数概念不相容;
+    case S::前提已变化:return 新方法操作状态::定义前提已变化;
+    case S::依赖未就绪:throw std::runtime_error("formal parameter reader dependencies unavailable");
+    case S::资源失败:throw std::bad_alloc{};
+    }
+    throw std::runtime_error("formal parameter reader state invalid");
+}
+
+// 类别引用只由相应owner的唯一根证明解释；枚举仅用于现C++服务派发。
+struct 参数类别概念保护 final {
+    新方法参数信息类型 分派类型;
+    稳定编码 类别概念;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+
+参数类别概念保护 读取参数类别概念保护(
+    新方法参数信息类型 类型, const 概念_存在类& 存在, const 概念_特征类& 特征) {
+    参数类别概念保护 结果{类型, {}, {}};
+    if (类型 == 新方法参数信息类型::存在) {
+        const auto p = 存在.读取存在根概念保护();
+        if (p.状态 == 正式概念读取状态::前提已变化) throw 引用内容定义前提变化{};
+        if (p.状态 != 正式概念读取状态::已读取 || !p.信息 || p.完整保护组.empty())
+            throw std::runtime_error("parameter existence category root unavailable");
+        结果.类别概念 = p.信息->节点;
+        结果.完整保护组 = p.完整保护组;
+    } else if (类型 == 新方法参数信息类型::特征) {
+        const auto p = 特征.读取特征类别根概念保护();
+        if (p.状态 == 正式概念读取状态::前提已变化) throw 引用内容定义前提变化{};
+        if (p.状态 != 正式概念读取状态::已读取 || !p.信息 || p.完整保护组.empty())
+            throw std::runtime_error("parameter feature category root unavailable");
+        结果.类别概念 = p.信息->节点;
+        结果.完整保护组 = p.完整保护组;
+    } else throw std::invalid_argument("unsupported parameter category dispatch hint");
+    return 结果;
+}
+
+参数类别概念保护 解析参数类别概念保护(
+    稳定编码 类别, const 概念_存在类& 存在, const 概念_特征类& 特征) {
+    auto e = 读取参数类别概念保护(新方法参数信息类型::存在, 存在, 特征);
+    auto f = 读取参数类别概念保护(新方法参数信息类型::特征, 存在, 特征);
+    if (e.类别概念 == f.类别概念)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"存在与特征类别根身份冲突。");
+    if (类别 == e.类别概念) {
+        e.完整保护组.insert(e.完整保护组.end(), f.完整保护组.begin(), f.完整保护组.end());
+        return e;
+    }
+    if (类别 == f.类别概念) {
+        f.完整保护组.insert(f.完整保护组.end(), e.完整保护组.begin(), e.完整保护组.end());
+        return f;
+    }
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"持久类别引用不是本版本准入的正式类别根。");
+}
+
+// 新旧字段严格二选一。旧整数只读派发，不给旧材料补写新字段。
+std::optional<新方法参数信息类型> 读取持久参数类别(
+    稳定编码 节点, 稳定编码 旧字段, 稳定编码 新字段,
+    const 概念_存在类& 存在, const 概念_特征类& 特征) {
+    const auto 旧 = 全局基础数据集.查询字段(节点, 旧字段);
+    const auto 新 = 全局基础数据集.查询字段(节点, 新字段);
+    if (旧.empty() == 新.empty())
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"新旧类别字段必须恰有一种，不能双写或全缺。");
+    if (!新.empty()) {
+        const auto c = 读取唯一节点字段(节点, 新字段);
+        if (!c)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"类别概念字段不是唯一合法节点引用。");
+        return 解析参数类别概念保护(*c, 存在, 特征).分派类型;
+    }
+    const auto v = 读取唯一I64字段(节点, 旧字段);
+    if (!v || (*v != 1 && *v != 2))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"旧类别字段不是唯一合法的兼容类型值。");
+    return static_cast<新方法参数信息类型>(*v);
+}
+enum class 引用内容条件校验模式 : std::uint8_t { 持久结构=1, 完整语义 };
+
+bool 读取引用内容条件定义保护(const 新方法引用内容条件& 内容,
+    const 概念_特征类& 特征概念,const 概念_存在类& 存在概念,
+    std::vector<基础联合节点快照>& 保护) {
+    if(内容.正式内容路径.size()>1||(内容.作用点!=新方法内容作用点::特征当前引用
+        &&内容.作用点!=新方法内容作用点::参数自身))return false;
+    if(内容.要求认知来源当前有效) {
+        if(内容.作用点!=新方法内容作用点::参数自身||!内容.正式内容路径.empty())return false;
+        const auto full=存在概念.读取引用内容筹办概念();
+        if(full.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+        if(full.状态!=正式结构操作状态::已读取||!full.信息||full.完整保护组.empty())
+            throw std::runtime_error("method current provenance condition complete concept unavailable");
+        if(full.信息->完整被认知需求!=内容.要求概念节点)return false;
+        保护.insert(保护.end(),full.完整保护组.begin(),full.完整保护组.end());
+    }
+    const auto 定义=存在概念.读取正式结构概念保护(内容.要求概念节点);
+    if(定义.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+    if(定义.状态==正式结构操作状态::未找到
+        ||定义.状态==正式结构操作状态::输入拒绝)return false;
+    if(定义.状态!=正式结构操作状态::已读取||!定义.信息||定义.完整保护组.empty())
+        throw std::runtime_error("content condition formal definition read failed");
+    const bool 结构=std::holds_alternative<信息结构概念定义>(定义.信息->定义);
+    if(!结构&&!std::holds_alternative<基础范围概念定义>(定义.信息->定义))return false;
+    保护.insert(保护.end(),定义.完整保护组.begin(),定义.完整保护组.end());
+    if(结构) {
+        const auto 有效内容=存在概念.读取正式结构有效内容保护(内容.要求概念节点);
+        if(有效内容.状态==正式结构有效内容读取状态::资源失败)throw std::bad_alloc{};
+        if(有效内容.状态==正式结构有效内容读取状态::前提已变化)throw 引用内容定义前提变化{};
+        if(有效内容.状态!=正式结构有效内容读取状态::已读取||!有效内容.信息||有效内容.完整保护组.empty())
+            throw std::runtime_error("content condition effective definition read failed");
+        保护.insert(保护.end(),有效内容.完整保护组.begin(),有效内容.完整保护组.end());
+    }
+    if(!内容.正式内容路径.empty()) {
+        for(std::uint32_t 槽=先天特征类型槽::需求主体;槽<=先天特征类型槽::内容确认来源;++槽) {
+            const auto FT=特征概念.读取先天特征类型槽(槽);
+            if(FT.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+            if(FT.状态==特征概念规则状态::前提已变化)throw 引用内容定义前提变化{};
+            if(FT.状态==特征概念规则状态::值不存在
+                ||FT.状态==特征概念规则状态::入口拒绝)return false;
+            if(FT.状态!=特征概念规则状态::已完成||!FT.类型根||FT.完整保护组.empty())
+                throw std::runtime_error("content condition innate FT read failed");
+            保护.insert(保护.end(),FT.完整保护组.begin(),FT.完整保护组.end());
+            if(*FT.类型根!=内容.正式内容路径.front())continue;
+            const auto* 基础=std::get_if<基础范围概念定义>(&定义.信息->定义);
+            if(!基础)return true; // 结构范围仍由正式内容求值器解释，不压成标量域。
+            using namespace 先天特征类型槽;
+            using 值类=正式内容值种类;
+            const auto 值种类=[&] {
+                switch(槽) {
+                case 需求主体:case 需求目标存在:return 值类::存在引用;
+                case 需求目标FT:case 目标域:case 目标比较:return 值类::概念引用;
+                case 父需求:return 值类::需求引用;
+                case 理解来源:return 值类::语言理解引用;
+                case 内容确认来源:return 值类::内容确认引用;
+                default:return 值类::I64数值;
+                }
+            }();
+            switch(基础->原语) {
+            case 基础概念原语::I64闭区间:case 基础概念原语::I64有限枚举:
+                return 值种类==值类::I64数值;
+            case 基础概念原语::合法存在:case 基础概念原语::唯一存在:
+                return 值种类==值类::存在引用;
+            case 基础概念原语::合法FT根:case 基础概念原语::合法特征概念:
+            case 基础概念原语::合法比较关系:case 基础概念原语::正式概念身份:
+                return 值种类==值类::概念引用;
+            case 基础概念原语::正式信息身份:return 值种类!=值类::I64数值;
+            case 基础概念原语::具名领域身份:
+                if(基础->整数参数.size()!=1)return false;
+                if(基础->整数参数.front()==2)return 值种类==值类::语言理解引用;
+                if(基础->整数参数.front()==3)return 值种类==值类::内容确认引用;
+                if(基础->整数参数.front()==15)return 值种类==值类::需求引用;
+                return 值种类!=值类::I64数值; // 其它正式身份保留求值器的未支持边界。
+            }
+            return false;
+        }
+        return false;
+    }
+    if(!结构)return false;
+    const auto 根=存在概念.读取先天需求任务方法概念();
+    if(根.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+    if(根.状态==正式结构操作状态::未找到
+        ||根.状态==正式结构操作状态::输入拒绝)return false;
+    if(根.状态!=正式结构操作状态::已读取||!根.信息)
+        throw std::runtime_error("content condition innate demand root read failed");
+    std::set<稳定编码> 已读;std::vector<稳定编码> 待读{内容.要求概念节点};bool 命中=false;
+    while(!待读.empty()) {
+        const auto n=待读.back();待读.pop_back();if(!已读.insert(n).second)continue;
+        const auto r=存在概念.读取正式结构概念保护(n);
+        if(r.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+        if(r.状态!=正式结构操作状态::已读取||!r.信息||r.完整保护组.empty())
+            throw std::runtime_error("content condition declared ancestor read failed");
+        const auto* d=std::get_if<信息结构概念定义>(&r.信息->定义);if(!d)return false;
+        保护.insert(保护.end(),r.完整保护组.begin(),r.完整保护组.end());
+        if(n==根.信息->需求)命中=true;
+        待读.insert(待读.end(),d->上位结构概念组.begin(),d->上位结构概念组.end());
+    }
+    return 命中;
+}
+
+bool 正式需求范围有效(稳定编码 范围,const 概念_特征类& f,const 概念_存在类& e) {
+    新方法引用内容条件 c;c.要求概念节点=范围;c.作用点=新方法内容作用点::参数自身;
+    std::vector<基础联合节点快照> p;
+    return 读取引用内容条件定义保护(c,f,e,p);
+}
+bool 追加需求主体路径保护(稳定编码 FT,const 概念_特征类& f,const 概念_存在类& e,
+    std::vector<基础联合节点快照>& p) {
+    const auto slot=f.读取先天特征类型槽(先天特征类型槽::需求主体);
+    if(slot.状态==特征概念规则状态::前提已变化)throw 引用内容定义前提变化{};
+    if(slot.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+    if(slot.状态!=特征概念规则状态::已完成||!slot.类型根||slot.完整保护组.empty())
+        throw std::runtime_error("method subject relation innate FT unavailable");
+    if(*slot.类型根!=FT)return false;
+    const auto def=f.读取特征概念定义保护(FT);
+    if(def.前提已变化)throw 引用内容定义前提变化{};
+    if(def.状态!=基础结构操作状态::已完成||!def.信息||def.预期节点组.empty())
+        throw std::runtime_error("method subject relation FT definition unavailable");
+    const auto* domain=std::get_if<特征概念信息引用值域>(&def.信息->定义.值域);
+    if(def.信息->定义.材料类型!=特征概念材料物理类型::信息节点引用
+        ||def.信息->定义.比较规则!=特征概念比较规则::信息引用身份精确
+        ||!domain||domain->语义!=信息引用语义::信息对象)return false;
+    const auto target=e.读取正式结构概念保护(domain->内容概念);
+    if(target.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+    if(target.状态!=正式结构操作状态::已读取||!target.信息||target.完整保护组.empty())
+        throw std::runtime_error("method subject content range unavailable");
+    const auto* base=std::get_if<基础范围概念定义>(&target.信息->定义);
+    if(!base||base->原语!=基础概念原语::合法存在)return false;
+    p.insert(p.end(),slot.完整保护组.begin(),slot.完整保护组.end());
+    p.insert(p.end(),def.预期节点组.begin(),def.预期节点组.end());
+    p.insert(p.end(),target.完整保护组.begin(),target.完整保护组.end());
+    return true;
+}
+
 bool 条件结果角色已声明(
     const std::vector<新方法参数规格>& 参数规格组,
-    const 新方法条件结果定义& 定义, const 概念_特征类& 概念服务) noexcept {
+    const 新方法条件结果定义& 定义, const 概念_特征类& 概念服务,
+    const 概念_存在类& 存在概念服务,
+    引用内容条件校验模式 模式=引用内容条件校验模式::完整语义) {
+    try {
+
+    const auto 找规格 = [&](std::uint32_t n) -> const 新方法有序参数规格* {
+        const 新方法有序参数规格* found = nullptr;
+        for (const auto& s : 参数规格组) if (s.有序规格 && s.有序规格->序号 == n) {
+            if (found) return nullptr; found = &*s.有序规格;
+        }
+        return found;
+    };
+    for(const auto* group:{&定义.条件.场景事实限定组,&定义.结果.场景事实限定组}) {
+      std::vector<新方法初始场景事实限定> 已核限定;
+      for (const auto& r : *group) {
+        if ((group==&定义.条件.场景事实限定组&&定义.条件.关系规则 != 新方法项关系规则::全部成立)
+            || std::find(已核限定.begin(), 已核限定.end(), r) != 已核限定.end()) return false;
+        const auto proof = 存在概念服务.读取已确认消息连接概念保护();
+        if (!proof.信息 || proof.完整保护组.empty() || proof.信息->节点 != r.关系概念节点) return false;
+        const std::array positions{r.场景参数序号,r.主体参数序号,r.对象参数序号,r.特征参数序号};
+        for (std::size_t i=0;i<positions.size();++i) {
+            const auto* p=找规格(positions[i]);
+            if (!p || p->信息类型 != (i==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在)) return false;
+        }
+        const auto* f=找规格(r.特征参数序号);
+        const auto fd=概念服务.获取特征概念(f->范围概念节点);
+        if (!fd || fd->材料类型!=特征概念材料物理类型::存在节点引用
+            || fd->比较规则!=特征概念比较规则::存在身份精确 || r.主体参数序号==r.对象参数序号) return false;
+        已核限定.push_back(r);
+      }
+    }
+    const auto 包含存在范围 = [&](稳定编码 范围, 稳定编码 所需上位) {
+        if (!存在概念服务.是存在概念节点(范围) || !存在概念服务.是存在概念节点(所需上位)) return false;
+        std::map<稳定编码, std::uint8_t> mark;
+        bool reached = false;
+        const auto visit = [&](auto&& self, 稳定编码 n) -> void {
+            const auto old = mark[n];
+            if (old == 1) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法存在引用关系", L"正式存在概念上位链有环。");
+            if (old == 2) return;
+            mark[n] = 1;
+            const auto c = 存在概念服务.获取存在概念(n);
+            if (!c) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法存在引用关系", L"正式存在概念上位链读取失败。");
+            if (n == 所需上位) reached = true;
+            for (const auto parent : c->上位概念组) self(self, parent);
+            mark[n] = 2;
+        };
+        visit(visit, 范围);
+        return reached;
+    };
+    for(const auto* group:{&定义.条件.场景事实限定组,&定义.结果.场景事实限定组})for(const auto& r:*group) {
+        const auto* f=找规格(r.特征参数序号);
+        const auto fd=概念服务.获取特征概念(f->范围概念节点);
+        const auto* domain=fd?std::get_if<特征概念存在引用值域>(&fd->值域):nullptr;
+        const auto* peer=找规格(r.对象参数序号);
+        if(!domain||!peer||!包含存在范围(peer->范围概念节点,domain->存在概念节点))return false;
+    }
+    const auto 引用声明合法 = [&](const 新方法参数关系& r) {
+        const auto* l = 找规格(r.左参数序号); const auto* e = 找规格(r.右参数序号);
+        if (!l || !e || l->信息类型 != 新方法参数信息类型::特征 || e->信息类型 != 新方法参数信息类型::存在) return false;
+        const auto f = 概念服务.获取特征概念(l->范围概念节点);
+        if (!f && 概念服务.是特征概念节点(l->范围概念节点))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法存在引用关系", L"正式特征参数范围读取失败。");
+        const auto root = f ? 读取线性特征类型根(f->节点, 概念服务) : std::nullopt;
+        if (f && !root)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法存在引用关系", L"正式特征类型根或上位结构读取失败。");
+        if(f&&root&&f->材料类型==特征概念材料物理类型::需求节点引用
+            &&f->比较规则==特征概念比较规则::需求身份精确) {
+            const auto* domain=std::get_if<特征概念信息引用值域>(&f->值域);
+            if(!正式需求范围有效(e->范围概念节点,概念服务,存在概念服务))return false;
+            if(std::holds_alternative<特征概念全材料值域>(f->值域))return true;
+            if(!domain||domain->语义!=信息引用语义::信息对象)return false;
+            // 正式需求的范围包含由结构概念上位闭包核验，不送普通存在树。
+            std::set<稳定编码> seen;std::vector<稳定编码> todo{e->范围概念节点};
+            bool found=false;
+            while(!todo.empty()) {
+                const auto n=todo.back();todo.pop_back();if(!seen.insert(n).second)continue;
+                const auto d=存在概念服务.读取正式结构概念保护(n);
+                if(d.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+                if(d.状态!=正式结构操作状态::已读取||!d.信息)throw std::runtime_error("method demand reference range unreadable");
+                const auto* s=std::get_if<信息结构概念定义>(&d.信息->定义);if(!s)return false;
+                if(n==domain->内容概念)found=true;
+                todo.insert(todo.end(),s->上位结构概念组.begin(),s->上位结构概念组.end());
+            }
+            return found;
+        }
+        const auto* domain = f ? std::get_if<特征概念存在引用值域>(&f->值域) : nullptr;
+        return f && root && domain && f->材料类型 == 特征概念材料物理类型::存在节点引用
+            && f->比较规则 == 特征概念比较规则::存在身份精确
+            && 包含存在范围(e->范围概念节点, domain->存在概念节点);
+    };
 
     const auto 关系已声明=[&](const 新方法参数关系& r) {
         const auto 类型=[&](std::uint32_t n)->std::optional<新方法参数信息类型> {
@@ -883,7 +1354,26 @@ bool 条件结果角色已声明(
         case 新方法参数关系种类::特征所属存在:
         case 新方法参数关系种类::集合包含存在:
             return *l==新方法参数信息类型::特征&&*v==新方法参数信息类型::存在;
+        case 新方法参数关系种类::特征引用存在:
+            return 引用声明合法(r);
+        case 新方法参数关系种类::内容引用参数: {
+            const auto* left=找规格(r.左参数序号);const auto* right=找规格(r.右参数序号);
+            if(!left||!right||*l!=新方法参数信息类型::存在||*v!=新方法参数信息类型::存在
+                ||r.左正式内容路径.size()!=1
+                ||!正式需求范围有效(left->范围概念节点,概念服务,存在概念服务))return false;
+            std::vector<基础联合节点快照> proof;
+            if(!追加需求主体路径保护(r.左正式内容路径.front(),概念服务,存在概念服务,proof))return false;
+            const auto ft=概念服务.获取特征概念(r.左正式内容路径.front());
+            const auto* domain=ft?std::get_if<特征概念信息引用值域>(&ft->值域):nullptr;
+            if(!domain||!存在概念服务.是存在概念节点(right->范围概念节点))return false;
+            const auto target=存在概念服务.读取正式结构概念保护(domain->内容概念);
+            if(target.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+            if(target.状态!=正式结构操作状态::已读取||!target.信息)throw std::runtime_error("method subject content range unavailable");
+            const auto* base=std::get_if<基础范围概念定义>(&target.信息->定义);
+            return base&&base->原语==基础概念原语::合法存在;
+        }
         case 新方法参数关系种类::同属场景:
+        case 新方法参数关系种类::场景包含存在:
             return *l==新方法参数信息类型::存在&&*v==新方法参数信息类型::存在;
         }
         return false;
@@ -891,7 +1381,133 @@ bool 条件结果角色已声明(
     if(!std::all_of(定义.条件.参数关系组.begin(),定义.条件.参数关系组.end(),关系已声明)
         ||!std::all_of(定义.结果.参数关系组.begin(),定义.结果.参数关系组.end(),关系已声明)) return false;
 
+    const auto 引用组合法 = [&](const std::vector<新方法参数关系>& group, bool result) {
+        if (!参数关系结构有效(group)) return false;
+        if (std::none_of(group.begin(), group.end(), [](const auto& r) {
+            return r.种类 == 新方法参数关系种类::特征引用存在;
+        })) return true; // 旧1..5的组合与未知项语义原样保留。
+        const auto rule = result ? 定义.结果.关系规则 : 定义.条件.关系规则;
+        if (rule != 新方法项关系规则::单项 && rule != 新方法项关系规则::全部成立) return false;
+        std::map<std::uint32_t, std::uint32_t> alias;
+        for (const auto& s : 参数规格组) if (s.有序规格) alias.emplace(s.有序规格->序号, s.有序规格->序号);
+        const auto root = [&](std::uint32_t n) {
+            for (;;) { const auto p = alias.find(n); if (p == alias.end()) return std::uint32_t{0}; if (p->second == n) return n; n = p->second; }
+        };
+        auto aliases = group;
+        if (result && (定义.条件.关系规则 == 新方法项关系规则::单项
+            || 定义.条件.关系规则 == 新方法项关系规则::全部成立)) for (const auto& r : 定义.条件.参数关系组)
+            if (r.种类 == 新方法参数关系种类::同一 || r.种类 == 新方法参数关系种类::不同) aliases.push_back(r);
+        for (const auto& r : aliases) if (r.种类 == 新方法参数关系种类::同一) {
+            const auto l = root(r.左参数序号), e = root(r.右参数序号); if (!l || !e) return false;
+            alias[(std::max)(l, e)] = (std::min)(l, e);
+        }
+        for (const auto& r : aliases) if (r.种类 == 新方法参数关系种类::不同
+            && root(r.左参数序号) == root(r.右参数序号)) return false;
+        std::map<std::uint32_t, std::uint32_t> targets;
+        for (const auto& r : group) if (r.种类 == 新方法参数关系种类::特征引用存在) {
+            const auto l = root(r.左参数序号), e = root(r.右参数序号);
+            const auto [it, inserted] = targets.emplace(l, e);
+            if (!l || !e || (!inserted && it->second != e)) return false;
+            const auto* spec = 找规格(r.左参数序号);
+            const auto ft = spec ? 读取线性特征类型根(spec->范围概念节点, 概念服务) : std::nullopt;
+            if (result && (!ft || std::none_of(定义.结果.结果项组.begin(), 定义.结果.结果项组.end(), [&](const auto& item) {
+                if(item.引用内容结果)return item.参数序号&&root(item.参数序号)==l&&!item.任务成员变量序号;
+                return item.参数序号 && root(item.参数序号) == l && !item.任务成员变量序号 && item.特征类型概念节点
+                    && !item.特征值域概念节点 && !item.精确数值域 && !item.变化方向概念节点 && !item.状态或动态概念节点
+                    && 读取线性特征类型根(*item.特征类型概念节点, 概念服务) == ft;
+            }))) return false;
+        }
+        if (result) for (const auto& item : 定义.结果.结果项组) {
+            if (!item.特征类型概念节点 || item.特征值域概念节点 || item.精确数值域 || item.变化方向概念节点 || item.状态或动态概念节点) continue;
+            const auto type = 概念服务.获取特征概念(*item.特征类型概念节点);
+            if (!type) return false;
+            if (type->材料类型 != 特征概念材料物理类型::存在节点引用) continue;
+            // 旧无值结果仍是未知项；只有位置关系6才将其补为完整引用效果。
+            if (!targets.contains(root(item.参数序号))) continue;
+            if (!item.参数序号 || item.任务成员变量序号
+                || type->比较规则 != 特征概念比较规则::存在身份精确) return false;
+            const auto* spec = 找规格(item.参数序号);
+            if (!spec || 读取线性特征类型根(spec->范围概念节点, 概念服务)
+                != 读取线性特征类型根(*item.特征类型概念节点, 概念服务)) return false;
+        }
+        return true;
+    };
+    if (!引用组合法(定义.条件.参数关系组, false) || !引用组合法(定义.结果.参数关系组, true)) return false;
+
     const auto 已声明 = [&](const auto& 项) {
+        if constexpr(requires{项.引用内容结果;}) if(项.引用内容结果) {
+            if(!结果项有效(项,概念服务))return false;
+            const auto* p=找规格(项.参数序号);
+            if(!p||p->信息类型!=新方法参数信息类型::特征)return false;
+            const auto ft=概念服务.获取特征概念(p->范围概念节点);
+            if(!ft||ft->材料类型!=特征概念材料物理类型::需求节点引用
+                ||ft->比较规则!=特征概念比较规则::需求身份精确)return false;
+            const auto known=存在概念服务.读取引用内容筹办概念();
+            if(known.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+            if(known.状态!=正式结构操作状态::已读取||!known.信息||known.完整保护组.empty())
+                throw std::runtime_error("method complete demand concept unavailable");
+            if(项.引用内容结果->要求概念节点!=known.信息->完整被认知需求)return false;
+            std::size_t count=0;
+            for(const auto& r:定义.结果.参数关系组)if(r.种类==新方法参数关系种类::特征引用存在
+                &&r.左参数序号==项.参数序号)++count;
+            if(count!=1||std::find(定义.结果.确认要求.禁止结果项组.begin(),定义.结果.确认要求.禁止结果项组.end(),项)
+                !=定义.结果.确认要求.禁止结果项组.end())return false;
+            std::vector<基础联合节点快照> proof;
+            return 读取引用内容条件定义保护(*项.引用内容结果,概念服务,存在概念服务,proof);
+        }
+        if constexpr(requires{项.特征前态限定;}) if(项.特征前态限定) {
+            const auto* p=找规格(项.参数序号);
+            if(!p||p->信息类型!=新方法参数信息类型::特征)return false;
+            const auto ft=概念服务.获取特征概念(p->范围概念节点);
+            if(!ft||ft->材料类型!=特征概念材料物理类型::需求节点引用
+                ||ft->比较规则!=特征概念比较规则::需求身份精确)return false;
+            if(项.特征类型概念节点&&读取线性特征类型根(*项.特征类型概念节点,概念服务)
+                !=读取线性特征类型根(p->范围概念节点,概念服务))return false;
+            return 项.特征前态限定->当前值状态==新方法当前值状态::未知
+                &&项.特征前态限定->历史不同值数量==std::optional<std::uint64_t>{0};
+        }
+        if constexpr(requires{项.引用内容条件;}) if(项.引用内容条件) {
+            if(!项.参数序号||有效(项.参数角色节点)||项.任务成员变量序号
+                ||项.存在概念节点||项.特征类型概念节点||项.特征值域概念节点
+                ||项.精确数值域||项.二次特征概念节点||项.状态或动态概念节点)return false;
+            if(!节点仍存在(项.引用内容条件->要求概念节点)||项.引用内容条件->正式内容路径.size()>1
+                ||std::any_of(项.引用内容条件->正式内容路径.begin(),项.引用内容条件->正式内容路径.end(),
+                    [](稳定编码 FT){return !节点仍存在(FT);}))return false;
+            const auto* 参数=找规格(项.参数序号);
+            if(项.引用内容条件->作用点==新方法内容作用点::参数自身) {
+                if(!参数||参数->信息类型!=新方法参数信息类型::存在
+                    ||!正式需求范围有效(参数->范围概念节点,概念服务,存在概念服务))return false;
+                std::vector<基础联合节点快照> proof;
+                return 读取引用内容条件定义保护(*项.引用内容条件,概念服务,存在概念服务,proof);
+            }
+            if(项.引用内容条件->作用点!=新方法内容作用点::特征当前引用)return false;
+            if(!参数||参数->信息类型!=新方法参数信息类型::特征)return false;
+            const auto FT=概念服务.获取特征概念(参数->范围概念节点);
+            if(!FT||FT->材料类型!=特征概念材料物理类型::需求节点引用
+                ||FT->比较规则!=特征概念比较规则::需求身份精确)return false;
+            if(定义.条件.关系规则!=新方法项关系规则::全部成立
+                &&定义.条件.关系规则!=新方法项关系规则::单项)return false;
+            std::map<std::uint32_t,std::uint32_t> 别名;
+            for(const auto& s:参数规格组)if(s.有序规格)别名.emplace(s.有序规格->序号,s.有序规格->序号);
+            const auto 根=[&](std::uint32_t n){for(;;){const auto i=别名.find(n);if(i==别名.end())return std::uint32_t{0};if(i->second==n)return n;n=i->second;}};
+            for(const auto& r:定义.条件.参数关系组)if(r.种类==新方法参数关系种类::同一) {
+                const auto l=根(r.左参数序号),v=根(r.右参数序号);if(!l||!v)return false;
+                别名[(std::max)(l,v)]=(std::min)(l,v);
+            }
+            for(const auto& r:定义.条件.参数关系组)
+                if(r.种类==新方法参数关系种类::不同&&根(r.左参数序号)==根(r.右参数序号))return false;
+            std::size_t 所属数=0;
+            for(const auto& r:定义.条件.参数关系组)
+                if(r.种类==新方法参数关系种类::特征所属存在&&根(r.左参数序号)==根(项.参数序号)) {
+                    const auto* E=找规格(r.右参数序号);
+                    if(!E||E->信息类型!=新方法参数信息类型::存在)return false;
+                    ++所属数;
+                }
+            if(所属数!=1)return false;
+            if(模式==引用内容条件校验模式::持久结构)return true;
+            std::vector<基础联合节点快照> 保护;
+            return 读取引用内容条件定义保护(*项.引用内容条件,概念服务,存在概念服务,保护);
+        }
         const auto 角色 = 项.参数角色节点;
         const auto 序号 = 项.参数序号;
         return std::any_of(参数规格组.begin(), 参数规格组.end(),
@@ -906,9 +1522,20 @@ bool 条件结果角色已声明(
                         && 内层 && 内层->材料类型 == 特征概念材料物理类型::I64标量;
                 }
                 if (规格.有序规格->信息类型 == 新方法参数信息类型::存在) {
-                    if (项.特征类型概念节点 || 项.特征值域概念节点 || 项.精确数值域) return false;
-                    if constexpr (requires { 项.二次特征概念节点; }) {
-                        if (项.二次特征概念节点) return false;
+                    if((项.特征值域概念节点||项.精确数值域)&&!项.特征类型概念节点)return false;
+                    if constexpr(requires{项.二次特征概念节点;})
+                        if(项.二次特征概念节点&&!项.特征类型概念节点)return false;
+                    if constexpr(requires{项.变化方向概念节点;})
+                        if(项.变化方向概念节点&&!项.特征类型概念节点)return false;
+                    if(项.特征类型概念节点) {
+                        const auto type=概念服务.获取特征概念(*项.特征类型概念节点);
+                        if(!type||读取线性特征类型根(*项.特征类型概念节点,概念服务)!=项.特征类型概念节点)return false;
+                        if(项.特征值域概念节点) {
+                            const auto domain=概念服务.获取特征概念(*项.特征值域概念节点);
+                            if(!domain||读取线性特征类型根(*项.特征值域概念节点,概念服务)!=项.特征类型概念节点
+                                ||domain->材料类型!=type->材料类型||domain->比较规则!=type->比较规则||domain->单位!=type->单位)return false;
+                        }
+                        if(!精确数值域有效(项.精确数值域,项.特征类型概念节点,项.特征值域概念节点,概念服务))return false;
                     }
                 } else if constexpr (requires { 项.存在概念节点; }) {
                     if (项.存在概念节点) return false;
@@ -931,6 +1558,11 @@ bool 条件结果角色已声明(
                [&](const 新方法结果项定义& 项) {
                    return 已声明(项);
                });
+    } catch (const 引用内容定义前提变化&) {
+        throw;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法参数关系", L"参数关系完整性核验遇到工程资源或读取异常。");
+    }
 }
 
 std::optional<std::vector<稳定编码>> 读取有序子节点(
@@ -952,24 +1584,31 @@ std::optional<std::vector<稳定编码>> 读取有序子节点(
     return 结果;
 }
 
-std::optional<新方法参数规格> 读取参数规格(稳定编码 节点, const 概念_特征类& 概念服务) {
+std::optional<新方法参数规格> 读取参数规格(稳定编码 节点, const 概念_特征类& 概念服务,
+    const 概念_存在类& 存在概念服务) {
     if (!节点类型为(节点, 参数规格节点类型)) return std::nullopt;
     const auto 序号 = 读取可选I64字段(节点, 有序参数序号字段);
+    if (!全局基础数据集.查询字段(节点, 有序参数类别概念字段).empty()
+        && (!序号 || !*序号 || **序号 <= 0
+            || **序号 > (std::numeric_limits<std::uint32_t>::max)()))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法参数类别", L"类别概念字段缺少合法有序参数序号。");
     if (!序号) return std::nullopt;
     if (*序号) {
-        const auto 类型 = 读取唯一I64字段(节点, 有序参数类型字段);
+        const auto 类型 = 读取持久参数类别(节点, 有序参数类型字段, 有序参数类别概念字段,
+            存在概念服务, 概念服务);
         const auto 范围 = 读取唯一节点字段(节点, 有序参数范围字段);
         if (**序号 <= 0 || **序号 > (std::numeric_limits<std::uint32_t>::max)()
-            || !类型 || (*类型 != 1 && *类型 != 2) || !范围) return std::nullopt;
+            || !类型 || !范围) return std::nullopt;
         for (const auto 字段 : {参数角色字段, 参数存在概念字段, 参数要求场景字段,
                 参数对象种类字段, 参数特征规格字段, 参数集合角色字段, 参数集合特征类型字段})
             if (!全局基础数据集.查询字段(节点, 字段).empty()) return std::nullopt;
         新方法参数规格 新;
         新.有序规格 = 新方法有序参数规格{static_cast<std::uint32_t>(**序号),
-            static_cast<新方法参数信息类型>(*类型), *范围};
+            *类型, *范围};
         return 参数规格有效({新}, 概念服务, false) ? std::optional{新} : std::nullopt;
     }
     if (!全局基础数据集.查询字段(节点, 有序参数类型字段).empty()
+        || !全局基础数据集.查询字段(节点, 有序参数类别概念字段).empty()
         || !全局基础数据集.查询字段(节点, 有序参数范围字段).empty()) return std::nullopt;
     const auto 角色 = 读取唯一节点字段(节点, 参数角色字段);
     const auto 存在概念 = 读取可选节点字段(节点, 参数存在概念字段);
@@ -1023,8 +1662,33 @@ std::optional<新方法条件定义> 读取条件(稳定编码 节点, const 概
     const auto 位置关系=读取参数关系(节点);
     if(!位置关系) return std::nullopt;
     结果.参数关系组=*位置关系;
+    const auto 限定节点组=读取有序子节点(节点,初始场景限定字段,概念服务);
+    if(!限定节点组)return std::nullopt;
+    for(const auto n:*限定节点组) {
+        if(!节点类型为(n,初始场景限定节点类型)
+            ||读取唯一节点字段(n,初始声明所属字段)!=std::optional<稳定编码>{节点})return std::nullopt;
+        const auto parents=全局基础数据集.查询目标字段(n,初始场景限定字段);
+        if(parents.size()!=1||parents.front().所属节点!=节点)return std::nullopt;
+        const auto snapshot=全局基础数据集.查询节点组完整结构({n});
+        if(snapshot.状态!=基础结构操作状态::已完成||snapshot.节点组.size()!=1||!snapshot.节点组.front().快照)return std::nullopt;
+        for(const auto& f:snapshot.节点组.front().快照->结构.字段组)
+            if(f.字段节点!=节点类型字段&&f.字段节点!=初始声明所属字段&&f.字段节点!=初始关系概念字段
+                &&f.字段节点!=顺序字段&&f.字段节点!=初始四位置字段)return std::nullopt;
+        const auto 关系概念=读取唯一节点字段(n,初始关系概念字段);
+        const auto fields=全局基础数据集.查询字段(n,初始四位置字段);
+        const auto* value=fields.size()==1?std::get_if<基础值>(&fields.front().内容):nullptr;
+        const auto* positions=value?std::get_if<std::vector<std::int64_t>>(&value->材料):nullptr;
+        if(!关系概念||!positions||positions->size()!=4)return std::nullopt;
+        for(const auto p:*positions)if(p<=0||p>(std::numeric_limits<std::uint32_t>::max)())return std::nullopt;
+        新方法初始场景事实限定 r{*关系概念,static_cast<std::uint32_t>((*positions)[0]),static_cast<std::uint32_t>((*positions)[1]),static_cast<std::uint32_t>((*positions)[2]),static_cast<std::uint32_t>((*positions)[3])};
+        if(std::find(结果.场景事实限定组.begin(),结果.场景事实限定组.end(),r)!=结果.场景事实限定组.end())return std::nullopt;
+        结果.场景事实限定组.push_back(r);
+    }
     for (const auto 项节点 : *项节点组) {
         if (!节点类型为(项节点, 条件项节点类型)) return std::nullopt;
+        if(!全局基础数据集.查询字段(项节点,结果引用内容要求字段).empty()
+            ||!全局基础数据集.查询字段(项节点,结果引用内容项字段).empty()
+            ||!全局基础数据集.查询字段(项节点,结果内容作用点字段).empty())return std::nullopt;
         const auto 角色 = 读取可选节点字段(项节点, 参数角色字段);
         const auto 序号 = 读取可选I64字段(项节点, 有序参数序号字段);
         const auto 存在 = 读取可选节点字段(项节点, 条件项存在概念字段);
@@ -1032,6 +1696,17 @@ std::optional<新方法条件定义> 读取条件(稳定编码 节点, const 概
         const auto 值域 = 读取可选节点字段(项节点, 条件项特征值域字段);
         const auto 二次 = 读取可选节点字段(项节点, 条件项二次特征字段);
         const auto 状态动态 = 读取可选节点字段(项节点, 条件项状态动态字段);
+        const auto 内容要求=读取可选节点字段(项节点,条件引用内容要求字段);
+        const auto 内容项=读取可选节点字段(项节点,条件引用内容项字段);
+        const auto 作用点=读取可选I64字段(项节点,条件内容作用点字段);
+        const auto 认知有效=读取可选I64字段(项节点,条件内容认知有效字段);
+        const auto 前态=读取可选I64字段(项节点,条件前态当前字段);
+        const auto 历史数=读取可选I64字段(项节点,条件前态历史数字段);
+        if(!内容要求||!内容项||!作用点||!认知有效||!前态||!历史数
+            ||(!有效(*内容要求)&&(有效(*内容项)||作用点->has_value()||认知有效->has_value()))
+            ||(*作用点&&**作用点!=1&&**作用点!=2)
+            ||(*认知有效&&**认知有效!=0&&**认知有效!=1)
+            ||(*前态&&**前态!=1&&**前态!=2)||(*历史数&&(!*前态||**历史数<0)))return std::nullopt;
         const auto 成员变量 = 读取可选I64字段(项节点, 任务成员变量字段);
         if (!成员变量 || (*成员变量 && **成员变量 != 1)) return std::nullopt;
         const auto 精确域 = 读取可选精确数值域(项节点);
@@ -1050,15 +1725,245 @@ std::optional<新方法条件定义> 读取条件(稳定编码 节点, const 概
         if (有效(*二次)) 项.二次特征概念节点 = *二次;
         if (有效(*状态动态)) 项.状态或动态概念节点 = *状态动态;
         项.精确数值域 = *精确域;
+        if(有效(*内容要求)) {
+            新方法引用内容条件 内容;内容.要求概念节点=*内容要求;
+            if(*作用点)内容.作用点=static_cast<新方法内容作用点>(**作用点);
+            if(*认知有效)内容.要求认知来源当前有效=**认知有效==1;
+            if(有效(*内容项))内容.正式内容路径.push_back(*内容项);
+            if(内容.要求认知来源当前有效&&(内容.作用点!=新方法内容作用点::参数自身||!内容.正式内容路径.empty()))return std::nullopt;
+            项.引用内容条件=std::move(内容);
+        }
+        if(*前态) {
+            新方法特征前态限定 p;p.当前值状态=static_cast<新方法当前值状态>(**前态);
+            if(*历史数)p.历史不同值数量=static_cast<std::uint64_t>(**历史数);
+            项.特征前态限定=std::move(p);
+        }
         if (!精确数值域有效(项.精确数值域, 项.特征类型概念节点,
                 项.特征值域概念节点, 概念服务)) return std::nullopt;
+        if(项.引用内容条件&&(项.存在概念节点||项.特征类型概念节点||项.特征值域概念节点
+            ||项.精确数值域||项.二次特征概念节点||项.状态或动态概念节点
+            ||项.任务成员变量序号||项.特征前态限定||!项.参数序号))return std::nullopt;
+        if(项.特征前态限定&&(项.存在概念节点||项.特征值域概念节点||项.精确数值域
+            ||项.二次特征概念节点||项.状态或动态概念节点||项.任务成员变量序号||!项.参数序号
+            ||项.特征前态限定->当前值状态!=新方法当前值状态::未知
+            ||项.特征前态限定->历史不同值数量!=std::optional<std::uint64_t>{0}))return std::nullopt;
         结果.条件项组.push_back(std::move(项));
     }
     return 结果;
 }
 
+bool 特征概念为或从属于(稳定编码,稳定编码,const 概念_特征类&);
+bool 分支条件有效(const 新方法条件定义& c,const std::vector<新方法参数规格>& specs,
+    const 概念_特征类& f,const 概念_存在类& e,
+    引用内容条件校验模式 模式=引用内容条件校验模式::完整语义) {
+    if(c.关系规则!=新方法项关系规则::全部成立||!条件结果有效({c,{},{}},f,false,true)
+        ||!条件结果角色已声明(specs,{c,{},{}},f,e,模式))return false;
+    for(const auto& x:c.条件项组) {
+        if(x.存在概念节点&&!e.获取存在概念(*x.存在概念节点))return false;
+    }
+    return true;
+}
+void 合入必要条件(新方法初始必要条件定义& target,const 新方法条件定义& source) {
+    target.条件.关系规则=新方法项关系规则::全部成立;
+    const auto merge=[](auto& to,const auto& from) {for(const auto& x:from)if(std::find(to.begin(),to.end(),x)==to.end())to.push_back(x);};
+    merge(target.条件.条件项组,source.条件项组);merge(target.条件.参数关系组,source.参数关系组);
+    merge(target.场景事实限定组,target.条件.场景事实限定组);target.条件.场景事实限定组.clear();
+    merge(target.场景事实限定组,source.场景事实限定组);
+}
+std::vector<新方法执行分支定义> 分支定义组(const 新方法信息& m) {
+    std::vector<新方法执行分支定义> result;for(const auto& b:m.执行分支组)result.push_back(b.定义);return result;
+}
+
+bool 模拟输入方案有效(const std::vector<新方法模拟输入方案定义>& plans,
+    const std::vector<新方法参数规格>& specs,const std::vector<新方法参数关系>& relations,
+    const 概念_特征类& concepts) {
+    const auto kind=[&](std::uint32_t p,新方法参数信息类型 k) {
+        return p&&p<=specs.size()&&specs[p-1].有序规格&&specs[p-1].有序规格->信息类型==k;
+    };
+    const auto message=[&](std::uint32_t f,std::uint32_t w) {
+        if(!kind(f,新方法参数信息类型::特征)||!kind(w,新方法参数信息类型::存在))return false;
+        const auto d=concepts.读取特征概念定义保护(specs[f-1].有序规格->范围概念节点);
+        return d.信息&&d.信息->定义.材料类型==特征概念材料物理类型::U64数组
+            &&d.信息->定义.比较规则==特征概念比较规则::消息集合身份判等
+            &&std::holds_alternative<特征概念全材料值域>(d.信息->定义.值域)
+            &&std::find(relations.begin(),relations.end(),新方法参数关系{新方法参数关系种类::特征所属存在,f,w})!=relations.end();
+    };
+    const auto direction=[](auto d){return d==新外设消息方向::接收||d==新外设消息方向::发送;};
+    for(std::size_t i=0;i<plans.size();++i) {
+        if(plans[i].顺序!=i||plans[i].消息组.empty())return false;
+        for(std::size_t j=0;j<plans[i].消息组.size();++j) {
+            const auto& x=plans[i].消息组[j];
+            if(x.顺序!=j||!direction(x.方向)||!kind(x.对端存在参数序号,新方法参数信息类型::存在)
+                ||!message(x.目标特征参数序号,x.窗口存在参数序号))return false;
+            const auto d=concepts.读取特征概念定义保护(x.正文范围概念);
+            if(!d.信息||d.信息->定义.材料类型!=特征概念材料物理类型::UTF8字符串
+                ||d.信息->定义.比较规则!=特征概念比较规则::完整材料精确
+                ||(!std::holds_alternative<特征概念全材料值域>(d.信息->定义.值域)
+                    &&!std::holds_alternative<std::vector<稳定编码>>(d.信息->定义.值域)))return false;
+            if(x.时机==新方法模拟输入时机::调用前) {if(x.触发)return false;}
+            else if(x.时机!=新方法模拟输入时机::参数新增消息后||!x.触发||!direction(x.触发->方向)
+                ||!message(x.触发->特征参数序号,x.窗口存在参数序号))return false;
+        }
+    }
+    return true;
+}
+
+std::optional<std::vector<新方法模拟输入方案定义>> 读取模拟输入方案(
+    稳定编码 vm,const 概念_特征类& concepts) {
+    const auto plans=读取有序子节点(vm,模拟输入方案字段,concepts);
+    if(!plans)return {};
+    std::vector<新方法模拟输入方案定义> out;
+    const auto array=[](稳定编码 n,稳定编码 k)->std::optional<std::vector<std::int64_t>> {
+        const auto f=全局基础数据集.查询字段(n,k);
+        if(f.size()!=1)return {};
+        const auto* v=std::get_if<基础值>(&f.front().内容);
+        const auto* a=v?std::get_if<std::vector<std::int64_t>>(&v->材料):nullptr;
+        return a?std::optional{*a}:std::nullopt;
+    };
+    const auto pos=[](std::int64_t x){return x>0&&static_cast<std::uint64_t>(x)<=(std::numeric_limits<std::uint32_t>::max)();};
+    for(const auto P:*plans) {
+        if(!节点类型为(P,模拟输入方案节点类型)||读取唯一节点字段(P,初始声明所属字段)!=vm
+            ||读取唯一I64字段(P,顺序字段)!=static_cast<std::int64_t>(out.size()))return {};
+        const auto items=读取有序子节点(P,模拟消息输入字段,concepts);
+        const auto structure=全局基础数据集.查询完整节点结构(P);
+        if(!items||items->empty()||!structure.结构||structure.结构->字段组.size()!=3+items->size())return {};
+        新方法模拟输入方案定义 plan;plan.顺序=static_cast<std::uint32_t>(out.size());
+        for(const auto I:*items) {
+            const auto p=array(I,模拟消息参数位置字段);
+            const auto d=读取唯一I64字段(I,模拟消息方向字段),nonempty=读取唯一I64字段(I,模拟正文非空字段),when=读取唯一I64字段(I,模拟输入时机字段);
+            const auto body=读取唯一节点字段(I,模拟正文范围字段);
+            const auto shape=全局基础数据集.查询完整节点结构(I);
+            if(!节点类型为(I,模拟消息输入节点类型)||读取唯一节点字段(I,初始声明所属字段)!=P
+                ||读取唯一I64字段(I,顺序字段)!=static_cast<std::int64_t>(plan.消息组.size())
+                ||!p||p->size()!=3||!std::all_of(p->begin(),p->end(),pos)||!d||(*d!=1&&*d!=2)
+                ||!nonempty||(*nonempty!=0&&*nonempty!=1)||!when||(*when!=1&&*when!=2)||!body||!shape.结构
+                ||shape.结构->字段组.size()!=static_cast<std::size_t>(*when==1?8:9))return {};
+            新方法模拟消息输入定义 x;
+            x.顺序=static_cast<std::uint32_t>(plan.消息组.size());
+            x.目标特征参数序号=static_cast<std::uint32_t>((*p)[0]);x.窗口存在参数序号=static_cast<std::uint32_t>((*p)[1]);x.对端存在参数序号=static_cast<std::uint32_t>((*p)[2]);
+            x.方向=static_cast<新外设消息方向>(*d);x.正文范围概念=*body;x.正文非空=*nonempty==1;x.时机=static_cast<新方法模拟输入时机>(*when);
+            if(*when==2) {
+                const auto t=array(I,模拟触发位置方向字段);
+                if(!t||t->size()!=2||!pos((*t)[0])||((*t)[1]!=1&&(*t)[1]!=2))return {};
+                x.触发=新方法模拟消息触发{static_cast<std::uint32_t>((*t)[0]),static_cast<新外设消息方向>((*t)[1])};
+            } else if(!全局基础数据集.查询字段(I,模拟触发位置方向字段).empty())return {};
+            plan.消息组.push_back(x);
+        }
+        out.push_back(std::move(plan));
+    }
+    return out;
+}
+
+void 追加模拟输入方案(基础节点组追加请求& q,稳定编码 vm,
+    const std::vector<新方法模拟输入方案定义>& plans) {
+    const auto field=[&](std::size_t n,稳定编码 k,基础组内字段内容 v){q.新节点组[n].字段组.push_back({k,std::move(v)});};
+    const auto node=[&](稳定编码 type){const auto n=q.新节点组.size();q.新节点组.emplace_back();field(n,节点类型字段,type);return n;};
+    for(const auto& p:plans) {
+        const auto P=node(模拟输入方案节点类型);field(P,顺序字段,基础值{static_cast<std::int64_t>(p.顺序)});field(P,初始声明所属字段,vm);
+        q.追加字段组.push_back({vm,模拟输入方案字段,基础组内节点引用{P}});
+        for(const auto& x:p.消息组) {
+            const auto I=node(模拟消息输入节点类型);field(I,顺序字段,基础值{static_cast<std::int64_t>(x.顺序)});field(I,初始声明所属字段,基础组内节点引用{P});
+            field(P,模拟消息输入字段,基础组内节点引用{I});
+            field(I,模拟消息参数位置字段,基础值{std::vector<std::int64_t>{x.目标特征参数序号,x.窗口存在参数序号,x.对端存在参数序号}});
+            field(I,模拟消息方向字段,基础值{static_cast<std::int64_t>(x.方向)});field(I,模拟正文范围字段,x.正文范围概念);
+            field(I,模拟正文非空字段,基础值{static_cast<std::int64_t>(x.正文非空)});field(I,模拟输入时机字段,基础值{static_cast<std::int64_t>(x.时机)});
+            if(x.触发)field(I,模拟触发位置方向字段,基础值{std::vector<std::int64_t>{x.触发->特征参数序号,static_cast<std::int64_t>(x.触发->方向)}});
+        }
+    }
+    std::set<稳定编码> endpoints;
+    for(const auto& n:q.新节点组)for(const auto& f:n.字段组) {
+        endpoints.insert(f.字段节点);if(const auto* v=std::get_if<稳定编码>(&f.内容))endpoints.insert(*v);
+    }
+    if(endpoints.empty())return; // 空声明没有新增端点，不向L1提交无效的空查询。
+    const auto read=全局基础数据集.查询节点组完整结构({endpoints.begin(),endpoints.end()});
+    if(read.状态!=基础结构操作状态::已完成||read.节点组.size()!=endpoints.size())throw std::runtime_error("simulation input declaration endpoints unavailable");
+    for(const auto& n:read.节点组){if(!n.快照)throw std::runtime_error("simulation input declaration endpoint missing");q.预期联合节点组.push_back(*n.快照);}
+}
+bool 条件涵盖必要项(const 新方法条件定义& actual,const 新方法初始必要条件定义& required,
+    const 概念_特征类& features,const 概念_存在类& concepts) {
+    if(actual.关系规则!=新方法项关系规则::全部成立)return false;
+    const auto isChild=[&](稳定编码 child,稳定编码 parent) {
+        std::set<稳定编码> seen;std::vector<稳定编码> pending{child};
+        while(!pending.empty()) {const auto n=pending.back();pending.pop_back();if(n==parent)return true;
+            if(!seen.insert(n).second)continue;const auto c=concepts.获取存在概念(n);
+            if(c)pending.insert(pending.end(),c->上位概念组.begin(),c->上位概念组.end());
+            else {
+                const auto f=concepts.读取正式结构概念保护(n);
+                if(f.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+                if(f.状态!=正式结构操作状态::已读取||!f.信息)return false;
+                const auto* s=std::get_if<信息结构概念定义>(&f.信息->定义);if(!s)return false;
+                pending.insert(pending.end(),s->上位结构概念组.begin(),s->上位结构概念组.end());
+            }}return false;
+    };
+    for(const auto& w:required.条件.条件项组) {
+        if(w.存在概念节点&&std::none_of(actual.条件项组.begin(),actual.条件项组.end(),[&](const auto& a) {
+            return a.参数序号==w.参数序号&&a.参数角色节点==w.参数角色节点
+                &&a.任务成员变量序号==w.任务成员变量序号&&a.存在概念节点
+                &&isChild(*a.存在概念节点,*w.存在概念节点);
+        }))return false;
+        if(std::none_of(actual.条件项组.begin(),actual.条件项组.end(),[&](const auto& a) {
+            bool 同位置=a.参数序号==w.参数序号&&a.参数角色节点==w.参数角色节点
+                &&a.任务成员变量序号==w.任务成员变量序号;
+            if(!同位置&&w.参数序号&&a.参数序号&&w.特征类型概念节点
+                &&!w.任务成员变量序号&&!a.任务成员变量序号&&!w.参数角色节点.值&&!a.参数角色节点.值) {
+                const 新方法参数关系 所属{新方法参数关系种类::特征所属存在,a.参数序号,w.参数序号};
+                同位置=std::find(required.条件.参数关系组.begin(),required.条件.参数关系组.end(),所属)!=required.条件.参数关系组.end()
+                    &&std::find(actual.参数关系组.begin(),actual.参数关系组.end(),所属)!=actual.参数关系组.end();
+            }
+            if(!同位置)return false;
+            if(w.引用内容条件||a.引用内容条件)
+                return w.引用内容条件&&a.引用内容条件&&w.引用内容条件==a.引用内容条件;
+            if(w.特征前态限定&&w.特征前态限定!=a.特征前态限定)return false;
+            if(w.特征类型概念节点&&a.特征类型概念节点!=w.特征类型概念节点)return false;
+            if(w.二次特征概念节点&&a.二次特征概念节点!=w.二次特征概念节点)return false;
+            if(w.状态或动态概念节点&&a.状态或动态概念节点!=w.状态或动态概念节点)return false;
+            if(w.精确数值域||w.特征值域概念节点) {
+                const auto domain=[&](const auto& x)->std::optional<特征概念值域> {
+                    if(x.精确数值域)return 特征概念值域{std::vector<特征概念I64闭区间>{*x.精确数值域}};
+                    if(x.特征值域概念节点) {const auto d=features.获取特征概念(*x.特征值域概念节点);if(d&&d->材料类型==特征概念材料物理类型::I64标量)return d->值域;}return {};
+                };
+                const auto lhs=domain(a),rhs=domain(w);
+                if(lhs&&rhs) {const auto r=features.比较值域(特征概念材料物理类型::I64标量,*lhs,*rhs);
+                    return r.状态==特征概念规则状态::已完成&&(r.关系==特征概念值域关系::相等||r.关系==特征概念值域关系::右包含左);}
+                return !w.精确数值域&&a.特征值域概念节点&&w.特征值域概念节点
+                    &&特征概念为或从属于(*a.特征值域概念节点,*w.特征值域概念节点,features);
+            }
+            return true;
+        }))return false;
+    }
+    for(const auto& r:required.条件.参数关系组)if(std::find(actual.参数关系组.begin(),actual.参数关系组.end(),r)==actual.参数关系组.end())return false;
+    for(const auto& r:required.场景事实限定组)if(std::find(actual.场景事实限定组.begin(),actual.场景事实限定组.end(),r)==actual.场景事实限定组.end())return false;
+    return true;
+}
+bool 配对分支来源有效(const 新方法信息& m,const 新方法条件结果定义& p,
+    const 概念_特征类& f,const 概念_存在类& e) {
+    if(m.执行分支组.empty())return p.来源执行分支节点组.empty();
+    if(p.来源执行分支节点组.empty())return false;
+    std::set<稳定编码> seen;
+    for(const auto B:p.来源执行分支节点组) {
+        if(!seen.insert(B).second)return false;
+        const auto branch=std::find_if(m.执行分支组.begin(),m.执行分支组.end(),[&](const auto& b){return b.节点==B;});
+        if(branch==m.执行分支组.end())return false;
+        新方法初始必要条件定义 needed;if(m.初始必要条件)needed=*m.初始必要条件;
+        合入必要条件(needed,branch->定义.必要条件);
+        for(const auto& r:m.初始模拟关系组)if(std::find(needed.条件.参数关系组.begin(),needed.条件.参数关系组.end(),r)==needed.条件.参数关系组.end())needed.条件.参数关系组.push_back(r);
+        if(!条件涵盖必要项(p.条件,needed,f,e))return false;
+    }return true;
+}
 std::optional<新方法结果项定义> 读取结果项(稳定编码 项节点, const 概念_特征类& 概念服务) {
         if (!节点类型为(项节点, 结果项节点类型)) return std::nullopt;
+        if(!全局基础数据集.查询字段(项节点,条件引用内容要求字段).empty()
+            ||!全局基础数据集.查询字段(项节点,条件引用内容项字段).empty()
+            ||!全局基础数据集.查询字段(项节点,条件内容作用点字段).empty()
+            ||!全局基础数据集.查询字段(项节点,条件内容认知有效字段).empty()
+            ||!全局基础数据集.查询字段(项节点,条件前态当前字段).empty()
+            ||!全局基础数据集.查询字段(项节点,条件前态历史数字段).empty())return std::nullopt;
+        const auto 内容要求=读取可选节点字段(项节点,结果引用内容要求字段);
+        const auto 内容路径=读取可选节点字段(项节点,结果引用内容项字段);
+        const auto 内容作用=读取可选I64字段(项节点,结果内容作用点字段);
+        if(!内容要求||!内容路径||!内容作用
+            ||(!有效(*内容要求)&&(有效(*内容路径)||内容作用->has_value()))
+            ||(有效(*内容要求)&&(!*内容作用||**内容作用!=1)))return std::nullopt;
         const auto 角色 = 读取可选节点字段(项节点, 参数角色字段);
         const auto 序号 = 读取可选I64字段(项节点, 有序参数序号字段);
         const auto 类型 = 读取可选节点字段(项节点, 结果项特征类型字段);
@@ -1083,8 +1988,15 @@ std::optional<新方法结果项定义> 读取结果项(稳定编码 项节点, 
         if (有效(*状态动态)) 项.状态或动态概念节点 = *状态动态;
         项.主要结果 = *主要 != 0;
         项.精确数值域 = *精确域;
+        if(有效(*内容要求)) {
+            新方法引用内容条件 c;c.要求概念节点=*内容要求;
+            if(有效(*内容路径))c.正式内容路径.push_back(*内容路径);
+            c.作用点=static_cast<新方法内容作用点>(**内容作用);
+            项.引用内容结果=std::move(c);
+        }
         if (!精确数值域有效(项.精确数值域, 项.特征类型概念节点,
                 项.特征值域概念节点, 概念服务)) return std::nullopt;
+        if(!结果项有效(项,概念服务))return std::nullopt;
         return 项;
 }
 
@@ -1110,6 +2022,29 @@ std::optional<新方法结果定义> 读取结果(稳定编码 节点, const 概
     const auto 位置关系=读取参数关系(节点);
     if(!位置关系) return std::nullopt;
     结果.参数关系组=*位置关系;
+    const auto sceneNodes=读取有序子节点(节点,结果场景限定字段,概念服务);
+    if(!sceneNodes)return std::nullopt;
+    for(std::size_t i=0;i<sceneNodes->size();++i) {
+        const auto n=(*sceneNodes)[i];
+        const auto parents=全局基础数据集.查询目标字段(n,结果场景限定字段);
+        if(!节点类型为(n,结果场景限定节点类型)||parents.size()!=1||parents.front().所属节点!=节点
+            ||读取唯一节点字段(n,结果场景所属字段)!=std::optional{节点}
+            ||读取唯一I64字段(n,顺序字段)!=std::optional<std::int64_t>{static_cast<std::int64_t>(i)})return std::nullopt;
+        const auto snapshot=全局基础数据集.查询完整节点结构(n);
+        if(!snapshot.结构)return std::nullopt;
+        for(const auto& f:snapshot.结构->字段组)
+            if(f.字段节点!=节点类型字段&&f.字段节点!=顺序字段&&f.字段节点!=结果场景所属字段
+                &&f.字段节点!=结果场景关系概念字段&&f.字段节点!=结果场景四位置字段)return std::nullopt;
+        const auto relation=读取唯一节点字段(n,结果场景关系概念字段);
+        const auto fields=全局基础数据集.查询字段(n,结果场景四位置字段);
+        const auto* value=fields.size()==1?std::get_if<基础值>(&fields.front().内容):nullptr;
+        const auto* positions=value?std::get_if<std::vector<std::int64_t>>(&value->材料):nullptr;
+        if(!relation||!positions||positions->size()!=4)return std::nullopt;
+        for(const auto p:*positions)if(p<=0||p>(std::numeric_limits<std::uint32_t>::max)())return std::nullopt;
+        新方法初始场景事实限定 r{*relation,static_cast<std::uint32_t>((*positions)[0]),static_cast<std::uint32_t>((*positions)[1]),static_cast<std::uint32_t>((*positions)[2]),static_cast<std::uint32_t>((*positions)[3])};
+        if(std::find(结果.场景事实限定组.begin(),结果.场景事实限定组.end(),r)!=结果.场景事实限定组.end())return std::nullopt;
+        结果.场景事实限定组.push_back(r);
+    }
     for (const auto 项节点 : *项节点组) {
         const auto 项 = 读取结果项(项节点, 概念服务);
         if (!项) return std::nullopt;
@@ -1141,8 +2076,8 @@ bool 方法属于根(稳定编码 方法节点) {
 
 // 仅核验根、候选入口和调用闭包的身份，不递归调用读取方法信息。
 // 后者会使用本函数，避免混合根与成员读回之间形成递归环。
+// 调用入口已核对架构分配及组织根身份、独立性，不在此重复全架构扫描。
 std::optional<新方法混合实例信息> 读取实例根结构(稳定编码 实例根, const 概念_特征类& 概念服务) {
-    if (!结构仍存在()) return std::nullopt;
     新方法混合实例信息 信息{实例根, {}};
     if (节点类型为(实例根, 混合方法实例根类型)) {
         const auto 归属 = 全局基础数据集.查询目标字段(
@@ -1230,9 +2165,29 @@ std::vector<复制字段规格> 方法复制字段规格(稳定编码 类型) {
     } else if (类型 == 方法虚拟存在节点类型) {
         内部({虚拟存在所属方法字段});
         值({参数位置关系字段, 模拟事件位置字段});
+        子(内容关系成员字段,内容关系节点类型);
         子(虚拟存在参数规格字段, 参数规格节点类型);
+        子(初始必要条件字段, 初始声明节点类型);
+        子(执行分支字段,分支节点类型);
+        子(模拟输入方案字段,模拟输入方案节点类型);
+    } else if (类型 == 模拟输入方案节点类型) {
+        内部({初始声明所属字段});值({顺序字段});子(模拟消息输入字段,模拟消息输入节点类型);
+    } else if (类型 == 模拟消息输入节点类型) {
+        内部({初始声明所属字段});外部({模拟正文范围字段});
+        值({顺序字段,模拟消息参数位置字段,模拟消息方向字段,模拟正文非空字段,模拟输入时机字段,模拟触发位置方向字段});
+    } else if (类型 == 分支节点类型) {
+        内部({分支所属方法字段,分支所属虚拟字段});值({顺序字段});
+        子(分支条件字段,条件节点类型);
+    } else if (类型 == 初始声明节点类型) {
+        内部({初始声明所属字段});值({初始声明格式字段,关系规则字段,参数位置关系字段});
+        子(条件项字段,初始声明项节点类型);子(初始场景限定字段,初始场景限定节点类型);
+        子(内容关系成员字段,内容关系节点类型);
+    } else if (类型 == 初始声明项节点类型) {
+        内部({初始声明所属字段});外部({条件项存在概念字段,条件项特征类型字段});值({顺序字段,有序参数序号字段});
+    } else if (类型 == 初始场景限定节点类型) {
+        内部({初始声明所属字段});外部({初始关系概念字段});值({顺序字段,初始四位置字段});
     } else if (类型 == 参数规格节点类型) {
-        外部({参数角色字段, 参数存在概念字段, 参数集合角色字段, 参数集合特征类型字段, 有序参数范围字段});
+        外部({参数角色字段, 参数存在概念字段, 参数集合角色字段, 参数集合特征类型字段, 有序参数范围字段, 有序参数类别概念字段});
         值({参数要求场景字段, 参数对象种类字段, 顺序字段, 有序参数序号字段, 有序参数类型字段});
         子(参数特征规格字段, 参数特征规格节点类型);
     } else if (类型 == 参数特征规格节点类型) {
@@ -1240,26 +2195,37 @@ std::vector<复制字段规格> 方法复制字段规格(稳定编码 类型) {
         值({顺序字段});
     } else if (类型 == 条件结果配对节点类型) {
         外部({配对来源字段});
+        内部({配对分支来源字段});
         子(配对条件字段, 条件节点类型);
         子(配对结果字段, 结果节点类型);
         值({顺序字段, 配对命中次数字段, 配对线性关系组字段, 配对知识来源字段});
     } else if (类型 == 条件节点类型) {
         子(条件项字段, 条件项节点类型);
+        子(初始场景限定字段, 初始场景限定节点类型);
         值({关系规则字段, 参数位置关系字段});
+        子(内容关系成员字段,内容关系节点类型);
     } else if (类型 == 结果节点类型) {
         子(结果项字段, 结果项节点类型);
         子(结果禁止项字段, 结果项节点类型);
+        子(结果场景限定字段,结果场景限定节点类型);
+        子(内容关系成员字段,内容关系节点类型);
         外部({结果等待条件概念字段});
         值({关系规则字段, 参数位置关系字段, 结果必要证据质量字段, 结果最大等待纳秒字段,
             结果多证据关系字段, 结果禁止关系规则字段});
+    } else if(类型==结果场景限定节点类型) {
+        内部({结果场景所属字段});外部({结果场景关系概念字段});值({顺序字段,结果场景四位置字段});
     } else if (类型 == 条件项节点类型) {
         外部({参数角色字段, 条件项存在概念字段, 条件项特征类型字段,
-            条件项特征值域字段, 条件项二次特征字段, 条件项状态动态字段});
-        值({顺序字段, 项精确数值域字段, 有序参数序号字段, 任务成员变量字段});
+            条件项特征值域字段, 条件项二次特征字段, 条件项状态动态字段,
+            条件引用内容要求字段,条件引用内容项字段});
+        值({顺序字段, 项精确数值域字段, 有序参数序号字段, 任务成员变量字段,
+            条件内容作用点字段,条件内容认知有效字段,条件前态当前字段,条件前态历史数字段});
     } else if (类型 == 结果项节点类型) {
         外部({参数角色字段, 结果项特征类型字段, 结果项特征值域字段,
-            结果项变化方向字段, 结果项状态动态字段});
-        值({顺序字段, 结果项主要结果字段, 项精确数值域字段, 有序参数序号字段, 任务成员变量字段});
+            结果项变化方向字段, 结果项状态动态字段,结果引用内容要求字段,结果引用内容项字段});
+        值({顺序字段, 结果项主要结果字段, 项精确数值域字段, 有序参数序号字段, 任务成员变量字段,结果内容作用点字段});
+    } else if(类型==内容关系节点类型) {
+        内部({内容关系所属字段});外部({内容关系路径字段});值({内容关系左字段,内容关系右字段});
     } else if (类型 == 组合步骤节点类型) {
         内部({步骤所属组合方法字段});
         组.push_back({步骤调用方法字段, 类别::调用方法, 方法节点类型});
@@ -1274,9 +2240,208 @@ std::vector<复制字段规格> 方法复制字段规格(稳定编码 类型) {
     return 组;
 }
 
-std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, const 概念_特征类& 概念服务,
-    const 新方法治理对象读取接口& 治理读取, bool 只读旧形状 = false) {
-    if (!结构仍存在() || !节点类型为(方法节点, 方法节点类型)
+bool 规范化通用概念必要声明(新方法初始必要条件定义& d) {
+    if(d.条件.关系规则!=新方法项关系规则::全部成立||d.条件.条件项组.empty()
+        ||!d.条件.参数关系组.empty()||!d.条件.场景事实限定组.empty()||!d.场景事实限定组.empty())return false;
+    for(const auto& c:d.条件.条件项组) {
+        if(!c.参数序号||c.存在概念节点.has_value()==c.特征类型概念节点.has_value())return false;
+        const auto 概念=c.存在概念节点 ? *c.存在概念节点 : *c.特征类型概念节点;
+        if(!有效(概念))return false;
+        新方法条件项定义 expected;expected.参数序号=c.参数序号;
+        expected.存在概念节点=c.存在概念节点;expected.特征类型概念节点=c.特征类型概念节点;
+        if(c!=expected)return false;
+    }
+    const auto key=[](const 新方法条件项定义& c) {
+        return std::tuple{c.参数序号,c.存在概念节点 ? 0 : 1,
+            c.存在概念节点 ? *c.存在概念节点 : *c.特征类型概念节点};
+    };
+    auto& items=d.条件.条件项组;
+    std::sort(items.begin(),items.end(),[&](const auto& a,const auto& b){return key(a)<key(b);});
+    items.erase(std::unique(items.begin(),items.end()),items.end());
+    return true;
+}
+
+bool 通用概念必要声明形状有效(const 新方法初始必要条件定义& d) {
+    auto normalized=d;
+    return 规范化通用概念必要声明(normalized)&&normalized==d;
+}
+
+新方法操作状态 核验通用概念必要声明(const 新方法知识建立请求& 请求,
+    const 概念_存在类& 存在概念,const 概念_特征类& 特征概念,
+    std::vector<基础联合节点快照>& 完整保护) {
+    if(!请求.初始必要条件)return 新方法操作状态::已找到;
+    if(!通用概念必要声明形状有效(*请求.初始必要条件))return 新方法操作状态::参数规格不合法;
+    std::set<稳定编码> 存在已读,特征已读;
+    const auto 保护存在概念=[&](稳定编码 C) {
+        if(!存在已读.insert(C).second)return 新方法操作状态::已找到;
+        if(!追加方法存在范围保护(C,存在概念,完整保护))return 新方法操作状态::参数规格不合法;
+        return 新方法操作状态::已找到;
+    };
+    for(const auto& c:请求.初始必要条件->条件.条件项组) {
+        if(c.参数序号>请求.参数规格组.size())return 新方法操作状态::参数规格不合法;
+        const auto& spec=请求.参数规格组[c.参数序号-1].有序规格;
+        if(!spec||spec->序号!=c.参数序号||spec->信息类型!=新方法参数信息类型::存在)
+            return 新方法操作状态::参数规格不合法;
+        if(c.存在概念节点) {
+            const auto 状态=保护存在概念(*c.存在概念节点);
+            if(状态!=新方法操作状态::已找到)return 状态;
+            continue;
+        }
+        if(特征已读.insert(*c.特征类型概念节点).second) {
+            const auto p=特征概念.读取特征概念定义保护(*c.特征类型概念节点);
+            if(p.前提已变化)return 新方法操作状态::结构不一致;
+            if(p.状态==基础结构操作状态::节点不存在)return 新方法操作状态::参数规格不合法;
+            if(p.状态!=基础结构操作状态::已完成||!p.信息||p.预期节点组.empty())
+                throw std::runtime_error("generic initial feature definition protection unavailable");
+            if(p.信息->类型根!=*c.特征类型概念节点||p.信息->定义.节点!=*c.特征类型概念节点)
+                return 新方法操作状态::参数规格不合法;
+            完整保护.insert(完整保护.end(),p.预期节点组.begin(),p.预期节点组.end());
+        }
+    }
+    for(const auto& p:请求.参数规格组)if(p.有序规格&&p.有序规格->信息类型==新方法参数信息类型::存在) {
+        const auto 状态=保护存在概念(p.有序规格->范围概念节点);
+        if(状态!=新方法操作状态::已找到)return 状态;
+    }
+    return 新方法操作状态::已找到;
+}
+
+void 追加通用概念必要声明(基础节点组追加请求& 请求,基础组内字段内容 vm,
+    const 新方法初始必要条件定义& d) {
+    if(!通用概念必要声明形状有效(d))throw std::invalid_argument("generic initial concept shape invalid");
+    const auto root=请求.新节点组.size();请求.新节点组.emplace_back();
+    const auto field=[&](std::size_t n,稳定编码 key,基础组内字段内容 value){请求.新节点组[n].字段组.push_back({key,std::move(value)});};
+    const bool 含存在=std::any_of(d.条件.条件项组.begin(),d.条件.条件项组.end(),
+        [](const auto& c){return c.存在概念节点.has_value();});
+    field(root,节点类型字段,初始声明节点类型);field(root,初始声明格式字段,基础值{std::int64_t{含存在 ? 3 : 2}});
+    field(root,初始声明所属字段,vm);field(root,关系规则字段,基础值{static_cast<std::int64_t>(新方法项关系规则::全部成立)});
+    for(std::size_t i=0;i<d.条件.条件项组.size();++i) {
+        const auto& c=d.条件.条件项组[i];const auto n=请求.新节点组.size();请求.新节点组.emplace_back();
+        field(n,节点类型字段,初始声明项节点类型);field(n,初始声明所属字段,基础组内节点引用{root});
+        field(n,顺序字段,基础值{static_cast<std::int64_t>(i)});
+        field(n,有序参数序号字段,基础值{static_cast<std::int64_t>(c.参数序号)});
+        if(c.存在概念节点)field(n,条件项存在概念字段,*c.存在概念节点);
+        else field(n,条件项特征类型字段,*c.特征类型概念节点);
+        field(root,条件项字段,基础组内节点引用{n});
+    }
+    if(const auto* n=std::get_if<稳定编码>(&vm))请求.追加字段组.push_back({*n,初始必要条件字段,基础组内节点引用{root}});
+    else if(const auto* n=std::get_if<基础组内节点引用>(&vm))field(n->索引,初始必要条件字段,基础组内节点引用{root});
+    else throw std::invalid_argument("generic initial owner reference invalid");
+}
+
+bool 初始必要条件形状有效(const 新方法初始必要条件定义& d) {
+    if(d.条件.关系规则!=新方法项关系规则::全部成立||d.条件.条件项组.size()!=1||!d.条件.场景事实限定组.empty()
+        ||d.条件.参数关系组!=std::vector<新方法参数关系>{{新方法参数关系种类::不同,2,3}}
+        ||d.场景事实限定组.size()!=1)return false;
+    const auto& c=d.条件.条件项组.front();新方法条件项定义 expected;
+    if(c.引用内容条件)return false; // 初始声明格式1不得静默丢弃新形状。
+    expected.参数序号=3;expected.存在概念节点=c.存在概念节点;
+    const auto& r=d.场景事实限定组.front();
+    return c.存在概念节点&&有效(*c.存在概念节点)&&c==expected&&有效(r.关系概念节点)
+        &&r.场景参数序号==1&&r.主体参数序号==2&&r.对象参数序号==3&&r.特征参数序号==4;
+}
+std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定编码 vm,
+    const 概念_存在类& concepts,const 概念_特征类& features,bool 核概念=true) {
+    const auto root=读取可选节点字段(vm,初始必要条件字段);
+    if(!root)throw std::runtime_error("initial requirements reference damaged");
+    if(!有效(*root))return {};
+    const auto parent=全局基础数据集.查询目标字段(*root,初始必要条件字段);
+    if(parent.size()!=1||parent.front().所属节点!=vm)throw std::runtime_error("initial requirement shared root");
+    const auto exactShape=[&](稳定编码 n,稳定编码 type) {
+        if(!节点类型为(n,type))throw std::runtime_error("initial requirement node type");
+        const auto s=全局基础数据集.查询完整节点结构(n);
+        if(s.状态!=基础结构操作状态::已完成||!s.结构)throw std::runtime_error("initial requirement snapshot unavailable");
+        const auto schema=方法复制字段规格(type);
+        for(const auto& f:s.结构->字段组)
+            if(std::none_of(schema.begin(),schema.end(),[&](const auto& x){return x.字段==f.字段节点;}))
+                throw std::runtime_error("initial requirement unknown field");
+    };
+    exactShape(*root,初始声明节点类型);
+    const auto format=读取唯一I64字段(*root,初始声明格式字段);
+    if(!format||(*format!=1&&*format!=2&&*format!=3)
+        ||读取唯一节点字段(*root,初始声明所属字段)!=std::optional<稳定编码>{vm})
+        throw std::runtime_error("initial requirement format or owner");
+    if(*format==2||*format==3) {
+        新方法初始必要条件定义 d;d.条件.关系规则=新方法项关系规则::全部成立;
+        if(读取唯一I64字段(*root,关系规则字段)!=std::optional{static_cast<std::int64_t>(d.条件.关系规则)}
+            ||!全局基础数据集.查询字段(*root,参数位置关系字段).empty()
+            ||!全局基础数据集.查询字段(*root,初始场景限定字段).empty())
+            throw std::runtime_error("generic initial requirement relation rule");
+        const auto items=读取有序子节点(*root,条件项字段,features);
+        const auto rs=全局基础数据集.查询完整节点结构(*root);
+        if(!items||items->empty()||!rs.结构||rs.结构->字段组.size()!=items->size()+4)
+            throw std::runtime_error("generic initial requirement children or fields");
+        for(std::size_t i=0;i<items->size();++i) {
+            const auto n=(*items)[i];exactShape(n,初始声明项节点类型);
+            const auto ps=全局基础数据集.查询目标字段(n,条件项字段);
+            const auto ns=全局基础数据集.查询完整节点结构(n);
+            const auto pos=读取唯一I64字段(n,有序参数序号字段);
+            const auto ft=读取唯一节点字段(n,条件项特征类型字段);
+            const auto existence=读取唯一节点字段(n,条件项存在概念字段);
+            if(ps.size()!=1||ps.front().所属节点!=*root||!ns.结构||ns.结构->字段组.size()!=5
+                ||读取唯一节点字段(n,初始声明所属字段)!=root
+                ||读取唯一I64字段(n,顺序字段)!=std::optional{static_cast<std::int64_t>(i)}
+                ||!pos||*pos<=0||*pos>(std::numeric_limits<std::uint32_t>::max)()
+                ||ft.has_value()==existence.has_value()
+                ||(*format==2&&(!ft||!全局基础数据集.查询字段(n,条件项存在概念字段).empty())))
+                throw std::runtime_error("generic initial requirement item shape");
+            新方法条件项定义 c;c.参数序号=static_cast<std::uint32_t>(*pos);
+            c.特征类型概念节点=ft;c.存在概念节点=existence;
+            if(核概念&&existence) {
+                std::vector<基础联合节点快照> proof;
+                if(!追加方法存在范围保护(*existence,concepts,proof))
+                    throw std::runtime_error("generic initial requirement formal existence unavailable");
+            }
+            if(核概念&&ft) {
+                const auto proof=features.读取特征概念定义保护(*ft);
+                if(proof.状态!=基础结构操作状态::已完成||proof.前提已变化||!proof.信息||proof.信息->类型根!=*ft
+                    ||proof.信息->定义.节点!=*ft||proof.预期节点组.empty())
+                    throw std::runtime_error("generic initial requirement formal feature unavailable");
+            }
+            d.条件.条件项组.push_back(std::move(c));
+        }
+        if(!通用概念必要声明形状有效(d)
+            ||(*format==3&&std::none_of(d.条件.条件项组.begin(),d.条件.条件项组.end(),
+                [](const auto& c){return c.存在概念节点.has_value();})))
+            throw std::runtime_error("generic initial requirement definition shape");
+        return d;
+    }
+    const auto item=读取唯一节点字段(*root,条件项字段),relation=读取唯一节点字段(*root,初始场景限定字段);
+    if(!item||!relation)throw std::runtime_error("initial requirement children");
+    for(const auto pair:{std::pair{*item,条件项字段},std::pair{*relation,初始场景限定字段}}) {
+        const auto parents=全局基础数据集.查询目标字段(pair.first,pair.second);
+        if(parents.size()!=1||parents.front().所属节点!=*root)throw std::runtime_error("initial requirement shared child");
+    }
+    exactShape(*item,初始声明项节点类型);exactShape(*relation,初始场景限定节点类型);
+    if(!全局基础数据集.查询字段(*item,条件项特征类型字段).empty())
+        throw std::runtime_error("format one initial requirement has generic feature field");
+    for(const auto n:{*item,*relation})if(读取唯一节点字段(n,初始声明所属字段)!=root
+        ||读取唯一I64字段(n,顺序字段)!=std::optional<std::int64_t>{0})throw std::runtime_error("initial requirement order/owner");
+    新方法初始必要条件定义 d;d.条件.关系规则=新方法项关系规则::全部成立;
+    const auto rule=读取唯一I64字段(*root,关系规则字段);const auto pairs=读取参数关系(*root);
+    if(!rule||*rule!=static_cast<std::int64_t>(d.条件.关系规则)||!pairs)throw std::runtime_error("initial requirement relation rule");
+    d.条件.参数关系组=*pairs;
+    新方法条件项定义 c;c.参数序号=3;c.存在概念节点=读取唯一节点字段(*item,条件项存在概念字段);
+    if(读取唯一I64字段(*item,有序参数序号字段)!=std::optional<std::int64_t>{3})throw std::runtime_error("initial requirement parameter");
+    d.条件.条件项组.push_back(c);
+    const auto rc=读取唯一节点字段(*relation,初始关系概念字段);
+    const auto fields=全局基础数据集.查询字段(*relation,初始四位置字段);
+    const auto* value=fields.size()==1 ? std::get_if<基础值>(&fields.front().内容) : nullptr;
+    const auto* positions=value ? std::get_if<std::vector<std::int64_t>>(&value->材料) : nullptr;
+    if(!rc||!positions||*positions!=std::vector<std::int64_t>{1,2,3,4})throw std::runtime_error("initial fact positions");
+    d.场景事实限定组.push_back({*rc,1,2,3,4});
+    if(!初始必要条件形状有效(d))throw std::runtime_error("initial requirement definition shape");
+    if(核概念) {
+        const auto relationProof=concepts.读取已确认消息连接概念保护();
+        if(!concepts.获取存在概念(*c.存在概念节点)||!relationProof.信息||relationProof.信息->节点!=*rc)
+            throw std::runtime_error("initial requirement formal definition unavailable");
+    }
+    return d;
+}
+
+std::optional<新方法信息> 读取方法信息本体(稳定编码 方法节点, const 概念_特征类& 概念服务,
+    const 新方法治理对象读取接口& 治理读取, const 概念_存在类& 存在概念服务, bool 只读旧形状,
+    bool 核初始概念) {
+    if (!节点类型为(方法节点, 方法节点类型)
         || !方法属于根(方法节点)) return std::nullopt;
     const auto 作用域 = 读取唯一I64字段(方法节点, 方法作用域字段);
     const auto 实现方式 = 读取唯一I64字段(方法节点, 方法实现方式字段);
@@ -1322,6 +2487,10 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
     const auto 事件位置=读取模拟事件位置(*虚拟存在);
     if(!事件位置) return std::nullopt;
     信息.初始模拟事件参数组=*事件位置;
+    const auto 输入方案=读取模拟输入方案(*虚拟存在,概念服务);
+    if(!输入方案)return std::nullopt;
+    信息.初始模拟输入方案组=*输入方案;
+    信息.初始必要条件=读取初始必要条件(*虚拟存在,存在概念服务,概念服务,核初始概念);
     if (有效(方法行为字段)) {
         const auto 字段组 = 全局基础数据集.查询字段(方法节点, 方法行为字段);
         if (字段组.size() > 1) return std::nullopt;
@@ -1381,11 +2550,50 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
     if (!头存在 || !头特征 || !头结果) return std::nullopt;
     信息.方法头 = {*头存在, *头特征, *头结果};
     for (const auto 参数节点 : *参数节点组) {
-        const auto 参数 = 读取参数规格(参数节点, 概念服务);
+        const auto 参数 = 读取参数规格(参数节点, 概念服务, 存在概念服务);
         if (!参数) return std::nullopt;
         信息.参数规格组.push_back(*参数);
     }
     if (!参数规格有效(信息.参数规格组, 概念服务)) return std::nullopt;
+    for(const auto& p:信息.参数规格组)if(p.有序规格
+        &&p.有序规格->信息类型==新方法参数信息类型::存在
+        &&!方法存在范围有效(p.有序规格->范围概念节点,存在概念服务))return std::nullopt;
+    if(信息.初始必要条件&&通用概念必要声明形状有效(*信息.初始必要条件))
+        for(const auto& c:信息.初始必要条件->条件.条件项组) {
+            if(c.参数序号>信息.参数规格组.size())return std::nullopt;
+            const auto& p=信息.参数规格组[c.参数序号-1].有序规格;
+            if(!p||p->序号!=c.参数序号||p->信息类型!=新方法参数信息类型::存在)return std::nullopt;
+        }
+    const auto branches=读取有序子节点(*虚拟存在,执行分支字段,概念服务);
+    if(!branches)return std::nullopt;
+    for(std::size_t i=0;i<branches->size();++i) {
+        const auto B=(*branches)[i];
+        const auto owners=全局基础数据集.查询目标字段(B,执行分支字段);
+        const auto C=读取唯一节点字段(B,分支条件字段);
+        if(!节点类型为(B,分支节点类型)||owners.size()!=1||owners.front().所属节点!=*虚拟存在
+            ||读取唯一节点字段(B,分支所属方法字段)!=std::optional{方法节点}
+            ||读取唯一节点字段(B,分支所属虚拟字段)!=虚拟存在||!C
+            ||读取唯一I64字段(B,顺序字段)!=std::optional<std::int64_t>{static_cast<std::int64_t>(i)})return std::nullopt;
+        const auto node=全局基础数据集.查询完整节点结构(B);
+        if(!node.结构)return std::nullopt;
+        for(const auto& field:node.结构->字段组)
+            if(field.字段节点!=节点类型字段&&field.字段节点!=顺序字段&&field.字段节点!=分支所属方法字段
+                &&field.字段节点!=分支所属虚拟字段&&field.字段节点!=分支条件字段)return std::nullopt;
+        const auto cOwners=全局基础数据集.查询目标字段(*C,分支条件字段);
+        if(cOwners.size()!=1||cOwners.front().所属节点!=B||!全局基础数据集.查询目标字段(*C,配对条件字段).empty())return std::nullopt;
+        const auto conditionNode=全局基础数据集.查询完整节点结构(*C);
+        if(!conditionNode.结构)return std::nullopt;
+        for(const auto& field:conditionNode.结构->字段组)
+            if(field.字段节点!=节点类型字段&&field.字段节点!=关系规则字段&&field.字段节点!=参数位置关系字段
+                &&field.字段节点!=条件项字段&&field.字段节点!=初始场景限定字段)return std::nullopt;
+        const auto c=读取条件(*C,概念服务);
+        if(!c||!分支条件有效(*c,信息.参数规格组,概念服务,存在概念服务,引用内容条件校验模式::持久结构))return std::nullopt;
+        信息.执行分支组.push_back({B,{static_cast<std::uint32_t>(i),*c}});
+    }
+    新方法条件结果定义 初始核验;
+    初始核验.条件.参数关系组 = 信息.初始模拟关系组;
+    if(!模拟输入方案有效(信息.初始模拟输入方案组,信息.参数规格组,信息.初始模拟关系组,概念服务))return std::nullopt;
+    if (!条件结果角色已声明(信息.参数规格组, 初始核验, 概念服务, 存在概念服务,引用内容条件校验模式::持久结构)) return std::nullopt;
     std::set<稳定编码> 已见来源配对;
     for (const auto 配对节点 : *配对节点组) {
         if (!节点类型为(配对节点, 条件结果配对节点类型)) return std::nullopt;
@@ -1408,12 +2616,19 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
         const auto 结果 = 读取结果(*结果节点, 概念服务);
         const auto 线性 = 读取线性关系组(配对节点);
         if (!条件 || !结果 || !线性
-            || !条件结果角色已声明(信息.参数规格组, {*条件, *结果, *线性}, 概念服务)
+            || !条件结果角色已声明(信息.参数规格组, {*条件, *结果, *线性}, 概念服务, 存在概念服务,引用内容条件校验模式::持久结构)
             || !线性关系有效({*条件, *结果, *线性}, 概念服务, 信息.实例根节点.has_value())) return std::nullopt;
         信息.条件结果组.push_back({
             配对节点, *条件节点, *结果节点, *条件, *结果, 命中->value_or(0), *线性,
             有效(*配对来源) ? std::optional<稳定编码>{*配对来源} : std::nullopt,
             *知识来源 ? 新方法知识来源种类::模拟 : 新方法知识来源种类::未注明});
+        const auto branchSources=读取多节点字段(配对节点,配对分支来源字段,概念服务);
+        if(!branchSources)return std::nullopt;
+        if(信息.执行分支组.empty()!=branchSources->empty())return std::nullopt;
+        for(const auto B:*branchSources)
+            if(std::none_of(信息.执行分支组.begin(),信息.执行分支组.end(),[&](const auto& b){return b.节点==B;}))return std::nullopt;
+        信息.条件结果组.back().来源执行分支节点组=*branchSources;
+        if(!配对分支来源有效(信息,{*条件,*结果,*线性,*branchSources},概念服务,存在概念服务))return std::nullopt;
     }
     const auto 函数组 = 全局基础数据集.查询字段(
         方法节点, 方法本能函数登记名字段);
@@ -1430,10 +2645,9 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
         return std::nullopt;
     }
     if (信息.父代方法节点) {
-        if (有祖代方法 && 信息.本能函数登记名 != 新本能函数登记名_服务值结算)
+        if (有祖代方法)
             return std::nullopt;
-        if ((信息.本能函数登记名 != 新本能函数登记名_服务值结算
-                && 信息.本能函数登记名 != 新本能函数登记名_旧两参数获取服务对象)
+        if (信息.本能函数登记名 != 新本能函数登记名_旧两参数获取服务对象
             || 信息.作用域 != 新方法作用域::普通世界
             || 信息.实现方式 != 新方法实现方式::本能
             || !步骤节点组->empty() || !转移节点组->empty() || 有效(*入口步骤)) return std::nullopt;
@@ -1515,10 +2729,17 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
     return 信息;
 }
 
+std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, const 概念_特征类& 概念服务,
+    const 新方法治理对象读取接口& 治理读取, const 概念_存在类& 存在概念服务, bool 只读旧形状 = false,
+    bool 核初始概念 = true) {
+    if (!结构仍存在()) return std::nullopt;
+    return 读取方法信息本体(方法节点, 概念服务, 治理读取, 存在概念服务, 只读旧形状, 核初始概念);
+}
+
 // 调用者已核验原登记声明并持有方法owner锁。未知不推断，唯一追加为发布点。
 新方法建立结果 补登记方法行为(const 新方法信息& 原,
     const std::optional<新方法行为>& 声明, const 概念_特征类& 概念,
-    const 新方法治理对象读取接口& 治理) {
+    const 新方法治理对象读取接口& 治理, const 概念_存在类& 存在概念服务) {
     if (!声明 || 原.行为 == 声明) return {新方法操作状态::已找到, 原.节点};
     if (原.行为 || !是方法行为(static_cast<std::int64_t>(*声明))
         || std::any_of(原.条件结果组.begin(), 原.条件结果组.end(),
@@ -1532,7 +2753,7 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
         if (!节点.快照) throw std::runtime_error("method behavior snapshot incomplete");
         请求.预期联合节点组.push_back(*节点.快照);
     }
-    const auto 当前 = 读取方法信息(原.节点, 概念, 治理);
+    const auto 当前 = 读取方法信息(原.节点, 概念, 治理, 存在概念服务);
     if (!当前 || *当前 != 原) throw std::runtime_error("method behavior declaration changed");
     auto 预期 = 原;
     预期.行为 = 声明;
@@ -1543,7 +2764,7 @@ std::optional<新方法信息> 读取方法信息(稳定编码 方法节点, con
     if (发布.状态 != 基础节点组追加状态::已完成)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记方法行为", L"方法行为原子追加失败，保留现场。");
     try {
-        const auto 读回 = 读取方法信息(原.节点, 概念, 治理);
+        const auto 读回 = 读取方法信息(原.节点, 概念, 治理, 存在概念服务);
         if (!读回 || *读回 != 预期) throw std::runtime_error("method behavior readback mismatch");
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记方法行为", L"已发布分类读回不一致，保留已发表事实。");
@@ -1567,15 +2788,17 @@ bool 写入参数规格(
     const 新方法参数规格& 规格,
     std::int64_t 参数顺序,
     std::vector<稳定编码>& 已建节点,
-    std::vector<稳定编码>& 已写字段) {
+    std::vector<稳定编码>& 已写字段,
+    const 概念_存在类& 存在, const 概念_特征类& 特征) {
     const auto 参数节点 = 新建类型化节点(
         参数规格节点类型, 已建节点, 已写字段);
     if (规格.有序规格) {
         const auto& 新 = *规格.有序规格;
+        const auto 类别 = 读取参数类别概念保护(新.信息类型, 存在, 特征);
         return 有效(参数节点)
             && 写入I64字段(参数节点, 顺序字段, 参数顺序, 已写字段)
             && 写入I64字段(参数节点, 有序参数序号字段, 新.序号, 已写字段)
-            && 写入I64字段(参数节点, 有序参数类型字段, static_cast<std::int64_t>(新.信息类型), 已写字段)
+            && 写入节点字段(参数节点, 有序参数类别概念字段, 类别.类别概念, 已写字段)
             && 写入节点字段(参数节点, 有序参数范围字段, 新.范围概念节点, 已写字段)
             && 写入节点字段(虚拟存在, 虚拟存在参数规格字段, 参数节点, 已写字段);
     }
@@ -1623,6 +2846,7 @@ bool 写入结果项(
     std::int64_t 顺序,
     std::vector<稳定编码>& 已建节点,
     std::vector<稳定编码>& 已写字段) {
+    if(源.引用内容结果&&源.引用内容结果->要求认知来源当前有效)return false;
     const auto 项 = 新建类型化节点(
         结果项节点类型, 已建节点, 已写字段);
     if (!有效(项)
@@ -1643,6 +2867,12 @@ bool 写入结果项(
     }
     if (源.精确数值域 && !写入精确数值域(项, *源.精确数值域, 已写字段)) return false;
     if (源.任务成员变量序号 && !写入I64字段(项, 任务成员变量字段, 源.任务成员变量序号, 已写字段)) return false;
+    if(源.引用内容结果) {
+        const auto& c=*源.引用内容结果;
+        if(!写入节点字段(项,结果引用内容要求字段,c.要求概念节点,已写字段)
+            ||!写入I64字段(项,结果内容作用点字段,static_cast<std::int64_t>(c.作用点),已写字段))return false;
+        if(!c.正式内容路径.empty()&&!写入节点字段(项,结果引用内容项字段,c.正式内容路径.front(),已写字段))return false;
+    }
     return 写入节点字段(结果节点, 持有字段, 项, 已写字段);
 }
 
@@ -1668,9 +2898,34 @@ bool 写入结果项(
         }
         if (源.精确数值域 && !写入精确数值域(项, *源.精确数值域, 已写字段)) return {};
         if (源.任务成员变量序号 && !写入I64字段(项, 任务成员变量字段, 源.任务成员变量序号, 已写字段)) return {};
+        if(源.引用内容条件) {
+            if(!写入节点字段(项,条件引用内容要求字段,源.引用内容条件->要求概念节点,已写字段))return {};
+            if(源.引用内容条件->作用点!=新方法内容作用点::特征当前引用
+                &&!写入I64字段(项,条件内容作用点字段,static_cast<std::int64_t>(源.引用内容条件->作用点),已写字段))return {};
+            if(源.引用内容条件->要求认知来源当前有效&&!写入I64字段(项,条件内容认知有效字段,1,已写字段))return {};
+            if(!源.引用内容条件->正式内容路径.empty()
+                &&!写入节点字段(项,条件引用内容项字段,源.引用内容条件->正式内容路径.front(),已写字段))return {};
+        }
+        if(源.特征前态限定) {
+            const auto& p=*源.特征前态限定;
+            if(p.历史不同值数量&&*p.历史不同值数量>static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()))return {};
+            if(!写入I64字段(项,条件前态当前字段,static_cast<std::int64_t>(p.当前值状态),已写字段))return {};
+            if(p.历史不同值数量&&!写入I64字段(项,条件前态历史数字段,static_cast<std::int64_t>(*p.历史不同值数量),已写字段))return {};
+        }
         if (!写入节点字段(条件, 条件项字段, 项, 已写字段)) return {};
     }
-    if(!写入参数关系(条件,定义.参数关系组,已写字段)) return {};
+    if(!写入参数关系(条件,定义.参数关系组,已建节点,已写字段)) return {};
+    for(std::size_t i=0;i<定义.场景事实限定组.size();++i) {
+        const auto& r=定义.场景事实限定组[i];
+        const auto n=新建类型化节点(初始场景限定节点类型,已建节点,已写字段);
+        if(!有效(n)||!写入I64字段(n,顺序字段,static_cast<std::int64_t>(i),已写字段)
+            ||!写入节点字段(n,初始声明所属字段,条件,已写字段)
+            ||!写入节点字段(n,初始关系概念字段,r.关系概念节点,已写字段))return {};
+        已写字段.reserve(已写字段.size()+1);
+        const auto f=全局基础数据集.添加字段值(n,初始四位置字段,基础值{std::vector<std::int64_t>{r.场景参数序号,r.主体参数序号,r.对象参数序号,r.特征参数序号}});
+        if(!有效(f))return {};已写字段.push_back(f);
+        if(!写入节点字段(条件,初始场景限定字段,n,已写字段))return {};
+    }
     return 条件;
 }
 
@@ -1743,7 +2998,20 @@ bool 写入条件结果(
             return false;
         }
     }
-    if(!写入参数关系(结果,定义.结果.参数关系组,已写字段)) return false;
+    if(!写入参数关系(结果,定义.结果.参数关系组,已建节点,已写字段)) return false;
+    for(std::size_t i=0;i<定义.结果.场景事实限定组.size();++i) {
+        const auto& r=定义.结果.场景事实限定组[i];
+        const auto n=新建类型化节点(结果场景限定节点类型,已建节点,已写字段);
+        if(!有效(n)||!写入I64字段(n,顺序字段,static_cast<std::int64_t>(i),已写字段)
+            ||!写入节点字段(n,结果场景所属字段,结果,已写字段)
+            ||!写入节点字段(n,结果场景关系概念字段,r.关系概念节点,已写字段))return false;
+        已写字段.reserve(已写字段.size()+1);
+        const auto field=全局基础数据集.添加字段值(n,结果场景四位置字段,基础值{std::vector<std::int64_t>{r.场景参数序号,r.主体参数序号,r.对象参数序号,r.特征参数序号}});
+        if(!有效(field))return false;已写字段.push_back(field);
+        if(!写入节点字段(结果,结果场景限定字段,n,已写字段))return false;
+    }
+    for(const auto B:定义.来源执行分支节点组)
+        if(!写入节点字段(配对,配对分支来源字段,B,已写字段))return false;
     if (未发布配对) {
         *未发布配对 = 配对;
         return true;
@@ -1781,127 +3049,6 @@ bool 特征概念为或从属于(
     return false;
 }
 
-enum class 服务结算声明种类 { 非法, 固定加一, 按贡献Q, 有序贡献Q };
-
-bool 是贡献Q声明(服务结算声明种类 类型) {
-    return 类型 == 服务结算声明种类::按贡献Q || 类型 == 服务结算声明种类::有序贡献Q;
-}
-
-std::optional<特征概念I64闭区间> 结算声明区间(
-    const 概念_特征类& 概念, const 新方法参数特征规格& 规格) {
-    if (!规格.值域概念节点 || !规格.二次特征概念组.empty()) return {};
-    const auto 域 = 概念.获取特征概念(*规格.值域概念节点);
-    const auto 比较 = 概念.比较单特征概念(*规格.值域概念节点, 规格.特征类型概念节点);
-    if (!域 || 域->材料类型 != 特征概念材料物理类型::I64标量
-        || 比较.状态 != 特征概念规则状态::已完成
-        || 比较.特征类型根 != 规格.特征类型概念节点 || !比较.关系
-        || (*比较.关系 != 单特征概念关系::同一
-            && *比较.关系 != 单特征概念关系::右为上位)) return {};
-    const auto* 区间 = std::get_if<std::vector<特征概念I64闭区间>>(&域->值域);
-    return 区间 && 区间->size() == 1 ? std::optional{区间->front()} : std::nullopt;
-}
-
-服务结算声明种类 读取服务结算声明种类(const 新方法头定义& 头,
-    const std::vector<新方法参数规格>& 参数, const 概念_特征类& 概念) {
-    using 类 = 服务结算声明种类;
-    if (参数.size() == 3 && 参数规格有效(参数, 概念)) {
-        for (std::size_t i = 0; i < 参数.size(); ++i) {
-            if (!参数[i].有序规格 || 参数[i].有序规格->序号 != i + 1
-                || 参数[i].有序规格->信息类型 != (i == 0
-                    ? 新方法参数信息类型::存在 : 新方法参数信息类型::特征)) return 类::非法;
-        }
-        const auto 自我 = 参数[0].有序规格->范围概念节点;
-        const auto 服务值 = 参数[1].有序规格->范围概念节点;
-        const auto 集合类型 = 参数[2].有序规格->范围概念节点;
-        const auto 集合 = 概念.获取特征概念(集合类型);
-        const auto 根比较 = 概念.比较单特征概念(集合类型, 集合类型);
-        if (头.作用存在概念组 != std::vector<稳定编码>{自我}
-            || 头.涉及特征类型概念组 != std::vector<稳定编码>{服务值}
-            || 头.可能结果概念组.size() != 1 || !集合
-            || 集合->比较规则 != 特征概念比较规则::服务任务集合身份判等
-            || 集合->材料类型 != 特征概念材料物理类型::U64数组
-            || 根比较.状态 != 特征概念规则状态::已完成 || 根比较.特征类型根 != 集合类型)
-            return 类::非法;
-        const auto 前 = 结算声明区间(概念, {服务值, 服务值, {}});
-        const auto 后 = 结算声明区间(概念, {服务值, 头.可能结果概念组.front(), {}});
-        constexpr auto 最大 = (std::numeric_limits<std::int64_t>::max)();
-        return 前 && 后 && (前->下界 == 0 || 前->下界 == (std::numeric_limits<std::int64_t>::min)())
-            && 前->上界 == 最大 && *后 == *前
-            ? 类::有序贡献Q : 类::非法;
-    }
-    if (参数.size() != 2 || 头.涉及特征类型概念组.size() != 1
-        || 头.可能结果概念组.size() != 1) return 类::非法;
-    const auto& 自我 = 参数[0]; const auto& 来源 = 参数[1];
-    if (自我.对象种类 != 新方法参数对象种类::普通世界 || !自我.要求场景
-        || 自我.集合成员约束 || 自我.特征规格组.size() != 2
-        || 来源.对象种类 != 新方法参数对象种类::任务虚拟存在 || 来源.要求场景
-        || 来源.存在概念节点 || !来源.集合成员约束
-        || (来源.特征规格组.size() != 1 && 来源.特征规格组.size() != 2)
-        || 自我.参数角色节点 != 头.涉及特征类型概念组.front()
-        || 自我.特征规格组[0].特征类型概念节点 != 自我.参数角色节点
-        || 来源.参数角色节点 != 来源.特征规格组[0].特征类型概念节点
-        || 来源.参数角色节点 == 自我.参数角色节点
-        || 来源.集合成员约束->集合参数角色节点 != 自我.参数角色节点
-        || 来源.集合成员约束->集合特征类型概念节点 != 自我.特征规格组[1].特征类型概念节点
-        || !自我.特征规格组[1].值域概念节点
-        || !自我.特征规格组[1].二次特征概念组.empty()) return 类::非法;
-    const auto 前 = 结算声明区间(概念, 自我.特征规格组[0]);
-    const auto 状态 = 结算声明区间(概念, 来源.特征规格组[0]);
-    新方法参数特征规格 结果规格{自我.参数角色节点, 头.可能结果概念组.front(), {}};
-    const auto 结果 = 结算声明区间(概念, 结果规格);
-    if (!前 || !状态 || *状态 != 特征概念I64闭区间{9, 9} || !结果) return 类::非法;
-    const auto 集合 = 概念.获取特征概念(*自我.特征规格组[1].值域概念节点);
-    const auto 集合比较 = 概念.比较单特征概念(*自我.特征规格组[1].值域概念节点,
-        自我.特征规格组[1].特征类型概念节点);
-    特征概念任务集合值域 非空; 非空.至少一个任务 = true;
-    if (!集合 || 集合->值域 != 特征概念值域{非空}
-        || 集合比较.状态 != 特征概念规则状态::已完成
-        || 集合比较.特征类型根 != 自我.特征规格组[1].特征类型概念节点
-        || !集合比较.关系 || (*集合比较.关系 != 单特征概念关系::同一
-            && *集合比较.关系 != 单特征概念关系::右为上位)) return 类::非法;
-    constexpr auto 最大 = (std::numeric_limits<std::int64_t>::max)();
-    if (来源.特征规格组.size() == 1) {
-        if (自我.存在概念节点 || !头.作用存在概念组.empty()
-            || 前->下界 < 0 || 前->下界 != 前->上界 || 前->上界 == 最大
-            || *结果 != 特征概念I64闭区间{前->下界 + 1, 前->下界 + 1}) return 类::非法;
-        return 类::固定加一;
-    }
-    const auto Q = 结算声明区间(概念, 来源.特征规格组[1]);
-    if (!自我.存在概念节点 || 头.作用存在概念组 != std::vector<稳定编码>{*自我.存在概念节点}
-        || !Q || (Q->下界 != 0 && Q->下界 != (std::numeric_limits<std::int64_t>::min)()) || Q->上界 != 最大
-        || (前->下界 != 0 && 前->下界 != (std::numeric_limits<std::int64_t>::min)()) || 前->上界 != 最大 || *结果 != *前
-        || 来源.特征规格组[1].特征类型概念节点 == 来源.参数角色节点) return 类::非法;
-    return 类::按贡献Q;
-}
-
-服务结算声明种类 读取服务结算声明种类(const 新方法信息& 方法,
-    const 概念_特征类& 概念) {
-    if (方法.作用域 != 新方法作用域::普通世界 || 方法.实现方式 != 新方法实现方式::本能
-        || 方法.本能函数登记名 != 新本能函数登记名_服务值结算
-        || !方法.组合步骤组.empty() || 方法.组合入口步骤节点 || !方法.结果转移组.empty())
-        return 服务结算声明种类::非法;
-    const auto 类型 = 读取服务结算声明种类(方法.方法头, 方法.参数规格组, 概念);
-    if (类型 == 服务结算声明种类::有序贡献Q
-        && 方法.初始模拟关系组 != std::vector<新方法参数关系>{
-            {新方法参数关系种类::特征所属存在, 2, 1},
-            {新方法参数关系种类::特征所属存在, 3, 1}}) return 服务结算声明种类::非法;
-    return 类型;
-}
-
-bool 结算代际范围一致(const 新方法信息& 父, const 新方法信息& 子) {
-    if (父.方法头.涉及特征类型概念组 != 子.方法头.涉及特征类型概念组) return false;
-    if (子.参数规格组.front().有序规格) {
-        const auto& 旧 = 父.参数规格组[0];
-        return 旧.特征规格组[0].特征类型概念节点 == 子.参数规格组[1].有序规格->范围概念节点
-            && 旧.特征规格组[1].特征类型概念节点 == 子.参数规格组[2].有序规格->范围概念节点
-            && (!旧.存在概念节点 || 旧.存在概念节点 == 子.参数规格组[0].有序规格->范围概念节点);
-    }
-    return 父.参数规格组[0].参数角色节点 == 子.参数规格组[0].参数角色节点
-        && 父.参数规格组[0].特征规格组[1] == 子.参数规格组[0].特征规格组[1]
-        && 父.参数规格组[1].参数角色节点 == 子.参数规格组[1].参数角色节点
-        && 父.参数规格组[1].特征规格组[0] == 子.参数规格组[1].特征规格组[0]
-        && 父.参数规格组[1].集合成员约束 == 子.参数规格组[1].集合成员约束;
-}
 
 // 调用方已经持有方法结构锁。完整扫描，任何破损都不能解释为未登记。
 bool 是有序服务对象规格(const std::vector<新方法参数规格>& 组) {
@@ -1966,7 +3113,7 @@ const 新方法信息& 核验服务对象方法族(const std::vector<新方法�
 }
 
 新方法建立结果 查询本能登记结构(const std::string& 登记名, const 概念_特征类& 概念服务,
-    const 新方法治理对象读取接口& 治理读取) {
+    const 新方法治理对象读取接口& 治理读取, const 概念_存在类& 存在概念服务) {
     新方法建立结果 结果;
     if (!结构仍存在()) {
         结果.状态 = 新方法操作状态::尚未初始化;
@@ -1979,12 +3126,12 @@ const 新方法信息& 核验服务对象方法族(const std::vector<新方法�
     }
     std::vector<新方法信息> 同名;
     for (const auto 节点 : *成员组) {
-        const auto 方法 = 读取方法信息(节点, 概念服务, 治理读取);
+        const auto 方法 = 读取方法信息本体(节点, 概念服务, 治理读取, 存在概念服务, false, true);
         if (!方法) {
             return {新方法操作状态::结构不一致, std::nullopt};
         }
         if (方法->来源方法节点 || 方法->本能函数登记名 != 登记名) continue;
-        if (登记名 == 新本能函数登记名_服务值结算 || 登记名 == 新本能函数登记名_旧两参数获取服务对象) {
+        if (登记名 == 新本能函数登记名_旧两参数获取服务对象) {
             同名.push_back(*方法); continue;
         }
         if (结果.方法节点) {
@@ -2008,37 +3155,6 @@ const 新方法信息& 核验服务对象方法族(const std::vector<新方法�
         if (std::any_of(同名.begin(), 同名.end(), [&](const auto& m) { return 已退役(m.节点); })) 停止();
         结果.方法节点 = 当前.节点;
     }
-    if (登记名 == 新本能函数登记名_服务值结算 && !同名.empty()) {
-        const auto 停止 = []() { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
-            L"查询服务结算方法登记", L"服务结算方法代际、启用或规格不完整，保留方法知识。"); };
-        if (同名.size() > 3) 停止();
-        const 新方法信息* 当前 = nullptr;
-        std::set<服务结算声明种类> 代际;
-        for (const auto& m : 同名) {
-            const auto 类别 = 读取服务结算声明种类(m, 概念服务);
-            if (m.来源方法节点 || m.实例根节点 || 类别 == 服务结算声明种类::非法
-                || !代际.insert(类别).second) 停止();
-            if (m.启用状态 == 新方法启用状态::启用) {
-                if (当前) 停止(); 当前 = &m;
-            } else if (m.启用状态 != 新方法启用状态::停用) 停止();
-        }
-        if (!当前) 停止();
-        std::set<稳定编码> 链;
-        const 新方法信息* 子 = 当前;
-        while (子) {
-            if (!链.insert(子->节点).second) 停止();
-            if (!子->父代方法节点) break;
-            const auto 父 = std::find_if(同名.begin(), 同名.end(), [&](const auto& m) {
-                return m.节点 == *子->父代方法节点;
-            });
-            if (父 == 同名.end() || 父->启用状态 != 新方法启用状态::停用
-                || 读取服务结算声明种类(*父, 概念服务) >= 读取服务结算声明种类(*子, 概念服务)
-                || !结算代际范围一致(*父, *子)) 停止();
-            子 = &*父;
-        }
-        if (链.size() != 同名.size()) 停止();
-        结果.方法节点 = 当前->节点;
-    }
     结果.状态 = 结果.方法节点 ? 新方法操作状态::已找到
         : 新方法操作状态::方法不存在;
     return 结果;
@@ -2051,12 +3167,98 @@ std::int64_t 方法当前UTC纳秒() {
 
 // 联合追加所读取的全部方法图、字段键和直接引用均有完整CAS预期。
 基础封存追加片段 封存方法片段(基础节点组追加请求 请求,
-    const std::vector<稳定编码>& 图) {
+    const std::vector<稳定编码>& 图, const 概念_存在类& 概念,const 概念_特征类& 特征概念) {
     std::set<稳定编码> 身份{新方法组织根节点};
+    std::set<稳定编码> 内容保护身份;
+    const auto 加类别保护 = [&](稳定编码 C) {
+        const auto p = 解析参数类别概念保护(C, 概念, 特征概念);
+        for (const auto& n : p.完整保护组) {
+            身份.insert(n.结构.节点.编码);
+            内容保护身份.insert(n.结构.节点.编码);
+            const auto old = std::find_if(请求.预期联合节点组.begin(), 请求.预期联合节点组.end(),
+                [&](const auto& v) { return v.结构.节点 == n.结构.节点; });
+            if (old == 请求.预期联合节点组.end()) 请求.预期联合节点组.push_back(n);
+            else if (old->结构.字段组 != n.结构.字段组 || old->入向字段组 != n.入向字段组
+                || old->入向外部关系组 != n.入向外部关系组 || old->出向外部关系组 != n.出向外部关系组)
+                throw 引用内容定义前提变化{};
+        }
+    };
+    const auto 加内容保护=[&](稳定编码 C,std::optional<稳定编码> 路径FT) {
+        新方法引用内容条件 条件;条件.要求概念节点=C;
+        if(路径FT)条件.正式内容路径.push_back(*路径FT);
+        std::vector<基础联合节点快照> 保护;
+        if(!读取引用内容条件定义保护(条件,特征概念,概念,保护))
+            throw std::runtime_error("method content requirement full semantics unavailable");
+        for(const auto& 快照:保护) {
+            身份.insert(快照.结构.节点.编码);
+            内容保护身份.insert(快照.结构.节点.编码);
+            const auto 旧=std::find_if(请求.预期联合节点组.begin(),请求.预期联合节点组.end(),
+                [&](const auto& v){return v.结构.节点==快照.结构.节点;});
+            if(旧==请求.预期联合节点组.end())请求.预期联合节点组.push_back(快照);
+            else if(旧->结构.字段组!=快照.结构.字段组||旧->入向字段组!=快照.入向字段组
+                ||旧->入向外部关系组!=快照.入向外部关系组||旧->出向外部关系组!=快照.出向外部关系组)
+                throw 引用内容定义前提变化{};
+        }
+    };
+    const auto 加正式保护=[&](const std::vector<基础联合节点快照>& 保护) {
+        for(const auto& p:保护) {
+            身份.insert(p.结构.节点.编码);内容保护身份.insert(p.结构.节点.编码);
+            const auto old=std::find_if(请求.预期联合节点组.begin(),请求.预期联合节点组.end(),[&](const auto& v){return v.结构.节点==p.结构.节点;});
+            if(old==请求.预期联合节点组.end())请求.预期联合节点组.push_back(p);
+            else if(old->结构.字段组!=p.结构.字段组||old->入向字段组!=p.入向字段组
+                ||old->入向外部关系组!=p.入向外部关系组||old->出向外部关系组!=p.出向外部关系组)
+                throw 引用内容定义前提变化{};
+        }
+    };
+    const auto 加主体保护=[&](稳定编码 FT) {
+        std::vector<基础联合节点快照> p;
+        if(!追加需求主体路径保护(FT,特征概念,概念,p))throw std::runtime_error("method subject relation path unsupported");
+        加正式保护(p);
+    };
+    const auto 加完整需求保护=[&](稳定编码 C) {
+        const auto p=概念.读取引用内容筹办概念();
+        if(p.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+        if(p.状态!=正式结构操作状态::已读取||!p.信息||p.完整保护组.empty()
+            ||p.信息->完整被认知需求!=C)throw std::runtime_error("method content result complete concept unavailable");
+        加正式保护(p.完整保护组);
+    };
     身份.insert(图.begin(), 图.end());
     for (const auto& f : 请求.追加字段组) {
         身份.insert(f.所属节点); 身份.insert(f.字段节点);
         if (const auto* n = std::get_if<稳定编码>(&f.内容)) 身份.insert(*n);
+    }
+    for(const auto& n:请求.新节点组)for(const auto& f:n.字段组) {
+        身份.insert(f.字段节点);
+        if(const auto* ref=std::get_if<稳定编码>(&f.内容))身份.insert(*ref);
+        if (f.字段节点 == 有序参数类别概念字段) {
+            const auto* c = std::get_if<稳定编码>(&f.内容);
+            if (!c) throw std::runtime_error("method parameter category is not a reference");
+            加类别保护(*c);
+        }
+        if(f.字段节点==内容关系路径字段) {
+            const auto* ft=std::get_if<稳定编码>(&f.内容);
+            if(!ft)throw std::runtime_error("method content relation FT is not a reference");
+            加主体保护(*ft);
+        }
+        if(f.字段节点==条件引用内容要求字段||f.字段节点==结果引用内容要求字段) {
+            const auto* C=std::get_if<稳定编码>(&f.内容);
+            if(!C)throw std::runtime_error("method content requirement is not a reference");
+            std::optional<稳定编码> 路径FT;
+            const auto 路径键=f.字段节点==条件引用内容要求字段 ? 条件引用内容项字段 : 结果引用内容项字段;
+            for(const auto& 路径:n.字段组)if(路径.字段节点==路径键) {
+                const auto* FT=std::get_if<稳定编码>(&路径.内容);
+                if(!FT||路径FT)throw std::runtime_error("method content path is not a unique reference");
+                路径FT=*FT;
+            }
+            加内容保护(*C,路径FT);
+            if(f.字段节点==结果引用内容要求字段)加完整需求保护(*C);
+            if(f.字段节点==条件引用内容要求字段)for(const auto& 限定:n.字段组)if(限定.字段节点==条件内容认知有效字段) {
+                const auto* raw=std::get_if<基础值>(&限定.内容);
+                const auto* value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+                if(!value||(*value!=0&&*value!=1))throw std::runtime_error("method provenance condition flag malformed");
+                if(*value==1)加完整需求保护(*C);
+            }
+        }
     }
     for (const auto n : 图) {
         const auto r = 全局基础数据集.查询节点组完整结构({n});
@@ -2065,6 +3267,43 @@ std::int64_t 方法当前UTC纳秒() {
         for (const auto& f : r.节点组[0].快照->结构.字段组) {
             身份.insert(f.字段节点);
             if (const auto* ref = std::get_if<稳定编码>(&f.内容)) 身份.insert(*ref);
+            if (f.字段节点 == 有序参数类别概念字段) {
+                const auto* c = std::get_if<稳定编码>(&f.内容);
+                if (!c) throw std::runtime_error("method parameter category is not a reference");
+                加类别保护(*c);
+            }
+            if(f.字段节点==内容关系路径字段) {
+                const auto* ft=std::get_if<稳定编码>(&f.内容);
+                if(!ft)throw std::runtime_error("method content relation FT is not a reference");
+                加主体保护(*ft);
+            }
+            if(f.字段节点==条件引用内容要求字段||f.字段节点==结果引用内容要求字段) {
+                const auto* C=std::get_if<稳定编码>(&f.内容);
+                if(!C)throw std::runtime_error("method content requirement is not a reference");
+                const auto 路径=读取可选节点字段(n,f.字段节点==条件引用内容要求字段 ? 条件引用内容项字段 : 结果引用内容项字段);
+                if(!路径)throw std::runtime_error("method content path field damaged");
+                加内容保护(*C, 有效(*路径) ? std::optional{*路径} : std::nullopt);
+                if(f.字段节点==结果引用内容要求字段)加完整需求保护(*C);
+                if(f.字段节点==条件引用内容要求字段) {
+                    const auto 限定=读取可选I64字段(n,条件内容认知有效字段);
+                    if(!限定||(*限定&&**限定!=0&&**限定!=1))throw std::runtime_error("method provenance condition flag malformed");
+                    if(*限定&&**限定==1)加完整需求保护(*C);
+                }
+            }
+            if(f.字段节点==初始关系概念字段||f.字段节点==结果场景关系概念字段) {
+                const auto* ref=std::get_if<稳定编码>(&f.内容);
+                const auto proof=概念.读取已确认消息连接概念保护();
+                if(!ref||!proof.信息||proof.信息->节点!=*ref||proof.完整保护组.empty())
+                    throw std::runtime_error("method scene condition formal protection unavailable");
+                for(const auto& snapshot:proof.完整保护组) {
+                    身份.insert(snapshot.结构.节点.编码);
+                    const auto old=std::find_if(请求.预期联合节点组.begin(),请求.预期联合节点组.end(),[&](const auto& v){return v.结构.节点==snapshot.结构.节点;});
+                    if(old==请求.预期联合节点组.end())请求.预期联合节点组.push_back(snapshot);
+                    else if(old->结构.字段组!=snapshot.结构.字段组||old->入向字段组!=snapshot.入向字段组
+                        ||old->入向外部关系组!=snapshot.入向外部关系组||old->出向外部关系组!=snapshot.出向外部关系组)
+                        throw std::runtime_error("method scene condition protection changed");
+                }
+            }
         }
     }
     const auto r = 全局基础数据集.查询节点组完整结构({身份.begin(), 身份.end()});
@@ -2072,7 +3311,13 @@ std::int64_t 方法当前UTC纳秒() {
         throw std::runtime_error("method publication snapshot unavailable");
     for (const auto& n : r.节点组) {
         if (!n.快照) throw std::runtime_error("method publication incomplete snapshot");
-        请求.预期联合节点组.push_back(*n.快照);
+        const auto old=std::find_if(请求.预期联合节点组.begin(),请求.预期联合节点组.end(),[&](const auto& v){return v.结构.节点==n.快照->结构.节点;});
+        if(old==请求.预期联合节点组.end())请求.预期联合节点组.push_back(*n.快照);
+        else if(old->结构.字段组!=n.快照->结构.字段组||old->入向字段组!=n.快照->入向字段组
+            ||old->入向外部关系组!=n.快照->入向外部关系组||old->出向外部关系组!=n.快照->出向外部关系组) {
+            if(内容保护身份.contains(n.快照->结构.节点.编码))throw 引用内容定义前提变化{};
+            throw std::runtime_error("method publication formal protection changed");
+        }
     }
     auto sealed = 全局基础数据集.封存原子追加片段(请求);
     if (sealed.状态 != 基础节点组追加状态::已完成 || !sealed.片段)
@@ -2085,13 +3330,463 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
     请求.追加字段组.push_back({v.引用.虚拟存在节点, 虚拟存在专属概念字段, v.专属存在概念节点});
 }
 
+struct 初始声明补齐候选 final {
+    新方法信息 原, 预期;
+    基础节点组追加请求 追加;
+    std::vector<新方法执行分支定义> 新分支定义;
+    bool 有变化=false;
+};
+
+新方法操作状态 核验初始声明补齐(const 新方法信息& 原,
+    const 新方法知识建立请求& 原声明, const 概念_特征类& 特征概念,
+    const 概念_存在类& 存在概念, 初始声明补齐候选& 候选) {
+    auto 声明=原声明;规范内容关系声明(声明);
+    候选.原=原; 候选.预期=原;
+    if(原.初始必要条件) {
+        const auto root=读取唯一节点字段(原.方法虚拟存在节点,初始必要条件字段);
+        const auto format=root?读取唯一I64字段(*root,初始声明格式字段):std::nullopt;
+        if(!format||(*format==1&&!初始必要条件形状有效(*原.初始必要条件))
+            ||((*format==2||*format==3)&&!通用概念必要声明形状有效(*原.初始必要条件))
+            ||(*format!=1&&*format!=2&&*format!=3))
+            throw std::runtime_error("existing initial requirement format or shape damaged");
+        // 格式1仍由原专用入口完成第二段完整核验；普通省略请求只读保留。
+        const bool 旧专用省略=*format==1&&!声明.初始必要条件;
+        if(!旧专用省略&&原.初始必要条件!=声明.初始必要条件)return 新方法操作状态::函数登记冲突;
+    }
+    const auto 原分支=分支定义组(原);
+    const auto 可补=[](const auto& 旧, const auto& 新) { return 旧.empty() || 旧==新; };
+    if (!可补(原分支,声明.执行分支组)
+        || !可补(原.初始模拟关系组,声明.初始模拟关系组)
+        || !可补(原.初始模拟事件参数组,声明.初始模拟事件参数组)
+        || !可补(原.初始模拟输入方案组,声明.初始模拟输入方案组)
+        || (原.行为 && 原.行为!=声明.行为)) return 新方法操作状态::函数登记冲突;
+    if (声明.行为 && (!是方法行为(static_cast<std::int64_t>(*声明.行为))
+        || std::any_of(原.条件结果组.begin(),原.条件结果组.end(),[&](const auto& p) {
+            return !行为结果相容(声明.行为,p.结果);
+        }))) return 新方法操作状态::函数登记冲突;
+    if (!参数关系结构有效(声明.初始模拟关系组)) return 新方法操作状态::参数规格不合法;
+    if(!模拟输入方案有效(声明.初始模拟输入方案组,原.参数规格组,声明.初始模拟关系组,特征概念))
+        return 新方法操作状态::参数规格不合法;
+    std::vector<基础联合节点快照> 必要保护;
+    const auto 必要核验=核验通用概念必要声明(声明,存在概念,特征概念,必要保护);
+    if(必要核验!=新方法操作状态::已找到)return 必要核验;
+    新方法条件结果定义 关系核验;
+    关系核验.条件.参数关系组=声明.初始模拟关系组;
+    if (!条件结果角色已声明(原.参数规格组,关系核验,特征概念,存在概念))
+        return 新方法操作状态::参数规格不合法;
+    for (std::size_t i=0;i<声明.初始模拟事件参数组.size();++i) {
+        const auto n=声明.初始模拟事件参数组[i];
+        if (!n || n>原.参数规格组.size() || !原.参数规格组[n-1].有序规格
+            || 原.参数规格组[n-1].有序规格->信息类型!=新方法参数信息类型::特征
+            || std::find(声明.初始模拟事件参数组.begin(),声明.初始模拟事件参数组.begin()+i,n)
+                !=声明.初始模拟事件参数组.begin()+i) return 新方法操作状态::参数规格不合法;
+    }
+    for (std::size_t i=0;i<声明.执行分支组.size();++i)
+        if (声明.执行分支组[i].顺序!=i
+            || !分支条件有效(声明.执行分支组[i].必要条件,原.参数规格组,特征概念,存在概念))
+            return 新方法操作状态::参数规格不合法;
+    const bool 补关系=原.初始模拟关系组.empty()&&!声明.初始模拟关系组.empty();
+    const bool 补事件=原.初始模拟事件参数组.empty()&&!声明.初始模拟事件参数组.empty();
+    const bool 补分支=原分支.empty()&&!声明.执行分支组.empty();
+    const bool 补输入=原.初始模拟输入方案组.empty()&&!声明.初始模拟输入方案组.empty();
+    const bool 补必要=!原.初始必要条件&&声明.初始必要条件;
+    if ((补关系||补事件||补分支||补输入||补必要) && (!原.条件结果组.empty()||!声明.条件结果组.empty()))
+        return 新方法操作状态::函数登记冲突;
+    auto& 请求=候选.追加;
+    请求.预期联合节点组.insert(请求.预期联合节点组.end(),必要保护.begin(),必要保护.end());
+    if(补必要) {
+        追加通用概念必要声明(请求,原.方法虚拟存在节点,*声明.初始必要条件);
+        候选.预期.初始必要条件=声明.初始必要条件;
+    }
+    if(补输入) {
+        追加模拟输入方案(请求,原.方法虚拟存在节点,声明.初始模拟输入方案组);
+        候选.预期.初始模拟输入方案组=声明.初始模拟输入方案组;
+    }
+    const auto 字段=[&](std::size_t n,稳定编码 key,基础组内字段内容 value) {
+        请求.新节点组[n].字段组.push_back({key,std::move(value)});
+    };
+    const auto 新节点=[&](稳定编码 类型) {
+        const auto n=请求.新节点组.size(); 请求.新节点组.emplace_back();
+        字段(n,节点类型字段,类型); return n;
+    };
+    const auto 编关系=[](const std::vector<新方法参数关系>& r) {
+        std::vector<std::int64_t> a;
+        for (const auto& x:r)if(x.种类!=新方法参数关系种类::内容引用参数)
+            a.insert(a.end(),{static_cast<std::int64_t>(x.种类),x.左参数序号,x.右参数序号});
+        return a;
+    };
+    const auto 追加内容关系=[&](基础组内字段内容 host,const std::vector<新方法参数关系>& rs) {
+        for(const auto& r:rs)if(r.种类==新方法参数关系种类::内容引用参数) {
+            const auto child=新节点(内容关系节点类型);
+            字段(child,内容关系所属字段,host);
+            字段(child,内容关系左字段,基础值{static_cast<std::int64_t>(r.左参数序号)});
+            字段(child,内容关系右字段,基础值{static_cast<std::int64_t>(r.右参数序号)});
+            字段(child,内容关系路径字段,r.左正式内容路径.front());
+            if(const auto* ref=std::get_if<基础组内节点引用>(&host))字段(ref->索引,内容关系成员字段,基础组内节点引用{child});
+            else if(const auto* ref=std::get_if<稳定编码>(&host))请求.追加字段组.push_back({*ref,内容关系成员字段,基础组内节点引用{child}});
+            else throw std::runtime_error("method content relation owner invalid");
+        }
+    };
+    if (补关系) {
+        const auto old=编关系(声明.初始模拟关系组);
+        if(!old.empty())请求.追加字段组.push_back({原.方法虚拟存在节点,参数位置关系字段,基础值{old}});
+        追加内容关系(原.方法虚拟存在节点,声明.初始模拟关系组);
+        候选.预期.初始模拟关系组=声明.初始模拟关系组;
+    }
+    if (补事件) {
+        请求.追加字段组.push_back({原.方法虚拟存在节点,模拟事件位置字段,
+            基础值{std::vector<std::int64_t>(声明.初始模拟事件参数组.begin(),声明.初始模拟事件参数组.end())}});
+        候选.预期.初始模拟事件参数组=声明.初始模拟事件参数组;
+    }
+    if (补分支) {
+        候选.新分支定义=声明.执行分支组;
+        for (const auto& b:声明.执行分支组) {
+            const auto B=新节点(分支节点类型), C=新节点(条件节点类型);
+            字段(B,顺序字段,基础值{static_cast<std::int64_t>(b.顺序)});
+            字段(B,分支所属方法字段,原.节点); 字段(B,分支所属虚拟字段,原.方法虚拟存在节点);
+            字段(B,分支条件字段,基础组内节点引用{C});
+            请求.追加字段组.push_back({原.方法虚拟存在节点,执行分支字段,基础组内节点引用{B}});
+            const auto& c=b.必要条件;
+            字段(C,关系规则字段,基础值{static_cast<std::int64_t>(c.关系规则)});
+            const auto old=编关系(c.参数关系组);
+            if(!old.empty())字段(C,参数位置关系字段,基础值{old});
+            追加内容关系(基础组内节点引用{C},c.参数关系组);
+            for (std::size_t i=0;i<c.条件项组.size();++i) {
+                const auto& x=c.条件项组[i]; const auto n=新节点(条件项节点类型);
+                字段(n,顺序字段,基础值{static_cast<std::int64_t>(i)});
+                if (x.参数序号) 字段(n,有序参数序号字段,基础值{static_cast<std::int64_t>(x.参数序号)});
+                else 字段(n,参数角色字段,x.参数角色节点);
+                const std::pair<const std::optional<稳定编码>*,稳定编码> refs[]{
+                    {&x.存在概念节点,条件项存在概念字段},{&x.特征类型概念节点,条件项特征类型字段},
+                    {&x.特征值域概念节点,条件项特征值域字段},{&x.二次特征概念节点,条件项二次特征字段},
+                    {&x.状态或动态概念节点,条件项状态动态字段}};
+                for (const auto& [v,key]:refs) if (*v) 字段(n,key,**v);
+                if (x.精确数值域) 字段(n,项精确数值域字段,基础值{std::vector<std::int64_t>{x.精确数值域->下界,x.精确数值域->上界}});
+                if (x.任务成员变量序号) 字段(n,任务成员变量字段,基础值{static_cast<std::int64_t>(x.任务成员变量序号)});
+                if(x.引用内容条件) {
+                    字段(n,条件引用内容要求字段,x.引用内容条件->要求概念节点);
+                    if(x.引用内容条件->作用点!=新方法内容作用点::特征当前引用)
+                        字段(n,条件内容作用点字段,基础值{static_cast<std::int64_t>(x.引用内容条件->作用点)});
+                    if(x.引用内容条件->要求认知来源当前有效)字段(n,条件内容认知有效字段,基础值{std::int64_t{1}});
+                    if(!x.引用内容条件->正式内容路径.empty())字段(n,条件引用内容项字段,x.引用内容条件->正式内容路径.front());
+                }
+                if(x.特征前态限定) {
+                    字段(n,条件前态当前字段,基础值{static_cast<std::int64_t>(x.特征前态限定->当前值状态)});
+                    if(x.特征前态限定->历史不同值数量)
+                        字段(n,条件前态历史数字段,基础值{static_cast<std::int64_t>(*x.特征前态限定->历史不同值数量)});
+                }
+                字段(C,条件项字段,基础组内节点引用{n});
+            }
+            for (std::size_t i=0;i<c.场景事实限定组.size();++i) {
+                const auto& r=c.场景事实限定组[i]; const auto n=新节点(初始场景限定节点类型);
+                字段(n,顺序字段,基础值{static_cast<std::int64_t>(i)});
+                字段(n,初始声明所属字段,基础组内节点引用{C}); 字段(n,初始关系概念字段,r.关系概念节点);
+                字段(n,初始四位置字段,基础值{std::vector<std::int64_t>{r.场景参数序号,r.主体参数序号,r.对象参数序号,r.特征参数序号}});
+                字段(C,初始场景限定字段,基础组内节点引用{n});
+            }
+        }
+    }
+    if (!原.行为 && 声明.行为) {
+        请求.追加字段组.push_back({原.节点,方法行为字段,基础值{static_cast<std::int64_t>(*声明.行为)}});
+        候选.预期.行为=声明.行为;
+    }
+    候选.有变化=!请求.追加字段组.empty();
+    // 捕获所有新节点字段键及稳定引用端点；组内引用只在同次原子追加中解析。
+    std::set<稳定编码> 端点;
+    const auto 收字段=[&](稳定编码 key,const 基础组内字段内容& value) {
+        端点.insert(key); if (const auto* n=std::get_if<稳定编码>(&value)) 端点.insert(*n);
+    };
+    for (const auto& n:请求.新节点组) for (const auto& f:n.字段组) 收字段(f.字段节点,f.内容);
+    for (const auto& f:请求.追加字段组) {端点.insert(f.所属节点);收字段(f.字段节点,f.内容);}
+    const auto 读=全局基础数据集.查询节点组完整结构({端点.begin(),端点.end()});
+    if (读.状态!=基础结构操作状态::已完成 || 读.节点组.size()!=端点.size())
+        throw std::runtime_error("initial declaration endpoint protection read failed");
+    for (const auto& p:读.节点组) {
+        if (!p.快照) throw std::runtime_error("initial declaration referenced endpoint missing");
+        请求.预期联合节点组.push_back(*p.快照);
+    }
+    const auto 加保护=[&](const auto& 保护) {请求.预期联合节点组.insert(请求.预期联合节点组.end(),保护.begin(),保护.end());};
+    std::set<稳定编码> 已存在范围,已特征范围;
+    const auto 存在范围=[&](auto&& self,稳定编码 n)->void {
+        (void)self;
+        if (!已存在范围.insert(n).second) return;
+        if(!追加方法存在范围保护(n,存在概念,请求.预期联合节点组))
+            throw std::runtime_error("initial declaration existence proof unavailable");
+    };
+    const auto 特征范围=[&](稳定编码 n) {
+        if (!已特征范围.insert(n).second) return true;
+        const auto p=特征概念.读取特征概念定义保护(n);
+        if (p.前提已变化) return false;
+        if (!p.信息 || p.预期节点组.empty()) throw std::runtime_error("initial declaration feature proof unavailable");
+        加保护(p.预期节点组); return true;
+    };
+    const auto 关系保护=[&](const std::vector<新方法参数关系>& rs) {
+        for(const auto& r:rs)if(r.种类==新方法参数关系种类::内容引用参数) {
+            std::vector<基础联合节点快照> p;
+            if(!追加需求主体路径保护(r.左正式内容路径.front(),特征概念,存在概念,p))return false;
+            加保护(p);
+        }
+        return true;
+    };
+    if(!关系保护(声明.初始模拟关系组))return 新方法操作状态::参数规格不合法;
+    for (const auto& s:原.参数规格组) if (s.有序规格) {
+        加保护(读取参数类别概念保护(s.有序规格->信息类型, 存在概念, 特征概念).完整保护组);
+        if (s.有序规格->信息类型==新方法参数信息类型::存在) 存在范围(存在范围,s.有序规格->范围概念节点);
+        if (s.有序规格->信息类型==新方法参数信息类型::特征 && !特征范围(s.有序规格->范围概念节点))
+            return 新方法操作状态::结构不一致;
+    }
+    for (const auto& b:声明.执行分支组) {
+        if(!关系保护(b.必要条件.参数关系组))return 新方法操作状态::参数规格不合法;
+        for (const auto& x:b.必要条件.条件项组) {
+            if(x.引用内容条件) {
+                std::vector<基础联合节点快照> 内容保护;
+                if(!读取引用内容条件定义保护(*x.引用内容条件,特征概念,存在概念,内容保护))
+                    return 新方法操作状态::结构不一致;
+                加保护(内容保护);
+            }
+            if (x.存在概念节点) 存在范围(存在范围,*x.存在概念节点);
+            if (x.特征类型概念节点 && !特征范围(*x.特征类型概念节点)) return 新方法操作状态::结构不一致;
+            if (x.特征值域概念节点 && !特征范围(*x.特征值域概念节点)) return 新方法操作状态::结构不一致;
+        }
+        for (const auto& r:b.必要条件.场景事实限定组) {
+            const auto p=存在概念.读取已确认消息连接概念保护();
+            if (!p.信息 || p.信息->节点!=r.关系概念节点 || p.完整保护组.empty())
+                throw std::runtime_error("initial declaration scene proof unavailable");
+            加保护(p.完整保护组);
+        }
+    }
+    for(const auto& p:声明.初始模拟输入方案组)for(const auto& x:p.消息组)
+        if(!特征范围(x.正文范围概念))return 新方法操作状态::结构不一致;
+    // 定义保护先捕获、后复核；提交时再比较同一保护快照，避免校验后定义变化。
+    if (!条件结果角色已声明(原.参数规格组,关系核验,特征概念,存在概念))
+        return 新方法操作状态::结构不一致;
+    if(!模拟输入方案有效(声明.初始模拟输入方案组,原.参数规格组,声明.初始模拟关系组,特征概念))
+        return 新方法操作状态::结构不一致;
+    for (const auto& b:声明.执行分支组)
+        if (!分支条件有效(b.必要条件,原.参数规格组,特征概念,存在概念))
+            return 新方法操作状态::结构不一致;
+    return 新方法操作状态::已找到;
+}
+
+新方法建立结果 发布初始声明补齐(初始声明补齐候选& 候选,
+    const 概念_特征类& 概念, const 新方法治理对象读取接口& 治理,
+    const 概念_存在类& 存在概念) {
+    std::map<稳定编码,基础联合节点快照> 合并;
+    const auto 相同=[](const auto& a,const auto& b) {
+        return a.结构.节点==b.结构.节点 && a.结构.字段组==b.结构.字段组 && a.入向字段组==b.入向字段组
+            && a.入向外部关系组==b.入向外部关系组 && a.出向外部关系组==b.出向外部关系组;
+    };
+    for (const auto& p:候选.追加.预期联合节点组) {
+        const auto [it,新增]=合并.emplace(p.结构.节点.编码,p);
+        if (!新增 && !相同(it->second,p)) return {新方法操作状态::结构不一致,{}};
+    }
+    候选.追加.预期联合节点组.clear();
+    std::vector<稳定编码> 身份;
+    for (const auto& [n,p]:合并) {身份.push_back(n);候选.追加.预期联合节点组.push_back(p);}
+    基础节点组追加状态 发布状态=基础节点组追加状态::已完成;
+    {
+        std::lock_guard 锁(新方法互斥);
+        if (候选.有变化) 发布状态=全局基础数据集.原子追加节点组(候选.追加).状态;
+        else {
+            const auto r=全局基础数据集.查询节点组完整结构(身份);
+            if (r.状态!=基础结构操作状态::已完成 || r.节点组.size()!=身份.size())
+                throw std::runtime_error("initial declaration reuse premise read failed");
+            for (std::size_t i=0;i<r.节点组.size();++i)
+                if (!r.节点组[i].快照 || !相同(*r.节点组[i].快照,合并.at(身份[i])))
+                    发布状态=基础节点组追加状态::预期不符;
+        }
+    }
+    // 完整读回在方法锁外；不以单项字段已经存在为成功消歧。
+    try {
+    const auto 当前=读取方法信息(候选.原.节点,概念,治理,存在概念);
+    const auto 完整相符=[&] {
+        if (!当前) return false;
+        auto 预期=候选.预期;
+        if (!候选.新分支定义.empty()) {
+            if (分支定义组(*当前)!=候选.新分支定义) return false;
+            预期.执行分支组=当前->执行分支组;
+        }
+        return *当前==预期;
+    };
+    if (完整相符()) return {新方法操作状态::已找到,候选.原.节点};
+    if (发布状态==基础节点组追加状态::预期不符) return {新方法操作状态::结构不一致,{}};
+    if (发布状态==基础节点组追加状态::资源失败) return {新方法操作状态::资源失败,{}};
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补齐本能初始声明",
+        L"原子发布后无法完整确认声明；保留已发布事实，不转为正常拒绝或重试。");
+    } catch (const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化,候选.原.节点};
+    } catch (...) {
+        if (候选.有变化 && 发布状态!=基础节点组追加状态::预期不符
+            && 发布状态!=基础节点组追加状态::资源失败)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补齐本能初始声明",
+                L"原子发布成功后的完整读回发生工程异常；保留已发布事实。");
+        throw;
+    }
+}
+
 } // namespace
 
 // 共用结构发布器；函数绑定是完整结构的一部分，根成员始终最后发布。
 // 只回滚本次未发布材料；已公开后读回失败保留现场向上送出。
+新方法操作状态 新_方法类::准备新方法最终发布保护(
+    const 新方法知识建立请求& 请求,const 方法虚拟存在准备& 虚拟,
+    基础节点组追加请求& 原子) {
+    if(!原子.预期联合节点组.empty()||!原子.预期既有节点组.empty())
+        throw std::logic_error("final method validation requires a fresh protection set");
+    if(!行为声明有效(请求)||!是作用域(static_cast<std::int64_t>(请求.作用域))
+        ||!是实现方式(static_cast<std::int64_t>(请求.实现方式)))return 新方法操作状态::方法类型不符;
+    if(!方法头有效(请求.方法头))return 新方法操作状态::方法头不合法;
+    if(!参数规格有效(请求.参数规格组,特征概念服务_))return 新方法操作状态::参数规格不合法;
+    const auto 必要=核验通用概念必要声明(请求,存在概念服务_,特征概念服务_,原子.预期联合节点组);
+    if(必要!=新方法操作状态::已找到)return 必要;
+    新方法条件结果定义 关系核验;
+    关系核验.条件.参数关系组=请求.初始模拟关系组;
+    if(!参数关系结构有效(请求.初始模拟关系组)
+        ||!条件结果角色已声明(请求.参数规格组,关系核验,特征概念服务_,存在概念服务_)
+        ||!模拟输入方案有效(请求.初始模拟输入方案组,请求.参数规格组,请求.初始模拟关系组,特征概念服务_))
+        return 新方法操作状态::参数规格不合法;
+    for(std::size_t i=0;i<请求.初始模拟事件参数组.size();++i) {
+        const auto n=请求.初始模拟事件参数组[i];
+        if(!n||n>请求.参数规格组.size()||!请求.参数规格组[n-1].有序规格
+            ||请求.参数规格组[n-1].有序规格->信息类型!=新方法参数信息类型::特征
+            ||std::find(请求.初始模拟事件参数组.begin(),请求.初始模拟事件参数组.begin()+i,n)
+                !=请求.初始模拟事件参数组.begin()+i)return 新方法操作状态::参数规格不合法;
+    }
+    for(std::size_t i=0;i<请求.执行分支组.size();++i)
+        if(请求.执行分支组[i].顺序!=i||!分支条件有效(请求.执行分支组[i].必要条件,
+            请求.参数规格组,特征概念服务_,存在概念服务_))return 新方法操作状态::参数规格不合法;
+    for(const auto& pair:请求.条件结果组)
+        if(!条件结果有效(pair,特征概念服务_)||!条件结果角色已声明(请求.参数规格组,pair,
+            特征概念服务_,存在概念服务_))return 新方法操作状态::条件结果不合法;
+    const auto feature=[&](稳定编码 C) {
+        const auto proof=特征概念服务_.读取特征概念定义保护(C);
+        if(!proof.信息||proof.前提已变化||proof.状态!=基础结构操作状态::已完成||proof.预期节点组.empty())
+            throw std::runtime_error("final method feature definition unavailable or changed");
+        原子.预期联合节点组.insert(原子.预期联合节点组.end(),proof.预期节点组.begin(),proof.预期节点组.end());
+    };
+    std::set<稳定编码> seen;
+    const auto existence=[&](auto&& self,稳定编码 C)->void {
+        (void)self;
+        if(!seen.insert(C).second)return;
+        if(!追加方法存在范围保护(C,存在概念服务_,原子.预期联合节点组))
+            throw std::runtime_error("final method existence definition unavailable");
+    };
+    for(const auto& spec:请求.参数规格组) {
+        if(spec.有序规格) {
+            const auto 类别 = 读取参数类别概念保护(spec.有序规格->信息类型, 存在概念服务_, 特征概念服务_);
+            原子.预期联合节点组.insert(原子.预期联合节点组.end(), 类别.完整保护组.begin(), 类别.完整保护组.end());
+            if(spec.有序规格->信息类型==新方法参数信息类型::存在)existence(existence,spec.有序规格->范围概念节点);
+            else feature(spec.有序规格->范围概念节点);
+        } else {
+            if(spec.存在概念节点)existence(existence,*spec.存在概念节点);
+            for(const auto& f:spec.特征规格组) {
+                feature(f.特征类型概念节点);
+                if(f.值域概念节点)feature(*f.值域概念节点);
+            }
+            if(spec.集合成员约束)feature(spec.集合成员约束->集合特征类型概念节点);
+        }
+    }
+    for(const auto& p:请求.初始模拟输入方案组)for(const auto& x:p.消息组)feature(x.正文范围概念);
+    // 对实际按定义求值的附加条件/结果域取得owner完整保护；仅作身份引用的
+    // 其它信息保留原准入，不能猜其类别或把它强制解释成FT。
+    const auto known=[&](稳定编码 C) {
+        if(特征概念服务_.获取特征概念(C))feature(C);
+        else if(存在概念服务_.获取存在概念(C))existence(existence,C);
+    };
+    for(const auto C:请求.方法头.作用存在概念组)known(C);
+    for(const auto C:请求.方法头.涉及特征类型概念组)known(C);
+    for(const auto C:请求.方法头.可能结果概念组)known(C);
+    const auto scene=[&](const std::vector<新方法初始场景事实限定>& group) {
+        for(const auto& item:group) {
+            const auto proof=存在概念服务_.读取已确认消息连接概念保护();
+            if(!proof.信息||proof.信息->节点!=item.关系概念节点||proof.完整保护组.empty())
+                throw std::runtime_error("final method scene relation definition unavailable");
+            原子.预期联合节点组.insert(原子.预期联合节点组.end(),proof.完整保护组.begin(),proof.完整保护组.end());
+        }
+    };
+    const auto condition=[&](const 新方法条件定义& c) {
+        for(const auto& r:c.参数关系组)if(r.种类==新方法参数关系种类::内容引用参数) {
+            std::vector<基础联合节点快照> p;
+            if(!追加需求主体路径保护(r.左正式内容路径.front(),特征概念服务_,存在概念服务_,p))
+                throw std::runtime_error("final method subject relation unsupported");
+            原子.预期联合节点组.insert(原子.预期联合节点组.end(),p.begin(),p.end());
+        }
+        for(const auto& item:c.条件项组) {
+            if(item.引用内容条件) {
+                std::vector<基础联合节点快照> 内容保护;
+                if(!读取引用内容条件定义保护(*item.引用内容条件,特征概念服务_,存在概念服务_,内容保护))
+                    throw std::runtime_error("final method content condition protection unavailable");
+                原子.预期联合节点组.insert(原子.预期联合节点组.end(),内容保护.begin(),内容保护.end());
+            }
+            if(item.存在概念节点)existence(existence,*item.存在概念节点);
+            if(item.特征类型概念节点)feature(*item.特征类型概念节点);
+            if(item.特征值域概念节点)feature(*item.特征值域概念节点);
+            if(item.二次特征概念节点)known(*item.二次特征概念节点);
+        }
+        scene(c.场景事实限定组);
+    };
+    const auto resultItem=[&](const 新方法结果项定义& item) {
+        if(item.引用内容结果) {
+            std::vector<基础联合节点快照> p;
+            if(!读取引用内容条件定义保护(*item.引用内容结果,特征概念服务_,存在概念服务_,p))
+                throw std::runtime_error("final method result content protection unavailable");
+            const auto root=存在概念服务_.读取引用内容筹办概念();
+            if(root.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+            if(root.状态!=正式结构操作状态::已读取||!root.信息||root.完整保护组.empty()
+                ||root.信息->完整被认知需求!=item.引用内容结果->要求概念节点)
+                throw std::runtime_error("final method complete demand result definition unavailable");
+            p.insert(p.end(),root.完整保护组.begin(),root.完整保护组.end());
+            原子.预期联合节点组.insert(原子.预期联合节点组.end(),p.begin(),p.end());
+        }
+        if(item.特征类型概念节点)feature(*item.特征类型概念节点);
+        if(item.特征值域概念节点)feature(*item.特征值域概念节点);
+    };
+    for(const auto& branch:请求.执行分支组)condition(branch.必要条件);
+    新方法条件定义 初始关系保护;初始关系保护.参数关系组=请求.初始模拟关系组;condition(初始关系保护);
+    for(const auto& pair:请求.条件结果组) {
+        condition(pair.条件);
+        for(const auto& item:pair.结果.结果项组)resultItem(item);
+        for(const auto& item:pair.结果.确认要求.禁止结果项组)resultItem(item);
+        scene(pair.结果.场景事实限定组);
+        新方法条件定义 结果关系保护;结果关系保护.参数关系组=pair.结果.参数关系组;condition(结果关系保护);
+    }
+    核验方法私有材料未消费(虚拟);
+    if(虚拟.信息.当前启用!=1||虚拟.信息.启用特征类型概念节点!=方法启用特征类型)
+        throw std::runtime_error("final method private enabled feature differs");
+    feature(虚拟.信息.启用特征类型概念节点);feature(虚拟.信息.当前特征概念节点);
+    const auto ec=存在概念服务_.读取普通存在概念定义保护(虚拟.信息.专属存在概念节点);
+    if(ec.状态!=正式概念读取状态::已读取||!ec.信息||ec.完整保护组.empty()
+        ||ec.信息->对应存在节点!=虚拟.信息.引用.虚拟存在节点)
+        throw std::runtime_error("final method private existence definition differs");
+    原子.预期联合节点组.insert(原子.预期联合节点组.end(),ec.完整保护组.begin(),ec.完整保护组.end());
+    // 保护捕获后再完整检查原规则；CAS仍复核捕获的全部定义，不对变化重试。
+    if(!行为声明有效(请求)||!方法头有效(请求.方法头)||!参数规格有效(请求.参数规格组,特征概念服务_)
+        ||!模拟输入方案有效(请求.初始模拟输入方案组,请求.参数规格组,请求.初始模拟关系组,特征概念服务_)
+        ||!条件结果角色已声明(请求.参数规格组,关系核验,特征概念服务_,存在概念服务_))
+        return 新方法操作状态::结构不一致;
+    for(const auto& branch:请求.执行分支组)
+        if(!分支条件有效(branch.必要条件,请求.参数规格组,特征概念服务_,存在概念服务_))return 新方法操作状态::结构不一致;
+    for(const auto& pair:请求.条件结果组)
+        if(!条件结果有效(pair,特征概念服务_)||!条件结果角色已声明(请求.参数规格组,pair,特征概念服务_,存在概念服务_))
+            return 新方法操作状态::结构不一致;
+    std::vector<基础联合节点快照> 末次必要保护;
+    const auto 末核=核验通用概念必要声明(请求,存在概念服务_,特征概念服务_,末次必要保护);
+    if(末核!=新方法操作状态::已找到)return 末核;
+    原子.预期联合节点组.insert(原子.预期联合节点组.end(),末次必要保护.begin(),末次必要保护.end());
+    std::map<稳定编码,基础联合节点快照> merged;
+    for(const auto& n:原子.预期联合节点组) {
+        const auto [it,added]=merged.emplace(n.结构.节点.编码,n);
+        if(!added&&(it->second.结构.字段组!=n.结构.字段组||it->second.入向字段组!=n.入向字段组
+            ||it->second.入向外部关系组!=n.入向外部关系组||it->second.出向外部关系组!=n.出向外部关系组))
+            throw std::runtime_error("final method definition protection changed");
+    }
+    原子.预期联合节点组.clear();for(const auto& [id,n]:merged)原子.预期联合节点组.push_back(n);
+    return 新方法操作状态::已找到;
+}
+
 新方法建立结果 新_方法类::发布方法结构(
-    const 新方法知识建立请求& 请求, const std::string* 登记名,
-    const 新方法信息* 替代父代) noexcept {
+    const 新方法知识建立请求& 原请求, const std::string* 登记名,
+    const 新方法信息* 替代父代,const std::vector<基础联合节点快照>* 初始必要保护) noexcept {
     std::vector<稳定编码> 已建节点;
     std::vector<稳定编码> 已写字段;
     bool 已发布 = false;
@@ -2099,25 +3794,26 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
     新特征I64准备结果 旧更新;
     std::optional<稳定编码> 前状态;
     std::int64_t 前时间 = 0;
+    std::optional<稳定编码> 本次发布方法;
     try {
+        auto 请求=原请求;
+        规范内容关系声明(请求);
+        if(请求.初始必要条件&&!规范化通用概念必要声明(*请求.初始必要条件))
+            return {新方法操作状态::参数规格不合法,{}};
         核验治理组织就绪();
-        const auto 请求类型 = 登记名 && *登记名 == 新本能函数登记名_服务值结算
-            ? 读取服务结算声明种类(请求.方法头, 请求.参数规格组, 特征概念服务_)
-            : 服务结算声明种类::非法;
-        if (登记名 && *登记名 == 新本能函数登记名_服务值结算
-            && 请求类型 == 服务结算声明种类::有序贡献Q
-            && 请求.初始模拟关系组 != std::vector<新方法参数关系>{
-                {新方法参数关系种类::特征所属存在, 2, 1},
-                {新方法参数关系种类::特征所属存在, 3, 1}})
-            throw std::runtime_error("ordered Q initial relations invalid");
+        // 入口保护只用于预检；新M的完整保护由全部候选完成后的工厂独立取得。
+        (void)初始必要保护;
+        if(请求.初始必要条件&&!通用概念必要声明形状有效(*请求.初始必要条件))
+            return {新方法操作状态::函数登记冲突,{}};
         for (const auto& 参数 : 请求.参数规格组) {
             if (参数.有序规格 && 参数.有序规格->信息类型 == 新方法参数信息类型::存在
-                && !存在概念服务_.获取存在概念(参数.有序规格->范围概念节点))
+                && !方法存在范围有效(参数.有序规格->范围概念节点,存在概念服务_))
                 throw std::logic_error("ordered parameter existence concept unavailable");
         }
         虚拟组.reserve(1);
         const auto 方法节点 = 新建类型化节点(
             方法节点类型, 已建节点, 已写字段);
+        if(有效(方法节点))本次发布方法=方法节点;
         const auto 头节点 = 新建类型化节点(
             方法头节点类型, 已建节点, 已写字段);
         const auto 虚拟存在 = 新建类型化节点(
@@ -2140,10 +3836,22 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
                 请求.方法头.可能结果概念组, 已写字段);
         for (std::size_t i = 0; 完整 && i < 请求.参数规格组.size(); ++i) {
             完整 = 写入参数规格(虚拟存在, 请求.参数规格组[i],
-                static_cast<std::int64_t>(i), 已建节点, 已写字段);
+                static_cast<std::int64_t>(i), 已建节点, 已写字段, 存在概念服务_, 特征概念服务_);
         }
-        if(完整) 完整=写入参数关系(虚拟存在,请求.初始模拟关系组,已写字段)
+        if(完整) 完整=写入参数关系(虚拟存在,请求.初始模拟关系组,已建节点,已写字段)
             && 写入模拟事件位置(虚拟存在,请求.初始模拟事件参数组,已写字段);
+        for(std::size_t i=0;完整&&i<请求.执行分支组.size();++i) {
+            const auto& b=请求.执行分支组[i];
+            if(b.顺序!=i||!分支条件有效(b.必要条件,请求.参数规格组,特征概念服务_,存在概念服务_))
+                throw std::invalid_argument("method branch declaration invalid");
+            const auto B=新建类型化节点(分支节点类型,已建节点,已写字段);
+            const auto C=写入条件子树(b.必要条件,已建节点,已写字段);
+            完整=有效(B)&&有效(C)&&写入I64字段(B,顺序字段,static_cast<std::int64_t>(i),已写字段)
+                &&写入节点字段(B,分支所属方法字段,方法节点,已写字段)
+                &&写入节点字段(B,分支所属虚拟字段,虚拟存在,已写字段)
+                &&写入节点字段(B,分支条件字段,C,已写字段)
+                &&写入节点字段(虚拟存在,执行分支字段,B,已写字段);
+        }
         for (std::size_t i = 0; 完整 && i < 请求.条件结果组.size(); ++i) {
             完整 = 写入条件结果(方法节点, 请求.条件结果组[i],
                 static_cast<std::int64_t>(i), 已建节点, 已写字段);
@@ -2160,10 +3868,14 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
         if (!完整) throw std::runtime_error("method private graph incomplete");
         虚拟组.push_back(准备方法虚拟存在(方法节点, 虚拟存在, 1));
         基础节点组追加请求 原子;
+        if(请求.初始必要条件)追加通用概念必要声明(原子,虚拟存在,*请求.初始必要条件);
+        if(!模拟输入方案有效(请求.初始模拟输入方案组,请求.参数规格组,请求.初始模拟关系组,特征概念服务_))
+            throw std::invalid_argument("simulation input declaration invalid");
+        追加模拟输入方案(原子,虚拟存在,请求.初始模拟输入方案组);
         追加方法虚拟归属(原子, 虚拟组.front().信息);
         原子.追加字段组.push_back({新方法组织根节点, 方法成员字段, 方法节点});
         if (替代父代) {
-            const auto 旧 = 读取方法信息(替代父代->节点, 特征概念服务_, *this);
+            const auto 旧 = 读取方法信息本体(替代父代->节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!旧 || *旧 != *替代父代 || 旧->启用状态 != 新方法启用状态::启用)
                 throw std::runtime_error("method replacement source changed");
             前时间 = 方法当前UTC纳秒();
@@ -2177,9 +3889,37 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
                 || 旧更新.准备->原当前值() != 1 || !旧更新.准备->核心有变化())
                 throw std::runtime_error("method replacement feature preparation failed");
         }
-        const auto 片段 = 封存方法片段(std::move(原子), 已建节点);
+        const 新方法治理片段工厂 工厂=[&]() {
+            // 声明编码器已捕获schema/直接端点的结构保护。保留它们不变；
+            // 最终语义验证使用独立空请求，不能混入入口预检或刷新旧结构保护。
+            基础节点组追加请求 最终定义保护;
+            const auto 核验=准备新方法最终发布保护(请求,虚拟组.front(),最终定义保护);
+            if(核验!=新方法操作状态::已找到)
+                throw std::runtime_error("final method declaration validation refused, status="+std::to_string(static_cast<unsigned>(核验)));
+            std::map<稳定编码,基础联合节点快照> 完整保护;
+            const auto 合并=[&](const std::vector<基础联合节点快照>& group) {
+                for(const auto& n:group) {
+                    const auto [it,added]=完整保护.emplace(n.结构.节点.编码,n);
+                    if(!added&&(it->second.结构.字段组!=n.结构.字段组||it->second.入向字段组!=n.入向字段组
+                        ||it->second.入向外部关系组!=n.入向外部关系组||it->second.出向外部关系组!=n.出向外部关系组))
+                        throw std::runtime_error("final method structural and definition protection conflict");
+                }
+            };
+            合并(原子.预期联合节点组);合并(最终定义保护.预期联合节点组);
+            std::vector<基础联合节点快照> 合并后;
+            合并后.reserve(完整保护.size());
+            for(const auto& [id,n]:完整保护)合并后.push_back(n);
+            原子.预期联合节点组=std::move(合并后);
+            if(替代父代) {
+                const auto 旧=读取方法信息本体(替代父代->节点,特征概念服务_,*this,存在概念服务_,false,true);
+                if(!旧||*旧!=*替代父代||旧->启用状态!=新方法启用状态::启用
+                    ||!旧更新.准备||旧更新.准备->原当前值()!=1||!旧更新.准备->核心有变化()||!前状态)
+                    throw std::runtime_error("method replacement final source or preparation changed");
+            }
+            return 封存方法片段(std::move(原子),已建节点,存在概念服务_,特征概念服务_);
+        };
         const auto 发表 = 内部治理世界_->发布新方法治理场景组({虚拟组.front().信息.引用},
-            片段, 旧更新.准备 ? &*旧更新.准备 : nullptr);
+            工厂, 旧更新.准备 ? &*旧更新.准备 : nullptr);
         if (发表.状态 != 新方法治理场景发布工程状态::已发布)
             throw std::runtime_error("method publication refused without publication");
         已发布 = true;
@@ -2199,12 +3939,21 @@ void 追加方法虚拟归属(基础节点组追加请求& 请求, const 新方�
                 throw std::runtime_error("method replacement after state failed");
             内部治理世界_->完成方法特征变化(引用, *前状态, *s.状态节点);
         }
-        const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
-        if (!读回 || 读回->行为 != 请求.行为
+        const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+        if (!读回 || 读回->行为 != 请求.行为 ||读回->初始必要条件!=请求.初始必要条件
+            ||读回->初始模拟输入方案组!=请求.初始模拟输入方案组
             || (登记名 && 读回->本能函数登记名 != *登记名)) {
             throw std::runtime_error("published method readback failed");
         }
         return {新方法操作状态::已建立, 方法节点};
+    } catch (const 引用内容定义前提变化&) {
+        if(!已发布) {
+            if(旧更新.准备)特征服务_.取消顶层I64更新(*旧更新.准备);
+            if(前状态&&状态服务_.删除状态(*前状态)!=新状态操作状态::已完成)
+                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立方法",L"前提变化后的未发布前状态清理失败。");
+            回收本批方法图(已建节点,已写字段,虚拟组,false);
+        }
+        return {新方法操作状态::定义前提已变化, 已发布 ? 本次发布方法 : std::nullopt};
     } catch (...) {
         if (!已发布) {
             if (旧更新.准备) 特征服务_.取消顶层I64更新(*旧更新.准备);
@@ -2237,6 +3986,51 @@ bool 新_方法类::初始化() noexcept {
             && 函数集 != 新本能函数登记状态::精确重复) return false;
         std::lock_guard 锁(新方法互斥);
         const auto 确保父代字段 = [&]() {
+            const std::array 内容键组{&条件引用内容要求字段,&条件引用内容项字段};
+            if(std::all_of(内容键组.begin(),内容键组.end(),[](const auto* p){return !有效(*p);})) {
+                const auto 创建=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(内容键组.size()));
+                if(创建.状态!=基础结构操作状态::已完成||创建.节点组.size()!=内容键组.size())
+                    throw std::runtime_error("method content condition schema atomic creation failed");
+                for(std::size_t i=0;i<内容键组.size();++i)*内容键组[i]=创建.节点组[i];
+            }
+            for(const auto* p:内容键组) {
+                if(!有效(*p)||!节点仍存在(*p))throw std::runtime_error("method content condition schema incomplete");
+                for(const auto* old:架构编码组())if(*old==*p)throw std::runtime_error("method content condition schema collision");
+            }
+            const std::array 正式内容键组{&条件内容作用点字段,&条件前态当前字段,&条件前态历史数字段,
+                &结果引用内容要求字段,&结果引用内容项字段,&结果内容作用点字段,
+                &内容关系成员字段,&内容关系节点类型,&内容关系所属字段,
+                &内容关系左字段,&内容关系右字段,&内容关系路径字段};
+            if(std::all_of(正式内容键组.begin(),正式内容键组.end(),[](const auto* p){return !有效(*p);})) {
+                const auto r=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(正式内容键组.size()));
+                if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=正式内容键组.size())
+                    throw std::runtime_error("method formal content schema creation failed");
+                for(std::size_t i=0;i<正式内容键组.size();++i)*正式内容键组[i]=r.节点组[i];
+            }
+            for(const auto* p:正式内容键组) {
+                if(!有效(*p)||!节点仍存在(*p))throw std::runtime_error("method formal content schema incomplete");
+                for(const auto* old:架构编码组())if(*old==*p)throw std::runtime_error("method formal content schema collision");
+            }
+            if(!有效(条件内容认知有效字段)) {
+                const auto r=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(1));
+                if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=1)
+                    throw std::runtime_error("method current provenance condition key creation failed");
+                条件内容认知有效字段=r.节点组.front();
+            }
+            if(!节点仍存在(条件内容认知有效字段))throw std::runtime_error("method current provenance condition key unavailable");
+            for(const auto* old:架构编码组())if(*old==条件内容认知有效字段)
+                throw std::runtime_error("method current provenance condition key collision");
+            const std::array resultSceneKeys{&结果场景限定字段,&结果场景限定节点类型,&结果场景所属字段,&结果场景关系概念字段,&结果场景四位置字段};
+            if(std::all_of(resultSceneKeys.begin(),resultSceneKeys.end(),[](const auto* p){return !有效(*p);})) {
+                const auto group=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(resultSceneKeys.size()));
+                if(group.状态!=基础结构操作状态::已完成||group.节点组.size()!=resultSceneKeys.size())
+                    throw std::runtime_error("method result scene keys atomic creation failed");
+                for(std::size_t i=0;i<resultSceneKeys.size();++i)*resultSceneKeys[i]=group.节点组[i];
+            }
+            for(const auto* p:resultSceneKeys) {
+                if(!有效(*p)||!节点仍存在(*p))throw std::runtime_error("method result scene keys incomplete");
+                for(const auto* old:架构编码组())if(*old==*p)throw std::runtime_error("method result scene keys overlap original schema");
+            }
             if (!有效(方法父代字段)) 方法父代字段 = 全局基础数据集.新建节点();
             if (!节点仍存在(方法父代字段))
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化方法代际字段", L"父代字段不可读。");
@@ -2244,14 +4038,29 @@ bool 新_方法类::初始化() noexcept {
                 if (*编码 == 方法父代字段)
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"初始化方法代际字段", L"父代字段身份冲突。");
             for (auto* 键 : {&虚拟存在启用特征字段, &虚拟存在专属概念字段, &方法行为字段,
-                    &有序参数序号字段, &有序参数类型字段, &有序参数范围字段, &方法旧网页退役成员字段, &参数位置关系字段, &模拟事件位置字段, &配对知识来源字段, &任务成员变量字段}) {
+                    &有序参数序号字段, &有序参数类型字段, &有序参数类别概念字段, &有序参数范围字段, &方法旧网页退役成员字段, &参数位置关系字段, &模拟事件位置字段, &配对知识来源字段, &任务成员变量字段,
+                    &初始必要条件字段,&初始声明节点类型,&初始声明项节点类型,&初始场景限定节点类型,
+                    &初始声明格式字段,&初始声明所属字段,&初始场景限定字段,&初始关系概念字段,&初始四位置字段,
+                    &执行分支字段,&分支节点类型,&分支所属方法字段,&分支所属虚拟字段,&分支条件字段,&配对分支来源字段,
+                    &模拟输入方案字段,&模拟输入方案节点类型,&模拟消息输入字段,&模拟消息输入节点类型,
+                    &模拟消息参数位置字段,&模拟消息方向字段,&模拟正文范围字段,&模拟正文非空字段,&模拟输入时机字段,&模拟触发位置方向字段}) {
                 if (!有效(*键)) *键 = 全局基础数据集.新建节点();
                 if (!节点仍存在(*键)) throw std::runtime_error("method governance key unavailable");
                 for (const auto* 编码 : 架构编码组())
                     if (*编码 == *键) throw std::runtime_error("method governance key collision");
             }
             const std::vector<稳定编码> 扩展键组{方法父代字段, 虚拟存在启用特征字段,
-                虚拟存在专属概念字段, 方法行为字段, 有序参数序号字段, 有序参数类型字段, 有序参数范围字段, 方法旧网页退役成员字段, 参数位置关系字段, 模拟事件位置字段, 配对知识来源字段, 任务成员变量字段};
+                虚拟存在专属概念字段, 方法行为字段, 有序参数序号字段, 有序参数类型字段, 有序参数类别概念字段, 有序参数范围字段, 方法旧网页退役成员字段, 参数位置关系字段, 模拟事件位置字段, 配对知识来源字段, 任务成员变量字段,
+                初始必要条件字段,初始声明节点类型,初始声明项节点类型,初始场景限定节点类型,
+                初始声明格式字段,初始声明所属字段,初始场景限定字段,初始关系概念字段,初始四位置字段,
+                执行分支字段,分支节点类型,分支所属方法字段,分支所属虚拟字段,分支条件字段,配对分支来源字段,
+                结果场景限定字段,结果场景限定节点类型,结果场景所属字段,结果场景关系概念字段,结果场景四位置字段,
+                条件引用内容要求字段,条件引用内容项字段,
+                条件内容作用点字段,条件内容认知有效字段,条件前态当前字段,条件前态历史数字段,
+                结果引用内容要求字段,结果引用内容项字段,结果内容作用点字段,
+                内容关系成员字段,内容关系节点类型,内容关系所属字段,内容关系左字段,内容关系右字段,内容关系路径字段,
+                模拟输入方案字段,模拟输入方案节点类型,模拟消息输入字段,模拟消息输入节点类型,
+                模拟消息参数位置字段,模拟消息方向字段,模拟正文范围字段,模拟正文非空字段,模拟输入时机字段,模拟触发位置方向字段};
             const std::set<稳定编码> 扩展键(扩展键组.begin(), 扩展键组.end());
             if (扩展键.size() != 扩展键组.size()) throw std::runtime_error("method extension keys collide");
             if (虚拟存在启用特征字段 == 虚拟存在专属概念字段
@@ -2488,7 +4297,8 @@ bool 新_方法类::装配内部治理世界(新方法治理世界协作接口& 
 }
 
 void 新_方法类::核验治理组织就绪() const {
-    if (!结构仍存在() || !内部治理世界_ || !治理组织已就绪_)
+    // 调用入口已核对方法架构，这里只确认治理依赖已装配并完成启动。
+    if (!内部治理世界_ || !治理组织已就绪_)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验方法治理就绪", L"方法治理尚未装配或完成启动迁接。");
 }
 
@@ -2545,7 +4355,7 @@ std::optional<新方法虚拟存在读回> 新_方法类::读取方法虚拟存�
     const 新方法虚拟存在引用& 引用) const noexcept {
     try {
         std::lock_guard 锁(新方法互斥);
-        if (!节点仍存在(引用.方法节点)) return std::nullopt;
+        if (!有效(引用.方法节点)) return std::nullopt;
         if (!节点类型为(引用.方法节点, 方法节点类型) || !方法属于根(引用.方法节点))
             return std::nullopt;
         const auto vm = 读取唯一节点字段(引用.方法节点, 方法虚拟存在字段);
@@ -2677,7 +4487,7 @@ void 新_方法类::初始化治理场景组织() noexcept {
         // 整批只读预检先完成；任何不完整旧方法都阻止第一次迁接写入。
         for (const auto m : *成员) {
             const bool 旧 = !全局基础数据集.查询字段(m, 方法启用状态字段).empty();
-            const auto info = 读取方法信息(m, 特征概念服务_, *this, 旧);
+            const auto info = 读取方法信息本体(m, 特征概念服务_, *this, 存在概念服务_, 旧, true);
             if (!info) throw std::runtime_error("method migration preflight failed");
             if (旧) {
                 if (场景服务_.属于内部治理组织(info->方法虚拟存在节点)
@@ -2705,12 +4515,12 @@ void 新_方法类::初始化治理场景组织() noexcept {
                 基础节点组追加请求 req;
                 追加方法虚拟归属(req, v);
                 req.删除字段关系组.push_back(记录->关系);
-                const auto seal = 封存方法片段(std::move(req), {old.节点, old.方法虚拟存在节点});
+                const auto seal = 封存方法片段(std::move(req), {old.节点, old.方法虚拟存在节点}, 存在概念服务_,特征概念服务_);
                 const auto r = 内部治理世界_->发布新方法治理场景组({v.引用}, seal);
                 if (r.状态 != 新方法治理场景发布工程状态::已发布)
                     throw std::runtime_error("legacy method zero publication");
                 已发布 = true;
-                const auto info = 读取方法信息(old.节点, 特征概念服务_, *this);
+                const auto info = 读取方法信息本体(old.节点, 特征概念服务_, *this, 存在概念服务_, false, true);
                 auto expected = old; expected.启用特征节点 = v.引用.启用特征节点;
                 expected.专属存在概念节点 = v.专属存在概念节点;
                 if (!info || *info != expected) throw std::runtime_error("method migration readback mismatch");
@@ -2720,7 +4530,7 @@ void 新_方法类::初始化治理场景组织() noexcept {
         内部治理世界_->迁移已有方法治理场景(全部);
         const auto 退役组 = 读取旧网页退役成员(特征概念服务_);
         for (const auto n : 退役组) {
-            const auto m = 读取方法信息(n, 特征概念服务_, *this);
+            const auto m = 读取方法信息本体(n, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!m || m->来源方法节点 || m->实例根节点
                 || m->本能函数登记名 != 新本能函数登记名_旧两参数获取服务对象
                 || m->启用状态 != 新方法启用状态::停用
@@ -2728,7 +4538,7 @@ void 新_方法类::初始化治理场景组织() noexcept {
                 throw std::runtime_error("retired method recovery identity invalid");
         }
         if (!退役组.empty()
-            && 查询本能登记结构(std::string(新本能函数登记名_旧两参数获取服务对象), 特征概念服务_, *this).状态
+            && 查询本能登记结构(std::string(新本能函数登记名_旧两参数获取服务对象), 特征概念服务_, *this, 存在概念服务_).状态
                 != 新方法操作状态::登记已退役)
             throw std::runtime_error("retired method family recovery incomplete");
         治理组织已就绪_ = true;
@@ -2831,9 +4641,11 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
 }
 
 新方法建立结果 新_方法类::建立方法知识(
-    const 新方法知识建立请求& 请求) noexcept {
+    const 新方法知识建立请求& 原请求) noexcept {
+    if(原请求.初始必要条件)return {新方法操作状态::函数登记冲突,{}};
     新方法建立结果 结果;
     try {
+        auto 请求=原请求;规范内容关系声明(请求);
         std::lock_guard 锁(新方法互斥);
         if (!结构仍存在()) {
             结果.状态 = 新方法操作状态::尚未初始化;
@@ -2856,7 +4668,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             || !std::all_of(请求.条件结果组.begin(), 请求.条件结果组.end(),
                 [&](const 新方法条件结果定义& 定义) {
                     return 条件结果有效(定义, 特征概念服务_)
-                        && 条件结果角色已声明(请求.参数规格组, 定义, 特征概念服务_);
+                        && 条件结果角色已声明(请求.参数规格组, 定义, 特征概念服务_, 存在概念服务_);
                 })) {
             结果.状态 = 新方法操作状态::条件结果不合法;
             return 结果;
@@ -2867,7 +4679,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             return 结果;
         }
         for (const auto 已有节点 : *成员组) {
-            const auto 已有 = 读取方法信息(已有节点, 特征概念服务_, *this);
+            const auto 已有 = 读取方法信息本体(已有节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!已有) {
                 结果.状态 = 新方法操作状态::结构不一致;
                 return 结果;
@@ -2881,11 +4693,13 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 && 已有->实现方式 == 请求.实现方式
                 && 已有->方法头 == 请求.方法头
                 && 已有->参数规格组 == 请求.参数规格组
+                && 分支定义组(*已有)==请求.执行分支组
+                && 已有->初始模拟输入方案组==请求.初始模拟输入方案组
                 && !已有->来源方法节点
                 && 已有配对.size() == 请求.条件结果组.size()
                 && std::equal(已有配对.begin(), 已有配对.end(), 请求.条件结果组.begin(),
                     [](const auto& 左, const auto& 右) {
-                        return 左.条件 == 右.条件 && 左.结果 == 右.结果
+                        return 左.条件 == 右.条件 && 同义结果(左.结果,右.结果)
                             && 线性关系等价(左.线性关系组, 右.线性关系组);
                     })) {
                 结果.状态 = 新方法操作状态::已找到;
@@ -2897,6 +4711,9 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
 
         return 发布方法结构(请求, nullptr);
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
         return 结果;
@@ -2916,7 +4733,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             结果.状态 = 新方法学习发布状态::方法不可用;
             return 结果;
         }
-        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
         if (!方法) {
             结果.状态 = 新方法学习发布状态::结构不一致;
             return 结果;
@@ -2928,7 +4745,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             结果.状态 = 新方法学习发布状态::方法不可用;
             return 结果;
         }
-        const auto& 定义 = 新配对定义组.front();
+        auto 定义 = 新配对定义组.front();规范内容关系配对(定义);
         const auto 类型已声明 = [&](const auto& 项) {
             const auto 规格 = std::find_if(方法->参数规格组.begin(), 方法->参数规格组.end(),
                 [&](const auto& 参数) { return 项.参数序号
@@ -2944,6 +4761,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                         && 内层 && 内层->材料类型 == 特征概念材料物理类型::I64标量;
                 }
                 return !项.特征类型概念节点
+                    || 规格->有序规格->信息类型 == 新方法参数信息类型::存在
                     || (规格->有序规格->信息类型 == 新方法参数信息类型::特征
                         && 特征概念为或从属于(规格->有序规格->范围概念节点,
                             *项.特征类型概念节点, 特征概念服务_));
@@ -2955,9 +4773,10 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                     }));
         };
         if (!行为结果相容(方法->行为, 定义.结果)
+            || !配对分支来源有效(*方法,定义,特征概念服务_,存在概念服务_)
             || !方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
             || !条件结果有效(定义, 特征概念服务_)
-            || !条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_)
+            || !条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_)
             || !std::all_of(定义.条件.条件项组.begin(), 定义.条件.条件项组.end(), 类型已声明)
             || !std::all_of(定义.结果.结果项组.begin(), 定义.结果.结果项组.end(), 类型已声明)
             || !std::all_of(定义.结果.确认要求.禁止结果项组.begin(),
@@ -2976,11 +4795,42 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
         if (已有配对) {
             结果.已有配对节点 = 已有配对->配对节点;
-            结果.状态 = 已有配对->结果 == 定义.结果
+            结果.状态 = 同义结果(已有配对->结果,定义.结果)
                 && ((已有配对->线性关系组.empty() && 定义.线性关系组.empty())
                     || 已有配对->条件 == 定义.条件)
                 && 线性关系等价(已有配对->线性关系组, 定义.线性关系组)
                 ? 新方法学习发布状态::精确重复 : 新方法学习发布状态::同条件结果冲突;
+            if(结果.状态==新方法学习发布状态::精确重复) {
+                基础节点组追加请求 request;
+                for(const auto B:定义.来源执行分支节点组)
+                    if(std::find(已有配对->来源执行分支节点组.begin(),已有配对->来源执行分支节点组.end(),B)==已有配对->来源执行分支节点组.end())
+                        request.追加字段组.push_back({已有配对->配对节点,配对分支来源字段,B});
+                if(!request.追加字段组.empty()) {
+                    std::vector<稳定编码> graph{方法节点};
+                    for(std::size_t i=0;i<graph.size();++i) {
+                        const auto type=读取唯一节点字段(graph[i],节点类型字段);
+                        if(!type)throw std::runtime_error("method branch union graph unreadable");
+                        for(const auto& field:方法复制字段规格(*type))if(field.种类==复制字段种类::独占子节点)
+                            for(const auto& r:全局基础数据集.查询字段(graph[i],field.字段)) {
+                                const auto* child=std::get_if<稳定编码>(&r.内容);
+                                if(!child)throw std::runtime_error("method branch union child malformed");
+                                if(std::find(graph.begin(),graph.end(),*child)==graph.end())graph.push_back(*child);
+                            }
+                    }
+                    const auto sealed=封存方法片段(std::move(request),graph,存在概念服务_,特征概念服务_);
+                    const auto published=全局基础数据集.原子追加封存片段组({sealed});
+                    if(published.状态!=基础节点组追加状态::已完成)throw std::runtime_error("method branch source union failed");
+                    const auto after=读取方法信息本体(方法节点,特征概念服务_,*this,存在概念服务_,false,true);
+                    if(!after)throw std::runtime_error("method branch source union readback failed");
+                    const auto pair=std::find_if(after->条件结果组.begin(),after->条件结果组.end(),[&](const auto& p){return p.配对节点==已有配对->配对节点;});
+                    if(pair==after->条件结果组.end()||pair->条件!=已有配对->条件||pair->结果!=已有配对->结果||pair->命中次数!=已有配对->命中次数)
+                        throw std::runtime_error("method branch source union changed semantic knowledge");
+                    for(const auto B:定义.来源执行分支节点组)if(std::find(pair->来源执行分支节点组.begin(),pair->来源执行分支节点组.end(),B)==pair->来源执行分支节点组.end())
+                        throw std::runtime_error("method branch source union lost new source");
+                    for(const auto B:已有配对->来源执行分支节点组)if(std::find(pair->来源执行分支节点组.begin(),pair->来源执行分支节点组.end(),B)==pair->来源执行分支节点组.end())
+                        throw std::runtime_error("method branch source union lost old source");
+                }
+            }
             return 结果;
         }
         std::int64_t 最大顺序 = -1;
@@ -3019,14 +4869,20 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
         // 预先分配返回材料，唯一所属关系是本次单配对的发布点。
         结果.新配对节点组.push_back(新配对);
-        if (!写入节点字段(方法节点, 方法条件结果字段, 新配对, 已写字段)) {
+        基础节点组追加请求 发布请求;
+        发布请求.追加字段组.push_back({方法节点,方法条件结果字段,新配对});
+        std::vector<稳定编码> 发布图{方法节点};
+        发布图.insert(发布图.end(),已建节点.begin(),已建节点.end());
+        const auto 封存=封存方法片段(std::move(发布请求),发布图,存在概念服务_,特征概念服务_);
+        const auto 发布=全局基础数据集.原子追加封存片段组({封存});
+        if (发布.状态!=基础节点组追加状态::已完成) {
             回滚(已写字段, 已建节点);
             结果.新配对节点组.clear();
             结果.状态 = 新方法学习发布状态::资源失败;
             return 结果;
         }
         已发布 = true;
-        const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!读回 || 读回->行为 != 方法->行为
             || 读回->条件结果组.size() != 方法->条件结果组.size() + 1) {
             结果.状态 = 新方法学习发布状态::发布结果未知;
@@ -3038,6 +4894,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             || std::count_if(读回->条件结果组.begin(), 读回->条件结果组.end(),
                 [&](const auto& 项) { return 项.配对节点 == 新配对; }) != 1
             || 新项->命中次数 != 0 || 新项->条件 != 定义.条件 || 新项->结果 != 定义.结果
+            || !std::is_permutation(新项->来源执行分支节点组.begin(),新项->来源执行分支节点组.end(),定义.来源执行分支节点组.begin(),定义.来源执行分支节点组.end())
             || !线性关系等价(新项->线性关系组, 定义.线性关系组)
             || !std::all_of(方法->条件结果组.begin(), 方法->条件结果组.end(),
                 [&](const auto& 旧项) {
@@ -3050,6 +4907,13 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             return 结果;
         }
         结果.状态 = 新方法学习发布状态::已发布;
+        return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        if(!已发布) {
+            回滚(已写字段,已建节点);
+            结果.新配对节点组.clear();
+        }
+        结果.状态 = 已发布 ? 新方法学习发布状态::发布结果未知 : 新方法学习发布状态::入口拒绝;
         return 结果;
     } catch (...) {
         if (!已发布) {
@@ -3064,12 +4928,22 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
 
 新方法建立结果 新_方法类::确保本能方法登记(
     const std::string& 登记名,
-    const 新方法知识建立请求& 请求) noexcept {
+    const 新方法知识建立请求& 原请求) noexcept {
     try {
+        auto 请求=原请求;
+        规范内容关系声明(请求);
+        if(请求.初始必要条件&&!规范化通用概念必要声明(*请求.初始必要条件))
+            return {新方法操作状态::参数规格不合法,{}};
         if (登记名.empty() || !新_本能函数管理类::解析(登记名).函数) {
             return {新方法操作状态::函数登记不合法, std::nullopt};
         }
-        std::lock_guard 锁(新方法互斥);
+        std::vector<基础联合节点快照> 必要保护;
+        if(请求.初始必要条件) {
+            if(!参数规格有效(请求.参数规格组,特征概念服务_))return {新方法操作状态::参数规格不合法,{}};
+            const auto 核验=核验通用概念必要声明(请求,存在概念服务_,特征概念服务_,必要保护);
+            if(核验!=新方法操作状态::已找到)return {核验,{}};
+        }
+        std::unique_lock 锁(新方法互斥);
         if (!结构仍存在()) {
             return {新方法操作状态::尚未初始化, std::nullopt};
         }
@@ -3086,18 +4960,12 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         }
         for (const auto& 参数 : 请求.参数规格组) {
             if (参数.有序规格 && 参数.有序规格->信息类型 == 新方法参数信息类型::存在
-                && !存在概念服务_.获取存在概念(参数.有序规格->范围概念节点))
+                && !方法存在范围有效(参数.有序规格->范围概念节点,存在概念服务_))
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记有序参数", L"存在参数的范围概念不可读取。");
         }
-        if (登记名 == 新本能函数登记名_服务值结算) {
-            const auto 类别 = 读取服务结算声明种类(请求.方法头, 请求.参数规格组, 特征概念服务_);
-            if (是贡献Q声明(类别)) return 确保服务结算Q方法登记(请求);
-            if (类别 != 服务结算声明种类::固定加一)
-                return {新方法操作状态::函数登记冲突, std::nullopt};
-        }
-        const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+        const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
         if (已有.状态 == 新方法操作状态::已找到 && 已有.方法节点) {
-            const auto 方法 = 读取方法信息(*已有.方法节点, 特征概念服务_, *this);
+            const auto 方法 = 读取方法信息本体(*已有.方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法) return {新方法操作状态::结构不一致, std::nullopt};
             if (!内部治理世界_->读取方法治理场景({方法->节点, 方法->方法虚拟存在节点, 方法->启用特征节点}))
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"复用本能方法", L"已登记本能方法没有完整治理场景。");
@@ -3108,8 +4976,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                     || (方法->行为 && 方法->行为 != 请求.行为))
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"迁移获取服务对象参数",
                         L"旧方法不是可完整识别的空配对头；保留已有方法知识和执行记录。");
-                const auto 发布 = 发布方法结构(请求, &登记名, &*方法);
-                const auto 当前 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+                const auto 发布 = 发布方法结构(请求, &登记名, &*方法, &必要保护);
+                const auto 当前 = 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
                 if (发布.状态 != 新方法操作状态::已建立 || !发布.方法节点
                     || 当前.状态 != 新方法操作状态::已找到 || 当前.方法节点 != 发布.方法节点)
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"迁移获取服务对象参数", L"新方法发表或读回不完整。");
@@ -3135,54 +5003,114 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 return {新方法操作状态::函数登记冲突, std::nullopt};
             }
 
-            if(!请求.初始模拟关系组.empty()) {
-                if(!参数关系结构有效(请求.初始模拟关系组))
-                    return {新方法操作状态::参数规格不合法,{}};
-                新方法条件结果定义 核验;
-                核验.条件.参数关系组=请求.初始模拟关系组;
-                if(!条件结果角色已声明(请求.参数规格组,核验,特征概念服务_))
-                    return {新方法操作状态::参数规格不合法,{}};
-                if(方法->初始模拟关系组.empty()) {
-                    if(!方法->条件结果组.empty())return {新方法操作状态::函数登记冲突,{}};
-                    std::vector<稳定编码> 本次字段;
-                    if(!写入参数关系(方法->方法虚拟存在节点,请求.初始模拟关系组,本次字段))
-                        throw std::runtime_error("simulation declaration publish failed");
-                    const auto 读回=读取参数关系(方法->方法虚拟存在节点);
-                    if(!读回||*读回!=请求.初始模拟关系组)
-                        throw std::runtime_error("simulation declaration readback failed");
-                } else if(方法->初始模拟关系组!=请求.初始模拟关系组)
-                    return {新方法操作状态::函数登记冲突,{}};
-            }
-
-
-            if(!请求.初始模拟事件参数组.empty()) {
-                for(auto n:请求.初始模拟事件参数组)
-                    if(!n||n>请求.参数规格组.size()||!请求.参数规格组[n-1].有序规格
-                        ||请求.参数规格组[n-1].有序规格->信息类型!=新方法参数信息类型::特征)
-                        return {新方法操作状态::参数规格不合法,{}};
-                if(方法->初始模拟事件参数组.empty()) {
-                    if(!方法->条件结果组.empty())return {新方法操作状态::函数登记冲突,{}};
-                    std::vector<稳定编码> f;
-                    if(!写入模拟事件位置(方法->方法虚拟存在节点,请求.初始模拟事件参数组,f))
-                        throw std::runtime_error("simulation event declaration publish");
-                }else if(方法->初始模拟事件参数组!=请求.初始模拟事件参数组)
-                    return {新方法操作状态::函数登记冲突,{}};
-            }
-
-            return 补登记方法行为(*方法, 请求.行为, 特征概念服务_, *this);
+            锁.unlock();
+            const auto 闭包=读取方法执行结构闭包({方法->节点});
+            if (闭包.状态!=执行结构读取状态::已读取 || 闭包.方法组.size()!=1
+                || 闭包.方法组.front()!=*方法) return {新方法操作状态::结构不一致,{}};
+            初始声明补齐候选 候选;
+            const auto 核验=核验初始声明补齐(*方法,请求,特征概念服务_,存在概念服务_,候选);
+            if (核验!=新方法操作状态::已找到) return {核验,{}};
+            候选.追加.预期联合节点组.insert(候选.追加.预期联合节点组.end(),
+                闭包.完整保护组.begin(),闭包.完整保护组.end());
+            return 发布初始声明补齐(候选,特征概念服务_,*this,存在概念服务_);
         }
         if (已有.状态 != 新方法操作状态::方法不存在) return 已有;
         // 本能登记允许尚无运行知识的头；非空配对仍必须完整合法。
         if (!std::all_of(请求.条件结果组.begin(), 请求.条件结果组.end(),
                 [&](const 新方法条件结果定义& 定义) {
                     return 条件结果有效(定义, 特征概念服务_)
-                        && 条件结果角色已声明(请求.参数规格组, 定义, 特征概念服务_);
+                        && 条件结果角色已声明(请求.参数规格组, 定义, 特征概念服务_, 存在概念服务_);
                 })) {
             return {新方法操作状态::条件结果不合法, std::nullopt};
         }
-        return 发布方法结构(请求, &登记名);
+        return 发布方法结构(请求, &登记名, nullptr, &必要保护);
+    } catch (const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化, std::nullopt};
     } catch (...) {
         return {新方法操作状态::资源失败, std::nullopt};
+    }
+}
+
+新方法建立结果 新_方法类::退役旧服务对象需求登记(
+    const 新方法知识建立请求& 原预期) noexcept {
+    try {
+        auto expected=原预期;
+        if(expected.初始必要条件&&!规范化通用概念必要声明(*expected.初始必要条件))
+            throw std::runtime_error("legacy demand expected declaration invalid");
+        if(expected.作用域!=新方法作用域::普通世界||expected.实现方式!=新方法实现方式::本能
+            ||expected.行为!=新方法行为::改变||expected.参数规格组.size()!=3
+            ||!expected.条件结果组.empty()||!expected.初始必要条件)
+            throw std::runtime_error("legacy demand migration declaration invalid");
+        for(std::size_t i=0;i<3;++i) {
+            const auto& spec=expected.参数规格组[i].有序规格;
+            if(!spec||spec->序号!=i+1||spec->信息类型!=(i==1?新方法参数信息类型::特征:新方法参数信息类型::存在))
+                throw std::runtime_error("legacy demand expected ordered declaration invalid");
+            if(i!=1&&!存在概念服务_.获取存在概念(spec->范围概念节点))
+                throw std::runtime_error("legacy demand migration requires ordinary existence ranges");
+        }
+        std::lock_guard lock(新方法互斥);
+        if(!结构仍存在())return {新方法操作状态::尚未初始化,{}};
+        核验治理组织就绪();
+        const auto members=读取多节点字段(新方法组织根节点,方法成员字段,特征概念服务_);
+        if(!members||std::set<稳定编码>(members->begin(),members->end()).size()!=members->size())
+            throw std::runtime_error("legacy demand full method root unreadable");
+        std::map<稳定编码,新方法信息> all;
+        std::set<稳定编码> family;
+        std::optional<稳定编码> root;
+        const std::string name="builtin.service_object.demand.acquire_new.v1";
+        for(const auto n:*members) {
+            const auto m=读取方法信息本体(n,特征概念服务_,*this,存在概念服务_,false,true);
+            if(!m||!all.emplace(n,*m).second)throw std::runtime_error("legacy demand family enumeration incomplete");
+            if(m->本能函数登记名==name&&!m->来源方法节点&&!m->父代方法节点) {
+                if(root)throw std::runtime_error("legacy demand registration is ambiguous");
+                root=n;family.insert(n);
+            }
+        }
+        if(!root) {
+            for(const auto& [n,m]:all)if(m.本能函数登记名==name)
+                throw std::runtime_error("legacy demand family lacks root");
+            return {新方法操作状态::无变化,{}};
+        }
+        bool changed=true;
+        while(changed) {
+            changed=false;
+            for(const auto& [n,m]:all)if(!family.contains(n)
+                &&((m.来源方法节点&&family.contains(*m.来源方法节点))
+                    ||(m.父代方法节点&&family.contains(*m.父代方法节点)))) {
+                family.insert(n);changed=true;
+            }
+        }
+        const auto matches=[&](const 新方法信息& m) {
+            if(m.作用域!=expected.作用域||m.实现方式!=expected.实现方式||m.行为!=expected.行为
+                ||m.本能函数登记名!=name||m.方法头!=expected.方法头||m.参数规格组!=expected.参数规格组
+                ||m.初始必要条件!=expected.初始必要条件||m.初始模拟关系组!=expected.初始模拟关系组
+                ||m.初始模拟事件参数组!=expected.初始模拟事件参数组
+                ||m.初始模拟输入方案组!=expected.初始模拟输入方案组
+                ||m.执行分支组.size()!=expected.执行分支组.size()
+                ||!m.组合步骤组.empty()||m.组合入口步骤节点||!m.结果转移组.empty())return false;
+            for(std::size_t i=0;i<m.执行分支组.size();++i)
+                if(m.执行分支组[i].定义!=expected.执行分支组[i])return false;
+            return true;
+        };
+        for(const auto& [n,m]:all) {
+            if(m.本能函数登记名==name&&!family.contains(n))throw std::runtime_error("legacy demand disconnected source family");
+            if(family.contains(n)&&(!matches(m)
+                ||!内部治理世界_->读取方法治理场景({m.节点,m.方法虚拟存在节点,m.启用特征节点})))
+                throw std::runtime_error("legacy demand declaration or governance scene differs");
+        }
+        for(const auto n:family) {
+            const auto before=读取方法信息本体(n,特征概念服务_,*this,存在概念服务_,false,true);
+            if(before!=std::optional{all.at(n)})throw std::runtime_error("legacy demand family changed before retirement");
+            const auto status=修改启用状态(n,新方法启用状态::停用);
+            if(status!=新方法操作状态::已修改&&status!=新方法操作状态::无变化)
+                throw std::runtime_error("legacy demand retirement incomplete");
+            auto retired=all.at(n);retired.启用状态=新方法启用状态::停用;
+            if(读取方法信息本体(n,特征概念服务_,*this,存在概念服务_,false,true)!=std::optional{retired})
+                throw std::runtime_error("legacy demand retirement readback differs");
+        }
+        return {新方法操作状态::登记已退役,root};
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"退役旧服务对象需求登记",L"旧登记声明、完整来源族或停用读回不完整，保留已有变化及历史材料。");
     }
 }
 
@@ -3199,7 +5127,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         std::lock_guard 锁(新方法互斥);
         if (!结构仍存在()) return {新方法操作状态::尚未初始化, std::nullopt};
         核验治理组织就绪();
-        const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+        const auto 已有 = 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
         if (已有.状态 == 新方法操作状态::方法不存在) return 已有;
         if (登记名 != 新本能函数登记名_旧两参数获取服务对象)
             throw std::runtime_error("legacy web transport has no recognized method-head contract");
@@ -3210,7 +5138,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if (!成员) throw std::runtime_error("legacy method root unreadable");
         std::vector<新方法信息> 家族;
         for (const auto n : *成员) {
-            const auto m = 读取方法信息(n, 特征概念服务_, *this);
+            const auto m = 读取方法信息本体(n, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!m) throw std::runtime_error("legacy method member unreadable");
             if (!m->来源方法节点 && m->本能函数登记名 == 登记名) 家族.push_back(*m);
         }
@@ -3236,7 +5164,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             请求.追加字段组.push_back({新方法组织根节点, 方法旧网页退役成员字段, m.节点});
             保护组.push_back(m.节点);
         }
-        const auto 片段 = 封存方法片段(std::move(请求), 保护组);
+        const auto 片段 = 封存方法片段(std::move(请求), 保护组, 存在概念服务_,特征概念服务_);
         零发表 = false;
         const auto 发布 = 特征服务_.提交顶层I64更新(*准备.准备, {片段});
         if (发布.状态 != 基础节点组追加状态::已完成) {
@@ -3261,11 +5189,13 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if (s1.状态 != 新状态操作状态::已完成 || !s1.状态节点)
             throw std::runtime_error("retirement after state unavailable");
         内部治理世界_->完成方法特征变化(引用, *前状态, *s1.状态节点);
-        const auto 读回 = 查询本能登记结构(登记名, 特征概念服务_, *this);
+        const auto 读回 = 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
         if (读回.状态 != 新方法操作状态::登记已退役 || 读回.方法节点 != 末代.节点
             || !内部治理世界_->读取方法特征变化(引用, *前状态, *s1.状态节点))
             throw std::runtime_error("retirement final readback failed");
         return 读回;
+    } catch (const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化,{}};
     } catch (...) {
         if (零发表) {
             if (准备.准备) 特征服务_.取消顶层I64更新(*准备.准备);
@@ -3282,108 +5212,15 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
     if (登记名.empty()) return {新方法操作状态::函数登记不合法, std::nullopt};
     try {
         std::lock_guard 锁(新方法互斥);
-        return 查询本能登记结构(登记名, 特征概念服务_, *this);
+        return 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
+    } catch (const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化, std::nullopt};
     } catch (...) {
         return {新方法操作状态::资源失败, std::nullopt};
     }
 }
 
-新方法建立结果 新_方法类::确保服务结算Q方法登记(
-    const 新方法知识建立请求& 请求) noexcept {
-    try {
-        std::lock_guard 锁(新方法互斥);
-        if (!结构仍存在() || !节点仍存在(方法父代字段))
-            throw std::runtime_error("method schema unavailable");
-        核验治理组织就绪();
-        if (!行为声明有效(请求) || 请求.作用域 != 新方法作用域::普通世界 || 请求.实现方式 != 新方法实现方式::本能
-            || !请求.条件结果组.empty() || !方法头有效(请求.方法头)
-            || !参数规格有效(请求.参数规格组, 特征概念服务_)
-            || !是贡献Q声明(读取服务结算声明种类(请求.方法头, 请求.参数规格组, 特征概念服务_))
-            || !新_本能函数管理类::解析(新本能函数登记名_服务值结算).函数)
-            throw std::runtime_error("Q registration contract invalid");
-        const std::string 名称(新本能函数登记名_服务值结算);
-        const auto 已有 = 查询本能登记结构(名称, 特征概念服务_, *this);
-        std::optional<新方法信息> 旧;
-        if (已有.状态 == 新方法操作状态::已找到 && 已有.方法节点) {
-            旧 = 读取方法信息(*已有.方法节点, 特征概念服务_, *this);
-            if (!旧) throw std::runtime_error("registered method unreadable");
-            if (旧->行为 && 请求.行为 && 旧->行为 != 请求.行为)
-                return {新方法操作状态::函数登记冲突, std::nullopt};
-            if (!内部治理世界_->读取方法治理场景({旧->节点, 旧->方法虚拟存在节点, 旧->启用特征节点}))
-                throw std::runtime_error("registered settlement method has no complete scene");
-            const auto 旧类型 = 读取服务结算声明种类(*旧, 特征概念服务_);
-            const auto 新类型 = 读取服务结算声明种类(请求.方法头, 请求.参数规格组, 特征概念服务_);
-            if (旧类型 == 新类型) {
-                if (旧->方法头 != 请求.方法头 || 旧->参数规格组 != 请求.参数规格组)
-                    throw std::runtime_error("Q registration changed meaning");
-                if (旧->初始模拟关系组 != 请求.初始模拟关系组)
-                    throw std::runtime_error("Q registration changed initial relations");
-                return 补登记方法行为(*旧, 请求.行为, 特征概念服务_, *this);
-            }
-            if (旧->启用状态 != 新方法启用状态::启用 || 旧类型 >= 新类型)
-                throw std::runtime_error("legacy method is not an authorized predecessor");
-            if (新类型 == 服务结算声明种类::有序贡献Q) {
-                const auto& 自我 = 旧->参数规格组[0];
-                if (旧->方法头.涉及特征类型概念组 != 请求.方法头.涉及特征类型概念组
-                    || 自我.特征规格组[0].特征类型概念节点 != 请求.参数规格组[1].有序规格->范围概念节点
-                    || 自我.特征规格组[1].特征类型概念节点 != 请求.参数规格组[2].有序规格->范围概念节点
-                    || (自我.存在概念节点 && 自我.存在概念节点 != 请求.参数规格组[0].有序规格->范围概念节点))
-                    throw std::runtime_error("ordered Q predecessor roles differ");
-            } else {
-            // 同一个作用FT、状态FT及集合角色；仅改变已冻结的前值/Q规格。
-            const auto& 老自我 = 旧->参数规格组[0]; const auto& 新自我 = 请求.参数规格组[0];
-            const auto& 老来源 = 旧->参数规格组[1]; const auto& 新来源 = 请求.参数规格组[1];
-            if (旧->方法头.涉及特征类型概念组 != 请求.方法头.涉及特征类型概念组
-                || 老自我.参数角色节点 != 新自我.参数角色节点
-                || 老自我.特征规格组[1] != 新自我.特征规格组[1]
-                || 老来源.参数角色节点 != 新来源.参数角色节点
-                || 老来源.特征规格组[0] != 新来源.特征规格组[0]
-                || 老来源.集合成员约束 != 新来源.集合成员约束)
-                throw std::runtime_error("legacy and Q roles differ");
-            }
-        } else if (已有.状态 != 新方法操作状态::方法不存在)
-            throw std::runtime_error("method lookup failed");
-        auto 发布请求 = 请求;
-        if (旧 && !发布请求.行为) 发布请求.行为 = 旧->行为;
-        const auto 发表 = 发布方法结构(发布请求, &名称, 旧 ? &*旧 : nullptr);
-        if (发表.状态 != 新方法操作状态::已建立 || !发表.方法节点)
-            throw std::runtime_error("Q method publication incomplete");
-        const auto 读回 = 查询本能登记结构(名称, 特征概念服务_, *this);
-        const auto 新 = 读取方法信息(*发表.方法节点, 特征概念服务_, *this);
-        if (读回.状态 != 新方法操作状态::已找到 || 读回.方法节点 != 发表.方法节点
-            || !新 || 新->方法头 != 请求.方法头 || 新->参数规格组 != 请求.参数规格组
-            || !新->条件结果组.empty() || 新->父代方法节点 != (旧 ? std::optional{旧->节点} : std::nullopt))
-            throw std::runtime_error("Q method readback incomplete");
-        return 发表;
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确保服务结算Q方法登记",
-            L"限定方法替代不完整或发生冲突，保留旧方法及已发表事实。");
-    }
-}
 
-std::optional<稳定编码> 新_方法类::读取服务结算固定加一父代(
-    稳定编码 当前Q方法) const noexcept {
-    try {
-        std::lock_guard 锁(新方法互斥);
-        const auto 当前 = 读取方法信息(当前Q方法, 特征概念服务_, *this);
-        const auto 登记 = 查询本能登记结构(std::string(新本能函数登记名_服务值结算), 特征概念服务_, *this);
-        if (!当前 || 当前->来源方法节点 || 当前->实例根节点
-            || !是贡献Q声明(读取服务结算声明种类(*当前, 特征概念服务_))
-            || 登记.状态 != 新方法操作状态::已找到 || 登记.方法节点 != 当前Q方法)
-            throw std::runtime_error("Q predecessor lookup mismatch");
-        auto 父 = 当前->父代方法节点;
-        while (父) {
-            const auto 信息 = 读取方法信息(*父, 特征概念服务_, *this);
-            if (!信息) throw std::runtime_error("Q ancestor unreadable");
-            if (读取服务结算声明种类(*信息, 特征概念服务_) == 服务结算声明种类::固定加一) return 父;
-            父 = 信息->父代方法节点;
-        }
-        return {};
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取服务结算固定加一父代",
-            L"方法父代关系损坏，不能改用当前Q规格解释历史。");
-    }
-}
 
 新方法操作状态 新_方法类::登记本能函数(
     稳定编码 方法节点,
@@ -3398,7 +5235,7 @@ std::optional<稳定编码> 新_方法类::读取服务结算固定加一父代(
 
         std::lock_guard 锁(新方法互斥);
         if (!结构仍存在()) return 新方法操作状态::尚未初始化;
-        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!方法) return 新方法操作状态::方法不存在;
         if (方法->实现方式 != 新方法实现方式::本能) {
             return 新方法操作状态::方法类型不符;
@@ -3408,9 +5245,6 @@ std::optional<稳定编码> 新_方法类::读取服务结算固定加一父代(
                 ? 新方法操作状态::无变化
                 : 新方法操作状态::函数登记冲突;
         }
-        // 服务结算的有限代际只能通过完整登记事务建立，禁止先建空方法再绑同名函数。
-        if (本能函数登记名 == 新本能函数登记名_服务值结算)
-            return 新方法操作状态::函数登记冲突;
 
         新关系 = 全局基础数据集.添加字段值(
             方法节点, 方法本能函数登记名字段,
@@ -3418,27 +5252,142 @@ std::optional<稳定编码> 新_方法类::读取服务结算固定加一父代(
         if (!有效(新关系)) {
             return 新方法操作状态::资源失败;
         }
-        const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!读回 || !读回->本能函数登记名
             || *读回->本能函数登记名 != 本能函数登记名) {
             (void)全局基础数据集.删除字段(新关系);
             return 新方法操作状态::结构不一致;
         }
         return 新方法操作状态::已修改;
+    } catch (const 引用内容定义前提变化&) {
+        return 新方法操作状态::定义前提已变化;
     } catch (...) {
         if (有效(新关系)) (void)全局基础数据集.删除字段(新关系);
         return 新方法操作状态::资源失败;
     }
 }
 
+新方法目录读取结果 新_方法类::读取方法目录() const noexcept {
+    using 状态 = 新方法目录读取状态;
+    const auto 非成功 = [](状态 值) {
+        新方法目录读取结果 结果; 结果.状态 = 值; return 结果;
+    };
+    try {
+        std::lock_guard 锁(新方法互斥);
+        const auto 架构 = 架构编码组();
+        if (std::none_of(架构.begin(), 架构.end(), [](const auto* 键) { return 有效(*键); }))
+            return 非成功(状态::尚未初始化);
+        if (!结构仍存在()) return 非成功(状态::结构不一致);
+        const auto 成员 = 读取多节点字段(新方法组织根节点, 方法成员字段, 特征概念服务_);
+        if (!成员) return 非成功(状态::结构不一致);
+        const auto 唯一持有 = [](稳定编码 节点, 稳定编码 字段, 稳定编码 持有者) {
+            const auto 归属 = 全局基础数据集.查询目标字段(节点, 字段);
+            return 归属.size() == 1 && 归属.front().所属节点 == 持有者;
+        };
+        新方法目录读取结果 结果;
+        for (const auto M : *成员) {
+            if (!节点类型为(M, 方法节点类型) || !方法属于根(M)) return 非成功(状态::结构不一致);
+            const auto 作用域 = 读取唯一I64字段(M, 方法作用域字段);
+            const auto 实现方式 = 读取唯一I64字段(M, 方法实现方式字段);
+            const auto 头 = 读取唯一节点字段(M, 方法头字段);
+            const auto Vm = 读取唯一节点字段(M, 方法虚拟存在字段);
+            if (!作用域 || !是作用域(*作用域) || !实现方式 || !是实现方式(*实现方式)
+                || !头 || !节点类型为(*头, 方法头节点类型) || !唯一持有(*头, 方法头字段, M)
+                || !Vm || !节点类型为(*Vm, 方法虚拟存在节点类型) || !唯一持有(*Vm, 方法虚拟存在字段, M)
+                || 读取唯一节点字段(*Vm, 虚拟存在所属方法字段) != std::optional{M}
+                || !全局基础数据集.查询字段(M, 方法启用状态字段).empty())
+                return 非成功(状态::结构不一致);
+            const auto F = 读取唯一节点字段(*Vm, 虚拟存在启用特征字段);
+            if (!F || !唯一持有(*F, 虚拟存在启用特征字段, *Vm)) return 非成功(状态::结构不一致);
+            const auto 启用 = 特征服务_.捕获特征匹配实例(*F);
+            const auto* 值 = 启用 && 启用->当前值 ? std::get_if<std::int64_t>(&*启用->当前值) : nullptr;
+            if (!启用 || 启用->上级特征节点 || 启用->实例单位 || !值 || (*值 != 0 && *值 != 1)
+                || 启用->定义.特征类型根 != 方法启用特征类型
+                || 启用->定义.材料类型 != 特征概念材料物理类型::I64标量)
+                return 非成功(状态::结构不一致);
+            const auto 头存在 = 读取多节点字段(*头, 方法头作用存在概念字段, 特征概念服务_);
+            const auto 头特征 = 读取多节点字段(*头, 方法头特征类型概念字段, 特征概念服务_);
+            const auto 头结果 = 读取多节点字段(*头, 方法头结果概念字段, 特征概念服务_);
+            if (!头存在 || !头特征 || !头结果) return 非成功(状态::结构不一致);
+            新方法目录项 项;
+            项.节点 = M; 项.方法头节点 = *头; 项.方法虚拟存在节点 = *Vm;
+            项.作用域 = static_cast<新方法作用域>(*作用域);
+            项.实现方式 = static_cast<新方法实现方式>(*实现方式);
+            项.启用状态 = static_cast<新方法启用状态>(*值);
+            项.方法头 = {*头存在, *头特征, *头结果};
+            if (!方法头有效(项.方法头)) return 非成功(状态::结构不一致);
+            const auto 参数组 = 读取有序子节点(*Vm, 虚拟存在参数规格字段, 特征概念服务_);
+            const auto 配对组 = 读取有序子节点(M, 方法条件结果字段, 特征概念服务_);
+            if (!参数组 || !配对组) return 非成功(状态::结构不一致);
+            for (const auto P : *参数组) {
+                if (!唯一持有(P, 虚拟存在参数规格字段, *Vm)) return 非成功(状态::结构不一致);
+                const auto 规格 = 读取参数规格(P, 特征概念服务_, 存在概念服务_);
+                if (!规格) return 非成功(状态::结构不一致);
+                项.参数规格组.push_back(*规格);
+            }
+            if (!参数规格有效(项.参数规格组, 特征概念服务_)) return 非成功(状态::结构不一致);
+            for (const auto P : *配对组)
+                if (!节点类型为(P, 条件结果配对节点类型) || !唯一持有(P, 方法条件结果字段, M))
+                    return 非成功(状态::结构不一致);
+            项.条件结果配对数量 = static_cast<std::uint64_t>(配对组->size());
+            const auto 来源 = 读取可选节点字段(M, 方法来源字段);
+            const auto 实例根 = 读取可选节点字段(M, 方法实例根字段);
+            if (!来源 || !实例根 || 有效(*来源) != 有效(*实例根)) return 非成功(状态::结构不一致);
+            if (有效(*来源)) {
+                if (*来源 == M || !节点类型为(*来源, 方法节点类型) || !方法属于根(*来源)
+                    || !全局基础数据集.查询字段(*来源, 方法来源字段).empty()
+                    || !全局基础数据集.查询字段(*来源, 方法实例根字段).empty())
+                    return 非成功(状态::结构不一致);
+                const bool 单方法根 = 节点类型为(*实例根, 方法节点类型) && 方法属于根(*实例根)
+                    && 读取唯一节点字段(*实例根, 方法实例根字段) == 实例根;
+                const bool 混合根 = 节点类型为(*实例根, 混合方法实例根类型)
+                    && 唯一持有(*实例根, 混合方法实例成员字段, 新方法组织根节点);
+                if (!单方法根 && !混合根) return 非成功(状态::结构不一致);
+                项.来源方法节点 = *来源; 项.实例根节点 = *实例根;
+            }
+            if (有效(方法父代字段)) {
+                const auto 父代 = 读取可选节点字段(M, 方法父代字段);
+                if (!父代) return 非成功(状态::结构不一致);
+                if (有效(*父代)) {
+                    if (*父代 == M || !节点类型为(*父代, 方法节点类型) || !方法属于根(*父代))
+                        return 非成功(状态::结构不一致);
+                    项.父代方法节点 = *父代;
+                }
+            }
+            if (有效(方法行为字段)) {
+                const auto 行为 = 读取可选I64字段(M, 方法行为字段);
+                if (!行为 || (*行为 && !是方法行为(**行为))) return 非成功(状态::结构不一致);
+                if (*行为) 项.行为 = static_cast<新方法行为>(**行为);
+            }
+            const auto 函数组 = 全局基础数据集.查询字段(M, 方法本能函数登记名字段);
+            if (函数组.size() > 1 || (项.实现方式 == 新方法实现方式::组合 && !函数组.empty()))
+                return 非成功(状态::结构不一致);
+            if (!函数组.empty()) {
+                const auto 名称 = 读取唯一字符串字段(M, 方法本能函数登记名字段);
+                if (!名称 || 名称->empty()) return 非成功(状态::结构不一致);
+                项.本能函数登记名 = *名称;
+            }
+            结果.项组.push_back(std::move(项));
+        }
+        std::sort(结果.项组.begin(), 结果.项组.end(), [](const auto& 左, const auto& 右) { return 左.节点 < 右.节点; });
+        结果.方法组织根 = 新方法组织根节点;
+        结果.状态 = 状态::已读取;
+        return 结果;
+    } catch (const std::bad_alloc&) { return 非成功(状态::资源失败); }
+    catch (...) { return 非成功(状态::内部错误); }
+}
+
 std::optional<新方法信息> 新_方法类::获取方法(
     稳定编码 方法节点) const noexcept {
     try {
         std::lock_guard 锁(新方法互斥);
-        auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        if (!结构已分配() || !节点类型为(新方法组织根节点, 方法组织根类型)
+            || !全局基础数据集.查询目标关系(新方法组织根节点, 基础外部关系类型::父子).empty())
+            return std::nullopt;
+        auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (方法) for (const auto& 参数 : 方法->参数规格组) {
             if (参数.有序规格 && 参数.有序规格->信息类型 == 新方法参数信息类型::存在
-                && !存在概念服务_.获取存在概念(参数.有序规格->范围概念节点))
+                && !方法存在范围有效(参数.有序规格->范围概念节点,存在概念服务_))
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取有序方法参数", L"存在参数范围不是可读取的正式存在概念。");
         }
         return 方法;
@@ -3474,12 +5423,20 @@ std::optional<新方法信息> 新_方法类::获取方法(
             const auto 节点 = *待读.begin();
             待读.erase(待读.begin());
             if (!已读.insert(节点).second) continue;
-            auto 方法 = 读取方法信息(节点, 特征概念服务_, *this);
+            auto 方法 = 读取方法信息本体(节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
                 L"读取方法执行结构闭包", L"正式方法闭包断链或定义损坏");
+            for(const auto& 配对:方法->条件结果组)
+                if(!条件结果角色已声明(方法->参数规格组,{配对.条件,配对.结果,配对.线性关系组},
+                    特征概念服务_,存在概念服务_,引用内容条件校验模式::完整语义))
+                    throw std::runtime_error("method execution content condition semantic validation failed");
+            for(const auto& 分支:方法->执行分支组)
+                if(!分支条件有效(分支.定义.必要条件,方法->参数规格组,特征概念服务_,存在概念服务_,
+                    引用内容条件校验模式::完整语义))
+                    throw std::runtime_error("method execution branch semantic validation failed");
             for (const auto& 参数 : 方法->参数规格组) {
                 if (参数.有序规格 && 参数.有序规格->信息类型 == 新方法参数信息类型::存在
-                    && !存在概念服务_.获取存在概念(参数.有序规格->范围概念节点))
+                    && !方法存在范围有效(参数.有序规格->范围概念节点,存在概念服务_))
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法执行结构闭包", L"存在参数范围不是正式存在概念。");
             }
             if (方法->来源方法节点 || 方法->实例根节点)
@@ -3495,7 +5452,158 @@ std::optional<新方法信息> 新_方法类::获取方法(
         }
         std::sort(结果.方法组.begin(), 结果.方法组.end(),
             [](const auto& 左, const auto& 右) { return 左.节点 < 右.节点; });
+        std::set<稳定编码> 图节点,保护身份{新方法组织根节点};
+        std::vector<基础联合节点快照> 场景概念保护;
+        const auto addProof=[&](const std::vector<基础联合节点快照>& proof) {
+            for(const auto& p:proof){保护身份.insert(p.结构.节点.编码);场景概念保护.push_back(p);}
+        };
+        for(const auto& 方法:结果.方法组) {
+            const auto 内容保护=[&](const 新方法条件定义& 条件) {
+                for(const auto& 项:条件.条件项组)if(项.引用内容条件) {
+                    std::vector<基础联合节点快照> 保护;
+                    if(!读取引用内容条件定义保护(*项.引用内容条件,特征概念服务_,存在概念服务_,保护))
+                        throw std::runtime_error("method execution content condition protection unavailable");
+                    addProof(保护);
+                    const auto 参数=std::find_if(方法.参数规格组.begin(),方法.参数规格组.end(),
+                        [&](const auto& 规格){return 规格.有序规格&&规格.有序规格->序号==项.参数序号;});
+                    if(参数==方法.参数规格组.end())throw std::runtime_error("method content parameter specification missing");
+                    if(项.引用内容条件->作用点==新方法内容作用点::参数自身) {
+                        std::vector<基础联合节点快照> p;
+                        if(!追加方法存在范围保护(参数->有序规格->范围概念节点,存在概念服务_,p))
+                            throw std::runtime_error("method direct content formal range unavailable");
+                        addProof(p);continue;
+                    }
+                    const auto FT=特征概念服务_.读取特征概念定义保护(参数->有序规格->范围概念节点);
+                    if(FT.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                    if(FT.前提已变化)throw 引用内容定义前提变化{};
+                    if(FT.状态!=基础结构操作状态::已完成||!FT.信息||FT.预期节点组.empty())
+                        throw std::runtime_error("method content parameter range protection unavailable");
+                    addProof(FT.预期节点组);
+                }
+            };
+            for(const auto& 分支:方法.执行分支组)内容保护(分支.定义.必要条件);
+            for(const auto& 配对:方法.条件结果组)内容保护(配对.条件);
+            for(const auto& 配对:方法.条件结果组)for(const auto& item:配对.结果.结果项组)if(item.引用内容结果) {
+                std::vector<基础联合节点快照> p;
+                if(!读取引用内容条件定义保护(*item.引用内容结果,特征概念服务_,存在概念服务_,p))
+                    throw std::runtime_error("method execution result content definition unavailable");
+                addProof(p);
+                const auto c=存在概念服务_.读取引用内容筹办概念();
+                if(c.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
+                if(c.状态!=正式结构操作状态::已读取||!c.信息||c.完整保护组.empty()
+                    ||c.信息->完整被认知需求!=item.引用内容结果->要求概念节点)
+                    throw std::runtime_error("method execution complete demand result unavailable");
+                addProof(c.完整保护组);
+            }
+        }
+        for(const auto& method:结果.方法组)if(method.初始必要条件
+            &&通用概念必要声明形状有效(*method.初始必要条件)) {
+            新方法知识建立请求 request;request.参数规格组=method.参数规格组;request.初始必要条件=method.初始必要条件;
+            std::vector<基础联合节点快照> proof;
+            const auto checked=核验通用概念必要声明(request,存在概念服务_,特征概念服务_,proof);
+            if(checked==新方法操作状态::结构不一致)return {状态::前提已变化,{},{},{}};
+            if(checked!=新方法操作状态::已找到)throw std::runtime_error("generic initial execution declaration invalid");
+            addProof(proof);
+        }
+        std::set<稳定编码> messageExistence;
+        const auto existenceProof=[&](auto&& self,稳定编码 C)->void {
+            (void)self;
+            if(!messageExistence.insert(C).second)return;
+            std::vector<基础联合节点快照> proof;
+            if(!追加方法存在范围保护(C,存在概念服务_,proof))
+                throw std::runtime_error("message range existence protection unavailable");
+            addProof(proof);
+        };
+        for(const auto& method:结果.方法组)for(const auto& spec:method.参数规格组)if(spec.有序规格) {
+            if(spec.有序规格->信息类型==新方法参数信息类型::存在)existenceProof(existenceProof,spec.有序规格->范围概念节点);
+            else {
+                const auto proof=特征概念服务_.读取特征概念定义保护(spec.有序规格->范围概念节点);
+                if(!proof.信息||proof.前提已变化)throw std::runtime_error("message feature range protection unavailable");
+                addProof(proof.预期节点组);
+            }
+        }
+        std::vector<稳定编码> 栈;
+        for(const auto& M:结果.方法组)栈.push_back(M.节点);
+        while(!栈.empty()) {
+            const auto n=栈.back();栈.pop_back();
+            if(!图节点.insert(n).second)continue;
+            const auto 类型=读取唯一节点字段(n,节点类型字段);
+            const auto 快照=全局基础数据集.查询完整节点结构(n);
+            if(!类型||!快照.结构)throw std::runtime_error("method execution protection graph unreadable");
+            const auto 规格=方法复制字段规格(*类型);
+            if(规格.empty())throw std::runtime_error("method execution protection schema unavailable");
+            保护身份.insert(n);保护身份.insert(*类型);
+            for(const auto& s:规格) {
+                if(有效(s.字段))保护身份.insert(s.字段);
+                if(有效(s.目标类型))保护身份.insert(s.目标类型);
+            }
+            for(const auto& f:快照.结构->字段组) {
+                保护身份.insert(f.字段节点);
+                const auto* 引用=std::get_if<稳定编码>(&f.内容);
+                if (f.字段节点 == 有序参数类别概念字段) {
+                    if (!引用) throw std::runtime_error("method execution category is not a reference");
+                    addProof(解析参数类别概念保护(*引用, 存在概念服务_, 特征概念服务_).完整保护组);
+                }
+                if(!引用)continue;
+                const auto s=std::find_if(规格.begin(),规格.end(),[&](const auto& v){return v.字段==f.字段节点;});
+                if(s!=规格.end()&&(s->种类==复制字段种类::独占子节点||s->种类==复制字段种类::调用方法))
+                    栈.push_back(*引用);
+                if(f.字段节点==虚拟存在启用特征字段)保护身份.insert(*引用);
+                if(f.字段节点==条件引用内容要求字段||f.字段节点==条件引用内容项字段
+                    ||f.字段节点==结果引用内容要求字段||f.字段节点==结果引用内容项字段)保护身份.insert(*引用);
+                if(f.字段节点==内容关系路径字段) {
+                    std::vector<基础联合节点快照> p;
+                    if(!追加需求主体路径保护(*引用,特征概念服务_,存在概念服务_,p))
+                        throw std::runtime_error("method execution subject relation path unsupported");
+                    addProof(p);
+                }
+                if(f.字段节点==模拟正文范围字段) {
+                    const auto proof=特征概念服务_.读取特征概念定义保护(*引用);
+                    if(!proof.信息||proof.前提已变化)throw std::runtime_error("simulation body definition protection unavailable");
+                    for(const auto& snapshot:proof.预期节点组) {
+                        保护身份.insert(snapshot.结构.节点.编码);场景概念保护.push_back(snapshot);
+                    }
+                }
+                if(f.字段节点==初始关系概念字段||f.字段节点==结果场景关系概念字段) {
+                    const auto proof=存在概念服务_.读取已确认消息连接概念保护();
+                    if(!proof.信息||proof.信息->节点!=*引用||proof.完整保护组.empty())
+                        throw std::runtime_error("method execution scene formal protection unavailable");
+                    for(const auto& snapshot:proof.完整保护组) {
+                        保护身份.insert(snapshot.结构.节点.编码);
+                        场景概念保护.push_back(snapshot);
+                    }
+                }
+            }
+        }
+        const std::vector<稳定编码> 请求身份{保护身份.begin(),保护身份.end()};
+        const auto 完整=全局基础数据集.查询节点组完整结构(请求身份);
+        if(完整.状态!=基础结构操作状态::已完成||完整.节点组.size()!=请求身份.size())
+            throw std::runtime_error("method execution protection capture failed");
+        for(const auto& n:完整.节点组) {
+            if(!n.快照)throw std::runtime_error("method execution protection missing snapshot");
+            结果.完整保护组.push_back(*n.快照);
+        }
+        for(const auto& a:场景概念保护) {
+            const auto b=std::find_if(结果.完整保护组.begin(),结果.完整保护组.end(),[&](const auto& v){return v.结构.节点==a.结构.节点;});
+            if(b==结果.完整保护组.end()||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
+                ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
+                return {状态::前提已变化,{},{},{}};
+        }
+        for(const auto& old:结果.方法组)
+            if(读取方法信息本体(old.节点,特征概念服务_,*this,存在概念服务_,false,true)!=old)
+                return {状态::前提已变化,{},{},{}};
+        const auto 再读=全局基础数据集.查询节点组完整结构(请求身份);
+        if(再读.状态!=基础结构操作状态::已完成||再读.节点组.size()!=结果.完整保护组.size())
+            throw std::runtime_error("method execution protection recapture failed");
+        for(std::size_t i=0;i<结果.完整保护组.size();++i) {
+            const auto& a=结果.完整保护组[i];const auto& b=再读.节点组[i].快照;
+            if(!b||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
+                ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
+                return {状态::前提已变化,{},{},{}};
+        }
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        return {状态::前提已变化,{},{},{}};
     } catch (const std::exception& 异常) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
             L"读取方法执行结构闭包", L"工程读取异常", 异常.what());
@@ -3559,7 +5667,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
             if (!节点类型为(来源方法节点, 方法节点类型) || !方法属于根(来源方法节点)) {
                 return 失败(新方法复制状态::方法不存在);
             }
-            const auto 来源 = 读取方法信息(来源方法节点, 特征概念服务_, *this);
+            const auto 来源 = 读取方法信息本体(来源方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!来源) return 失败(新方法复制状态::结构不一致);
             if (来源->来源方法节点) return 失败(新方法复制状态::来源不是抽象方法);
         }
@@ -3583,7 +5691,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
             auto& 当前材料 = 材料.at(当前);
             if (!节点类型为(当前, 当前材料.类型)) return 失败(新方法复制状态::结构不一致);
             if (当前材料.类型 == 方法节点类型) {
-                const auto 方法 = 读取方法信息(当前, 特征概念服务_, *this);
+                const auto 方法 = 读取方法信息本体(当前, 特征概念服务_, *this, 存在概念服务_, false, true);
                 if (!方法) return 失败(新方法复制状态::结构不一致);
                 if (方法->来源方法节点) return 失败(新方法复制状态::来源不是抽象方法);
                 if (!方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
@@ -3592,8 +5700,11 @@ std::optional<新方法信息> 新_方法类::获取方法(
                         [&](const auto& 配对) {
                             const 新方法条件结果定义 定义{配对.条件, 配对.结果, 配对.线性关系组};
                             return 条件结果有效(定义, 特征概念服务_)
-                                && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_);
+                                && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_);
                         })) return 失败(新方法复制状态::结构不一致);
+                for(const auto& 分支:方法->执行分支组)
+                    if(!分支条件有效(分支.定义.必要条件,方法->参数规格组,特征概念服务_,存在概念服务_))
+                        return 失败(新方法复制状态::结构不一致);
                 方法组.push_back(当前);
             }
             const auto 规格组 = 方法复制字段规格(当前材料.类型);
@@ -3619,7 +5730,8 @@ std::optional<新方法信息> 新_方法类::获取方法(
                             for (const auto 字段码 : {方法头字段, 方法虚拟存在字段,
                                 方法条件结果字段, 方法组合步骤字段, 方法结果转移字段,
                                 虚拟存在参数规格字段, 参数特征规格字段, 配对条件字段,
-                                配对结果字段, 条件项字段, 结果项字段, 结果禁止项字段}) {
+                                配对结果字段, 条件项字段, 结果项字段, 结果禁止项字段,
+                                初始必要条件字段,初始场景限定字段,结果场景限定字段,执行分支字段,分支条件字段,模拟输入方案字段,模拟消息输入字段}) {
                                 const auto 持有组 = 全局基础数据集.查询目标字段(*目标, 字段码);
                                 for (const auto& 持有 : 持有组) {
                                     if (持有.所属节点 != 当前 || 持有.字段节点 != 规格.字段) {
@@ -3693,7 +5805,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
                 || !写入节点字段(副本, 方法实例根字段, 新根, 已写字段)) {
                 return 失败(新方法复制状态::资源失败);
             }
-            const auto source = 读取方法信息(方法, 特征概念服务_, *this);
+            const auto source = 读取方法信息本体(方法, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!source) return 失败(新方法复制状态::结构不一致);
             虚拟组.push_back(准备方法虚拟存在(副本,
                 材料.at(source->方法虚拟存在节点).新节点, static_cast<std::int64_t>(source->启用状态)));
@@ -3707,12 +5819,12 @@ std::optional<新方法信息> 新_方法类::获取方法(
             }
             发布请求.追加字段组.push_back({新方法组织根节点, 混合方法实例成员字段, 新根});
         }
-        const auto 片段 = 封存方法片段(std::move(发布请求), 已建节点);
+        const auto 片段 = 封存方法片段(std::move(发布请求), 已建节点, 存在概念服务_,特征概念服务_);
         const auto 发表 = 内部治理世界_->发布新方法治理场景组(引用组, 片段);
         if (发表.状态 != 新方法治理场景发布工程状态::已发布) return 失败(新方法复制状态::资源失败);
         已发布 = true;
         for (const auto 方法 : 方法组) {
-            const auto 读回 = 读取方法信息(材料.at(方法).新节点, 特征概念服务_, *this);
+            const auto 读回 = 读取方法信息本体(材料.at(方法).新节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!读回 || 读回->来源方法节点 != 方法 || 读回->实例根节点 != 新根) {
                 return 失败(新方法复制状态::结构不一致);
             }
@@ -3738,6 +5850,10 @@ std::optional<新方法信息> 新_方法类::获取方法(
         }
         // 所有可分配输出均在采用前形成；此后只移动值式结果。
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        // 本控制只会在采用回调前的定义读取中产生；回收仍由原owner逐项核实未消费。
+        if(已发布)明确未采用=true;
+        return 失败(新方法复制状态::入口拒绝);
     } catch (...) {
         return 失败(新方法复制状态::资源失败);
     }
@@ -3776,10 +5892,10 @@ std::optional<新方法信息> 新_方法类::获取方法(
         // 抽象身份到本轮材料身份；已有来源一律复用旧副本的材料，绝不复制第二份。
         std::map<稳定编码, 稳定编码> 来源映射;
         std::map<稳定编码, 稳定编码> 配对来源组, 旧结果来源组;
-        std::map<稳定编码, std::vector<稳定编码>> 追加配对组;
+        std::map<稳定编码, std::vector<稳定编码>> 追加配对组,追加配对分支来源组;
         std::vector<稳定编码> 待读来源(候选来源.begin(), 候选来源.end());
         for (const auto& 成员 : 全局基础数据集.查询目标字段(预期旧实例根, 方法实例根字段)) {
-            const auto 旧 = 读取方法信息(成员.所属节点, 特征概念服务_, *this);
+            const auto 旧 = 读取方法信息本体(成员.所属节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!旧 || !旧->来源方法节点 || !来源映射.emplace(*旧->来源方法节点, 旧->节点).second)
                 return 失败(状态::来源无法对齐);
             旧方法组.emplace(旧->节点, *旧);
@@ -3788,7 +5904,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
         for (std::size_t i = 0; i < 待读来源.size(); ++i) {
             const auto 编码 = 待读来源[i];
             if (来源方法组.contains(编码)) continue;
-            const auto 方法 = 读取方法信息(编码, 特征概念服务_, *this);
+            const auto 方法 = 读取方法信息本体(编码, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法) return 失败(状态::来源方法不存在);
             if (方法->来源方法节点 || 方法->实例根节点) return 失败(状态::来源无法对齐);
             if (!方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
@@ -3796,13 +5912,16 @@ std::optional<新方法信息> 新_方法类::获取方法(
                 || !std::all_of(方法->条件结果组.begin(), 方法->条件结果组.end(), [&](const auto& 对) {
                     const 新方法条件结果定义 定义{对.条件, 对.结果, 对.线性关系组};
                     return 条件结果有效(定义, 特征概念服务_)
-                        && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_);
+                        && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_);
                 })) return 失败(状态::结构不一致);
+            for(const auto& 分支:方法->执行分支组)
+                if(!分支条件有效(分支.定义.必要条件,方法->参数规格组,特征概念服务_,存在概念服务_))
+                    return 失败(状态::结构不一致);
             来源方法组.emplace(编码, *方法);
             for (const auto& 步骤 : 方法->组合步骤组) 待读来源.push_back(步骤.调用方法节点);
         }
         const auto 配对可对齐 = [&](const 新方法条件结果信息& 旧, const 新方法条件结果信息& 源) {
-            if (旧.结果 != 源.结果 || !线性关系等价(旧.线性关系组, 源.线性关系组)) return false;
+            if (!同义结果(旧.结果,源.结果) || !线性关系等价(旧.线性关系组, 源.线性关系组)) return false;
             if (旧.线性关系组.empty()) return 旧.条件 == 源.条件;
             if (旧.条件.关系规则 != 源.条件.关系规则
                 || 旧.条件.条件项组.size() != 源.条件.条件项组.size()) return false;
@@ -3824,9 +5943,13 @@ std::optional<新方法信息> 新_方法类::获取方法(
         for (const auto& [旧编码, 旧] : 旧方法组) {
             const auto& 源 = 来源方法组.at(*旧.来源方法节点);
             if (旧.方法头 != 源.方法头 || 旧.参数规格组 != 源.参数规格组
+                ||分支定义组(旧)!=分支定义组(源)
+                ||旧.初始模拟输入方案组!=源.初始模拟输入方案组
                 || 旧.作用域 != 源.作用域 || 旧.实现方式 != 源.实现方式
                 || 旧.启用状态 != 源.启用状态 || 旧.本能函数登记名 != 源.本能函数登记名)
                 return 失败(状态::来源无法对齐);
+            for(std::size_t i=0;i<源.执行分支组.size();++i)
+                来源映射.emplace(源.执行分支组[i].节点,旧.执行分支组[i].节点);
             std::set<稳定编码> 已导入;
             for (const auto& 旧对 : 旧.条件结果组) {
                 const 新方法条件结果信息* 匹配 = nullptr;
@@ -3840,6 +5963,16 @@ std::optional<新方法信息> 新_方法类::获取方法(
                     || 读取唯一I64字段(旧对.配对节点, 顺序字段)
                         != 读取唯一I64字段(匹配->配对节点, 顺序字段)) return 失败(状态::来源无法对齐);
                 配对来源组.emplace(旧对.配对节点, 匹配->配对节点);
+                std::vector<稳定编码> mapped;
+                for(const auto B:匹配->来源执行分支节点组) {
+                    if(!来源映射.contains(B))return 失败(状态::来源无法对齐);
+                    mapped.push_back(来源映射.at(B));
+                }
+                for(const auto B:旧对.来源执行分支节点组)
+                    if(std::find(mapped.begin(),mapped.end(),B)==mapped.end())return 失败(状态::来源无法对齐);
+                for(const auto B:mapped)if(std::find(旧对.来源执行分支节点组.begin(),旧对.来源执行分支节点组.end(),B)==旧对.来源执行分支节点组.end()) {
+                    追加配对分支来源组[旧对.配对节点].push_back(B);有增量=true;
+                }
                 旧结果来源组.emplace(旧对.结果节点, 匹配->结果节点);
                 if (!来源映射.emplace(匹配->配对节点, 旧对.配对节点).second
                     || !来源映射.emplace(匹配->结果节点, 旧对.结果节点).second)
@@ -3926,6 +6059,8 @@ std::optional<新方法信息> 新_方法类::获取方法(
                     for (const auto 配对 : 追加配对组.at(当前))
                         字段组.push_back({{}, 当前, 方法条件结果字段, 配对});
                 }
+                if(规格.字段==配对分支来源字段&&追加配对分支来源组.contains(当前))
+                    for(const auto B:追加配对分支来源组.at(当前))字段组.push_back({{},当前,配对分支来源字段,B});
                 for (auto 字段 : 字段组) {
                     const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
                     if (规格.种类 == 复制字段种类::直接值) {
@@ -3944,7 +6079,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
                             for (const auto 字段码 : {方法头字段, 方法虚拟存在字段, 方法条件结果字段,
                                 方法组合步骤字段, 方法结果转移字段, 虚拟存在参数规格字段,
                                 参数特征规格字段, 配对条件字段, 配对结果字段, 条件项字段,
-                                结果项字段, 结果禁止项字段}) {
+                                结果项字段, 结果禁止项字段,初始必要条件字段,初始场景限定字段,结果场景限定字段,执行分支字段,分支条件字段,模拟输入方案字段,模拟消息输入字段}) {
                                 for (const auto& 持有 : 全局基础数据集.查询目标字段(*目标, 字段码)) {
                                     if (持有.所属节点 != 预期持有 || 持有.字段节点 != 规格.字段)
                                         return 失败(状态::结构不一致);
@@ -4017,7 +6152,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
         for (const auto 入口 : 入口材料)
             发布请求.追加字段组.push_back({*新根, 混合方法候选入口字段, 材料.at(入口).新节点});
         发布请求.追加字段组.push_back({新方法组织根节点, 混合方法实例成员字段, *新根});
-        const auto 片段 = 封存方法片段(std::move(发布请求), 已建节点);
+        const auto 片段 = 封存方法片段(std::move(发布请求), 已建节点, 存在概念服务_,特征概念服务_);
         const auto 发表 = 内部治理世界_->发布新方法治理场景组(引用组, 片段);
         if (发表.状态 != 新方法治理场景发布工程状态::已发布) return 失败(状态::资源失败);
         已发布 = true;
@@ -4045,7 +6180,12 @@ std::optional<新方法信息> 新_方法类::获取方法(
             预期.专属存在概念节点 = 新虚拟组.at(节点).专属存在概念节点;
             预期.来源方法节点 = 原始方法;
             预期.实例根节点 = 新根;
+            for(auto& b:预期.执行分支组)b.节点=副本(b.节点);
             for (auto& 项 : 预期.条件结果组) {
+                if(追加配对分支来源组.contains(项.配对节点))
+                    项.来源执行分支节点组.insert(项.来源执行分支节点组.end(),追加配对分支来源组.at(项.配对节点).begin(),追加配对分支来源组.at(项.配对节点).end());
+                for(auto& B:项.来源执行分支节点组)B=副本(B);
+                std::sort(项.来源执行分支节点组.begin(),项.来源执行分支节点组.end());
                 项.来源配对节点 = 配对来源组.contains(项.配对节点) ? 配对来源组.at(项.配对节点) : 项.配对节点;
                 项.配对节点 = 副本(项.配对节点);
                 项.条件节点 = 副本(项.条件节点);
@@ -4065,7 +6205,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
             std::sort(预期.结果转移组.begin(), 预期.结果转移组.end(), [](const auto& 左, const auto& 右) {
                 return 左.转移节点 < 右.转移节点;
             });
-            const auto 读回 = 读取方法信息(预期.节点, 特征概念服务_, *this);
+            const auto 读回 = 读取方法信息本体(预期.节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!读回 || *读回 != 预期) return 失败(状态::结构不一致);
         }
         // 采用回调只做task CAS。此后任何异常/未知均保留新旧图，不撤销可能已绑定的数据。
@@ -4078,6 +6218,9 @@ std::optional<新方法信息> 新_方法类::获取方法(
             return 失败(状态::未采用);
         }
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"交付增补方法", L"采用状态未知，保留已发表方法及场景。");
+    } catch (const 引用内容定义前提变化&) {
+        if(已发布||可能已采用)return {状态::发布结果未知,新根};
+        return 失败(状态::入口拒绝);
     } catch (...) {
         return 失败(状态::资源失败);
     }
@@ -4087,12 +6230,13 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
     稳定编码 实例根节点) const noexcept {
     try {
         std::lock_guard 锁(新方法互斥);
+        if (!结构仍存在()) return std::nullopt;
         const auto 信息 = 读取实例根结构(实例根节点, 特征概念服务_);
         if (!信息) return std::nullopt;
         // 候选之外的共享被调方法也必须完整可读，不能只确认根标签。
         for (const auto& 成员 : 全局基础数据集.查询目标字段(
             实例根节点, 方法实例根字段)) {
-            const auto 方法 = 读取方法信息(成员.所属节点, 特征概念服务_, *this);
+            const auto 方法 = 读取方法信息本体(成员.所属节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法 || !方法头有效(方法->方法头)
                 || !参数规格有效(方法->参数规格组, 特征概念服务_)
                 || (方法->实现方式 != 新方法实现方式::本能 && 方法->条件结果组.empty())
@@ -4100,7 +6244,7 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
                     [&](const auto& 配对) {
                         const 新方法条件结果定义 定义{配对.条件, 配对.结果, 配对.线性关系组};
                         return 条件结果有效(定义, 特征概念服务_, true)
-                            && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_);
+                            && 条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_);
                     })) return std::nullopt;
         }
         return 信息;
@@ -4136,7 +6280,7 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
     try {
         std::lock_guard 锁(新方法互斥);
         const auto 根 = 获取混合方法实例(实例根节点);
-        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
         if (!根 || !方法 || !方法->来源方法节点
             || 方法->实例根节点 != std::optional<稳定编码>{实例根节点}) return 失败(状态::入口拒绝);
         const auto 配对 = std::find_if(方法->条件结果组.begin(), 方法->条件结果组.end(),
@@ -4144,6 +6288,10 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
         if (配对 == 方法->条件结果组.end() || *配对 != 预期配对) return 失败(状态::来源已变化);
         if (所需条件域组.empty() || 所需条件域组.size() != 配对->条件.条件项组.size()
             || 配对->线性关系组.empty()) return 失败(状态::入口拒绝);
+        if(std::any_of(配对->条件.条件项组.begin(),配对->条件.条件项组.end(),
+            [](const auto& 项){return 项.引用内容条件.has_value()||项.特征前态限定.has_value();})
+            ||std::any_of(配对->结果.结果项组.begin(),配对->结果.结果项组.end(),[](const auto& x){return x.引用内容结果.has_value();})
+            ||含内容关系(配对->条件.参数关系组)||含内容关系(配对->结果.参数关系组))return 失败(状态::入口拒绝);
         auto 新条件 = 配对->条件;
         // 全组验证先于概念发布；不使用已经收窄的C重新定义比例。
         std::vector<特征概念信息> 类型组;
@@ -4198,6 +6346,9 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
             return 失败(状态::结构不一致);
         std::vector<稳定编码> 旧节点组{配对->条件节点}, 旧字段组;
         旧节点组.insert(旧节点组.end(), 项节点组->begin(), 项节点组->end());
+        const auto 旧限定组=读取有序子节点(配对->条件节点,初始场景限定字段,特征概念服务_);
+        if(!旧限定组)return 失败(状态::结构不一致);
+        旧节点组.insert(旧节点组.end(),旧限定组->begin(),旧限定组->end());
         for (const auto 节点 : 旧节点组) {
             for (const auto 关系类型 : {基础外部关系类型::父子, 基础外部关系类型::兄弟}) {
                 if (!全局基础数据集.查询源关系(节点, 关系类型).empty()
@@ -4205,16 +6356,17 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
             }
             std::size_t 持有数 = 0;
             const bool 是C = 节点 == 配对->条件节点;
+            const bool 是限定=std::find(旧限定组->begin(),旧限定组->end(),节点)!=旧限定组->end();
             // 公开L1只能按已知字段查询；未知非法引用由删除拒绝保留，不冒充已证明不存在。
             for (const auto* 字段 : 架构编码组()) {
                 for (const auto& 持有 : 全局基础数据集.查询目标字段(节点, *字段)) {
                     if (持有.所属节点 != (是C ? 配对->配对节点 : 配对->条件节点)
-                        || 持有.字段节点 != (是C ? 配对条件字段 : 条件项字段)) return 失败(状态::结构不一致);
+                        || 持有.字段节点 != (是C ? 配对条件字段 : 是限定 ? 初始场景限定字段 : 条件项字段)) return 失败(状态::结构不一致);
                     ++持有数;
                 }
             }
             if (持有数 != 1) return 失败(状态::结构不一致);
-            for (const auto& 规格 : 方法复制字段规格(是C ? 条件节点类型 : 条件项节点类型))
+            for (const auto& 规格 : 方法复制字段规格(是C ? 条件节点类型 : 是限定 ? 初始场景限定节点类型 : 条件项节点类型))
                 for (const auto& 字段 : 全局基础数据集.查询字段(节点, 规格.字段)) 旧字段组.push_back(字段.编码);
         }
         // 保证建立过程中登记新节点/字段不再因容器扩容而漏记。
@@ -4226,7 +6378,7 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
         if (!暂存 || *暂存 != 新条件) return 失败(状态::结构不一致);
         if (!全局基础数据集.修改字段节点(条件引用->关系, 新C)) return 失败(状态::资源失败);
         结果.已生效 = true;
-        const auto 读回 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!读回) return 失败(状态::已生效但结构不一致);
         const auto 新配对 = std::find_if(读回->条件结果组.begin(), 读回->条件结果组.end(),
             [&](const auto& x) { return x.配对节点 == 配对->配对节点; });
@@ -4238,6 +6390,8 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
         if (!清理(旧字段组, 旧节点组)) return 失败(状态::已生效但结构不一致);
         结果.状态 = 状态::已覆盖;
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        return 失败(状态::来源已变化);
     } catch (...) {
         return 失败(状态::资源失败);
     }
@@ -4253,7 +6407,7 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
         if (!信息) return {新方法操作状态::结构不一致, {}};
         新方法实例配对结果 结果;
         for (const auto 方法节点 : 信息->候选方法实例根组) {
-            const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+            const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法) return {新方法操作状态::结构不一致, {}};
             for (const auto& 配对 : 方法->条件结果组) {
                 结果.配对组.push_back({方法节点, 配对});
@@ -4261,6 +6415,8 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
         }
         结果.状态 = 新方法操作状态::已找到;
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化, {}};
     } catch (...) {
         return {新方法操作状态::资源失败, {}};
     }
@@ -4269,44 +6425,12 @@ std::optional<新方法混合实例信息> 新_方法类::获取混合方法实�
 bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
     try {
         std::lock_guard 锁(新方法互斥);
-        return 读取方法信息(节点, 特征概念服务_, *this).has_value();
+        return 读取方法信息(节点, 特征概念服务_, *this, 存在概念服务_).has_value();
     } catch (...) {
         return false;
     }
 }
 
-bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const {
-    try {
-        std::lock_guard 锁(新方法互斥);
-        if (!有效(方法节点) || !结构仍存在())
-            throw std::logic_error("retired settlement family requires a valid method owner");
-        // 来源与父代可以汇合为同一个祖先；只把灰色回边视为环。
-        std::map<稳定编码, std::uint8_t> 颜色;
-        std::vector<std::pair<稳定编码, bool>> 待查{{方法节点, false}};
-        bool 属于 = false;
-        while (!待查.empty()) {
-            const auto [节点, 已展开] = 待查.back(); 待查.pop_back();
-            if (已展开) { 颜色[节点] = 2; continue; }
-            const auto c = 颜色.find(节点);
-            if (c != 颜色.end()) {
-                if (c->second == 1) throw std::logic_error("settlement method ancestry cycle");
-                continue;
-            }
-            const auto 方法 = 读取方法信息(节点, 特征概念服务_, *this);
-            if (!方法) throw std::logic_error("settlement method ancestry reference is broken");
-            颜色.emplace(节点, 1);
-            属于 = 属于 || 方法->本能函数登记名 == 新本能函数登记名_服务值结算;
-            待查.push_back({节点, true});
-            if (方法->父代方法节点) 待查.push_back({*方法->父代方法节点, false});
-            if (方法->来源方法节点) 待查.push_back({*方法->来源方法节点, false});
-        }
-        return 属于;
-    } catch (const std::bad_alloc&) { throw; }
-    catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"识别历史服务结算方法",
-            L"方法来源或父代身份损坏，禁止把工程错误解释为普通可用方法。");
-    }
-}
 
 新方法候选结果 新_方法类::查询候选方法(
     const 新方法候选查询& 查询) const noexcept {
@@ -4377,7 +6501,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         });
 #endif
         for (const auto 方法节点 : *成员组) {
-            const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+            const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
             if (!方法) {
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
                 记录监控([&](auto& 文本) { 文本 << L"遍历方法=" << 方法节点.值 << L"；方法读取失败"; });
@@ -4395,12 +6519,6 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                 写编码组(文本, 方法->方法头.涉及特征类型概念组);
             });
 #endif
-            if (是历史服务结算方法(方法节点)) {
-#ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
-                记录监控([&](auto& 文本) { 文本 << L"排除方法=" << 方法节点.值 << L"；原因=历史结算方法"; });
-#endif
-                continue;
-            }
             if (方法->来源方法节点 || 方法->启用状态 != 新方法启用状态::启用
                 || (查询.作用域 && 方法->作用域 != *查询.作用域)
                 || (查询.实现方式 && 方法->实现方式 != *查询.实现方式)
@@ -4435,6 +6553,10 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         记录监控([&](auto& 文本) { 文本 << L"查询完成；候选数量=" << 结果.方法节点组.size(); });
 #endif
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        结果.方法节点组.clear();
+        return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
         结果.方法节点组.clear();
@@ -4452,7 +6574,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         std::lock_guard 锁(新方法互斥);
         if (!结构仍存在()) return 新方法操作状态::尚未初始化;
         核验治理组织就绪();
-        const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+        const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!方法) return 新方法操作状态::方法不存在;
         const 新方法虚拟存在引用 引用{方法节点, 方法->方法虚拟存在节点, 方法->启用特征节点};
         if (!内部治理世界_->读取方法治理场景(引用)) throw std::runtime_error("method scene missing before enabled update");
@@ -4468,10 +6590,6 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         if (方法->本能函数登记名 == 新本能函数登记名_旧两参数获取服务对象
             && (方法->父代方法节点 || !全局基础数据集.查询目标字段(方法节点, 方法父代字段).empty()
                 || 是有序服务对象规格(方法->参数规格组)))
-            return 新方法操作状态::入口拒绝;
-        if (方法->本能函数登记名 == 新本能函数登记名_服务值结算
-            && (方法->父代方法节点 || !全局基础数据集.查询目标字段(方法节点, 方法父代字段).empty()
-                || 是贡献Q声明(读取服务结算声明种类(*方法, 特征概念服务_))))
             return 新方法操作状态::入口拒绝;
         const auto 前时间 = 方法当前UTC纳秒();
         const auto s0 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
@@ -4509,6 +6627,8 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             || !内部治理世界_->读取方法特征变化(引用, *前状态, *s1.状态节点))
             throw std::runtime_error("method enabled update final readback failed");
         return 新方法操作状态::已修改;
+    } catch (const 引用内容定义前提变化&) {
+        return 新方法操作状态::定义前提已变化;
     } catch (...) {
         if (已证零发表) {
             if (准备.准备) 特征服务_.取消顶层I64更新(*准备.准备);
@@ -4528,8 +6648,8 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             结果.状态 = 新方法操作状态::尚未初始化;
             return 结果;
         }
-        const auto 组合 = 读取方法信息(请求.组合方法节点, 特征概念服务_, *this);
-        const auto 调用 = 读取方法信息(请求.调用方法节点, 特征概念服务_, *this);
+        const auto 组合 = 读取方法信息本体(请求.组合方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+        const auto 调用 = 读取方法信息本体(请求.调用方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!组合 || !调用) {
             结果.状态 = 新方法操作状态::方法不存在;
             return 结果;
@@ -4577,6 +6697,9 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         结果.状态 = 新方法操作状态::已建立;
         结果.节点 = 步骤;
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
         return 结果;
@@ -4588,7 +6711,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
     稳定编码 步骤节点) noexcept {
     try {
         std::lock_guard 锁(新方法互斥);
-        const auto 方法 = 读取方法信息(组合方法节点, 特征概念服务_, *this);
+        const auto 方法 = 读取方法信息(组合方法节点, 特征概念服务_, *this, 存在概念服务_);
         if (!方法) return 新方法操作状态::方法不存在;
         if (方法->实现方式 != 新方法实现方式::组合) {
             return 新方法操作状态::方法类型不符;
@@ -4605,6 +6728,8 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         return 全局基础数据集.修改字段节点(
                 当前组.front().编码, 步骤节点)
             ? 新方法操作状态::已修改 : 新方法操作状态::资源失败;
+    } catch (const 引用内容定义前提变化&) {
+        return 新方法操作状态::定义前提已变化;
     } catch (...) {
         return 新方法操作状态::资源失败;
     }
@@ -4615,7 +6740,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
     新方法结构节点结果 结果;
     try {
         std::lock_guard 锁(新方法互斥);
-        const auto 组合 = 读取方法信息(请求.组合方法节点, 特征概念服务_, *this);
+        const auto 组合 = 读取方法信息(请求.组合方法节点, 特征概念服务_, *this, 存在概念服务_);
         if (!组合) {
             结果.状态 = 新方法操作状态::方法不存在;
             return 结果;
@@ -4638,7 +6763,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             结果.状态 = 新方法操作状态::步骤不存在;
             return 结果;
         }
-        const auto 被调方法 = 读取方法信息(当前步骤->调用方法节点, 特征概念服务_, *this);
+        const auto 被调方法 = 读取方法信息本体(当前步骤->调用方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!被调方法) {
             结果.状态 = 新方法操作状态::结构不一致;
             return 结果;
@@ -4694,10 +6819,35 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         结果.状态 = 新方法操作状态::已建立;
         结果.节点 = 转移;
         return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
         return 结果;
     }
+}
+
+bool 新_方法类::装配正式信息参数读取接口(const 正式信息参数读取接口* reader) noexcept {
+    std::lock_guard lock(新方法互斥);
+    if(reader&&正式信息读取_&&reader!=正式信息读取_)return false;
+    正式信息读取_=reader;
+    return true;
+}
+bool 新_方法类::装配字段询问运行接口(std::shared_ptr<新本能字段询问运行接口> p) noexcept {
+    std::lock_guard lock(新方法互斥);
+    if (!p || (字段询问运行_ && 字段询问运行_!=p)) return false;
+    if (!字段询问运行_ && !退役字段询问运行_.expired()) return false;
+    字段询问运行_=std::move(p);
+    return true;
+}
+bool 新_方法类::解除字段询问运行接口(const 新本能字段询问运行接口& p) noexcept {
+    std::lock_guard lock(新方法互斥);
+    if (!字段询问运行_) return 退役字段询问运行_.lock().get()==&p;
+    if (字段询问运行_.get()!=&p) return false;
+    退役字段询问运行_=字段询问运行_;
+    字段询问运行_.reset();
+    return true;
 }
 
 新方法参数场景结果 新_方法类::建立参数场景(
@@ -4705,19 +6855,35 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
     std::vector<新方法参数角色绑定> 角色绑定组,
     const 新内部治理对象读取接口* 治理对象读取,
     const 新服务要求材料读取接口* 服务要求读取,
-    std::optional<新方法任务成员绑定> 任务成员绑定) const noexcept {
+    std::optional<新方法任务成员绑定> 任务成员绑定,std::optional<稳定编码> 执行分支,
+    std::shared_ptr<新本能需求运行接口> 需求运行) const noexcept {
     新方法参数场景结果 结果;
     try {
         std::optional<新方法信息> 方法;
+        const 正式信息参数读取接口* reader=nullptr;
+        std::shared_ptr<新本能字段询问运行接口> 字段询问运行;
+        std::vector<基础联合节点快照> 正式保护;
         {
             // 这里只在复制方法规格时持有本类锁；后续调用场景、存在、
             // 特征与概念服务时不跨服务持锁。
             std::lock_guard 锁(新方法互斥);
-            方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+            方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
+            reader=正式信息读取_;
+            字段询问运行=字段询问运行_;
         }
         if (!方法) {
             结果.状态 = 新方法操作状态::方法不存在;
             return 结果;
+        }
+        if(!方法->执行分支组.empty()||执行分支) {
+            const auto 分支读取=读取执行分支必要条件(方法节点,执行分支);
+            if(分支读取.状态!=新方法执行分支读取状态::已读取) {
+                结果.状态=分支读取.状态==新方法执行分支读取状态::前提已变化
+                    ? 新方法操作状态::定义前提已变化
+                    : 分支读取.状态==新方法执行分支读取状态::方法不存在
+                        ? 新方法操作状态::方法不存在 : 新方法操作状态::参数概念不相容;
+                return 结果;
+            }
         }
         if (!方法->参数规格组.empty() && 方法->参数规格组.front().有序规格) {
             if (!参数规格有效(方法->参数规格组, 特征概念服务_))
@@ -4743,6 +6909,20 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                     结果.状态 = 新方法操作状态::参数引用失效; return 结果;
                 }
                 if (规格.信息类型 == 新方法参数信息类型::存在) {
+                    const auto 普通定义=存在概念服务_.读取普通存在概念定义保护(规格.范围概念节点);
+                    if(普通定义.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
+                    if(普通定义.状态==正式概念读取状态::非本提供者概念) {
+                        if(!追加方法存在范围保护(规格.范围概念节点,存在概念服务_,正式保护))
+                            throw std::logic_error("formal parameter range declaration unavailable");
+                        if(!reader)throw std::logic_error("formal parameter reader not assembled");
+                        const auto read=reader->读取正式信息参数保护(节点,规格.范围概念节点);
+                        const auto state=正式参数状态(read,节点);
+                        if(state!=新方法操作状态::已找到){结果.状态=state;return 结果;}
+                        正式保护.insert(正式保护.end(),read.完整保护组.begin(),read.完整保护组.end());
+                        continue;
+                    }
+                    if(普通定义.状态!=正式概念读取状态::已读取||!普通定义.信息)
+                        throw std::logic_error("ordinary parameter range declaration unavailable");
                     if (!存在服务_.是存在节点(节点)) {
                         结果.状态 = 新方法操作状态::参数概念不相容; return 结果;
                     }
@@ -4766,9 +6946,16 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                     }
                 }
             }
+            {
+                std::lock_guard lock(新方法互斥);
+                if(正式信息读取_!=reader||读取方法信息(方法节点,特征概念服务_,*this,存在概念服务_)!=方法
+                    ||!方法联合保护仍成立(正式保护)) {
+                    结果.状态=新方法操作状态::定义前提已变化;return 结果;
+                }
+            }
             结果.参数场景 = std::shared_ptr<const 方法参数场景>(new 方法参数场景(
                 方法节点, std::move(角色绑定组), 特征服务_, 特征值服务_,
-                新方法参数场景用途::执行, 治理对象读取, {}, 服务要求读取, {}, 任务成员绑定));
+                新方法参数场景用途::执行, 治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行),reader,std::move(字段询问运行)));
             结果.状态 = 新方法操作状态::已建立;
             return 结果;
         }
@@ -5053,7 +7240,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         结果.参数场景 = std::shared_ptr<const 方法参数场景>(
             new 方法参数场景(方法节点, std::move(角色绑定组),
                 特征服务_, 特征值服务_, 新方法参数场景用途::执行,
-                治理对象读取, {}, 服务要求读取, {}, 任务成员绑定));
+                治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行)));
         结果.状态 = 新方法操作状态::已建立;
         return 结果;
     } catch (const std::bad_alloc&) {
@@ -5066,77 +7253,27 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         return 结果;
     } catch (const std::exception& 异常) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立参数场景", L"参数结构或概念核验发生工程异常。", 异常.what());
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        结果.参数场景.reset();
+        return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立参数场景", L"参数结构或概念核验发生未知工程异常。");
     }
 }
 
-新方法参数场景结果 新_方法类::建立服务结算治理参数场景(
-    稳定编码 方法节点, const 新任务贡献治理参数& 参数,
-    const 新内部治理对象读取接口& 治理对象读取) const noexcept {
-    新方法参数场景结果 结果;
-    try {
-        {
-            std::lock_guard 锁(新方法互斥);
-            const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
-            const auto 当前 = 查询本能登记结构(std::string(新本能函数登记名_服务值结算), 特征概念服务_, *this);
-            if (!方法 || 当前.状态 != 新方法操作状态::已找到 || 当前.方法节点 != 方法节点
-                || 方法->启用状态 != 新方法启用状态::启用 || 方法->来源方法节点 || 方法->实例根节点
-                || !是贡献Q声明(读取服务结算声明种类(*方法, 特征概念服务_))) {
-                结果.状态 = 新方法操作状态::参数引用失效; return 结果;
-            }
-        }
-        // 只消费中立读取接口；D/C/X/A的正式关系由任务owner在读取和执行两端核验。
-        std::set<稳定编码> 已见需求, 已见任务;
-        const auto 核验对象 = [&](const 新任务贡献治理对象引用& 对象, bool 必须有任务) {
-            if (!有效(对象.需求节点) || !已见需求.insert(对象.需求节点).second) return false;
-            if (!对象.任务引用) return !必须有任务 && !对象.服务值特征节点 && !对象.治理场景节点
-                && !对象.执行实例节点 && !对象.影响评估节点 && !对象.完成结算节点 && !对象.接收节点;
-            if (!对象.服务值特征节点 || !有效(*对象.服务值特征节点)
-                || !对象.治理场景节点 || !有效(*对象.治理场景节点)
-                || !已见任务.insert(对象.任务引用->任务节点).second) return false;
-            const auto f = 治理对象读取.读取任务虚拟存在特征组(*对象.任务引用);
-            return f && f->引用 == *对象.任务引用 && f->状态.特征节点 == 对象.任务引用->状态特征节点
-                && f->服务值 && f->服务值->特征节点 == 对象.服务值特征节点;
-        };
-        if (!有效(参数.完成来源.任务节点) || !有效(参数.完成来源.执行实例节点)
-            || !有效(参数.完成来源.影响评估节点) || !核验对象(参数.来源, true)
-            || 参数.来源.任务引用->任务节点 != 参数.完成来源.任务节点
-            || 参数.来源.执行实例节点 != 参数.完成来源.执行实例节点
-            || 参数.来源.影响评估节点 != 参数.完成来源.影响评估节点
-            || (参数.直接父 && !核验对象(*参数.直接父, false))) {
-            结果.状态 = 新方法操作状态::参数引用失效; return 结果;
-        }
-        std::optional<稳定编码> 前子需求;
-        for (const auto& 子 : 参数.直接子) {
-            if ((前子需求 && !(*前子需求 < 子.需求节点)) || !核验对象(子, false)) {
-                结果.状态 = 新方法操作状态::参数引用失效; return 结果;
-            }
-            前子需求 = 子.需求节点;
-        }
-        结果.参数场景 = std::shared_ptr<const 方法参数场景>(new 方法参数场景(
-            方法节点, {}, 特征服务_, 特征值服务_, 新方法参数场景用途::任务贡献治理,
-            &治理对象读取, {}, nullptr, 参数));
-        结果.状态 = 新方法操作状态::已建立;
-        return 结果;
-    } catch (...) {
-        结果.状态 = 新方法操作状态::资源失败;
-        结果.参数场景.reset();
-        return 结果;
-    }
-}
 
 新方法参数场景结果 新_方法类::建立模拟参数场景(
     稳定编码 方法节点,
     std::vector<新方法参数角色绑定> 绑定,
     std::shared_ptr<新方法模拟运行接口> 模拟,
-    std::optional<新方法任务成员绑定> 任务成员绑定) const noexcept {
+    std::optional<新方法任务成员绑定> 任务成员绑定,std::optional<稳定编码> 执行分支) const noexcept {
     新方法参数场景结果 结果;
     try {
         std::optional<新方法信息> 方法;
         {
             std::lock_guard 锁(新方法互斥);
-            方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+            方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
         }
         if (!方法 || 方法->来源方法节点 || 方法->实例根节点
             || 方法->实现方式 != 新方法实现方式::本能
@@ -5146,12 +7283,17 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             return 结果;
         }
 
-        if (方法->本能函数登记名 == 新本能函数登记名_服务值结算
-            && 是贡献Q声明(读取服务结算声明种类(*方法, 特征概念服务_))) {
-            // 贡献Q没有隔离模拟owner，不得经通用有序入口绕过。
-            结果.状态 = 新方法操作状态::参数概念不相容;
-            return 结果;
+        if(!方法->执行分支组.empty()||执行分支) {
+            const auto 分支读取=读取执行分支必要条件(方法节点,执行分支);
+            if(分支读取.状态!=新方法执行分支读取状态::已读取) {
+                结果.状态=分支读取.状态==新方法执行分支读取状态::前提已变化
+                    ? 新方法操作状态::定义前提已变化
+                    : 分支读取.状态==新方法执行分支读取状态::方法不存在
+                        ? 新方法操作状态::方法不存在 : 新方法操作状态::参数概念不相容;
+                return 结果;
+            }
         }
+
         if(方法->参数规格组.empty()||方法->参数规格组.front().有序规格) {
             if(!模拟||!模拟->核验模拟参数(方法节点,绑定)||绑定.size()!=方法->参数规格组.size()) {
                 结果.状态=新方法操作状态::参数引用失效;return 结果;
@@ -5164,24 +7306,35 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                 }
                 if(spec.信息类型==新方法参数信息类型::特征) {
                     const auto f=模拟->读取模拟特征(b.有序引用->信息节点);
-                    if(!f||!f->当前值||!特征概念为或从属于(f->特征概念节点,spec.范围概念节点,特征概念服务_)) {
+                    const auto 定义 = f ? 特征概念服务_.获取特征概念(f->特征概念节点) : std::nullopt;
+                    const bool 合法未知需求引用 = 定义
+                        && 定义->材料类型==特征概念材料物理类型::需求节点引用
+                        && 定义->比较规则==特征概念比较规则::需求身份精确;
+                    if(!f||(!f->当前值&&!合法未知需求引用)||!特征概念为或从属于(f->特征概念节点,spec.范围概念节点,特征概念服务_)) {
                         结果.状态=新方法操作状态::参数概念不相容;return 结果;
                     }
-                } else if(!模拟->读取模拟存在特征组(b.有序引用->信息节点)) {
-                    结果.状态=新方法操作状态::参数引用失效;return 结果;
+                } else {
+                    const auto ordinary=存在概念服务_.读取普通存在概念定义保护(spec.范围概念节点);
+                    if(ordinary.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
+                    if(ordinary.状态==正式概念读取状态::非本提供者概念) {
+                        if(!方法存在范围有效(spec.范围概念节点,存在概念服务_)) {
+                            结果.状态=新方法操作状态::参数规格不合法;return 结果;
+                        }
+                        const auto read=模拟->读取正式信息参数保护(b.有序引用->信息节点,spec.范围概念节点);
+                        const auto state=正式参数状态(read,b.有序引用->信息节点);
+                        if(state!=新方法操作状态::已找到){结果.状态=state;return 结果;}
+                    } else if(ordinary.状态!=正式概念读取状态::已读取||!ordinary.信息) {
+                        throw std::runtime_error("simulation ordinary range unavailable");
+                    } else if(!模拟->读取模拟存在特征组(b.有序引用->信息节点)) {
+                        结果.状态=新方法操作状态::参数引用失效;return 结果;
+                    }
                 }
             }
             结果.参数场景=std::shared_ptr<const 方法参数场景>(new 方法参数场景(
-                方法节点,std::move(绑定),特征服务_,特征值服务_,新方法参数场景用途::模拟,nullptr,std::move(模拟),nullptr,{},任务成员绑定));
+                方法节点,std::move(绑定),特征服务_,特征值服务_,新方法参数场景用途::模拟,nullptr,std::move(模拟),nullptr,{},任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_));
             结果.状态=新方法操作状态::已建立;return 结果;
         }
 
-        if (方法->本能函数登记名 == 新本能函数登记名_服务值结算
-            && 读取服务结算声明种类(*方法, 特征概念服务_) == 服务结算声明种类::按贡献Q) {
-            // 新Q尚无模拟owner；在取模拟端口或读取现实材料前结束。
-            结果.状态 = 新方法操作状态::参数概念不相容;
-            return 结果;
-        }
         // 本切片没有服务要求材料的模拟owner，必须在调用任何模拟/现实端口前拒绝。
         if (std::any_of(方法->参数规格组.begin(), 方法->参数规格组.end(),
                 [](const auto& 规格) { return 规格.有序规格 || 是服务要求参数对象(规格.对象种类); })
@@ -5193,8 +7346,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         }
         // 外部模拟owner核验在方法锁之外；这里绝不调用现实场景/存在owner。
         if (!模拟 || !节点仍存在(模拟->模拟根节点())
-            || !模拟->核验模拟参数(方法节点, 绑定)
-            || !模拟->获取服务值结算模拟端口()) {
+            || !模拟->核验模拟参数(方法节点, 绑定)) {
             结果.状态 = 新方法操作状态::参数引用失效;
             return 结果;
         }
@@ -5327,8 +7479,12 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         }
         结果.参数场景 = std::shared_ptr<const 方法参数场景>(new 方法参数场景(
             方法节点, std::move(绑定), 特征服务_, 特征值服务_,
-            新方法参数场景用途::模拟, nullptr, std::move(模拟)));
+            新方法参数场景用途::模拟, nullptr, std::move(模拟),nullptr,{},任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_));
         结果.状态 = 新方法操作状态::已建立;
+        return 结果;
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法操作状态::定义前提已变化;
+        结果.参数场景.reset();
         return 结果;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
@@ -5376,7 +7532,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         }
         结果.参数场景 = std::shared_ptr<const 方法参数场景>(
             new 方法参数场景({}, std::move(角色绑定组),
-                特征服务_, 特征值服务_, 新方法参数场景用途::登记, nullptr));
+                特征服务_, 特征值服务_, 新方法参数场景用途::登记, nullptr,{},nullptr,{},{},{}));
         结果.状态 = 新方法操作状态::已建立;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
@@ -5396,7 +7552,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             }
         }
         结果.参数场景 = std::shared_ptr<const 方法参数场景>(new 方法参数场景(
-            {}, {}, 特征服务_, 特征值服务_, 新方法参数场景用途::登记, nullptr));
+            {}, {}, 特征服务_, 特征值服务_, 新方法参数场景用途::登记, nullptr,{},nullptr,{},{},{}));
         结果.状态 = 新方法操作状态::已建立;
     } catch (...) {
         结果.状态 = 新方法操作状态::资源失败;
@@ -5421,14 +7577,10 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
         {
             // 外部函数调用期间不得持有方法结构互斥。
             std::lock_guard 锁(新方法互斥);
-            方法 = 读取方法信息(方法节点, 特征概念服务_, *this);
+            方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
         }
         if (!方法) {
             结果.状态 = 新方法本能调用状态::方法不存在;
-            return 结果;
-        }
-        if (是历史服务结算方法(方法节点)) {
-            结果.状态 = 新方法本能调用状态::方法停用;
             return 结果;
         }
         if (方法->启用状态 != 新方法启用状态::启用) {
@@ -5443,28 +7595,13 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
             结果.状态 = 新方法本能调用状态::函数未登记;
             return 结果;
         }
-        const bool 治理 = 参数场景.用途() == 新方法参数场景用途::任务贡献治理;
-        if (治理 != 参数场景.读取任务贡献治理参数().has_value()
-            || (治理 && (方法->本能函数登记名 != 新本能函数登记名_服务值结算
-                || !参数场景.全部角色绑定().empty()
-                || !是贡献Q声明(读取服务结算声明种类(*方法, 特征概念服务_))))) {
+        if (参数场景.用途() == 新方法参数场景用途::任务贡献治理
+            || 参数场景.读取任务贡献治理参数()) {
             结果.状态 = 新方法本能调用状态::参数场景不匹配; return 结果;
-        }
-        if (方法->本能函数登记名 == 新本能函数登记名_服务值结算) {
-            std::lock_guard 锁(新方法互斥);
-            const auto 当前 = 查询本能登记结构(std::string(新本能函数登记名_服务值结算), 特征概念服务_, *this);
-            // 旧冻结副本也不能借原登记名执行新Q函数。
-            const auto 抽象 = 方法->来源方法节点.value_or(方法->节点);
-            if (当前.状态 != 新方法操作状态::已找到 || 当前.方法节点 != 抽象) {
-                结果.状态 = 新方法本能调用状态::方法停用; return 结果;
-            }
-            if (方法->来源方法节点 || 方法->实例根节点) {
-                结果.状态 = 新方法本能调用状态::参数场景不匹配; return 结果;
-            }
         }
         if (方法->本能函数登记名 == 新本能函数登记名_旧两参数获取服务对象) {
             std::lock_guard 锁(新方法互斥);
-            const auto 当前 = 查询本能登记结构(std::string(新本能函数登记名_旧两参数获取服务对象), 特征概念服务_, *this);
+            const auto 当前 = 查询本能登记结构(std::string(新本能函数登记名_旧两参数获取服务对象), 特征概念服务_, *this, 存在概念服务_);
             if (当前.状态 != 新方法操作状态::已找到
                 || 当前.方法节点 != 方法->来源方法节点.value_or(方法->节点)
                 || !是有序服务对象规格(方法->参数规格组)) {
@@ -5478,11 +7615,27 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
                 : 新方法本能调用状态::函数未登记;
             return 结果;
         }
+        if(!方法->执行分支组.empty()||参数场景.执行分支节点()) {
+            const auto 分支读取=读取执行分支必要条件(方法节点,参数场景.执行分支节点());
+            if(分支读取.状态!=新方法执行分支读取状态::已读取) {
+                结果.状态=分支读取.状态==新方法执行分支读取状态::前提已变化
+                    ? 新方法本能调用状态::定义前提已变化
+                    : 分支读取.状态==新方法执行分支读取状态::方法不存在
+                        ? 新方法本能调用状态::方法不存在 : 新方法本能调用状态::参数场景不匹配;
+                return 结果;
+            }
+        }
         结果.本次条件结果对 = 函数.函数(参数场景);
+        const auto returned=结果.本次条件结果对->条件.执行分支节点;
+        if((returned&&returned!=参数场景.执行分支节点())
+            ||(结果.本次条件结果对->结果.状态==新本能函数执行状态::已按合同返回&&returned!=参数场景.执行分支节点()))
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"核验本能执行分支",L"函数返回分支与本次参数场景选择不同。");
         结果.状态 = 新方法本能调用状态::已调用;
         return 结果;
     } catch (const std::bad_alloc&) {
         结果.状态 = 新方法本能调用状态::资源失败;
+    } catch (const 引用内容定义前提变化&) {
+        结果.状态 = 新方法本能调用状态::定义前提已变化;
     } catch (...) {
         结果.状态 = 新方法本能调用状态::内部错误;
     }
@@ -5492,7 +7645,7 @@ bool 新_方法类::是历史服务结算方法(稳定编码 方法节点) const
 
 std::optional<新方法直接调用身份> 新_方法类::读取直接调用身份(
     稳定编码 调用) const {
-    std::lock_guard 锁(新方法互斥);
+    std::unique_lock 锁(新方法互斥);
     if (!有效(调用) || !有效(直接调用根)) return std::nullopt;
     确保直接调用结构();
     const auto 成员 = 读取多节点字段(直接调用根, 直接调用成员字段, 特征概念服务_);
@@ -5506,35 +7659,93 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
     const auto 收束 = 读取唯一I64字段(调用, 直接调用收束字段);
     const auto 动作 = 读取可选节点字段(调用, 直接调用动作字段);
     const auto 参数节点组 = 读取多节点字段(调用, 直接调用参数字段, 特征概念服务_);
+    const auto 方法信息 = 方法 ? 获取方法(*方法) : std::nullopt;
     if (!方法 || !现实 || !外设 || !收束 || !动作 || !参数节点组
-        || (*收束 != 0 && *收束 != 1) || 参数节点组->size() != 6)
+        || !方法信息 || !参数规格有效(方法信息->参数规格组, 特征概念服务_)
+        || (*收束 != 0 && *收束 != 1)
+        || 参数节点组->size() != 方法信息->参数规格组.size())
         throw std::runtime_error("direct invocation content damaged");
     新方法直接调用身份 结果{调用, *方法, *现实, *外设, {}, {}, *收束 == 1};
+    std::vector<基础联合节点快照> 类别保护;
     if (有效(*动作)) 结果.动作节点 = *动作;
     for (const auto 参数 : *参数节点组) {
         const auto 序号 = 读取唯一I64字段(参数, 直接调用序号字段);
-        const auto 类型 = 读取唯一I64字段(参数, 直接调用信息类型字段);
+        const auto 类型 = 读取持久参数类别(参数, 直接调用信息类型字段, 直接调用类别概念字段,
+            存在概念服务_, 特征概念服务_);
         const auto 引用 = 读取唯一节点字段(参数, 直接调用信息引用字段);
         if (!节点类型为(参数, 直接调用参数类型) || !序号 || !类型 || !引用
-            || *序号 < 1 || *序号 > 6
-            || (*类型 != static_cast<std::int64_t>(新方法参数信息类型::存在)
-                && *类型 != static_cast<std::int64_t>(新方法参数信息类型::特征)))
+            || *序号 < 1 || static_cast<std::uint64_t>(*序号) > 参数节点组->size())
             throw std::runtime_error("direct invocation parameter damaged");
+        if (const auto c = 读取唯一节点字段(参数, 直接调用类别概念字段)) {
+            const auto p = 解析参数类别概念保护(*c, 存在概念服务_, 特征概念服务_);
+            if (p.分派类型 != *类型) throw 引用内容定义前提变化{};
+            类别保护.insert(类别保护.end(), p.完整保护组.begin(), p.完整保护组.end());
+        }
         结果.参数引用组.push_back({static_cast<std::uint32_t>(*序号),
-            static_cast<新方法参数信息类型>(*类型), *引用});
+            *类型, *引用});
     }
     std::sort(结果.参数引用组.begin(), 结果.参数引用组.end(),
         [](const auto& a, const auto& b) { return a.序号 < b.序号; });
-    for (std::uint32_t i = 1; i <= 6; ++i)
-        if (结果.参数引用组[i - 1].序号 != i)
+    for (std::size_t i = 0; i < 结果.参数引用组.size(); ++i) {
+        const auto& 规格 = 方法信息->参数规格组[i].有序规格;
+        if (!规格 || 结果.参数引用组[i].序号 != 规格->序号
+            || 结果.参数引用组[i].信息类型 != 规格->信息类型)
             throw std::runtime_error("direct invocation parameter order damaged");
+        const auto 引用 = 结果.参数引用组[i].信息节点;
+        if (规格->信息类型 == 新方法参数信息类型::存在) {
+            const auto ordinary=存在概念服务_.读取普通存在概念定义保护(规格->范围概念节点);
+            if(ordinary.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
+            if(ordinary.状态==正式概念读取状态::非本提供者概念) {
+                if(!追加方法存在范围保护(规格->范围概念节点,存在概念服务_,类别保护))
+                    throw std::runtime_error("direct invocation formal range invalid");
+                const auto* reader=正式信息读取_;
+                if(!reader)throw std::runtime_error("direct invocation formal reader unavailable");
+                const auto invocation=全局基础数据集.查询节点组完整结构({调用});
+                if(invocation.状态!=基础结构操作状态::已完成||invocation.节点组.size()!=1||!invocation.节点组.front().快照)
+                    throw std::runtime_error("direct invocation formal read premise unavailable");
+                const auto C=规格->范围概念节点;
+                锁.unlock();
+                const auto read=reader->读取正式信息参数保护(引用,C);
+                锁.lock();
+                if(正式信息读取_!=reader||获取方法(*方法)!=方法信息
+                    ||!方法联合保护仍成立({*invocation.节点组.front().快照}))throw 引用内容定义前提变化{};
+                const auto state=正式参数状态(read,引用);
+                if(state==新方法操作状态::定义前提已变化)throw 引用内容定义前提变化{};
+                if(state!=新方法操作状态::已找到)throw std::runtime_error("direct invocation formal identity unavailable");
+                类别保护.insert(类别保护.end(),read.完整保护组.begin(),read.完整保护组.end());
+            } else if(ordinary.状态!=正式概念读取状态::已读取||!ordinary.信息||!存在服务_.是存在节点(引用))
+                throw std::runtime_error("direct invocation reference identity damaged");
+        } else if (!特征服务_.获取特征(引用)) throw std::runtime_error("direct invocation reference identity damaged");
+    }
+    if (!类别保护.empty()) {
+        std::map<稳定编码, 基础联合节点快照> 预期;
+        for (const auto& p : 类别保护) {
+            const auto [it, added] = 预期.emplace(p.结构.节点.编码, p);
+            if (!added && (it->second.结构.字段组 != p.结构.字段组 || it->second.入向字段组 != p.入向字段组
+                || it->second.入向外部关系组 != p.入向外部关系组 || it->second.出向外部关系组 != p.出向外部关系组))
+                throw 引用内容定义前提变化{};
+        }
+        std::vector<稳定编码> ids;
+        for (const auto& [id, p] : 预期) ids.push_back(id);
+        const auto r = 全局基础数据集.查询节点组完整结构(ids);
+        if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != ids.size())
+            throw std::runtime_error("direct invocation category protection unavailable");
+        for (const auto& item : r.节点组) {
+            if (!item.快照) throw std::runtime_error("direct invocation category snapshot missing");
+            const auto& n = *item.快照;
+            const auto& p = 预期.at(n.结构.节点.编码);
+            if (p.结构.字段组 != n.结构.字段组 || p.入向字段组 != n.入向字段组
+                || p.入向外部关系组 != n.入向外部关系组 || p.出向外部关系组 != n.出向外部关系组)
+                throw 引用内容定义前提变化{};
+        }
+    }
     return 结果;
 }
 
 新方法直接调用身份 新_方法类::建立直接调用身份(
     稳定编码 方法节点, const std::vector<新方法参数角色绑定>& 绑定组,
     稳定编码 现实场景, 稳定编码 外设场景) {
-    std::lock_guard 锁(新方法互斥);
+    std::unique_lock 锁(新方法互斥);
     确保直接调用结构();
     const auto 方法 = 获取方法(方法节点);
     if (!方法 || 方法->实现方式 != 新方法实现方式::本能
@@ -5542,23 +7753,63 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
         || !有效(现实场景) || !有效(外设场景)
         || !全局基础数据集.查询节点(现实场景)
         || !全局基础数据集.查询节点(外设场景)
-        || 绑定组.size() != 6)
+        || !参数规格有效(方法->参数规格组, 特征概念服务_)
+        || 绑定组.size() != 方法->参数规格组.size())
         throw std::invalid_argument("direct invocation input invalid");
     std::vector<新方法有序参数引用> 参数;
+    std::vector<基础联合节点快照> 正式保护;
     for (const auto& 绑定 : 绑定组) {
-        if (!绑定.有序引用 || !有效(绑定.有序引用->信息节点))
+        if (!绑定.有序引用 || !有效(绑定.有序引用->信息节点)
+            || 有效(绑定.参数角色节点) || 绑定.实际存在节点
+            || !绑定.实际特征组.empty() || 绑定.任务虚拟存在引用
+            || 绑定.服务要求分项引用 || 绑定.服务要求确认引用
+            || (绑定.世界场景节点 && !场景服务_.是场景节点(*绑定.世界场景节点)))
             throw std::invalid_argument("direct invocation parameter missing");
         参数.push_back(*绑定.有序引用);
     }
     std::sort(参数.begin(), 参数.end(),
         [](const auto& a, const auto& b) { return a.序号 < b.序号; });
-    for (std::uint32_t i = 1; i <= 6; ++i)
-        if (参数[i - 1].序号 != i
-            || 参数[i - 1].信息类型 != (i == 3 || i == 5 || i == 6
-                ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在)
-            || !全局基础数据集.查询节点(参数[i - 1].信息节点))
+    for (std::size_t i = 0; i < 参数.size(); ++i) {
+        const auto& 规格 = 方法->参数规格组[i].有序规格;
+        if (!规格 || 参数[i].序号 != 规格->序号
+            || 参数[i].信息类型 != 规格->信息类型
+            || !全局基础数据集.查询节点(参数[i].信息节点))
             throw std::invalid_argument("direct invocation parameter shape invalid");
+        if (规格->信息类型 == 新方法参数信息类型::存在) {
+            const auto ordinary=存在概念服务_.读取普通存在概念定义保护(规格->范围概念节点);
+            if(ordinary.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
+            if(ordinary.状态==正式概念读取状态::非本提供者概念) {
+                if(!追加方法存在范围保护(规格->范围概念节点,存在概念服务_,正式保护))
+                    throw std::invalid_argument("direct invocation formal range invalid");
+                const auto* reader=正式信息读取_;
+                if(!reader)throw std::runtime_error("direct invocation formal reader unavailable");
+                const auto N=参数[i].信息节点,C=规格->范围概念节点;
+                锁.unlock();
+                const auto read=reader->读取正式信息参数保护(N,C);
+                锁.lock();
+                if(正式信息读取_!=reader||获取方法(方法节点)!=方法)throw 引用内容定义前提变化{};
+                const auto state=正式参数状态(read,N);
+                if(state==新方法操作状态::定义前提已变化)throw 引用内容定义前提变化{};
+                if(state!=新方法操作状态::已找到)throw std::invalid_argument("direct invocation formal parameter unsupported or absent");
+                正式保护.insert(正式保护.end(),read.完整保护组.begin(),read.完整保护组.end());
+                continue;
+            }
+            if(ordinary.状态!=正式概念读取状态::已读取||!ordinary.信息)
+                throw std::runtime_error("direct invocation ordinary range unavailable");
+            const auto 概念 = 存在概念服务_.获取存在概念(规格->范围概念节点);
+            if (!存在服务_.是存在节点(参数[i].信息节点) || !概念
+                || (概念->种类 == 存在概念种类::专属
+                    ? 概念->对应存在节点 != 参数[i].信息节点
+                    : 存在服务_.匹配存在概念(参数[i].信息节点, 规格->范围概念节点).状态 != 新存在概念匹配状态::匹配))
+                throw std::invalid_argument("direct invocation existence outside declared range");
+        } else {
+            const auto 特征 = 特征服务_.获取特征(参数[i].信息节点);
+            if (!特征 || !特征概念为或从属于(特征->特征概念节点, 规格->范围概念节点, 特征概念服务_))
+                throw std::invalid_argument("direct invocation feature outside declared range");
+        }
+    }
     基础节点组追加请求 请求;
+    请求.预期联合节点组=std::move(正式保护);
     基础组内新节点 调用;
     调用.字段组 = {{节点类型字段, 直接调用类型},
         {直接调用方法字段, 方法节点}, {直接调用现实场景字段, 现实场景},
@@ -5568,22 +7819,40 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
         调用.字段组.push_back({直接调用参数字段, 基础组内节点引用{i + 1}});
     请求.新节点组.push_back(std::move(调用));
     for (const auto& 项 : 参数) {
+        const auto 类别 = 读取参数类别概念保护(项.信息类型, 存在概念服务_, 特征概念服务_);
+        请求.预期联合节点组.insert(请求.预期联合节点组.end(), 类别.完整保护组.begin(), 类别.完整保护组.end());
         基础组内新节点 p;
         p.字段组 = {{节点类型字段, 直接调用参数类型},
             {直接调用序号字段, 基础值{static_cast<std::int64_t>(项.序号)}},
-            {直接调用信息类型字段, 基础值{static_cast<std::int64_t>(项.信息类型)}},
+            {直接调用类别概念字段, 类别.类别概念},
             {直接调用信息引用字段, 项.信息节点}};
         请求.新节点组.push_back(std::move(p));
     }
     请求.追加字段组.push_back({直接调用根, 直接调用成员字段, 基础组内节点引用{0}});
-    const auto 根快照 = 全局基础数据集.查询节点组完整结构({直接调用根});
-    if (根快照.状态 != 基础结构操作状态::已完成 || 根快照.节点组.size() != 1
-        || !根快照.节点组.front().快照)
+    const std::vector<稳定编码> 直接保护节点{直接调用根, 节点类型字段, 直接调用类型,
+        直接调用参数类型, 直接调用方法字段, 直接调用现实场景字段, 直接调用外设场景字段,
+        直接调用参数字段, 直接调用序号字段, 直接调用类别概念字段,
+        直接调用信息引用字段, 直接调用收束字段, 直接调用成员字段};
+    const auto 根快照 = 全局基础数据集.查询节点组完整结构(直接保护节点);
+    if (根快照.状态 != 基础结构操作状态::已完成 || 根快照.节点组.size() != 直接保护节点.size())
         throw std::runtime_error("direct invocation root snapshot unavailable");
-    请求.预期联合节点组.push_back(*根快照.节点组.front().快照);
+    for (const auto& n : 根快照.节点组) {
+        if (!n.快照) throw std::runtime_error("direct invocation schema protection unavailable");
+        请求.预期联合节点组.push_back(*n.快照);
+    }
+    std::map<稳定编码, 基础联合节点快照> 唯一保护;
+    for (const auto& n : 请求.预期联合节点组) {
+        const auto [it, added] = 唯一保护.emplace(n.结构.节点.编码, n);
+        if (!added && (it->second.结构.字段组 != n.结构.字段组 || it->second.入向字段组 != n.入向字段组
+            || it->second.入向外部关系组 != n.入向外部关系组 || it->second.出向外部关系组 != n.出向外部关系组))
+            throw 引用内容定义前提变化{};
+    }
+    请求.预期联合节点组.clear();
+    for (const auto& [id, n] : 唯一保护) 请求.预期联合节点组.push_back(n);
     const auto 发布 = 全局基础数据集.原子追加节点组(请求);
-    if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 7)
+    if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 参数.size() + 1)
         throw std::runtime_error("direct invocation atomic publication failed");
+    锁.unlock();
     const auto 读回 = 读取直接调用身份(发布.新节点组.front());
     if (!读回 || 读回->方法节点 != 方法节点 || 读回->现实场景 != 现实场景
         || 读回->外设场景 != 外设场景 || 读回->参数引用组 != 参数
@@ -5593,12 +7862,15 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
 }
 
 void 新_方法类::绑定直接调用动作(稳定编码 调用, 稳定编码 动作) {
-    std::lock_guard 锁(新方法互斥);
     const auto 旧 = 读取直接调用身份(调用);
+    std::unique_lock 锁(新方法互斥);
     if (!旧 || 旧->已收束 || !有效(动作) || !全局基础数据集.查询节点(动作))
         throw std::invalid_argument("direct invocation action invalid");
     if (旧->动作节点 == 动作) return;
     if (旧->动作节点) throw std::runtime_error("direct invocation action conflict");
+    const auto currentAction=读取可选节点字段(调用,直接调用动作字段);
+    if(!currentAction||有效(*currentAction)||读取唯一I64字段(调用,直接调用收束字段)!=std::optional<std::int64_t>{0})
+        throw 引用内容定义前提变化{};
     const auto 快照 = 全局基础数据集.查询节点组完整结构({调用});
     if (快照.状态 != 基础结构操作状态::已完成 || 快照.节点组.size() != 1
         || !快照.节点组.front().快照)
@@ -5608,13 +7880,15 @@ void 新_方法类::绑定直接调用动作(稳定编码 调用, 稳定编码 �
     请求.追加字段组.push_back({调用, 直接调用动作字段, 动作});
     if (全局基础数据集.原子比较变更字段组(请求).状态 != 基础字段组合变化状态::已完成)
         throw std::runtime_error("direct invocation action publication failed");
-    if (读取直接调用身份(调用)->动作节点 != 动作)
+    锁.unlock();
+    const auto readback=读取直接调用身份(调用);
+    if (!readback||readback->动作节点 != 动作)
         throw std::runtime_error("direct invocation action readback failed");
 }
 
 void 新_方法类::收束直接调用身份(稳定编码 调用) {
-    std::lock_guard 锁(新方法互斥);
     const auto 旧 = 读取直接调用身份(调用);
+    std::unique_lock 锁(新方法互斥);
     if (!旧) throw std::invalid_argument("direct invocation absent");
     if (旧->已收束) return;
     const auto 字段 = 读取唯一I64字段记录(调用, 直接调用收束字段);
@@ -5627,7 +7901,9 @@ void 新_方法类::收束直接调用身份(稳定编码 调用) {
     请求.替换字段组.push_back({字段->关系, 基础值{std::int64_t{1}}});
     if (全局基础数据集.原子比较变更字段组(请求).状态 != 基础字段组合变化状态::已完成)
         throw std::runtime_error("direct invocation close failed");
-    if (!读取直接调用身份(调用)->已收束)
+    锁.unlock();
+    const auto readback=读取直接调用身份(调用);
+    if (!readback||!readback->已收束)
         throw std::runtime_error("direct invocation close readback failed");
 }
 
@@ -5636,6 +7912,355 @@ void 新_方法类::收束直接调用身份(稳定编码 调用) {
 namespace 海中鱼巣 {
 std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定编码 C) const noexcept {
     return 存在概念服务_.获取存在概念(C);
+}
+存在范围语义保护结果 新_方法类::读取模拟存在范围语义保护(稳定编码 C) const noexcept {
+    return 存在概念服务_.读取存在范围语义保护(C);
+}
+存在概念实例候选读取结果 新_方法类::读取模拟存在原型候选(稳定编码 C) const noexcept {
+    return 存在概念服务_.读取下位专属实例候选完整(C);
+}
+新存在概念匹配结果 新_方法类::比较模拟存在匹配材料(const 新存在概念匹配材料& m) const noexcept {
+    return 存在服务_.比较存在概念匹配材料(m);
+}
+新方法执行分支读取结果 新_方法类::读取执行分支必要条件(稳定编码 M,std::optional<稳定编码> B) const noexcept {
+    try {
+        std::lock_guard lock(新方法互斥);
+        新方法执行分支读取结果 out;
+        if(!节点类型为(M,方法节点类型))return out;
+        const auto m=读取方法信息(M,特征概念服务_,*this,存在概念服务_);
+        if(!m)throw std::runtime_error("method branch structure unreadable");
+        if(m->执行分支组.empty()) {
+            if(B){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
+        } else {
+            if(!B){out.状态=新方法执行分支读取状态::分支未指定;return out;}
+            const auto it=std::find_if(m->执行分支组.begin(),m->执行分支组.end(),[&](const auto& b){return b.节点==*B;});
+            if(it==m->执行分支组.end()){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
+            out.分支=*it;
+        }
+        out.有效必要条件.条件.关系规则=新方法项关系规则::全部成立;
+        // 规格隐含的存在范围只投影到调用期视图，不回写Vm或历史C/R。
+        for(const auto& p:m->参数规格组)if(p.有序规格
+            &&p.有序规格->信息类型==新方法参数信息类型::存在) {
+            新方法条件项定义 c;c.参数序号=p.有序规格->序号;
+            c.存在概念节点=p.有序规格->范围概念节点;
+            out.有效必要条件.条件.条件项组.push_back(std::move(c));
+        }
+        if(m->初始必要条件) {
+            合入必要条件(out.有效必要条件,m->初始必要条件->条件);
+            for(const auto& r:m->初始必要条件->场景事实限定组)
+                if(std::find(out.有效必要条件.场景事实限定组.begin(),out.有效必要条件.场景事实限定组.end(),r)
+                    ==out.有效必要条件.场景事实限定组.end())out.有效必要条件.场景事实限定组.push_back(r);
+        }
+        if(out.分支)合入必要条件(out.有效必要条件,out.分支->定义.必要条件);
+        for(const auto& r:m->初始模拟关系组)
+            if(std::find(out.有效必要条件.条件.参数关系组.begin(),out.有效必要条件.条件.参数关系组.end(),r)==out.有效必要条件.条件.参数关系组.end())out.有效必要条件.条件.参数关系组.push_back(r);
+        out.状态=新方法执行分支读取状态::已读取;return out;
+    } catch (const 引用内容定义前提变化&) {
+        新方法执行分支读取结果 结果;结果.状态=新方法执行分支读取状态::前提已变化;return 结果;
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式执行分支",L"方法分支完整读取或投影发生工程故障。");
+    }
+}
+新方法参数特征声明读取结果 新_方法类::读取存在参数特征声明(
+    稳定编码 M,std::optional<稳定编码> B,std::uint32_t position,稳定编码 FT) const noexcept {
+    struct 声明读取前提变化 final {};
+    struct 声明复用投影 final {
+        const 新_方法类* owner=nullptr;
+        稳定编码 方法节点;
+        std::optional<稳定编码> 分支节点;
+        std::uint32_t 位置=0;
+        稳定编码 特征类型;
+        新方法信息 方法;
+        std::vector<基础联合节点快照> 保护;
+        std::vector<新特征匹配定义快照> 定义;
+        新方法参数特征声明读取结果 结果;
+    };
+    // 只保留本线程上一个完整且已授权的查询；纯值投影不持owner或节点存续权。
+    static thread_local std::optional<声明复用投影> 上次声明;
+    try {
+        std::lock_guard lock(新方法互斥);
+        新方法参数特征声明读取结果 out;
+        if(上次声明&&(上次声明->owner!=this||上次声明->方法节点!=M||上次声明->分支节点!=B))上次声明.reset();
+        if(!节点类型为(M,方法节点类型)){上次声明.reset();return out;}
+        const auto method=读取方法信息(M,特征概念服务_,*this,存在概念服务_);
+        if(!method)throw std::runtime_error("existence feature declaration method unreadable");
+        std::vector<基础联合节点快照> protection;
+        std::vector<新特征匹配定义快照> definitions;
+        const auto same=[](const auto& a,const auto& b) {
+            return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组
+                &&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;
+        };
+        const auto 依赖仍同=[&](const auto& capturedDefinitions,const auto& capturedProtection) {
+            for(const auto& d:capturedDefinitions)
+                if(特征服务_.捕获特征匹配定义(d.概念节点)!=std::optional{d})return false;
+            std::vector<稳定编码> ids;for(const auto& p:capturedProtection)ids.push_back(p.结构.节点.编码);
+            const auto current=全局基础数据集.查询节点组完整结构(ids);
+            if(current.状态!=基础结构操作状态::已完成||current.节点组.size()!=ids.size())
+                throw std::runtime_error("existence feature declaration recheck failed");
+            for(std::size_t i=0;i<capturedProtection.size();++i)
+                if(!current.节点组[i].快照||!same(capturedProtection[i],*current.节点组[i].快照))return false;
+            return true;
+        };
+        if(上次声明) {
+            const bool 查询相同=上次声明->位置==position&&上次声明->特征类型==FT;
+            if(查询相同&&上次声明->方法==*method&&依赖仍同(上次声明->定义,上次声明->保护)) {
+                // 本次完整方法读取和依赖读回已核对缓存结果，不再重复尾核。
+                return 上次声明->结果;
+            }
+            // 仅入口旧副本失效可回原采集；基础读取故障已抛出，不能作为正常miss。
+            上次声明.reset();
+        }
+        const auto merge=[&](const auto& group) {
+            for(const auto& s:group) {
+                const auto it=std::find_if(protection.begin(),protection.end(),[&](const auto& x){return x.结构.节点==s.结构.节点;});
+                if(it==protection.end())protection.push_back(s);
+                else if(!same(*it,s))throw 声明读取前提变化{};
+            }
+        };
+        // 复用方法owner既有独占图schema，包含B/C/R及所属引用；不输出新CAS凭据。
+        std::set<稳定编码> nodes{M},refs;
+        std::vector<稳定编码> pending{M};
+        for(std::size_t i=0;i<pending.size();++i) {
+            const auto n=pending[i];const auto type=读取唯一节点字段(n,节点类型字段);
+            const auto snapshot=全局基础数据集.查询完整节点结构(n);
+            if(!type||!snapshot.结构)throw std::runtime_error("existence feature declaration graph unreadable");
+            const auto schema=方法复制字段规格(*type);
+            if(schema.empty())throw std::runtime_error("existence feature declaration graph type invalid");
+            for(const auto& f:snapshot.结构->字段组) {
+                refs.insert(f.字段节点);
+                const auto* ref=std::get_if<稳定编码>(&f.内容);if(!ref)continue;refs.insert(*ref);
+                const auto rule=std::find_if(schema.begin(),schema.end(),[&](const auto& x){return x.字段==f.字段节点;});
+                if(rule!=schema.end()&&(rule->种类==复制字段种类::独占子节点||rule->种类==复制字段种类::调用方法)
+                    &&nodes.insert(*ref).second)pending.push_back(*ref);
+            }
+        }
+        refs.insert(nodes.begin(),nodes.end());
+        const auto snapshots=全局基础数据集.查询节点组完整结构({refs.begin(),refs.end()});
+        if(snapshots.状态!=基础结构操作状态::已完成||snapshots.节点组.size()!=refs.size())
+            throw std::runtime_error("existence feature declaration graph capture failed");
+        for(const auto& n:snapshots.节点组) {
+            if(!n.快照)throw std::runtime_error("existence feature declaration graph snapshot missing");
+            merge(std::vector<基础联合节点快照>{*n.快照});
+        }
+        const auto finish=[&]() {
+            const auto after=读取方法信息本体(M,特征概念服务_,*this,存在概念服务_,false,true);
+            if(!after||*after!=*method)throw 声明读取前提变化{};
+            std::sort(protection.begin(),protection.end(),[](const auto& a,const auto& b){return a.结构.节点.编码<b.结构.节点.编码;});
+            if(!依赖仍同(definitions,protection))throw 声明读取前提变化{};
+            if(out.状态==新方法参数特征读取状态::已读取&&out.特征定义) {
+                // 先在局部完整构造；部分采集、未声明与所有非成功均不发表缓存。
+                声明复用投影 prepared{this,M,B,position,FT,*method,protection,definitions,out};
+                上次声明=std::move(prepared);
+            }
+            return out;
+        };
+        const auto branch=读取执行分支必要条件(M,B);
+        if(branch.状态==新方法执行分支读取状态::前提已变化)throw 声明读取前提变化{};
+        if(branch.状态!=新方法执行分支读取状态::已读取)return finish();
+        const auto spec=std::find_if(method->参数规格组.begin(),method->参数规格组.end(),[&](const auto& x){return x.有序规格&&x.有序规格->序号==position;});
+        if(spec==method->参数规格组.end()){out.状态=新方法参数特征读取状态::参数未绑定;return finish();}
+        if(spec->有序规格->信息类型!=新方法参数信息类型::存在){out.状态=新方法参数特征读取状态::信息类型不符;return finish();}
+        if(!特征概念服务_.是特征概念节点(FT))return finish();
+        const auto definition=特征服务_.捕获特征匹配定义(FT);
+        if(!definition)throw std::runtime_error("existence feature formal FT definition unreadable");
+        definitions.push_back(*definition);
+        if(definition->特征类型根!=FT||definition->概念节点!=FT)return finish();
+        const auto ftProof=特征概念服务_.读取特征概念定义保护(FT);
+        if(ftProof.前提已变化)throw 声明读取前提变化{};
+        if(ftProof.状态!=基础结构操作状态::已完成||!ftProof.信息||ftProof.预期节点组.empty())
+            throw std::runtime_error("existence feature FT definition protection unavailable");
+        merge(ftProof.预期节点组);
+        const auto existence=存在概念服务_.读取普通存在概念定义保护(spec->有序规格->范围概念节点);
+        if(existence.状态==正式概念读取状态::前提已变化)throw 声明读取前提变化{};
+        if(existence.状态==正式概念读取状态::非本提供者概念) {
+            std::vector<基础联合节点快照> formal;
+            if(!追加方法存在范围保护(spec->有序规格->范围概念节点,存在概念服务_,formal))
+                throw std::runtime_error("formal information parameter range proof unavailable");
+            merge(formal);
+            // 信息的直接内容经正式信息reader读取，不冒充普通E的实际F。
+            return finish();
+        }
+        if(!existence.信息||existence.完整保护组.empty())throw std::runtime_error("existence parameter concept protection unavailable");
+        merge(existence.完整保护组);
+        bool authorized=std::any_of(existence.信息->特征组.begin(),existence.信息->特征组.end(),[&](const auto& f){return f.特征类型概念==FT;});
+        const auto fromItems=[&](const auto& group) {
+            return std::any_of(group.begin(),group.end(),[&](const auto& x){return !x.任务成员变量序号&&x.参数序号==position&&x.特征类型概念节点==std::optional{FT};});
+        };
+        authorized=authorized||fromItems(branch.有效必要条件.条件.条件项组);
+        for(const auto& pair:method->条件结果组) {
+            const bool selected=B?std::find(pair.来源执行分支节点组.begin(),pair.来源执行分支节点组.end(),*B)!=pair.来源执行分支节点组.end():pair.来源执行分支节点组.empty();
+            if(selected)authorized=authorized||fromItems(pair.条件.条件项组)||fromItems(pair.结果.结果项组)||fromItems(pair.结果.确认要求.禁止结果项组);
+        }
+        for(const auto& r:branch.有效必要条件.条件.参数关系组) {
+            if(r.种类!=新方法参数关系种类::特征所属存在||r.右参数序号!=position)continue;
+            const auto f=std::find_if(method->参数规格组.begin(),method->参数规格组.end(),[&](const auto& x){return x.有序规格&&x.有序规格->序号==r.左参数序号&&x.有序规格->信息类型==新方法参数信息类型::特征;});
+            if(f==method->参数规格组.end())continue;
+            const auto d=特征服务_.捕获特征匹配定义(f->有序规格->范围概念节点);
+            const auto p=特征概念服务_.读取特征概念定义保护(f->有序规格->范围概念节点);
+            if(p.前提已变化)throw 声明读取前提变化{};
+            if(!d||p.状态!=基础结构操作状态::已完成||!p.信息||p.预期节点组.empty())throw std::runtime_error("direct feature declaration unreadable");
+            definitions.push_back(*d);
+            merge(p.预期节点组);if(d->特征类型根==FT)authorized=true;
+        }
+        if(authorized){out.状态=新方法参数特征读取状态::已读取;out.特征定义=*definition;}
+        return finish();
+    } catch(const 声明读取前提变化&) {
+        上次声明.reset();
+        新方法参数特征声明读取结果 out;out.状态=新方法参数特征读取状态::定义前提已变化;return out;
+    } catch (const 引用内容定义前提变化&) {
+        上次声明.reset();
+        新方法参数特征声明读取结果 结果;结果.状态=新方法参数特征读取状态::定义前提已变化;return 结果;
+    } catch(...) {
+        上次声明.reset();
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取存在参数特征声明",L"正式方法/概念声明读取或前后核验发生工程故障。");
+    }
+}
+稳定编码 新_方法类::确保已确认消息连接概念() {
+    const auto result=存在概念服务_.建立或取得已确认消息连接概念();
+    const auto proof=存在概念服务_.读取已确认消息连接概念保护();
+    if(!result.信息||!proof.信息||result.信息!=proof.信息||proof.完整保护组.empty())
+        throw std::runtime_error("confirmed message connection concept unavailable");
+    return proof.信息->节点;
+}
+正式结构概念保护结果 新_方法类::读取初始场景事实概念保护(稳定编码 c) const noexcept {
+    const auto proof=存在概念服务_.读取已确认消息连接概念保护();
+    if(!proof.信息)return proof;
+    if(proof.信息&&proof.信息->节点==c)return proof;
+    return {};
+}
+新方法建立结果 新_方法类::补齐空头初始必要条件(稳定编码 method,const 新方法信息& expected,
+    const 新方法初始必要条件定义& definition) noexcept {
+    struct 初始声明前提变化 final {};
+    try {
+        if(!有效(method)||method!=expected.节点||!初始必要条件形状有效(definition))
+            return {新方法操作状态::函数登记冲突,{}};
+        // 本轮例外的唯一函数声明来源；租约与所有跨owner读取均先于方法锁。
+        const auto source=[]() -> std::pair<std::optional<新服务对象获取配置>,std::optional<稳定编码>> {
+            const auto port=新_本能函数管理类::租用服务对象获取端口();
+            if(!port)return {};
+            return {port->读取登记材料(),port->读取初始连接关系概念()};
+        }(); // 只保留值副本；端口租约已在进入方法锁前释放。
+        const auto& config=source.first;
+        if(!config||!source.second)return {新方法操作状态::结构不一致,{}};
+        if(definition.条件.条件项组.front().存在概念节点!=std::optional{config->人类概念节点}
+            ||source.second!=std::optional{definition.场景事实限定组.front().关系概念节点}
+            ||!新_本能函数管理类::解析(新本能函数登记名_获取服务对象).函数)
+            return {新方法操作状态::函数登记冲突,{}};
+        const std::array<稳定编码,4> ranges{config->通用存在概念节点,config->自我概念节点,
+            config->通用存在概念节点,config->交互者特征类型节点};
+        if(expected.本能函数登记名!=新本能函数登记名_获取服务对象||expected.来源方法节点||expected.实例根节点
+            ||expected.作用域!=新方法作用域::普通世界||expected.实现方式!=新方法实现方式::本能
+            ||expected.行为!=新方法行为::改变||expected.启用状态!=新方法启用状态::启用
+            ||expected.参数规格组.size()!=4||!expected.初始模拟事件参数组.empty()
+            ||expected.初始模拟关系组!=std::vector<新方法参数关系>{{新方法参数关系种类::特征所属存在,4,2},{新方法参数关系种类::同属场景,2,3}}
+            ||expected.方法头.作用存在概念组!=std::vector<稳定编码>{config->自我概念节点}
+            ||expected.方法头.涉及特征类型概念组!=std::vector<稳定编码>{config->交互者特征类型节点}
+            ||expected.方法头.可能结果概念组!=std::vector<稳定编码>{config->交互者特征类型节点})
+            return {新方法操作状态::函数登记冲突,{}};
+        for(std::uint32_t i=0;i<4;++i) {
+            新方法参数规格 spec;spec.有序规格=新方法有序参数规格{i+1,i==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在,ranges[i]};
+            if(expected.参数规格组[i]!=spec)return {新方法操作状态::函数登记冲突,{}};
+        }
+        std::vector<基础联合节点快照> protection;
+        const auto merge=[&](const auto& group) {
+            for(const auto& s:group) {
+                const auto it=std::find_if(protection.begin(),protection.end(),[&](const auto& old){return old.结构.节点==s.结构.节点;});
+                if(it!=protection.end()) {
+                    if(it->结构.节点!=s.结构.节点||it->结构.字段组!=s.结构.字段组
+                        ||it->入向字段组!=s.入向字段组||it->入向外部关系组!=s.入向外部关系组
+                        ||it->出向外部关系组!=s.出向外部关系组)throw 初始声明前提变化{};
+                }
+                else protection.push_back(s);
+            }
+        };
+        const auto relation=读取初始场景事实概念保护(definition.场景事实限定组.front().关系概念节点);
+        if(relation.状态==正式结构操作状态::前提已变化)return {新方法操作状态::结构不一致,{}};
+        if(!relation.信息||relation.完整保护组.empty())return {新方法操作状态::函数登记冲突,{}};
+        merge(relation.完整保护组);
+        for(const auto c:{config->人类概念节点,config->自我概念节点,config->通用存在概念节点}) {
+            const auto p=存在概念服务_.读取普通存在概念定义保护(c);
+            if(p.状态==正式概念读取状态::前提已变化)return {新方法操作状态::结构不一致,{}};
+            if(!p.信息||p.完整保护组.empty())throw std::runtime_error("initial existence concept protection unavailable");
+            merge(p.完整保护组);
+        }
+        const auto ft=特征概念服务_.读取特征概念定义保护(config->交互者特征类型节点);
+        if(ft.前提已变化)return {新方法操作状态::结构不一致,{}};
+        if(!ft.信息||ft.预期节点组.empty())throw std::runtime_error("initial feature concept protection unavailable");
+        merge(ft.预期节点组);
+        std::lock_guard lock(新方法互斥);
+        if(!结构仍存在()||!方法属于根(method))return {新方法操作状态::结构不一致,{}};
+        const auto registered=读取多节点字段(新方法组织根节点,方法成员字段,特征概念服务_);
+        if(!registered)return {新方法操作状态::结构不一致,{}};
+        std::optional<稳定编码> named;
+        for(const auto n:*registered) {
+            const auto info=读取方法信息本体(n,特征概念服务_,*this,存在概念服务_,false,false);
+            if(!info)return {新方法操作状态::结构不一致,{}};
+            if(info->来源方法节点||info->本能函数登记名!=新本能函数登记名_获取服务对象)continue;
+            if(named)return {新方法操作状态::函数登记冲突,{}};
+            named=n;
+        }
+        if(named!=std::optional{method})return {新方法操作状态::函数登记冲突,{}};
+        const auto current=读取方法信息本体(method,特征概念服务_,*this,存在概念服务_,false,false);
+        if(!current||*current!=expected)return {新方法操作状态::结构不一致,{}};
+        if(current->初始必要条件) {
+            if(*current->初始必要条件!=definition)return {新方法操作状态::函数登记冲突,{}};
+            return {新方法操作状态::已找到,method};
+        }
+        if(!current->条件结果组.empty())return {新方法操作状态::函数登记冲突,{}};
+        // 本owner完整独占子图及根登记均参与CAS；包括Vm缺声明和M空C/R。
+        std::vector<稳定编码> nodes{method,新方法组织根节点};
+        for(const auto n:*registered)if(std::find(nodes.begin(),nodes.end(),n)==nodes.end())nodes.push_back(n);
+        for(std::size_t i=0;i<nodes.size();++i) {
+            const auto n=nodes[i];const auto type=读取唯一节点字段(n,节点类型字段);
+            if(!type) { if(n==新方法组织根节点)continue;throw std::runtime_error("initial declaration method graph type"); }
+            for(const auto& schema:方法复制字段规格(*type))if(schema.种类==复制字段种类::独占子节点)
+                for(const auto& f:全局基础数据集.查询字段(n,schema.字段)) {
+                    const auto* target=std::get_if<稳定编码>(&f.内容);
+                    if(!target)throw std::runtime_error("initial declaration method child shape");
+                    if(std::find(nodes.begin(),nodes.end(),*target)==nodes.end())nodes.push_back(*target);
+                }
+        }
+        for(const auto key:{初始必要条件字段,初始声明节点类型,初始声明项节点类型,初始场景限定节点类型,
+            初始声明格式字段,初始声明所属字段,初始场景限定字段,初始关系概念字段,初始四位置字段,
+            节点类型字段,关系规则字段,参数位置关系字段,条件项字段,条件项存在概念字段,顺序字段,有序参数序号字段})
+            if(std::find(nodes.begin(),nodes.end(),key)==nodes.end())nodes.push_back(key);
+        const auto snapshots=全局基础数据集.查询节点组完整结构(nodes);
+        if(snapshots.状态!=基础结构操作状态::已完成||snapshots.节点组.size()!=nodes.size())throw std::runtime_error("initial declaration snapshots");
+        for(const auto& n:snapshots.节点组) { if(!n.快照)throw std::runtime_error("initial declaration incomplete snapshot");merge(std::vector<基础联合节点快照>{*n.快照}); }
+        const auto again=读取方法信息本体(method,特征概念服务_,*this,存在概念服务_,false,false);
+        if(!again||*again!=expected)return {新方法操作状态::结构不一致,{}};
+        基础节点组追加请求 request;request.预期联合节点组=std::move(protection);
+        request.新节点组.resize(3);
+        const auto field=[&](std::size_t n,稳定编码 key,基础组内字段内容 value){request.新节点组[n].字段组.push_back({key,std::move(value)});};
+        field(0,节点类型字段,初始声明节点类型);field(0,初始声明格式字段,基础值{std::int64_t{1}});
+        field(0,初始声明所属字段,current->方法虚拟存在节点);field(0,关系规则字段,基础值{static_cast<std::int64_t>(新方法项关系规则::全部成立)});
+        field(0,参数位置关系字段,基础值{std::vector<std::int64_t>{2,2,3}});
+        field(0,条件项字段,基础组内节点引用{1});field(0,初始场景限定字段,基础组内节点引用{2});
+        field(1,节点类型字段,初始声明项节点类型);field(1,初始声明所属字段,基础组内节点引用{0});
+        field(1,顺序字段,基础值{std::int64_t{0}});field(1,有序参数序号字段,基础值{std::int64_t{3}});
+        field(1,条件项存在概念字段,config->人类概念节点);
+        field(2,节点类型字段,初始场景限定节点类型);field(2,初始声明所属字段,基础组内节点引用{0});
+        field(2,顺序字段,基础值{std::int64_t{0}});field(2,初始关系概念字段,relation.信息->节点);
+        field(2,初始四位置字段,基础值{std::vector<std::int64_t>{1,2,3,4}});
+        request.追加字段组.push_back({current->方法虚拟存在节点,初始必要条件字段,基础组内节点引用{0}});
+        const auto published=全局基础数据集.原子追加节点组(request);
+        if(published.状态==基础节点组追加状态::预期不符)return {新方法操作状态::结构不一致,{}};
+        auto wanted=expected;wanted.初始必要条件=definition;
+        const auto readback=读取方法信息本体(method,特征概念服务_,*this,存在概念服务_,false,false);
+        if(published.状态!=基础节点组追加状态::已完成) {
+            if(published.状态==基础节点组追加状态::内部不一致&&readback&&*readback==wanted)
+                return {新方法操作状态::已找到,method}; // 只以同M完整请求消歧，不重发。
+            throw std::runtime_error("initial declaration publication failed");
+        }
+        if(published.新节点组.size()!=3)throw std::runtime_error("initial declaration publication identities");
+        if(!readback||*readback!=wanted)throw std::runtime_error("initial declaration publication readback mismatch");
+        return {新方法操作状态::已找到,method};
+    }catch(const 初始声明前提变化&) { return {新方法操作状态::结构不一致,{}}; }
+    catch(const 引用内容定义前提变化&) {
+        return {新方法操作状态::定义前提已变化,method};
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"补齐空头必要条件",L"必要声明保护、原子发表或读回失败；保留已有事实。");
+    }
 }
 std::optional<新特征匹配定义快照> 新_方法类::读取模拟特征范围(稳定编码 C) const noexcept {
     return 特征服务_.捕获特征匹配定义(C);
@@ -5649,16 +8274,49 @@ std::optional<新存在信息> 新_方法类::读取模拟来源存在(稳定编
 std::optional<新特征匹配实例快照> 新_方法类::读取模拟来源特征(稳定编码 F) const {
     return 特征服务_.捕获特征匹配实例(F);
 }
+std::optional<新特征信息> 新_方法类::读取模拟来源完整特征(稳定编码 F) const {
+    return 特征服务_.获取特征(F);
+}
+先天信息概念结果 新_方法类::读取模拟需求概念组() const noexcept {
+    return 存在概念服务_.读取先天需求任务方法概念();
+}
+正式结构概念保护结果 新_方法类::读取模拟正式结构(稳定编码 C) const noexcept {
+    return 存在概念服务_.读取正式结构概念保护(C);
+}
+先天特征类型槽结果 新_方法类::读取模拟先天特征类型槽(std::uint32_t 语义序号) const noexcept {
+    return 特征概念服务_.读取先天特征类型槽(语义序号);
+}
+稳定编码 新_方法类::建立模拟I64目标域(稳定编码 C,std::int64_t x) {
+    const auto c=特征概念服务_.获取特征概念(C);
+    if(!c||c->材料类型!=特征概念材料物理类型::I64标量
+        ||c->比较规则!=特征概念比较规则::I64数值)
+        throw std::invalid_argument("simulation target requires an I64 definition");
+    const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&c->值域);
+    if(!ranges||std::none_of(ranges->begin(),ranges->end(),[&](const auto& r){return r.下界<=x&&x<=r.上界;}))
+        throw std::invalid_argument("simulation target outside formal domain");
+    const 特征概念值域 exact=std::vector<特征概念I64闭区间>{{x,x}};
+    if(c->值域==exact)return C;
+    特征概念定义 d;d.材料类型=c->材料类型;d.单位=c->单位;
+    d.比较规则=c->比较规则;d.聚合规则=c->聚合规则;d.值域=exact;
+    const auto result=特征概念服务_.建立或取得特征概念(d,特征值服务_,C);
+    if(!有效(result))throw std::runtime_error("simulation target concept publication failed");
+    return result;
+}
 }
 namespace 海中鱼巣 {
 稳定编码 新_方法类::保存模拟材料值域(稳定编码 C,const 新特征值信息& v) {
     const auto c=特征概念服务_.获取特征概念(C);
     if(!c)throw std::runtime_error("simulation input concept unavailable");
+    if(c->材料类型==特征概念材料物理类型::需求节点引用
+        ||c->材料类型==特征概念材料物理类型::信息节点引用
+        ||c->比较规则==特征概念比较规则::需求集合身份判等)
+        throw std::invalid_argument("typed information reference requires a rebindable knowledge abstraction");
     const auto n=特征值服务_.保存或取得特征值(v.物理类型,v.材料);
     if(!有效(n))throw std::runtime_error("simulation knowledge material publish failed");
     特征概念定义 d;d.材料类型=c->材料类型;d.单位=c->单位;
     d.比较规则=c->比较规则;d.聚合规则=c->聚合规则;
     d.值域=std::vector<稳定编码>{n};
+    if(d.值域==c->值域)return C;
     const auto result=特征概念服务_.建立或取得特征概念(d,特征值服务_,C);
     if(!有效(result))throw std::runtime_error("simulation exact material domain publish failed");
     return result;

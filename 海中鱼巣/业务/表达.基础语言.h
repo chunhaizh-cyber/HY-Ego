@@ -10,6 +10,7 @@
 
 #include "../领域/新_语言类.h"
 #include "../领域/信息内容.数据.h"
+#include "../领域/语言含义图.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -19,8 +20,14 @@ class 概念_名称关系类;
 class 概念_存在类;
 class 概念_特征类;
 class 新_存在类;
+struct 结构项概念保护结果;
 struct 普通应用网页自我归类表达请求;
 struct 普通应用网页自我归类表达结果;
+
+// 由正式需求及先天结构声明读取字段的精确范围；不选择字段、不补造字段值。
+结构项概念保护结果 读取正式字段询问范围(
+    const 正式信息参数读取结果&,稳定编码 目标字段,
+    const 概念_存在类&,const 概念_特征类&);
 
 enum class 基础表达目标节点类型 : std::uint8_t { 存在 = 1 };
 enum class 基础表达来源种类 : std::uint8_t { 网页自我待发 = 1 };
@@ -73,46 +80,6 @@ struct 基础表达参数 final {
     std::variant<稳定编码, std::int64_t> 内容;
     std::optional<稳定编码> 选用名称关系;
 };
-struct 语言图引用值 final {
-    新语言知识角色类别 类别=新语言知识角色类别::存在;
-    稳定编码 节点{};
-    std::optional<稳定编码> 来源概念,选用名称关系;
-    friend bool operator==(const 语言图引用值&,const 语言图引用值&)=default;
-};
-struct 语言图整数值 final {
-    std::string 规范十进制;
-    std::optional<稳定编码> 单位;
-    friend bool operator==(const 语言图整数值&,const 语言图整数值&)=default;
-};
-struct 语言图子出现引用 final {
-    std::int64_t 出现编号=0;
-    friend bool operator==(const 语言图子出现引用&,const 语言图子出现引用&)=default;
-};
-using 语言图绑定值=std::variant<语言图引用值,语言图整数值,语言图子出现引用>;
-struct 语言图角色绑定 final {
-    std::int64_t 角色编号=0;
-    语言图绑定值 值;
-    friend bool operator==(const 语言图角色绑定&,const 语言图角色绑定&)=default;
-};
-struct 语言图含义出现 final {
-    std::int64_t 出现编号=0;
-    稳定编码 所用知识节点{};
-    std::int64_t 定义含义编号=0;
-    新语言知识作用域 有效作用域=新语言知识作用域::普通陈述;
-    std::vector<std::int64_t> 结构项路径;
-    std::vector<语言图角色绑定> 角色组;
-    std::optional<std::pair<std::size_t,std::size_t>> 原文范围;
-    friend bool operator==(const 语言图含义出现&,const 语言图含义出现&)=default;
-};
-struct 语言图含义材料 final {
-    稳定编码 语言节点{};
-    新语言知识含义图 定义图;
-    std::int64_t 根出现编号=0;
-    std::vector<语言图含义出现> 出现组;
-    std::optional<std::string> 固定原文;
-    std::optional<稳定编码> 未核验来源语言记录节点;
-    std::optional<正式信息参数投影> 正式需求来源;
-};
 struct 基础表达请求 final {
     稳定编码 语言节点;
     新语言知识表达目的 目的;
@@ -162,7 +129,8 @@ struct 基础表达结果 final {
     const 概念_名称关系类& 名称服务,
     const 概念_存在类& 存在概念服务,
     const 概念_特征类& 特征概念服务,
-    const 新_存在类& 受询者存在服务);
+    const 新_存在类& 受询者存在服务,
+    const 正式信息参数读取接口* 正式读取=nullptr);
 
 // 理解入口钩子：若匹配 SC-请求执行方法，则经 新_方法类::查询候选方法 取候选；
 // 不写任务完成态，不绕过 5260。

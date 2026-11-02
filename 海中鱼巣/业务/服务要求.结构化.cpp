@@ -1,4 +1,5 @@
 #include "服务要求.结构化.h"
+#include "../领域/模拟需求.数据.h"
 #include "../领域/概念_存在类.h"
 #include "../领域/新_语言类.h"
 #include <algorithm>
@@ -7,16 +8,30 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <stdexcept>
+#include <new>
 
 namespace 海中鱼巣 {
 namespace {
 using 状态 = 结构化服务要求状态;
 struct 材料失败 { 状态 原因; };
+struct 模拟来源漂移 final {};
 [[noreturn]] void 拒绝(状态 原因 = 状态::结构不一致) { throw 材料失败{原因}; }
 void 必须(bool 条件, 状态 原因 = 状态::结构不一致) { if (!条件) 拒绝(原因); }
 void 检查基础(基础结构操作状态 结果) {
     if (结果 == 基础结构操作状态::资源失败) 拒绝(状态::资源失败);
     必须(结果 == 基础结构操作状态::已完成);
+}
+std::vector<基础联合节点快照> 校验模拟完整保护(const std::vector<基础联合节点快照>& input) {
+    std::map<稳定编码,基础联合节点快照> unique;
+    const auto same=[](const auto& a,const auto& b){return a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组
+        &&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;};
+    for(const auto& n:input){const auto [it,added]=unique.emplace(n.结构.节点.编码,n);if(!added&&!same(it->second,n))throw 模拟来源漂移{};}
+    std::vector<稳定编码> ids;for(const auto& [id,n]:unique)ids.push_back(id);
+    const auto fresh=全局基础数据集.查询节点组完整结构(ids);检查基础(fresh.状态);
+    if(fresh.节点组.size()!=unique.size())throw std::runtime_error("source complete protection count invalid");
+    std::vector<基础联合节点快照> out;
+    for(const auto& n:fresh.节点组){if(!n.快照||!same(unique.at(n.查询节点),*n.快照))throw 模拟来源漂移{};out.push_back(*n.快照);}return out;
 }
 enum class 字段 : std::size_t {
     类型, 场景, 来源, 目标人, 会话, 特征类型, 形式, 域, 比较, 方向, 固定语义,
@@ -53,6 +68,7 @@ std::vector<特征概念I64闭区间> 解码区间(const std::vector<std::int64_
     return 结果;
 }
 void 检查形状(const 新需求目标定义& 目标) {
+    必须(!目标.引用内容定位&&!目标.新增成员来源见证, 状态::语义快照暂不支持);
     必须(有效(目标.目标特征类型概念节点), 状态::目标不完整);
     if (目标.目标形式 == 新需求目标形式::值) {
         必须(!目标.目标变化方向, 状态::目标不合法);
@@ -85,7 +101,7 @@ struct 结构化服务要求服务::实现 {
     void 检查人类(稳定编码 来源) const {
         必须(有效(来源), 状态::来源不合法);
         const auto 存在 = 服务.存在_.获取存在(来源);
-        必须(存在 && 存在->节点 == 来源);
+        必须(存在.has_value());
         // 三色迭代DFS允许共享祖先，但拒绝真正的回边，不按预算截断。
         std::map<稳定编码, unsigned> 颜色;
         struct 帧 { 稳定编码 节点; bool 退出; };
@@ -98,7 +114,7 @@ struct 结构化服务要求服务::实现 {
             必须(色 != 1);
             if (色 == 2) continue;
             const auto 概念 = 服务.存在概念_.获取存在概念(当前.节点);
-            必须(概念 && 概念->节点 == 当前.节点);
+            必须(概念.has_value());
             if (当前.节点 == 人类) 找到 = true;
             颜色[当前.节点] = 1;
             栈.push_back({当前.节点, true});
@@ -148,15 +164,15 @@ struct 结构化服务要求服务::实现 {
         const auto FT = 目标.目标特征类型概念节点;
         必须(类型根(FT) == FT, 状态::目标不合法);
         const auto 类型 = 服务.特征概念_.获取特征概念(FT);
-        必须(类型 && 类型->节点 == FT);
+        必须(类型.has_value());
         服务要求目标语义快照 结果{捕获特征(*类型), {}, {}};
         if (目标.目标形式 == 新需求目标形式::变化方向) return 结果;
         必须(类型根(*目标.目标值域概念节点) == FT, 状态::目标不合法);
         const auto 域 = 服务.特征概念_.获取特征概念(*目标.目标值域概念节点);
-        必须(域 && 域->节点 == *目标.目标值域概念节点);
+        必须(域.has_value());
         结果.目标域 = 捕获域(*域);
         const auto 比较 = 服务.二次概念_.获取二次特征概念(*目标.目标比较关系概念节点);
-        必须(比较 && 比较->节点 == *目标.目标比较关系概念节点);
+        必须(比较.has_value());
         必须(比较->参照特征概念节点 == 目标.目标值域概念节点, 状态::目标不合法);
         bool 有准确值 = false;
         for (const auto& 输入 : 比较->输入定义组) {
@@ -608,7 +624,7 @@ struct 结构化服务要求服务::实现 {
         std::lock_guard 锁(互斥_);
         必须(有效(人类概念节点), 状态::来源不合法);
         const auto 概念 = 存在概念_.获取存在概念(人类概念节点);
-        必须(概念 && 概念->节点 == 人类概念节点);
+        必须(概念.has_value());
         if (!实现_) 实现_ = std::make_unique<实现>(*this);
         auto& s = *实现_;
         必须(!有效(s.人类) || s.人类 == 人类概念节点, 状态::来源不合法);
@@ -635,6 +651,7 @@ struct 结构化服务要求服务::实现 {
 
 服务要求理解结果 结构化服务要求服务::建立或取得理解(const 服务要求理解请求& 请求) noexcept {
     try {
+        必须(!请求.目标.引用内容定位, 状态::语义快照暂不支持);
         std::lock_guard 锁(互斥_);
         必须(实现_ && 实现_->就绪, 状态::未初始化); auto& s = *实现_;
         必须(!请求.公开会话标识.empty(), 状态::会话未绑定);
@@ -1155,4 +1172,113 @@ const std::vector<基础联合节点快照>& 新服务要求确认语义保护::
     catch (...) { return {S::结构不一致, {}}; }
 }
 
+std::optional<std::vector<基础联合节点快照>> 结构化服务要求服务::读取模拟自有结构(
+    稳定编码 node,std::size_t expected) const {
+    if(!实现_||!实现_->就绪)throw std::runtime_error("structured source provider not initialized");
+    const auto& s=*实现_;
+    std::set<稳定编码> ownedKeys;
+    for(const auto k:{字段::对应理解,字段::对应确认,字段::来源要求,字段::固定语义,字段::类型快照,
+        字段::域快照,字段::比较快照,字段::特征快照,字段::输出域,字段::输入,字段::分量})
+        ownedKeys.insert(s.字段锚[下标(k)]);
+    std::set<稳定编码> seen;std::vector<稳定编码> todo{node,s.场景,s.人类};
+    todo.insert(todo.end(),s.字段锚.begin(),s.字段锚.end());todo.insert(todo.end(),s.类型锚.begin(),s.类型锚.end());
+    std::vector<基础联合节点快照> result;
+    for(std::size_t i=0;i<todo.size();++i) {
+        if(!seen.insert(todo[i]).second)continue;
+        const auto read=全局基础数据集.查询节点组完整结构({todo[i]});
+        检查基础(read.状态);
+        if(read.节点组.size()!=1)throw std::runtime_error("structured source snapshot count corrupt");
+        if(!read.节点组[0].快照){if(i==0)return {};throw std::runtime_error("structured source owned edge missing");}
+        const auto& snap=*read.节点组[0].快照;
+        if(i==0) {
+            std::vector<基础字段关系> fields;
+            for(const auto& f:snap.结构.字段组)if(f.字段节点==s.字段锚[下标(字段::类型)])fields.push_back(f);
+            if(fields.size()!=1||std::get_if<稳定编码>(&fields[0].内容)==nullptr
+                ||std::get<稳定编码>(fields[0].内容)!=s.类型锚.at(expected))return {};
+        }
+        for(const auto& f:snap.结构.字段组)if(ownedKeys.contains(f.字段节点)) {
+            const auto* ref=std::get_if<稳定编码>(&f.内容);
+            if(!ref)throw std::runtime_error("structured source owned edge is not a reference");
+            todo.push_back(*ref);
+        }result.push_back(snap);
+    }
+    return 校验模拟完整保护(result);
+}
+std::vector<基础联合节点快照> 结构化服务要求服务::读取模拟目标定义保护(const 新需求目标定义& t) const {
+    必须(!t.引用内容定位&&!t.新增成员来源见证, 状态::语义快照暂不支持);
+    std::vector<基础联合节点快照> out;
+    const auto absorb=[&](const auto& read) {
+        if(read.前提已变化)throw 模拟来源漂移{};
+        if(read.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(read.状态!=基础结构操作状态::已完成||!read.信息||read.预期节点组.empty())
+            throw std::runtime_error("source semantic referenced definition is unavailable or corrupt");
+        out.insert(out.end(),read.预期节点组.begin(),read.预期节点组.end());
+    };
+    if(有效(t.目标特征类型概念节点))absorb(特征概念_.读取特征概念定义保护(t.目标特征类型概念节点));
+    if(t.目标值域概念节点)absorb(特征概念_.读取特征概念定义保护(*t.目标值域概念节点));
+    if(t.目标比较关系概念节点) {
+        const auto b=二次概念_.读取二次特征定义保护(*t.目标比较关系概念节点);absorb(b);
+        for(const auto& i:b.信息->输入定义组)if(i.特征类型概念节点)absorb(特征概念_.读取特征概念定义保护(*i.特征类型概念节点));
+        if(b.信息->参照特征概念节点)absorb(特征概念_.读取特征概念定义保护(*b.信息->参照特征概念节点));
+        absorb(特征概念_.读取特征概念定义保护(b.信息->输出特征概念.节点));
+    }
+    return out.empty()?out:校验模拟完整保护(out);
+}
+新模拟需求来源结果<服务要求理解信息> 结构化服务要求服务::读取模拟理解来源(稳定编码 n) const {
+    std::lock_guard lock(互斥_);
+    try {
+    if(!实现_||!实现_->就绪)return {新模拟需求状态::正式定义未就绪};
+    const auto graph=读取模拟自有结构(n,下标(种类::理解));if(!graph)return {};
+    auto u=实现::解码器{*实现_,*graph}.理解(n);
+    auto protection=*graph;const auto target=读取模拟目标定义保护(u.目标);
+    protection.insert(protection.end(),target.begin(),target.end());
+    const auto fresh=读取模拟自有结构(n,下标(种类::理解));
+    if(!fresh||实现::解码器{*实现_,*fresh}.理解(n)!=u)return {新模拟需求状态::前提已变化};
+    return {新模拟需求状态::已完成,std::move(u),校验模拟完整保护(protection)};
+    } catch(const 模拟来源漂移&){return {新模拟需求状态::前提已变化};}
+    catch(const std::bad_alloc&){return {新模拟需求状态::资源失败};}
+    catch(const 材料失败& e){if(e.原因==状态::资源失败)return {新模拟需求状态::资源失败};throw std::runtime_error("structured understanding source decode failed");}
+}
+新模拟需求来源结果<服务要求确认信息> 结构化服务要求服务::读取模拟确认来源(稳定编码 n) const {
+    std::lock_guard lock(互斥_);
+    try {
+    if(!实现_||!实现_->就绪)return {新模拟需求状态::正式定义未就绪};
+    const auto graph=读取模拟自有结构(n,下标(种类::确认));if(!graph)return {};
+    auto c=实现::解码器{*实现_,*graph}.确认(n);
+    const auto definitions=读取模拟目标定义保护(c.理解.目标);
+    c.需重新确认=!实现_->语义仍相同(c.理解);
+    auto protection=*graph;protection.insert(protection.end(),definitions.begin(),definitions.end());
+    return {新模拟需求状态::已完成,std::move(c),校验模拟完整保护(protection)};
+    } catch(const 模拟来源漂移&){return {新模拟需求状态::前提已变化};}
+    catch(const std::bad_alloc&){return {新模拟需求状态::资源失败};}
+    catch(const 材料失败& e){if(e.原因==状态::资源失败)return {新模拟需求状态::资源失败};throw std::runtime_error("structured confirmation source decode failed");}
+}
+新模拟需求来源结果<新部分服务要求材料> 结构化服务要求服务::读取模拟要求来源(稳定编码 n) const {
+    std::lock_guard lock(互斥_);
+    try {
+    if(!实现_||!实现_->就绪)return {新模拟需求状态::正式定义未就绪};
+    const auto graph=读取模拟自有结构(n,下标(种类::部分要求));if(!graph)return {};
+    auto material=实现::解码器{*实现_,*graph}.部分要求(n);auto protection=*graph;
+    新需求目标定义 partial;partial.目标特征类型概念节点=material.已知目标.目标特征类型概念节点.value_or(稳定编码{});
+    partial.目标值域概念节点=material.已知目标.目标值域概念节点;partial.目标比较关系概念节点=material.已知目标.目标比较关系概念节点;
+    const auto partialProtection=读取模拟目标定义保护(partial);protection.insert(protection.end(),partialProtection.begin(),partialProtection.end());
+    if(material.理解节点) {
+        const auto u=实现::解码器{*实现_,*graph}.理解(*material.理解节点);
+        const auto target=读取模拟目标定义保护(u.目标);
+        protection.insert(protection.end(),target.begin(),target.end());
+    }
+    return {新模拟需求状态::已完成,std::move(material),校验模拟完整保护(protection)};
+    } catch(const 模拟来源漂移&){return {新模拟需求状态::前提已变化};}
+    catch(const std::bad_alloc&){return {新模拟需求状态::资源失败};}
+    catch(const 材料失败& e){if(e.原因==状态::资源失败)return {新模拟需求状态::资源失败};throw std::runtime_error("structured requirement source decode failed");}
+}
+新模拟需求来源结果<新模拟需求构造依据> 结构化服务要求服务::读取模拟构造依据() const {
+    std::lock_guard lock(互斥_);
+    if(!实现_||!实现_->就绪)return {新模拟需求状态::正式定义未就绪};
+    const auto c=存在概念_.读取存在概念上位保护(实现_->人类);
+    if(c.前提已变化)return {新模拟需求状态::前提已变化};
+    if(c.状态==基础结构操作状态::资源失败)return {新模拟需求状态::资源失败};
+    if(c.状态!=基础结构操作状态::已完成||!c.信息)throw std::runtime_error("human concept source unavailable");
+    return {新模拟需求状态::已完成,新模拟需求构造依据{实现_->人类},c.预期节点组};
+}
 } // namespace 海中鱼巣

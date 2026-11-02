@@ -7,31 +7,23 @@
 #include <chrono>
 
 #include "新_本能函数集.h"
-#include "服务值结算.本能合同.h"
 #include "连接.本能合同.h"
+#include "本能字段询问.运行接口.h"
 
 namespace 海中鱼巣 {
-inline constexpr std::string_view 新本能函数登记名_服务值结算 = "服务值结算";
+inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
     "builtin.service_object.acquire.v2";
+inline constexpr std::string_view 新本能函数登记名_获取服务对象新需求 =
+    "builtin.service_object.demand.acquire_new.v1";
+inline constexpr std::string_view 新本能函数登记名_获取服务对象需求节点 =
+    "builtin.service_object.demand.acquire_node.v1";
 inline constexpr std::string_view 新本能函数登记名_旧两参数获取服务对象 =
     "builtin.service_object.acquire.v1";
 inline constexpr std::string_view 新本能函数登记名_建立连接 =
-    "builtin.connection.establish.v2";
+    "builtin.connection.establish.v3";
 inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
     "builtin.connection.establish.v1";
-inline constexpr std::string_view 新本能函数登记名_主动获取服务需求 =
-    "builtin.service_requirement.acquire_active.v3";
-inline constexpr std::string_view 新本能函数登记名_旧有序主动获取服务需求 =
-    "builtin.service_requirement.acquire_active.v2";
-inline constexpr std::string_view 新本能函数登记名_旧主动获取服务需求 =
-    "builtin.service_requirement.acquire_active.v1";
-inline constexpr std::string_view 新本能函数登记名_被动获取服务需求 =
-    "builtin.service_requirement.acquire_passive.v3";
-inline constexpr std::string_view 新本能函数登记名_旧有序被动获取服务需求 =
-    "builtin.service_requirement.acquire_passive.v2";
-inline constexpr std::string_view 新本能函数登记名_旧被动获取服务需求 =
-    "builtin.service_requirement.acquire_passive.v1";
 
 // 稳定程序内登记名不是自然语言方法名称，也不作为能力判断依据。
 inline constexpr std::string_view 新本能函数登记名_读取网页对话消息 =
@@ -102,13 +94,10 @@ public:
     // 进程内只允许一个真实网页对话端口；同一端口可重复装配，不允许替换。
     static 新本能函数端口装配状态 装配网页对话端口(
         const 新本能网页对话函数端口& 端口) noexcept;
-    static 新本能函数端口装配状态 装配服务值结算端口(新服务值结算本能端口&) noexcept;
-    static 新本能函数端口装配状态 关闭服务值结算端口(新服务值结算本能端口&) noexcept;
-    static 新本能函数端口装配状态 卸载服务值结算端口(新服务值结算本能端口&) noexcept;
-    static 新本能函数端口装配状态 装配服务需求获取端口(
-        std::shared_ptr<新服务需求获取本能端口>) noexcept;
-    static 新本能函数端口装配状态 关闭服务需求获取端口(
-        新服务需求获取本能端口&) noexcept;
+    static 新本能函数端口装配状态 装配服务对象新需求端口(
+        std::shared_ptr<新服务对象新需求本能端口>) noexcept;
+    static 新本能函数端口装配状态 关闭服务对象新需求端口(
+        新服务对象新需求本能端口&) noexcept;
     static 新本能函数端口装配状态 装配服务对象获取端口(
         std::shared_ptr<新服务对象获取本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭服务对象获取端口(
@@ -117,6 +106,8 @@ public:
         std::shared_ptr<新连接本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭连接端口(
         新连接本能端口&) noexcept;
+    static 新本能函数端口装配状态 装配字段询问端口(std::shared_ptr<新字段询问登记端口>) noexcept;
+    static 新本能函数端口装配状态 关闭字段询问端口(新字段询问登记端口&) noexcept;
 
     // 线程池调用期的工程停止能力；不进入业务参数或条件结果知识。
     class 本能停止守卫 final {
@@ -174,21 +165,10 @@ public:
         const 方法参数场景& 参数场景) noexcept;
 
 private:
+    static std::shared_ptr<新字段询问登记端口> 租用字段询问端口() noexcept;
     static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
     static std::shared_ptr<新连接本能端口> 租用连接端口() noexcept;
-    static std::shared_ptr<新服务需求获取本能端口> 租用服务需求获取端口() noexcept;
-    class 服务值结算调用守卫 final {
-    public:
-        服务值结算调用守卫() noexcept;
-        ~服务值结算调用守卫();
-        服务值结算调用守卫(const 服务值结算调用守卫&) = delete;
-        服务值结算调用守卫& operator=(const 服务值结算调用守卫&) = delete;
-        新服务值结算本能端口* operator->() const noexcept { return 端口_; }
-        explicit operator bool() const noexcept { return 端口_ != nullptr; }
-    private:
-        新服务值结算本能端口* 端口_ = nullptr;
-    };
-    static 服务值结算调用守卫 租用服务值结算端口() noexcept;
+    static std::shared_ptr<新服务对象新需求本能端口> 租用服务对象新需求端口() noexcept;
     enum class 网页对话入口 : std::uint8_t {
         读取已显示消息 = 1,
         设置输入框文本,
@@ -196,6 +176,7 @@ private:
     };
 
     friend class 新_本能函数集;
+    friend class 新_方法类;
     static 新本能函数本次条件结果对 调用网页对话入口(
         网页对话入口 入口,
         const 方法参数场景& 参数场景) noexcept;

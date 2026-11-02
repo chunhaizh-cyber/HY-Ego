@@ -60,6 +60,15 @@ struct 新词条列表查询结果 final {
     std::vector<稳定编码> 词条节点组;
 };
 
+enum class 新词条保护状态 : std::uint8_t {
+    已读取 = 1, 未找到, 输入拒绝, 前提已变化, 资源失败
+};
+struct 新词条保护结果 final {
+    新词条保护状态 状态 = 新词条保护状态::输入拒绝;
+    std::optional<新词条信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
+
 // 词条只登记语言、规范化合同和规范化词面。它不分词、不规范化输入，
 // 也不建立词义、概念或名称关系。
 class 新_词类 final {
@@ -74,6 +83,10 @@ public:
     新词条查询结果 按规范化词面查询(
         稳定编码 语言节点,
         稳定编码 规范化合同节点,
+        const std::string& 规范化词面) const noexcept;
+    新词条保护结果 读取词条保护(稳定编码 词条) const noexcept;
+    新词条保护结果 按规范化词面查询保护(
+        稳定编码 语言, 稳定编码 规范化合同,
         const std::string& 规范化词面) const noexcept;
     新词条列表查询结果 查询语言词条(
         稳定编码 语言节点) const noexcept;
