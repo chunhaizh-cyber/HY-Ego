@@ -38,6 +38,9 @@
 
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
 #include "../核心/日志系统.h"
+#endif
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+#include "../核心/日志系统.h"
 #include <exception>
 #include <source_location>
 #include <sstream>
@@ -17792,6 +17795,19 @@ namespace {
     }
 }
 
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+namespace {
+void 记录进入等待条件诊断(稳定编码 任务节点, 新任务状态 原状态, const wchar_t* 站点) noexcept {
+    try {
+        std::wstring 文本 = L"任务=" + std::to_wstring(任务节点.值)
+            + L"；原状态=" + std::to_wstring(static_cast<unsigned>(原状态))
+            + L"；站点=" + 站点;
+        (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务状态", L"进入等待条件", 文本);
+    } catch (...) {}
+}
+}
+#endif
+
 新任务治理候选消费结果 新_任务类::消费任务方法候选(
     稳定编码 任务节点, 稳定编码 材料节点) noexcept {
     新任务治理候选消费结果 结果;
@@ -17816,6 +17832,14 @@ namespace {
         }
         const auto 目标状态 = 有候选
             ? 新任务状态::待检查条件 : 新任务状态::等待条件;
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        if (目标状态 == 新任务状态::等待条件) {
+            const auto 当前 = 获取任务(任务节点);
+            记录进入等待条件诊断(任务节点,
+                当前 ? 当前->当前状态 : 新任务状态::待查找方法,
+                L"消费任务方法候选/完整无候选");
+        }
+#endif
         结果.状态写入 = 修改任务状态(任务节点, 目标状态);
         if (*结果.状态写入 != 新任务操作状态::已修改
             && *结果.状态写入 != 新任务操作状态::无变化) {
@@ -24346,6 +24370,8 @@ std::optional<新任务完成结算信息>
     }
 }
 
+
+
 新任务治理承接结果 新_任务类::建立需求任务关联(
     稳定编码 需求节点) noexcept {
     新任务治理承接结果 结果;
@@ -24387,6 +24413,9 @@ std::optional<新任务完成结算信息>
         // fresh决议。无论本次新建还是复用并发入口刚建立的T，都先收束到
         // 等待条件；后续只能由self fresh决议经manager复核后唤醒。
         if (读回.任务 && 读回.任务->当前状态 == 新任务状态::已建立) {
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            记录进入等待条件诊断(任务节点, 读回.任务->当前状态, L"建立需求任务关联/扫描补齐");
+#endif
             const auto 等待 = 修改任务状态(任务节点, 新任务状态::等待条件);
             if (等待 != 新任务操作状态::已修改
                 && 等待 != 新任务操作状态::无变化) {
@@ -24817,6 +24846,9 @@ std::optional<新任务字段追问记录> 新_任务类::采用字段询问候�
     const auto result=全局基础数据集.原子追加节点组(q);
     if(result.状态==基础节点组追加状态::预期不符||result.状态==基础节点组追加状态::资源失败)return {};
     要求(result.状态==基础节点组追加状态::已完成,"field inquiry adoption publication failed");
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+    记录进入等待条件诊断(T, current->当前状态, L"采用字段询问候选");
+#endif
     const auto changed=修改任务状态(T,新任务状态::等待条件);
     要求(changed==新任务操作状态::已修改||changed==新任务操作状态::无变化,"field inquiry adoption wait publication failed");
     return 读取字段追问记录(T);
@@ -25097,6 +25129,9 @@ void 新_任务类::登记语言补全来源(稳定编码 D,const 新需求字�
     新任务语言补全记录 record{T,D,parentT,target,source};
     if(done)record.阶段=新任务语言补全阶段::已满足;
     语言补全记录_.emplace(T,std::move(record));
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+    记录进入等待条件诊断(T, 新任务状态::已建立, L"采用已确认语言子需求");
+#endif
     const auto changed=修改任务状态(T,新任务状态::等待条件);
     if(changed!=新任务操作状态::已修改&&changed!=新任务操作状态::无变化)return changed;
     return 新任务操作状态::已修改;
