@@ -1,5 +1,7 @@
 #include "概念_存在类.h"
 #include "../核心/容错检查.h"
+#include "../核心/日志系统.h"
+#include <sstream>
 
 #include <algorithm>
 #include <functional>
@@ -2402,8 +2404,30 @@ bool 初始化正式schema() {
     return true;
 }
 bool 正式快照相同(const 基础联合节点快照&a,const 基础联合节点快照&b) {
-    return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组
+    const bool same=a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组
         &&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;
+#ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
+    // 只观察本次比较已有的两份快照，禁止为诊断补读或刷新保护。
+    if(!same)try {
+        std::wostringstream text;text<<L"节点="<<a.结构.节点.编码.值
+            <<L"；字段差异="<<(a.结构.字段组!=b.结构.字段组)
+            <<L"；入字段差异="<<(a.入向字段组!=b.入向字段组)
+            <<L"；入关系差异="<<(a.入向外部关系组!=b.入向外部关系组)
+            <<L"；出关系差异="<<(a.出向外部关系组!=b.出向外部关系组);
+        std::size_t count=0;
+        const auto fields=[&](const wchar_t* label,const auto& x,const auto& y) {
+            for(const auto& f:x)if(std::find(y.begin(),y.end(),f)==y.end()&&count++<16) {
+                text<<L"；"<<label<<L"[关系="<<f.编码.值<<L",owner="<<f.所属节点.值<<L",字段="<<f.字段节点.值;
+                if(const auto* ref=std::get_if<稳定编码>(&f.内容))text<<L",引用="<<ref->值;
+                text<<L"]";
+            }
+        };
+        fields(L"原字段",a.结构.字段组,b.结构.字段组);fields(L"对照字段",b.结构.字段组,a.结构.字段组);
+        fields(L"原入字段",a.入向字段组,b.入向字段组);fields(L"对照入字段",b.入向字段组,a.入向字段组);
+        (void)记录调试日志(L"ASK_BACK_INFORMATION_GUARD",L"概念owner",L"正式快照比较差异",text.str());
+    }catch(...){}
+#endif
+    return same;
 }
 基础联合节点快照 正式快照(稳定编码 n) {
     auto r=全局基础数据集.查询节点组完整结构({n});
