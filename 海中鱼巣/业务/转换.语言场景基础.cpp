@@ -1254,6 +1254,20 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
         if(图词面语义键(*图)!=图词面语义键(回读.完整候选组[0])){result.状态=O::回读含义不一致;return result;}
         result.状态=O::已生成且唯一回读;result.文本=表达.文本;result.构式=图构式(*图);result.所用知识节点组=表达.已用知识节点组;
         for(const auto& 对齐:表达.对齐组)result.输出对齐组.push_back({{对齐.起始标量,对齐.结束标量},对齐.结构项路径,对齐.词条节点,对齐.名称关系节点,{},{},{}});
+        // 汇总唯一回读路径上的完整保护，供字段询问发送合同在同一基础事务中核验。
+        const auto 并入保护=[&](const std::vector<基础联合节点快照>& 组){
+            for(const auto& 项:组){
+                const auto 旧=std::find_if(result.完整保护组.begin(),result.完整保护组.end(),
+                    [&](const auto& p){return p.结构.节点.编码==项.结构.节点.编码;});
+                if(旧==result.完整保护组.end()){result.完整保护组.push_back(项);continue;}
+                if(旧->结构.节点!=项.结构.节点||旧->结构.字段组!=项.结构.字段组
+                    ||旧->入向外部关系组!=项.入向外部关系组||旧->出向外部关系组!=项.出向外部关系组
+                    ||旧->入向字段组!=项.入向字段组){result.状态=O::读取漂移;result.完整保护组.clear();return false;}
+            }
+            return true;
+        };
+        if(!并入保护(回读.对象绑定保护))return result;
+        for(const auto& 依据:回读.特征概念依据组)if(!并入保护(依据.完整保护))return result;
         return result;
     }
     if(!有效(q.语言节点)||!q.最大知识条目数||!q.最大名称候选数||!q.最大输出标量数||!q.最大回读原文标量数||!q.最大组合候选数||!q.最大确认候选数)return result;
