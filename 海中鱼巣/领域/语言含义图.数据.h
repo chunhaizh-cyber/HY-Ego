@@ -11,6 +11,25 @@
 
 namespace 海中鱼巣 {
 
+struct 新语言指代配置 final {
+    稳定编码 状态类型, 已消解值域, 比较关系;
+};
+struct 新语言指代请求 final {
+    稳定编码 自然语言场景, 来源消息, 原文材料, 作用域, 代词概念;
+    std::uint64_t 原文起点=0, 原文终点=0;
+    std::optional<稳定编码> 存在目标;
+};
+struct 新语言指代信息 final {
+    稳定编码 实例, 状态特征;
+    新语言指代请求 来源;
+    std::optional<稳定编码> 当前存在目标;
+};
+struct 新语言指代结果 final {
+    bool 已读回=false, 已消解=false;
+    std::optional<新语言指代信息> 信息;
+    std::vector<基础联合节点快照> 完整保护;
+};
+
 struct 语言图引用值 final {
     新语言知识角色类别 类别=新语言知识角色类别::存在;
     稳定编码 节点{};
@@ -31,7 +50,11 @@ struct 语言图待求值 final {
     稳定编码 内容范围概念{};
     friend bool operator==(const 语言图待求值&,const 语言图待求值&)=default;
 };
-using 语言图绑定值=std::variant<语言图引用值,语言图整数值,语言图子出现引用,语言图待求值>;
+struct 语言图材料值 final {
+    std::string 原文;
+    friend bool operator==(const 语言图材料值&,const 语言图材料值&)=default;
+};
+using 语言图绑定值=std::variant<语言图引用值,语言图整数值,语言图子出现引用,语言图待求值,语言图材料值>;
 struct 语言图角色绑定 final {
     std::int64_t 角色编号=0;
     语言图绑定值 值;
@@ -110,6 +133,8 @@ struct 新语言需求目标投影 final {
     std::optional<新语言知识特征方向> 方向;
     std::optional<稳定编码> 单位;
     新接收认知来源键 需求来源{};
+    // 仅保存请求原文，不含可执行动作或猜测的目标存在/特征。
+    bool 未解请求目标原文=false;
 };
 struct 新语言需求目标投影结果 final {
     新语言含义采用状态 状态 = 新语言含义采用状态::输入拒绝;

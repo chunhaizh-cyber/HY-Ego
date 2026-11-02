@@ -3,6 +3,7 @@
 #include "新_词类.h"
 #include "概念_存在类.h"
 #include "概念_特征类.h"
+#include "概念_动态类.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -98,7 +99,7 @@ enum class 概念类别 : std::uint8_t {
     特征 = 1,
     存在 = 2,
     信息定义 = 3,
-    特征类别根 = 4
+    特征类别根 = 4, 动态 = 5
 };
 struct 名称正式读取上下文;
 正式结构概念结果 读取名称用正式定义(稳定编码,
@@ -107,7 +108,7 @@ struct 名称正式读取上下文;
 std::optional<概念类别> 识别概念类别(
     稳定编码 概念节点,
     const 概念_特征类& 特征概念服务,
-    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr) {
+    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr,const 概念_动态类* 动态=nullptr) {
     const bool 是特征 = 特征概念服务.是特征概念节点(概念节点);
     const bool 是存在 = 存在概念服务.是存在概念节点(概念节点);
     // 类别根不具有FT值域；其owner证明独立于存在结构schema是否就绪。
@@ -116,6 +117,13 @@ std::optional<概念类别> 识别概念类别(
         if(根.状态==正式概念读取状态::已读取&&根.信息&&根.信息->节点==概念节点)
             return 概念类别::特征类别根;
         if(根.状态==正式概念读取状态::前提已变化)return std::nullopt;
+    }
+    if(!是特征&&!是存在) {
+        const auto E=存在概念服务.读取语言归类概念身份保护(概念节点);
+        if(E.信息&&E.信息->定义未知)return 概念类别::存在;
+        const auto F=特征概念服务.读取语言归类概念身份保护(概念节点);
+        if(F.信息&&F.信息->定义未知)return 概念类别::特征;
+        if(动态){const auto D=动态->读取语言归类概念身份保护(概念节点);if(D.状态==归类概念读取状态::已读取&&D.信息&&D.信息->节点!=D.信息->所属根)return 概念类别::动态;}
     }
     const auto 正式定义 = 读取名称用正式定义(概念节点,存在概念服务,上下文);
     if (!是特征 && !是存在 && (正式定义.状态 == 正式结构操作状态::前提已变化
@@ -134,7 +142,7 @@ std::optional<概念名称关系信息> 读取关系端点(
     稳定编码 节点,
     const 新_词类& 词服务,
     const 概念_特征类& 特征概念服务,
-    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr) {
+    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr,const 概念_动态类* 动态=nullptr) {
     if (!节点仍存在(节点) || !类型为(节点, 名称关系节点类型)
         || !有唯一父节点(节点, 概念名称关系根节点)) {
         return std::nullopt;
@@ -143,7 +151,7 @@ std::optional<概念名称关系信息> 读取关系端点(
     const auto 词条节点 = 读取唯一节点字段(节点, 目标词条字段);
     if (!概念节点 || !词条节点
         || !识别概念类别(
-            *概念节点, 特征概念服务, 存在概念服务,上下文)
+            *概念节点, 特征概念服务, 存在概念服务,上下文,动态)
         || !词服务.是词条节点(*词条节点)) {
         return std::nullopt;
     }
@@ -153,13 +161,15 @@ std::optional<概念名称关系信息> 读取关系端点(
 bool 概念持有关系(
     const 概念名称关系信息& 信息,
     const 概念_特征类& 特征概念服务,
-    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr) {
+    const 概念_存在类& 存在概念服务,名称正式读取上下文* 上下文=nullptr,const 概念_动态类* 动态=nullptr) {
     std::vector<稳定编码> 关系组;
     if (const auto 特征 = 特征概念服务.获取特征概念(信息.概念节点)) {
         关系组 = 特征->名称关系;
     } else if (const auto 存在 = 存在概念服务.获取存在概念(信息.概念节点)) {
         关系组 = 存在->名称关系;
     } else {
+        for(const auto r:{存在概念服务.读取语言归类概念身份保护(信息.概念节点),特征概念服务.读取语言归类概念身份保护(信息.概念节点)})if(r.信息&&r.信息->定义未知)return std::count(r.信息->名称关系.begin(),r.信息->名称关系.end(),信息.节点)==1;
+        if(动态){const auto r=动态->读取语言归类概念身份保护(信息.概念节点);if(r.信息)return std::count(r.信息->名称关系.begin(),r.信息->名称关系.end(),信息.节点)==1;}
         const auto 根=特征概念服务.读取特征类别根概念保护();
         if(根.状态==正式概念读取状态::前提已变化)return false;
         if(根.状态==正式概念读取状态::已读取&&根.信息&&根.信息->节点==信息.概念节点)
@@ -594,7 +604,7 @@ struct 名称核验全集 final {
     const 概念_特征类& 特征服务, const 概念_存在类& 存在服务,
     名称正式读取上下文* 上下文=nullptr,
     std::optional<稳定编码> 目标概念=std::nullopt,
-    std::optional<稳定编码> 目标名称=std::nullopt) {
+    std::optional<稳定编码> 目标名称=std::nullopt,const 概念_动态类* 动态=nullptr) {
     名称核验全集 结果;
     {
         std::lock_guard 锁(概念名称关系互斥);
@@ -630,10 +640,10 @@ struct 名称核验全集 final {
             结果.指代.push_back(*读取.信息);
         } else {
             const auto 信息 = 读取关系端点(原始.快照.结构.节点.编码,
-                词服务, 特征服务, 存在服务,正式读取);
+                词服务, 特征服务, 存在服务,正式读取,动态);
             if (!信息 || 信息->概念节点 != 原始.概念
                 || 信息->词条节点 != 原始.词条
-                || !概念持有关系(*信息, 特征服务, 存在服务,正式读取)) {
+                || !概念持有关系(*信息, 特征服务, 存在服务,正式读取,动态)) {
                 结果.状态 = 指代名称读取状态::结构不一致; return 结果;
             }
             结果.普通.push_back(*信息);
@@ -832,11 +842,12 @@ std::vector<基础联合节点快照> 完成名称保护(const 名称保护读�
 
 void 核普通名称概念保护(const 概念名称关系信息& 项,
     const 概念_特征类& 特征服务, const 概念_存在类& 存在服务,
-    名称保护读集& 保护) {
+    名称保护读集& 保护,const 概念_动态类* 动态=nullptr) {
     const auto 核持有 = [&](const std::vector<稳定编码>& 名称) {
         if (std::count(名称.begin(), 名称.end(), 项.节点) != 1)
             throw std::logic_error("name concept reverse ownership corrupt");
     };
+    const auto 采用归类身份=[&](const 归类概念身份读取结果& r){if(r.状态==归类概念读取状态::前提已变化)throw 概念名称关系查询状态::读取漂移;if(r.状态==归类概念读取状态::资源失败)throw 概念名称关系查询状态::资源失败;if(r.状态!=归类概念读取状态::已读取||!r.信息)return false;核持有(r.信息->名称关系);并名称保护(保护,r.完整保护);return true;};
     const auto E = 存在服务.读取普通存在概念定义保护(项.概念节点);
     if (E.状态 == 正式概念读取状态::前提已变化)
         throw 概念名称关系查询状态::读取漂移;
@@ -849,6 +860,10 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
         并名称保护(保护, E.完整保护组);
         return;
     }
+    const auto unknownE=存在服务.读取语言归类概念身份保护(项.概念节点);
+    if(unknownE.信息&&unknownE.信息->定义未知&&采用归类身份(unknownE))return;
+    const auto unknownF=特征服务.读取语言归类概念身份保护(项.概念节点);
+    if(unknownF.信息&&unknownF.信息->定义未知&&采用归类身份(unknownF))return;
     const auto 特征身份 = 特征服务.读取正式概念身份保护(项.概念节点);
     if (特征身份.状态 == 正式概念读取状态::前提已变化)
         throw 概念名称关系查询状态::读取漂移;
@@ -876,6 +891,7 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
         并名称保护(保护, F.预期节点组);
         return;
     }
+    if(动态&&采用归类身份(动态->读取语言归类概念身份保护(项.概念节点)))return;
     const auto 结构 = 存在服务.读取正式结构概念保护(项.概念节点);
     if (结构.状态 == 正式结构操作状态::前提已变化)
         throw 概念名称关系查询状态::读取漂移;
@@ -1054,7 +1070,7 @@ bool 概念_名称关系类::初始化() noexcept {
         if (!结构仍存在()) return false;
         }
         return 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_).状态
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_).状态
                 == 指代名称读取状态::已读取;
     } catch (...) {
         return false;
@@ -1068,7 +1084,7 @@ bool 概念_名称关系类::初始化() noexcept {
     try {
         名称正式读取上下文 正式读取;
         if (!有效(概念节点) || !有效(词条节点)) return 结果;
-        if (!识别概念类别(概念节点, 特征概念服务_, 存在概念服务_,&正式读取)) {
+        if (!识别概念类别(概念节点, 特征概念服务_, 存在概念服务_,&正式读取,动态概念服务_)) {
             const auto 指代 = 存在概念服务_.获取指代概念(概念节点);
             if (指代.状态 == 指代概念查询状态::已找到)
                 return 结果;
@@ -1080,7 +1096,7 @@ bool 概念_名称关系类::初始化() noexcept {
             }
         }
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_,&正式读取,概念节点);
+            词服务_, 特征概念服务_, 存在概念服务_,&正式读取,概念节点,std::nullopt,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取) {
             结果.状态 = 普通建立状态(全集.状态); return 结果;
         }
@@ -1097,7 +1113,7 @@ bool 概念_名称关系类::初始化() noexcept {
             return 结果;
         }
         const auto 类别 = 识别概念类别(
-            概念节点, 特征概念服务_, 存在概念服务_,&正式读取);
+            概念节点, 特征概念服务_, 存在概念服务_,&正式读取,动态概念服务_);
         if (!类别 || !词服务_.是词条节点(词条节点)) {
             结果.状态 = 概念名称关系建立状态::依赖不存在;
             return 结果;
@@ -1110,6 +1126,7 @@ bool 概念_名称关系类::初始化() noexcept {
                 : 特征概念服务_.解除名称关系(概念节点, 名称节点);
             case 概念类别::存在: return 绑定 ? 存在概念服务_.绑定名称关系(概念节点, 名称节点)
                 : 存在概念服务_.解除名称关系(概念节点, 名称节点);
+            case 概念类别::动态: return 动态概念服务_ && 动态概念服务_->更新语言归类名称关系(概念节点,名称节点,绑定);
             case 概念类别::信息定义: return 绑定 ? 存在概念服务_.绑定信息定义名称关系(概念节点, 名称节点)
                 : 存在概念服务_.解除信息定义名称关系(概念节点, 名称节点);
             }
@@ -1152,8 +1169,8 @@ bool 概念_名称关系类::初始化() noexcept {
             return 结果;
         }
         const auto 读回 = 读取关系端点(
-            节点, 词服务_, 特征概念服务_, 存在概念服务_,&正式读取);
-        if (读回 && 概念持有关系(*读回, 特征概念服务_, 存在概念服务_,&正式读取)
+            节点, 词服务_, 特征概念服务_, 存在概念服务_,&正式读取,动态概念服务_);
+        if (读回 && 概念持有关系(*读回, 特征概念服务_, 存在概念服务_,&正式读取,动态概念服务_)
             && 读回->概念节点 == 概念节点
             && 读回->词条节点 == 词条节点) {
             结果.状态 = 概念名称关系建立状态::已建立;
@@ -1175,7 +1192,7 @@ bool 概念_名称关系类::初始化() noexcept {
     try {
         if (!有效(名称关系节点)) return 概念名称关系删除状态::输入不合法;
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_);
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取)
             return 全集.状态 == 指代名称读取状态::资源失败
                 ? 概念名称关系删除状态::资源失败
@@ -1193,12 +1210,12 @@ bool 概念_名称关系类::初始化() noexcept {
         }
         if (!结构仍存在()) return 概念名称关系删除状态::结构不一致;
         const auto 信息 = 读取关系端点(
-            名称关系节点, 词服务_, 特征概念服务_, 存在概念服务_);
+            名称关系节点, 词服务_, 特征概念服务_, 存在概念服务_,nullptr,动态概念服务_);
         const auto 类别 = 信息 ? 识别概念类别(
-            信息->概念节点, 特征概念服务_, 存在概念服务_)
+            信息->概念节点, 特征概念服务_, 存在概念服务_,nullptr,动态概念服务_)
             : std::nullopt;
         if (!信息 || !类别 || !概念持有关系(
-            *信息, 特征概念服务_, 存在概念服务_)) {
+            *信息, 特征概念服务_, 存在概念服务_,nullptr,动态概念服务_)) {
             return 概念名称关系删除状态::结构不一致;
         }
         const auto 参与名称 = [&](bool 绑定) {
@@ -1212,6 +1229,7 @@ bool 概念_名称关系类::初始化() noexcept {
             case 概念类别::存在: return 绑定
                 ? 存在概念服务_.绑定名称关系(信息->概念节点, 名称关系节点)
                 : 存在概念服务_.解除名称关系(信息->概念节点, 名称关系节点);
+            case 概念类别::动态: return 动态概念服务_ && 动态概念服务_->更新语言归类名称关系(信息->概念节点,名称关系节点,绑定);
             case 概念类别::信息定义: return 绑定
                 ? 存在概念服务_.绑定信息定义名称关系(信息->概念节点, 名称关系节点)
                 : 存在概念服务_.解除信息定义名称关系(信息->概念节点, 名称关系节点);
@@ -1255,7 +1273,7 @@ bool 概念_名称关系类::初始化() noexcept {
     try {
         if (!有效(名称关系节点)) return 结果;
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,名称关系节点);
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,名称关系节点,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取) {
             结果.状态 = 普通查询状态(全集.状态); return 结果;
         }
@@ -1295,7 +1313,7 @@ bool 概念_名称关系类::初始化() noexcept {
     try {
         if (!有效(概念节点)) return 结果;
         std::optional<指代概念查询结果> 指代概念;
-        if (!识别概念类别(概念节点, 特征概念服务_, 存在概念服务_))
+        if (!识别概念类别(概念节点, 特征概念服务_, 存在概念服务_,nullptr,动态概念服务_))
             指代概念 = 存在概念服务_.获取指代概念(概念节点);
         if (指代概念 && 指代概念->状态 != 指代概念查询状态::已找到
             && 指代概念->状态 != 指代概念查询状态::未找到
@@ -1305,7 +1323,7 @@ bool 概念_名称关系类::初始化() noexcept {
             return 结果;
         }
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_,nullptr,概念节点);
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,概念节点,std::nullopt,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取) {
             结果.状态 = 普通查询状态(全集.状态); return 结果;
         }
@@ -1392,8 +1410,10 @@ bool 概念_名称关系类::初始化() noexcept {
     }
 }
 
-概念名称候选保护结果 概念_名称关系类::读取词条名称候选保护(
-    稳定编码 词条) const noexcept {
+概念名称候选保护结果 概念_名称关系类::读取词条名称候选保护(稳定编码 词条) const noexcept {return 读取词条名称候选保护内部(词条,false);}
+概念名称候选保护结果 概念_名称关系类::读取词条指代候选保护(稳定编码 词条) const noexcept {return 读取词条名称候选保护内部(词条,true);}
+概念名称候选保护结果 概念_名称关系类::读取词条名称候选保护内部(
+    稳定编码 词条,bool 只核指代) const noexcept {
     using S = 概念名称关系查询状态;
     try {
         if (!有效(词条)) return {};
@@ -1423,10 +1443,11 @@ bool 概念_名称关系类::初始化() noexcept {
         // 不持名称锁调用其它owner；最后以自身登记和完整读集重核。
         for (const auto& 项 : 原始.项组) {
             if (!项.角色) {
+                if(只核指代)continue;
                 const 概念名称关系信息 信息{项.快照.结构.节点.编码, 项.概念, 项.词条};
                 if (!普通概念.insert(项.概念).second)
                     throw std::logic_error("ordinary name endpoints duplicated");
-                核普通名称概念保护(信息, 特征概念服务_, 存在概念服务_, 保护);
+                核普通名称概念保护(信息, 特征概念服务_, 存在概念服务_, 保护,动态概念服务_);
                 候选.emplace_back(信息);
                 continue;
             }
@@ -1500,7 +1521,7 @@ bool 概念_名称关系类::是概念名称关系节点(
     指代名称读取结果 结果;
     if (!有效(名称关系节点)) return 结果;
     const auto 全集 = 准备名称核验全集(
-        词服务_, 特征概念服务_, 存在概念服务_);
+        词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
     if (全集.状态 != 指代名称读取状态::已读取) {
         结果.状态 = 全集.状态; return 结果;
     }
@@ -1523,7 +1544,7 @@ bool 概念_名称关系类::是概念名称关系节点(
     if (结果.状态 != 指代名称读取状态::已读取) return 结果;
     if (!概念.信息) { 结果.状态 = 指代名称读取状态::结构不一致; return 结果; }
     const auto 全集 = 准备名称核验全集(
-        词服务_, 特征概念服务_, 存在概念服务_);
+        词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
     if (全集.状态 != 指代名称读取状态::已读取) {
         结果.状态 = 全集.状态; return 结果;
     }
@@ -1561,7 +1582,7 @@ bool 概念_名称关系类::是概念名称关系节点(
         return 结果;
     }
     const auto 全集 = 准备名称核验全集(
-        词服务_, 特征概念服务_, 存在概念服务_);
+        词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
     if (全集.状态 != 指代名称读取状态::已读取) {
         结果.状态 = 全集.状态; return 结果;
     }
@@ -1651,7 +1672,7 @@ bool 概念_名称关系类::是概念名称关系节点(
             结果.状态 = 指代名称变更状态::依赖已变化; return 结果;
         }
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_);
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取) {
             结果.状态 = 写状态(全集.状态); return 结果;
         }
@@ -1806,7 +1827,7 @@ bool 概念_名称关系类::是概念名称关系节点(
     try {
         if (!有效(名称关系节点)) return 结果;
         const auto 全集 = 准备名称核验全集(
-            词服务_, 特征概念服务_, 存在概念服务_);
+            词服务_, 特征概念服务_, 存在概念服务_,nullptr,std::nullopt,std::nullopt,动态概念服务_);
         if (全集.状态 != 指代名称读取状态::已读取) {
             结果.状态 = 写状态(全集.状态); return 结果;
         }
@@ -1972,3 +1993,65 @@ bool 概念_名称关系类::是概念名称关系节点(
 }
 
 } // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+void 概念_名称关系类::装配归类动态概念读取(概念_动态类* reader) noexcept {
+    std::lock_guard lock(概念名称关系互斥);
+    if(动态概念服务_&&reader&&动态概念服务_!=reader)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"装配名称动态概念读取",L"读取所有者不一致");
+    动态概念服务_=reader;
+}
+概念名称关系建立结果 概念_名称关系类::建立或取得归类名称关系(稳定编码 C,稳定编码 W,
+    const std::vector<基础联合节点快照>& source) noexcept {
+    using S=概念名称关系建立状态;
+    try {
+        if(source.empty()||!有效(C)||!有效(W))return {};
+        const auto e=存在概念服务_.读取语言归类概念身份保护(C);
+        const auto f=特征概念服务_.读取语言归类概念身份保护(C);
+        const auto d=动态概念服务_ ? 动态概念服务_->读取语言归类概念身份保护(C) : 归类概念身份读取结果{};
+        const auto* endpoint=e.信息 ? &e : f.信息 ? &f : d.信息 ? &d : nullptr;
+        if(!endpoint||endpoint->状态!=归类概念读取状态::已读取||!endpoint->信息->定义未知||endpoint->信息->目标词条!=W)return {S::依赖不存在,{}};
+        auto expected=source;
+        const auto merge=[&](const auto&incoming){for(const auto&n:incoming){const auto it=std::find_if(expected.begin(),expected.end(),[&](const auto&x){return x.结构.节点.编码==n.结构.节点.编码;});if(it==expected.end())expected.push_back(n);else if(!同一联合节点(*it,n))return false;}return true;};
+        if(!merge(endpoint->完整保护))return {S::依赖已变化,{}};
+        std::lock_guard lock(概念名称关系互斥);
+        const auto raw=读取名称原始全集(C);if(raw.状态!=指代名称读取状态::已读取)return {普通建立状态(raw.状态),{}};
+        std::optional<稳定编码> N;
+        for(const auto&item:raw.项组)if(!item.角色&&item.概念==C&&item.词条==W){if(N)return {S::结构不一致,{}};N=item.快照.结构.节点.编码;}
+        bool reused=N.has_value();
+        if(!N){
+            const auto root=全局基础数据集.查询节点组完整结构({概念名称关系根节点});
+            if(root.状态==基础结构操作状态::资源失败)return {S::资源失败,{}};
+            if(root.状态!=基础结构操作状态::已完成||root.节点组.size()!=1||!root.节点组.front().快照)return {S::结构不一致,{}};
+            if(!merge(std::vector<基础联合节点快照>{*root.节点组.front().快照}))return {S::依赖已变化,{}};
+            基础节点组追加请求 q;q.预期联合节点组=std::move(expected);
+            q.新节点组.push_back({{{节点类型字段,名称关系节点类型},{被命名概念字段,C},{目标词条字段,W}}});
+            q.追加外部关系组.push_back({概念名称关系根节点,基础组内节点引用{0},基础外部关系类型::父子,0});
+            const auto result=全局基础数据集.原子追加节点组(q);
+            if(result.状态==基础节点组追加状态::预期不符)return {S::依赖已变化,{}};
+            if(result.状态==基础节点组追加状态::资源失败)return {S::资源失败,{}};
+            if(result.状态!=基础节点组追加状态::已完成||result.新节点组.size()!=1)return {S::结构不一致,{}};
+            N=result.新节点组.front();
+        }
+        // 将本次名称节点造成的引用增量计入来源保护，除此以外不接受源变化。
+        std::vector<基础联合节点快照> bindSource;
+        for(const auto&old:source){const auto captured=全局基础数据集.查询节点组完整结构({old.结构.节点.编码});
+            if(captured.状态==基础结构操作状态::资源失败)return {S::资源失败,N};
+            if(captured.状态!=基础结构操作状态::已完成||captured.节点组.size()!=1||!captured.节点组.front().快照)return {S::依赖已变化,N};
+            const auto fresh=*captured.节点组.front().快照;auto normalized=fresh;
+            std::erase_if(normalized.结构.字段组,[&](const auto&x){const auto*v=std::get_if<稳定编码>(&x.内容);return v&&*v==*N&&std::find(old.结构.字段组.begin(),old.结构.字段组.end(),x)==old.结构.字段组.end();});
+            std::erase_if(normalized.入向字段组,[&](const auto&x){return x.所属节点==*N&&std::find(old.入向字段组.begin(),old.入向字段组.end(),x)==old.入向字段组.end();});
+            const auto ownEdge=[&](const auto&e,const auto&prior){return (e.源节点==*N||e.目标节点==*N)&&std::find(prior.begin(),prior.end(),e)==prior.end();};
+            std::erase_if(normalized.入向外部关系组,[&](const auto&e){return ownEdge(e,old.入向外部关系组);});
+            std::erase_if(normalized.出向外部关系组,[&](const auto&e){return ownEdge(e,old.出向外部关系组);});
+            if(!同一联合节点(old,normalized))return {S::依赖已变化,N};bindSource.push_back(fresh);
+        }
+        // 名称 owner 的前缀已发表；概念 owner 独立完成反向持有，失败时不伪报回滚。
+        const bool bound=e.信息 ? 存在概念服务_.更新语言归类名称关系(C,*N,true,bindSource) : f.信息 ? 特征概念服务_.更新语言归类名称关系(C,*N,true,bindSource) : 动态概念服务_->更新语言归类名称关系(C,*N,true,bindSource);
+        if(!bound)return {S::工程未完成,N};
+        const auto back=获取名称关系(*N);
+        if(back.状态!=概念名称关系查询状态::已找到||!back.信息||back.信息->概念节点!=C||back.信息->词条节点!=W)return {S::读取未完成,N};
+        return {reused ? S::已复用 : S::已建立,N};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(...){return {S::结构不一致,{}};}
+}
+}

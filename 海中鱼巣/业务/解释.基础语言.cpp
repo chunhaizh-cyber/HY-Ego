@@ -4006,6 +4006,7 @@ std::string 解释图语义键(const 语言图含义材料& 材料) {
             if(const auto* 引用=std::get_if<语言图引用值>(&值->值))键+=std::to_string(static_cast<int>(引用->类别))+":"+std::to_string(引用->节点.值);
             else if(const auto* 数=std::get_if<语言图整数值>(&值->值))键+=数->规范十进制+":"+(数->单位 ? std::to_string(数->单位->值) : "-");
             else if(const auto* 待求=std::get_if<语言图待求值>(&值->值))键+="?"+std::to_string(待求->内容范围概念.值);
+            else if(const auto* raw=std::get_if<语言图材料值>(&值->值))键+="raw:"+std::to_string(raw->原文.size())+":"+raw->原文;
             else 键+=自身(自身,std::get<语言图子出现引用>(值->值).出现编号);
         }return 键+")";
     };
@@ -4081,8 +4082,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         for(const auto& 知识:全知识.信息组)if(知识.定义.目标.含义图) {
             const auto& 图=*知识.定义.目标.含义图;
             const auto 根=std::find_if(图.节点组.begin(),图.节点组.end(),[&](const auto& 项){return 项.局部编号==图.根含义编号;});
-            if(根!=图.节点组.end()&&根->操作==新语言知识含义操作::行动请求
-                &&知识.定义.目标.目的==新语言知识表达目的::提出需求)根知识.insert(知识.节点);
+            if(根!=图.节点组.end()&&((根->操作==新语言知识含义操作::行动请求
+                &&知识.定义.目标.目的==新语言知识表达目的::提出需求)||是语言材料操作(根->操作)))根知识.insert(知识.节点);
         }
         using 角色键=std::pair<std::int64_t,std::int64_t>;
         struct 图短语结果 final {
@@ -4235,6 +4236,61 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             std::map<std::int64_t,const 新语言图含义节点*> 节点表;for(const auto& 节点:图.节点组)节点表.emplace(节点.局部编号,&节点);
             if(!节点表.contains(图.根含义编号))return 成果;
             const auto& 项组=知识.定义.结构.有序项组;
+            const auto 未明=std::find_if(图.节点组.begin(),图.节点组.end(),[](const auto& n){return n.操作==新语言知识含义操作::未解请求目标原文;});
+            if(未明!=图.节点组.end()) {
+                // 具名输入知识只识别请求引导词；尾部保持原始语言材料，绝不求动词的目标语义。
+                // 说话者及受请求者只取本次已核验语境；受益者等词面仍留在未明片段中。
+                if(!请求.交互上下文||图.节点组.size()!=3||项组.size()!=2)return 成果;
+                const auto* 引导=std::get_if<新语言知识固定词项>(&项组.front().载荷);
+                if(!引导)return 成果;
+                const auto 词读=词.获取词条(引导->词条节点);
+                if(词读.状态==新词条查询状态::资源失败)throw 状态类::资源失败;
+                if(词读.状态!=新词条查询状态::已找到||!词读.信息)throw 状态类::引用不可读;
+                词保护.emplace(词读.信息->节点,*词读.信息);
+                const auto 前词=解码标准UTF8(词读.信息->规范化词面);
+                if(!前词||前词->码点.empty())throw 状态类::内部不一致;
+                const auto 代起=起+前词->码点.size();
+                if(代起>=末||片段(起,代起)!=词读.信息->规范化词面)return 成果;
+                const auto* speakerRole=std::get_if<新语言知识图角色表达项>(&项组[1].载荷);
+                if(!speakerRole||speakerRole->方式!=新语言知识表达方式::已消解指代
+                    ||!speakerRole->指代名称关系节点||!speakerRole->指代概念节点)throw 状态类::内部不一致;
+                const auto pronoun=名称.获取指代名称关系(*speakerRole->指代名称关系节点);
+                if(pronoun.状态==指代名称读取状态::资源失败)throw 状态类::资源失败;
+                if(pronoun.状态!=指代名称读取状态::已读取||!pronoun.信息)throw 状态类::引用不可读;
+                const auto& pp=*pronoun.信息;
+                if(pp.概念.节点!=speakerRole->指代概念节点||pp.概念.定义.规则!=指代声明规则::作用域说话者
+                    ||pp.概念.定义.目标范围!=指代目标范围::单个已登记强类型信息节点)throw 状态类::内部不一致;
+                const auto word=解码标准UTF8(pp.词条.规范化词面);if(!word||word->码点.empty())throw 状态类::内部不一致;
+                const auto 尾起=代起+word->码点.size();
+                if(尾起>=末||片段(代起,尾起)!=pp.词条.规范化词面)return 成果;
+                指代保护.emplace(pp.节点,pp);词保护.emplace(pp.词条.节点,pp.词条);
+                const auto names=依据 ? 依据->读名称(pp.词条.节点) : 名称.查询词条候选概念(pp.词条.节点);
+                if(names.状态!=概念名称关系查询状态::已找到)throw 状态类::读取漂移;
+                名称集合保护.emplace(pp.词条.节点,名称集合快照{names.状态,names.名称关系节点组});
+                if(std::find(names.名称关系节点组.begin(),names.名称关系节点组.end(),pp.节点)==names.名称关系节点组.end())throw 状态类::读取漂移;
+                auto 尾末=末;
+                while(尾末>尾起&&(原文->码点[尾末-1]==U'。'||原文->码点[尾末-1]==U'！'||原文->码点[尾末-1]==U'!'||原文->码点[尾末-1]==U'.'
+                    ||原文->码点[尾末-1]==U' '||原文->码点[尾末-1]==U'\t'||原文->码点[尾末-1]==U'\r'||原文->码点[尾末-1]==U'\n'))--尾末;
+                if(尾末==尾起)return 成果;
+                const auto& 上下文=*请求.交互上下文;
+                if(!有效(上下文.接收消息M)||!有效(上下文.说话者H)||!有效(上下文.受话者E)||!有效(上下文.现实范围根))throw 状态类::输入拒绝;
+                核交互身份(上下文.说话者H);核交互身份(上下文.受话者E);
+                const auto& 根=*节点表.at(图.根含义编号);
+                if(根.操作!=新语言知识含义操作::行动请求||根.子含义组.size()!=1)throw 状态类::内部不一致;
+                const auto& 需=*节点表.at(根.子含义组.front().子含义编号);
+                if(需.操作!=新语言知识含义操作::需求描述||需.子含义组.size()!=1||需.子含义组.front().子含义编号!=未明->局部编号)throw 状态类::内部不一致;
+                const auto 角色号=[](const auto& n,新语言知识参数角色 p){const auto i=std::find_if(n.参数组.begin(),n.参数组.end(),[&](const auto& x){return x.参数==p;});if(i==n.参数组.end())throw std::logic_error("unresolved action contextual role missing");return i->规则角色;};
+                图短语结果 r;
+                const auto E角色=角色键{根.局部编号,角色号(根,新语言知识参数角色::受请求者)};
+                const auto H角色=角色键{需.局部编号,角色号(需,新语言知识参数角色::主体)};
+                r.值组.emplace(E角色,语言图引用值{新语言知识角色类别::存在,上下文.受话者E,{},{}});
+                r.值组.emplace(H角色,语言图引用值{新语言知识角色类别::存在,上下文.说话者H,{},{}});
+                r.角色范围[E角色]={起,代起};r.角色范围[H角色]={代起,尾起};
+                for(const auto& n : 图.节点组)r.所用知识[n.局部编号]=知识编号;
+                r.节点范围[根.局部编号]={起,末};r.节点范围[需.局部编号]={代起,尾末};r.节点范围[未明->局部编号]={尾起,尾末};
+                r.节点路径[根.局部编号]=路径;auto 子路径=路径;子路径.push_back(1);r.节点路径[需.局部编号]=子路径;子路径.push_back(1);r.节点路径[未明->局部编号]=子路径;
+                成果.push_back(std::move(r));return 成果;
+            }
             const auto 下一固定词可能匹配=[&](std::size_t 项位置,std::size_t 端) {
                 if(项位置+1>=项组.size())return true;
                 const auto* 固定=std::get_if<新语言知识固定词项>(&项组[项位置+1].载荷);
@@ -4276,7 +4332,10 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                     for(std::size_t 端=游标+1;端<=末;++端) {
                         if(!下一固定词可能匹配(项位置,端))continue;
                         std::vector<语言图绑定值> 候选;
-                        if(角色&&角色->方式==新语言知识表达方式::查询变量词面) {
+                        if(定义->种类==新语言知识角色种类::语言材料引用) {
+                            if(!是语言材料操作(节点表.at(引用.含义编号)->操作))continue;
+                            const auto raw=片段(游标,端);if(!raw.empty())候选.push_back(语言图材料值{raw});
+                        }else if(角色&&角色->方式==新语言知识表达方式::查询变量词面) {
                             const auto 词条=依据 ? 依据->读词(*角色->查询词条节点):词.获取词条(*角色->查询词条节点);
                             if(词条.状态!=新词条查询状态::已找到||!词条.信息)throw 状态类::引用不可读;
                             词保护.emplace(词条.信息->节点,*词条.信息);

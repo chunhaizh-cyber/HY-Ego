@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include <vector>
+#include <functional>
 
 #include "新_方法参数场景.h"
 #include "新_状态类.h"
@@ -188,13 +189,17 @@ public:
 
     static 新本能函数本次条件结果对 获取服务对象(
         const 方法参数场景&) noexcept;
-    static 新本能函数本次条件结果对 获取服务对象新需求(
+    static 新本能函数本次条件结果对 获取服务对象需求信息(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 建立连接(
         const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 需求字段回答写回(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 写回语言场景主张(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 发送指定需求字段(const 方法参数场景&) noexcept;
 };
 
+// 仅worker的同步调用期借用；不保存业务事实，不给self执行本能的权限。
+新本能函数本次条件结果对 调用需求字段答案写回本能(const 方法参数场景&,
+    const std::function<新本能函数本次条件结果对(const 方法参数场景&)>&);
 } // namespace 海中鱼巣

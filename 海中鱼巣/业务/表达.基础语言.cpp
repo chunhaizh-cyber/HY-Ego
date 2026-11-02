@@ -678,7 +678,10 @@ int 图整数次序(const std::string& 左,const std::string& 右) {
                 ||!值组.contains(角色.局部编号)||角色.必要约束组.size()!=1
                 ||角色.必要约束组[0].被约束角色!=角色.局部编号)return false;
             const auto& 值=*值组.at(角色.局部编号);
-            if(角色.种类==新语言知识角色种类::子含义引用) {
+            if(角色.种类==新语言知识角色种类::语言材料引用) {
+                const auto* raw=std::get_if<语言图材料值>(&值);
+                if(!raw||raw->原文.empty()||!新_语言类::严格UTF8字节串有效(raw->原文)||!是语言材料操作(定义.操作))return false;
+            }else if(角色.种类==新语言知识角色种类::子含义引用) {
                 const auto* 子=std::get_if<语言图子出现引用>(&值);
                 const auto 边=std::find_if(定义.子含义组.begin(),定义.子含义组.end(),[&](const auto& 项){return 项.本节点角色编号==角色.局部编号;});
                 if(!子||边==定义.子含义组.end()||!校验出现.contains(子->出现编号)
@@ -789,6 +792,8 @@ int 图整数次序(const std::string& 左,const std::string& 右) {
     for(const auto& 知识:全部.信息组)if(旧六图兼容(知识.定义)
         &&std::none_of(知识.定义.结构.有序项组.begin(),知识.定义.结构.有序项组.end(),[](const auto& 项){const auto* 角色=std::get_if<新语言知识角色表达项>(&项.载荷);return 角色&&角色->方式==新语言知识表达方式::已消解指代;}))
         根知识.insert(知识.节点);
+    for(const auto& k : 全部.信息组)if(k.定义.目标.含义图&&k.定义.目标.含义图->节点组.size()==1
+        &&是语言材料操作(k.定义.目标.含义图->节点组.front().操作))根知识.insert(k.节点);
     std::map<稳定编码,const 新语言知识信息*> 知识表;for(const auto& 项:全部.信息组)知识表.emplace(项.节点,&项);
     std::map<std::int64_t,const 新语言图含义节点*> 定义表;
     for(const auto& 节点:材料.定义图.节点组)if(!定义表.emplace(节点.局部编号,&节点).second)return 失败(基础表达状态::输入拒绝);
@@ -797,7 +802,7 @@ int 图整数次序(const std::string& 左,const std::string& 右) {
     if(!出现表.contains(材料.根出现编号))return 失败(基础表达状态::输入拒绝);
     const auto& 根定义=*定义表.at(出现表.at(材料.根出现编号)->定义含义编号);
     if(根定义.操作!=请求.操作||出现表.at(材料.根出现编号)->有效作用域!=请求.作用域
-        ||((请求.目的==新语言知识表达目的::提问)!=(根定义.操作==新语言知识含义操作::信息请求)))return 失败(基础表达状态::输入拒绝);
+        ||((请求.目的==新语言知识表达目的::提问)!=(根定义.操作==新语言知识含义操作::信息请求||是语言材料提问(根定义.操作))))return 失败(基础表达状态::输入拒绝);
     using 角色键=std::pair<std::int64_t,std::int64_t>;
     using 绑定表=std::map<角色键,const 语言图角色绑定*>;
     const auto 工程状态=[](基础表达状态 状态){return 状态==基础表达状态::工程未完成||状态==基础表达状态::内部不一致
@@ -925,6 +930,9 @@ int 图整数次序(const std::string& 左,const std::string& 右) {
                     const auto 读取=词.获取词条(*图角色->查询词条节点);
                     if(读取.状态!=新词条查询状态::已找到||!读取.信息)return 基础表达状态::引用不可读;
                     固定词保护.emplace(读取.信息->节点,*读取.信息);现场.文本+=读取.信息->规范化词面;词条=读取.信息->节点;
+                }else if(const auto* raw=std::get_if<语言图材料值>(&值)) {
+                    if(raw->原文.empty())return 基础表达状态::输入拒绝;
+                    现场.文本+=raw->原文;
                 }else if(const auto* 数=std::get_if<语言图整数值>(&值)) {
                     auto 规范=数->规范十进制;if(!图整数规范(规范)||规范!=数->规范十进制)return 基础表达状态::输入拒绝;现场.文本+=规范;
                 }else if(const auto* 引用值=std::get_if<语言图引用值>(&值)) {

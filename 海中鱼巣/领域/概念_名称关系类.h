@@ -13,6 +13,7 @@
 namespace 海中鱼巣 {
 
 class 新_词类;
+class 概念_动态类;
 class 概念_特征类;
 class 概念_存在类;
 
@@ -139,6 +140,9 @@ public:
         概念_特征类& 特征概念服务,
         概念_存在类& 存在概念服务) noexcept;
 
+    void 装配归类动态概念读取(概念_动态类*) noexcept;
+    概念名称关系建立结果 建立或取得归类名称关系(稳定编码,稳定编码,
+        const std::vector<基础联合节点快照>&) noexcept;
     bool 初始化() noexcept;
 
     指代名称读取状态 初始化指代名称结构();
@@ -162,9 +166,13 @@ public:
         稳定编码 词条节点) const noexcept;
     概念名称候选保护结果 读取词条名称候选保护(
         稳定编码 词条) const noexcept;
+    // 归类准入只核验指代名称；不要求尚在修复的普通名称前缀已完成。
+    概念名称候选保护结果 读取词条指代候选保护(稳定编码) const noexcept;
     bool 是概念名称关系节点(稳定编码 节点) const noexcept;
 
 private:
+    概念名称候选保护结果 读取词条名称候选保护内部(稳定编码,bool) const noexcept;
+    概念_动态类* 动态概念服务_ = nullptr;
     新_词类& 词服务_;
     概念_特征类& 特征概念服务_;
     概念_存在类& 存在概念服务_;

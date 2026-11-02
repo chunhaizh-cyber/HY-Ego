@@ -13,6 +13,8 @@
 #include "业务/服务对象.本能运行服务.h"
 #include "业务/服务需求.本能运行服务.h"
 #include "业务/字段询问.语言服务.h"
+#include "业务/词条归类.事实服务.h"
+#include "业务/语言补全.运行服务.h"
 #include "业务/字段询问.本能运行服务.h"
 #include "业务/语言场景写回.本能运行服务.h"
 #include "业务/模拟学习.服务.h"
@@ -373,6 +375,8 @@ struct 普通应用上下文 final {
     std::shared_ptr<连接本能运行服务> 连接运行;
     std::shared_ptr<服务对象本能运行服务> 服务对象运行;
     std::shared_ptr<服务对象新需求本能运行服务> 服务对象新需求运行;
+    std::shared_ptr<词条归类事实服务> 词条归类事实;
+    std::shared_ptr<语言补全运行服务> 语言补全运行;
     std::shared_ptr<字段询问语言服务> 字段询问语言;
     std::shared_ptr<字段询问本能运行服务> 字段询问运行;
     std::shared_ptr<语言场景写回本能运行服务> 语言写回运行;
@@ -1287,8 +1291,8 @@ public:
             return "{\"stage\":\"未处理\",\"reason\":\"尚无接收认知观察\",\"message\":null,\"speaker\":null,\"scene\":null,\"meaning\":null,\"demand\":null}";
         }
         auto item=*last;
-        static constexpr std::array<const char*,13> names{"未处理","已采用U","已建立D","已读回","非支持输入",
-            "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求"};
+        static constexpr std::array<const char*,14> names{"未处理","已采用U","已建立D","已读回","非支持输入",
+            "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求","已读回待完善请求"};
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
@@ -1686,6 +1690,8 @@ void 采集普通控制面板(普通应用上下文& 当前,
             const auto 间隔 = 完整 ? std::chrono::milliseconds(2000) : std::chrono::milliseconds(15000);
             (void)缓存->唤醒.wait_for(锁, 停止, 间隔, [] { return false; });
         }
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"控制面板只读采集", L"只读快照工程异常，不将其解释为业务失败或空数据。",e.what());
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"控制面板只读采集", L"只读快照工程异常，不将其解释为业务失败或空数据。");
     }
@@ -3686,6 +3692,19 @@ void 命名并读回先天信息概念(普通应用上下文& 当前, const 先�
             if (询问登记调用.结果.状态!=新本能函数执行状态::已按合同返回
                 || !当前.方法服务.查询本能登记(std::string(新本能函数登记名_询问指定需求字段)).方法节点)
                 throw std::logic_error("字段询问头及参数规格登记失败");
+            if(!当前.词条归类事实)当前.词条归类事实=std::make_shared<词条归类事实服务>(当前.世界事实.词服务,
+                当前.世界事实.名称关系服务,当前.世界事实.存在概念服务,当前.世界事实.特征概念服务,当前.世界树.获取词条归类动态概念服务());
+            当前.需求服务.装配词条归类读取接口(当前.词条归类事实.get());
+            if(!当前.语言补全运行)当前.语言补全运行=std::make_shared<语言补全运行服务>(当前.外设世界树,当前.自然语言世界树,
+                当前.世界事实.语言服务,当前.世界事实.词服务,当前.世界事实.名称关系服务,当前.世界事实.存在概念服务,
+                当前.世界事实.特征概念服务,当前.世界树.获取词条归类动态概念服务(),当前.世界事实.二次特征概念服务,
+                当前.世界事实.存在服务,当前.世界事实.特征值服务,当前.世界事实.特征服务,当前.世界事实.场景服务,
+                当前.需求服务,当前.方法服务,当前.世界事实.动态服务,当前.接收认知);
+            if(!当前.语言补全运行->初始化(询问配置))throw std::logic_error("language completion runtime initialization failed");
+            当前.接收认知.装配字段答案执行(当前.方法服务,当前.世界事实.动态服务,询问配置);
+            当前.接收认知.装配语言补全(当前.语言补全运行);
+            当前.任务服务.装配语言补全运行接口(当前.语言补全运行);
+
         } catch (const std::exception& e) {
             工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"装配字段询问本能",L"字段询问运行依赖或方法声明未完整装配；保留已发生步骤。",e.what());
         } catch (...) {
@@ -3763,6 +3782,14 @@ void 命名并读回先天信息概念(普通应用上下文& 当前, const 先�
         if(!当前.自我线程.绑定接收需求认知(当前.接收认知).成功()) {
             结果.状态=普通应用装配状态::线程绑定失败;return 结果;
         }
+        当前.接收认知.装配任务读取接口(当前.任务服务);
+        当前.任务服务.装配字段答案候选读取([&provider=当前.接收认知](const 新任务字段追问记录& r) {
+            return provider.读取字段答案候选(r);
+        });
+        当前.任务服务.装配字段答案执行([&provider=当前.接收认知](const 新需求字段答案写回请求& q,
+            新_需求类& owner,const 方法参数场景& scene) {
+            return provider.执行字段答案写回本能(q,owner,scene);
+        });
 
         结果.消息配置 = 当前.自我线程.配置消息处理({
             当前.配置.自我线程邮箱容量,
@@ -3803,7 +3830,7 @@ void 命名并读回先天信息概念(普通应用上下文& 当前, const 先�
             return 结果;
         }
         const auto 新需求登记 = 当前.方法服务.查询本能登记(
-            std::string(新本能函数登记名_获取服务对象需求节点));
+            std::string(新本能函数登记名_获取服务对象需求信息));
 #if HY_EGO_STARTUP_TIMING
         观察阶段(L"装配层查询新方法登记", static_cast<std::int64_t>(新需求登记.状态));
 #endif

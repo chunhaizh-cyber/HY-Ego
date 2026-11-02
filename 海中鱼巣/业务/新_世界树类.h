@@ -293,6 +293,8 @@ public:
     bool 已初始化() const noexcept;
     std::optional<稳定编码> 获取世界树根场景() const noexcept;
     新世界事实服务引用 获取事实服务引用() noexcept;
+    // 装配正式词条归类写回服务；仍使用原动态概念owner。
+    概念_动态类& 获取词条归类动态概念服务() noexcept;
     新动态概念自动抽象结果 处理已登记动态概念(
         const 新_场景类& 场景视图, 稳定编码 场景节点, 稳定编码 动态节点) noexcept;
 

@@ -1,10 +1,16 @@
 #include "接收需求认知.服务.h"
+#include "语言补全.运行服务.h"
 #include "新_外设世界树类.h"
 #include "转换.语言场景基础.h"
 #include "转换.语言场景共同.h"
 #include "../领域/新_自然语言世界树类.h"
 #include "../领域/新_场景类.h"
 #include "../领域/新_需求类.h"
+#include "../领域/新_任务类.h"
+#include "../领域/新_方法类.h"
+#include "../领域/新_本能函数管理类.h"
+#include "../领域/新_动态类.h"
+#include "../适配/适配器.UTC时钟.h"
 #include "../领域/概念_二次特征类.h"
 #include "../核心/容错检查.h"
 #include "../核心/日志系统.h"
@@ -13,6 +19,7 @@
 #endif
 #include <sstream>
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <chrono>
 #include <functional>
@@ -330,13 +337,15 @@ std::int64_t 读I64(const std::string& s){
 }
 新部分服务要求目标 映射目标(认知依赖& d,const 新语言需求目标投影& p,std::stop_token stop){
     检查认知停止(stop);
+    if(p.未解请求目标原文)return {}; // 明确没有目标投影，原动作只保存在语言来源中。
+    新部分服务要求目标 out;out.目标存在节点=p.目标存在;out.目标特征类型概念节点=p.目标特征类型;
+    if(!p.准确整数&&!p.区间下界&&!p.区间上界&&!p.方向)return out;
     const auto r=d.特征概念.读取特征概念定义保护(p.目标特征类型);
     if(r.前提已变化)漂移();if(r.状态==基础结构操作状态::资源失败)资源();
     if(r.状态!=基础结构操作状态::已完成||!r.信息)throw std::logic_error("adopted target FT unreadable");
     const auto& def=r.信息->定义;
     if(r.信息->类型根!=p.目标特征类型||def.材料类型!=特征概念材料物理类型::I64标量||(!p.方向&&def.单位!=p.单位))
         throw 推进中断{阶段::D映射受阻,"目标FT类型或单位暂不能精确映射"};
-    新部分服务要求目标 out;out.目标存在节点=p.目标存在;out.目标特征类型概念节点=p.目标特征类型;
     if(p.方向){out.目标形式=新需求目标形式::变化方向;out.目标变化方向=*p.方向==新语言知识特征方向::增加 ? 新需求变化方向::增加 : 新需求变化方向::减少;return out;}
     const auto lo=读I64(p.准确整数 ? *p.准确整数 : *p.区间下界),hi=读I64(p.准确整数 ? *p.准确整数 : *p.区间上界);
     const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
@@ -372,6 +381,8 @@ std::int64_t 读I64(const std::string& s){
 
 struct 接收需求认知服务::实现 final {
     认知依赖 依赖;
+    std::shared_ptr<语言补全运行服务> 语言补全;
+    新_任务类* 任务=nullptr;新_方法类* 方法=nullptr;新_动态类* 动态=nullptr;稳定编码 答案方法{};
     struct 会话 final {接收需求认知会话语境 语境;bool 封存=false;};
     struct 调度 final {接收需求认知观察 观察;bool 终结=false;std::chrono::steady_clock::time_point 下次{};bool 行动请求已交接=false;};
     mutable std::mutex 锁;
@@ -528,6 +539,9 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         if(adopted.状态==新语言含义采用状态::已采用){
             if(!adopted.信息)throw std::logic_error("adopted meaning source returned no payload");
             out.U=adopted.信息->节点;out.S=adopted.信息->场景节点;
+            if(实现_->语言补全&&context.已绑定自我
+                &&!实现_->语言补全->记录采用指代(*out.U,*context.已绑定人类,*context.已绑定自我))
+                throw 推进中断{阶段::对象未决,"采用指代尚未完成正式实例绑定与读回"};
             const auto roles=读取认知图角色(adopted.信息->含义);
             if(roles.主体!=*context.已绑定人类)throw std::logic_error("saved demand speaker conflicts with source context");
             新语言需求目标投影 projected;
@@ -606,7 +620,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                             pending.窗口=m.窗口节点;pending.外设场景=m.场景节点;pending.输出特征=*window->定位.输出队列特征;
                             pending.公开宿主会话=m.来源.公开宿主会话;pending.对话框标识=m.来源.对话框标识;
                             out.待完善交接=std::move(pending);out.阶段=阶段::已读回待完善请求;
-                            out.原因="同源请求已保存但内容待完善；交自我确认缺项后由任务追问";
+                            out.原因="同源请求为待完善材料；确认完整获取信息目标后由通用筹办提出补问子需求";
                         } else {
                             if(qualification.状态!=新被认知需求资格状态::已读取||!qualification.信息)
                                 throw std::logic_error("request child demand complete qualification unavailable");
@@ -714,6 +728,198 @@ std::optional<新需求字段追问来源> 接收需求认知服务::读取字�
     result.公开宿主会话=message->来源.公开宿主会话;result.对话框标识=message->来源.对话框标识;
     if(d.需求.复核字段追问来源(result)!=新需求操作状态::已找到)return {};
     return result;
+}
+
+void 接收需求认知服务::装配语言补全(std::shared_ptr<语言补全运行服务> runtime) {
+    std::lock_guard lock(实现_->锁);
+    if(实现_->语言补全&&runtime&&实现_->语言补全!=runtime)throw std::logic_error("language completion owner conflict");
+    实现_->语言补全=std::move(runtime);
+}
+void 接收需求认知服务::装配任务读取接口(新_任务类& tasks) {
+    std::lock_guard lock(实现_->锁);
+    if(实现_->任务&&实现_->任务!=&tasks)throw std::logic_error("answer task reader owner differs");
+    实现_->任务=&tasks;
+}
+void 接收需求认知服务::装配字段答案执行(新_方法类& methods,新_动态类& dynamics,const 新字段询问登记配置& config) {
+    const auto* cfg=&config;
+    新方法知识建立请求 q;q.作用域=新方法作用域::普通世界;q.实现方式=新方法实现方式::本能;q.行为=新方法行为::改变;
+    q.方法头.作用存在概念组={cfg->需求根概念};
+    q.方法头.涉及特征类型概念组=cfg->支持字段类型组;
+    q.方法头.可能结果概念组=cfg->支持字段类型组;
+    const std::array<新方法有序参数规格,5> specs{{
+        {1,新方法参数信息类型::存在,cfg->需求根概念},{2,新方法参数信息类型::存在,cfg->自我范围概念},
+        {3,新方法参数信息类型::存在,cfg->人类概念},{4,新方法参数信息类型::存在,cfg->通用存在概念},
+        {5,新方法参数信息类型::特征,cfg->输出队列类型}}};
+    for(const auto& spec:specs){新方法参数规格 p;p.有序规格=spec;q.参数规格组.push_back(std::move(p));}
+    q.初始模拟关系组={{新方法参数关系种类::不同,2,3},{新方法参数关系种类::特征所属存在,5,4}};
+    const auto registered=methods.确保本能方法登记(std::string(新本能函数登记名_需求字段回答写回),q);
+    if(!registered.方法节点)throw std::logic_error("answer builtin independent method registration failed");
+    std::lock_guard lock(实现_->锁);
+    if((实现_->方法&&实现_->方法!=&methods)||(实现_->动态&&实现_->动态!=&dynamics))throw std::logic_error("answer builtin runtime owner differs");
+    实现_->方法=&methods;实现_->动态=&dynamics;实现_->答案方法=*registered.方法节点;
+}
+std::optional<新需求字段答案写回请求> 接收需求认知服务::读取字段答案候选(const 新任务字段追问记录& question) const {
+    auto& s=*实现_;auto& d=s.依赖;新_任务类* tasks;接收需求认知会话语境 context;
+    {std::lock_guard lock(s.锁);tasks=s.任务;const auto session=s.会话组.find(question.来源.公开宿主会话);
+        if(!tasks||session==s.会话组.end()||session->second.封存)return {};context=session->second.语境;}
+    if(question.阶段!=新任务字段追问阶段::已发送待字段满足||!question.来源已具备||!question.候选||!question.已提交输出
+        ||question.候选->表达目标.被询内容.正式内容路径.size()!=1
+        ||context.已绑定人类!=std::optional{question.来源.请求.来源人类节点}
+        ||context.已绑定自我!=std::optional{question.来源.请求.受请求者节点})return {};
+    std::size_t pending=0;
+    for(const auto T:tasks->查询字段追问任务()){const auto r=tasks->读取字段追问记录(T);
+        if(r&&r->阶段==新任务字段追问阶段::已发送待字段满足&&r->来源.公开宿主会话==question.来源.公开宿主会话
+            &&r->来源.对话框标识==question.来源.对话框标识)++pending;}
+    if(pending!=1)return {}; // 多个未答字段需要显式回指，不按时间或遍历顺序绑定。
+    const auto current=tasks->读取字段追问记录(question.任务节点);
+    if(!current||current->阶段!=question.阶段||current->来源!=question.来源||current->候选!=question.候选||current->已提交输出!=question.已提交输出)return {};
+    const auto original=d.外设.读取消息保护(question.来源.请求.需求来源.键.接收消息节点);
+    const auto outgoing=d.外设.读取消息保护(question.已提交输出->消息节点);
+    const auto all=d.外设.完整读取仍保留的接收记录();
+    if(original.状态!=新外设事实状态::已完成||!original.消息||outgoing.状态!=新外设事实状态::已完成||!outgoing.消息
+        ||all.状态!=新外设事实状态::已完成)return {};
+    const auto old=d.需求.读取需求治理信息(question.来源.请求.被认知需求节点);
+    if(!old||!old->已知目标)return {};
+    const auto field=question.候选->表达目标.被询内容.正式内容路径.front();
+    const auto EType=d.特征概念.读取先天特征类型槽(先天特征类型槽::需求目标存在);
+    const auto FTType=d.特征概念.读取先天特征类型槽(先天特征类型槽::需求目标FT);
+    const auto FormType=d.特征概念.读取先天特征类型槽(先天特征类型槽::需求目标形式);
+    const auto DomainType=d.特征概念.读取先天特征类型槽(先天特征类型槽::目标域);
+    const auto ComparisonType=d.特征概念.读取先天特征类型槽(先天特征类型槽::目标比较);
+    const auto DirectionType=d.特征概念.读取先天特征类型槽(先天特征类型槽::目标方向);
+    if(!EType.类型根||!FTType.类型根||!FormType.类型根||!DomainType.类型根||!ComparisonType.类型根||!DirectionType.类型根)return {};
+    if(field!=*EType.类型根&&field!=*FTType.类型根&&field!=*FormType.类型根&&field!=*DomainType.类型根&&field!=*ComparisonType.类型根&&field!=*DirectionType.类型根)return {};
+    std::optional<新需求字段答案写回请求> answer;
+    for(const auto& m:all.消息组) {
+        if(d.需求.接收答案消息已采用(m.消息节点))continue;
+        if(m.来源.方向!=新外设消息方向::接收||m.窗口节点!=question.来源.窗口||m.场景节点!=question.来源.外设场景
+            ||m.来源.公开宿主会话!=question.来源.公开宿主会话||m.来源.对话框标识!=question.来源.对话框标识
+            ||m.来源.来源序号<=original.消息->来源.来源序号)continue;
+        auto text=m.UTF8正文;
+        while(!text.empty()&&(text.back()==' '||text.back()=='\r'||text.back()=='\n'||text.back()=='\t'))text.pop_back();
+        for(const std::string_view terminal:{std::string_view{"。"},std::string_view{"."}})if(text.ends_with(terminal))text.resize(text.size()-terminal.size());
+        std::optional<std::int64_t> enumValue;
+        if(field==*FormType.类型根){if(text=="值")enumValue=static_cast<std::int64_t>(新需求目标形式::值);else if(text=="变化方向")enumValue=static_cast<std::int64_t>(新需求目标形式::变化方向);else continue;}
+        if(field==*DirectionType.类型根){if(text=="增加")enumValue=static_cast<std::int64_t>(新需求变化方向::增加);else if(text=="减少")enumValue=static_cast<std::int64_t>(新需求变化方向::减少);else continue;}
+        std::optional<新词条信息> answerWord;概念名称候选保护结果 names;
+        if(!enumValue) {
+            const auto word=d.词.按规范化词面查询(context.语言,严格UTF8字节精确规范化合同节点,text);
+            if(word.状态==新词条查询状态::未找到)continue;
+            if(word.状态==新词条查询状态::资源失败)return {};
+            if(word.状态!=新词条查询状态::已找到||!word.信息)throw std::logic_error("answer word lookup failed");
+            answerWord=*word.信息;names=d.名称.读取词条名称候选保护(word.信息->节点);
+            if(names.状态==概念名称关系查询状态::未找到)continue;
+            if(names.状态!=概念名称关系查询状态::已找到)return {};
+        }
+        std::vector<std::pair<稳定编码,std::vector<基础联合节点快照>>> values;
+        for(const auto& named:names.候选组) {
+            if(field==*EType.类型根) {
+                if(const auto* pronoun=std::get_if<指代名称关系信息>(&named)) {
+                    std::optional<稳定编码> E;
+                    if(pronoun->概念.定义.规则==指代声明规则::作用域说话者)E=context.已绑定人类;
+                    else if(pronoun->概念.定义.规则==指代声明规则::作用域受话者)E=context.已绑定自我;
+                    if(!E||!s.语言补全)continue;
+                    const auto originalDemand=d.需求.读取需求治理信息(question.来源.请求.被认知需求节点);
+                    if(!originalDemand||!originalDemand->首次接收认知来源)continue;
+                    const auto adopted=d.语言.读取接收采用含义(originalDemand->首次接收认知来源->键,d.特征);
+                    if(adopted.状态!=新语言含义采用状态::已采用||!adopted.信息)continue;
+                    新语言指代请求 request;
+                    request.自然语言场景=adopted.信息->场景节点;request.来源消息=m.消息节点;
+                    request.原文材料=m.正文材料节点;request.作用域=adopted.信息->场景节点;request.代词概念=pronoun->概念.节点;
+                    request.原文起点=0;request.原文终点=标量数(text);request.存在目标=E;
+                    const auto resolved=s.语言补全->消解交互指代(request);
+                    if(resolved.已读回&&resolved.已消解&&resolved.信息&&resolved.信息->当前存在目标)
+                        values.push_back({*resolved.信息->当前存在目标,resolved.完整保护});
+                } else {
+                    const auto C=std::get<概念名称关系信息>(named).概念节点;
+                    接收专名读取器 proper(d,context.现实根,{});const auto id=proper.读取实例专名(C,{0,标量数(text)});
+                    if(id.状态==语言图专名绑定状态::已绑定&&id.存在节点)values.push_back({*id.存在节点,id.完整保护});
+                }
+            } else if(const auto* name=std::get_if<概念名称关系信息>(&named)) {
+                if(field==*ComparisonType.类型根) {
+                    const auto comparison=d.二次概念.读取二次特征定义保护(name->概念节点);
+                    if(comparison.状态==基础结构操作状态::已完成&&!comparison.前提已变化&&comparison.信息&&old->已知目标->目标特征类型概念节点
+                        &&std::any_of(comparison.信息->输入定义组.begin(),comparison.信息->输入定义组.end(),[&](const auto& input){return input.特征类型概念节点==*old->已知目标->目标特征类型概念节点;}))
+                        values.push_back({name->概念节点,comparison.预期节点组});
+                } else {
+                    const auto ft=d.特征概念.读取特征概念定义保护(name->概念节点);
+                    if(ft.状态==基础结构操作状态::已完成&&!ft.前提已变化&&ft.信息
+                        &&(field==*FTType.类型根 ? ft.信息->类型根==name->概念节点
+                            : field==*DomainType.类型根&&old->已知目标->目标特征类型概念节点==std::optional{ft.信息->类型根}))
+                        values.push_back({name->概念节点,ft.预期节点组});
+                }
+            }
+        }
+        if(!enumValue&&values.empty())continue;
+        if(!values.empty()&&std::any_of(values.begin()+1,values.end(),[&](const auto& v){return v.first!=values.front().first;}))return {};
+        if(answer)return {}; // 两条可能回答不任选其一。
+        const auto message=d.外设.读取消息保护(m.消息节点);if(message.状态!=新外设事实状态::已完成||!message.消息||!同消息(*message.消息,m))return {};
+        新需求字段答案写回请求 q;q.来源=question.来源;q.字段任务=question.任务节点;q.答案消息=m.消息节点;q.字段类型=field;q.预期信息=*old;q.已知目标=*old->已知目标;
+        if(field==*FormType.类型根)q.已知目标.目标形式=static_cast<新需求目标形式>(*enumValue);
+        else if(field==*DirectionType.类型根)q.已知目标.目标变化方向=static_cast<新需求变化方向>(*enumValue);
+        else if(field==*EType.类型根)q.已知目标.目标存在节点=values.front().first;
+        else if(field==*FTType.类型根)q.已知目标.目标特征类型概念节点=values.front().first;
+        else if(field==*DomainType.类型根)q.已知目标.目标值域概念节点=values.front().first;
+        else q.已知目标.目标比较关系概念节点=values.front().first;
+        q.答案保护=message.完整保护;并保护(q.答案保护,original.完整保护);并保护(q.答案保护,outgoing.完整保护);并保护(q.答案保护,names.完整保护);
+        for(const auto& value:values)并保护(q.答案保护,value.second);
+        std::vector<稳定编码> nodes{question.节点,question.任务节点};if(answerWord)nodes.push_back(answerWord->节点);
+        const auto taskProof=全局基础数据集.查询节点组完整结构(nodes);
+        if(taskProof.状态!=基础结构操作状态::已完成)return {};
+        for(const auto& item:taskProof.节点组){if(!item.快照)return {};并保护(q.答案保护,{*item.快照});}
+        answer=std::move(q);
+    }
+    return answer;
+}
+新本能函数本次条件结果对 接收需求认知服务::执行字段答案写回本能(
+    const 新需求字段答案写回请求& request,新_需求类& owner,const 方法参数场景& originalScene) const {
+    auto& s=*实现_;新_任务类* tasks;新_方法类* methods;新_动态类* dynamics;稳定编码 method;
+    {std::lock_guard lock(s.锁);tasks=s.任务;methods=s.方法;dynamics=s.动态;method=s.答案方法;}
+    if(!tasks||!methods||!dynamics||!有效(method)||&owner!=&s.依赖.需求)throw std::logic_error("answer builtin runtime is not assembled");
+    const auto record=tasks->读取字段追问记录(request.字段任务);
+    if(!record||record->来源!=request.来源||!record->候选)throw std::logic_error("answer source changed before invocation");
+    const auto& bindings=originalScene.全部角色绑定();
+    if(bindings.size()!=5)throw std::logic_error("answer requires the original five-role question binding");
+    const std::array<稳定编码,5> expected{record->字段需求节点,request.来源.请求.受请求者节点,
+        request.来源.请求.来源人类节点,request.来源.窗口,request.来源.输出特征};
+    for(std::uint32_t i=1;i<=5;++i){const auto* p=originalScene.查询参数(i);
+        if(!p||p->信息类型!=(i==5? 新方法参数信息类型::特征 : 新方法参数信息类型::存在)||p->信息节点!=expected[i-1])
+            throw std::logic_error("field answer five-role source mismatch");}
+    const auto q=owner.获取需求(record->字段需求节点);
+    if(!q||!q->目标.引用内容定位||q->目标.引用内容定位->引用需求节点!=request.来源.请求.被认知需求节点
+        ||q->目标.引用内容定位->正式内容路径!=std::vector<稳定编码>{request.字段类型})
+        throw std::logic_error("field answer Q does not name the current D and exact field path");
+    const auto queue=s.依赖.存在.获取存在(request.来源.窗口);
+    if(!queue||std::count(queue->特征节点组.begin(),queue->特征节点组.end(),request.来源.输出特征)!=1)
+        throw std::logic_error("field answer output feature is not owned by the source window");
+
+    const auto scene=methods->建立参数场景(method,bindings);
+    if(!scene.参数场景)throw std::logic_error("answer builtin five-role parameter scene unavailable");
+    return 调用需求字段答案写回本能(*scene.参数场景,[&](const 方法参数场景& actual){
+        新本能函数本次条件结果对 r;r.结果.状态=新本能函数执行状态::入口拒绝;
+        const auto record=tasks->读取字段追问记录(request.字段任务);if(!record)return r;
+        auto fresh=读取字段答案候选(*record);
+        const auto same=[&](const auto& x){return x.答案消息==request.答案消息&&x.字段类型==request.字段类型&&x.来源==request.来源&&x.预期信息==request.预期信息&&x.已知目标==request.已知目标;};
+        if(!fresh||!same(*fresh))return r;
+        基础节点组追加请求 proof;proof.预期联合节点组=fresh->答案保护;
+        const auto verified=全局基础数据集.原子追加节点组(proof);if(verified.状态==基础节点组追加状态::预期不符)return r;
+        if(verified.状态!=基础节点组追加状态::已完成)throw std::logic_error("answer builtin precondition proof failed");
+        const auto call=methods->建立直接调用身份(actual.方法节点(),actual.全部角色绑定(),request.来源.自我场景,request.来源.外设场景);
+        const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});if(!time.成功())throw std::logic_error("answer observation UTC unavailable");
+        const auto action=dynamics->建立动作动态({request.来源.请求.受请求者节点,actual.方法节点(),call.节点,request.来源.外设场景,{},
+            {新状态时间语义::实例绝对UTC,time.证据->UTC纳秒}});
+        if(action.状态!=新动态操作状态::已完成||!action.动态节点)throw std::logic_error("answer observation action publication failed");
+        methods->绑定直接调用动作(call.节点,*action.动态节点);
+        r.结果.动作动态节点=*action.动态节点;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
+        fresh=读取字段答案候选(*record);
+        if(!fresh||!same(*fresh)){methods->收束直接调用身份(call.节点);return r;}
+        fresh->动作节点=*action.动态节点;
+        const auto written=owner.写回接收认知需求字段(*fresh);
+        methods->收束直接调用身份(call.节点);
+        if(written.状态!=新需求操作状态::已修改&&written.状态!=新需求操作状态::无变化)return r;
+        if(!written.信息)throw std::logic_error("answer field owner returned no formal readback");
+        r.结果.状态=新本能函数执行状态::已按合同返回;r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;r.结果.结果取得状态=新本能函数结果取得状态::已取得;return r;
+    });
 }
 
 } // namespace 海中鱼巣

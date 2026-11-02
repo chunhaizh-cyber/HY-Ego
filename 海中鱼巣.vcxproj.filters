@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\业务\词条归类.事实服务.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\词条归类.事实服务.cpp"><Filter>业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\领域\概念归类.数据.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\语言补全.运行接口.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\业务\语言补全.运行服务.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\语言补全.运行服务.cpp"><Filter>业务</Filter></ClCompile>
+
     <ClInclude Include="海中鱼巣\领域\语言场景写回.数据.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\本能语言场景写回.运行接口.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\业务\语言场景写回.本能运行服务.h"><Filter>业务</Filter></ClInclude>

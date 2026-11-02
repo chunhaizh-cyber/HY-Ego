@@ -743,6 +743,7 @@ std::string 图词面语义键(const 语言图含义材料& 图) {
             if(const auto* 引用=std::get_if<语言图引用值>(&绑定->值))键+=std::to_string(static_cast<int>(引用->类别))+":"+std::to_string(引用->节点.值);
             else if(const auto* 数=std::get_if<语言图整数值>(&绑定->值))键+=数->规范十进制+":"+(数->单位 ? std::to_string(数->单位->值):"-");
             else if(const auto* 待求=std::get_if<语言图待求值>(&绑定->值))键+="?"+std::to_string(待求->内容范围概念.值);
+            else if(const auto* 原文=std::get_if<语言图材料值>(&绑定->值))键+="raw:"+std::to_string(原文->原文.size())+":"+原文->原文;
             else 键+=自身(自身,std::get<语言图子出现引用>(绑定->值).出现编号);
         }
         活动.erase(编号);return 键+")";

@@ -134,7 +134,7 @@ enum class 新任务筹办处理状态 : std::uint8_t {
     状态推进失败,
     停止取消,
     内部错误,
-    组织能力暂不支持, 复合目标需自我确认, 内容结果定位未支持, 未执行目标已满足
+    组织能力暂不支持, 复合目标需自我确认, 内容结果定位未支持, 未执行目标已满足, 语言子需求需自我确认, 语言筹办待材料
 };
 
 struct 新任务筹办处理结果 final {
@@ -145,6 +145,7 @@ struct 新任务筹办处理结果 final {
     std::optional<新任务治理条件筹办结果> 条件筹办;
     std::optional<新任务治理条件筹办结果> 独立条件筹办;
     std::optional<新任务条件子需求提议> 独立子需求提议;
+    std::optional<新任务语言子需求提议> 独立语言子需求提议;
     std::optional<新任务因果子需求提议> 因果子需求提议;
     std::optional<新任务复合目标分解提议> 复合目标提议;
     std::optional<新任务执行前目标收束结果> 执行前目标收束;
@@ -491,8 +492,6 @@ private:
         std::function<void()> 最终服务工作唤醒,
         const 新长期服务值结算配置& 服务结算配置) noexcept;
     新任务承接接收结果 提交外部服务需求承接(const 新任务承接消息&) noexcept;
-    // self仅确认缺项来源；实际D/T、think和独立发送由task链推进。
-    新任务承接接收状态 提交字段追问(const 新需求字段追问来源&) noexcept;
     新任务承接接收状态 提交已有字段追问来源(稳定编码,const 新需求字段追问来源&) noexcept;
     新任务承接接收结果 提交行动请求需求承接(const 新任务承接消息&) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;
@@ -500,6 +499,9 @@ private:
         const 新自我筹办裁决& 裁决) noexcept;
     新自我因果筹办提交结果 提交自我因果筹办裁决(
         const 新自我筹办裁决&, std::stop_token) noexcept;
+    void 通知语言补全材料变化() noexcept;
+    新任务操作状态 提交已确认语言子需求(const 新任务筹办反馈定位&,
+        const 新任务语言子需求提议&,const std::vector<std::optional<稳定编码>>&);
     新任务承接接收结果 提交已确认条件子需求(
         const 新任务筹办反馈定位& 父筹办定位,
         const 新任务承接消息& 消息) noexcept;

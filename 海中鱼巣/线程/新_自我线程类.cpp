@@ -934,6 +934,9 @@ struct 新_自我线程类::实现 final {
         std::optional<稳定编码> 行动请求自我需求;
         std::optional<新行动请求采用结果> 行动请求采用材料;
         std::optional<新外部服务需求采用结果> 外部服务采用材料;
+        std::optional<新任务语言子需求提议> 语言原提议;
+        std::vector<std::optional<稳定编码>> 语言子需求采用;
+        std::vector<bool> 语言采用完成;
         std::optional<新子需求采用回执> 条件子需求回执;
         bool 条件子需求回执已接收 = false;
         std::optional<新自我筹办裁决::因果采用回执> 因果子需求回执;
@@ -978,6 +981,8 @@ struct 新_自我线程类::实现 final {
     // 这是self内部治理进度，不是外部邮箱消息；每个本能根至多一项。
     std::array<std::optional<自动承接项>, 2> 自动承接;
     std::vector<自动承接项> 扫描承接;
+    // 接收确认只承接完整的信息获取目标，pending D始终仅为引用内容。
+    std::map<稳定编码, 新任务承接消息> 需求信息承接消息;
 
     新自我线程操作结果 操作结果(
         新自我线程操作状态 状态) const noexcept {
@@ -3439,6 +3444,67 @@ struct 新_自我线程类::实现 final {
         }
     }
 
+
+    std::optional<新自我消息处理结果> 处理语言子需求提议(消息项& item,const 新任务筹办处理结果& work) {
+        try {
+
+        新自我消息处理结果 result;result.原消息=item.消息;
+        const auto& where=*item.消息.筹办反馈;
+        if(!item.语言原提议){
+            if(!work.独立语言子需求提议)throw std::logic_error("language proposal missing from manager readback");
+            item.语言子需求采用.resize(work.独立语言子需求提议->目标组.size());
+            item.语言采用完成.resize(work.独立语言子需求提议->目标组.size(),false);
+            item.语言原提议=work.独立语言子需求提议;
+        }
+        const auto& original=*item.语言原提议;
+        for(std::size_t i=0;i<original.目标组.size();++i){
+            if(item.语言采用完成[i])continue;
+            if(停止源.stop_requested()){result.状态=新自我消息处理状态::停止取消;return result;}
+            const auto fresh=任务服务->提议任务语言子需求(where.任务节点);
+            if(fresh.状态==新语言补全状态::资源失败||fresh.状态==新语言补全状态::等待材料)return std::nullopt;
+            if(fresh.状态==新语言补全状态::结构不一致)throw std::logic_error("language proposal fresh structure inconsistent");
+            if(fresh.状态!=新语言补全状态::已完成&&fresh.状态!=新语言补全状态::无需补全){
+                result.状态=新自我消息处理状态::任务筹办定位已变化;return result;
+            }
+
+            if(fresh.父需求节点!=original.父需求节点||fresh.父目标!=original.父目标||fresh.来源!=original.来源){
+                result.状态=新自我消息处理状态::任务筹办定位已变化;return result;
+            }
+            const auto& target=original.目标组[i];
+            if(std::find(fresh.目标组.begin(),fresh.目标组.end(),target)==fresh.目标组.end()){
+                item.语言采用完成[i]=true;continue;
+            }
+            新需求建立结果 created;
+            if(target.种类==新语言补全种类::词条归类){
+                if(!target.词条||target.指代)throw std::logic_error("lemma proposal target shape corrupt");
+                created=需求服务->建立或取得词条归类需求已核验({original.父需求节点,where.任务节点,*target.词条,fresh.完整保护});
+            }else{
+                if(!target.指代||target.词条)throw std::logic_error("pronoun proposal target shape corrupt");
+                新普通需求建立请求 q;q.父需求节点=original.父需求节点;
+                q.目标存在节点=target.指代->目标存在节点;q.目标=target.指代->目标;
+                q.来源类型=新需求来源类型::任务子目标;q.来源承接节点=where.任务节点;
+                created=需求服务->建立或取得普通需求已核验(q,true,fresh.完整保护);
+            }
+            if(created.状态==新需求操作状态::资源失败||created.状态==新需求操作状态::前提已变化
+                ||created.状态==新需求操作状态::尚未初始化)return std::nullopt;
+            if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)
+                throw std::logic_error("self confirmed language demand publication failed");
+            // 已发布前缀先保留；随后读回或交接失败不得回滚/重造另一个需求。
+            item.语言子需求采用[i]=created.需求节点;item.语言采用完成[i]=true;
+            const auto d=需求服务->获取需求(*created.需求节点);
+            if(!d||d->父需求节点!=original.父需求节点||d->来源承接节点!=where.任务节点
+                ||d->来源类型!=新需求来源类型::任务子目标)throw std::logic_error("language demand source readback differs");
+        }
+        const auto accepted=任务管理->提交已确认语言子需求(where,original,item.语言子需求采用);
+        if(accepted==新任务操作状态::资源失败)return std::nullopt;
+        result.状态=(accepted==新任务操作状态::已修改||accepted==新任务操作状态::无变化)
+            ? 新自我消息处理状态::任务筹办已裁决 : 新自我消息处理状态::任务筹办定位已变化;
+        return result;
+            }catch(const std::bad_alloc&){return std::nullopt;}
+        catch(const std::length_error&){return std::nullopt;}
+        catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理语言子需求提议",L"正式来源或采用回执工程错误，保留已发布前缀");}
+    }
+
     // 空结果只表示manager暂时不能接纳裁决；保留原反馈定位后重试。
     std::optional<新自我消息处理结果> 处理筹办反馈(消息项& 项) noexcept {
         新自我消息处理结果 结果;
@@ -3485,6 +3551,16 @@ struct 新_自我线程类::实现 final {
             结果.状态 = 新自我消息处理状态::任务筹办定位已变化;
             return 结果;
         }
+        if(结果.筹办独立读回->状态==新任务筹办处理状态::语言筹办待材料&&!项.语言原提议){
+            新自我筹办裁决 decision;decision.定位=定位;decision.状态=新自我筹办裁决状态::等待材料;
+            const auto accepted=任务管理->提交自我筹办裁决(decision);
+            if(accepted==新自我筹办裁决接收状态::资源失败)return std::nullopt;
+            结果.状态=(accepted==新自我筹办裁决接收状态::已接收||accepted==新自我筹办裁决接收状态::精确重复)
+                ? 新自我消息处理状态::任务筹办已裁决 : 新自我消息处理状态::任务筹办定位已变化;
+            return 结果;
+        }
+        if(项.语言原提议||结果.筹办独立读回->状态==新任务筹办处理状态::语言子需求需自我确认)
+            return 处理语言子需求提议(项,*结果.筹办独立读回);
         if ((!项.复合子需求采用 || 项.复合子需求采用->采用组.empty())
             && 结果.筹办独立读回->状态 == 新任务筹办处理状态::内容结果定位未支持) {
             const auto& 工作 = 结果.筹办独立读回->工作结果;
@@ -4406,6 +4482,13 @@ struct 新_自我线程类::实现 final {
                             const auto qualification=confirmed==新需求操作状态::已找到
                                 ? 需求服务->读取被认知需求完整资格保护(source.请求.被认知需求节点,source.请求.来源人类节点)
                                 : 新被认知需求资格读取结果{};
+                            {
+                                std::wostringstream trace;
+                                trace<<L"M="<<source.请求.需求来源.键.接收消息节点.值
+                                    <<L"；来源复核="<<static_cast<int>(confirmed)<<L"；完整资格="<<static_cast<int>(qualification.状态)
+                                    <<L"；父需求="<<source.父需求.值;
+                                (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"获取信息目标确认前",trace.str());
+                            }
                             if(confirmed==新需求操作状态::已找到&&qualification.状态==新被认知需求资格状态::已读取) {
                                 const auto accepted=接纳行动请求(source.请求);
                                 if(accepted.状态==新自我消息接收状态::已接收||accepted.状态==新自我消息接收状态::精确重复) {
@@ -4413,13 +4496,41 @@ struct 新_自我线程类::实现 final {
                                     if(ack==接收行动请求交接确认状态::已确认||ack==接收行动请求交接确认状态::精确重复)行动请求已入邮箱=true;
                                 }
                             } else if(confirmed==新需求操作状态::已找到&&qualification.状态==新被认知需求资格状态::内容待完善) {
-                                // self只确认来源和缺项；D/T、候选取得及发送均由task链推进。
-                                const auto accepted=任务管理->提交字段追问(source);
-                                if(accepted==新任务承接接收状态::已接收||accepted==新任务承接接收状态::精确重复) {
+                                const auto parent=任务服务->查询需求任务(source.父需求);
+                                if(parent) {
+                                    const auto information=需求服务->建立或取得服务对象需求信息需求(source,*parent);
+                                    {
+                                        std::wostringstream trace;trace<<L"M="<<source.请求.需求来源.键.接收消息节点.值
+                                            <<L"；获取信息目标发布="<<static_cast<int>(information.状态)<<L"；父任务="<<parent->值;
+                                        (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"获取信息目标确认结果",trace.str());
+                                    }
+                                    if(information.状态==新需求操作状态::已建立||information.状态==新需求操作状态::已复用) {
+                                        if(!information.需求节点)throw std::logic_error("information demand publication missing identity");
+                                        任务服务->登记语言补全来源(*information.需求节点,source);
+                                        auto [message,inserted]=需求信息承接消息.try_emplace(source.请求.被认知需求节点);
+                                        if(inserted) {
+                                            message->second.消息编号=取得自动消息编号();
+                                            message->second.需求节点=*information.需求节点;
+                                            message->second.依据=新任务承接依据::显式请求;
+                                            std::wostringstream trace;
+                                            trace<<L"M="<<source.请求.需求来源.键.接收消息节点.值
+                                                <<L"；U="<<source.请求.需求来源.采用含义节点.值
+                                                <<L"；待完善材料="<<source.请求.被认知需求节点.值
+                                                <<L"；完整获取信息需求="<<information.需求节点->值<<L"；父任务="<<parent->值;
+                                            (void)记录运行日志(L"自我线程",L"确认服务对象需求信息目标",trace.str());
+                                        }
+                                        if(message->second.需求节点!=*information.需求节点)
+                                            throw std::logic_error("information demand handoff identity changed");
+                                        const auto accepted=任务管理->提交消息(message->second);
+                                        if(accepted.状态==新任务承接接收状态::已接收||accepted.状态==新任务承接接收状态::精确重复) {
                                     const auto ack=provider->确认行动请求已交接(source.请求);
                                     if(ack!=接收行动请求交接确认状态::已确认&&ack!=接收行动请求交接确认状态::精确重复
                                         &&ack!=接收行动请求交接确认状态::资源失败)
-                                        throw std::logic_error("incomplete request handoff acknowledgement differs");
+                                                throw std::logic_error("information demand handoff acknowledgement differs");
+                                        }
+                                    } else if(information.状态!=新需求操作状态::资源失败&&information.状态!=新需求操作状态::前提已变化
+                                        &&information.状态!=新需求操作状态::尚未初始化)
+                                        throw std::logic_error("information demand confirmation publication rejected");
                                 }
                             } else if(confirmed!=新需求操作状态::已找到&&confirmed!=新需求操作状态::资源失败&&confirmed!=新需求操作状态::前提已变化
                                 &&confirmed!=新需求操作状态::尚未初始化)
@@ -5698,6 +5809,7 @@ void 新_自我线程类::通知接收认知变化() noexcept {
         if(实现_->停止已请求||实现_->线程已完成||!实现_->接收认知)return;
         实现_->接收认知待唤醒=true;实现_->状态变化.notify_all();
     }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"通知接收认知变化",L"接收认知轻通知异常。");}
+    if(实现_->任务管理)实现_->任务管理->通知语言补全材料变化();
 }
 
 新自我线程操作结果 新_自我线程类::绑定服务值结算确认端口(

@@ -12,6 +12,7 @@
 #include "本能语言场景写回.运行接口.h"
 
 namespace 海中鱼巣 {
+inline constexpr std::string_view 新本能函数登记名_需求字段回答写回 = "builtin.demand.field.answer.writeback.v1";
 inline constexpr std::string_view 新本能函数登记名_写回语言场景主张 = "builtin.language_scene.claim.writeback.v1";
 inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_发送指定需求字段 = "builtin.demand.field.send.v1";
@@ -19,7 +20,7 @@ inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
     "builtin.service_object.acquire.v2";
 inline constexpr std::string_view 新本能函数登记名_获取服务对象新需求 =
     "builtin.service_object.demand.acquire_new.v1";
-inline constexpr std::string_view 新本能函数登记名_获取服务对象需求节点 =
+inline constexpr std::string_view 新本能函数登记名_获取服务对象需求信息 =
     "builtin.service_object.demand.acquire_node.v1";
 inline constexpr std::string_view 新本能函数登记名_旧两参数获取服务对象 =
     "builtin.service_object.acquire.v1";

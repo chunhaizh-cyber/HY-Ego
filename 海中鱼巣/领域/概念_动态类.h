@@ -1,4 +1,5 @@
 #pragma once
+#include "概念归类.数据.h"
 
 #include <cstdint>
 #include <optional>
@@ -111,6 +112,10 @@ extern 稳定编码 动态概念图根节点;
 
 class 概念_动态类 final {
 public:
+    // 归类专属身份；定义未知的节点不冒充普通完整定义。
+    归类概念身份读取结果 读取语言归类概念身份保护(稳定编码) const noexcept;
+    归类概念建立结果 建立或取得语言归类概念(const 归类概念建立请求&) noexcept;
+
     概念_动态类(
         概念_特征类& 特征概念服务,
         const 新_特征值类& 特征值服务,
@@ -172,6 +177,10 @@ public:
         稳定编码 概念节点) const noexcept;
 
 private:
+    friend class 概念_名称关系类;
+    bool 更新语言归类名称关系(稳定编码, 稳定编码, bool 绑定,
+        const std::vector<基础联合节点快照>& 来源保护 = {}) noexcept;
+
     friend class 新_动态类;
     基础结构操作状态 删除实例概念及动态结构(
         稳定编码 实例概念节点, 稳定编码 实际动态节点,

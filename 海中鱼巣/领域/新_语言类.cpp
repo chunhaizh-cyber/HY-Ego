@@ -4,6 +4,8 @@
 #include "语言含义图.数据.h"
 #include "新_特征类.h"
 #include "新_存在类.h"
+#include "新_场景类.h"
+#include "../适配/适配器.UTC时钟.h"
 
 #include <algorithm>
 #include <array>
@@ -60,7 +62,10 @@ enum class 接收含义键 : std::size_t {
     出现宿主, 出现编号, 出现知识, 出现定义编号, 出现作用域, 出现路径, 出现范围, 出现角色,
     角色宿主, 角色编号, 值标签, 引用类别, 实际角色特征, 引用节点, 来源概念, 选用名称,
     整数文本, 整数单位, 子出现,
-    定位宿主, 定位出现, 定位角色, 定位范围, 总数
+    定位宿主, 定位出现, 定位角色, 定位范围,
+    指代登记, 指代场景, 指代消息, 指代原文, 指代作用域, 指代概念,
+    指代起点, 指代终点, 指代特征, 指代目标,
+    归类学习登记, 归类学习词条, 归类学习概念, 归类学习消息, 归类学习知识, 总数
 };
 std::array<稳定编码, static_cast<std::size_t>(接收含义键::总数)> 接收含义句柄{};
 稳定编码 采用键(接收含义键 键) noexcept {
@@ -703,12 +708,13 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
             if(约束.被约束角色!=角色.局部编号||约束.允许类别组.empty())return 拒绝("图角色必须自约束");
             std::sort(约束.允许类别组.begin(),约束.允许类别组.end());
             if(std::adjacent_find(约束.允许类别组.begin(),约束.允许类别组.end())!=约束.允许类别组.end())return 拒绝("图类别重复");
-            for(auto 类别:约束.允许类别组)if(类别<新语言知识角色类别::存在||类别>新语言知识角色类别::正式信息节点)return 拒绝("图角色类别非法");
+            for(auto 类别 : 约束.允许类别组)if(类别<新语言知识角色类别::存在||类别>新语言知识角色类别::原文材料)return 拒绝("图角色类别非法");
             const auto& 类别=约束.允许类别组;
             const bool 相容=角色.种类==新语言知识角色种类::领域对象引用 ? (类别==std::vector{新语言知识角色类别::存在}||类别==std::vector{新语言知识角色类别::正式信息节点})
                 :角色.种类==新语言知识角色种类::特征类型引用 ? 类别.size()==1&&(类别[0]==新语言知识角色类别::I64标量特征类型||类别[0]==新语言知识角色类别::正式特征类型)
                 :角色.种类==新语言知识角色种类::准确值 ? 类别.size()==1&&(类别[0]==新语言知识角色类别::十进制整数||类别[0]==新语言知识角色类别::I64标量)
                 :角色.种类==新语言知识角色种类::子含义引用 ? 类别==std::vector{新语言知识角色类别::子含义}
+                 : 角色.种类==新语言知识角色种类::语言材料引用  ?  类别==std::vector{新语言知识角色类别::原文材料}
                 :角色.种类==新语言知识角色种类::查询变量 ? 类别==std::vector{新语言知识角色类别::查询特征值}
                 :角色.种类==新语言知识角色种类::概念引用 ? std::all_of(类别.begin(),类别.end(),[](auto 类){return 类==新语言知识角色类别::存在概念||类==新语言知识角色类别::特征概念;}) : false;
             if(!相容)return 拒绝("图角色种类与类别冲突");
@@ -719,6 +725,13 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
         if(参数角色组.size()!=节点.角色组.size())return 拒绝("图含未使用的角色");
         std::set<参数> 必须;
         switch(节点.操作) {
+        case 新语言知识含义操作::原文确认接受 : case 新语言知识含义操作::原文确认拒绝 : 必须={};break;
+        case 新语言知识含义操作::词条归类询问 : case 新语言知识含义操作::拥有材料询问 :
+        case 新语言知识含义操作::能力材料询问 : case 新语言知识含义操作::指代澄清询问 :
+        case 新语言知识含义操作::原文重述确认 : 必须={参数::主体};break;
+        case 新语言知识含义操作::词条归类回答 : case 新语言知识含义操作::拥有材料陈述 :
+        case 新语言知识含义操作::能力材料陈述 : 必须={参数::主体,参数::目标内容};break;
+        case 新语言知识含义操作::未解请求目标原文 : 必须={};break;
         case 新语言知识含义操作::行动请求:必须={参数::受请求者,参数::目标内容};break;
         case 新语言知识含义操作::需求描述:必须={参数::主体,参数::目标内容};break;
         case 新语言知识含义操作::信息请求:必须={参数::被询内容};if(节点.确认范围!=新语言知识确认范围::主张成立与否&&节点.确认范围!=新语言知识确认范围::填项内容)return 拒绝("图询问范围未支持");break;
@@ -732,7 +745,10 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
         const auto 参数种类=[&](参数 参数名,新语言知识角色种类 种类) {
             return 参数组.contains(参数名)&&角色组.at({节点.局部编号,参数组.at(参数名)})->种类==种类;
         };
-        if(节点.操作==新语言知识含义操作::行动请求) {
+        if(是语言材料操作(节点.操作)) {
+            if(!节点.子含义组.empty()||(!参数组.empty()&&!参数种类(参数::主体,新语言知识角色种类::语言材料引用))
+                ||(参数组.contains(参数::目标内容)&&!参数种类(参数::目标内容,新语言知识角色种类::语言材料引用)))return 拒绝("语言材料操作只承载有来源文本角色");
+        }else if(节点.操作==新语言知识含义操作::行动请求) {
             if(节点.作用域!=新语言知识作用域::请求范围
                 ||!参数种类(参数::受请求者,新语言知识角色种类::领域对象引用)
                 ||角色组.at({节点.局部编号,参数组.at(参数::受请求者)})->必要约束组.front().允许类别组!=std::vector{新语言知识角色类别::存在}
@@ -748,6 +764,8 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
             if(!参数种类(参数::被询内容,新语言知识角色种类::子含义引用)
                 ||节点.子含义组.size()!=1||节点.子含义组[0].本节点角色编号!=参数组.at(参数::被询内容)
                 ||节点.子含义组[0].用途!=新语言子含义用途::被询内容)return 拒绝("确认图参数类型或被询边非法");
+        }else if(节点.操作==新语言知识含义操作::未解请求目标原文) {
+            if(节点.作用域!=新语言知识作用域::需求目标范围||!节点.子含义组.empty())return 拒绝("未解请求目标原文仅保存需求目标范围内的原文");
         }else {
             if(!参数种类(参数::主体,新语言知识角色种类::领域对象引用)
                 ||!参数种类(参数::特征类型,新语言知识角色种类::特征类型引用)||!节点.子含义组.empty())return 拒绝("特征图主体或类型非法");
@@ -779,7 +797,7 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
             const auto& 子=*节点组.at(边.子含义编号);
             if(边.用途==新语言子含义用途::需求目标) {
                 if(节点.操作!=新语言知识含义操作::需求描述||子.作用域!=新语言知识作用域::需求目标范围)return false;
-                if(子.操作!=新语言知识含义操作::特征描述&&子.操作!=新语言知识含义操作::特征区间描述&&子.操作!=新语言知识含义操作::特征方向描述)return false;
+                if(子.操作!=新语言知识含义操作::特征描述&&子.操作!=新语言知识含义操作::特征区间描述&&子.操作!=新语言知识含义操作::特征方向描述&&子.操作!=新语言知识含义操作::未解请求目标原文)return false;
             }else if(边.用途==新语言子含义用途::期望目标) {
                 if(节点.操作!=新语言知识含义操作::行动请求||子.操作!=新语言知识含义操作::需求描述
                     ||子.作用域!=新语言知识作用域::需求目标范围)return false;
@@ -807,7 +825,7 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
     const auto 待求数=std::count_if(角色组.begin(),角色组.end(),[](const auto& 项){return 项.second->种类==新语言知识角色种类::查询变量;});
     if(待求数&&(待求数!=1||根.操作!=新语言知识含义操作::信息请求||根.确认范围!=新语言知识确认范围::填项内容
         ||根.子含义组.size()!=1))return 拒绝("查询变量只允许唯一填项被询内容");
-    if((定义.目标.目的==新语言知识表达目的::提问)!=(根.操作==新语言知识含义操作::信息请求)
+    if((定义.目标.目的==新语言知识表达目的::提问)!=(根.操作==新语言知识含义操作::信息请求||是语言材料提问(根.操作))
         ||(定义.目标.目的==新语言知识表达目的::提出需求)!=(根.操作==新语言知识含义操作::行动请求))return 拒绝("图目的与根操作冲突");
     for(std::size_t 位置=0;位置<定义.结构.有序项组.size();++位置) {
         auto& 项=定义.结构.有序项组[位置];项.局部编号=static_cast<std::int64_t>(位置);
@@ -825,8 +843,10 @@ bool 规范含义图(新语言知识定义& 定义,std::string& 诊断) {
                     ||角色.必要约束组.front().允许类别组!=std::vector{新语言知识角色类别::存在}
                     ||!表达->指代概念节点||!表达->指代名称关系节点
                     ||表达->概念前词条节点||表达->概念后词条节点||表达->查询词条节点)return 拒绝("已消解指代图项不完整");
-                if(表达->角色.含义编号!=图.根含义编号||根.操作!=新语言知识含义操作::行动请求
-                    ||std::none_of(根.参数组.begin(),根.参数组.end(),[&](const auto& p){return p.参数==参数::受请求者&&p.规则角色==表达->角色.角色编号;}))
+                const auto& 本节点=*节点组.at(表达->角色.含义编号);
+                const bool receiver=表达->角色.含义编号==图.根含义编号&&std::any_of(根.参数组.begin(),根.参数组.end(),[&](const auto& p){return p.参数==参数::受请求者&&p.规则角色==表达->角色.角色编号;});
+                const bool speaker=本节点.操作==新语言知识含义操作::需求描述&&std::any_of(本节点.参数组.begin(),本节点.参数组.end(),[&](const auto& p){return p.参数==参数::主体&&p.规则角色==表达->角色.角色编号;});
+                if(根.操作!=新语言知识含义操作::行动请求||(!receiver&&!speaker))
                     return 拒绝("本包已消解图指代只能表达行动请求受请求者");
             }else if(表达->方式==新语言知识表达方式::查询变量词面) {
                 if(角色.种类!=新语言知识角色种类::查询变量||!表达->查询词条节点||表达->指代概念节点||表达->指代名称关系节点||表达->概念前词条节点||表达->概念后词条节点)return 拒绝("查询词面项不完整");
@@ -1472,7 +1492,7 @@ struct 知识读取现场 final {
             知识标识::图含义确认,知识标识::图含义方向,知识标识::图子边宿主})
             ||现场.引用(身份,知识标识::图含义宿主)!=目标||!现场.归属(身份,知识标识::目标图成员,目标))return 图;
         节点.局部编号=现场.原始值<std::int64_t>(身份,知识标识::图含义编号);
-        节点.操作=现场.枚举<新语言知识含义操作>(身份,知识标识::图含义操作,9);
+        节点.操作=现场.枚举<新语言知识含义操作>(身份,知识标识::图含义操作,10);
         节点.作用域=现场.枚举<新语言知识作用域>(身份,知识标识::图含义作用域,4);
         if(!现场.字段(身份,知识键(知识标识::图含义分支)).empty())节点.特征值分支=现场.枚举<新语言知识特征值分支>(身份,知识标识::图含义分支,2);
         if(!现场.字段(身份,知识键(知识标识::图含义确认)).empty())节点.确认范围=现场.枚举<新语言知识确认范围>(身份,知识标识::图含义确认,2);
@@ -1894,7 +1914,12 @@ std::vector<稳定编码> 收集知识指代定义(const 语言知识候选快�
             const auto* 表达=std::get_if<新语言知识图角色表达项>(&项.载荷);
             if(!表达||表达->方式!=新语言知识表达方式::已消解指代)continue;
             const auto p=表达->指代概念节点 ? 指代.find(*表达->指代概念节点) : 指代.end();
-            if(p==指代.end()||!是作用域受话者定义(p->second.定义))return false;
+            if(p==指代.end())return false;
+            const auto node=std::find_if(定义.目标.含义图->节点组.begin(),定义.目标.含义图->节点组.end(),[&](const auto& n){return n.局部编号==表达->角色.含义编号;});
+            if(node==定义.目标.含义图->节点组.end())return false;
+            if(node->操作==新语言知识含义操作::行动请求){if(!是作用域受话者定义(p->second.定义))return false;}
+            else if(node->操作==新语言知识含义操作::需求描述){if(!是作用域说话者定义(p->second.定义))return false;}
+            else return false;
         }
         return true;
     };
@@ -4658,6 +4683,14 @@ const 语言图含义出现& 取采用需求出现(const 语言图含义材料& 
             return 边.本节点角色编号 == 目标参数->规则角色 && 边.用途 == 新语言子含义用途::需求目标
                 && 边.子含义编号 == 子.定义含义编号;
         }) != 1) throw std::logic_error("adopted demand target edge or scope invalid");
+    if(子定义.操作==新语言知识含义操作::未解请求目标原文) {
+        if(!是采用行动请求(图)||!子.角色组.empty()||!子.原文范围)
+            throw std::logic_error("unresolved action must retain an unexecuted source span");
+        新语言需求目标投影 result{U,主体->节点,{},{}};
+        result.需求来源=来源;result.需求来源.原文起点=根.原文范围->first;
+        result.需求来源.原文终点=根.原文范围->second;result.需求来源.根出现路径=根.结构项路径;
+        result.未解请求目标原文=true;return result;
+    }
     const auto* E = std::get_if<语言图引用值>(&采用参数(图, 子, P::主体));
     const auto* FT = std::get_if<语言图引用值>(&采用参数(图, 子, P::特征类型));
     if (!E || E->类别 != 新语言知识角色类别::存在 || !有效(E->节点)
@@ -4733,6 +4766,7 @@ void 核采用图结构(const 新语言含义采用请求& q) {
         using P=新语言知识参数角色;
         std::set<P> 必须;
         switch(d.操作) {
+        case 新语言知识含义操作::未解请求目标原文 : 必须={};break;
         case 新语言知识含义操作::行动请求:必须={P::受请求者,P::目标内容};break;
         case 新语言知识含义操作::需求描述:必须={P::主体,P::目标内容};break;
         case 新语言知识含义操作::特征描述:必须={P::主体,P::特征类型,P::特征值};break;
@@ -4815,7 +4849,7 @@ void 核采用图结构(const 新语言含义采用请求& q) {
             新语言知识角色类别 类别;
             if(const auto* v=std::get_if<语言图引用值>(&r.值)) {
                 类别=v->类别;
-                if(!有效(v->节点)||类别<新语言知识角色类别::存在||类别>新语言知识角色类别::正式信息节点
+                if(!有效(v->节点)||类别<新语言知识角色类别::存在||类别>新语言知识角色类别::原文材料
                     ||(v->来源概念&&!有效(*v->来源概念))||(v->选用名称关系&&!有效(*v->选用名称关系))
                     ||(类别==新语言知识角色类别::存在&&!定位键.contains({n,r.角色编号})))
                     throw std::logic_error("adopted graph reference role invalid");
@@ -5053,11 +5087,12 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
             if(p==d.参数组.end())throw std::logic_error("adopted existence subject role missing");
             return p->规则角色;
         };
-        if(原.角色特征组.size()!=2)throw std::logic_error("adopted demand must own two existence role features");
+        const bool 澄清动作=找采用定义(g,找采用出现(g,child.出现编号).定义含义编号).操作==新语言知识含义操作::未解请求目标原文;
+        if(原.角色特征组.size()!=(澄清动作  ?  1u : 2u))throw std::logic_error("adopted demand existence role feature count differs from known roles");
         std::set<稳定编码> 已读F;
         for(const auto& p:原.角色特征组) {
             const bool isH=p.出现==root.出现编号&&p.角色==subjectRole(root.出现编号);
-            const bool isE=p.出现==child.出现编号&&p.角色==subjectRole(child.出现编号);
+            const bool isE=!澄清动作&&p.出现==child.出现编号&&p.角色==subjectRole(child.出现编号);
             if((!isH&&!isE)||!已读F.insert(p.特征).second)throw std::logic_error("adopted existence role feature reused or misplaced");
             const auto f=特征.读取特征完整保护(p.特征);
             if(f.状态==新特征完整读取状态::资源失败)throw 采用状态::资源失败;
@@ -5202,7 +5237,8 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
             if(!知识来源UTF8有效(s.固定原文,count)||static_cast<std::uint64_t>(count)!=q.来源.原文终点
                 ||(q.含义.固定原文&&*q.含义.固定原文!=s.固定原文))
                 throw 采用状态::前提已变化;
-            if(s.特征概念依据组.empty())throw std::logic_error("adoption lacks actual feature definition protection");
+            const bool 澄清动作=std::any_of(q.含义.定义图.节点组.begin(),q.含义.定义图.节点组.end(),[](const auto& n){return n.操作==新语言知识含义操作::未解请求目标原文;});
+            if(!澄清动作&&s.特征概念依据组.empty())throw std::logic_error("adoption lacks actual feature definition protection");
             if(是采用行动请求(q.含义)) {
                 const auto& 根=找采用出现(q.含义,q.含义.根出现编号);
                 const auto& e=std::get<语言图引用值>(采用参数(q.含义,根,新语言知识参数角色::受请求者));
@@ -5218,6 +5254,7 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
         candidates.reserve(2);roles.reserve(2);
         for(const auto [n,e,slot]:{std::tuple{root.出现编号,p.需求主体,先天特征类型槽::需求主体},
                 std::tuple{child.出现编号,p.目标存在,先天特征类型槽::需求目标存在}}) {
+            if(p.未解请求目标原文&&n==child.出现编号)continue;
             const auto type=ft.读取先天特征类型槽(slot);
             if(type.状态==特征概念规则状态::资源失败)throw 采用状态::资源失败;
             if(type.状态!=特征概念规则状态::已完成||!type.类型根||type.完整保护组.empty())
@@ -5478,5 +5515,152 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
 }
 
 
+
+
+namespace {
+新状态强时间 指代写入时间() {
+    const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});
+    if(!time.成功())throw std::logic_error("pronoun publication UTC unavailable");
+    return {新状态时间语义::实例绝对UTC,time.证据->UTC纳秒};
+}
+std::int64_t 指代整数(稳定编码 E,接收含义键 key) {
+    const auto fields=全局基础数据集.查询字段(E,采用键(key));
+    if(fields.size()!=1)throw std::logic_error("pronoun occurrence field missing or ambiguous");
+    const auto* v=std::get_if<基础值>(&fields.front().内容);
+    if(!v)throw std::logic_error("pronoun occurrence field type corrupt");
+    const auto* n=std::get_if<std::int64_t>(&v->材料);
+    if(!n)throw std::logic_error("pronoun occurrence range corrupt");
+    return *n;
+}
+稳定编码 指代节点(稳定编码 E,接收含义键 key) {
+    const auto v=读取唯一节点字段(E,采用键(key));
+    if(!v)throw std::logic_error("pronoun content reference corrupt");
+    return *v;
+}
+}
+std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M) const {
+    std::lock_guard lock(新语言互斥);
+    std::vector<稳定编码> result;
+    for(const auto& f : 全局基础数据集.查询字段(自然语言组织根节点,采用键(接收含义键::指代登记))) {
+        const auto* E=std::get_if<稳定编码>(&f.内容);
+        if(!E)throw std::logic_error("pronoun registration corrupt");
+        if(指代节点(*E,接收含义键::指代消息)==M)result.push_back(*E);
+    }
+    return result;
+}
+新语言指代结果 新_语言类::读取交互指代(稳定编码 E,const 新语言指代配置& config,
+    新_场景类& scene,const 新_存在类& existence,新_特征类& feature) const {
+    新语言指代结果 result;
+    新语言指代信息 info; info.实例=E;
+    {
+        std::lock_guard lock(新语言互斥);
+        info.状态特征=指代节点(E,接收含义键::指代特征);
+        auto& q=info.来源;
+        q.自然语言场景=指代节点(E,接收含义键::指代场景);
+        q.来源消息=指代节点(E,接收含义键::指代消息);
+        q.原文材料=指代节点(E,接收含义键::指代原文);
+        q.作用域=指代节点(E,接收含义键::指代作用域);
+        q.代词概念=指代节点(E,接收含义键::指代概念);
+        q.原文起点=static_cast<std::uint64_t>(指代整数(E,接收含义键::指代起点));
+        q.原文终点=static_cast<std::uint64_t>(指代整数(E,接收含义键::指代终点));
+        info.当前存在目标=读取唯一节点字段(E,采用键(接收含义键::指代目标));
+    }
+    const auto id=existence.读取存在身份保护(E);
+    if(id.状态!=基础结构操作状态::已完成||id.前提已变化||!id.信息)return result;
+    if(scene.查询所属场景(E)!=std::optional{info.来源.自然语言场景})return result;
+    bool readable=false;
+    if(info.当前存在目标) {
+        const auto target=existence.读取存在身份保护(*info.当前存在目标);
+        if(target.状态==基础结构操作状态::资源失败)throw std::bad_alloc();
+        readable=target.状态==基础结构操作状态::已完成&&!target.前提已变化&&target.信息.has_value();
+        if(readable)result.完整保护=target.预期节点组;
+    }
+    auto current=feature.获取特征(info.状态特征);
+    if(!current)throw std::logic_error("pronoun actual resolution feature disappeared");
+    const auto* value=current->当前值 ? std::get_if<std::int64_t>(&*current->当前值) : nullptr;
+    const auto expected=static_cast<std::int64_t>(readable ? 1 : 0);
+    if(!value||*value!=expected) {
+        const auto updated=scene.更新场景内存在特征值(info.来源.自然语言场景,E,info.状态特征,
+            新特征准确值{expected},指代写入时间());
+        if(updated.状态!=新场景操作状态::已完成&&updated.状态!=新场景操作状态::无变化)
+            return result; // 已发布绑定与已发生F前缀保留，下一次fresh读取收敛。
+        current=feature.获取特征(info.状态特征);
+        if(!current||!current->当前值||std::get_if<std::int64_t>(&*current->当前值)==nullptr
+            ||std::get<std::int64_t>(*current->当前值)!=expected)
+            throw std::logic_error("pronoun resolution feature readback mismatch");
+    }
+    const auto head=feature.读取特征头保护(info.状态特征);
+    if(!head.信息||head.信息->特征类型根!=config.状态类型)
+        throw std::logic_error("pronoun resolution feature type mismatch");
+    const auto proof=全局基础数据集.查询节点组完整结构({E,info.状态特征});
+    if(proof.状态!=基础结构操作状态::已完成)return result;
+    for(const auto& n : proof.节点组){if(!n.快照)return result;result.完整保护.push_back(*n.快照);}
+    result.已读回=true;result.已消解=readable;result.信息=std::move(info);return result;
+}
+新语言指代结果 新_语言类::建立或取得交互指代(const 新语言指代请求& q,
+    const 新语言指代配置& config,新_场景类& scene,新_存在类& existence,新_特征类& feature) {
+    if(!有效(q.自然语言场景)||!有效(q.来源消息)||!有效(q.原文材料)||!有效(q.作用域)
+        ||!有效(q.代词概念)||q.原文终点<=q.原文起点)return {};
+    std::optional<稳定编码> existing;
+    for(const auto E : 查询消息指代实例(q.来源消息)) {
+        auto r=读取交互指代(E,config,scene,existence,feature);
+        if(!r.已读回||!r.信息)return {};
+        const auto& old=r.信息->来源;
+        if(old.原文起点==q.原文起点&&old.原文终点==q.原文终点&&old.作用域==q.作用域) {
+            if(old.代词概念!=q.代词概念||old.自然语言场景!=q.自然语言场景||old.原文材料!=q.原文材料)return {};
+            existing=E;break;
+        }
+    }
+    if(!existing) {
+        新存在建立请求 request;request.初始特征组.push_back({config.状态类型,新特征准确值{std::int64_t{0}}});
+        const auto born=scene.建立成员存在(q.自然语言场景,request,指代写入时间());
+        if(born.状态!=新场景操作状态::已完成||!born.存在节点)return {};
+        existing=*born.存在节点;
+        const auto E=existence.获取存在(*existing);
+        if(!E||E->特征节点组.size()!=1)throw std::logic_error("pronoun existence birth readback failed");
+        std::lock_guard lock(新语言互斥);
+        const auto put=[&](接收含义键 key,稳定编码 v){if(!有效(全局基础数据集.添加字段节点(*existing,采用键(key),v)))throw std::logic_error("pronoun content publication failed");};
+        put(接收含义键::指代场景,q.自然语言场景);put(接收含义键::指代消息,q.来源消息);
+        put(接收含义键::指代原文,q.原文材料);put(接收含义键::指代作用域,q.作用域);
+        put(接收含义键::指代概念,q.代词概念);put(接收含义键::指代特征,E->特征节点组.front());
+        for(const auto& item : {std::pair{接收含义键::指代起点,q.原文起点},std::pair{接收含义键::指代终点,q.原文终点}})
+            if(!有效(全局基础数据集.添加字段值(*existing,采用键(item.first),基础值{static_cast<std::int64_t>(item.second)})))throw std::logic_error("pronoun occurrence publication failed");
+        if(!有效(全局基础数据集.添加字段节点(自然语言组织根节点,采用键(接收含义键::指代登记),*existing)))throw std::logic_error("pronoun registration publication failed");
+    }
+    if(q.存在目标) {
+        const auto id=existence.读取存在身份保护(*q.存在目标);
+        if(id.状态!=基础结构操作状态::已完成||id.前提已变化||!id.信息)return {};
+        std::lock_guard lock(新语言互斥);
+        const auto fields=全局基础数据集.查询字段(*existing,采用键(接收含义键::指代目标));
+        if(fields.empty()) {
+            if(!有效(全局基础数据集.添加字段节点(*existing,采用键(接收含义键::指代目标),*q.存在目标)))throw std::logic_error("pronoun binding publication failed");
+        } else if(fields.size()!=1||读取唯一节点字段(*existing,采用键(接收含义键::指代目标))!=q.存在目标) {
+            // 已解释出现不可改写。纠正必须由新解析/新出现建立新实例。
+            return {};
+        }
+    }
+    return 读取交互指代(*existing,config,scene,existence,feature);
+}
+
+
+
+bool 新_语言类::记录词条归类学习(稳定编码 W,稳定编码 C,稳定编码 M,稳定编码 K) {
+    if(!有效(W)||!有效(C)||!有效(M)||!有效(K))return false;
+    std::lock_guard lock(新语言互斥);
+    for(const auto& f : 全局基础数据集.查询字段(自然语言组织根节点,采用键(接收含义键::归类学习登记))) {
+        const auto* id=std::get_if<稳定编码>(&f.内容);if(!id)throw std::logic_error("lemma learning index corrupt");
+        if(指代节点(*id,接收含义键::归类学习词条)==W&&指代节点(*id,接收含义键::归类学习概念)==C)
+            return true; // 身份及所属概念类型已固定，重复出现不另造语言学习事实。
+    }
+    const auto born=全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(1));
+    if(born.状态!=基础结构操作状态::已完成||born.节点组.size()!=1)return false;
+    const auto id=born.节点组.front();
+    for(const auto& field : {std::pair{接收含义键::归类学习词条,W},std::pair{接收含义键::归类学习概念,C},
+        std::pair{接收含义键::归类学习消息,M},std::pair{接收含义键::归类学习知识,K}})
+        if(!有效(全局基础数据集.添加字段节点(id,采用键(field.first),field.second)))throw std::logic_error("lemma learning publication incomplete");
+    if(!有效(全局基础数据集.添加字段节点(自然语言组织根节点,采用键(接收含义键::归类学习登记),id)))throw std::logic_error("lemma learning registration failed");
+    return 指代节点(id,接收含义键::归类学习词条)==W&&指代节点(id,接收含义键::归类学习概念)==C
+        &&指代节点(id,接收含义键::归类学习消息)==M&&指代节点(id,接收含义键::归类学习知识)==K;
+}
 
 } // namespace 海中鱼巣

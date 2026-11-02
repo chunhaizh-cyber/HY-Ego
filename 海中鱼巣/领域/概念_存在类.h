@@ -1,4 +1,5 @@
 #pragma once
+#include "概念归类.数据.h"
 
 #include <cstdint>
 #include <array>
@@ -244,7 +245,7 @@ struct 存在根建立请求 final {
 };
 
 enum class 存在分类概念形状 : std::uint8_t {
-    普通专属=1, 普通抽象, 信息结构
+    普通专属=1, 普通抽象, 信息结构, 语言归类定义未知
 };
 struct 存在分类关系信息 final {
     稳定编码 概念节点;
@@ -393,6 +394,10 @@ struct 存在概念上位保护结果 final {
 };
 class 概念_存在类 final : public 正式概念身份读取接口 {
 public:
+    // 归类专属身份；定义未知的节点不冒充普通完整定义。
+    归类概念身份读取结果 读取语言归类概念身份保护(稳定编码) const noexcept;
+    归类概念建立结果 建立或取得语言归类概念(const 归类概念建立请求&) noexcept;
+
     // owner登记的语义根不同于物理组织根；名称仅供语言引用。
     存在概念建立结果 建立或取得存在根概念(const 存在根建立请求&) noexcept;
     普通存在概念定义保护结果 读取存在根概念保护() const noexcept;
@@ -490,6 +495,9 @@ public:
     存在概念实例候选读取结果 读取下位专属实例候选完整(稳定编码 概念节点) const noexcept;
 
 private:
+    bool 更新语言归类名称关系(稳定编码, 稳定编码, bool 绑定,
+        const std::vector<基础联合节点快照>& 来源保护 = {}) noexcept;
+
     friend class 概念_名称关系类;
     bool 绑定信息定义名称关系(稳定编码, 稳定编码) noexcept;
     bool 解除信息定义名称关系(稳定编码, 稳定编码) noexcept;

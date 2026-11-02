@@ -1,4 +1,5 @@
 #pragma once
+#include "概念归类.数据.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -449,6 +450,7 @@ struct 特征分类关系信息 final {
     稳定编码 概念节点;
     bool 是类别根 = false;
     std::vector<稳定编码> 直接上位概念组, 直接下位概念组;
+    bool 定义未知=false;
 };
 struct 特征分类关系保护结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
@@ -457,6 +459,10 @@ struct 特征分类关系保护结果 final {
 };
 class 概念_特征类 final : public 正式概念身份读取接口 {
 public:
+    // 归类专属身份；定义未知的节点不冒充普通完整定义。
+    归类概念身份读取结果 读取语言归类概念身份保护(稳定编码) const noexcept;
+    归类概念建立结果 建立或取得语言归类概念(const 归类概念建立请求&) noexcept;
+
     特征概念编码操作结果 建立或取得特征类别根概念() noexcept;
     特征类别根读取结果 读取特征类别根概念保护() const noexcept;
     特征分类关系保护结果 读取特征分类关系保护(稳定编码) const noexcept;
@@ -588,6 +594,9 @@ public:
         const 新_特征值类& 特征值服务) const noexcept;
 
 private:
+    bool 更新语言归类名称关系(稳定编码, 稳定编码, bool 绑定,
+        const std::vector<基础联合节点快照>& 来源保护 = {}) noexcept;
+
     friend class 新_特征类;
     // 只供信息引用型空F出生：本owner计数与调用者封存的空实例共同发布。
     基础片段组合结果 联合发布新增空实例引用(

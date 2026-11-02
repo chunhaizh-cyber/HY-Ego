@@ -3,6 +3,8 @@
 #include "../核心/容错检查.h"
 
 #include <algorithm>
+#include <functional>
+#include <new>
 #include <array>
 #include <mutex>
 #include <set>
@@ -15,6 +17,30 @@ namespace 海中鱼巣 {
 稳定编码 动态概念图根节点{};
 
 namespace {
+
+// 归类专属结构由本概念 owner 持有；不进入普通完整定义的值域/实例链。
+稳定编码 归类未知类型{},归类上位字段{},归类词条字段{},归类需求字段{},归类回答字段{},归类登记字段{},归类名称字段{};
+auto 语言归类字段组() {return std::array{&归类未知类型,&归类上位字段,&归类词条字段,&归类需求字段,&归类回答字段,&归类登记字段,&归类名称字段};}
+bool 归类同快照(const 基础联合节点快照&a,const 基础联合节点快照&b){return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组&&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;}
+bool 归类并保护(std::vector<基础联合节点快照>&a,const std::vector<基础联合节点快照>&b){for(const auto&n:b){const auto it=std::find_if(a.begin(),a.end(),[&](const auto&x){return x.结构.节点.编码==n.结构.节点.编码;});if(it==a.end())a.push_back(n);else if(!归类同快照(*it,n))return false;}return true;}
+std::optional<基础联合节点快照> 归类取快照(稳定编码 n){const auto r=全局基础数据集.查询节点组完整结构({n});if(r.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=1)throw std::logic_error("classification identity snapshot failed");return r.节点组.front().快照;}
+bool 归类保护未变(const std::vector<基础联合节点快照>&p){for(const auto&n:p){const auto s=归类取快照(n.结构.节点.编码);if(!s||!归类同快照(n,*s))return false;}return true;}
+std::vector<稳定编码> 归类引用组(const 基础节点结构&s,稳定编码 key){std::vector<稳定编码>r;for(const auto&f:s.字段组)if(f.字段节点==key){const auto*v=std::get_if<稳定编码>(&f.内容);if(!v||!有效(*v))throw std::logic_error("classification identity reference field corrupt");r.push_back(*v);}return r;}
+稳定编码 归类单引用(const 基础节点结构&s,稳定编码 key){const auto r=归类引用组(s,key);if(r.size()!=1)throw std::logic_error("classification identity cardinality corrupt");return r.front();}
+
+extern 稳定编码 节点类型字段;
+std::vector<稳定编码> 归类直接子投影(稳定编码 root,稳定编码 parent,std::vector<基础联合节点快照>&protect){
+    const auto r=归类取快照(root);if(!r)throw std::logic_error("classification registry root absent");if(!归类并保护(protect,{*r}))throw 归类概念读取状态::前提已变化;
+    std::vector<稳定编码> children;
+    for(const auto C:归类引用组(r->结构,归类登记字段)){
+        const auto c=归类取快照(C);if(!c||归类单引用(c->结构,节点类型字段)!=归类未知类型)throw std::logic_error("classification registered identity corrupt");
+        if(归类单引用(c->结构,归类上位字段)!=parent)continue;
+        if(!归类并保护(protect,{*c}))throw 归类概念读取状态::前提已变化;
+        children.push_back(C);
+    }
+    std::sort(children.begin(),children.end());if(std::adjacent_find(children.begin(),children.end())!=children.end())throw std::logic_error("classification child registered twice");return children;
+}
+
 
 std::recursive_mutex 动态概念图互斥;
 
@@ -739,6 +765,8 @@ bool 概念_动态类::初始化() noexcept {
             节点 = 全局基础数据集.新建节点();
             return 有效(节点);
         };
+        for(auto* key:语言归类字段组())if(!建立(*key))return false;
+
         for (auto* 字段 : 动作字段组()) if (!建立(*字段)) return false;
         return 建立(动态概念图根节点)
             && 建立(节点类型字段)
@@ -2090,6 +2118,8 @@ std::optional<动态概念信息> 概念_动态类::获取动态概念(
 }
 
 bool 概念_动态类::是动态概念节点(稳定编码 节点) const noexcept {
+    if(有效(归类未知类型)&&读取唯一节点字段(节点,节点类型字段)==归类未知类型){const auto r=读取语言归类概念身份保护(节点);return r.状态==归类概念读取状态::已读取&&r.信息.has_value();}
+
     return 获取动态概念(节点).has_value();
 }
 
@@ -2155,14 +2185,119 @@ bool 概念_动态类::是聚合动态概念节点(稳定编码 节点) const no
 
 std::vector<稳定编码> 概念_动态类::查询上位动态概念(
     稳定编码 概念节点) const noexcept {
+    const auto learning=读取语言归类概念身份保护(概念节点);if(learning.信息&&learning.信息->定义未知)return {*learning.信息->直接上位};
     const auto 信息 = 获取动态概念(概念节点);
     return 信息 ? 信息->上位概念组 : std::vector<稳定编码>{};
 }
 
 std::vector<稳定编码> 概念_动态类::查询下位动态概念(
     稳定编码 概念节点) const noexcept {
-    const auto 信息 = 获取动态概念(概念节点);
-    return 信息 ? 信息->下位概念组 : std::vector<稳定编码>{};
+    const auto 信息 = 获取动态概念(概念节点);auto result=信息 ? 信息->下位概念组 : std::vector<稳定编码>{};
+    try{std::vector<基础联合节点快照> p;const auto added=归类直接子投影(动态概念图根节点,概念节点,p);if(!归类保护未变(p))return {};result.insert(result.end(),added.begin(),added.end());std::sort(result.begin(),result.end());result.erase(std::unique(result.begin(),result.end()),result.end());return result;}catch(...){return {};}
+
 }
 
 } // namespace 海中鱼巣
+
+namespace 海中鱼巣 {
+
+归类概念身份读取结果 概念_动态类::读取语言归类概念身份保护(稳定编码 n) const noexcept {
+    using S=归类概念读取状态;
+    try {
+        std::lock_guard lock(动态概念图互斥);
+        if(!结构已初始化())return {S::依赖未就绪,{},{}};
+        if(!有效(n))return {};
+        if(n==动态概念图根节点){const auto r=归类取快照(n);if(!r)return {S::依赖未就绪,{},{}};归类概念身份信息 info;info.节点=n;info.所属根=n;return {S::已读取,std::move(info),{*r}};}
+
+        const auto first=归类取快照(n);if(!first)return {};
+        const auto kind=归类引用组(first->结构,节点类型字段);
+        if(kind.size()!=1)return {};
+        if(kind.front()!=归类未知类型){
+            const auto normal=获取动态概念(n);if(!normal)return {};
+            if(std::none_of(first->入向外部关系组.begin(),first->入向外部关系组.end(),[&](const auto&e){return e.类型==基础外部关系类型::父子&&e.源节点==动态概念图根节点&&(e.角色或顺序==组织归属关系角色||e.角色或顺序==0);}))return {S::结构不一致,{},{}};
+            const auto root=归类取快照(动态概念图根节点);if(!root)return {S::依赖未就绪,{},{}};
+            std::vector<基础联合节点快照> p{*first,*root};
+            // 正式 getter 已核验动态概念身份；组织根及当前节点保护相同才接受。
+            if(!归类保护未变(p)||获取动态概念(n)!=normal)return {S::前提已变化,{},{}};
+            归类概念身份信息 info;info.节点=n;info.所属根=动态概念图根节点;info.名称关系=归类引用组(first->结构,归类名称字段);
+            return {S::已读取,std::move(info),std::move(p)};
+        }
+        static thread_local std::set<稳定编码> active;
+        if(!active.insert(n).second)return {S::结构不一致,{},{}};
+        struct 退出{std::set<稳定编码>&s;稳定编码 n;~退出(){s.erase(n);}}leave{active,n};
+        const auto root=归类取快照(动态概念图根节点);if(!root)return {S::依赖未就绪,{},{}};
+        const auto registered=归类引用组(root->结构,归类登记字段);
+        if(std::count(registered.begin(),registered.end(),n)!=1)return {S::结构不一致,{},{}};
+        归类概念身份信息 info;info.节点=n;info.定义未知=true;
+        info.直接上位=归类单引用(first->结构,归类上位字段);
+        info.目标词条=归类单引用(first->结构,归类词条字段);
+        info.归类需求=归类单引用(first->结构,归类需求字段);
+        info.回答消息=归类单引用(first->结构,归类回答字段);
+        info.名称关系=归类引用组(first->结构,归类名称字段);
+        if(std::set<稳定编码>(info.名称关系.begin(),info.名称关系.end()).size()!=info.名称关系.size())return {S::结构不一致,{},{}};
+        const auto parent=读取语言归类概念身份保护(*info.直接上位);
+        if(parent.状态!=S::已读取||!parent.信息)return parent;
+        info.所属根=parent.信息->所属根;
+        auto protect=parent.完整保护;
+        if(!归类并保护(protect,{*first,*root}))return {S::前提已变化,{},{}};
+        for(const auto id:{*info.目标词条,*info.归类需求,*info.回答消息}){
+            const auto p=归类取快照(id);if(!p)return {S::结构不一致,{},{}};
+            if(!归类并保护(protect,{*p}))return {S::前提已变化,{},{}};
+        }
+        for(const auto id:info.名称关系){const auto p=归类取快照(id);if(!p)return {S::结构不一致,{},{}};if(!归类并保护(protect,{*p}))return {S::前提已变化,{},{}};}
+        if(!归类保护未变(protect))return {S::前提已变化,{},{}};
+        return {S::已读取,std::move(info),std::move(protect)};
+    }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(...){return {S::结构不一致,{},{}};}
+}
+归类概念建立结果 概念_动态类::建立或取得语言归类概念(const 归类概念建立请求&q) noexcept {
+    using S=归类概念读取状态;
+    try{
+        std::lock_guard lock(动态概念图互斥);
+        if(!结构已初始化()||!有效(归类未知类型))return {S::依赖未就绪,{},{}};
+        if(!有效(q.目标词条)||!有效(q.归类需求)||!有效(q.回答消息)||q.来源保护.empty())return {};
+        const auto parent=读取语言归类概念身份保护(q.上位概念);
+        if(parent.状态!=S::已读取||!parent.信息)return {parent.状态,{},{}};
+        auto protect=q.来源保护;if(!归类并保护(protect,parent.完整保护))return {S::前提已变化,{},{}};
+        const auto root=归类取快照(动态概念图根节点);if(!root)return {S::依赖未就绪,{},{}};
+        if(!归类并保护(protect,{*root}))return {S::前提已变化,{},{}};
+        for(const auto n:归类引用组(root->结构,归类登记字段)){
+            const auto old=读取语言归类概念身份保护(n);
+            if(old.状态!=S::已读取||!old.信息)return {old.状态,{},{}};
+            const auto&i=*old.信息;
+            if((i.归类需求==q.归类需求&&i.回答消息==q.回答消息)||(i.目标词条==q.目标词条&&i.直接上位==q.上位概念)){
+                if(i.目标词条!=q.目标词条||i.直接上位!=q.上位概念)return {S::结构不一致,n,true};
+                if(!归类并保护(protect,old.完整保护)||!归类保护未变(protect))return {S::前提已变化,n,true};
+                return {S::已读取,n,true};
+            }
+        }
+        if(!归类保护未变(protect))return {S::前提已变化,{},{}};
+        基础节点组追加请求 add;add.预期联合节点组=std::move(protect);
+        add.新节点组.push_back({{{节点类型字段,归类未知类型},{归类上位字段,q.上位概念},{归类词条字段,q.目标词条},{归类需求字段,q.归类需求},{归类回答字段,q.回答消息}}});
+        add.追加字段组.push_back({动态概念图根节点,归类登记字段,基础组内节点引用{0}});
+        const auto done=全局基础数据集.原子追加节点组(add);
+        if(done.状态==基础节点组追加状态::预期不符)return {S::前提已变化,{},{}};
+        if(done.状态==基础节点组追加状态::资源失败)return {S::资源失败,{},{}};
+        if(done.状态!=基础节点组追加状态::已完成||done.新节点组.size()!=1)return {S::结构不一致,{},{}};
+        const auto C=done.新节点组.front();const auto back=读取语言归类概念身份保护(C);
+        return {back.状态,C,false}; // 读回非成功仍保留已发布身份，供原来源重试。
+    }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(...){return {S::结构不一致,{},{}};}
+}
+bool 概念_动态类::更新语言归类名称关系(稳定编码 C,稳定编码 name,bool bind,const std::vector<基础联合节点快照>& source) noexcept {
+    try{
+        std::lock_guard lock(动态概念图互斥);
+        const auto info=读取语言归类概念身份保护(C);if(info.状态!=归类概念读取状态::已读取||!info.信息)return false;
+        const auto snapshot=归类取快照(C);if(!snapshot||!有效(name))return false;
+        const auto key=info.信息->定义未知 ? 归类名称字段 : 归类名称字段;
+        const auto fields=归类引用组(snapshot->结构,key);
+        if(bind&&std::find(fields.begin(),fields.end(),name)!=fields.end())return true;
+        基础节点组追加请求 q;q.预期联合节点组=info.完整保护;
+        if(!归类并保护(q.预期联合节点组,source))return false;
+        if(bind)q.追加字段组.push_back({C,key,name});
+        else for(const auto&f:snapshot->结构.字段组)if(f.字段节点==key&&std::get_if<稳定编码>(&f.内容)&&std::get<稳定编码>(f.内容)==name)q.删除字段关系组.push_back(f.编码);
+        return 全局基础数据集.原子追加节点组(q).状态==基础节点组追加状态::已完成;
+    }catch(...){return false;}
+}
+
+}
