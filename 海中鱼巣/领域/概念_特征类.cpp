@@ -1,4 +1,5 @@
-#include "概念_特征类.h"
+﻿#include "概念_特征类.h"
+#include "../核心/日志系统.h"
 #include "../核心/容错检查.h"
 #include <algorithm>
 #include <array>
@@ -29,6 +30,23 @@ extern std::recursive_mutex 存在特征互斥;
 }
 
 namespace {
+// 只输出调用点已有I64域，最多八段，不读取业务材料。
+void 记录动态诊断概念(const wchar_t* 入口, 稳定编码 节点,
+    std::optional<稳定编码> 父, const 特征概念值域& 域) noexcept {
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+    try {
+        const auto* I64=std::get_if<std::vector<特征概念I64闭区间>>(&域);
+        if (!I64) return;
+        std::wstring 文本=L"节点="+std::to_wstring(节点.值)+L"；父="+std::to_wstring(父 ? 父->值 : 0);
+        for (std::size_t i=0; i<I64->size() && i<8; ++i)
+            文本+=L"；["+std::to_wstring((*I64)[i].下界)+L","+std::to_wstring((*I64)[i].上界)+L"]";
+        (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION",L"特征概念owner",入口,文本);
+    } catch (...) {}
+#else
+    (void)入口;(void)节点;(void)父;(void)域;
+#endif
+}
+
 
 // 归类专属结构由本概念 owner 持有；不进入普通完整定义的值域/实例链。
 稳定编码 归类未知类型{},归类上位字段{},归类词条字段{},归类需求字段{},归类回答字段{},归类登记字段{},归类名称字段{};
@@ -2575,6 +2593,7 @@ std::optional<先天特征概念集合> 概念_特征类::获取先天特征概�
     const 特征概念定义& d, const 新_特征值类& v, std::optional<稳定编码> p) noexcept {
     try {
         const auto n = 建立特征概念内部(d, v, p);
+        记录动态诊断概念(L"建立或取得返回",n,p,d.值域);
         return 有效(n) ? 特征概念编码操作结果{特征概念规则状态::已完成, n}
             : 特征概念编码操作结果{};
     } catch (const 特征运算技术拒绝& e) { return {e.状态, {}}; }
@@ -3288,6 +3307,8 @@ bool 概念_特征类::更新特征概念值域内部(
         新定义.值域 = 新值域;
         const auto 规范新定义 = 规范化定义(新定义);
         const auto 规范原定义 = 规范化定义(转为定义(*原信息));
+        记录动态诊断概念(L"更新原域",特征概念节点,{},原信息->值域);
+        记录动态诊断概念(L"更新请求域",特征概念节点,{},新值域);
         if (!规范新定义 || !规范原定义) return false;
         std::vector<基础联合节点快照> 需求域身份保护;
         if (规范新定义->材料类型 == 特征概念材料物理类型::需求节点引用) {
@@ -4130,6 +4151,12 @@ std::vector<稳定编码> 概念_特征类::查询特征概念内部(
                     *当前信息, 特征值, 特征值服务, 存在引用读取接口_, 需求成员读取接口_, 存在成员读取接口_);
             }
             if (!当前尺度) continue;
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+            if (const auto* I64=std::get_if<std::int64_t>(&特征值); I64 && *I64==1)
+                记录动态诊断概念(L"值1命中域",当前.节点,
+                    当前.路径.size()>1 ? std::optional<稳定编码>{当前.路径[当前.路径.size()-2]} : std::nullopt,
+                    当前信息->值域);
+#endif
             命中组.push_back({
                 当前.节点, *当前尺度, 当前.路径});
 
@@ -4201,6 +4228,19 @@ std::vector<稳定编码> 概念_特征类::查询特征概念内部(
                 });
             if (!是同尺度候选的祖先) 最具体候选.push_back(&候选);
         }
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+        if (最具体候选.size() > 1) {
+            try {
+                std::wstring 文本=L"根="+std::to_wstring(特征类型概念.值)+L"；尺度="+std::to_wstring(最佳尺度);
+                if (const auto* v=std::get_if<std::int64_t>(&特征值)) 文本+=L"；I64="+std::to_wstring(*v);
+                for (std::size_t i=0;i<最具体候选.size() && i<16;++i) {
+                    const auto* 项=最具体候选[i];文本+=L"；候选="+std::to_wstring(项->节点.值)+L"；路径=";
+                    for (std::size_t j=0;j<项->路径.size() && j<32;++j) 文本+=std::to_wstring(项->路径[j].值)+L"/";
+                }
+                (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION",L"特征概念owner",L"最具体冲突",文本);
+            } catch (...) {}
+        }
+#endif
         if (最具体候选.size() > 1) {
             std::vector<稳定编码> 冲突候选;
             冲突候选.reserve(最具体候选.size());
