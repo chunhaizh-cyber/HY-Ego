@@ -135,6 +135,12 @@ public:
     std::optional<新自然语言场景信息> 获取场景(
         稳定编码 场景节点) const noexcept;
     std::vector<稳定编码> 查询全部场景() const noexcept;
+    // 自然语言场景的真实成员身份/F仍由本树既有场景owner发布；不暴露私有视图。
+    新场景成员建立结果 建立场景成员存在(稳定编码,const 新存在建立请求&,
+        const 新状态强时间&) noexcept;
+    std::optional<稳定编码> 查询成员所属场景(稳定编码) const noexcept;
+    新场景特征值更新结果 更新场景成员特征值(稳定编码 场景,稳定编码 存在,
+        稳定编码 特征,const 新特征准确值&,const 新状态强时间&) noexcept;
     bool 是自然语言场景节点(稳定编码 节点) const noexcept;
     新自然语言场景复制结果 读取复制场景(稳定编码) const;
 

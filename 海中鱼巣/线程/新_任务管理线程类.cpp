@@ -429,9 +429,17 @@ struct 新_任务管理线程类::实现 final {
     void 推进语言补全() {
         for(const auto T: 任务服务->查询语言补全任务()) {
             const auto r=任务服务->读取语言补全记录(T);if(!r)throw std::logic_error("language task disappeared");
+            bool waitingInput=false;
             {std::lock_guard lock(互斥);专有字段任务.insert(T.值);
-                if(停止||语言等待新输入.contains(T)||r->阶段==新任务语言补全阶段::已满足||r->阶段==新任务语言补全阶段::来源已变化
-                    ||std::any_of(活动工作.begin(),活动工作.end(),[&](const auto& w){return w.请求.任务节点==T;}))continue;}
+                if(停止||r->阶段==新任务语言补全阶段::已满足||r->阶段==新任务语言补全阶段::来源已变化
+                    ||std::any_of(活动工作.begin(),活动工作.end(),[&](const auto& w){return w.请求.任务节点==T;}))continue;
+                waitingInput=语言等待新输入.contains(T);}
+            if(waitingInput) {
+                // 只读复核来源和当前目标；等待新输入只抑制再次询问/发送，不能冻结事实判定。
+                const auto fresh=任务服务->读取所属需求当前满足(r->需求节点);
+                const bool mayFinish=fresh.状态==新需求当前满足状态::已满足&&!r->原句确认中&&!r->仍待理解重述;
+                if(!mayFinish&&fresh.状态!=新需求当前满足状态::目标引用前提已变化)continue;
+            }
             新任务工作请求 q;q.任务节点=T;q.种类=新任务工作种类::推进语言补全;
             {std::lock_guard lock(互斥);if(!下一工作编号)throw std::logic_error("language work number exhausted");q.工作编号=下一工作编号++;}
             (void)提交普通工作(q);

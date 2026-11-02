@@ -5,6 +5,7 @@
 #include "新_特征类.h"
 #include "新_存在类.h"
 #include "新_场景类.h"
+#include "新_自然语言世界树类.h"
 #include "../适配/适配器.UTC时钟.h"
 
 #include <algorithm>
@@ -5561,7 +5562,7 @@ std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M
     return result;
 }
 新语言指代结果 新_语言类::读取交互指代(稳定编码 E,const 新语言指代配置& config,
-    新_场景类& scene,const 新_存在类& existence,新_特征类& feature) const {
+    新_自然语言世界树类& scene,const 新_存在类& existence,新_特征类& feature) const {
     新语言指代结果 result;
     新语言指代信息 info; info.实例=E;
     {
@@ -5579,7 +5580,7 @@ std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M
     }
     const auto id=existence.读取存在身份保护(E);
     if(id.状态!=基础结构操作状态::已完成||id.前提已变化||!id.信息)return result;
-    if(scene.查询所属场景(E)!=std::optional{info.来源.自然语言场景})return result;
+    if(scene.查询成员所属场景(E)!=std::optional{info.来源.自然语言场景})return result;
     bool readable=false;
     if(info.当前存在目标) {
         const auto target=existence.读取存在身份保护(*info.当前存在目标);
@@ -5592,10 +5593,11 @@ std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M
     const auto* value=current->当前值 ? std::get_if<std::int64_t>(&*current->当前值) : nullptr;
     const auto expected=static_cast<std::int64_t>(readable ? 1 : 0);
     if(!value||*value!=expected) {
-        const auto updated=scene.更新场景内存在特征值(info.来源.自然语言场景,E,info.状态特征,
+        const auto updated=scene.更新场景成员特征值(info.来源.自然语言场景,E,info.状态特征,
             新特征准确值{expected},指代写入时间());
         if(updated.状态!=新场景操作状态::已完成&&updated.状态!=新场景操作状态::无变化)
-            return result; // 已发布绑定与已发生F前缀保留，下一次fresh读取收敛。
+            throw std::runtime_error("pronoun stage=NL-state-feature-update; scene-operation-status="
+                +std::to_string(static_cast<std::int64_t>(updated.状态))+"; instance="+std::to_string(E.值)); // 保留实际绑定/F前缀。
         current=feature.获取特征(info.状态特征);
         if(!current||!current->当前值||std::get_if<std::int64_t>(&*current->当前值)==nullptr
             ||std::get<std::int64_t>(*current->当前值)!=expected)
@@ -5610,7 +5612,7 @@ std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M
     result.已读回=true;result.已消解=readable;result.信息=std::move(info);return result;
 }
 新语言指代结果 新_语言类::建立或取得交互指代(const 新语言指代请求& q,
-    const 新语言指代配置& config,新_场景类& scene,新_存在类& existence,新_特征类& feature) {
+    const 新语言指代配置& config,新_自然语言世界树类& scene,新_存在类& existence,新_特征类& feature) {
     if(!有效(q.自然语言场景)||!有效(q.来源消息)||!有效(q.原文材料)||!有效(q.作用域)
         ||!有效(q.代词概念)||q.原文终点<=q.原文起点)return {};
     std::optional<稳定编码> existing;
@@ -5625,8 +5627,10 @@ std::vector<稳定编码> 新_语言类::查询消息指代实例(稳定编码 M
     }
     if(!existing) {
         新存在建立请求 request;request.初始特征组.push_back({config.状态类型,新特征准确值{std::int64_t{0}}});
-        const auto born=scene.建立成员存在(q.自然语言场景,request,指代写入时间());
-        if(born.状态!=新场景操作状态::已完成||!born.存在节点)return {};
+        const auto born=scene.建立场景成员存在(q.自然语言场景,request,指代写入时间());
+        if(born.状态!=新场景操作状态::已完成||!born.存在节点)
+            throw std::runtime_error("pronoun stage=NL-member-birth; owner=natural-language-scene; scene-operation-status="
+                +std::to_string(static_cast<std::int64_t>(born.状态))+"; scene="+std::to_string(q.自然语言场景.值));
         existing=*born.存在节点;
         const auto E=existence.获取存在(*existing);
         if(!E||E->特征节点组.size()!=1)throw std::logic_error("pronoun existence birth readback failed");

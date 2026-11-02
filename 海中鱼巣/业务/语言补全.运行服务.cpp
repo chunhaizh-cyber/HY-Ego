@@ -191,7 +191,7 @@ struct 语言补全运行服务::实现 final {
         std::vector<稳定编码> nodes{D,info->节点,source.父需求,source.请求.被认知需求节点,source.窗口,source.输出特征};
         if(goal.词条)nodes.push_back(goal.词条->目标词条);
         if(goal.指代) {
-            const auto r=语言.读取交互指代(goal.指代->目标存在节点,指代,场景,存在,特征);
+            const auto r=语言.读取交互指代(goal.指代->目标存在节点,指代,世界,存在,特征);
             if(!r.已读回||!merge(r.完整保护))return {};nodes.push_back(goal.指代->目标存在节点);
         }
         const auto proof=全局基础数据集.查询节点组完整结构(nodes);if(proof.状态!=基础结构操作状态::已完成)return {};
@@ -312,26 +312,34 @@ std::optional<稳定编码> 语言补全运行服务::读取方法(新语言补�
             if(!value||std::none_of(constraint.允许值域.begin(),constraint.允许值域.end(),[&](const auto& r){return *value>=r.下界&&*value<=r.上界;}))checked.存在目标.reset();
         }
     }
-    return s.语言.建立或取得交互指代(checked,s.指代,s.场景,s.存在,s.特征);
+    return s.语言.建立或取得交互指代(checked,s.指代,s.世界,s.存在,s.特征);
 }
 
 bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,稳定编码 E) {
-    auto& s=*实现_;if(!s.活跃())return false;
-    const auto adopted=s.语言.读取采用含义(U,s.特征);if(!adopted.信息)return false;
+    auto& s=*实现_;
+    const auto failed=[&](const char* stage,std::int64_t status,稳定编码 node)->void {
+        throw std::runtime_error(std::string{"pronoun adoption stage="}+stage+"; owner-status="+std::to_string(status)
+            +"; adopted-U="+std::to_string(U.值)+"; node="+std::to_string(node.值));
+    };
+    if(!s.活跃())failed("runtime-not-active",0,U);
+    const auto adopted=s.语言.读取采用含义(U,s.特征);
+    if(!adopted.信息)failed("adopted-meaning-read",static_cast<std::int64_t>(adopted.状态),U);
     const auto& a=*adopted.信息;
     const auto source=s.外设.读取消息保护(a.来源.接收消息节点);
-    if(source.状态!=新外设事实状态::已完成||!source.消息)return false;
+    if(source.状态!=新外设事实状态::已完成||!source.消息)
+        failed("original-message-read",static_cast<std::int64_t>(source.状态),a.来源.接收消息节点);
     const auto pieces=s.语言.按已登记词条最长匹配(a.含义.语言节点,source.消息->UTF8正文,s.词);
-    if(pieces.状态!=新语言查询状态::已找到)return false;
+    if(pieces.状态!=新语言查询状态::已找到)failed("registered-word-boundary-read",static_cast<std::int64_t>(pieces.状态),a.来源.接收消息节点);
     // 固定我/你和完整单词第三人称先按正式定义形成出现。
     // 近远指短语未有完整构式解析时保留原文，不截中心词制造缺约束的实例。
     for(const auto& piece : pieces.片段组)if(piece.词条节点) {
         const auto names=s.名称.读取词条名称候选保护(*piece.词条节点);
         std::optional<指代名称关系信息> pronoun;
         if(names.状态==概念名称关系查询状态::未找到)continue;
-        if(names.状态!=概念名称关系查询状态::已找到)return false;
+        if(names.状态!=概念名称关系查询状态::已找到)failed("pronoun-name-read",static_cast<std::int64_t>(names.状态),*piece.词条节点);
         for(const auto& name : names.候选组)if(const auto* p=std::get_if<指代名称关系信息>(&name)) {
-            if(pronoun&&pronoun->概念.节点!=p->概念.节点)return false;pronoun=*p;
+            if(pronoun&&pronoun->概念.节点!=p->概念.节点)return false; // 真实定义歧义仍与工程读取失败分账。
+            pronoun=*p;
         }
         if(!pronoun)continue;
         const auto rule=pronoun->概念.定义.规则;
@@ -341,7 +349,8 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
         q.原文起点=piece.原文码点起点;q.原文终点=q.原文起点+piece.原文码点数量;
         if(rule==指代声明规则::作用域说话者)q.存在目标=H;
         else if(rule==指代声明规则::作用域受话者)q.存在目标=E;
-        const auto r=消解交互指代(q);if(!r.已读回)return false;
+        const auto r=消解交互指代(q);
+        if(!r.已读回)failed("instance-binding-readback",0,q.代词概念);
     }
     return true;
 }
@@ -411,7 +420,7 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
         }
     }
     for(const auto E : s.语言.查询消息指代实例(message.消息->消息节点)) {
-        const auto r=s.语言.读取交互指代(E,s.指代,s.场景,s.存在,s.特征);
+        const auto r=s.语言.读取交互指代(E,s.指代,s.世界,s.存在,s.特征);
         if(!r.已读回)return out;并入(out.完整保护,r.完整保护);
         if(!r.已消解) {
             新需求完整目标 goal;goal.目标存在节点=E;goal.目标.目标特征类型概念节点=s.指代.状态类型;
@@ -431,7 +440,7 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
             if(!word.信息)return 新本能函数本次条件结果对{};text=word.信息->规范化词面;
         } else {
             if(!goal.指代)return 新本能函数本次条件结果对{};
-            const auto r=s.语言.读取交互指代(goal.指代->目标存在节点,s.指代,s.场景,s.存在,s.特征);
+            const auto r=s.语言.读取交互指代(goal.指代->目标存在节点,s.指代,s.世界,s.存在,s.特征);
             if(!r.已读回||!r.信息||r.已消解)return 新本能函数本次条件结果对{};
             const auto m=s.外设.读取消息保护(r.信息->来源.来源消息);if(!m.消息)return 新本能函数本次条件结果对{};
             text=标量片段(m.消息->UTF8正文,r.信息->来源.原文起点,r.信息->来源.原文终点);
@@ -547,7 +556,7 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
             for(const auto& o : adopted.信息->含义.出现组)for(const auto& b : o.角色组)
                 if(const auto* E=std::get_if<语言图引用值>(&b.值);E&&E->类别==新语言知识角色类别::存在)mentioned.insert(E->节点);
             for(const auto instance : s.语言.查询消息指代实例(source.请求.需求来源.键.接收消息节点)) {
-                const auto ref=s.语言.读取交互指代(instance,s.指代,s.场景,s.存在,s.特征);
+                const auto ref=s.语言.读取交互指代(instance,s.指代,s.世界,s.存在,s.特征);
                 if(ref.已消解&&ref.信息&&ref.信息->当前存在目标
                     &&ref.信息->来源.自然语言场景==adopted.信息->场景节点&&ref.信息->来源.作用域==adopted.信息->节点) {
                     mentioned.insert(*ref.信息->当前存在目标);并入(a.保护,ref.完整保护);
@@ -590,7 +599,7 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
                 out.仍待理解重述=true;
             }
         } else {
-            const auto old=s.语言.读取交互指代(goal.指代->目标存在节点,s.指代,s.场景,s.存在,s.特征);
+            const auto old=s.语言.读取交互指代(goal.指代->目标存在节点,s.指代,s.世界,s.存在,s.特征);
             if(old.已读回&&old.信息) {
                 auto q=old.信息->来源;q.存在目标=answer->目标;
                 const auto written=消解交互指代(q);out.目标当前已满足=written.已读回&&written.已消解;out.完整保护=written.完整保护;
