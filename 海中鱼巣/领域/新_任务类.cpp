@@ -25074,10 +25074,35 @@ void 新_任务类::登记语言补全来源(稳定编码 D,const 新需求字�
     if(是终结状态(task->当前状态)){out.状态=新语言补全状态::来源已变化;return out;}
 
     {std::lock_guard lock(新任务互斥);runtime=语言补全运行_;const auto src=语言补全来源_.find(d->节点);
-        if(src==语言补全来源_.end()){out.状态=新语言补全状态::等待材料;return out;}out.来源=src->second;}
+        if(src==语言补全来源_.end()){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            try {
+                (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务语言筹办", L"提议等待材料",
+                    L"任务=" + std::to_wstring(T.值) + L"；需求=" + std::to_wstring(d->节点.值)
+                    + L"；站点=无语言补全来源");
+            } catch (...) {}
+#endif
+            out.状态=新语言补全状态::等待材料;return out;}out.来源=src->second;}
     out.父需求节点=d->节点;out.父目标={d->目标存在节点,d->目标};
-    if(!runtime){out.状态=新语言补全状态::等待材料;return out;}
+    if(!runtime){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        try {
+            (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务语言筹办", L"提议等待材料",
+                L"任务=" + std::to_wstring(T.值) + L"；需求=" + std::to_wstring(d->节点.值)
+                + L"；站点=无语言补全运行");
+        } catch (...) {}
+#endif
+        out.状态=新语言补全状态::等待材料;return out;}
     const auto gaps=runtime->读取缺口(out.来源);out.状态=gaps.状态;out.目标组=gaps.目标组;out.完整保护=gaps.完整保护;
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+    if (out.状态 == 新语言补全状态::等待材料) {
+        try {
+            (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务语言筹办", L"提议等待材料",
+                L"任务=" + std::to_wstring(T.值) + L"；需求=" + std::to_wstring(d->节点.值)
+                + L"；站点=读取缺口返回；目标数=" + std::to_wstring(out.目标组.size()));
+        } catch (...) {}
+    }
+#endif
     const auto virtualTask=获取任务虚拟存在(T);
     if(!virtualTask){out.状态=新语言补全状态::来源已变化;out.目标组.clear();return out;}
     const auto capture=全局基础数据集.查询节点组完整结构({T,d->节点,task->任务虚拟存在节点,virtualTask->任务状态特征节点});

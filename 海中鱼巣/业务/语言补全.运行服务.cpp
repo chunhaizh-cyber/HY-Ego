@@ -17,6 +17,10 @@
 #include "../领域/新_特征值类.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "../核心/容错检查.h"
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+#include "../核心/日志系统.h"
+#include <sstream>
+#endif
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -354,20 +358,49 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
     }
     return true;
 }
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+namespace {
+void 记录缺口等待(const wchar_t* 站点, const 新需求字段追问来源& source,
+    std::size_t 目标数=0, std::size_t 片段数=0, bool rawUnknown=false) noexcept {
+    try {
+        std::wostringstream 文本;
+        文本 << L"站点=" << 站点
+            << L"；M=" << source.请求.需求来源.键.接收消息节点.值
+            << L"；U=" << source.请求.需求来源.采用含义节点.值
+            << L"；目标数=" << 目标数
+            << L"；片段数=" << 片段数
+            << L"；rawUnknown=" << (rawUnknown ? 1 : 0);
+        (void)记录调试日志(L"TASK_METHOD_RECALL", L"语言补全运行", L"读取缺口等待", 文本.str());
+    } catch (...) {}
+}
+}
+#endif
 新语言补全缺口结果 语言补全运行服务::读取缺口(const 新需求字段追问来源& source) const {
     auto& s=*实现_;新语言补全缺口结果 out;
     if(!s.复核来源(source)){out.状态=S::来源已变化;return out;}
     const auto adopted=s.语言.读取采用含义(source.请求.需求来源.采用含义节点,s.特征);
     const auto message=s.外设.读取消息保护(source.请求.需求来源.键.接收消息节点);
-    if(!adopted.信息||message.状态!=新外设事实状态::已完成||!message.消息)return out;
+    if(!adopted.信息||message.状态!=新外设事实状态::已完成||!message.消息){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        记录缺口等待(L"采用含义或消息未就绪", source);
+#endif
+        return out;}
     并入(out.完整保护,adopted.完整保护);并入(out.完整保护,message.完整保护);
     std::set<稳定编码> targets;bool rawUnknown=false;
     const auto pieces=s.语言.按已登记词条最长匹配(s.配置->语言节点,message.消息->UTF8正文,s.词);
-    if(pieces.状态!=新语言查询状态::已找到)return out;
+    if(pieces.状态!=新语言查询状态::已找到){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        记录缺口等待(L"词条最长匹配未找到", source, 0, pieces.片段组.size());
+#endif
+        return out;}
     // 语法固定项是功能材料，不能因无概念关系被送进三根概念树。
     std::set<稳定编码> grammarWords;
     const auto knowledge=s.语言.枚举语言知识候选(s.配置->语言节点,(std::numeric_limits<std::size_t>::max)(),s.词,s.存在概念);
-    if(knowledge.状态!=新语言知识状态::已完成)return out;
+    if(knowledge.状态!=新语言知识状态::已完成){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        记录缺口等待(L"语言知识枚举未完成", source, 0, pieces.片段组.size());
+#endif
+        return out;}
     for(const auto& k : knowledge.信息组)for(const auto& item : k.定义.结构.有序项组)
         if(const auto* fixed=std::get_if<新语言知识固定词项>(&item.载荷))grammarWords.insert(fixed->词条节点);
     for(const auto& p : pieces.片段组) {
@@ -380,13 +413,21 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
         并入(out.完整保护,current.完整保护);
         if(current.状态==新词条归类读取状态::未满足&&targets.insert(*p.词条节点).second)
             out.目标组.push_back({新语言补全种类::词条归类,新词条归类目标{*p.词条节点},{}});
-        else if(current.状态!=新词条归类读取状态::已满足&&current.状态!=新词条归类读取状态::未满足){out.状态=S::等待材料;return out;}
+        else if(current.状态!=新词条归类读取状态::已满足&&current.状态!=新词条归类读取状态::未满足){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            记录缺口等待(L"词条归类读取非终态", source, targets.size(), pieces.片段组.size(), rawUnknown);
+#endif
+            out.状态=S::等待材料;return out;}
     }
     // 回答中的已登记新词沿同一筹办口提出同级归类目标；不创建词界，不越过所属根。
     std::vector<实现::发送记录> sentRecords;
     {std::lock_guard lock(s.锁);sentRecords=s.已发送;}
     const auto incoming=s.外设.完整读取仍保留的接收记录();
-    if(incoming.状态!=新外设事实状态::已完成)return out;
+    if(incoming.状态!=新外设事实状态::已完成){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+        记录缺口等待(L"入站接收记录未完成", source, targets.size(), pieces.片段组.size(), rawUnknown);
+#endif
+        return out;}
     std::map<稳定编码,std::set<稳定编码>> edges;
     for(const auto& sent : sentRecords)if(sent.来源==source&&sent.目标.词条) {
         const auto outgoing=s.外设.读取消息保护(sent.消息);if(!outgoing.消息)continue;
@@ -421,14 +462,24 @@ bool 语言补全运行服务::记录采用指代(稳定编码 U,稳定编码 H,
     }
     for(const auto E : s.语言.查询消息指代实例(message.消息->消息节点)) {
         const auto r=s.语言.读取交互指代(E,s.指代,s.世界,s.存在,s.特征);
-        if(!r.已读回)return out;并入(out.完整保护,r.完整保护);
+        if(!r.已读回){
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+            记录缺口等待(L"指代实例未读回", source, out.目标组.size(), pieces.片段组.size(), rawUnknown);
+#endif
+            return out;}并入(out.完整保护,r.完整保护);
         if(!r.已消解) {
             新需求完整目标 goal;goal.目标存在节点=E;goal.目标.目标特征类型概念节点=s.指代.状态类型;
             goal.目标.目标形式=新需求目标形式::值;goal.目标.目标值域概念节点=s.指代.已消解值域;goal.目标.目标比较关系概念节点=s.指代.比较关系;
             out.目标组.push_back({新语言补全种类::指代澄清,{},goal});
         }
     }
-    out.状态=out.目标组.empty() ? (rawUnknown ? S::等待材料 : S::无需补全) : S::已完成;return out;
+    out.状态=out.目标组.empty() ? (rawUnknown ? S::等待材料 : S::无需补全) : S::已完成;
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+    if (out.状态 == S::等待材料) {
+        记录缺口等待(L"终态空目标且有未登记原文", source, out.目标组.size(), pieces.片段组.size(), rawUnknown);
+    }
+#endif
+    return out;
 }
 新语言补全询问结果 语言补全运行服务::询问(const 方法参数场景& scene,const 新语言补全目标& goal,const 新需求字段追问来源& source) {
     auto& s=*实现_;新语言补全询问结果 out;
