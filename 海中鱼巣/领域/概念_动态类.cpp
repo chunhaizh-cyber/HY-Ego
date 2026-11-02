@@ -1,4 +1,5 @@
-#include "概念_动态类.h"
+﻿#include "概念_动态类.h"
+#include "../核心/日志系统.h"
 #include "概念_存在类.h"
 #include "../核心/容错检查.h"
 
@@ -238,6 +239,12 @@ std::optional<稳定编码> 取得准确值域概念(
     }
     const auto 查找 = 特征概念服务.查找值对应的最具体概念(
         *定位.特征类型根, 状态.固定准确值, 根->单位, 特征值服务);
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+    try { (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION",L"概念owner",L"取得准确值域概念",
+        L"S="+std::to_wstring(状态.节点.值)+L"；FC="+std::to_wstring(状态.特征类型概念节点.值)
+        +L"；根="+std::to_wstring(定位.特征类型根->值)+L"；查找状态="+std::to_wstring(static_cast<int>(查找.状态))
+        +L"；候选="+std::to_wstring(查找.概念节点 ? 查找.概念节点->值 : 0)); } catch (...) {}
+#endif
     if (查找.状态 != 特征概念查找状态::已找到 || !查找.概念节点) {
         return std::nullopt;
     }
@@ -254,6 +261,11 @@ std::optional<稳定编码> 取得准确值域概念(
     定义.聚合规则 = 根->聚合规则;
     const auto 新概念 = 特征概念服务.建立或取得特征概念(
         定义, 特征值服务, *查找.概念节点);
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+    try { (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION",L"概念owner",L"创建准确值域概念",
+        L"S="+std::to_wstring(状态.节点.值)+L"；父="+std::to_wstring(查找.概念节点->值)
+        +L"；新概念="+std::to_wstring(新概念.值)); } catch (...) {}
+#endif
     return 有效(新概念)
         ? std::optional<稳定编码>{新概念} : std::nullopt;
 }

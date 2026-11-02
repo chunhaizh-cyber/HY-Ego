@@ -1,4 +1,5 @@
-#include "新_动态类.h"
+﻿#include "新_动态类.h"
+#include "../核心/日志系统.h"
 #include "../核心/容错检查.h"
 #include <stdexcept>
 #include "新_存在类.h"
@@ -475,27 +476,37 @@ bool 新_动态类::初始化() noexcept {
     稳定编码 前状态节点,
     稳定编码 后状态节点) noexcept {
     新动态建立结果 结果;
+    const auto 诊断 = [&](int 行) noexcept {
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+        try { (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION", L"动态owner", L"建立原子动态",
+            L"行="+std::to_wstring(行)+L"；主题="+std::to_wstring(主题存在节点.值)
+            +L"；前S="+std::to_wstring(前状态节点.值)+L"；后S="+std::to_wstring(后状态节点.值)
+            +L"；状态="+std::to_wstring(static_cast<int>(结果.状态))); } catch (...) {}
+#else
+        (void)行;
+#endif
+    };
     try {
         std::lock_guard 锁(新动态互斥);
         const std::vector<稳定编码> 状态节点组{前状态节点, 后状态节点};
         if (!结构仍存在() || !有效(主题存在节点)
-            || !节点仍存在(主题存在节点)) return 结果;
+            || !节点仍存在(主题存在节点)) { 诊断(__LINE__); return 结果; }
         std::set<std::uint64_t> 唯一状态;
         std::vector<新状态信息> 状态信息组;
         状态信息组.reserve(状态节点组.size());
         for (const auto 状态节点 : 状态节点组) {
             if (!唯一状态.insert(状态节点.值).second) {
                 结果.状态 = 新动态操作状态::状态重复;
-                return 结果;
+                { 诊断(__LINE__); return 结果; }
             }
             const auto 状态 = 状态服务_.获取状态(状态节点);
             if (!状态) {
                 结果.状态 = 新动态操作状态::状态不存在;
-                return 结果;
+                { 诊断(__LINE__); return 结果; }
             }
             if (状态->被描述存在节点 != 主题存在节点) {
                 结果.状态 = 新动态操作状态::主题不一致;
-                return 结果;
+                { 诊断(__LINE__); return 结果; }
             }
             状态信息组.push_back(*状态);
         }
@@ -504,30 +515,30 @@ bool 新_动态类::初始化() noexcept {
                 || (i > 0 && 状态信息组[i].强时间.纳秒
                     <= 状态信息组[i - 1].强时间.纳秒)) {
                 结果.状态 = 新动态操作状态::时间不合法;
-                return 结果;
+                { 诊断(__LINE__); return 结果; }
             }
         }
         const auto 前根 = 读取状态特征类型根(状态信息组[0], 特征概念服务_);
         const auto 后根 = 读取状态特征类型根(状态信息组[1], 特征概念服务_);
         if (!前根 || !后根) {
             结果.状态 = 新动态操作状态::结构不一致;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         if (前根 != 后根) {
             结果.状态 = 新动态操作状态::特征类型不一致;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         auto 状态引用组 = 建立状态引用组(状态节点组);
         if (!状态引用组) {
             结果.状态 = 新动态操作状态::资源失败;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         const auto 动态节点 = 全局基础数据集.新建节点();
         std::vector<稳定编码> 已写字段;
         if (!有效(动态节点)) {
             清理状态引用组(*状态引用组);
             结果.状态 = 新动态操作状态::资源失败;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         auto 记录 = [&](稳定编码 字段) {
             if (!有效(字段)) return false;
@@ -556,7 +567,7 @@ bool 新_动态类::初始化() noexcept {
         if (!完整) {
             清理动态基础字段(动态节点, 已写字段, *状态引用组);
             结果.状态 = 新动态操作状态::资源失败;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         std::vector<稳定编码> 已增加引用;
         for (const auto 状态节点 : 状态节点组) {
@@ -567,12 +578,17 @@ bool 新_动态类::初始化() noexcept {
                 }
                 清理动态基础字段(动态节点, 已写字段, *状态引用组);
                 结果.状态 = 新动态操作状态::资源失败;
-                return 结果;
+                { 诊断(__LINE__); return 结果; }
             }
             已增加引用.push_back(状态节点);
         }
         const auto 概念结果 = 动态概念服务_.建立实例动态概念(
             动态节点, 状态信息组);
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+        try { (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION", L"动态owner", L"实例概念结果",
+            L"D="+std::to_wstring(动态节点.值)+L"；状态="+std::to_wstring(static_cast<int>(概念结果.状态))
+            +L"；概念="+std::to_wstring(概念结果.概念节点 ? 概念结果.概念节点->值 : 0)); } catch (...) {}
+#endif
         if (概念结果.状态 != 动态概念操作状态::已建立
             || !概念结果.概念节点) {
             for (auto 位置 = 已增加引用.rbegin();
@@ -581,7 +597,7 @@ bool 新_动态类::初始化() noexcept {
             }
             清理动态基础字段(动态节点, 已写字段, *状态引用组);
             结果.状态 = 新动态操作状态::实例概念失败;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         const auto 概念字段关系 = 全局基础数据集.添加字段节点(
             动态节点, 动态概念字段, *概念结果.概念节点);
@@ -594,7 +610,7 @@ bool 新_动态类::初始化() noexcept {
             }
             清理动态基础字段(动态节点, 已写字段, *状态引用组);
             结果.状态 = 新动态操作状态::资源失败;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         已写字段.push_back(概念字段关系);
         const auto 读回 = 获取动态(动态节点);
@@ -613,17 +629,17 @@ bool 新_动态类::初始化() noexcept {
             }
             清理动态基础字段(动态节点, 已写字段, *状态引用组);
             结果.状态 = 新动态操作状态::结构不一致;
-            return 结果;
+            { 诊断(__LINE__); return 结果; }
         }
         结果.状态 = 新动态操作状态::已完成;
         结果.动态节点 = 动态节点;
         结果.动态概念节点 = *概念结果.概念节点;
-        return 结果;
+        { 诊断(__LINE__); return 结果; }
     } catch (...) {
         结果.状态 = 新动态操作状态::资源失败;
         结果.动态节点.reset();
         结果.动态概念节点.reset();
-        return 结果;
+        { 诊断(__LINE__); return 结果; }
     }
 }
 

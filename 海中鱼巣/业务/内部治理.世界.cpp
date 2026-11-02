@@ -1,4 +1,5 @@
-#include "内部治理.世界.h"
+﻿#include "内部治理.世界.h"
+#include "../核心/日志系统.h"
 #include "../领域/新_任务类.h"
 #include "../核心/容错检查.h"
 #include <algorithm>
@@ -644,6 +645,21 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
             throw std::runtime_error("new task change is stale or partly consumed; do not replay");
         核验挂接(治理场景_.添加治理状态(治理->场景节点, 前节点, *任务读取_));
         核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
+#ifdef HY_EGO_DEBUG_LOG_TASK_DYNAMIC_PUBLICATION
+        try {
+            std::wstring 文本=L"T="+std::to_wstring(目标.任务引用.任务节点.值)
+                +L"；Vt="+std::to_wstring(目标.任务引用.虚拟存在节点.值)+L"；F="+std::to_wstring(目标.特征节点.值)
+                +L"；场景="+std::to_wstring(治理->场景节点.值)+L"；当前值="+std::to_wstring(特征.当前值);
+            for (const auto* S : {&*前,&*后}) {
+                文本+=L"；[S="+std::to_wstring(S->节点.值)+L"；主体="+std::to_wstring(S->被描述存在节点.值)
+                    +L"；F="+std::to_wstring(S->来源实例特征节点.值)+L"；FC="+std::to_wstring(S->特征类型概念节点.值)
+                    +L"；值类型="+std::to_wstring(S->固定准确值.index())+L"；I64="+std::to_wstring(std::get<std::int64_t>(S->固定准确值))
+                    +L"；时间语义="+std::to_wstring(static_cast<int>(S->强时间.语义))+L"；ns="+std::to_wstring(S->强时间.纳秒)
+                    +L"；引用="+std::to_wstring(S->被引用次数)+L"]";
+            }
+            (void)记录调试日志(L"TASK_DYNAMIC_PUBLICATION",L"治理",L"完成任务特征变化",文本);
+        } catch (...) {}
+#endif
         const auto 变化 = 动态服务_.建立原子动态(目标.任务引用.虚拟存在节点, 前节点, 后节点);
         if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
             throw std::runtime_error("task feature atomic dynamic publication failed");
