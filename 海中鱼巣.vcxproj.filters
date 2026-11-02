@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\语言场景写回.数据.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\本能语言场景写回.运行接口.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\业务\语言场景写回.本能运行服务.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\语言场景写回.本能运行服务.cpp"><Filter>业务</Filter></ClCompile>
     <Filter Include="领域">
       <UniqueIdentifier>{C734D1D8-C842-42AB-B4AB-CE48DD1FA213}</UniqueIdentifier>
     </Filter>

@@ -1,5 +1,6 @@
 #pragma once
 #include "../领域/接收认知来源.数据.h"
+#include "../领域/新_需求类.h"
 #include <memory>
 #include <optional>
 #include <stop_token>
@@ -24,7 +25,7 @@ enum class 接收认知语境接纳状态 : std::uint8_t {
 };
 enum class 接收需求认知阶段 : std::uint8_t {
     未处理=1,已采用U,已建立D,已读回,非支持输入,对象未决,
-    非本次人类需求,D映射拒绝,D映射受阻,前提变化,资源延后,停止未完成,已读回行动请求=13
+    非本次人类需求,D映射拒绝,D映射受阻,前提变化,资源延后,停止未完成,已读回行动请求=13,已读回待完善请求=14
 };
 enum class 接收行动请求交接确认状态 : std::uint8_t {
     已确认=1,精确重复,来源冲突,输入拒绝,资源失败
@@ -37,6 +38,7 @@ struct 接收需求认知观察 final {
     std::optional<稳定编码> 受请求者{};
     std::optional<新接收认知来源键> 需求来源{};
     std::optional<新行动请求承接来源> 待交接请求{};
+    std::optional<新需求字段追问来源> 待完善交接{};
 };
 // 普通应用持有，self单消费者推进；依赖必须存活到self最终join。
 class 接收需求认知服务 final {
@@ -53,6 +55,10 @@ public:
     接收行动请求交接确认状态 确认行动请求已交接(
         const 新行动请求承接来源&) noexcept;
     std::optional<接收需求认知观察> 读取最近观察() const;
+    // 仅从原M及仍活跃的正式会话投影，不回退到当前窗口或猜测对端。
+    std::optional<新需求字段追问来源> 读取字段追问来源(
+        稳定编码 被认知需求,稳定编码 自我,稳定编码 自我场景,稳定编码 父需求) const;
+
 private:
     struct 实现;
     std::unique_ptr<实现> 实现_;

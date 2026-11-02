@@ -8,6 +8,8 @@
 #include "新_状态类.h"
 #include "服务要求.材料合同.h"
 #include "服务对象.材料合同.h"
+#include "字段询问.数据.h"
+#include "语言场景写回.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -111,7 +113,7 @@ struct 新本能已发布需求核验结果 final {
 };
 enum class 新本能字段询问原因 : std::uint8_t {
     字段已有值=1, 字段不适用, 前提已变化, 定位未支持,
-    缺语言知识, 缺名称, 缺指称, 多义, 已入列
+    缺语言知识, 缺名称, 缺指称, 多义, 已入列, 已取得候选, 发送合同待对接
 };
 struct 新本能已提交输出结果 final {
     稳定编码 窗口节点{}, 输出队列特征节点{}, 消息节点{}, 动作节点{}, 入列状态{}, 入列动态{};
@@ -123,9 +125,11 @@ struct 新本能字段询问返回材料 final {
     std::optional<正式内容引用定位> 正式定位;
     std::optional<正式内容值> 已读取字段;
     std::optional<新本能已提交输出结果> 已提交输出;
+    std::optional<新字段询问候选> 表达候选;
     friend bool operator==(const 新本能字段询问返回材料& a,const 新本能字段询问返回材料& b) {
         if (a.原因!=b.原因 || a.正式定位.has_value()!=b.正式定位.has_value()
-            || a.已读取字段.has_value()!=b.已读取字段.has_value() || a.已提交输出!=b.已提交输出) return false;
+            || a.已读取字段.has_value()!=b.已读取字段.has_value() || a.已提交输出!=b.已提交输出
+            || a.表达候选!=b.表达候选) return false;
         if (a.正式定位 && (a.正式定位->信息节点!=b.正式定位->信息节点 || a.正式定位->正式内容路径!=b.正式定位->正式内容路径)) return false;
         return !a.已读取字段 || (a.已读取字段->种类==b.已读取字段->种类
             && a.已读取字段->状态==b.已读取字段->状态 && a.已读取字段->值==b.已读取字段->值);
@@ -150,6 +154,7 @@ struct 新本能函数本次结果 final {
     std::vector<新方法本次场景事实引用> 已取得场景事实组;
     std::optional<新本能已发布需求结果> 已发布需求;
     std::optional<新本能字段询问返回材料> 字段询问;
+    std::optional<新语言场景主张结果> 语言场景写回;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;
@@ -187,7 +192,9 @@ public:
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 建立连接(
         const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 写回语言场景主张(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 发送指定需求字段(const 方法参数场景&) noexcept;
 };
 
 } // namespace 海中鱼巣

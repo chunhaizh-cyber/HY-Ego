@@ -7,6 +7,7 @@
 
 #include "新_存在类.h"
 #include "新_动态类.h"
+#include "语言场景写回.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -344,6 +345,13 @@ public:
         新场景树用途 用途 = 新场景树用途::普通) noexcept;
 
     bool 初始化() noexcept;
+    // 场景owner持有语言主张与逐出现绑定，不把claim写成存在的准确特征值。
+    void 初始化语言主张存储();
+    新语言场景主张结果 查询语言主张(const 新语言场景主张请求&) const;
+    新语言场景主张结果 记录语言主张(const 新语言场景主张请求&,
+        稳定编码 动作节点,const std::vector<基础联合节点快照>& 完整保护);
+    std::vector<新语言场景主张记录> 查询场景语言主张(稳定编码 场景节点) const;
+
     std::optional<稳定编码> 获取根场景() const noexcept;
 
     // 根场景没有父场景；重复调用返回同一个根场景。

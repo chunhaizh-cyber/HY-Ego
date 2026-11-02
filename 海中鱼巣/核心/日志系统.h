@@ -63,7 +63,14 @@ struct 事件材料 {
 };
 
 inline std::filesystem::path 日志目录路径() {
-    return L"D:\\海中鱼巣\\日志";
+    // 多实例工程验证可以隔离人读输出；默认目录不变，不参与机器判定。
+    static const std::filesystem::path 目录=[] {
+        wchar_t 路径[32768]{};
+        const auto 长度=GetEnvironmentVariableW(L"HY_EGO_LOG_DIRECTORY",路径,32768);
+        if(长度>0 && 长度<32768)return std::filesystem::path(路径);
+        return std::filesystem::path(L"D:\\海中鱼巣\\日志");
+    }();
+    return 目录;
 }
 
 inline bool 调试日志切片名可用(std::wstring_view 切片名) {

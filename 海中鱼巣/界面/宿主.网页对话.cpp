@@ -1,4 +1,5 @@
 #include <fstream>
+#include <filesystem>
 #include "宿主.网页对话.h"
 #include "../核心/容错检查.h"
 
@@ -1796,7 +1797,12 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         if (!会话.开始(公开会话标识, 停止请求, 输出队列)) return {网页对话宿主状态::运行失败};
         if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
         try {
-            std::ofstream 会话旁路("D:/TEMP/海中鱼巣/last-session-url.txt", std::ios::trunc);
+            wchar_t 输出路径[32768]{};
+            const auto 路径长度=GetEnvironmentVariableW(L"HY_EGO_SESSION_URL_FILE",输出路径,32768);
+            const auto 旁路路径=路径长度>0 && 路径长度<32768
+                ? std::filesystem::path(输出路径)
+                : std::filesystem::path(L"D:/TEMP/海中鱼巣/last-session-url.txt");
+            std::ofstream 会话旁路(旁路路径, std::ios::trunc);
             if (会话旁路) 会话旁路 << 浏览器地址 << std::flush;
         } catch (...) {}
         // 不自动打开浏览器：页面轮询会在单线程 accept 上与启动期任务承接争用外设/场景锁，导致入站饿死甚至死锁。

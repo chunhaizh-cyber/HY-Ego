@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\语言场景写回.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\本能语言场景写回.运行接口.h" />
+    <ClInclude Include="海中鱼巣\业务\语言场景写回.本能运行服务.h" />
+    <ClCompile Include="海中鱼巣\业务\语言场景写回.本能运行服务.cpp" />
     <ClInclude Include="海中鱼巣\领域\字段询问.数据.h" />
     <ClInclude Include="海中鱼巣\领域\本能字段询问.运行接口.h" />
     <ClCompile Include="海中鱼巣\领域\本能字段询问.运行接口.cpp" />

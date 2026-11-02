@@ -40,6 +40,48 @@ const 基础封存追加片段& 新方法治理场景发布准备::场景片段(
 namespace {
 
 std::recursive_mutex 新场景互斥;
+namespace 语言主张存储 {
+enum class 键 : std::size_t { 类型, 记录类型, 对象类型, 目标场景, 当前场景, 来源场景,
+    消息, 语言, 说话者, 原文, 范围, 路径, 种类, 主体, 整体, FT, 值概念, 整数,
+    对象, 编号, 概念, 真实存在, 动作, 数量 };
+std::array<稳定编码,static_cast<std::size_t>(键::数量)> 字段{};
+稳定编码 取(键 k) { return 字段[static_cast<std::size_t>(k)]; }
+struct 读 final {
+    基础节点结构 s;
+    explicit 读(稳定编码 n) {
+        const auto r=全局基础数据集.查询完整节点结构(n);
+        if(r.状态!=基础结构操作状态::已完成||!r.结构)throw std::logic_error("world claim record unreadable");
+        s=*r.结构;
+    }
+    std::vector<基础字段关系> 全(键 k) const {
+        std::vector<基础字段关系> out;for(const auto& f:s.字段组)if(f.字段节点==取(k))out.push_back(f);return out;
+    }
+    const 基础字段关系& 单(键 k) const {
+        const 基础字段关系* p=nullptr;for(const auto& f:s.字段组)if(f.字段节点==取(k)){
+            if(p)throw std::logic_error("world claim single field duplicated");p=&f;}
+        if(!p)throw std::logic_error("world claim single field missing");return *p;
+    }
+    稳定编码 引(键 k) const { return std::get<稳定编码>(单(k).内容); }
+    template<class T>T 值(键 k)const{return std::get<T>(std::get<基础值>(单(k).内容).材料);}
+    std::optional<稳定编码> 可引(键 k)const {const auto fs=全(k);if(fs.empty())return {};if(fs.size()!=1)throw std::logic_error("world claim optional repeated");return std::get<稳定编码>(fs.front().内容);}
+};
+新语言场景主张记录 读记录(稳定编码 n) {
+    读 d(n);if(d.引(键::类型)!=取(键::记录类型))throw std::logic_error("world claim record type differs");
+    新语言场景主张记录 r;r.节点=n;r.动作节点=d.引(键::动作);auto& q=r.请求;
+    q.目标场景=d.引(键::目标场景);q.当前场景=d.引(键::当前场景);q.来源语言场景=d.引(键::来源场景);
+    q.语言=d.引(键::语言);q.说话者=d.引(键::说话者);q.固定原文=d.值<std::string>(键::原文);
+    q.来源.接收消息节点=d.引(键::消息);const auto range=d.值<std::vector<std::uint64_t>>(键::范围);
+    if(range.size()!=2)throw std::logic_error("world claim range malformed");q.来源.原文起点=range[0];q.来源.原文终点=range[1];q.来源.根出现路径=d.值<std::vector<std::int64_t>>(键::路径);
+    auto& c=q.内容;c.种类=static_cast<新语言场景主张种类>(d.值<std::int64_t>(键::种类));
+    c.主体或部分出现编号=d.值<std::int64_t>(键::主体);c.整体出现编号=d.值<std::int64_t>(键::整体);
+    c.特征类型概念=d.可引(键::FT);c.特征值概念=d.可引(键::值概念);
+    if(!d.全(键::整数).empty())c.规范整数=d.值<std::string>(键::整数);
+    for(const auto& f:d.全(键::对象)) {读 b(std::get<稳定编码>(f.内容));if(b.引(键::类型)!=取(键::对象类型))throw std::logic_error("world claim occurrence type differs");
+        c.对象组.push_back({b.值<std::int64_t>(键::编号),b.引(键::概念),b.可引(键::真实存在)});}
+    return r;
+}
+} // namespace 语言主张存储
+
 
 稳定编码 场景身份字段{};
 稳定编码 场景节点类型{};
@@ -3594,6 +3636,91 @@ std::vector<稳定编码> 新_场景类::查询场景全部特征(
         结果.相对坐标组.clear();
         结果.需要获取定位坐标的存在组.clear();
         return 结果;
+    }
+}
+
+
+// 诊断责任：内部辅助异常向调用本能的最终工程边界送出。
+void 新_场景类::初始化语言主张存储() {
+    std::lock_guard lock(新场景互斥);using namespace 语言主张存储;
+    if(有效(取(键::类型)))return;
+    if(!结构仍存在())throw std::logic_error("world claim scene owner unavailable");
+    std::vector<基础组内新节点> req(字段.size());const auto r=全局基础数据集.原子建立节点组(req);
+    if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=字段.size())throw std::runtime_error("world claim schema publication failed");
+    std::copy(r.节点组.begin(),r.节点组.end(),字段.begin());
+}
+新语言场景主张结果 新_场景类::查询语言主张(const 新语言场景主张请求& q) const {
+    std::lock_guard lock(新场景互斥);using namespace 语言主张存储;
+    if(!有效(取(键::类型)))return {};
+    const auto rs=全局基础数据集.查询字段引用节点结构(q.来源.接收消息节点,取(键::消息));
+    if(rs.状态!=基础结构操作状态::已完成)throw std::runtime_error("world claim source index unreadable");
+    std::optional<新语言场景主张记录> found;
+    for(const auto& f:rs.引用字段组){auto r=读记录(f.所属节点);
+        if(r.请求.来源!=q.来源||r.请求.目标场景!=q.目标场景)continue;
+        if(found)throw std::logic_error("world claim same source duplicated");found=std::move(r);}
+    if(!found)return {};
+    if(found->请求!=q)return {新语言场景主张状态::来源冲突,{}};
+    return {新语言场景主张状态::已复用,std::move(found)};
+}
+std::vector<新语言场景主张记录> 新_场景类::查询场景语言主张(稳定编码 C) const {
+    std::lock_guard lock(新场景互斥);using namespace 语言主张存储;std::vector<新语言场景主张记录> out;
+    if(!有效(取(键::类型)))return out;
+    const auto r=全局基础数据集.查询字段引用节点结构(C,取(键::目标场景));
+    if(r.状态!=基础结构操作状态::已完成)throw std::runtime_error("world claim scene index unreadable");
+    for(const auto& f:r.引用字段组)out.push_back(读记录(f.所属节点));return out;
+}
+新语言场景主张结果 新_场景类::记录语言主张(const 新语言场景主张请求& x,
+    稳定编码 action,const std::vector<基础联合节点快照>& guard) {
+    std::lock_guard lock(新场景互斥);using namespace 语言主张存储;
+    if(!有效(取(键::类型))||!有效(action)||guard.empty())return {};
+    const auto prior=查询语言主张(x);if(prior.状态!=新语言场景主张状态::待材料)return prior;
+    if(!是场景节点(x.目标场景)||!是场景节点(x.当前场景))return {};
+    // 本函数是owner组合入口；来源、身份和候选完整保护由运行服务提供。
+    基础节点组追加请求 q;q.预期联合节点组=guard;q.新节点组.resize(1+x.内容.对象组.size());
+    const auto ref=[&](std::size_t i,键 k,稳定编码 n){q.新节点组[i].字段组.push_back({取(k),n});};
+    const auto val=[&](std::size_t i,键 k,基础原始值 v){q.新节点组[i].字段组.push_back({取(k),基础值{std::move(v)}});};
+    ref(0,键::类型,取(键::记录类型));ref(0,键::目标场景,x.目标场景);ref(0,键::当前场景,x.当前场景);ref(0,键::来源场景,x.来源语言场景);
+    ref(0,键::消息,x.来源.接收消息节点);ref(0,键::语言,x.语言);ref(0,键::说话者,x.说话者);ref(0,键::动作,action);
+    val(0,键::原文,x.固定原文);val(0,键::范围,std::vector<std::uint64_t>{x.来源.原文起点,x.来源.原文终点});val(0,键::路径,x.来源.根出现路径);
+    val(0,键::种类,static_cast<std::int64_t>(x.内容.种类));val(0,键::主体,x.内容.主体或部分出现编号);val(0,键::整体,x.内容.整体出现编号);
+    if(x.内容.特征类型概念)ref(0,键::FT,*x.内容.特征类型概念);if(x.内容.特征值概念)ref(0,键::值概念,*x.内容.特征值概念);if(x.内容.规范整数)val(0,键::整数,*x.内容.规范整数);
+    for(std::size_t i=0;i<x.内容.对象组.size();++i){const auto& b=x.内容.对象组[i];const auto j=i+1;
+        ref(j,键::类型,取(键::对象类型));val(j,键::编号,b.出现编号);ref(j,键::概念,b.来源概念);if(b.真实存在)ref(j,键::真实存在,*b.真实存在);
+        q.新节点组[0].字段组.push_back({取(键::对象),基础组内节点引用{j}});}
+    // 主张永久持有动作引用；未发表记录时只撤销本次计数，不删除真实动作。
+    bool 已增加引用=false,已发表=false;
+    const auto 撤销引用=[&]{
+        已增加引用=false; // 只尝试一次；撤销异常不能触发第二次减数。
+        if(动态服务_.撤销增加引用(action)!=新动态操作状态::已完成)
+            throw std::runtime_error("world claim unpublished action reference rollback failed; action retained");
+    };
+    try {
+        新事实追加保护增量 引用增量;
+        if(动态服务_.增加引用(action,引用增量)!=新动态操作状态::已完成)
+            throw std::runtime_error("world claim action reference acquisition failed");
+        已增加引用=true;
+        // 若保护也含该动作，只应用本owner的准确计数回执，不用fresh读取覆盖竞争。
+        for(const auto& change:引用增量.字段变化组)for(auto& snapshot:q.预期联合节点组){
+            if(snapshot.结构.节点.编码!=change.修改前.所属节点)continue;
+            const auto i=std::find(snapshot.结构.字段组.begin(),snapshot.结构.字段组.end(),change.修改前);
+            if(i==snapshot.结构.字段组.end())throw std::logic_error("world claim action reference receipt differs");
+            *i=change.修改后;
+        }
+        const auto r=全局基础数据集.原子追加节点组(q);
+        已发表=r.状态==基础节点组追加状态::已完成;
+        if(!已发表){
+            撤销引用();
+            if(r.状态==基础节点组追加状态::预期不符||r.状态==基础节点组追加状态::节点不存在||r.状态==基础节点组追加状态::引用不存在)
+                return {新语言场景主张状态::前提已变化,{}};
+            throw std::runtime_error("world claim atomic publication failed");
+        }
+        if(r.新节点组.size()!=q.新节点组.size())throw std::logic_error("world claim publication receipt differs");
+        auto out=读记录(r.新节点组.front());
+        if(out.请求!=x||out.动作节点!=action)throw std::logic_error("world claim publication readback differs; facts retained");
+        return {新语言场景主张状态::已记录,std::move(out)};
+    } catch(...) {
+        if(已增加引用&&!已发表)撤销引用();
+        throw;
     }
 }
 

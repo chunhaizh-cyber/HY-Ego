@@ -437,6 +437,14 @@ struct 新外部服务需求采用结果 final {
     std::optional<稳定编码> 需求节点, 需求列表项节点;
 };
 
+// self确认后的缺项追问来源；真实会话定位来自接收消息，不从全局窗口猜测。
+struct 新需求字段追问来源 final {
+    新行动请求承接来源 请求;
+    稳定编码 自我场景, 窗口, 外设场景, 输出特征, 父需求;
+    std::string 公开宿主会话, 对话框标识;
+    friend bool operator==(const 新需求字段追问来源&,const 新需求字段追问来源&)=default;
+};
+
 struct 新需求列表项信息 final {
     稳定编码 节点;
     std::optional<新需求根角色> 根角色;
@@ -814,6 +822,10 @@ public:
         稳定编码 需求节点, 稳定编码 预期主体,
         const std::vector<稳定编码>& 正式内容FT组) const noexcept;
     void 装配接收认知语言读取接口(const 新_语言类*) noexcept;
+    // 不要求完整目标；只核验同源正式请求与当前必要缺项，供self确认。
+    新需求操作状态 复核字段追问来源(const 新需求字段追问来源&) const noexcept;
+    新需求建立结果 建立请求字段完善需求(
+        const 新需求字段追问来源&,稳定编码 父任务) noexcept;
     新被认知需求资格读取结果 读取被认知需求完整资格保护(稳定编码,稳定编码) const noexcept;
     新需求内容判定结果 判定被认知需求内容保护(稳定编码,稳定编码,稳定编码,
         const std::vector<稳定编码>& 正式内容路径 = {}) const noexcept;

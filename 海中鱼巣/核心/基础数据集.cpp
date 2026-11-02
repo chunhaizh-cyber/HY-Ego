@@ -17,6 +17,70 @@
 
 namespace 海中鱼巣 {
 
+namespace {
+// 仅事务候选使用逐项覆盖层；正式读表仍是原生map/set，输出顺序和读路径不变。
+// 本对象只在数据集独占锁内存活。分配/复制异常向既有事务边界传播；发布前不改原表。
+template<class 表>
+class 候选写集 final {
+    using 键 = typename 表::key_type;
+    using 值 = typename 表::value_type;
+    表& 原表_;
+    表 待写_;
+    std::set<键> 待删_;
+    static const 键& 取键(const 值& 项) noexcept {
+        if constexpr (std::is_same_v<键, 值>) return 项;
+        else return 项.first;
+    }
+public:
+    using iterator = typename 表::iterator;
+    explicit 候选写集(表& 原表) noexcept : 原表_(原表) {}
+    候选写集(const 候选写集&) = delete;
+    候选写集& operator=(const 候选写集&) = delete;
+    iterator end() noexcept { return 待写_.end(); }
+    bool contains(const 键& 项) const {
+        return 待写_.contains(项) || (!待删_.contains(项) && 原表_.contains(项));
+    }
+    iterator find(const 键& 项) {
+        auto 已写 = 待写_.find(项);
+        if (已写 != 待写_.end()) return 已写;
+        if (待删_.contains(项)) return 待写_.end();
+        const auto 原项 = std::as_const(原表_).find(项);
+        if (原项 == 原表_.end()) return 待写_.end();
+        return 待写_.insert(*原项).first;
+    }
+    decltype(auto) at(const 键& 项) {
+        const auto it = find(项);
+        if (it == end()) throw std::out_of_range("candidate write-set key missing");
+        return (it->second);
+    }
+    template<class... 参数>
+    std::pair<iterator, bool> emplace(参数&&... 材料) {
+        值 新项(std::forward<参数>(材料)...);
+        const auto& 项 = 取键(新项);
+        if (contains(项)) return {find(项), false};
+        auto 结果 = 待写_.insert(std::move(新项));
+        待删_.erase(取键(*结果.first));
+        return 结果;
+    }
+    std::size_t erase(const 键& 项) {
+        if (!contains(项)) return 0;
+        // 先复制键并建立删除标记，再销毁可能承载参数引用的待写项。
+        const 键 删除键 = 项;
+        待删_.insert(删除键);
+        待写_.erase(删除键);
+        return 1;
+    }
+    void erase(iterator 位置) { const 键 项 = 取键(*位置); erase(项); }
+    // 全部载荷和索引在调用前已备齐。默认allocator兼容，数值/tuple键比较不抛异常；
+    // 删除与node_handle合并不分配。多张表在同一独占锁下逐一发布，读者不可观察中间态。
+    void 发布() noexcept {
+        for (const auto& 项 : 待删_) 原表_.erase(项);
+        for (const auto& 项 : 待写_) 原表_.erase(取键(项));
+        原表_.merge(待写_);
+    }
+};
+} // namespace
+
 基础数据集 全局基础数据集;
 
 struct 基础封存追加片段::内容 final {
@@ -276,7 +340,7 @@ void 加字段索引(const 基础字段关系& 字段, auto& 所属, auto& 反�
         throw;
     }
 }
-void 删字段索引(const 基础字段关系& 字段, auto& 所属, auto& 反向, auto& 入向, auto& 字段键) noexcept {
+void 删字段索引(const 基础字段关系& 字段, auto& 所属, auto& 反向, auto& 入向, auto& 字段键) {
     所属.erase({字段.所属节点.值,字段.字段节点.值,字段.编码.值});
     字段键.erase({字段.字段节点.值,字段.编码.值});
     if(const auto* 目标=std::get_if<稳定编码>(&字段.内容)) {
@@ -297,7 +361,7 @@ void 加关系索引(const 基础外部关系& 关系, auto& 源, auto& 目标) 
         throw;
     }
 }
-void 删关系索引(const 基础外部关系& 关系, auto& 源, auto& 目标) noexcept {
+void 删关系索引(const 基础外部关系& 关系, auto& 源, auto& 目标) {
     const auto 类型=static_cast<std::uint64_t>(关系.类型);
     源.erase({关系.源节点.值,类型,关系.编码.值});
     目标.erase({关系.目标节点.值,类型,关系.编码.值});
@@ -684,15 +748,15 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
     // 独占锁内构造隔离候选；分配水位属于同一分配器，失败也不回退。
     // 这里不调用任何上层服务、回调、I/O或本对象公开入口。
-    auto 候选节点 = 节点_;
-    auto 候选字段 = 字段关系_;
-    auto 候选关系 = 外部关系_;
-    auto 候选源关系索引 = 源关系索引_;
-    auto 候选目标关系索引 = 目标关系索引_;
-    auto 候选所属索引 = 所属字段索引_;
-    auto 候选目标索引 = 目标字段索引_;
-    auto 候选入向索引 = 入向字段索引_;
-    auto 候选字段键索引 = 字段节点索引_;
+    auto 候选节点 = 候选写集(节点_);
+    auto 候选字段 = 候选写集(字段关系_);
+    auto 候选关系 = 候选写集(外部关系_);
+    auto 候选源关系索引 = 候选写集(源关系索引_);
+    auto 候选目标关系索引 = 候选写集(目标关系索引_);
+    auto 候选所属索引 = 候选写集(所属字段索引_);
+    auto 候选目标索引 = 候选写集(目标字段索引_);
+    auto 候选入向索引 = 候选写集(入向字段索引_);
+    auto 候选字段键索引 = 候选写集(字段节点索引_);
     基础节点组建立结果 结果{状态::已完成, {}};
     结果.节点组.reserve(请求.size());
     const auto 编码已占用 = [&](稳定编码 编码) {
@@ -729,21 +793,17 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         候选关系.emplace(编码.值,边);
         加关系索引(边,候选源关系索引,候选目标关系索引);
     }
-    // map使用标准分配器和无状态比较器，交换不分配、不抛异常。
+    // 写集已备齐，以下各表发布仅删除或搬移预分配节点。
     // 读者只能在本次独占锁释放后观察到全部候选。
-    static_assert(std::is_nothrow_swappable_v<decltype(源关系索引_)>);
-    static_assert(std::is_nothrow_swappable_v<decltype(目标关系索引_)>);
-    static_assert(std::is_nothrow_swappable_v<decltype(入向字段索引_)>);
-    static_assert(std::is_nothrow_swappable_v<decltype(字段节点索引_)>);
-    节点_.swap(候选节点);
-    字段关系_.swap(候选字段);
-    外部关系_.swap(候选关系);
-    源关系索引_.swap(候选源关系索引);
-    目标关系索引_.swap(候选目标关系索引);
-    所属字段索引_.swap(候选所属索引);
-    目标字段索引_.swap(候选目标索引);
-    入向字段索引_.swap(候选入向索引);
-    字段节点索引_.swap(候选字段键索引);
+    候选节点.发布();
+    候选字段.发布();
+    候选关系.发布();
+    候选源关系索引.发布();
+    候选目标关系索引.发布();
+    候选所属索引.发布();
+    候选目标索引.发布();
+    候选入向索引.发布();
+    候选字段键索引.发布();
     return 结果;
 }
 
@@ -948,19 +1008,19 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
         }
-        auto 候选节点 = 节点_;
-        auto 候选字段 = 字段关系_;
-        auto 候选所属索引 = 所属字段索引_;
-        auto 候选目标索引 = 目标字段索引_;
-        auto 候选入向索引 = 入向字段索引_;
-        auto 候选字段键索引 = 字段节点索引_;
-        // 只有新增外部边时才复制关系表及两份关系索引。
-        std::optional<decltype(外部关系_)> 候选关系;
-        std::optional<decltype(源关系索引_)> 候选源关系索引,候选目标关系索引;
+        auto 候选节点 = 候选写集(节点_);
+        auto 候选字段 = 候选写集(字段关系_);
+        auto 候选所属索引 = 候选写集(所属字段索引_);
+        auto 候选目标索引 = 候选写集(目标字段索引_);
+        auto 候选入向索引 = 候选写集(入向字段索引_);
+        auto 候选字段键索引 = 候选写集(字段节点索引_);
+        // 只有新增外部边时才建立关系表及两份关系索引的候选写集。
+        std::optional<候选写集<decltype(外部关系_)>> 候选关系;
+        std::optional<候选写集<decltype(源关系索引_)>> 候选源关系索引,候选目标关系索引;
         if (!请求.追加外部关系组.empty()) {
-            候选关系 = 外部关系_;
-            候选源关系索引 = 源关系索引_;
-            候选目标关系索引 = 目标关系索引_;
+            候选关系.emplace(外部关系_);
+            候选源关系索引.emplace(源关系索引_);
+            候选目标关系索引.emplace(目标关系索引_);
         }
         基础节点组追加结果 结果{状态::已完成, {}, {}};
         结果.新节点组.reserve(请求.新节点组.size());
@@ -1032,15 +1092,15 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             加关系索引(边,*候选源关系索引,*候选目标关系索引);
             结果.追加外部关系组.push_back(编码);
         }
-        // 全部候选与索引已闭合；以下交换不再分配。
-        节点_.swap(候选节点); 字段关系_.swap(候选字段);
-        所属字段索引_.swap(候选所属索引); 目标字段索引_.swap(候选目标索引);
-        入向字段索引_.swap(候选入向索引);
-        字段节点索引_.swap(候选字段键索引);
+        // 全部候选与索引已闭合；以下逐项发布不再分配。
+        候选节点.发布(); 候选字段.发布();
+        候选所属索引.发布(); 候选目标索引.发布();
+        候选入向索引.发布();
+        候选字段键索引.发布();
         if (候选关系) {
-            外部关系_.swap(*候选关系);
-            源关系索引_.swap(*候选源关系索引);
-            目标关系索引_.swap(*候选目标关系索引);
+            候选关系->发布();
+            候选源关系索引->发布();
+            候选目标关系索引->发布();
         }
         return 结果;
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}};
@@ -1393,11 +1453,11 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 #endif
         }
 
-        auto 候选字段 = 字段关系_;
-        auto 候选所属索引 = 所属字段索引_;
-        auto 候选目标索引 = 目标字段索引_;
-        auto 候选入向索引 = 入向字段索引_;
-        auto 候选字段键索引 = 字段节点索引_;
+        auto 候选字段 = 候选写集(字段关系_);
+        auto 候选所属索引 = 候选写集(所属字段索引_);
+        auto 候选目标索引 = 候选写集(目标字段索引_);
+        auto 候选入向索引 = 候选写集(入向字段索引_);
+        auto 候选字段键索引 = 候选写集(字段节点索引_);
         基础字段组合变化结果 结果{状态::已完成, {}};
         结果.追加字段关系组.reserve(请求.追加字段组.size());
         const auto 移除候选字段 = [&](稳定编码 编码) {
@@ -1431,15 +1491,12 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             结果.追加字段关系组.push_back(编码);
         }
 
-        static_assert(std::is_nothrow_swappable_v<decltype(字段关系_)>);
-        static_assert(std::is_nothrow_swappable_v<decltype(所属字段索引_)>);
-        static_assert(std::is_nothrow_swappable_v<decltype(目标字段索引_)>);
         static_assert(std::is_nothrow_move_constructible_v<基础字段组合变化结果>);
-        字段关系_.swap(候选字段);
-        所属字段索引_.swap(候选所属索引);
-        目标字段索引_.swap(候选目标索引);
-        入向字段索引_.swap(候选入向索引);
-        字段节点索引_.swap(候选字段键索引);
+        候选字段.发布();
+        候选所属索引.发布();
+        候选目标索引.发布();
+        候选入向索引.发布();
+        候选字段键索引.发布();
         return 结果;
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}};
@@ -1475,15 +1532,15 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         }
         const auto 预期状态 = 复核联合预期已加锁(请求.预期节点组, 必需);
         if (预期状态 != 状态::已完成) return {预期状态, {}, {}, {}};
-        auto 候选节点 = 节点_;
-        auto 候选字段 = 字段关系_;
-        auto 候选关系 = 外部关系_;
-        auto 候选源关系索引 = 源关系索引_;
-        auto 候选目标关系索引 = 目标关系索引_;
-        auto 候选所属索引 = 所属字段索引_;
-        auto 候选目标索引 = 目标字段索引_;
-        auto 候选入向索引 = 入向字段索引_;
-        auto 候选字段键索引 = 字段节点索引_;
+        auto 候选节点 = 候选写集(节点_);
+        auto 候选字段 = 候选写集(字段关系_);
+        auto 候选关系 = 候选写集(外部关系_);
+        auto 候选源关系索引 = 候选写集(源关系索引_);
+        auto 候选目标关系索引 = 候选写集(目标关系索引_);
+        auto 候选所属索引 = 候选写集(所属字段索引_);
+        auto 候选目标索引 = 候选写集(目标字段索引_);
+        auto 候选入向索引 = 候选写集(入向字段索引_);
+        auto 候选字段键索引 = 候选写集(字段节点索引_);
         const auto 编码已占用 = [&](稳定编码 编码) {
             return 候选节点.contains(编码.值) || 候选字段.contains(编码.值)
                 || 候选关系.contains(编码.值);
@@ -1515,15 +1572,15 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         候选关系.emplace(关系.值,边);
         加关系索引(边,候选源关系索引,候选目标关系索引);
         基础互引节点建立结果 结果{状态::已完成, 节点, *反向, 关系};
-        节点_.swap(候选节点);
-        字段关系_.swap(候选字段);
-        外部关系_.swap(候选关系);
-        源关系索引_.swap(候选源关系索引);
-        目标关系索引_.swap(候选目标关系索引);
-        所属字段索引_.swap(候选所属索引);
-        目标字段索引_.swap(候选目标索引);
-        入向字段索引_.swap(候选入向索引);
-        字段节点索引_.swap(候选字段键索引);
+        候选节点.发布();
+        候选字段.发布();
+        候选关系.发布();
+        候选源关系索引.发布();
+        候选目标关系索引.发布();
+        候选所属索引.发布();
+        候选目标索引.发布();
+        候选入向索引.发布();
+        候选字段键索引.发布();
         return 结果;
     } catch (const std::bad_alloc&) { return {状态::资源失败, {}, {}, {}};
     } catch (const std::length_error&) { return {状态::资源失败, {}, {}, {}};
@@ -1600,35 +1657,35 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         if (!父边) return 状态::引用不存在;
         const auto 预期状态 = 复核联合预期已加锁(请求.预期节点组, 必需);
         if (预期状态 != 状态::已完成) return 预期状态;
-        auto 候选节点 = 节点_;
-        auto 候选字段 = 字段关系_;
-        auto 候选关系 = 外部关系_;
-        auto 候选源关系索引 = 源关系索引_;
-        auto 候选目标关系索引 = 目标关系索引_;
-        auto 候选所属索引 = 所属字段索引_;
-        auto 候选目标索引 = 目标字段索引_;
-        auto 候选入向索引 = 入向字段索引_;
-        auto 候选字段键索引 = 字段节点索引_;
+        auto 候选节点 = 候选写集(节点_);
+        auto 候选字段 = 候选写集(字段关系_);
+        auto 候选关系 = 候选写集(外部关系_);
+        auto 候选源关系索引 = 候选写集(源关系索引_);
+        auto 候选目标关系索引 = 候选写集(目标关系索引_);
+        auto 候选所属索引 = 候选写集(所属字段索引_);
+        auto 候选目标索引 = 候选写集(目标字段索引_);
+        auto 候选入向索引 = 候选写集(入向字段索引_);
+        auto 候选字段键索引 = 候选写集(字段节点索引_);
         const auto 删字段 = [&](const 基础字段关系& 字段) {
             删字段索引(字段,候选所属索引,候选目标索引,候选入向索引,候选字段键索引);
             if (候选字段.erase(字段.编码.值) != 1)
                 throw std::logic_error("union delete field missing");
         };
-        for (const auto 编码 : 待删字段) 删字段(字段关系_.at(编码));
+        for (const auto 编码 : 待删字段) 删字段(std::as_const(字段关系_).at(编码));
         删字段(反向);
-        删关系索引(外部关系_.at(*父边),候选源关系索引,候选目标关系索引);
+        删关系索引(std::as_const(外部关系_).at(*父边),候选源关系索引,候选目标关系索引);
         if (候选关系.erase(*父边) != 1
             || 候选节点.erase(请求.节点.值) != 1)
             throw std::logic_error("union delete node or edge missing");
-        节点_.swap(候选节点);
-        字段关系_.swap(候选字段);
-        外部关系_.swap(候选关系);
-        源关系索引_.swap(候选源关系索引);
-        目标关系索引_.swap(候选目标关系索引);
-        所属字段索引_.swap(候选所属索引);
-        目标字段索引_.swap(候选目标索引);
-        入向字段索引_.swap(候选入向索引);
-        字段节点索引_.swap(候选字段键索引);
+        候选节点.发布();
+        候选字段.发布();
+        候选关系.发布();
+        候选源关系索引.发布();
+        候选目标关系索引.发布();
+        候选所属索引.发布();
+        候选目标索引.发布();
+        候选入向索引.发布();
+        候选字段键索引.发布();
         return 状态::已完成;
     } catch (const std::bad_alloc&) { return 状态::资源失败;
     } catch (const std::length_error&) { return 状态::资源失败;

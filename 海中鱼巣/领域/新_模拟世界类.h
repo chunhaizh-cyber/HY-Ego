@@ -95,7 +95,7 @@ class 概念_动态类;
 class 新_模拟世界类 final : public 新方法模拟运行接口,
     public 新方法问题归档接口, public 新本能交互运行接口, public 新方法隔离执行接口,
     public 新本能需求运行接口, public 正式信息参数读取接口,
-    public 新本能字段询问运行接口 {
+    public 新本能字段询问运行接口, public 新字段询问发送运行接口 {
 public:
     explicit 新_模拟世界类(新_方法类&) noexcept;
     新_模拟世界类(新_方法类&,const 动作方法定义只读提供者&,新_动态类&,const 概念_动态类&) noexcept;

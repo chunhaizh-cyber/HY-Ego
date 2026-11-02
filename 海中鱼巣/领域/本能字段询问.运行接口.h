@@ -39,7 +39,18 @@ public:
     virtual ~新本能字段询问运行接口()=default;
     virtual 新字段询问材料读回 读取询问材料(const 方法参数场景&) const=0;
     virtual 新字段询问文字结果 生成询问文字(const 新正式字段询问目标&) const=0;
+    virtual 新字段询问文字结果 提交表达需求(const 新字段询问表达需求& 目标) const {
+        return 生成询问文字(目标);
+    }
     virtual bool 已请求停止() const noexcept=0;
+};
+// task的独立发送工作消费；询问本能不取得此端口。
+class 新字段询问发送运行接口 {
+public:
+    virtual ~新字段询问发送运行接口()=default;
+    // 只有独立动作定义及完整语言/来源读集已能原子提交时才可开放。
+    virtual bool 原子发送合同已接通() const noexcept { return false; }
+    virtual bool 复核发送会话(稳定编码,std::string_view,std::string_view) const { return false; }
     virtual 稳定编码 建立输出动作(const 方法参数场景&, const 新字段询问材料&)=0;
     virtual 新字段询问入列读回 提交询问输出(
         const 方法参数场景&, const 新字段询问材料&, 稳定编码 动作,
@@ -60,6 +71,7 @@ public:
     virtual ~新字段询问登记端口()=default;
     virtual std::optional<新字段询问登记配置> 读取登记材料() const noexcept=0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept=0;
+    virtual 新方法建立结果 读取或确保发送方法登记() noexcept=0;
 };
 
 } // namespace 海中鱼巣

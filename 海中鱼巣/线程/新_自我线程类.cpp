@@ -4393,6 +4393,38 @@ struct 新_自我线程类::实现 final {
                             (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"推进接收需求认知入口",诊断.str());
                         } catch (...) {}
                         const auto observed=provider->推进一次(token);
+                        if(!token.stop_requested()&&observed&&observed->阶段==接收需求认知阶段::已读回待完善请求
+                            &&observed->待完善交接&&observed->待交接请求) {
+                            if(!任务管理||!任务服务||!需求服务||!初始化结果||!初始化结果->自我存在
+                                ||!初始化结果->自我所在场景||!初始化结果->完成服务需求)
+                                throw std::logic_error("incomplete request confirmation dependencies absent");
+                            auto source=*observed->待完善交接;
+                            source.自我场景=*初始化结果->自我所在场景;source.父需求=*初始化结果->完成服务需求;
+                            if(source.请求.受请求者节点!=*初始化结果->自我存在)
+                                throw std::logic_error("incomplete request addressee differs from self");
+                            const auto confirmed=需求服务->复核字段追问来源(source);
+                            const auto qualification=confirmed==新需求操作状态::已找到
+                                ? 需求服务->读取被认知需求完整资格保护(source.请求.被认知需求节点,source.请求.来源人类节点)
+                                : 新被认知需求资格读取结果{};
+                            if(confirmed==新需求操作状态::已找到&&qualification.状态==新被认知需求资格状态::已读取) {
+                                const auto accepted=接纳行动请求(source.请求);
+                                if(accepted.状态==新自我消息接收状态::已接收||accepted.状态==新自我消息接收状态::精确重复) {
+                                    const auto ack=provider->确认行动请求已交接(source.请求);
+                                    if(ack==接收行动请求交接确认状态::已确认||ack==接收行动请求交接确认状态::精确重复)行动请求已入邮箱=true;
+                                }
+                            } else if(confirmed==新需求操作状态::已找到&&qualification.状态==新被认知需求资格状态::内容待完善) {
+                                // self只确认来源和缺项；D/T、候选取得及发送均由task链推进。
+                                const auto accepted=任务管理->提交字段追问(source);
+                                if(accepted==新任务承接接收状态::已接收||accepted==新任务承接接收状态::精确重复) {
+                                    const auto ack=provider->确认行动请求已交接(source.请求);
+                                    if(ack!=接收行动请求交接确认状态::已确认&&ack!=接收行动请求交接确认状态::精确重复
+                                        &&ack!=接收行动请求交接确认状态::资源失败)
+                                        throw std::logic_error("incomplete request handoff acknowledgement differs");
+                                }
+                            } else if(confirmed!=新需求操作状态::已找到&&confirmed!=新需求操作状态::资源失败&&confirmed!=新需求操作状态::前提已变化
+                                &&confirmed!=新需求操作状态::尚未初始化)
+                                throw std::logic_error("incomplete request source confirmation rejected");
+                        }
                         if(!token.stop_requested()&&observed
                             &&observed->阶段==接收需求认知阶段::已读回行动请求&&observed->待交接请求) {
                             const auto accepted=接纳行动请求(*observed->待交接请求);
@@ -4416,6 +4448,32 @@ struct 新_自我线程类::实现 final {
                                 &&accepted.状态!=新自我消息接收状态::尚未配置
                                 &&accepted.状态!=新自我消息接收状态::已停止接收)
                                 throw std::logic_error("formal action request mailbox rejected source");
+                        }
+                        // 正式写回使内容完整后，才回到原完整行动请求采用；追问本身不替代该资格。
+                        if(!token.stop_requested()&&任务服务&&需求服务) {
+                            std::set<稳定编码> sources;
+                            for(const auto t:任务服务->查询字段追问任务()) {
+                                const auto record=任务服务->读取字段追问记录(t);
+                                if(record&&record->阶段==新任务字段追问阶段::候选待真实来源&&初始化结果
+                                    &&初始化结果->自我存在&&初始化结果->自我所在场景) {
+                                    const auto field=需求服务->获取需求(record->字段需求节点);
+                                    if(field&&field->父需求节点&&field->目标.引用内容定位) {
+                                        const auto origin=provider->读取字段追问来源(field->目标.引用内容定位->引用需求节点,
+                                            *初始化结果->自我存在,*初始化结果->自我所在场景,*field->父需求节点);
+                                        if(origin&&需求服务->复核字段追问来源(*origin)==新需求操作状态::已找到)
+                                            (void)任务管理->提交已有字段追问来源(t,*origin);
+                                    }
+                                    continue;
+                                }
+                                if(!record||record->阶段!=新任务字段追问阶段::字段已满足
+                                    ||!sources.insert(record->来源.请求.需求来源.采用含义节点).second)continue;
+                                const auto& request=record->来源.请求;
+                                const auto complete=需求服务->读取被认知需求完整资格保护(request.被认知需求节点,request.来源人类节点);
+                                if(complete.状态!=新被认知需求资格状态::已读取)continue;
+                                const auto accepted=接纳行动请求(request);
+                                if(accepted.状态==新自我消息接收状态::已接收||accepted.状态==新自我消息接收状态::精确重复)
+                                    行动请求已入邮箱=true;
+                            }
                         }
                     }
                     catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"推进接收需求认知",L"真实消息认知结构或内部不变量错误，不当作业务缺项重试。",e.what());}

@@ -226,10 +226,10 @@ namespace {
             新方法知识建立请求 q;
             q.作用域=新方法作用域::普通世界;
             q.实现方式=新方法实现方式::本能;
-            q.行为=新方法行为::改变;
-            q.方法头.作用存在概念组={c->通用存在概念};
-            q.方法头.涉及特征类型概念组={c->输出队列类型};
-            q.方法头.可能结果概念组={c->输出队列类型};
+            q.行为=新方法行为::读取;
+            q.方法头.作用存在概念组={c->需求根概念};
+            q.方法头.涉及特征类型概念组=c->支持字段类型组;
+            q.方法头.可能结果概念组=c->支持字段类型组;
             const std::array<新方法有序参数规格,5> specs{{
                 {1,新方法参数信息类型::存在,c->需求根概念},
                 {2,新方法参数信息类型::存在,c->自我范围概念},
@@ -258,10 +258,36 @@ namespace {
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"询问指定需求字段",L"字段询问未知工程异常。");
     }
 }
+新本能函数本次条件结果对 新_本能函数集::发送指定需求字段(const 方法参数场景& 场景) noexcept {
+    try {
+        if(场景.用途()==新方法参数场景用途::登记) {
+            const auto p=新_本能函数管理类::租用字段询问端口();
+            if(!p)throw std::logic_error("field send declaration provider unavailable");
+            const auto m=p->读取或确保发送方法登记();
+            if(!m.方法节点)throw std::logic_error("field send declaration failed");
+            新本能函数本次条件结果对 r;
+            r.结果.状态=场景.全部角色绑定().empty() ? 新本能函数执行状态::已按合同返回 : 新本能函数执行状态::参数不匹配;
+            return r;
+        }
+        return 执行本次任务字段发送(场景);
+    }catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"发送指定需求字段",L"独立发送工程异常；保留已发生事实。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"发送指定需求字段",L"独立发送未知工程异常。");}
+}
 新本能函数本次条件结果对 新_本能函数集::设置网页对话输入文本(const 方法参数场景& 参数场景) noexcept {
     return 新_本能函数管理类::调用网页对话入口(新_本能函数管理类::网页对话入口::设置输入框文本, 参数场景);
 }
 新本能函数本次条件结果对 新_本能函数集::提交网页对话消息(const 方法参数场景& 参数场景) noexcept {
     return 新_本能函数管理类::调用网页对话入口(新_本能函数管理类::网页对话入口::提交消息, 参数场景);
 }
+
+新本能函数本次条件结果对 新_本能函数集::写回语言场景主张(const 方法参数场景& scene) noexcept {
+    try{const auto port=新_本能函数管理类::租用语言场景写回端口();if(!port)throw std::logic_error("language claim writeback owner unavailable");
+        if(scene.用途()==新方法参数场景用途::登记)return port->声明();
+        const auto* context=读取语言场景写回上下文(scene);
+        if(!context){新本能函数本次条件结果对 r;r.结果.语言场景写回=新语言场景主张结果{};return r;}
+        return port->执行(scene,*context);
+    }catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回语言场景主张",L"写回工程异常；主张不升级为真实特征，已发生动作保留。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回语言场景主张",L"未知写回工程异常。");}
+}
+
 } // namespace 海中鱼巣

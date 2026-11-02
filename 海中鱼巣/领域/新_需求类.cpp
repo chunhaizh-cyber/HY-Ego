@@ -8111,4 +8111,64 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
     }
 }
 
+
+新需求操作状态 新_需求类::复核字段追问来源(const 新需求字段追问来源& q) const noexcept {
+    using S=新需求操作状态;
+    try {
+        const auto& source=q.请求;
+        if(!有效(q.自我场景)||!有效(q.窗口)||!有效(q.外设场景)||!有效(q.输出特征)
+            ||!有效(q.父需求)||q.公开宿主会话.empty()||q.对话框标识.empty())return S::入口拒绝;
+        const auto* language=接收认知语言读取接口_;
+        if(!language)return S::尚未初始化;
+        const auto r=language->读取采用行动请求保护(source.需求来源.采用含义节点,source.受请求者节点,特征服务_,存在服务_);
+        if(r.状态==新语言含义采用状态::资源失败)return S::资源失败;
+        if(r.状态==新语言含义采用状态::前提已变化||r.状态==新语言含义采用状态::未找到)return S::前提已变化;
+        if((r.状态!=新语言含义采用状态::已采用&&r.状态!=新语言含义采用状态::精确重复)||!r.信息)
+            return S::认知来源不合法;
+        if(r.信息->需求来源!=source.需求来源.键||r.信息->说话者H!=source.来源人类节点
+            ||r.信息->受请求者E!=source.受请求者节点)return S::认知来源不合法;
+        const auto d=查询接收认知来源需求(source.需求来源,*language,特征服务_);
+        if(d.状态!=S::已找到)return d.状态;
+        if(!d.信息||d.信息->节点!=source.被认知需求节点
+            ||d.信息->需求主体存在节点!=source.来源人类节点
+            ||d.信息->执行域!=新需求执行域::被认知)return S::认知来源不合法;
+        const auto parent=读取需求治理信息(q.父需求);
+        if(!parent||parent->执行域!=新需求执行域::自我执行
+            ||parent->需求主体存在节点!=source.受请求者节点)return S::父需求不合法;
+        return S::已找到;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复核字段追问来源",L"正式请求来源读取工程错误");}
+}
+新需求建立结果 新_需求类::建立请求字段完善需求(
+    const 新需求字段追问来源& q,稳定编码 父任务) noexcept {
+    using S=新需求操作状态;
+    try {
+        const auto source=复核字段追问来源(q);
+        if(source!=S::已找到)return {source,{},{}};
+        const auto concepts=存在概念服务_.读取引用内容筹办概念();
+        const auto fts=特征概念服务_.获取先天特征概念();
+        if(concepts.状态!=正式结构操作状态::已读取||!concepts.信息||!fts)return {S::尚未初始化,{},{}};
+        const auto check=判定被认知需求内容保护(q.请求.被认知需求节点,q.请求.来源人类节点,concepts.信息->完整被认知需求);
+        if(check.状态==新引用内容目标状态::资源失败)return {S::资源失败,{},{}};
+        if(check.状态==新引用内容目标状态::引用前提已变化)return {S::前提已变化,{},{}};
+        if(check.状态!=新引用内容目标状态::未满足&&check.状态!=新引用内容目标状态::分支待定)
+            return {S::无变化,{},{}};
+        // 只选已确定为必要且当前未知的项目；未决值/方向分支不猜测。
+        const auto form=特征概念服务_.读取先天特征类型槽(先天特征类型槽::需求目标形式);
+        const 正式结构项目判定* selected=nullptr;
+        for(const auto& item:check.必要项目组)if(item.状态==正式内容符合状态::当前未知) {
+            if(!selected)selected=&item;
+            if(form.类型根&&item.特征类型==*form.类型根){selected=&item;break;}
+        }
+        if(!selected)return {S::目标内容未支持,{},{}};
+        新普通需求建立请求 request;
+        request.父需求节点=q.父需求;request.目标存在节点=q.请求.来源人类节点;
+        request.目标={fts->需求,新需求目标形式::值,selected->要求概念,{},{},
+            新需求引用内容定位{q.请求.被认知需求节点,{selected->特征类型}}};
+        request.来源类型=新需求来源类型::任务子目标;request.来源承接节点=父任务;
+        return 建立或取得普通需求已核验(request,true,check.完整保护组);
+    }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立请求字段完善需求",L"正式缺项或需求发布工程故障");}
+}
+
 } // namespace 海中鱼巣

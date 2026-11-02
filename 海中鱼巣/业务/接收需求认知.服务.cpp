@@ -409,15 +409,15 @@ std::optional<接收需求认知观察> 接收需求认知服务::读取最近�
     try {
         std::lock_guard g(实现_->锁);
         const auto it=实现_->进度.find(source.需求来源.键.接收消息节点);
-        if(it==实现_->进度.end()||it->second.观察.阶段!=阶段::已读回行动请求)return S::输入拒绝;
+        if(it==实现_->进度.end()||(it->second.观察.阶段!=阶段::已读回行动请求&&it->second.观察.阶段!=阶段::已读回待完善请求))return S::输入拒绝;
         auto& work=it->second;const auto& out=work.观察;
         if(out.M!=source.需求来源.键.接收消息节点||out.U!=source.需求来源.采用含义节点
             ||out.D!=source.被认知需求节点||out.H!=source.来源人类节点
             ||out.受请求者!=source.受请求者节点||out.需求来源!=std::optional{source.需求来源.键})
             return S::来源冲突;
         if(work.行动请求已交接)return S::精确重复;
-        work.行动请求已交接=true;work.观察.待交接请求.reset();
-        if(实现_->最近&&实现_->最近->M==out.M)实现_->最近->待交接请求.reset();
+        work.行动请求已交接=true;work.观察.待交接请求.reset();work.观察.待完善交接.reset();
+        if(实现_->最近&&实现_->最近->M==out.M){实现_->最近->待交接请求.reset();实现_->最近->待完善交接.reset();}
         return S::已确认;
     }catch(const std::bad_alloc&){return S::资源失败;}
     catch(const std::length_error&){return S::资源失败;}
@@ -452,7 +452,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     // 公平轮转，不让单条反复前提变化阻挡后续真实M。
     // 已登记且未封存会话上的M优先：旧会话残留不得长期挡住当前入站认知（§8.2 真实M公平）。
     const auto eligible=[&](const auto& m){const auto it=impl.进度.find(m.消息节点);return it==impl.进度.end()
-        ||((!it->second.终结||(it->second.观察.阶段==阶段::已读回行动请求&&!it->second.行动请求已交接))&&it->second.下次<=now);};
+        ||((!it->second.终结||((it->second.观察.阶段==阶段::已读回行动请求||it->second.观察.阶段==阶段::已读回待完善请求)&&!it->second.行动请求已交接))&&it->second.下次<=now);};
     const auto 会话仍活跃=[&](const auto& m){
         std::lock_guard g(impl.锁);const auto it=impl.会话组.find(m.来源.公开宿主会话);
         return it!=impl.会话组.end()&&!it->second.封存;};
@@ -474,10 +474,19 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         return {};}
     const auto& m=*chosen;impl.上次=m.消息节点;本次消息=m.消息节点;
     auto& work=impl.进度[m.消息节点];auto out=work.观察;out.M=m.消息节点;
-    if(work.终结&&out.阶段==阶段::已读回行动请求&&!work.行动请求已交接) {
+    if(work.终结&&(out.阶段==阶段::已读回行动请求||out.阶段==阶段::已读回待完善请求)&&!work.行动请求已交接) {
         if(!out.U||!out.D||!out.H||!out.受请求者||!out.需求来源)
             throw std::logic_error("completed request handoff source missing");
         const 新行动请求承接来源 source{{*out.需求来源,*out.U},*out.D,*out.H,*out.受请求者};
+        if(out.阶段==阶段::已读回待完善请求) {
+            const auto window=d.外设.读取对话框来源(m.窗口节点);
+            if(!window||window->公开宿主会话!=m.来源.公开宿主会话||window->对话框标识!=m.来源.对话框标识
+                ||window->定位.场景节点!=m.场景节点) {
+                out.待完善交接.reset();out.待交接请求.reset();out.原因="待完善请求原会话前提已变化";
+            }
+            work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
+            保存观察(out);return out;
+        }
         const auto fresh=d.需求.读取行动请求承接来源保护(source);
         if(stop.stop_requested())return {};
         out.待交接请求.reset();
@@ -588,12 +597,21 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                         const auto qualification=d.需求.读取被认知需求完整资格保护(*out.D,*context.已绑定人类);
                         if(qualification.状态==新被认知需求资格状态::资源失败)资源();
                         if(qualification.状态==新被认知需求资格状态::前提已变化)漂移();
-                        if(qualification.状态==新被认知需求资格状态::内容待完善)
-                            throw 推进中断{阶段::D映射受阻,"已保存需求尚不符合完整内容概念，未承接"};
-                        if(qualification.状态!=新被认知需求资格状态::已读取||!qualification.信息)
-                            throw std::logic_error("request child demand complete qualification unavailable");
-                        out.阶段=阶段::已读回行动请求;out.原因="明确行动请求及同源需求子内容正式读回；未承接";
                         out.待交接请求=新行动请求承接来源{source,*out.D,*context.已绑定人类,*out.受请求者};
+                        if(qualification.状态==新被认知需求资格状态::内容待完善) {
+                            const auto window=d.外设.读取对话框来源(m.窗口节点);
+                            if(!window||window->公开宿主会话!=m.来源.公开宿主会话||window->对话框标识!=m.来源.对话框标识
+                                ||window->定位.场景节点!=m.场景节点||!window->定位.输出队列特征)漂移();
+                            新需求字段追问来源 pending;pending.请求=*out.待交接请求;
+                            pending.窗口=m.窗口节点;pending.外设场景=m.场景节点;pending.输出特征=*window->定位.输出队列特征;
+                            pending.公开宿主会话=m.来源.公开宿主会话;pending.对话框标识=m.来源.对话框标识;
+                            out.待完善交接=std::move(pending);out.阶段=阶段::已读回待完善请求;
+                            out.原因="同源请求已保存但内容待完善；交自我确认缺项后由任务追问";
+                        } else {
+                            if(qualification.状态!=新被认知需求资格状态::已读取||!qualification.信息)
+                                throw std::logic_error("request child demand complete qualification unavailable");
+                            out.阶段=阶段::已读回行动请求;out.原因="明确行动请求及同源需求子内容正式读回；未承接";
+                        }
                     } else {out.阶段=阶段::已读回;out.原因="同源语言采用与被认知需求正式读回；未自动承接";}
                     本次终结=true;
                 }
@@ -666,4 +684,36 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         保存观察(out);return out;
     }
 }
+
+std::optional<新需求字段追问来源> 接收需求认知服务::读取字段追问来源(
+    稳定编码 D,稳定编码 self,稳定编码 selfScene,稳定编码 parent) const {
+    auto& impl=*实现_;auto& d=impl.依赖;
+    const auto demand=d.需求.读取需求治理信息(D);
+    if(!demand||demand->执行域!=新需求执行域::被认知||!demand->首次接收认知来源)return {};
+    const auto& origin=*demand->首次接收认知来源;
+    const auto records=d.外设.完整读取仍保留的接收记录();
+    if(records.状态==新外设事实状态::资源失败)return {};
+    if(records.状态!=新外设事实状态::已完成)throw std::logic_error("field question original receive records unavailable");
+    const auto message=std::find_if(records.消息组.begin(),records.消息组.end(),[&](const auto& m){return m.消息节点==origin.键.接收消息节点;});
+    if(message==records.消息组.end())return {}; // 原M未保留，不替换成最近窗口。
+    {
+        std::lock_guard lock(impl.锁);const auto session=impl.会话组.find(message->来源.公开宿主会话);
+        if(session==impl.会话组.end()||session->second.封存
+            ||session->second.语境.已绑定人类!=std::optional{demand->需求主体存在节点}
+            ||session->second.语境.已绑定自我!=std::optional{self})return {};
+    }
+    const auto request=d.语言.读取采用行动请求保护(origin.采用含义节点,self,d.特征,d.存在);
+    if((request.状态!=新语言含义采用状态::已采用&&request.状态!=新语言含义采用状态::精确重复)||!request.信息)return {};
+    if(request.信息->需求来源!=origin.键||request.信息->说话者H!=demand->需求主体存在节点||request.信息->受请求者E!=self)return {};
+    const auto window=d.外设.读取对话框来源(message->窗口节点);
+    if(!window||window->公开宿主会话!=message->来源.公开宿主会话||window->对话框标识!=message->来源.对话框标识
+        ||window->定位.场景节点!=message->场景节点||!window->定位.输出队列特征)return {};
+    新需求字段追问来源 result;
+    result.请求={origin,D,demand->需求主体存在节点,self};result.自我场景=selfScene;result.父需求=parent;
+    result.窗口=message->窗口节点;result.外设场景=message->场景节点;result.输出特征=*window->定位.输出队列特征;
+    result.公开宿主会话=message->来源.公开宿主会话;result.对话框标识=message->来源.对话框标识;
+    if(d.需求.复核字段追问来源(result)!=新需求操作状态::已找到)return {};
+    return result;
+}
+
 } // namespace 海中鱼巣
