@@ -48,6 +48,10 @@
 
 namespace 海中鱼巣 {
 
+namespace 调试内部 {
+std::array<std::uint64_t, 3> 取回最近I64写入诊断() noexcept;
+}
+
 namespace {
 bool 同一来源前端目标(const 新来源前驱内容模板& a,const 新来源前驱内容模板& b) noexcept {
     return a.种类==b.种类&&a.目标槽类型==b.目标槽类型&&a.要求概念==b.要求概念
@@ -7154,11 +7158,28 @@ bool 新_任务类::初始化() noexcept {
             if (!有效(状态特征) || !有效(服务值特征)) throw std::runtime_error("task features preparation failed");
             const auto 状态写入 = 特征服务_.添加特征值(状态特征,
                 新特征准确值{static_cast<std::int64_t>(新任务状态::已建立)});
+            const auto 状态底层 = 调试内部::取回最近I64写入诊断();
             const auto 值写入 = 特征服务_.添加特征值(服务值特征, 新特征准确值{std::int64_t{0}});
+            const auto 值底层 = 调试内部::取回最近I64写入诊断();
             const auto 写入完成 = [](新特征写入状态 状态) {
                 return 状态 == 新特征写入状态::已完成 || 状态 == 新特征写入状态::无变化;
             };
-            if (!写入完成(状态写入.状态) || !写入完成(值写入.状态)) throw std::runtime_error("task features initialization failed");
+            if (!写入完成(状态写入.状态) || !写入完成(值写入.状态)) {
+                const auto 描述写入 = [](const char* 名称, 稳定编码 F,
+                    const 新特征值添加结果& 写入, const std::array<std::uint64_t, 3>& 底层) {
+                    return std::string(名称) + "_feature=" + std::to_string(F.值)
+                        + ",status=" + std::to_string(static_cast<unsigned>(写入.状态))
+                        + ",current_changed=" + std::to_string(写入.当前值已改变)
+                        + ",aggregation=" + (写入.聚合结果
+                            ? std::to_string(static_cast<unsigned>(写入.聚合结果->状态)) : "none")
+                        + ",i64_stage=" + std::to_string(底层[1])
+                        + ",i64_status=" + std::to_string(底层[2]);
+                };
+                throw std::runtime_error("task features initialization failed: demand="
+                    + std::to_string(需求节点.值) + "; "
+                    + 描述写入("state", 状态特征, 状态写入, 状态底层) + "; "
+                    + 描述写入("service", 服务值特征, 值写入, 值底层));
+            }
             任务节点 = 全局基础数据集.新建节点();
             虚拟存在 = 全局基础数据集.新建节点();
             if (!有效(任务节点) || !有效(虚拟存在)) throw std::runtime_error("task candidate allocation failed");

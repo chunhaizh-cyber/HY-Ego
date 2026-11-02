@@ -9,6 +9,7 @@
 #include <shared_mutex>
 #include <string>
 #include <tuple>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -368,6 +369,10 @@ private:
     // 只在本对象锁内使用；索引存编码而不是字段副本或跨发布迭代器。
     using 字段索引键 = std::tuple<std::uint64_t, std::uint64_t, std::uint64_t>;
     void 插入字段已加锁(基础字段关系 字段);
+    void 插入关系已加锁(基础外部关系 关系);
+    void 删除关系已加锁(const 基础外部关系& 关系) noexcept;
+    void 读取节点关系已加锁(稳定编码 节点, bool 出向,
+        std::optional<基础外部关系类型> 类型, std::vector<基础外部关系>& 结果) const;
     void 核验字段索引已加锁(const 基础字段关系& 字段) const;
     void 删除字段已加锁(const 基础字段关系& 字段) noexcept;
     void 读取节点字段已加锁(稳定编码 节点, std::vector<基础字段关系>& 结果) const;
@@ -385,6 +390,11 @@ private:
     std::map<std::uint64_t, 基础字段关系> 字段关系_;
     std::set<字段索引键> 所属字段索引_; // 所属节点、字段节点、字段关系编码
     std::set<字段索引键> 目标字段索引_; // 字段节点、引用目标、字段关系编码
+    using 节点编码索引键 = std::pair<std::uint64_t, std::uint64_t>;
+    std::set<节点编码索引键> 入向字段索引_; // 引用目标、字段关系编码
+    std::set<节点编码索引键> 字段节点索引_; // 字段节点、字段关系编码（含直接值）
+    std::set<字段索引键> 源关系索引_; // 源节点、关系类型、关系编码
+    std::set<字段索引键> 目标关系索引_; // 目标节点、关系类型、关系编码
 };
 
 // 新数据架构共用唯一基础数据集；各类数据树以其中的根节点区分。

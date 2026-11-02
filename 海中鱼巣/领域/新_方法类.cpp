@@ -3126,6 +3126,13 @@ const 新方法信息& 核验服务对象方法族(const std::vector<新方法�
     }
     std::vector<新方法信息> 同名;
     for (const auto 节点 : *成员组) {
+        if (!节点仍存在(节点)) return {新方法操作状态::结构不一致, std::nullopt};
+        // 登记名是本次查询范围；无关方法不再为查询另一个登记反复完整解码。
+        const auto 登记字段 = 全局基础数据集.查询字段(节点, 方法本能函数登记名字段);
+        if (登记字段.empty()) continue;
+        const auto 名称 = 读取唯一字符串字段(节点, 方法本能函数登记名字段);
+        if (!名称 || 名称->empty()) return {新方法操作状态::结构不一致, std::nullopt};
+        if (*名称 != 登记名) continue;
         const auto 方法 = 读取方法信息本体(节点, 概念服务, 治理读取, 存在概念服务, false, true);
         if (!方法) {
             return {新方法操作状态::结构不一致, std::nullopt};

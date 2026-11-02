@@ -24,7 +24,8 @@ namespace 海中鱼巣 {
 inline constexpr std::uint64_t 普通应用默认邮箱容量 = 256;
 inline constexpr std::uint64_t 普通应用默认资源重试间隔毫秒 = 100;
 inline constexpr std::uint64_t 普通应用默认线程进入等待毫秒 = 5000;
-inline constexpr std::uint64_t 普通应用默认线程停止回收等待毫秒 = 5000;
+// 默认停止窗口覆盖正常在途筹办/采集的收束；仍以真实停止见证决定成功。
+inline constexpr std::uint64_t 普通应用默认线程停止回收等待毫秒 = 120000;
 
 struct 普通应用配置 final {
     std::uint64_t 自我线程邮箱容量 = 普通应用默认邮箱容量;
