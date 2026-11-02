@@ -1,4 +1,4 @@
-#include "新_任务工作线程类.h"
+﻿#include "新_任务工作线程类.h"
 #include "../领域/新_本能函数管理类.h"
 #include "../核心/容错检查.h"
 
@@ -119,6 +119,42 @@ const wchar_t* 召回诊断操作名(状态类型 状态) noexcept {
     default: return L"其它操作状态";
     }
 }
+
+
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+const wchar_t* 语言补全状态名(新语言补全状态 状态) noexcept {
+    switch (状态) {
+    case 新语言补全状态::已完成: return L"已完成";
+    case 新语言补全状态::无需补全: return L"无需补全";
+    case 新语言补全状态::等待材料: return L"等待材料";
+    case 新语言补全状态::来源已变化: return L"来源已变化";
+    case 新语言补全状态::输入不适用: return L"输入不适用";
+    case 新语言补全状态::结构不一致: return L"结构不一致";
+    case 新语言补全状态::资源失败: return L"资源失败";
+    }
+    return L"未知枚举";
+}
+
+void 记录语言筹办诊断(const 新任务工作请求& 请求,
+    const 新任务语言子需求提议& 提议,
+    const wchar_t* 映射结果) noexcept {
+    try {
+        std::wstring 文本 = L"工作编号=" + std::to_wstring(请求.工作编号)
+            + L"；任务=" + std::to_wstring(请求.任务节点.值)
+            + L"；语言状态码=" + std::to_wstring(static_cast<unsigned>(提议.状态))
+            + L"；语言状态=" + 语言补全状态名(提议.状态)
+            + L"；父需求=" + std::to_wstring(提议.父需求节点.值)
+            + L"；目标数=" + std::to_wstring(提议.目标组.size())
+            + L"；映射=" + 映射结果;
+        for (std::size_t i = 0; i < 提议.目标组.size() && i < 8; ++i) {
+            const auto& t = 提议.目标组[i];
+            文本 += L"；目标" + std::to_wstring(i)
+                + L"种类=" + std::to_wstring(static_cast<unsigned>(t.种类));
+        }
+        (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务工作线程", L"语言筹办返回", 文本);
+    } catch (...) {}
+}
+#endif
 
 void 记录召回诊断(const 新任务工作请求& 请求,
     const 新任务工作处理结果* 结果) noexcept {
@@ -401,12 +437,34 @@ struct 新_任务工作线程类::实现 final {
             auto language=任务服务->提议任务语言子需求(项->请求.任务节点);
             switch(language.状态){
             case 新语言补全状态::已完成:
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+                记录语言筹办诊断(项->请求, language, L"语言子需求需自我确认");
+                结果.语言子需求提议=language;结果.状态=新任务工作处理状态::语言子需求需自我确认;
+                记录召回诊断(项->请求, &结果);结果.语言子需求提议=std::move(language);return;
+#else
                 结果.语言子需求提议=std::move(language);结果.状态=新任务工作处理状态::语言子需求需自我确认;return;
-            case 新语言补全状态::无需补全:case 新语言补全状态::输入不适用:break;
+#endif
+            case 新语言补全状态::无需补全:case 新语言补全状态::输入不适用:
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+                记录语言筹办诊断(项->请求, language, L"继续方法召回");
+#endif
+                break;
             case 新语言补全状态::等待材料:case 新语言补全状态::资源失败:
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+                记录语言筹办诊断(项->请求, language, L"语言筹办待材料");
+                结果.语言子需求提议=language;结果.状态=新任务工作处理状态::语言筹办待材料;
+                记录召回诊断(项->请求, &结果);结果.语言子需求提议=std::move(language);return;
+#else
                 结果.语言子需求提议=std::move(language);结果.状态=新任务工作处理状态::语言筹办待材料;return;
+#endif
             case 新语言补全状态::来源已变化:
+#ifdef HY_EGO_DEBUG_LOG_TASK_METHOD_RECALL
+                记录语言筹办诊断(项->请求, language, L"任务状态已变化");
+                结果.语言子需求提议=language;结果.状态=新任务工作处理状态::任务状态已变化;
+                记录召回诊断(项->请求, &结果);结果.语言子需求提议=std::move(language);return;
+#else
                 结果.语言子需求提议=std::move(language);结果.状态=新任务工作处理状态::任务状态已变化;return;
+#endif
             case 新语言补全状态::结构不一致:throw std::logic_error("language preparation formal structure inconsistent");
             }
             结果.方法召回 = 任务服务->查询任务方法候选并发布(项->请求.任务节点);
