@@ -5,8 +5,13 @@
 #include "../领域/新_场景类.h"
 #include "../领域/新_存在类.h"
 
+// 本翻译单元复用已启用的接收解释诊断，不改变全局编译选项。
+#if defined(HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE) && !defined(HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE)
+#define HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+#endif
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
 #include "../核心/日志系统.h"
+#include <sstream>
 #include <atomic>
 #include <chrono>
 #include <exception>
@@ -33,15 +38,15 @@ public:
         : 序号_(含义图诊断序号.fetch_add(1, std::memory_order_relaxed) + 1),
           语言_(语言), 开始_(std::chrono::steady_clock::now()), 上次_(开始_) {}
     ~含义图阶段观察() noexcept { 记录(L"含义图入口离开", std::uncaught_exceptions()); }
-    void 记录(const wchar_t* 阶段, int 状态 = -1, std::size_t 数量 = 0, 稳定编码 根知识 = {}) noexcept {
-        if (序号_ > 64 || 条数_ >= 128) return;
+    void 记录(const wchar_t* 阶段, int 状态 = -1, std::size_t 数量 = 0, 稳定编码 根知识 = {},bool 关键失败=false) noexcept {
+        if (!关键失败&&(序号_ > 64 || 条数_ >= 128)) return;
         ++条数_;
         try {
             const auto 当前 = std::chrono::steady_clock::now();
             std::wostringstream 文本;
             文本 << L"图调用序号=" << 序号_ << L"；语言=" << 语言_.值
                 << L"；阶段=" << 阶段 << L"；状态或离开时异常展开数=" << 状态
-                << L"；数量=" << 数量 << L"；根知识=" << 根知识.值
+                << L"；数量=" << 数量 << L"；知识或引用节点=" << 根知识.值
                 << L"；累计毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 开始_).count()
                 << L"；阶段间隔毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 上次_).count();
             上次_ = 当前;
@@ -4168,7 +4173,12 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             for(auto 身份:关系组.名称关系节点组) {
                 auto 失败状态=状态类::引用不可读;
                 const auto 读取=读取强类型名称(身份,词读取.信息->节点,名称,存在概念,特征概念,失败状态,依据);
-                if(!读取)throw 失败状态;
+                if(!读取) {
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+                    观察.记录(L"图角色/强类型名称读取失败（映射后基础语言输入状态）",static_cast<int>(失败状态),0,身份,true);
+#endif
+                    throw 失败状态;
+                }
                 const auto* 普通=std::get_if<普通名称候选读回>(&*读取);if(!普通)continue;
                 const auto 概念节点=普通->名称关系.概念节点;
                 const auto [名称位置,名称新增]=名称保护.emplace(身份,*普通);
@@ -4245,7 +4255,12 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 if(!引导)return 成果;
                 const auto 词读=词.获取词条(引导->词条节点);
                 if(词读.状态==新词条查询状态::资源失败)throw 状态类::资源失败;
-                if(词读.状态!=新词条查询状态::已找到||!词读.信息)throw 状态类::引用不可读;
+                if(词读.状态!=新词条查询状态::已找到||!词读.信息) {
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+                    观察.记录(L"帮我壳/引导词owner读取失败（新词条查询状态）",static_cast<int>(词读.状态),0,引导->词条节点,true);
+#endif
+                    throw 状态类::引用不可读;
+                }
                 词保护.emplace(词读.信息->节点,*词读.信息);
                 const auto 前词=解码标准UTF8(词读.信息->规范化词面);
                 if(!前词||前词->码点.empty())throw 状态类::内部不一致;
@@ -4255,7 +4270,12 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 if(!speakerRole||speakerRole->方式!=新语言知识表达方式::已消解指代
                     ||!speakerRole->指代名称关系节点||!speakerRole->指代概念节点)throw 状态类::内部不一致;
                 const auto pronoun=名称.获取指代名称关系(*speakerRole->指代名称关系节点);
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+                if(pronoun.状态!=指代名称读取状态::已读取||!pronoun.信息)
+                    观察.记录(L"帮我壳/SPEAKER指代名称owner读取失败（指代名称读取状态）",static_cast<int>(pronoun.状态),0,*speakerRole->指代名称关系节点,true);
+#endif
                 if(pronoun.状态==指代名称读取状态::资源失败)throw 状态类::资源失败;
+                if(pronoun.状态==指代名称读取状态::读取漂移||pronoun.状态==指代名称读取状态::依赖已变化)throw 状态类::读取漂移;
                 if(pronoun.状态!=指代名称读取状态::已读取||!pronoun.信息)throw 状态类::引用不可读;
                 const auto& pp=*pronoun.信息;
                 if(pp.概念.节点!=speakerRole->指代概念节点||pp.概念.定义.规则!=指代声明规则::作用域说话者
@@ -4713,7 +4733,11 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             }else 结果.图角色原文定位组=候选定位.at(解释图语义键(图));
         }
         return 结果;
-    }catch(状态类 状态){结果.状态=状态;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
+    }catch(状态类 状态){
+#ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
+        观察.记录(L"含义图/具名非成功返回（基础语言输入状态）",static_cast<int>(状态),0,{},true);
+#endif
+        结果.状态=状态;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
     catch(const std::bad_alloc&){结果.状态=状态类::资源失败;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
     catch(const std::length_error&){结果.状态=状态类::资源失败;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
 }
