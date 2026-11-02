@@ -5,6 +5,7 @@
     <ClInclude Include="海中鱼巣\领域\本能字段询问.运行接口.h" />
     <ClCompile Include="海中鱼巣\领域\本能字段询问.运行接口.cpp" />
     <ClInclude Include="海中鱼巣\业务\字段询问.语言服务.h" />
+    <ClInclude Include="海中鱼巣\业务\正式表达需求.h" />
     <ClCompile Include="海中鱼巣\业务\字段询问.语言服务.cpp" />
     <ClInclude Include="海中鱼巣\业务\字段询问.本能运行服务.h" />
     <ClCompile Include="海中鱼巣\业务\字段询问.本能运行服务.cpp" />
