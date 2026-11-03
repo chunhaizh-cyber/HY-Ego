@@ -5,12 +5,12 @@
 - 目标编号：`GOAL-SELF-GOVERNANCE-CLOSURE`
 - 名称：自我内部治理闭环实现
 - 类型：集成能力目标
-- 记录版本：v0.31
+- 记录版本：v0.32
 - 创建时间：2026-09-22
 - 更新时间：2026-11-03
-- 当前状态：候选；当前主推进目标的直接上位集成路线，优先推进`GOAL-WEB-LANGUAGE-DEMAND-CLOSURE`，整体闭环未完成
+- 当前状态：候选；当前主推进目标的直接上位集成路线，优先推进`GOAL-DEMAND-TREE-GROWTH`，整体闭环未完成
 - 直接上位目标：`GOAL-INSTINCT-RUNTIME`
-- 直接下位目标：`GOAL-WEB-LANGUAGE-DEMAND-CLOSURE`（当前）；`GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR`、`GOAL-CONNECTION-RECEIVE-STATE`、`GOAL-TASK-LEARNED-METHOD-CONSUMPTION`及`GOAL-SELF-THREAD-CAPABILITIES`（暂停，保留各自完整范围及未完成状态）；其余已完成前置按目标总账终态导航追溯
+- 直接下位目标：`GOAL-DEMAND-TREE-GROWTH`（当前）；`GOAL-WEB-LANGUAGE-DEMAND-CLOSURE`、`GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR`、`GOAL-CONNECTION-RECEIVE-STATE`、`GOAL-TASK-LEARNED-METHOD-CONSUMPTION`及`GOAL-SELF-THREAD-CAPABILITIES`（暂停独立主推进，保留各自完整范围及未完成状态）；其余已完成前置按目标总账终态导航追溯
 - 目标账所有者：交互智能体
 
 ## 1.1 历史优先级裁决（2026-09-26；当前位置见第9节）
@@ -105,6 +105,8 @@ G1—G8现在只表示目标路线，不是已冻结合同、活动目标或可�
 - 未验证、风险、阻断解除与自动触发按新目标第5节和本目标第2节分别核对；新主目标完成也不自动证明本上位完整恢复及所有能力验收通过。
 
 ## 9. 当前阶段刷新（2026-11-03）
+
+- 最新事实截止main/origin/main `9a7ea90f210e62ea75047d47caf29624e14e3ada`，事务`TARGET-20261103-DEMAND-TREE-01`。用户已确认[启动双根需求树生长](GOAL-DEMAND-TREE-GROWTH.md)为当前主推进：从安全/服务根验证缺口筹办、self确认子D入树、manager建/复用T及继续分解，暂不要求完整语言闭环或末端动作全部执行。原语言目标暂停独立主推进、范围保留，其它旧暂停目标不恢复；本上位目标仍候选未完成。新计划待闭合，无生长通过证据，下一动作以新目标为准。以下条目保留为前阶段历史，不再提供当前路由。
 
 - 状态事实截止：main／origin/main `a44c5ca6ff46a0a45ce454d79f630106558820db`；事务`TARGET-20261103-WEB-LANGUAGE-01`。用户确认[真实网页输入、语言缺口交互与需求承接闭环](GOAL-WEB-LANGUAGE-DEMAND-CLOSURE.md)为当前主推进；本上位目标保持候选、未完成，旧服务目标继续暂停。
 - 新目标纳入初始化、真实入站、外设状态／动态、自我接收、语言补全、正式筹办与按需学习、网页输出、回答接续及需求承接；不等于现实倒水或本上位全部恢复／结算／持续运行验收。
