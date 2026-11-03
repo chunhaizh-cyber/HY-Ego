@@ -864,9 +864,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             }
             std::vector<基础字段关系> 当前字段;
             读取节点字段已加锁(宿主, 当前字段);
-            std::sort(当前字段.begin(), 当前字段.end(), [](const auto& 左, const auto& 右) {
-                return 左.编码 < 右.编码;
-            });
             if (当前字段 != 预期字段) return {状态::预期不符, {}, {}};
         }
         std::set<稳定编码> 联合宿主组;

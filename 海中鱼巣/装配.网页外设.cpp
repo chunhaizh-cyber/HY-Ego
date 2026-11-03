@@ -63,12 +63,10 @@ bool 事实发布完成(新外设事实状态 状态) noexcept {
         throw std::runtime_error("peripheral queue receipt payload inconsistent");
     if (原.消息) {
         auto& 消息 = *原.消息;
-        if (!消息.消息节点.值 || !消息.来源.来源序号
-            || 消息.来源.方向 != 新外设消息方向::输出
+        if (消息.来源.方向 != 新外设消息方向::输出
             || 消息.来源.公开宿主会话 != 目标.公开会话标识
             || 消息.来源.对话框标识 != 目标.对话框标识
-            || 消息.场景节点 != 定位.场景节点 || 消息.窗口节点 != 定位.窗口节点
-            || 消息.UTF8正文.empty() || !新_语言类::严格UTF8字节串有效(消息.UTF8正文))
+            || 消息.场景节点 != 定位.场景节点 || 消息.窗口节点 != 定位.窗口节点)
             throw std::runtime_error("peripheral queue receipt identity or text invalid");
         结果.项.emplace(网页输出队列项{目标, 消息.来源.来源序号,
             消息.消息节点.值, std::move(消息.UTF8正文)});

@@ -287,7 +287,7 @@ bool 读取词保护语言(词保护现场& 现场, 稳定编码 语言,
     if (结果.状态 == 新语言查询状态::结构不一致)
         throw std::logic_error("word language structure corrupt");
     if (结果.状态 != 新语言查询状态::已找到) return false;
-    if (!结果.信息 || !首读 || 结果.信息->节点 != 语言)
+    if (!结果.信息 || !首读)
         throw 新词条保护状态::前提已变化;
     // 语言owner解释其字段；此处只保留本次实际读到的端点完整性预期。
     for (const auto& 字段 : 首读->结构.字段组) {

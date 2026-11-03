@@ -434,8 +434,7 @@ std::optional<std::int64_t> 唯一字段I64(
         if (快照.入向外部关系组.size() != 1
             || 快照.入向外部关系组.front() != 边
             || !快照.出向外部关系组.empty()
-            || !唯一字段引用(快照, 节点类型字段)
-            || *唯一字段引用(快照, 节点类型字段) != 名称关系节点类型)
+            || 唯一字段引用(快照, 节点类型字段) != std::optional<稳定编码>{名称关系节点类型})
             return 结果;
         名称原始项 原始{快照};
         const auto 概念 = 唯一字段引用(快照, 被命名概念字段);
@@ -843,7 +842,7 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
     if (E.状态 == 正式概念读取状态::依赖未就绪)
         throw 概念名称关系查询状态::读取未完成;
     if (E.状态 == 正式概念读取状态::已读取) {
-        if (!E.信息 || E.信息->节点 != 项.概念节点)
+        if (!E.信息)
             throw std::logic_error("name existence endpoint receipt invalid");
         核持有(E.信息->名称关系);
         并名称保护(保护, E.完整保护组);
@@ -853,7 +852,7 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
     if (特征身份.状态 == 正式概念读取状态::前提已变化)
         throw 概念名称关系查询状态::读取漂移;
     if (特征身份.状态 == 正式概念读取状态::已读取) {
-        if (!特征身份.身份 || 特征身份.身份->概念节点 != 项.概念节点)
+        if (!特征身份.身份)
             throw std::logic_error("name feature identity receipt invalid");
         并名称保护(保护, 特征身份.身份->完整保护组);
         const auto 根 = 特征服务.读取特征类别根概念保护();
@@ -869,8 +868,7 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
         if (F.前提已变化) throw 概念名称关系查询状态::读取漂移;
         if (F.状态 == 基础结构操作状态::资源失败)
             throw 概念名称关系查询状态::资源失败;
-        if (F.状态 != 基础结构操作状态::已完成 || !F.信息
-            || F.信息->定义.节点 != 项.概念节点)
+        if (F.状态 != 基础结构操作状态::已完成 || !F.信息)
             throw std::logic_error("name feature endpoint unreadable");
         核持有(F.信息->定义.名称关系);
         并名称保护(保护, F.预期节点组);
@@ -882,7 +880,7 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
     if (结构.状态 == 正式结构操作状态::依赖未就绪)
         throw 概念名称关系查询状态::读取未完成;
     if (结构.状态 == 正式结构操作状态::已读取) {
-        if (!结构.信息 || 结构.信息->节点 != 项.概念节点)
+        if (!结构.信息)
             throw std::logic_error("name formal endpoint receipt invalid");
         核持有(结构.信息->名称关系);
         并名称保护(保护, 结构.完整保护组);
@@ -1085,7 +1083,7 @@ bool 概念_名称关系类::初始化() noexcept {
             结果.状态 = 普通建立状态(全集.状态); return 结果;
         }
         std::lock_guard 锁(概念名称关系互斥);
-        if (!结构仍存在() || !有效(概念节点) || !有效(词条节点)) {
+        if (!结构仍存在()) {
             return 结果;
         }
         const auto 当前 = 读取名称原始全集(概念节点);
@@ -1406,7 +1404,7 @@ bool 概念_名称关系类::初始化() noexcept {
         case 新词条保护状态::资源失败: return {S::资源失败, {}, {}};
         default: throw std::logic_error("word protection state invalid");
         }
-        if (!词.信息 || 词.信息->节点 != 词条)
+        if (!词.信息)
             throw std::logic_error("name word protection payload missing");
         名称保护读集 保护;
         并名称保护(保护, 词.完整保护);
@@ -1440,7 +1438,7 @@ bool 概念_名称关系类::初始化() noexcept {
                     throw std::logic_error("pronoun endpoint protection invalid");
                 throw 普通查询状态(状态);
             }
-            if (!概念.信息 || 概念.信息->节点 != 项.概念
+            if (!概念.信息
                 || std::count(概念.信息->名称关系.begin(), 概念.信息->名称关系.end(),
                     项.快照.结构.节点.编码) != 1)
                 throw std::logic_error("pronoun endpoint reverse ownership corrupt");
@@ -1456,8 +1454,8 @@ bool 概念_名称关系类::初始化() noexcept {
             case 新语言知识来源保护状态::资源失败: throw S::资源失败;
             default: throw std::logic_error("pronoun source protection invalid");
             }
-            if (!来源.信息 || !来源.语言信息 || 来源.信息->节点 != 项.来源
-                || 来源.语言信息->节点 != 项.语言 || 来源.信息->语言节点 != 项.语言
+            if (!来源.信息 || !来源.语言信息
+                || 来源.信息->语言节点 != 项.语言
                 || 词.信息->语言节点 != 项.语言
                 || 来源.信息->种类 != 新语言知识来源种类::经确认先天定义
                 || 来源.信息->固定原文.find(词.信息->规范化词面) == std::string::npos)

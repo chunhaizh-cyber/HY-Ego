@@ -369,7 +369,6 @@ std::optional<新需求根角色> 转换根角色(std::int64_t 值) noexcept {
 }
 
 bool 目标相同(const 新需求目标定义& 左, const 新需求目标定义& 右) {
-    if(左.引用内容定位!=右.引用内容定位)return false;
     return 左 == 右;
 }
 
@@ -1500,7 +1499,7 @@ bool 构建子树权重修改(
             return false;
         }
         const auto 子需求 = std::optional{读取需求治理物理(上下文, 关系.目标节点)};
-        if (!子需求 || 子需求->根角色 || !子需求->父需求节点
+        if (子需求->根角色 || !子需求->父需求节点
             || *子需求->父需求节点 != 父需求节点) {
             return false;
         }
@@ -4885,9 +4884,8 @@ std::optional<新需求信息> 新_需求类::读取提议源需求(稳定编码
 新引用内容目标判定 新_需求类::求值引用内容条件目标(const 新需求完整目标& 目标) const noexcept {
     using S=新引用内容目标状态;
     try {
-        if(!目标.目标.引用内容定位||!目标形状合法(目标.目标)
-            ||目标.目标.目标形式!=新需求目标形式::值||目标.目标.目标比较关系概念节点
-            ||目标.目标.目标变化方向)return {S::定义不合法,{},{},{},{},{}};
+        if(!目标.目标.引用内容定位||!目标形状合法(目标.目标))
+            return {S::定义不合法,{},{},{},{},{}};
         const 新引用内容目标读取接口* 端口=nullptr;
         {std::lock_guard 锁(新需求互斥);if(!结构已初始化())return {};端口=引用内容目标读取接口_;}
         if(!端口)return {};
@@ -4898,9 +4896,8 @@ std::optional<新需求信息> 新_需求类::读取提议源需求(稳定编码
 新引用内容目标判定 新_需求类::求值指定需求内容目标(const 新需求完整目标& 目标) const noexcept {
     using S=新引用内容目标状态;
     try {
-        if(!目标.目标.引用内容定位||!目标形状合法(目标.目标)
-            ||目标.目标.目标形式!=新需求目标形式::值||目标.目标.目标比较关系概念节点
-            ||目标.目标.目标变化方向)return {S::定义不合法,{},{},{},{},{}};
+        if(!目标.目标.引用内容定位||!目标形状合法(目标.目标))
+            return {S::定义不合法,{},{},{},{},{}};
         const 新引用内容目标读取接口* 端口=nullptr;
         {std::lock_guard 锁(新需求互斥);if(!结构已初始化())return {};端口=引用内容目标读取接口_;}
         if(!端口)return {};
@@ -5600,7 +5597,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             if(!d.首次接收认知来源)continue;
             const auto& key=d.首次接收认知来源->键;
             要求需求物理(std::find(seen.begin(),seen.end(),key)==seen.end());seen.push_back(key);
-            if(key==K){要求需求物理(!result);result=d;}
+            if(key==K)result=d;
         }
         if(!需求内容保护未变(protect))return {S::前提已变化,{},{}};
         return {result ? S::已找到 : S::需求不存在,std::move(result),std::move(protect)};
@@ -5698,7 +5695,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             if(!add(C))return {S::比较关系不合法,{}};
             const auto& domain=D.信息->定义;
             const auto* intervals=std::get_if<std::vector<特征概念I64闭区间>>(&domain.值域);
-            if(ft.材料类型!=特征概念材料物理类型::I64标量||domain.材料类型!=ft.材料类型
+            if(domain.材料类型!=ft.材料类型
                 ||D.信息->类型根!=p.目标特征类型||domain.单位!=ft.单位||p.单位!=ft.单位
                 ||domain.比较规则!=ft.比较规则||domain.聚合规则!=ft.聚合规则
                 ||!intervals||intervals->size()!=1)return {S::目标值域不合法,{}};

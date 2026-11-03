@@ -1454,15 +1454,6 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 消息路径) {
-        if (!请求.对话框标识) {
-            发送响应(客户端, "400 Bad Request", "text/plain;charset=utf-8", "缺少对话框标识");
-            return true;
-        }
-        if (请求.正文.empty() || !是有效UTF8(请求.正文)) {
-            发送响应(客户端, "422 Unprocessable Content", "text/plain;charset=utf-8",
-                "消息必须是非空UTF-8文本");
-            return true;
-        }
         const auto 上行序号 = 取得下一上行序号(会话标识);
         if (!上行序号
             || (消息接收

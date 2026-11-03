@@ -140,8 +140,9 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         };
         std::map<稳定编码,基础联合节点快照> expected;
         result.完整保护组.insert(result.完整保护组.end(),definition.完整保护组.begin(),definition.完整保护组.end());
-        for(const auto& item:result.完整保护组) {
-            const auto [it,added]=expected.emplace(item.结构.节点.编码,item);
+        for(auto& item:result.完整保护组) {
+            const auto id=item.结构.节点.编码;
+            const auto [it,added]=expected.try_emplace(id,std::move(item));
             if(!added&&!same(it->second,item))return {正式信息参数读取状态::前提已变化,{},{}};
         }
         std::vector<稳定编码> ids;for(const auto& [id,item]:expected)ids.push_back(id);
@@ -153,7 +154,7 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         for(const auto& item:current.节点组)
             if(!item.快照||!same(expected.at(item.快照->结构.节点.编码),*item.快照))
                 return {正式信息参数读取状态::前提已变化,{},{}};
-        result.完整保护组.clear();for(const auto& [id,item]:expected)result.完整保护组.push_back(item);
+        result.完整保护组.clear();for(auto& [id,item]:expected)result.完整保护组.push_back(std::move(item));
         return result;
     } catch(const std::bad_alloc&) {
         return {正式信息参数读取状态::资源失败,{},{}};
@@ -425,7 +426,7 @@ bool 方法参数场景::使用服务要求读取接口(
     稳定编码 参数角色节点) const noexcept {
     using S = 新服务要求确认状态;
     const auto 身份 = 读取绑定服务要求确认身份(参数角色节点);
-    if (身份.状态 != S::已读取 || !身份.确认) return 身份;
+    if (身份.状态 != S::已读取) return 身份;
     const auto 读回 = 服务要求读取_->复核服务要求确认语义(身份.确认->确认节点);
     if ((读回.状态 == S::当前有效 || 读回.状态 == S::需重新确认)
         && (!读回.确认 || *读回.确认 != *身份.确认))

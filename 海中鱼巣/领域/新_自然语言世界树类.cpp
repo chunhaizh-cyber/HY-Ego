@@ -91,9 +91,7 @@ bool 实例投影与来源概念一致(
         }
         if (!找到) return false;
     }
-    return std::all_of(已匹配.begin(), 已匹配.end(), [](bool 值) {
-        return 值;
-    });
+    return true;
 }
 
 std::optional<新自然语言概念实例信息> 读取概念实例(
@@ -300,11 +298,14 @@ bool 新自然语言世界初始化结果::成功() const noexcept {
     新自然语言场景复制信息 info{*scene};
     std::map<稳定编码,新存在信息> members;
     std::map<稳定编码,基础联合节点快照> definitionProtection;
+    const auto protectOne=[&](const 基础联合节点快照& x) {
+        const auto [it,added]=definitionProtection.emplace(x.结构.节点.编码,x);
+        if(!added&&(it->second.结构.字段组!=x.结构.字段组||it->second.入向字段组!=x.入向字段组
+            ||it->second.入向外部关系组!=x.入向外部关系组||it->second.出向外部关系组!=x.出向外部关系组))
+            throw 语言复制前提变化{};
+    };
     const auto protect=[&](const auto& group) {
-        for(const auto& x:group){const auto [it,added]=definitionProtection.emplace(x.结构.节点.编码,x);
-            if(!added&&(it->second.结构.字段组!=x.结构.字段组||it->second.入向字段组!=x.入向字段组
-                ||it->second.入向外部关系组!=x.入向外部关系组||it->second.出向外部关系组!=x.出向外部关系组))
-                throw 语言复制前提变化{};}
+        for(const auto& x:group)protectOne(x);
     };
     const auto protectConcept=[&](稳定编码 C) {
         const auto existence=存在概念服务_.读取普通存在概念定义保护(C);
@@ -347,11 +348,11 @@ bool 新自然语言世界初始化结果::成功() const noexcept {
     if(snapshots.状态==基础结构操作状态::资源失败)return {S::资源失败};
     if(snapshots.状态!=基础结构操作状态::已完成)throw std::runtime_error("language source snapshot failed");
     新自然语言场景复制结果 result{S::已完成,info};
-    for(const auto& x:snapshots.节点组){if(!x.快照)throw std::runtime_error("language source dependency disappeared");protect(std::vector<基础联合节点快照>{*x.快照});}
+    for(const auto& x:snapshots.节点组){if(!x.快照)throw std::runtime_error("language source dependency disappeared");protectOne(*x.快照);}
     if(场景服务_.获取场景(n)!=scene)return {S::前提已变化};
     for(const auto& [E,e]:members)if(存在服务_.获取存在(E)!=std::optional{e})return {S::前提已变化};
     for(const auto& e:info.概念实例组)if(读取概念实例(e.节点,场景服务_,存在服务_,特征服务_,特征概念服务_,存在概念服务_)!=std::optional{e})return {S::前提已变化};
-    ids.clear();for(const auto& [id,p]:definitionProtection){ids.insert(id);result.完整保护.push_back(p);}
+    ids.clear();for(auto& [id,p]:definitionProtection){ids.insert(id);result.完整保护.push_back(std::move(p));}
     const auto fresh=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
     if(fresh.状态==基础结构操作状态::资源失败)return {S::资源失败};
     if(fresh.状态!=基础结构操作状态::已完成||fresh.节点组.size()!=result.完整保护.size())

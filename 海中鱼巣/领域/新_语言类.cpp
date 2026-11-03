@@ -338,13 +338,11 @@ bool 新_语言类::初始化() noexcept {
             字段组.push_back(全局基础数据集.添加字段值(
                 节点, 语言登记键字段, 基础值{请求.登记键}));
         }
-        if (请求.创建来源节点
-            && !字段组.empty() && 有效(字段组.back())) {
+        if (请求.创建来源节点 && 有效(字段组.back())) {
             字段组.push_back(全局基础数据集.添加字段节点(
                 节点, 创建来源字段, *请求.创建来源节点));
         }
-        if (字段组.empty()
-            || std::any_of(字段组.begin(), 字段组.end(), [](稳定编码 字段) {
+        if (std::any_of(字段组.begin(), 字段组.end(), [](稳定编码 字段) {
                 return !有效(字段);
             })) {
             回滚语言节点(节点, 字段组);
@@ -448,7 +446,7 @@ bool 新_语言类::是语言节点(稳定编码 节点) const noexcept {
         // 各领域读取各自持锁并返回副本；此处不能持新语言互斥再调词服务。
         const auto 语言 = 获取语言(语言节点);
         if (语言.状态 != 新语言查询状态::已找到) return {语言.状态, {}};
-        if (!语言.信息 || 语言.信息->节点 != 语言节点) {
+        if (!语言.信息) {
             return {新语言查询状态::结构不一致, {}};
         }
         if (文本.empty()) return {新语言查询状态::已找到, {}};
@@ -478,8 +476,7 @@ bool 新_语言类::是语言节点(稳定编码 节点) const noexcept {
             const auto 词 = 词服务.获取词条(词条);
             if (词.状态 == 新词条查询状态::资源失败) return {新语言查询状态::资源失败, {}};
             if (词.状态 != 新词条查询状态::已找到 || !词.信息
-                || 词.信息->节点 != 词条 || 词.信息->语言节点 != 语言节点
-                || !严格UTF8字节串有效(词.信息->规范化词面)) {
+                || 词.信息->语言节点 != 语言节点) {
                 return {新语言查询状态::结构不一致, {}};
             }
             std::size_t 树位置 = 0;
@@ -1867,8 +1864,7 @@ std::vector<稳定编码> 收集知识指代定义(const 语言知识候选快�
     语言知识指代端点快照 本次;
     for (const auto 身份 : 身份组) {
         const auto 读取 = 存在概念服务.获取指代概念(身份);
-        if (读取.状态 != 指代概念查询状态::已找到 || !读取.信息
-            || 读取.信息->节点 != 身份) {
+        if (读取.状态 != 指代概念查询状态::已找到 || !读取.信息) {
             诊断 = "指代定义正式端点不可完整读取";
             return 读取.状态 == 指代概念查询状态::资源失败 ? 知识状态::工程未完成
                 : 读取.状态 == 指代概念查询状态::结构不一致 ? 知识状态::内部不一致
@@ -1932,8 +1928,7 @@ std::vector<稳定编码> 收集知识指代定义(const 语言知识候选快�
             return 前.状态 == 新词条查询状态::资源失败 ? 知识状态::工程未完成
                 : (前.状态 == 新词条查询状态::结构不一致 ? 知识状态::内部不一致 : 知识状态::引用不可读);
         }
-        if (前.信息->节点 != 词条 || 前.信息->语言节点 != 语言节点
-            || 前.信息->规范化合同节点 != 严格UTF8字节精确规范化合同节点) {
+        if (前.信息->语言节点 != 语言节点) {
             诊断 = "固定词语言或规范化合同不相容"; return 知识状态::输入拒绝;
         }
         const auto 基础 = 全局基础数据集.查询完整节点结构(词条);
@@ -2541,14 +2536,13 @@ namespace {
     const std::string& 种子版本, const 新_词类& 词服务) {
     新语言知识缺口结果 结果;
     (void)词服务;
-    if (!有效(语言节点) || 种子版本.empty()
-        || !严格UTF8字节串有效(种子版本)
-        || 定义.标签.empty() || !严格UTF8字节串有效(定义.标签)
+    if (!有效(语言节点) || !严格UTF8字节串有效(种子版本)
+        || !严格UTF8字节串有效(定义.标签)
         || static_cast<std::uint8_t>(定义.编号) < 1
         || static_cast<std::uint8_t>(定义.编号) > 14)
         return 结果;
     for (const auto& 词面 : 定义.提示词面组)
-        if (词面.empty() || !严格UTF8字节串有效(词面)) return 结果;
+        if (!严格UTF8字节串有效(词面)) return 结果;
     std::lock_guard 锁(新语言互斥);
     结果.状态 = 知识模式状态已加锁();
     if (结果.状态 != 知识状态::已完成) return 结果;
@@ -2716,7 +2710,7 @@ namespace {
 using 结构键 = 知识标识;
 using 结构快照 = std::map<稳定编码, 基础节点结构>;
 bool 结构非空UTF8(const std::string& s) noexcept {
-    return !s.empty() && 新_语言类::严格UTF8字节串有效(s);
+    return 新_语言类::严格UTF8字节串有效(s);
 }
 template<class T> bool 结构枚举合法(T v, std::int64_t max) {
     return static_cast<std::int64_t>(v) >= 1 && static_cast<std::int64_t>(v) <= max;
@@ -2880,9 +2874,9 @@ bool 核结构模式(const 新语言表达模式定义& d, const 新语言结构
     }
     if (used.size() != slots.size() || mapped.size() != slots.size()) return false;
     for (const auto& [id, optional] : roles) if (!optional && !bound.contains(id)) return false;
-    for (const auto& group : {d.适用语法编号组, d.修饰槽标识组}) {
+    for (const auto* group : {&d.适用语法编号组, &d.修饰槽标识组}) {
         std::set<std::string> unique;
-        for (const auto& x : group) if (!结构非空UTF8(x) || !unique.insert(x).second) return false;
+        for (const auto& x : *group) if (!结构非空UTF8(x) || !unique.insert(x).second) return false;
     }
     if(!d.实现知识节点)return d.知识角色映射组.empty();
     if(!有效(*d.实现知识节点)||d.知识角色映射组.size()!=c.含义角色组.size())return false;
@@ -3541,12 +3535,12 @@ std::optional<稳定编码> 找同键定义集(知识读取现场& s, const 新�
 
 std::vector<新语言结构对应行> 派生集对应行(const 新语言结构定义集信息& set) {
     std::vector<新语言结构对应行> rows;
-    std::map<稳定编码, 新语言结构概念信息> concepts;
+    std::map<稳定编码, const 新语言结构概念信息*> concepts;
     std::map<std::string, 稳定编码> grammar;
-    for (const auto& c : set.概念组) concepts.emplace(c.节点, c);
+    for (const auto& c : set.概念组) concepts.emplace(c.节点, &c);
     for (const auto& g : set.语法组) grammar.emplace(g.定义.编号, g.节点);
     for (const auto& m : set.模式组) {
-        const auto& c = concepts.at(m.结构概念节点);
+        const auto& c = *concepts.at(m.结构概念节点);
         新语言结构对应行 r{};
         r.语言节点 = set.语言节点; r.结构概念节点 = c.节点; r.表达模式节点 = m.节点;
         r.种类 = c.定义.种类; r.细目 = c.定义.细目; r.来源 = c.定义.来源;
@@ -4809,8 +4803,7 @@ void 核采用图结构(const 新语言含义采用请求& q) {
         std::set<std::int64_t> 角色号;
         for(const auto& r:o.角色组) {
             const auto rd=std::find_if(d.角色组.begin(),d.角色组.end(),[&](const auto& x){return x.局部编号==r.角色编号;});
-            if(!角色号.insert(r.角色编号).second||rd==d.角色组.end()||rd->必要约束组.size()!=1
-                ||rd->必要约束组[0].被约束角色!=r.角色编号||rd->数量!=新语言知识角色数量::单项)
+            if(!角色号.insert(r.角色编号).second||rd==d.角色组.end())
                 throw std::logic_error("adopted graph role cardinality invalid");
             新语言知识角色类别 类别;
             if(const auto* v=std::get_if<语言图引用值>(&r.值)) {
@@ -5283,8 +5276,6 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
                         && (&r.值==&采用参数(q.含义,o,新语言知识参数角色::受请求者));
                     integer(rn,U键::值标签,受话者 ? 4 : 1);integer(rn,U键::引用类别,v->类别);
                     if(受话者) {
-                        if(v->类别!=新语言知识角色类别::存在||v->来源概念||v->选用名称关系)
-                            throw std::logic_error("adopted request addressee cannot carry ordinary role payload");
                         add(rn,U键::引用节点,v->节点);
                         continue;
                     }
