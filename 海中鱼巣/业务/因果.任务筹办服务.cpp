@@ -68,7 +68,8 @@ std::vector<稳定编码> 规范成员(std::vector<稳定编码> 成员) {
     return 成员;
 }
 std::int64_t 新增成员数(const std::vector<稳定编码>& 后, const std::vector<稳定编码>& 前) {
-    const auto a = 规范成员(后), b = 规范成员(前);
+    const auto& a = 后;
+    const auto& b = 前;
     std::size_t j = 0;
     std::int64_t 数量 = 0;
     for (const auto n : a) {
@@ -577,6 +578,10 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
         const bool 多候选=候选.size()>1;
         // 多义仍保留每个独立候选的整组OR，不在多个候选里择第一个。
         if(候选.empty())候选.push_back(nullptr);
+        auto 投影分支组=派生.关系分支组;
+        std::sort(投影分支组.begin(),投影分支组.end(),[](const auto& 左,const auto& 右){
+            return 左.正式定义.唯一结果.变化<右.正式定义.唯一结果.变化;
+        });
         for(const auto* 材料:候选) {
             const auto D=材料 ? std::optional{材料->D} : 固定D;
             const auto Ds=材料&&材料->同源自我需求 ? std::optional{材料->同源自我需求->节点} : std::nullopt;
@@ -676,10 +681,6 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
                     回.当前直接结果依据组.insert(回.当前直接结果依据组.end(),项.正式依据节点组.begin(),项.正式依据节点组.end());
                 return 回;
             };
-            auto 投影分支组=派生.关系分支组;
-            std::sort(投影分支组.begin(),投影分支组.end(),[](const auto& 左,const auto& 右){
-                return 左.正式定义.唯一结果.变化<右.正式定义.唯一结果.变化;
-            });
             for(const auto 自我分支:{新来源前驱发生分支::新建,新来源前驱发生分支::复用})
             for(const auto 管理分支:{新来源前驱发生分支::新建,新来源前驱发生分支::复用})
             for(const auto& 原投影:投影分支组) {

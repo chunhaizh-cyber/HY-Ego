@@ -110,6 +110,8 @@ class 反向查询工作 final
     }
     const 动态概念信息 &读取DC(稳定编码 节点)
     {
+        if (const auto 位置 = 动态概念缓存_.find(节点); 位置 != 动态概念缓存_.end())
+            return 位置->second;
         const auto &概念 = 缓存读取(
             节点, 动态概念缓存_, [&](稳定编码 编码) { return 动态概念_.获取动态概念(编码); },
             "动态概念不可读");

@@ -122,7 +122,7 @@ void 规范引用组(std::vector<新模拟业务待展开引用>& edges) {
         return {S::来源已变化,{},"demand source changed during capture"};
     if(g->节点!=D||d.has_value()!=g->完整目标.has_value()
         ||(d&&(d->节点!=D||d->需求主体存在节点!=g->需求主体存在节点
-        ||!g->完整目标||d->目标存在节点!=g->完整目标->目标存在节点||d->目标!=g->完整目标->目标)))
+        ||d->目标存在节点!=g->完整目标->目标存在节点||d->目标!=g->完整目标->目标)))
         throw std::logic_error("demand source owner projections disagree");
     if(g->完整目标 && g->完整目标->目标.新增成员来源见证)
         return {S::尚缺依赖提供者,{},"新增成员来源见证目标的隔离模拟来源尚缺依赖提供者",{}};

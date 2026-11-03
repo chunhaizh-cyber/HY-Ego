@@ -39,7 +39,7 @@ void 核验动作子目录(const std::vector<动作概念定义>& 全部,
 void 合并动作子目录(
     std::atomic<std::shared_ptr<const std::vector<动作概念定义>>>& 目录,
     const std::vector<动作概念定义>& 新项) {
-    核验动作子目录(新项,新项);
+    核验动作子目录(新项,{});
     auto 已有=目录.load(std::memory_order_acquire);
     for (;;) {
         std::vector<动作概念定义> 候选=已有 ? *已有 : std::vector<动作概念定义>{};
@@ -53,7 +53,6 @@ void 合并动作子目录(
             else if (*项!=定义)
                 throw std::logic_error("关系先天初始化：不可变动作目录同身份异义");
         }
-        核验动作子目录(候选,新项);
         if (!已改变) return;
         auto 新目录=std::make_shared<const std::vector<动作概念定义>>(std::move(候选));
         if (目录.compare_exchange_weak(已有,新目录,

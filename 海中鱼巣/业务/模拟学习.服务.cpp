@@ -389,8 +389,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         };
         return visit(child);
     };
-    // 参数各自的概念范围决定取样点；合并后的范围只负责合法性约束。
-    auto 原始参数定义 = defs;
     // 同一F的参数限定和存在原型均取正式值域交集，不丢弃任一限定。
     const auto 收窄特征范围 = [&](std::size_t k,const 新特征匹配定义快照& d) {
         if(defs[k]->特征类型根!=d.特征类型根||defs[k]->材料类型!=d.材料类型
@@ -461,7 +459,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             收窄特征范围(i,d);
         }
     }
-    原始参数定义=defs;
+    // 参数各自的概念范围决定取样点；合并后的范围只负责合法性约束。
+    auto 原始参数定义=defs;
     std::vector<std::size_t> 代表(N);
     for(std::size_t i=0;i<N;++i)代表[i]=i;
     const auto 根=[&](std::size_t i){while(代表[i]!=i)i=代表[i];return i;};
@@ -507,9 +506,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     // 正式分类没有实例轮廓时，所有合法下位专属原型逐个求值；不任选首项。
     for (const auto& [位置,范围]:初始存在条件) {
         const auto i=代表[位置];
-        const auto C=std::optional{采集归属根(有效存在概念(i)).概念};
-        if (!C) throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"prototype concept unreadable");
-        if (C->对应存在节点) continue;
+        const auto& C=采集归属根(有效存在概念(i)).概念;
+        if (C.对应存在节点) continue;
         const auto 选择=原型选择.find(static_cast<std::uint32_t>(i+1));
         if (选择==原型选择.end()) {
             const auto 原型=方法_.读取模拟存在原型候选(有效存在概念(i));
@@ -533,10 +531,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     // 专属概念明确指向同一来源时是身份别名，不按普通同概念归并。
     std::map<稳定编码,std::size_t> 专属来源代表;
     for(std::size_t i=0;i<N;++i)if(是普通存在(i)) {
-        const auto ec=std::optional{采集归属根(有效存在概念(i)).概念};
-        if(!ec)throw std::runtime_error("selected existence concept unavailable");
-        if(!ec->对应存在节点)continue;
-        const auto [it,added]=专属来源代表.emplace(*ec->对应存在节点,根(i));
+        const auto& ec=采集归属根(有效存在概念(i)).概念;
+        if(!ec.对应存在节点)continue;
+        const auto [it,added]=专属来源代表.emplace(*ec.对应存在节点,根(i));
         if(!added) {const auto a=根(i),b=根(it->second);代表[(std::max)(a,b)]=(std::min)(a,b);}
     }
     for(std::size_t i=0;i<N;++i) {
@@ -629,11 +626,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
         if(!是普通存在(i))continue;
         const auto owner=static_cast<std::uint32_t>((i<N ? 代表[i] : i)+1);
-        const auto ec=std::optional{采集归属根(有效存在概念(i)).概念};
-        if(!ec)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
-            "existence range unavailable: position=" + std::to_string(i + 1)
-            + " concept=" + std::to_string(base[i].规格.范围概念节点.值));
-        for(const auto& required:ec->特征组) {
+        const auto& ec=采集归属根(有效存在概念(i)).概念;
+        for(const auto& required:ec.特征组) {
             const auto d=方法_.读取模拟特征范围(required.具体特征概念);
             if(!d)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
                 "existence required feature range unavailable: concept=" + std::to_string(required.具体特征概念.值));
@@ -644,10 +638,10 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 base.push_back({{0,新方法参数信息类型::特征,required.具体特征概念},owner});
                 defs.push_back(d);
                 // 正式专属原型的非参数上下文沿当前实际材料固定，不额外扩成数值试验轴。
-                if(ec->对应存在节点) {
-                    const auto E=方法_.读取模拟来源存在(*ec->对应存在节点);
+                if(ec.对应存在节点) {
+                    const auto E=方法_.读取模拟来源存在(*ec.对应存在节点);
                     if(!E) throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype source unreadable");
-                    const auto [旧E,新增E]=原型存在快照.emplace(*ec->对应存在节点,*E);
+                    const auto [旧E,新增E]=原型存在快照.emplace(*ec.对应存在节点,*E);
                     if(!新增E&&旧E->second!=*E)
                         throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype existence changed during capture");
                     for(const auto F:E->特征节点组) {
@@ -740,7 +734,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     std::set<稳定编码> 首批需求;
     std::map<std::size_t,std::vector<std::uint32_t>> 需求候选序号;
     // 正式任务/需求成员先交各自owner读取；可读值投影不冒充可执行本地图。
-    std::string 业务缺口;
     std::map<稳定编码,新模拟任务来源投影> 任务来源;
     std::vector<新模拟任务治理输入> 任务治理组;
     struct 来源采集已漂移 final {};
@@ -749,7 +742,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         HY_SIM_PROGRESS(L"开始采集业务来源",原型数量);
         任务来源.clear();
         任务治理组.clear();
-        业务缺口.clear();
         try
         {
             for (std::size_t i = 0; i < 原型数量; ++i)
@@ -808,8 +800,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                         }
                     }
                 }
-            if (!业务缺口.empty())
-                throw 新学习运行异常(m.节点, 新学习运行异常原因::规格未支持, std::move(业务缺口));
             for (const auto &[T, source] : 任务来源)
             {
                 停止();
@@ -851,9 +841,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             throw 新学习运行异常(m.节点, 新学习运行异常原因::结构不一致, "copy source existence unavailable");
         auto pos=base.size();
         for(std::size_t i=0;i<base.size();++i)if(是普通存在(i)&&(i>=N||代表[i]==i)) {
-            const auto ec=std::optional{采集归属根(有效存在概念(i)).概念};
-            if(!ec)throw std::runtime_error("selected prototype concept unavailable");
-            if(ec->对应存在节点&&*ec->对应存在节点==E) {
+            const auto& ec=采集归属根(有效存在概念(i)).概念;
+            if(ec.对应存在节点&&*ec.对应存在节点==E) {
                 if(pos!=base.size())不支持(0,"one source has multiple unmerged dedicated private prototypes");
                 pos=i;
             }
@@ -1011,13 +1000,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(full->实例区间值)copied.实例区间=转域(*full->实例区间值,shape->定义);
         if(full->实例历史聚合值域)copied.历史聚合=转域(*full->实例历史聚合值域,shape->定义);
         for(const auto& v:full->历史不同值)copied.历史不同值.push_back(转准确(v,shape->定义));
-        for(std::size_t i=0;i<full->历史不同值.size();++i)for(std::size_t j=0;j<i;++j)
-            if(full->历史不同值[i]==full->历史不同值[j])throw std::runtime_error("copied feature historical values contain duplicates");
-        std::vector<新特征准确值> hitValues;
         for(const auto& hit:full->历史值命中信息) {
-            if(hit.命中次数<0||std::find(full->历史不同值.begin(),full->历史不同值.end(),hit.值)==full->历史不同值.end())
-                throw std::runtime_error("copied history hit is not a valid historical value");
-            if(std::find(hitValues.begin(),hitValues.end(),hit.值)!=hitValues.end())throw std::runtime_error("duplicate copied history hit");hitValues.push_back(hit.值);
             copied.历史值命中信息.push_back({转准确(hit.值,shape->定义),hit.命中次数});
         }
         auto pos=existing.value_or(base.size());
