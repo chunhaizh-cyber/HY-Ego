@@ -269,10 +269,10 @@ std::optional<std::vector<std::vector<std::uint64_t>>> 生成压缩层(
     std::vector<std::vector<std::uint64_t>> 层;
     if (类型 == 材料物理类型::二维二值格) {
         for (std::size_t 目标边长 = *边长;; 目标边长 /= 2) {
-            const auto 当前层 = 从原图生成二维面积层(
+            auto 当前层 = 从原图生成二维面积层(
                 *原始材料, *边长, 目标边长);
             if (!当前层) return std::nullopt;
-            层.push_back(*当前层);
+            层.push_back(std::move(*当前层));
             if (目标边长 == 8) break;
         }
         return 层;
@@ -353,7 +353,7 @@ public:
         材料物理类型 类型, const 新特征值材料& 材料) noexcept {
         try {
             std::scoped_lock 锁(互斥_);
-            if (!已初始化_ || !是已知物理类型(类型) || !材料形态匹配(类型, 材料)) {
+            if (!已初始化_ || !材料形态匹配(类型, 材料)) {
                 return {};
             }
             const auto 层 = 生成压缩层(类型, 材料);
@@ -381,7 +381,7 @@ public:
         材料物理类型 类型, const 新特征值材料& 材料) const noexcept {
         try {
             std::scoped_lock 锁(互斥_);
-            if (!已初始化_ || !是已知物理类型(类型) || !材料形态匹配(类型, 材料)) {
+            if (!已初始化_ || !材料形态匹配(类型, 材料)) {
                 return {};
             }
             const auto 层 = 生成压缩层(类型, 材料);
@@ -433,7 +433,7 @@ private:
         }
 
         const auto 类型字段 = 读取唯一值字段(数据集_, 节点, 材料物理类型字段_);
-        const auto 材料字段 = 读取唯一值字段(数据集_, 节点, 原始材料字段_);
+        auto 材料字段 = 读取唯一值字段(数据集_, 节点, 原始材料字段_);
         if (!类型字段 || !材料字段) return std::nullopt;
         const auto* 类型值 = std::get_if<std::int64_t>(&类型字段->材料);
         if (!类型值) return std::nullopt;
@@ -442,14 +442,14 @@ private:
         if (!是已知物理类型(类型)) return std::nullopt;
 
         新特征值材料 材料;
-        if (const auto* U64值 =
+        if (auto* U64值 =
             std::get_if<std::vector<std::uint64_t>>(&材料字段->材料)) {
-            材料 = *U64值;
-        } else if (const auto* I64值 =
+            材料 = std::move(*U64值);
+        } else if (auto* I64值 =
             std::get_if<std::vector<std::int64_t>>(&材料字段->材料)) {
-            材料 = *I64值;
-        } else if (const auto* 字符串值 = std::get_if<std::string>(&材料字段->材料)) {
-            材料 = *字符串值;
+            材料 = std::move(*I64值);
+        } else if (auto* 字符串值 = std::get_if<std::string>(&材料字段->材料)) {
+            材料 = std::move(*字符串值);
         } else {
             return std::nullopt;
         }
