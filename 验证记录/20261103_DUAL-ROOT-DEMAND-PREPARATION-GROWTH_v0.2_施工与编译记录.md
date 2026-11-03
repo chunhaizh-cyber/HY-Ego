@@ -234,3 +234,51 @@ root及独审分别读取最终cpp`497dd9920f184d969784dad49e08a01a805e74dc`完�
 开始`2026-11-04T02:37:31.3150509+08:00`，结束`2026-11-04T02:38:26.5642381+08:00`；本owner及时消费原exec session66250最终回执，真实exit为`0`。实际项目成功生成，`0`警告、`0`错误，MSBuild用时`00:00:54.79`。本次实际只重编`模拟学习.服务.cpp`并LTCG/链接（不是对以后依赖重编范围的承诺）；既有组件过大改非增量LTCG提示不作为业务/配置根因。本轮无失败构建，build-v09.log及全部旧日志分别保留，不清obj或复制工程。
 
 最终exe完整路径`D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/海中鱼巣.exe`，SHA256为`758F0B641391207D54BB7EE1C4DA6284ACAEAE4D7CDAA42AAB4EFC6FE3D1F3CD`。编译后cpp及原h、两特征、四观测、因果blob与第10节输入逐一核同；源码未变，最终差异检查和index差异检查通过，仅该cpp和本原记录dirty，index空。无MSBuild/cl/link/应用进程，代码/原记录及同Release输出资源全部交回root负责精确发布与正常入口复验。本owner未运行应用/浏览器/测试，三入口×六槽/载荷/各错误分支全部运行`NOT_RUN`；结论仅为“同次诊断已实现并编译链接”，不证明typed集合映射修复、正式配对发表或上位目标完成。
+
+## 11. v0.10 完整任务集合隔离复制及窄匹配施工
+
+原代码owner `root/language_source_code` 继续独占本计划三生产文件及本原记录；root独占Git/index/main、目标及真实运行。工作树为`D:/worktree/demand-tree-growth-20261103/海中鱼巣`，分支`codex/dual-root-demand-preparation-growth-20261103`，从clean的生产基线`f05d7fc533e4065e3741e7930a719f77114e3e36`普通ff-only到仅文档前进的`f15be069e5944f7f341c7f02da03c0c7e1deb370`；计划v0.10 blob`5ef38a097305a9b9fe4a0e1771ea726ef4f4eb48`、详设v0.10 blob`dcec0bae2b9f33aed36c3179f652fc02ee8d1172`及索引可执行行已核。三生产起点分别为`f7b1084680f53ea855110ad6691dc5c730fdca78`、`497dd9920f184d969784dad49e08a01a805e74dc`、`eb4a418f62e2587046e9d067aee6d66fe88365ef`。恢复时已重读执行skill、发布/工作树/知识规则及知识三入口、现§17/§19和直接源码调用；用途卡无相关函数命中。index空、三WIP均属于本切片，无MSBuild/cl/link/应用占用，不读取或搬入其它树语言WIP。
+
+调用期复制枚举末尾追加任务集合7，原1—6及variant不改。学习函数以唯一局部加任务入口采集原T/Vt/治理投影，按首次出现保持一基槽；早期有限候选与完整current/std、两个有限域及两历史共用同表，末次全部T/Vt/治理值核同后才按槽冻结治理组。原D图裁剪只处理D槽，不重编号task槽。来源变化整批重采，停止/资源/工程仍原分账；没有新任务manager或现实写入，也不声称来源reader已提供完整原子保护。
+
+模拟世界按typed槽映射既有本地T，完整集合材料只存local T。成功返回前逐一读回全部复制F（不只正式参数）各任务值槽，反查来源集合并核别名、成员及历史命中次数。存在概念匹配仅本函数内适配任务集合身份比较：保留实际F/V和完整actual组、两阶段约束、所有required先验身份/重复检查、正式full/finite限制及同时实例域。合法finite候选缺本次来源依据时整体窄比较材料不足，保留该required，不扩冻结图、不丢成员或误判损坏；所有候选均核完，三态仍不符合优先。原隐藏任务内容读取阻断保留，只有C已声明的存在匹配读取由局部RAII暂关并在异常时恢复。
+
+停止机械解释沿root裁决：`核验绑定存在概念`在取得外层`s.互斥`之前调原`已请求停止()`；为真仅短路让本能返回。原学习收口在形成任何C/R之前先检查`读取已关闭调用证据().已请求取消`并抛原`新学习运行异常::停止取消`，因此不把该短路发表为材料不足业务结果或条件结果对。不在已持递归锁的逐成员/候选循环调用停止协作回调，避免内部unlock仍持外层锁执行回调；单getter保持原一次调用粒度，不新增停止ABI、异常种类或有界退出承诺。
+
+静态矩阵已对照三入口×六槽、晚发现T/历史旧T/同源槽复用、末次核同、task与D槽隔离、全部local材料及反查、正式/实例full及finite、未采候选不足、两阶段required/actual重复与三态合并、原消息和任务谓词域拒绝及隐藏依赖门。均为静态检查，运行全部`NOT_RUN`。`git diff --check`和`git diff --cached --check`通过，尚未启动本轮构建；源码初次冻结如下，交root及独审复核后才成组构建：
+
+| 文件 | v0.10初次冻结blob |
+| --- | --- |
+| 海中鱼巣/领域/模拟需求.数据.h | `ffae2c0e15bb4721dda41d66344df40cf9b57f59` |
+| 海中鱼巣/业务/模拟学习.服务.cpp | `d45931080d77f867c5d94c59d8780e3c85608100` |
+| 海中鱼巣/领域/新_模拟世界类.cpp | `a437117fae04a0b559d81e4db3f986ba6040d05a` |
+
+原模拟h、两特征、四观测、因果等范围外生产保持已发布输入。枚举追加不是持久格式/真实任务类别或业务结果扩展；本切片不复制T的D/候选/X/结算内容，不改变本能效果，不证明正式配对发表、末端执行或上位目标完成。
+
+### 11.1 本轮代码知识变更清单
+
+| 完整函数身份及可见性 | 用途、边与合同变化 |
+| --- | --- |
+| `void 海中鱼巣::模拟学习服务::学习有序本能(const 新方法信息&,const std::function<bool()>&,const std::map<std::uint32_t,稳定编码>&,std::optional<稳定编码>,bool,std::optional<std::uint32_t>)`；业务cpp private | 新局部加任务复用原来源reader，完整六值槽扩typed task，末次值核同后冻结治理组；同源T唯一槽、来源变化整批重采。原签名/异常/调用执行/发表责任不变，无现实写。 |
+| `新模拟世界建立结果 海中鱼巣::新_模拟世界类::建立有序样例(稳定编码,const std::vector<新模拟有序参数输入>&,const std::vector<新模拟输入事件>&,const std::vector<新模拟任务治理输入>&,const std::vector<新模拟场景事实输入>&,std::optional<稳定编码>,const std::optional<新模拟消息方案输入>&,const 新模拟需求输入图&,const std::optional<新模拟执行主体输入>&)`；领域cpp public | 复制准确case扩task槽到既有本地T；新增本函数局部读回，组合原读取模拟特征/材料/任务来源，成功前核全部复制F。原发布/释放/工程边界保持，无新公开getter或现实反写。 |
+| `新存在概念匹配状态 海中鱼巣::新_模拟世界类::核验绑定存在概念(稳定编码,稳定编码)`；领域cpp public | 入口锁前复用原停止getter，局部RAII恢复监控，纯typed归一与full/finite比较；原完整actual及两阶段matcher调用保持，未知域/缺来源为不足而非假匹配，坏结构原工程传播。无T内容/manager读取或事实写。 |
+
+无新增/退出成员函数，新增lambda只在对应调用期使用。依据为原计划§17、详设§19及5370/5350/1130/7160；函数用途卡待最终代码发布后由知识维护owner复核，本owner不写共享索引。结果提交待root，实际编译证据随后追加；当前不以静态实现冒运行结果。
+
+### 11.2 v0.10首轮实际工程构建及命名修正
+
+root全文及独审分别核初次三blob，无剩余具名P1/P2后授权成组构建。输入HEAD为第11节`f15be069e5944f7f341c7f02da03c0c7e1deb370`及三源码WIP；原记录不参与编译，构建中三源冻结，模拟h/两特征/四观测/因果等八个保留blob逐一核同。实际命令沿原工程Release/x64和原同owner bin/obj，未清缓存或复制项目：
+
+```powershell
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' './海中鱼巣.vcxproj' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2 /nologo /v:minimal /fl '/p:OutDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/obj/' '/flp:logfile=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/build-v10.log;verbosity=normal;encoding=UTF-8'
+```
+
+首轮于`2026-11-04T03:17:51.5598135+08:00`开始，`2026-11-04T03:21:18.9320435+08:00`结束，本owner消费原exec session55414最终回执，真实exit为`0`；成功生成，`0`警告、`0`错误，MSBuild耗时`00:03:26.92`。首轮原三blob仍等于第11节表。既有LTCG组件过大改为非增量提示不属于警告/错误，不据此推断运行性能。首轮exe位于原bin/海中鱼巣.exe，SHA256为`D5C6709FB5407ABCCAE99F3B52CB391ABA1371B98A140556E582E12923A5AECF`，build-v10.log保留；未运行该产物。
+
+构建期间root指出CODE-FILE-01§9.2的新增局部业务变量应为中文。本owner保持首轮自然结束后，仅改本轮新增lambda/局部变量/局部状态别名的词法名称，不改条件/类型/调用顺序/异常文本/ABI或旧代码其余命名。命名轮输入h保持`ffae2c0e15bb4721dda41d66344df40cf9b57f59`，学习cpp变为`14356e386a61ea220d7abca3853e36c9d0f33f62`，模拟cpp变为`b3002db2321ed34db0e876b33b3e4fbbd368fba2`；git差异/index差异检查通过。首轮hash-object未写Git对象，因此尝试直接diff初次源码blob得到bad object；这是静态追溯命令失败，不是构建失败或源码损坏，已交root按两轮实际diff核词法变化。命名轮复编待root快速复核后追加，用独立build-v10-naming.log，不覆盖首轮日志；所有运行矩阵仍NOT_RUN，不把首轮编译等同最终命名输入编译完成。
+
+root逐段对照首轮和命名轮差异，确认仅局部命名替换，原分支/表达式/集合/异常文本/调用边不变后授权复编。实际项目及全部MSBuild参数同上，唯一改动是日志名为`build-v10-naming.log`，沿原bin/obj增量重编`模拟学习.服务.cpp`和`新_模拟世界类.cpp`并完成LTCG/链接；首轮头依赖实际重编36个cpp，具体列表保留在build-v10.log，不把36个编译输入写成36个源码改动。命名轮于`2026-11-04T03:24:32.6819534+08:00`开始，`2026-11-04T03:25:48.7100883+08:00`结束；本owner消费原exec session48901最终回执，真实exit为`0`，`0`警告、`0`错误，MSBuild用时`00:01:15.50`。两轮日志全部保留，无失败构建，未清obj或复制工程。
+
+最终exe完整路径`D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/海中鱼巣.exe`，SHA256为`3E5871CD04C00E35ACEA4CA77574996C18636CF05B4346F4A9F90C4361EFBF58`。最终三blob与本节命名轮输入一致；模拟h`2f4fcbd50bbdbdff244fadec912368e1f4d14588`、两特征`18ba9c9ded29e72eb3d114db3b97716a73f04aea/ce4ed187449168e3161806d817969c4d6a4c538f`及第8.2节四观测/因果全部逐一核同。构建中未写源码，最终只有本三生产及原记录dirty，index空，diff/index检查通过；无MSBuild/cl/link/应用进程。
+
+三源码、原记录和原Release bin/obj全部交回root负责最终审核及唯一Git发布/真实入口运行，本owner停止写入。不运行应用/浏览器/测试，不提交或推送；所有新增复制/finite/取消/源变动/隐藏依赖矩阵均为运行`NOT_RUN`。结论仅为“v0.10隔离任务集合映射和窄匹配已实现并编译链接”，不证明原阻断已实际消失、正式条件结果对已发表、末端执行或双根上位目标完成。共享知识更新仍按第11.1节交已发布代码维护owner。

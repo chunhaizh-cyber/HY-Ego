@@ -109,7 +109,7 @@ template<class T> struct 新模拟需求来源结果 final {
     std::vector<基础联合节点快照> 完整保护;
 };
 struct 新模拟需求构造依据 final { 稳定编码 人类概念; };
-enum class 新模拟复制值种类 : std::uint8_t { I64=1, 普通材料, 存在引用, 需求引用, 存在集合, 需求集合 };
+enum class 新模拟复制值种类 : std::uint8_t { I64=1, 普通材料, 存在引用, 需求引用, 存在集合, 需求集合, 任务集合=7 };
 struct 新模拟复制准确值 final {
     新模拟复制值种类 种类;
     std::variant<std::int64_t,新特征值信息,std::uint32_t,std::vector<std::uint32_t>> 内容;

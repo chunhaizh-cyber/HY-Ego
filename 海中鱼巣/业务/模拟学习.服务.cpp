@@ -735,12 +735,34 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     std::map<std::size_t,std::vector<std::uint32_t>> 需求候选序号;
     // 正式任务/需求成员先交各自owner读取；可读值投影不冒充可执行本地图。
     std::map<稳定编码,新模拟任务来源投影> 任务来源;
+    std::map<稳定编码,std::uint32_t> 任务位置;
+    std::vector<稳定编码> 任务顺序;
     std::vector<新模拟任务治理输入> 任务治理组;
+    const auto 加任务=[&](稳定编码 任务)->std::uint32_t {
+        停止();
+        if(!有效(任务))throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed task source identity is empty");
+        if(const auto 已有位置=任务位置.find(任务);已有位置!=任务位置.end())return 已有位置->second;
+        const auto 读取=业务来源_.读取任务来源(任务);
+        if(读取.状态==新模拟业务来源状态::来源已变化)throw 模拟输入采集漂移{};
+        if(读取.状态!=新模拟业务来源状态::已读取||!读取.信息)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed task source unavailable: "+读取.诊断);
+        const auto& 来源=*读取.信息;
+        if(来源.任务.节点!=任务||来源.虚拟存在.任务节点!=任务
+            ||!有效(来源.虚拟存在.节点)||来源.任务.任务虚拟存在节点!=来源.虚拟存在.节点
+            ||来源.治理特征.引用!=新任务虚拟存在引用{任务,来源.虚拟存在.节点,来源.虚拟存在.任务状态特征节点}
+            ||!有效(来源.治理特征.状态.特征节点)||来源.治理特征.状态.特征节点!=来源.虚拟存在.任务状态特征节点)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed task source projections disagree");
+        if(任务顺序.size()>=(std::numeric_limits<std::uint32_t>::max)())
+            throw 新学习运行异常(m.节点,新学习运行异常原因::资源不足,"typed task position exceeds uint32");
+        const auto 位置=static_cast<std::uint32_t>(任务顺序.size()+1);
+        任务来源.emplace(任务,来源);任务位置.emplace(任务,位置);任务顺序.push_back(任务);return 位置;
+    };
     struct 来源采集已漂移 final {};
     for (;;) {
         停止();
         HY_SIM_PROGRESS(L"开始采集业务来源",原型数量);
         任务来源.clear();
+        任务位置.clear();任务顺序.clear();
         任务治理组.clear();
         try
         {
@@ -783,37 +805,13 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                             };
                             if (defs[i]->比较规则 == 特征概念比较规则::服务任务集合身份判等)
                             {
-                                const auto read = 业务来源_.读取任务来源(稳定编码{n});
-                                if (read.状态 == 新模拟业务来源状态::来源已变化)
-                                    throw 来源采集已漂移{};
-                                if (read.状态 != 新模拟业务来源状态::已读取 || !read.信息)
-                                    throw 新学习运行异常(m.节点, 新学习运行异常原因::结构不一致,
-                                                         prefix + " " + read.诊断);
-                                const auto [it, added] = 任务来源.emplace(稳定编码{n}, *read.信息);
-                                if (!added &&
-                                    (it->second.任务 != read.信息->任务 || it->second.虚拟存在 != read.信息->虚拟存在 ||
-                                     it->second.治理特征 != read.信息->治理特征))
-                                    throw 来源采集已漂移{};
+                                (void)加任务(稳定编码{n});
                             }
                             else
                                 consume(业务来源_.读取需求来源(稳定编码{n}), "demand");
                         }
                     }
                 }
-            for (const auto &[T, source] : 任务来源)
-            {
-                停止();
-                const auto fresh = 业务来源_.读取任务来源(T);
-                if (fresh.状态 == 新模拟业务来源状态::来源已变化)
-                    throw 来源采集已漂移{};
-                if (!fresh.信息 || fresh.状态 != 新模拟业务来源状态::已读取)
-                    throw 新学习运行异常(m.节点, 新学习运行异常原因::结构不一致,
-                                         "task governance source changed during capture");
-                if (fresh.信息->任务 != source.任务 || fresh.信息->虚拟存在 != source.虚拟存在 ||
-                    fresh.信息->治理特征 != source.治理特征)
-                    throw 来源采集已漂移{};
-                任务治理组.push_back({source.治理特征});
-            }
             break;
         }
         catch (const 来源采集已漂移 &)
@@ -978,7 +976,15 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(def.比较规则==特征概念比较规则::存在集合身份判等)return {K::存在集合,std::move(mapped)};
             return {K::需求集合,std::move(mapped)};
         }
-        if(def.比较规则==特征概念比较规则::服务任务集合身份判等||def.比较规则==特征概念比较规则::消息集合身份判等) {
+        if(def.比较规则==特征概念比较规则::服务任务集合身份判等){
+            const auto* 成员组=std::get_if<std::vector<std::uint64_t>>(&material->材料);
+            if(material->物理类型!=材料物理类型::U64数组||!成员组)
+                throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed copied task collection payload invalid");
+            std::vector<std::uint32_t> 映射组;
+            for(const auto 任务:*成员组)映射组.push_back(加任务(稳定编码{任务}));
+            return {K::任务集合,std::move(映射组)};
+        }
+        if(def.比较规则==特征概念比较规则::消息集合身份判等) {
             const auto* ids=std::get_if<std::vector<std::uint64_t>>(&material->材料);
             if(!ids||!ids->empty())不支持(0,
                 std::string("copied history/current task or message collection lacks complete typed mapping")
@@ -1391,6 +1397,16 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         const auto spec=base[i].规格;base[i]=base[代表[i]];base[i].规格=spec;
         base[i].同一参数=static_cast<std::uint32_t>(代表[i]+1);defs[i]=defs[代表[i]];
     }
+    for(const auto 任务:任务顺序){
+        停止();const auto 复读=业务来源_.读取任务来源(任务);
+        if(复读.状态==新模拟业务来源状态::来源已变化)throw 模拟输入采集漂移{};
+        if(复读.状态!=新模拟业务来源状态::已读取||!复读.信息)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed task final source unavailable: "+复读.诊断);
+        const auto& 来源=任务来源.at(任务);
+        if(复读.信息->任务!=来源.任务||复读.信息->虚拟存在!=来源.虚拟存在||复读.信息->治理特征!=来源.治理特征)
+            throw 模拟输入采集漂移{};
+    }
+    for(const auto 任务:任务顺序)任务治理组.push_back({任务来源.at(任务).治理特征});
     const auto K=base.size(); // 到此闭包完成；轴开始后禁止扩容。
     std::vector<通用模拟候选轴> axes;
     const auto utf8=[&](const 新特征匹配定义快照& d,bool nonempty,std::uint64_t seed) {

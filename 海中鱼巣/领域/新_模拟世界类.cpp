@@ -2008,14 +2008,20 @@ namespace 海中鱼巣 {
             q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{x},基础外部关系类型::父子});
             material.emplace(x,v.物理类型);if(有效(v.节点))复制材料索引.emplace(v.节点,x);return 基础组内节点引用{x};
         }
-        case K::存在集合:case K::需求集合: {
+        case K::存在集合:case K::需求集合:case K::任务集合: {
             auto positions=std::get<std::vector<std::uint32_t>>(value.内容);
             std::sort(positions.begin(),positions.end());positions.erase(std::unique(positions.begin(),positions.end()),positions.end());
             const auto key=std::pair{value.种类,positions};
             if(const auto it=复制集合索引.find(key);it!=复制集合索引.end())return 基础组内节点引用{it->second};
             std::vector<std::uint64_t> ids;
             for(const auto pos:positions) {
-                if(value.种类==K::需求集合)ids.push_back(图引用(D节点,pos).值);
+                if(value.种类==K::任务集合){
+                    if(!pos||pos>任务组.size())throw std::invalid_argument("copied task collection position invalid");
+                    const auto 来源任务=任务组[pos-1].治理特征.引用.任务节点;
+                    const auto 本地任务=T节点.find(来源任务);
+                    if(本地任务==T节点.end()||!有效(本地任务->second))throw std::invalid_argument("copied task collection has no prepared local task");
+                    ids.push_back(本地任务->second.值);
+                }else if(value.种类==K::需求集合)ids.push_back(图引用(D节点,pos).值);
                 else {
                     const auto e=E引用(pos);const auto* ref=std::get_if<稳定编码>(&e);
                     if(!ref)throw std::invalid_argument("copied existence collection reference must have a prepared identity");ids.push_back(ref->值);
@@ -2368,6 +2374,52 @@ namespace 海中鱼巣 {
         if(read.状态==正式信息参数读取状态::资源失败)return {新模拟世界状态::资源失败,{}};
         if(read.状态!=正式信息参数读取状态::已读取||!read.信息||read.信息->直接内容组.size()!=15)
             throw std::runtime_error("local formal demand parameter publication readback failed");
+    }
+    const auto 核任务值=[&](const 新模拟复制准确值& 原值,const std::optional<新特征准确值>& 实际) {
+        if(原值.种类!=新模拟复制值种类::任务集合)return;
+        const auto* 材料节点=实际 ? std::get_if<稳定编码>(&*实际) : nullptr;
+        const auto 读=材料节点 ? 读取模拟特征值材料(*材料节点) : std::nullopt;
+        const auto* 成员组=读 ? std::get_if<std::vector<std::uint64_t>>(&读->材料) : nullptr;
+        if(!材料节点||!读||读->节点!=*材料节点||读->物理类型!=材料物理类型::U64数组||!成员组)
+            throw std::runtime_error("copied task value publication readback malformed");
+        std::set<稳定编码> 期望来源,实际来源;
+        for(const auto 位置:std::get<std::vector<std::uint32_t>>(原值.内容)){
+            if(!位置||位置>任务组.size())throw std::runtime_error("copied task value readback position invalid");
+            期望来源.insert(任务组[位置-1].治理特征.引用.任务节点);
+        }
+        for(const auto 成员:*成员组){
+            const auto 来源=读取模拟任务来源(稳定编码{成员});
+            if(!来源||!有效(*来源))throw std::runtime_error("copied task value contains nonlocal task");
+            实际来源.insert(*来源);
+        }
+        if(实际来源!=期望来源)throw std::runtime_error("copied task value lost members or identity aliases");
+    };
+    const auto 核任务域=[&](const std::optional<新模拟复制值域>& 原域,const std::optional<特征概念值域>& 实际) {
+        if(!原域)return;
+        const auto* 值组=std::get_if<std::vector<新模拟复制准确值>>(&原域->内容);
+        if(!值组)return;
+        const auto* 实际组=实际 ? std::get_if<std::vector<稳定编码>>(&*实际) : nullptr;
+        for(std::size_t 项号=0;项号<值组->size();++项号)if((*值组)[项号].种类==新模拟复制值种类::任务集合){
+            if(!实际组||实际组->size()!=值组->size())throw std::runtime_error("copied finite task domain readback malformed");
+            核任务值((*值组)[项号],新特征准确值{(*实际组)[项号]});
+        }
+    };
+    for(std::size_t 参数索引=0;参数索引<输入.size();++参数索引)if(输入[参数索引].完整复制特征){
+        const auto 特征=读取模拟特征(p.新节点组[index[参数索引]]);
+        if(!特征)throw std::runtime_error("copied feature publication readback unavailable");
+        const auto& 原=*输入[参数索引].完整复制特征;
+        if(原.当前值)核任务值(*原.当前值,特征->当前值);
+        if(原.标准值)核任务值(*原.标准值,特征->标准值);
+        核任务域(原.实例区间,特征->实例区间值);核任务域(原.历史聚合,特征->实例历史聚合值域);
+        for(std::size_t 项号=0;项号<原.历史不同值.size();++项号)if(原.历史不同值[项号].种类==新模拟复制值种类::任务集合){
+            if(特征->历史不同值.size()!=原.历史不同值.size())throw std::runtime_error("copied task history size differs");
+            核任务值(原.历史不同值[项号],特征->历史不同值[项号]);
+        }
+        for(std::size_t 项号=0;项号<原.历史值命中信息.size();++项号)if(原.历史值命中信息[项号].值.种类==新模拟复制值种类::任务集合){
+            if(特征->历史值命中信息.size()!=原.历史值命中信息.size()||特征->历史值命中信息[项号].命中次数!=原.历史值命中信息[项号].命中次数)
+                throw std::runtime_error("copied task history hits differ");
+            核任务值(原.历史值命中信息[项号].值,特征->历史值命中信息[项号].值);
+        }
     }
     return {新模拟世界状态::已完成,完成场景};
 }
@@ -3547,6 +3599,7 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
 }
 新存在概念匹配状态 新_模拟世界类::核验绑定存在概念(稳定编码 E,稳定编码 C) {
     if(!实现_)return 新存在概念匹配状态::材料不足;
+    if(已请求停止())return 新存在概念匹配状态::材料不足;
     auto& s=*实现_;std::lock_guard lock(s.互斥);
     const auto it=s.通用参数.find(E);
     if(it==s.通用参数.end()||!s.是普通存在参数(E))return 新存在概念匹配状态::材料不足;
@@ -3569,28 +3622,124 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         material.必需特征组.push_back({f,*d});
     }
     // 此完整存在读取由C中的存在概念约束表达；不放过任何额外方法读取。
-    const auto old=s.记录复制读取;s.记录复制读取=false;
+    struct 复制读取恢复 final {bool& 标志;bool 原值;~复制读取恢复(){标志=原值;}} 恢复{s.记录复制读取,s.记录复制读取};
+    s.记录复制读取=false;
     const auto features=读取模拟存在特征组(E);
     if(features)for(const auto F:*features) {
         const auto f=读取模拟特征(F);const auto d=f?s.方法.读取模拟特征范围(f->特征概念节点):std::nullopt;
         if(!f||!d)throw std::runtime_error("simulation local existence feature unavailable");
-        新特征匹配实例快照 snap;snap.特征节点=F;snap.定义=*d;snap.实例单位=f->实例单位;snap.当前值=f->当前值;
+        新特征匹配实例快照 snap;snap.特征节点=F;snap.上级特征节点=f->上级特征节点;
+        snap.定义=*d;snap.实例单位=f->实例单位;snap.当前值=f->当前值;snap.实例区间值=f->实例区间值;
         if(f->当前值&&d->材料类型!=特征概念材料物理类型::I64标量&&d->材料类型!=特征概念材料物理类型::存在节点引用) {
             const auto* V=std::get_if<稳定编码>(&*f->当前值);
             if(V)snap.当前完整材料=读取模拟特征值材料(*V);
         }
         material.实际特征组.push_back(std::move(snap));
     }
-    s.记录复制读取=old;
-    const auto first=s.方法.比较模拟存在匹配材料(material);
-    if(first.状态!=新存在概念匹配状态::匹配)return first.状态;
+    using 匹配状态=新存在概念匹配状态;
+    const auto 本地集合=[&](稳定编码 材料节点,const 新特征值信息& 材料) {
+        const auto* 成员组=std::get_if<std::vector<std::uint64_t>>(&材料.材料);
+        if(!有效(材料节点)||材料.节点!=材料节点||材料.物理类型!=材料物理类型::U64数组||!成员组)
+            throw std::runtime_error("local task collection material identity or payload invalid");
+        std::set<稳定编码> 来源;
+        for(const auto 成员:*成员组){
+            const auto 任务=s.通用任务.find(稳定编码{成员});
+            if(任务==s.通用任务.end()||!有效(任务->second.来源)||任务->second.本地.引用.任务节点!=任务->first
+                ||!有效(任务->second.本地.引用.虚拟存在节点)||!有效(任务->second.本地.引用.状态特征节点)
+                ||任务->second.本地.状态.特征节点!=任务->second.本地.引用.状态特征节点
+                ||std::count_if(s.通用任务.begin(),s.通用任务.end(),[&](const auto& 项){return 项.second.来源==任务->second.来源;})!=1)
+                throw std::runtime_error("local task collection has no unique consistent source mapping");
+            来源.insert(任务->second.来源);
+        }
+        return std::pair{true,std::move(来源)};
+    };
+    const auto 正式域=[&](const 特征概念值域& 值域) {
+        std::vector<std::set<稳定编码>> 候选;
+        if(std::holds_alternative<特征概念全材料值域>(值域))return std::pair{true,候选};
+        const auto* 材料组=std::get_if<std::vector<稳定编码>>(&值域);
+        if(!材料组)return std::pair{false,候选};
+        bool 完整=true;
+        for(const auto 材料节点:*材料组){
+            const auto 材料=s.方法.读取模拟候选材料(材料节点);
+            const auto* 成员组=材料 ? std::get_if<std::vector<std::uint64_t>>(&材料->材料) : nullptr;
+            if(!有效(材料节点)||!材料||材料->节点!=材料节点||材料->物理类型!=材料物理类型::U64数组||!成员组)
+                throw std::runtime_error("formal finite task collection material malformed");
+            std::set<稳定编码> 组;
+            for(const auto 成员:*成员组){
+                if(!成员)throw std::runtime_error("formal finite task collection has empty identity");
+                if(std::none_of(s.通用任务.begin(),s.通用任务.end(),[&](const auto& 项){return 项.second.来源==稳定编码{成员};}))完整=false;
+                组.insert(稳定编码{成员});
+            }
+            候选.push_back(std::move(组));
+        }
+        return std::pair{完整,std::move(候选)};
+    };
+    const auto 窄比较=[&](const 新存在概念必需特征快照& 必需)->std::pair<bool,匹配状态> {
+        const auto& 定义=必需.定义;
+        const 新特征匹配实例快照* 实际=nullptr;
+        for(const auto& 特征:material.实际特征组)if(特征.定义.特征类型根==定义.特征类型根){
+            if(实际)throw std::runtime_error("duplicate local task feature type");实际=&特征;
+        }
+        if(!实际||!实际->当前值||!实际->当前完整材料)return {false,匹配状态::材料不足};
+        if(!有效(实际->特征节点)||!有效(实际->定义.概念节点)||!有效(实际->定义.特征类型根)||实际->上级特征节点)
+            throw std::runtime_error("local task feature has invalid top-level identity");
+        if(实际->定义.材料类型!=特征概念材料物理类型::U64数组
+            ||实际->定义.比较规则!=特征概念比较规则::服务任务集合身份判等
+            ||实际->定义.单位!=定义.单位||实际->实例单位!=实际->定义.单位)return {false,匹配状态::材料不足};
+        const auto* 材料节点=std::get_if<稳定编码>(&*实际->当前值);
+        if(!材料节点)throw std::runtime_error("local task collection current value is not material identity");
+        const auto 当前=本地集合(*材料节点,*实际->当前完整材料);
+        if(!当前.first)return {false,匹配状态::材料不足};
+        bool 实例域完整=true;
+        if(实际->实例区间值&&!std::holds_alternative<特征概念全材料值域>(*实际->实例区间值)){
+            const auto* 有限组=std::get_if<std::vector<稳定编码>>(&*实际->实例区间值);
+            if(!有限组)实例域完整=false;
+            else for(const auto 本地材料节点:*有限组){
+                const auto 材料=读取模拟特征值材料(本地材料节点);
+                if(!材料)throw std::runtime_error("local finite task domain material unavailable");
+                if(!本地集合(本地材料节点,*材料).first)实例域完整=false;
+            }
+        }
+        const auto 实际域=正式域(实际->定义.值域);
+        const auto 目标域=正式域(定义.值域);
+        if(!实例域完整||!实际域.first||!目标域.first)return {false,匹配状态::材料不足};
+        if(std::holds_alternative<特征概念全材料值域>(定义.值域))return {true,匹配状态::匹配};
+        if(!std::holds_alternative<std::vector<稳定编码>>(定义.值域))return {false,匹配状态::材料不足};
+        const bool 相等=std::find(目标域.second.begin(),目标域.second.end(),当前.second)!=目标域.second.end();
+        return {true,相等 ? 匹配状态::匹配 : 匹配状态::不符合};
+    };
+    const auto 比较阶段=[&]() {
+        std::set<稳定编码> 已见;
+        for(const auto& 特征:material.必需特征组){
+            if(!有效(特征.来源.特征类型概念)||!有效(特征.来源.具体特征概念)
+                ||特征.定义.特征类型根!=特征.来源.特征类型概念||特征.定义.概念节点!=特征.来源.具体特征概念
+                ||!已见.insert(特征.来源.特征类型概念).second)
+                throw std::runtime_error("simulation required feature identities or duplicates invalid");
+        }
+        auto 工作=material;工作.必需特征组.clear();bool 不符合=false,不足=false;
+        for(const auto& 特征:material.必需特征组){
+            if(特征.定义.比较规则==特征概念比较规则::服务任务集合身份判等
+                &&特征.定义.材料类型==特征概念材料物理类型::U64数组){
+                const auto 结论=窄比较(特征);
+                if(结论.first){不符合|=结论.second==匹配状态::不符合;continue;}
+                不足=true;
+            }
+            工作.必需特征组.push_back(特征);
+        }
+        const auto 通用状态=s.方法.比较模拟存在匹配材料(工作).状态;
+        switch(通用状态){case 匹配状态::匹配:break;case 匹配状态::不符合:不符合=true;break;case 匹配状态::材料不足:不足=true;break;
+        default:throw std::runtime_error("simulation existence matcher returned unknown state");}
+        return 不符合 ? 匹配状态::不符合 : 不足 ? 匹配状态::材料不足 : 匹配状态::匹配;
+    };
+    const auto first=比较阶段();
+    if(first!=匹配状态::匹配)return first;
     material.必需特征组.clear();
     for(const auto& f:target->特征组) {
         const auto d=s.方法.读取模拟特征范围(f.具体特征概念);
         if(!d)throw std::runtime_error("simulation target feature definition unavailable");
         material.必需特征组.push_back({f,*d});
     }
-    return s.方法.比较模拟存在匹配材料(material).状态;
+    return 比较阶段();
 }
 稳定编码 新_模拟世界类::建立本次动作(const 方法参数场景& scene,const 新交互绑定& b) {
     新交互绑定 actual;if(读取绑定环境(scene,actual)!=新交互求值状态::已取得||actual.自我!=b.自我||actual.交互者特征!=b.交互者特征)return {};
