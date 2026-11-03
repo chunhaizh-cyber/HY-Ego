@@ -925,6 +925,9 @@ struct 新_自我线程类::实现 final {
         std::optional<新服务值最终消费结果> 直接最终消费结果;
         bool 直接最终消费已确认 = false;
         std::optional<新任务复合采用请求> 复合子需求采用;
+        std::optional<新任务前置语言输入请求> 前置请求;
+        std::optional<新任务工作请求> 前置工作;
+        std::shared_future<新任务工作处理结果> 前置结果;
         std::set<稳定编码> 已处理内容学习方法;
     };
     // 处理中项仍留在活动组，接收方查重与容量计算不会漏算。
@@ -1982,6 +1985,96 @@ struct 新_自我线程类::实现 final {
         catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"接纳行动请求",L"自我请求邮箱接纳不变量异常。");}
     }
 
+    新自我消息接收结果 接纳前置输入(const 新前置语言输入定位& p) noexcept {
+        using S=新自我消息接收状态;
+        try {
+            if(!有效(p.来源.接收消息节点)||!有效(p.前置来源节点)||!有效(p.固定文本材料)
+                ||!有效(p.语言节点)||!有效(p.来源人类节点)||!有效(p.自我存在节点)||!有效(p.现实根场景)
+                ||p.公开宿主会话.empty()||p.来源.原文起点>=p.来源.原文终点)return {S::入口拒绝,{}};
+            std::lock_guard 锁(状态互斥);
+            if(停止已请求||线程已完成)return {S::已停止接收,{}};
+            if(!线程已进入)return {S::尚未启动,{}};
+            if(!消息配置)return {S::尚未配置,{}};
+            for(const auto& item:活动消息)if(item->消息.前置语言输入&&item->消息.前置语言输入->来源==p.来源) {
+                if(*item->消息.前置语言输入!=p)return {S::身份冲突,{}};
+                return {S::精确重复,item->结果};
+            }
+            if(普通消息数量已加锁()>=消息配置->邮箱容量)return {S::邮箱已满,{}};
+            const auto item=std::make_shared<消息项>();
+            item->消息.消息编号=取得自动消息编号();
+            if(!item->消息.消息编号)throw std::logic_error("preunderstanding self mailbox identity exhausted");
+            item->消息.类型=新自我消息类型::前置语言输入材料;item->消息.前置语言输入=p;
+            item->可处理时点=std::chrono::steady_clock::now();活动消息.push_back(item);状态变化.notify_all();
+            return {S::已接收,item->结果};
+        }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+        catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"接纳前置输入",L"同M输入邮箱定位不变量异常");}
+    }
+    std::optional<新自我消息处理结果> 处理前置语言输入材料(消息项& 项) {
+        using R=新前置语言读取状态;
+        try {
+            if(!接收认知||!任务服务||!任务管理||!需求服务||!初始化结果||!初始化结果->自我存在||!项.消息.前置语言输入)
+                throw std::logic_error("preunderstanding self dependencies missing");
+            const auto& p=*项.消息.前置语言输入;
+            新自我消息处理结果 out;out.原消息=项.消息;
+            if(p.自我存在节点!=*初始化结果->自我存在)throw std::logic_error("preunderstanding self identity conflict");
+            if(!项.前置工作) {
+                if(!项.前置请求) {
+                if(停止源.stop_requested()){out.状态=新自我消息处理状态::停止取消;return out;}
+                const auto fresh=接收认知->确认前置输入已接纳(p);
+                if(fresh==接收行动请求交接确认状态::输入拒绝){out.状态=新自我消息处理状态::停止取消;return out;}
+                if(fresh!=接收行动请求交接确认状态::已确认&&fresh!=接收行动请求交接确认状态::精确重复)
+                    throw std::logic_error("fresh preunderstanding source or context rejected");
+                const auto D=需求服务->查询根需求(新需求根角色::服务);
+                if(!D)throw std::logic_error("service parent root missing");
+                const auto parent=任务服务->建立前置语言材料父任务(p.自我存在节点,*D);
+                if(parent.状态==新任务治理承接状态::尚未初始化)return {};
+                if((parent.状态!=新任务治理承接状态::已读回&&parent.状态!=新任务治理承接状态::既有终结任务)||!parent.任务)
+                    throw std::logic_error("material parent association unreadable");
+                项.前置请求=新任务前置语言输入请求{p,*D,parent.任务->节点};
+                }
+                const auto accepted=任务管理->提交前置语言输入筹办(*项.前置请求);
+                switch(accepted.状态) {
+                case 新任务工作接收状态::已接收:case 新任务工作接收状态::精确重复:
+                    if(!accepted.工作||!accepted.处理结果.valid())throw std::logic_error("material acceptance future missing");
+                    项.前置工作=accepted.工作;项.前置结果=accepted.处理结果;break;
+                case 新任务工作接收状态::任务已占用:case 新任务工作接收状态::邮箱已满:case 新任务工作接收状态::尚未启动:return {};
+                case 新任务工作接收状态::已停止接收:out.状态=新自我消息处理状态::停止取消;return out;
+                default:throw std::logic_error("material manager acceptance rejected");
+                }
+            }
+            if(项.前置结果.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready)return {};
+            const auto& 原=项.前置结果.get();
+            const auto read=任务管理->读取前置语言输入筹办结果(*项.前置工作);
+            if(!read)return {};
+            if(read->原请求!=*项.前置工作||原.原请求!=read->原请求||!read->前置语言输入||!原.前置语言输入
+                ||*原.前置语言输入!=*read->前置语言输入||read->前置语言输入->原请求!=*项.前置请求)
+                throw std::logic_error("material future and independent result mismatch");
+            const auto& r=*read->前置语言输入;
+            if(r.状态==R::资源失败) {
+                (void)任务管理->确认前置语言输入筹办已读回(*项.前置工作);
+                throw std::logic_error("material resource failure is not a language gap");
+            }
+            const auto ack=接收认知->确认前置输入已筹办(r);
+            // 无论正常、晚到、停用或非成功，已完成future的transport均须释放。
+            const auto released=任务管理->确认前置语言输入筹办已读回(*项.前置工作);
+            if(released!=新任务工作操作状态::已完成&&released!=新任务工作操作状态::无变化)throw std::logic_error("material transport release failed");
+            if(ack==接收行动请求交接确认状态::资源失败||ack==接收行动请求交接确认状态::来源冲突)
+                throw std::logic_error("material cognition result acknowledgement failed");
+            out.前置语言输入=r;
+            switch(r.状态) {
+            case R::已读取:
+                if(!r.材料)throw std::logic_error("read material absent");
+                out.状态=r.材料->可重入原认知 ? 新自我消息处理状态::已复核 : 新自我消息处理状态::等待材料;break;
+            case R::前提已变化:out.状态=新自我消息处理状态::等待材料;break;
+            case R::来源停用:case R::停止取消:out.状态=新自我消息处理状态::停止取消;break;
+            case R::输入不适用:out.状态=新自我消息处理状态::入口拒绝;break;
+            case R::资源失败:throw std::logic_error("material resource failure is not a language gap");
+            default:throw std::logic_error("material result state unknown");
+            }
+            if(ack==接收行动请求交接确认状态::输入拒绝)out.状态=新自我消息处理状态::停止取消;
+            return out;
+        }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理前置输入材料",L"输入父域、原工作读回或结果确认异常");}
+    }
     std::optional<新自我消息处理结果> 处理行动请求承接(消息项& 项) {
         try {
         if(!任务管理||!任务服务||!需求服务||!初始化结果
@@ -2066,8 +2159,8 @@ struct 新_自我线程类::实现 final {
     }
 
     // 调用者持有状态互斥。安全根明确“需增加”时才形成普通自动承接；
-    // 服务根已经分解为“完成服务需求”，由manager持有的长期结算任务
-    // 专属处理，不能再把服务根交给普通任务路径。
+    // 服务结算由“完成服务需求”长期T专属处理；服务根唯一T仅接受
+    // 前置输入只读材料治理，不进入此普通自动承接或方法执行路径。
     void 安排自动承接(const 新自我本能需求复核结果& 复核) noexcept {
         if (!消息配置 || !任务管理
             || 复核.状态 != 新自我需求复核状态::已复核) return;
@@ -4347,6 +4440,18 @@ struct 新_自我线程类::实现 final {
                             (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"推进接收需求认知入口",诊断.str());
                         } catch (...) {}
                         const auto observed=provider->推进一次(token);
+                        if(!token.stop_requested()&&observed&&observed->待交接前置输入) {
+                            const auto accepted=接纳前置输入(*observed->待交接前置输入);
+                            if(accepted.状态==新自我消息接收状态::已接收||accepted.状态==新自我消息接收状态::精确重复) {
+                                if(!accepted.处理结果.valid())throw std::logic_error("input handoff future missing");
+                                const auto ack=provider->确认前置输入已接纳(*observed->待交接前置输入);
+                                if(ack==接收行动请求交接确认状态::已确认||ack==接收行动请求交接确认状态::精确重复)行动请求已入邮箱=true;
+                                else if(ack!=接收行动请求交接确认状态::资源失败&&ack!=接收行动请求交接确认状态::输入拒绝)
+                                    throw std::logic_error("input handoff acknowledgement conflict");
+                            } else if(accepted.状态!=新自我消息接收状态::邮箱已满&&accepted.状态!=新自我消息接收状态::资源失败
+                                &&accepted.状态!=新自我消息接收状态::尚未启动&&accepted.状态!=新自我消息接收状态::尚未配置
+                                &&accepted.状态!=新自我消息接收状态::已停止接收)throw std::logic_error("input handoff mailbox conflict");
+                        }
                         if(!token.stop_requested()&&observed
                             &&observed->阶段==接收需求认知阶段::已读回行动请求&&observed->待交接请求) {
                             const auto accepted=接纳行动请求(*observed->待交接请求);
@@ -4377,7 +4482,7 @@ struct 新_自我线程类::实现 final {
                     锁.lock();
                     最近接收认知推进=std::chrono::steady_clock::now();
                     if(停止已请求||停止源.stop_requested())break;
-                    // 普通认知拍仍继续原治理；仅行动请求已入邮箱时回入口优先排干。
+                    // 普通认知拍仍继续原治理；前U材料或行动请求入邮箱后优先排干。
                     if(行动请求已入邮箱)continue;
                 }
                 if (最终服务工作待唤醒.exchange(false)) {
@@ -4559,7 +4664,7 @@ struct 新_自我线程类::实现 final {
                     // 邮箱中已就绪的行动请求承接优先于自动承接扫描，避免交接后被长自动路径饿死。
                     const bool 有就绪行动请求 = std::any_of(活动消息.begin(), 活动消息.end(),
                         [](const auto& m) {
-                            return m->消息.类型 == 新自我消息类型::行动请求承接
+                            return (m->消息.类型 == 新自我消息类型::行动请求承接||m->消息.类型==新自我消息类型::前置语言输入材料)
                                 && m->可处理时点 <= std::chrono::steady_clock::now();
                         });
                     if (有就绪行动请求) {
@@ -4589,9 +4694,9 @@ struct 新_自我线程类::实现 final {
                         const bool 左就绪 = 左->可处理时点 <= 选信时点;
                         const bool 右就绪 = 右->可处理时点 <= 选信时点;
                         const bool 左请求 = 左就绪
-                            && 左->消息.类型 == 新自我消息类型::行动请求承接;
+                            && (左->消息.类型 == 新自我消息类型::行动请求承接||左->消息.类型==新自我消息类型::前置语言输入材料);
                         const bool 右请求 = 右就绪
-                            && 右->消息.类型 == 新自我消息类型::行动请求承接;
+                            && (右->消息.类型 == 新自我消息类型::行动请求承接||右->消息.类型==新自我消息类型::前置语言输入材料);
                         if (左请求 != 右请求) return 左请求;
                         return 左->可处理时点 < 右->可处理时点;
                     });
@@ -4623,6 +4728,8 @@ struct 新_自我线程类::实现 final {
                     单次结果 = 处理完整服务需求材料(*项);
                 else if (项->消息.类型 == 新自我消息类型::行动请求承接)
                     单次结果 = 处理行动请求承接(*项);
+                else if(项->消息.类型==新自我消息类型::前置语言输入材料)
+                    单次结果=处理前置语言输入材料(*项);
                 else if (项->消息.类型 == 新自我消息类型::学习后需求复核)
                     单次结果 = 处理学习复核(*项);
                 else if (项->消息.类型 == 新自我消息类型::等待任务复核)
@@ -4678,6 +4785,10 @@ struct 新_自我线程类::实现 final {
             }
             生命周期 = 新自我线程生命周期::正在停止;
             停止源.request_stop();
+            if(接收认知) {
+                auto* provider=接收认知;const auto token=停止源.get_token();
+                锁.unlock();(void)provider->推进一次(token);锁.lock();
+            }
             if (学习线程) (void)学习线程->请求停止();
             扫描承接.clear();
             扫描工作结果 = {};
@@ -5577,13 +5688,23 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
 新自我线程操作结果 新_自我线程类::绑定接收需求认知(接收需求认知服务& provider) noexcept {
     if(!实现_)return {新自我线程操作状态::资源失败,新自我线程生命周期::内部错误};
     try {
-        std::lock_guard join(实现_->加入互斥);std::lock_guard lock(实现_->状态互斥);
-        if(实现_->工作线程.joinable()||实现_->线程已完成)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
-        if(实现_->接收认知==&provider)return 实现_->操作结果(新自我线程操作状态::无变化);
-        if(实现_->接收认知)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
+        std::lock_guard join(实现_->加入互斥);
+        接收需求认知服务* 原=nullptr;新_任务类* task=nullptr;
+        {
+            std::lock_guard lock(实现_->状态互斥);
+            if(实现_->工作线程.joinable()||实现_->线程已完成)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
+            原=实现_->接收认知;task=实现_->任务服务;
+            if(原&&原!=&provider)return 实现_->操作结果(新自我线程操作状态::入口拒绝);
+        }
+        if(!task)throw std::logic_error("self has no task owner for reader binding");
+        task->装配前置语言输入读取接口(&provider);
+        std::lock_guard lock(实现_->状态互斥);
+        if(实现_->接收认知!=原||实现_->工作线程.joinable()||实现_->线程已完成)
+            throw std::logic_error("self input binding changed inside exclusive startup sequence");
         实现_->接收认知=&provider;实现_->接收认知待唤醒=true;
+        if(原==&provider)return 实现_->操作结果(新自我线程操作状态::无变化);
         return 实现_->操作结果(新自我线程操作状态::已完成);
-    }catch(...){return {新自我线程操作状态::内部错误,新自我线程生命周期::内部错误};}
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"绑定接收认知",L"启动前只读端口装配或绑定一致性异常");}
 }
 void 新_自我线程类::通知接收认知变化() noexcept {
     if(!实现_)return;
@@ -5819,6 +5940,10 @@ void 新_自我线程类::通知接收认知变化() noexcept {
     const 新行动请求承接来源& source) noexcept {
     if(!实现_)return {新自我消息接收状态::资源失败,{}};
     return 实现_->接纳行动请求(source);
+}
+新自我消息接收结果 新_自我线程类::提交前置语言输入材料(const 新前置语言输入定位& p) noexcept {
+    if(!实现_)return {新自我消息接收状态::资源失败,{}};
+    return 实现_->接纳前置输入(p);
 }
 
 std::stop_token 新_自我线程类::读取停止令牌() const noexcept {

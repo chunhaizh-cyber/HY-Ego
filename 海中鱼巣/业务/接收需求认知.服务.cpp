@@ -5,6 +5,7 @@
 #include "../领域/新_自然语言世界树类.h"
 #include "../领域/新_场景类.h"
 #include "../领域/新_需求类.h"
+#include "../领域/新_任务类.h"
 #include "../领域/语言分界.数据.h"
 #include "../领域/概念_二次特征类.h"
 #include "../核心/容错检查.h"
@@ -374,13 +375,20 @@ std::int64_t 读I64(const std::string& s){
 struct 接收需求认知服务::实现 final {
     认知依赖 依赖;
     struct 会话 final {接收需求认知会话语境 语境;bool 封存=false;};
-    struct 调度 final {接收需求认知观察 观察;bool 终结=false;std::chrono::steady_clock::time_point 下次{};bool 行动请求已交接=false;};
+    enum class 前置阶段 {无,待接纳,待筹办,具名等待,待重入,已停用};
+    struct 调度 final {
+        接收需求认知观察 观察;bool 终结=false;std::chrono::steady_clock::time_point 下次{};bool 行动请求已交接=false;
+        前置阶段 前置=前置阶段::无;
+        std::optional<新前置语言输入定位> 定位;
+        std::optional<新任务前置语言输入结果> 已确认结果;
+    };
     mutable std::mutex 锁;
     std::map<std::string,会话,std::less<>> 会话组;
     std::map<稳定编码,调度> 进度;
     std::optional<接收需求认知观察> 最近;
     std::optional<稳定编码> 上次;
     explicit 实现(认知依赖 d):依赖(d){}
+    新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,std::stop_token);
 };
 接收需求认知服务::接收需求认知服务(新_外设世界树类& a,新_自然语言世界树类& b,新_语言类& c,新_词类& e,
     概念_名称关系类& n,概念_存在类& ce,概念_特征类& cf,概念_二次特征类& c2,新_存在类& ex,
@@ -398,7 +406,10 @@ struct 接收需求认知服务::实现 final {
     }catch(const std::bad_alloc&){return S::资源失败;}catch(const std::length_error&){return S::资源失败;}
 }
 void 接收需求认知服务::封存会话(std::string_view c) noexcept {
-    try {std::lock_guard g(实现_->锁);const auto it=实现_->会话组.find(c);if(it!=实现_->会话组.end())it->second.封存=true;}
+    try {std::lock_guard g(实现_->锁);const auto it=实现_->会话组.find(c);if(it!=实现_->会话组.end())it->second.封存=true;
+        for(auto& [M,项]:实现_->进度)if(项.定位&&项.定位->公开宿主会话==c) {
+            项.前置=实现::前置阶段::已停用;项.观察.待交接前置输入.reset();
+        }}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"封存接收认知会话",L"接收认知会话封存发生工程异常。");}
 }
 std::optional<接收需求认知观察> 接收需求认知服务::读取最近观察() const {std::lock_guard g(实现_->锁);return 实现_->最近;}
@@ -425,6 +436,129 @@ std::optional<接收需求认知观察> 接收需求认知服务::读取最近�
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确认行动请求交接",L"认知请求交接进度不变量异常。");}
 }
 
+接收行动请求交接确认状态 接收需求认知服务::确认前置输入已接纳(const 新前置语言输入定位& p) noexcept {
+    using S=接收行动请求交接确认状态;using P=实现::前置阶段;
+    try {
+        std::lock_guard g(实现_->锁);
+        const auto i=实现_->进度.find(p.来源.接收消息节点);
+        if(i==实现_->进度.end()||!i->second.定位)return S::输入拒绝;
+        auto& w=i->second;
+        if(w.定位!=std::optional{p})return S::来源冲突;
+        const auto c=实现_->会话组.find(p.公开宿主会话);
+        if(c==实现_->会话组.end()||c->second.封存||w.前置==P::已停用)return S::输入拒绝;
+        if(c->second.语境.已绑定人类!=std::optional{p.来源人类节点}
+            ||c->second.语境.已绑定自我!=std::optional{p.自我存在节点}
+            ||c->second.语境.语言!=p.语言节点||c->second.语境.现实根!=p.现实根场景)return S::来源冲突;
+        if(w.前置==P::待筹办||w.前置==P::具名等待||w.前置==P::待重入)return S::精确重复;
+        if(w.前置!=P::待接纳||w.观察.U||w.观察.D)return S::输入拒绝;
+        w.已确认结果.reset();
+        w.前置=P::待筹办;w.观察.待交接前置输入.reset();
+        if(实现_->最近&&实现_->最近->M==w.观察.M)实现_->最近=w.观察;
+        return S::已确认;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确认前置输入接纳",L"原M输入接纳不变量异常");}
+}
+接收行动请求交接确认状态 接收需求认知服务::确认前置输入已筹办(const 新任务前置语言输入结果& r) noexcept {
+    using S=接收行动请求交接确认状态;using P=实现::前置阶段;using R=新前置语言读取状态;
+    try {
+        if((r.状态==R::已读取)!=r.材料.has_value()
+            ||(r.材料&&(r.材料->定位!=r.原请求.输入||(!r.材料->可重入原认知&&r.材料->缺口组.empty()))))
+            throw std::logic_error("preunderstanding result payload invalid");
+        std::lock_guard g(实现_->锁);const auto& p=r.原请求.输入;
+        const auto i=实现_->进度.find(p.来源.接收消息节点);
+        if(i==实现_->进度.end()||!i->second.定位)return S::输入拒绝;
+        auto& w=i->second;if(w.定位!=std::optional{p})return S::来源冲突;
+        if(w.已确认结果&&*w.已确认结果==r&&w.前置!=P::待筹办)return S::精确重复;
+        if(w.已确认结果&&w.前置!=P::待筹办)return S::来源冲突;
+        const auto c=实现_->会话组.find(p.公开宿主会话);
+        if(c==实现_->会话组.end()||c->second.封存||w.前置==P::已停用){w.前置=P::已停用;return S::输入拒绝;}
+        if(w.前置!=P::待筹办||w.观察.U||w.观察.D)return S::输入拒绝;
+        w.已确认结果=r;w.观察.待交接前置输入.reset();
+        switch(r.状态) {
+        case R::已读取:
+            w.观察.前置输入等待材料=r.材料;
+            w.前置=r.材料->可重入原认知 ? P::待重入 : P::具名等待;
+            w.观察.阶段=阶段::前置输入治理等待;w.终结=false;break;
+        case R::前提已变化:case R::停止取消:
+            w.前置=P::待接纳;w.观察.待交接前置输入=p;w.观察.阶段=阶段::前置输入待治理;break;
+        case R::来源停用:case R::输入不适用:w.前置=P::已停用;break;
+        case R::资源失败:throw std::logic_error("preunderstanding resource failure requires engineering handling");
+        default:throw std::logic_error("unknown preunderstanding result state");
+        }
+        w.下次=std::chrono::steady_clock::now();实现_->最近=w.观察;return S::已确认;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确认前置输入筹办",L"实际筹办结果或进度不变量异常");}
+}
+新前置语言输入读取结果 接收需求认知服务::实现::读取前置材料内部(const 新前置语言输入定位& p,std::stop_token stop) {
+    using R=新前置语言读取状态;
+    auto& d=依赖;检查认知停止(stop);
+    const auto pre=d.语言.读取前置来源(p.来源,d.外设);
+    if(pre.状态==新语言分界工程状态::资源失败)资源();
+    if(pre.状态==新语言分界工程状态::前提已变化)漂移();
+    if(pre.状态!=新语言分界工程状态::已完成||!pre.信息)throw std::logic_error("retained input source unreadable");
+    if(pre.信息->节点!=p.前置来源节点||pre.信息->固定文本材料!=p.固定文本材料||pre.信息->来源!=p.来源)
+        return {R::输入不适用,{}};
+    const auto m=d.外设.读取消息保护(p.来源.接收消息节点);
+    if(m.状态==新外设事实状态::资源失败)资源();
+    if(m.状态!=新外设事实状态::已完成||!m.消息)漂移();
+    if(m.消息->来源.公开宿主会话!=p.公开宿主会话||m.消息->正文材料节点!=p.固定文本材料
+        ||m.消息->UTF8正文!=pre.信息->固定UTF8原文)return {R::输入不适用,{}};
+    接收专名读取器 names(d,p.现实根场景,stop);
+    语言基础统一输入请求 q{p.语言节点,pre.信息->固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
+    q.交互上下文=语言图交互上下文{p.来源.接收消息节点,p.来源人类节点,p.自我存在节点,p.现实根场景};
+    const auto parsed=只读解释单句基础语言(q,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+    if(parsed.状态==语言场景基础输入状态::读取漂移)漂移();
+    if(parsed.状态==语言场景基础输入状态::工程未完成||parsed.状态==语言场景基础输入状态::额度不足)资源();
+    if(parsed.状态==语言场景基础输入状态::内部不一致)throw std::logic_error("input material parse corrupt");
+    新前置语言输入材料 out{p};
+    if(parsed.状态==语言场景基础输入状态::已形成值式图&&parsed.含义&&std::holds_alternative<语言图含义材料>(*parsed.含义)
+        &&(parsed.构式==语言基础统一构式::需求陈述||parsed.构式==语言基础统一构式::行动请求)) {
+        const auto roles=读取认知图角色(std::get<语言图含义材料>(*parsed.含义));
+        out.可重入原认知=roles.主体==p.来源人类节点&&(!roles.受请求者||roles.受请求者==std::optional{p.自我存在节点});
+    }
+    if(!out.可重入原认知) {
+        const auto matched=d.语言.按已登记词条最长匹配(p.语言节点,pre.信息->固定UTF8原文,d.词);
+        if(matched.状态==新语言查询状态::资源失败)资源();
+        if(matched.状态!=新语言查询状态::已找到)throw std::logic_error("input lexical material unreadable");
+        for(const auto& x:matched.片段组)if(!x.词条节点)
+            out.缺口组.push_back({新前置语言缺口种类::词面未登记,x.原文码点起点,x.原文码点起点+x.原文码点数量,{}});
+        新前置语言缺口种类 kind=新前置语言缺口种类::语言规则不足;
+        switch(parsed.状态) {
+        case 语言场景基础输入状态::缺名称:kind=新前置语言缺口种类::名称材料不足;break;
+        case 语言场景基础输入状态::对象待绑定:kind=新前置语言缺口种类::对象未唯一绑定;break;
+        case 语言场景基础输入状态::概念多义待解:case 语言场景基础输入状态::多规则待解:case 语言场景基础输入状态::构式多义待解:
+            kind=新前置语言缺口种类::解释多义;break;
+        case 语言场景基础输入状态::已形成值式图:kind=新前置语言缺口种类::非本入口构式;break;
+        default:break;
+        }
+        out.缺口组.push_back({kind,p.来源.原文起点,p.来源.原文终点,parsed.受阻节点组});
+    }
+    检查认知停止(stop);return {R::已读取,std::move(out)};
+}
+新前置语言输入读取结果 接收需求认知服务::读取前置语言输入材料(const 新前置语言输入定位& p,std::stop_token stop) const {
+    using R=新前置语言读取状态;using P=实现::前置阶段;
+    try {
+        const auto 核工作=[&]() -> R {
+            std::lock_guard g(实现_->锁);const auto c=实现_->会话组.find(p.公开宿主会话);
+            if(c==实现_->会话组.end()||c->second.封存)return R::来源停用;
+            if(c->second.语境.已绑定人类!=std::optional{p.来源人类节点}
+                ||c->second.语境.已绑定自我!=std::optional{p.自我存在节点}
+                ||c->second.语境.语言!=p.语言节点||c->second.语境.现实根!=p.现实根场景)return R::输入不适用;
+            const auto i=实现_->进度.find(p.来源.接收消息节点);
+            if(i==实现_->进度.end()||i->second.定位!=std::optional{p}||i->second.观察.U||i->second.观察.D)return R::输入不适用;
+            if(i->second.前置==P::已停用)return R::来源停用;
+            return i->second.前置==P::待筹办 ? R::已读取 : R::前提已变化;
+        };
+        if(stop.stop_requested())return {R::停止取消,{}};
+        const auto before=核工作();if(before!=R::已读取)return {before,{}};
+        auto out=实现_->读取前置材料内部(p,stop);
+        const auto after=核工作();if(after!=R::已读取)return {after,{}};
+        return out;
+    }catch(const 推进中断& e){return {e.状态==阶段::停止未完成 ? R::停止取消 : e.状态==阶段::资源延后 ? R::资源失败 : R::前提已变化,{}};}
+    catch(const std::bad_alloc&){return {R::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取前置输入材料",L"只读材料来源或内部结构不变量异常");}
+}
+
 std::optional<接收需求认知观察> 接收需求认知服务::推进一次(std::stop_token stop){
     auto& impl=*实现_;auto& d=impl.依赖;
     std::optional<稳定编码> 本次消息;
@@ -440,7 +574,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }catch(...){}
     };
     try {
-    if(stop.stop_requested())return {};
+    if(stop.stop_requested()) {
+        std::lock_guard g(impl.锁);
+        for(auto& [M,项]:impl.进度)if(项.定位) {
+            项.前置=实现::前置阶段::已停用;项.观察.待交接前置输入.reset();
+        }
+        return {};
+    }
     const auto records=d.外设.完整读取仍保留的接收记录();
     if(records.状态==新外设事实状态::资源失败){
         接收需求认知观察 out{{},{},{},{},{},阶段::资源延后,"接收记录完整读取资源未完成"};
@@ -452,13 +592,17 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     const auto now=std::chrono::steady_clock::now();
     // 公平轮转，不让单条反复前提变化阻挡后续真实M。
     // 已登记且未封存会话上的M优先：旧会话残留不得长期挡住当前入站认知（§8.2 真实M公平）。
-    const auto eligible=[&](const auto& m){const auto it=impl.进度.find(m.消息节点);return it==impl.进度.end()
+    const auto eligible=[&](const auto& m){std::lock_guard g(impl.锁);const auto it=impl.进度.find(m.消息节点);
+        if(it!=impl.进度.end()&&(it->second.前置==实现::前置阶段::待筹办||it->second.前置==实现::前置阶段::具名等待
+            ||it->second.前置==实现::前置阶段::已停用))return false;
+        return it==impl.进度.end()
         ||((!it->second.终结||(it->second.观察.阶段==阶段::已读回行动请求&&!it->second.行动请求已交接))&&it->second.下次<=now);};
     const auto 会话仍活跃=[&](const auto& m){
         std::lock_guard g(impl.锁);const auto it=impl.会话组.find(m.来源.公开宿主会话);
         return it!=impl.会话组.end()&&!it->second.封存;};
     std::size_t start=0;
-    if(impl.上次){const auto prev=std::find_if(records.消息组.begin(),records.消息组.end(),[&](const auto& m){return m.消息节点==*impl.上次;});
+    std::optional<稳定编码> 上次;{std::lock_guard g(impl.锁);上次=impl.上次;}
+    if(上次){const auto prev=std::find_if(records.消息组.begin(),records.消息组.end(),[&](const auto& m){return m.消息节点==*上次;});
         if(prev!=records.消息组.end())start=static_cast<std::size_t>(prev-records.消息组.begin())+1;}
     const auto 轮转选取=[&](bool 仅活跃会话){
         for(std::size_t i=0;i<records.消息组.size();++i){
@@ -473,8 +617,26 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         try{std::wostringstream t;t<<L"保留接收条数="<<records.消息组.size()<<L"；本拍无合格M";
             (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"接收需求认知",L"推进一次",t.str());}catch(...){}
         return {};}
-    const auto& m=*chosen;impl.上次=m.消息节点;本次消息=m.消息节点;
-    auto& work=impl.进度[m.消息节点];auto out=work.观察;out.M=m.消息节点;
+    const auto& m=*chosen;本次消息=m.消息节点;
+    实现::调度 work;
+    {std::lock_guard g(impl.锁);impl.上次=m.消息节点;work=impl.进度[m.消息节点];}
+    const auto 原阶段=work.前置;const auto 原定位=work.定位;const auto 原交接=work.行动请求已交接;
+    const auto 提交进度=[&]() {
+        std::lock_guard g(impl.锁);auto& actual=impl.进度.at(m.消息节点);
+        if(actual.前置!=原阶段||actual.定位!=原定位||actual.行动请求已交接!=原交接)return false;
+        const auto c=impl.会话组.find(m.来源.公开宿主会话);
+        if(c!=impl.会话组.end()&&c->second.封存&&work.定位){actual.前置=实现::前置阶段::已停用;actual.观察.待交接前置输入.reset();return false;}
+        actual=work;return true;
+    };
+    auto out=work.观察;out.M=m.消息节点;
+    if(work.前置==实现::前置阶段::待接纳) {
+        out.待交接前置输入=work.定位;work.观察=out;
+        work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
+        if(!提交进度())return {};保存观察(out);return out;
+    }
+    if(work.前置==实现::前置阶段::待重入) {
+        work.前置=实现::前置阶段::无;work.观察.前置输入等待材料.reset();out.前置输入等待材料.reset();
+    }
     if(work.终结&&out.阶段==阶段::已读回行动请求&&!work.行动请求已交接) {
         if(!out.U||!out.D||!out.H||!out.受请求者||!out.需求来源)
             throw std::logic_error("completed request handoff source missing");
@@ -496,7 +658,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }
         // 认知阶段13保持已发生事实；本次未取得来源时不交付待交接值。
         work.观察=out;work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
-        保存观察(out);return out;
+        if(!提交进度())return {};保存观察(out);return out;
     }
     bool 本次终结=work.终结;
     const auto 进入步骤=[&](const char* name){
@@ -509,7 +671,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         进入步骤("读取正式会话语境");
         接收需求认知会话语境 context;
         {std::lock_guard g(impl.锁);const auto it=impl.会话组.find(m.来源.公开宿主会话);
-            if(it==impl.会话组.end())throw 推进中断{阶段::非本次人类需求,"消息未接入正式会话语境，保留原始接收事实"};context=it->second.语境;}
+            if(it==impl.会话组.end()||it->second.封存)throw 推进中断{阶段::非本次人类需求,"消息未接入活动正式会话语境，保留原始接收事实"};context=it->second.语境;}
         out.H=context.已绑定人类;
         if(!context.已绑定人类)throw 推进中断{阶段::非本次人类需求,"匿名会话不推定人类主体"};
         const 新接收认知来源键 请求键{m.消息节点,0,标量数(m.UTF8正文),{}};
@@ -534,6 +696,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             ||固定来源.固定文本材料!=m.正文材料节点||固定来源.固定UTF8原文!=m.UTF8正文)
             来源工程错误("正式前置来源与选定消息不一致");
         const auto& k=固定来源.来源;
+        if(!out.U&&context.已绑定自我)
+            work.定位=新前置语言输入定位{k,固定来源.节点,固定来源.固定文本材料,context.语言,*context.已绑定人类,*context.已绑定自我,context.现实根,context.公开宿主会话};
         if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
         进入步骤("读取同源语言采用");
         auto adopted=d.语言.读取接收采用含义(k,d.特征);
@@ -675,11 +839,17 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             out.受请求者=roles.受请求者;out.需求来源.reset();
             out.原因=roles.受请求者 ? "已采用明确请求及本句需求内容，尚未建立需求D" : "已采用真实消息的唯一需求含义，尚未建立需求D";
         } else throw std::logic_error("same-source meaning lookup failed");
-    }catch(const 推进中断& e){out.阶段=e.状态;out.原因=std::string(步骤)+"："+e.原因;本次终结=e.状态!=阶段::资源延后&&e.状态!=阶段::前提变化&&e.状态!=阶段::停止未完成;}
+    }catch(const 推进中断& e){out.阶段=e.状态;out.原因=std::string(步骤)+"："+e.原因;本次终结=e.状态!=阶段::资源延后&&e.状态!=阶段::前提变化&&e.状态!=阶段::停止未完成;
+        if(!out.U&&!out.D&&work.定位&&(e.状态==阶段::对象未决||e.状态==阶段::非支持输入)) {
+            work.前置=实现::前置阶段::待接纳;out.待交接前置输入=work.定位;
+            out.阶段=阶段::前置输入待治理;本次终结=false;
+        }
+        if(e.状态==阶段::停止未完成&&work.定位){work.前置=实现::前置阶段::已停用;out.待交接前置输入.reset();}
+    }
     catch(const std::bad_alloc&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进分配资源未完成";}
     catch(const std::length_error&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进材料资源未完成";}
     work.观察=out;work.终结=本次终结;work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
-    保存观察(out);return out;
+    if(!提交进度())return {};保存观察(out);return out;
     }catch(const std::bad_alloc&){
         接收需求认知观察 out{本次消息.value_or(稳定编码{}),{},{},{},{},阶段::资源延后,"认知调度分配资源未完成"};
         保存观察(out);return out;
