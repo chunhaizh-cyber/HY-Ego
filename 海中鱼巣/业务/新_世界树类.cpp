@@ -577,7 +577,6 @@ struct 新世界需求引用组合准备::实现 final {
             if (!last || in.有序来源组.back().需求节点 != in.当前需求节点) return {};
             const auto oldCurrent = members(*old->当前值);
             if (!oldCurrent || *oldCurrent != current) return {S::前提已变化, {}};
-            std::vector<稳定编码> historicalUnion;
             std::vector<std::vector<稳定编码>> historicalSets;
             for (const auto& v : old->历史不同值) {
                 const auto m = members(v);
@@ -585,12 +584,9 @@ struct 新世界需求引用组合准备::实现 final {
                 const auto legal = 特征服务_.按概念比较特征值(ot->特征类型根, v, v);
                 if (legal.状态 != 新特征比较状态::已完成 || legal.比较值 != 10000) 世界I64组合故障(L"旧需求集合身份不可读");
                 historicalSets.push_back(*m);
-                historicalUnion.insert(historicalUnion.end(), m->begin(), m->end());
             }
             for (const auto& prefix : prefixes)
                 if (std::find(historicalSets.begin(), historicalSets.end(), prefix) == historicalSets.end()) return {};
-            std::sort(historicalUnion.begin(), historicalUnion.end()); historicalUnion.erase(std::unique(historicalUnion.begin(), historicalUnion.end()), historicalUnion.end());
-            if (historicalUnion != current) return {};
             // 不接受未解释的旧F状态或其他首次发布动作。
             for (const auto n : scenes) {
                 capture(n); const auto s = 状态服务_.获取状态(n);

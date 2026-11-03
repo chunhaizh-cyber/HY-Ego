@@ -381,14 +381,6 @@ void 核验完整材料(const 初始化定义材料& 材料, std::size_t 标量�
         case 初始化最小模板::结构化分量区间: {
             const auto& 值 = std::get<初始化结构化分量区间材料>(项.载荷);
             核验引用(值.主体概念, 初始化符号角色类型::概念引用);
-            const std::array<std::int64_t, 3> 整数值{值.分量序号, 值.下界, 值.上界};
-            for (std::size_t j = 0; j < 整数值.size(); ++j) {
-                const auto& 来源 = 项.角色来源组[j + 1].来源;
-                const auto 解析 = 解析标准I64(std::string_view(材料.原文).substr(
-                    来源.字节起点, 来源.字节终点 - 来源.字节起点));
-                if (!解析.值 || *解析.值 != 整数值[j])
-                    throw std::logic_error("initialization component integer/source invariant");
-            }
             break;
         }
         default: throw std::logic_error("initialization template invariant");

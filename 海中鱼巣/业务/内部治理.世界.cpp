@@ -1391,8 +1391,7 @@ std::optional<新因果动作定义> 新_内部治理世界类::读取自我动�
         const auto 动作 = 动态服务_.获取动态(节点);
         if (!动作 || 动作->种类 != 新动态种类::动作
             || 动作->动作目标种类 != 新动作目标种类::任务虚拟存在) return std::nullopt;
-        if (动作->动作目标种类 != 新动作目标种类::任务虚拟存在
-            || !动作->动作目标任务虚拟存在 || !动作->动态概念节点)
+        if (!动作->动作目标任务虚拟存在 || !动作->动态概念节点)
             throw std::runtime_error("governance action projection missing");
         const auto 治理 = 读取任务治理场景(*动作->动作目标任务虚拟存在);
         const auto 场景 = 治理 ? 治理场景_.获取场景(治理->场景节点) : std::nullopt;

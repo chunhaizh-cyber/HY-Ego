@@ -544,8 +544,8 @@ bool 服务对象需求发布服务::实现::核验已完成迁移关联(稳定�
         &&change->状态节点组==std::vector<稳定编码>{selected->前状态节点,selected->后状态节点},L"迁移需求结果原变化不符");
     const auto before=state(selected->前状态节点,mapping.原特征节点,oldType.信息->类型根);
     const auto after=state(selected->后状态节点,mapping.原特征节点,oldType.信息->类型根);
-    require(before.强时间.纳秒<=action->动作时间->纳秒&&action->动作时间->纳秒<after.强时间.纳秒
-        &&before.强时间.纳秒<after.强时间.纳秒,L"迁移需求结果原动作时间不符");
+    require(before.强时间.纳秒<=action->动作时间->纳秒&&action->动作时间->纳秒<after.强时间.纳秒,
+        L"迁移需求结果原动作时间不符");
     const auto previous=集合成员(before.固定准确值);const auto following=集合成员(after.固定准确值);
     require(!std::binary_search(previous.begin(),previous.end(),source.需求节点),L"迁移需求结果原前集合已含D");
     auto expected=previous;expected.push_back(source.需求节点);std::sort(expected.begin(),expected.end());
@@ -930,7 +930,7 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
             if(根.状态==正式结构操作状态::依赖未就绪||根.状态==正式结构操作状态::未找到)return {};
             if(根.状态==正式结构操作状态::前提已变化)return {S::引用前提已变化,{},{},{},{},{}};
             if(根.状态!=正式结构操作状态::已读取||!根.信息)发布故障(L"内容求值先天需求根读取工程失败");
-            auto 当前=实现_->读取当前结构(*场景,E,定位.正式内容路径.empty() ? C : 根.信息->需求,定位.引用需求节点);
+            auto 当前=实现_->读取当前结构(*场景,E,根.信息->需求,定位.引用需求节点);
             if(当前.状态==服务对象需求内容读取状态::未就绪)return {};
             if(当前.状态==服务对象需求内容读取状态::资源失败)return {S::资源失败,{},{},{},{},{}};
             if(当前.状态==服务对象需求内容读取状态::内容项未支持)return {S::未支持,{},{},{},{},{}};

@@ -338,7 +338,7 @@ std::int64_t 读I64(const std::string& s){
         throw 推进中断{阶段::D映射受阻,"目标FT类型或单位暂不能精确映射"};
     新部分服务要求目标 out;out.目标存在节点=p.目标存在;out.目标特征类型概念节点=p.目标特征类型;
     if(p.方向){out.目标形式=新需求目标形式::变化方向;out.目标变化方向=*p.方向==新语言知识特征方向::增加 ? 新需求变化方向::增加 : 新需求变化方向::减少;return out;}
-    const auto lo=读I64(p.准确整数 ? *p.准确整数 : *p.区间下界),hi=读I64(p.准确整数 ? *p.准确整数 : *p.区间上界);
+    const auto lo=读I64(p.准确整数 ? *p.准确整数 : *p.区间下界),hi=p.准确整数 ? lo : 读I64(*p.区间上界);
     const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
     if(!ranges)throw 推进中断{阶段::D映射受阻,"目标FT不是已支持的I64区间值域"};
     if(lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))

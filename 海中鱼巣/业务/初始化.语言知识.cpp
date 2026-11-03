@@ -781,9 +781,6 @@ bool 解码结构种子行(const std::vector<std::string_view>& 词,
 
 
     const auto 拒绝 = [&](const char* 文本) { 诊断 = 文本; return false; };
-    for (const auto& 项 : 词)
-        if (项.empty() || !新_语言类::严格UTF8字节串有效(std::string(项)))
-            return 拒绝("结构种子字段不是非空严格UTF8");
     const auto& 头 = 词.front();
     auto& 声明 = 草稿.结构声明;
     if (头 == "结构概念" && 词.size() == 5 && !当前概念 && !当前模式) {

@@ -235,7 +235,7 @@ std::vector<叶项> 展开知识(const 新语言知识信息& k, const std::vect
     for(const auto&leaf:leaves)if(leaf.固定词){
         const auto word=c.依据 ? c.依据->读词(*leaf.固定词):c.词服务.获取词条(*leaf.固定词);
         if(word.状态!=新词条查询状态::已找到||!word.信息){failure.状态=word.状态==新词条查询状态::资源失败 ? I::工程未完成:I::引用不可读;return failure;}
-        if(word.信息->节点!=*leaf.固定词||word.信息->语言节点!=lang){failure.状态=I::读取漂移;return failure;}
+        if(word.信息->语言节点!=lang){failure.状态=I::读取漂移;return failure;}
         fixed.push_back(*word.信息);
     }
     // Registered words may themselves contain spaces. Only separators outside matched words count.
@@ -307,7 +307,7 @@ I 根状态(特征概念规则状态 s){
     if(!有效(q.语言节点)||q.固定原文.empty()||(c.模式==语言解释读取模式::显式额度&&!q.最大知识条目数))return r;
     if(!解码语言场景原文(q.固定原文)){r.状态=I::格式失败;return r;}
     const auto lang=c.语言服务.获取语言(q.语言节点);
-    if(lang.状态!=新语言查询状态::已找到||!lang.信息||lang.信息->节点!=q.语言节点){r.状态=lang.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return r;}
+    if(lang.状态!=新语言查询状态::已找到||!lang.信息){r.状态=lang.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return r;}
     r.快照.语言=lang.信息;
     const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,c.语言服务,c.词服务,c.存在概念服务,c.模式);
     if(ks.状态!=读取状态::已完成){r.状态=输入映射(ks.状态);return r;}
@@ -524,14 +524,14 @@ I 核验基础来源(const 语言场景基础含义& meaning,稳定编码 lang,c
 }
 I 核验实例绑定(const 语言场景基础含义& m,const 新_自然语言世界树类& world){
     const auto scene=world.获取场景(m.场景节点);
-    if(!scene||scene->节点!=m.场景节点)return I::引用不可读;
+    if(!scene)return I::引用不可读;
     const std::size_t count=m.解释.构式==F::S05组成 ? 2:1;
     if(m.对象绑定组.size()!=count)return I::输入拒绝;
     std::set<稳定编码> seen;
     for(std::size_t i=0;i<count;++i){const auto&b=m.对象绑定组[i];
         if(b.局部出现编号!=static_cast<std::int64_t>(i+1)||b.来源概念节点!=命名(m.解释,i).概念节点||!seen.insert(b.实例节点).second)return I::输入拒绝;
         const auto instance=world.获取概念实例(b.实例节点);
-        if(!instance||instance->节点!=b.实例节点||instance->所属场景节点!=m.场景节点
+        if(!instance||instance->所属场景节点!=m.场景节点
             ||instance->概念节点!=b.来源概念节点||instance->种类!=新自然语言概念实例种类::存在概念)return I::引用不可读;
     }
     return I::已形成且读回;
@@ -778,7 +778,7 @@ struct 统一键 final {
 bool S02完全相同(const 基础概念上下位候选&a,const 基础概念上下位候选&b){return a.类别==b.类别&&a.主体概念节点==b.主体概念节点&&a.归类概念节点==b.归类概念节点&&a.主体名称关系节点==b.主体名称关系节点&&a.归类名称关系节点==b.归类名称关系节点&&a.所用知识节点==b.所用知识节点&&范围相同(a.主体范围,b.主体范围)&&范围相同(a.归类范围,b.归类范围);}
 bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统一候选&b){
     if(a.index()!=b.index()||统一候选键(a,true)!=统一候选键(b,true))return false;
-    if(const auto* 图=std::get_if<语言图含义材料>(&a)){const auto& 另=std::get<语言图含义材料>(b);return 图词面语义键(*图)==图词面语义键(另)&&图->固定原文==另.固定原文;}
+    if(const auto* 图=std::get_if<语言图含义材料>(&a)){const auto& 另=std::get<语言图含义材料>(b);return 图->固定原文==另.固定原文;}
     if(const auto*x=std::get_if<语言场景基础候选>(&a))return 候选相同(*x,std::get<语言场景基础候选>(b));
     if(const auto*x=std::get_if<基础概念上下位候选>(&a))return S02完全相同(*x,std::get<基础概念上下位候选>(b));
     if(const auto*x=std::get_if<基础概念归类确认候选>(&a)){const auto&y=std::get<基础概念归类确认候选>(b);return !x->受询者存在节点&&!y.受询者存在节点&&S02完全相同(x->被询归类,y.被询归类)&&范围相同(x->子句范围,y.子句范围)&&范围相同(x->确认词范围,y.确认词范围);}
@@ -795,7 +795,7 @@ bool 统一候选相同(const 语言基础统一候选&a,const 语言基础统�
     if(!有效(q.语言节点)||q.固定原文.empty()||(限额&&(!q.最大原文标量数||!q.最大知识条目数||!q.最大名称候选数||!q.最大组合候选数||!q.最大确认候选数)))return result;
     const auto map=解码语言场景原文(q.固定原文);if(!map){result.状态=I::格式失败;return result;}
     if(限额&&map->标量字节边界.size()-1>q.最大原文标量数){result.状态=I::额度不足;return result;}
-    const auto language=lang.获取语言(q.语言节点);if(language.状态!=新语言查询状态::已找到||!language.信息||language.信息->节点!=q.语言节点){result.状态=language.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return result;}
+    const auto language=lang.获取语言(q.语言节点);if(language.状态!=新语言查询状态::已找到||!language.信息){result.状态=language.状态==新语言查询状态::资源失败 ? I::工程未完成:I::引用不可读;return result;}
     const auto ks=读取语言场景基础知识完整(q.语言节点,q.最大知识条目数,lang,words,es,q.读取模式);
     if(ks.状态!=读取状态::已完成){result.状态=输入映射(ks.状态);return result;}
     const 只读上下文 c{lang,words,names,es,fs,q.读取模式,依据};std::set<U> applicable;
@@ -1027,7 +1027,6 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
             if((result.状态==I::对象待绑定)!=有未决对象)throw std::logic_error("graph binding state does not match object material");
         }
         if(result.状态==I::已形成值式图) {
-            if(新图候选.size()!=1)throw std::logic_error("unique graph interpretation missing unique material");
             const auto& 图=新图候选[0];
             result.含义=图;
         }

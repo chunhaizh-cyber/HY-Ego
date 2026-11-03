@@ -95,7 +95,7 @@ std::optional<新外设消息信息> 读取正式消息(
         if (!项.快照) throw std::runtime_error("peripheral message identity endpoint disappeared");
         if (项.查询节点 == 节点 && 项.快照->结构.字段组 != 消息.结构.字段组)
             throw std::runtime_error("peripheral immutable message content changed");
-        快照.push_back(*项.快照);
+        if (保护) 快照.push_back(*项.快照);
     }
     if (保护) 保护->insert(保护->end(), 快照.begin(), 快照.end());
     return 结果;
