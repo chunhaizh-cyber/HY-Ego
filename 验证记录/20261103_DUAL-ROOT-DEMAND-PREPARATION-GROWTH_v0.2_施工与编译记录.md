@@ -210,3 +210,27 @@ root与独审分别读取最终两源完整diff，无具名P1/P2；该结论仅�
 最终产物完整路径`D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/海中鱼巣.exe`，SHA256为`2F53E85F52887AEEA0D107C2D59D23055C46A01B3B4D2F0EF175B176D80350FB`。本轮无失败构建，原build-v08.log和所有旧日志保留；未清obj/复制工程。构建前后两特征源blob与本节冻结值一致，第8.2节四观测/因果blob亦逐一核同；无其它源码WIP输入，构建中未改生产文件。
 
 最终差异检查及index差异检查通过，仅两特征源及本原记录dirty，index空；无MSBuild/cl/link/应用进程。本owner不运行应用、测试或浏览器，新增普通7所有矩阵运行仍为`NOT_RUN`。代码、原记录和Release bin/obj全部交回root负责精确发布及正常入口复验；当前结论仅为“普通7完整reader实现已编译链接”，不证明实际reader成功、来源后继推进、任务区核同问题解决或上位目标完成。
+
+## 10. v0.9模拟复制原失败的同次定位
+
+root交回唯一模拟学习cpp及原记录/Release资源后，从clean的已发布`602ab72dee6518e203db9f02af597d8d8a24c5be`普通ff-only至仅文档前进的`1506f2548590ac94c974bb47a4d67fc4951fe507`，无冲突/stash。工作树和分支沿前节，index空；增量S0核计划v0.9 blob`3ff2ac67f16e62110aae9445c8585ad73079452a`、详设§18 blob`fd32a02edbaf2fa285a180d4ab8f9fd9d9558205`及索引可执行行，当前学习函数/三lambda/三个调用及公开学习异常边界已逐项读回，知识用途卡无本函数命中。cpp起点`e66343fc02b1f0a9dbae38582a7d0f8dbe98fe32`，原h`2f4fcbd50bbdbdff244fadec912368e1f4d14588`、v0.8两特征源`18ba9c9ded29e72eb3d114db3b97716a73f04aea/ce4ed187449168e3161806d817969c4d6a4c538f`及第8.2节四观测/因果均核同并保持。无应用/构建进程，本轮build-v09.log不存在，旧语言WIP不消费。
+
+唯一生产改动是学习有序本能内调用期无分配上下文：三静态entry、六实际值槽、原existing/owner/language和当前循环索引显式传到原转准确，有限域/历史仍只沿原单遍历；没有预估转换后pos、提前base.size或正式参数号。只在原一次任务/消息集合拒绝谓词为真时追加原m/def/F/id/material及载荷形状/空性/成员数；完整int64原码、非U64的false/null/null、existing=null与0分别保存。原前缀/不支持0/规格未支持、空U64不报错、去重/读取/转换顺序和异常传播均保持；成功路径无新增诊断字符串分配/读取、无新遍历或payload副本。新上下文不进入模板、规格、参数或C/R，不据入口推断字段必要性。
+
+初次冻结cpp blob`497dd9920f184d969784dad49e08a01a805e74dc`，51行新增/13行删除；`git diff --check`及`git diff --cached --check`通过。三入口×六槽的静态传递、两域/两历史索引、原pos求值、载荷及原异常边界已对照；全部新增诊断运行为`NOT_RUN`，不注入故障或建立验证脚本。提交/运行仍由root负责，工程构建待静态复核后追加。
+
+### 10.1 本轮代码知识变更清单
+
+只修改既有private成员`void 海中鱼巣::模拟学习服务::学习有序本能(const 新方法信息&,const std::function<bool()>&,const std::map<std::uint32_t,稳定编码>&,std::optional<稳定编码>,bool,std::optional<std::uint32_t>)`，物理位置`海中鱼巣/业务/模拟学习.服务.cpp`。公开/私有成员签名与递归/消息方案/漂移/停止/采样/执行/发表均不变；三个既有局部lambda只显式传调用期诊断，原getter、转换、写base和抛错调用边/次数不变，不新增成员/外部helper或持久DTO。原一次规格未支持的错误文本增同次定位，bad_alloc及其它异常沿原公开学习边界，不新增catch或业务分支。无新增/退出函数或共享知识写入；依据为原计划v0.9§16、详设§18及LOG-01/CODE-FILE-01。结果提交待root；发布后交知识维护owner按最终blob复核用途卡。本清单不宣称参数复制、正式配对或上位目标完成。
+
+### 10.2 v0.9实际工程构建与交权
+
+root及独审分别读取最终cpp`497dd9920f184d969784dad49e08a01a805e74dc`完整diff并核三入口/六槽、原谓词/prefix/0/pos/optional/枚举与异常边界，无具名P1/P2；只属静态结论。随后以本节HEAD及唯一该cpp WIP成组构建（原记录WIP不参与），源冻结未在构建中改动，原h及范围外输入均保持。实际命令：
+
+```powershell
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' './海中鱼巣.vcxproj' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2 /nologo /v:minimal /fl '/p:OutDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/obj/' '/flp:logfile=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/build-v09.log;verbosity=normal;encoding=UTF-8'
+```
+
+开始`2026-11-04T02:37:31.3150509+08:00`，结束`2026-11-04T02:38:26.5642381+08:00`；本owner及时消费原exec session66250最终回执，真实exit为`0`。实际项目成功生成，`0`警告、`0`错误，MSBuild用时`00:00:54.79`。本次实际只重编`模拟学习.服务.cpp`并LTCG/链接（不是对以后依赖重编范围的承诺）；既有组件过大改非增量LTCG提示不作为业务/配置根因。本轮无失败构建，build-v09.log及全部旧日志分别保留，不清obj或复制工程。
+
+最终exe完整路径`D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/海中鱼巣.exe`，SHA256为`758F0B641391207D54BB7EE1C4DA6284ACAEAE4D7CDAA42AAB4EFC6FE3D1F3CD`。编译后cpp及原h、两特征、四观测、因果blob与第10节输入逐一核同；源码未变，最终差异检查和index差异检查通过，仅该cpp和本原记录dirty，index空。无MSBuild/cl/link/应用进程，代码/原记录及同Release输出资源全部交回root负责精确发布与正常入口复验。本owner未运行应用/浏览器/测试，三入口×六槽/载荷/各错误分支全部运行`NOT_RUN`；结论仅为“同次诊断已实现并编译链接”，不证明typed集合映射修复、正式配对发表或上位目标完成。

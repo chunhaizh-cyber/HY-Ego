@@ -950,7 +950,17 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(defs[i]->比较规则!=特征概念比较规则::需求身份精确)不支持(static_cast<std::uint32_t>(i+1),"demand reference comparison is not typed identity");
         if(const auto* ids=std::get_if<std::vector<稳定编码>>(&defs[i]->值域))for(const auto D:*ids)需求候选序号[i].push_back(加D(D));
     }
-    const auto 转准确=[&](const 新特征准确值& value,const 新特征匹配定义快照& def)->新模拟复制准确值 {
+    struct 复制失败诊断上下文 final {
+        稳定编码 来源特征;
+        const char* 复制入口;
+        std::optional<std::size_t> 既有输入索引;
+        std::uint32_t 所属存在输入;
+        std::uint32_t 所属语言场景输入;
+        const char* 值槽;
+        std::optional<std::size_t> 槽内索引;
+    };
+    const auto 转准确=[&](const 新特征准确值& value,const 新特征匹配定义快照& def,
+        const 复制失败诊断上下文& diagnostic)->新模拟复制准确值 {
         using K=新模拟复制值种类;
         if(const auto* x=std::get_if<std::int64_t>(&value)) {
             if(def.材料类型!=特征概念材料物理类型::I64标量)throw std::runtime_error("typed copied scalar disagrees with feature type");
@@ -970,15 +980,39 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
         if(def.比较规则==特征概念比较规则::服务任务集合身份判等||def.比较规则==特征概念比较规则::消息集合身份判等) {
             const auto* ids=std::get_if<std::vector<std::uint64_t>>(&material->材料);
-            if(!ids||!ids->empty())不支持(0,"copied history/current task or message collection lacks complete typed mapping");
+            if(!ids||!ids->empty())不支持(0,
+                std::string("copied history/current task or message collection lacks complete typed mapping")
+                +"; methodId="+std::to_string(m.节点.值)
+                +"; sourceFeatureId="+std::to_string(diagnostic.来源特征.值)
+                +"; featureTypeRootId="+std::to_string(def.特征类型根.值)
+                +"; featureConceptId="+std::to_string(def.概念节点.值)
+                +"; copyEntry="+diagnostic.复制入口
+                +"; existingInputIndex0="+(diagnostic.既有输入索引 ? std::to_string(*diagnostic.既有输入索引) : "null")
+                +"; ownerExistenceInput="+std::to_string(diagnostic.所属存在输入)
+                +"; languageSceneInput="+std::to_string(diagnostic.所属语言场景输入)
+                +"; valueSlot="+diagnostic.值槽
+                +"; slotIndex0="+(diagnostic.槽内索引 ? std::to_string(*diagnostic.槽内索引) : "null")
+                +"; definitionMaterialTypeCode="+std::to_string(static_cast<std::int64_t>(def.材料类型))
+                +"; comparisonRuleCode="+std::to_string(static_cast<std::int64_t>(def.比较规则))
+                +"; materialId="+std::to_string(id.值)
+                +"; materialPhysicalTypeCode="+std::to_string(static_cast<std::int64_t>(material->物理类型))
+                +"; payloadIsU64Array="+(ids ? "true" : "false")
+                +"; payloadEmpty="+(ids ? (ids->empty() ? "true" : "false") : "null")
+                +"; memberCount="+(ids ? std::to_string(ids->size()) : "null"));
         }
         if(material->物理类型!=材料物理类型::UTF8字符串&&material->物理类型!=材料物理类型::I64数组&&material->物理类型!=材料物理类型::U64数组)
             不支持(0,"copied material physical category unsupported");
         return {K::普通材料,*material};
     };
-    const auto 转域=[&](const 特征概念值域& domain,const 新特征匹配定义快照& def)->新模拟复制值域 {
+    const auto 转域=[&](const 特征概念值域& domain,const 新特征匹配定义快照& def,
+        const 复制失败诊断上下文& diagnostic)->新模拟复制值域 {
         if(const auto* ids=std::get_if<std::vector<稳定编码>>(&domain)) {
-            std::vector<新模拟复制准确值> out;for(const auto id:*ids)out.push_back(转准确(新特征准确值{id},def));return {std::move(out)};
+            std::vector<新模拟复制准确值> out;std::size_t 索引=0;
+            for(const auto id:*ids){
+                auto 当前诊断=diagnostic;当前诊断.槽内索引=索引++;
+                out.push_back(转准确(新特征准确值{id},def,当前诊断));
+            }
+            return {std::move(out)};
         }
         if(const auto* d=std::get_if<特征概念存在集合值域>(&domain);d&&!d->必含存在节点组.empty())不支持(0,"copied domain existence-member constraints lack a local domain representation");
         if(const auto* d=std::get_if<特征概念需求集合值域>(&domain);d&&!d->必含需求节点组.empty())不支持(0,"copied domain demand-member constraints lack a local domain representation");
@@ -986,7 +1020,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         return {domain};
     };
     std::map<稳定编码,std::size_t> 来源F位置;
-    const auto 复制F=[&](稳定编码 F,std::optional<std::size_t> existing,std::uint32_t owner,std::uint32_t language) {
+    const auto 复制F=[&](稳定编码 F,std::optional<std::size_t> existing,std::uint32_t owner,std::uint32_t language,const char* entry) {
         if(const auto it=来源F位置.find(F);it!=来源F位置.end()) {
             const auto& p=base.at(it->second);if(p.所属存在参数!=owner||p.所属语言场景输入!=language)throw std::runtime_error("source feature has conflicting owners");return it->second;
         }
@@ -996,12 +1030,16 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(shape->当前值!=full->当前值||shape->实例区间值!=full->实例区间值||shape->实例单位!=full->实例单位)
             throw 模拟输入采集漂移{};
         新模拟完整特征复制输入 copied;copied.实例单位=full->实例单位;
-        if(full->当前值)copied.当前值=转准确(*full->当前值,shape->定义);if(full->标准值)copied.标准值=转准确(*full->标准值,shape->定义);
-        if(full->实例区间值)copied.实例区间=转域(*full->实例区间值,shape->定义);
-        if(full->实例历史聚合值域)copied.历史聚合=转域(*full->实例历史聚合值域,shape->定义);
-        for(const auto& v:full->历史不同值)copied.历史不同值.push_back(转准确(v,shape->定义));
+        if(full->当前值)copied.当前值=转准确(*full->当前值,shape->定义,{F,entry,existing,owner,language,"current",{}});
+        if(full->标准值)copied.标准值=转准确(*full->标准值,shape->定义,{F,entry,existing,owner,language,"standard",{}});
+        if(full->实例区间值)copied.实例区间=转域(*full->实例区间值,shape->定义,{F,entry,existing,owner,language,"interval-finite",{}});
+        if(full->实例历史聚合值域)copied.历史聚合=转域(*full->实例历史聚合值域,shape->定义,{F,entry,existing,owner,language,"history-domain-finite",{}});
+        std::size_t 历史不同值索引=0;
+        for(const auto& v:full->历史不同值)
+            copied.历史不同值.push_back(转准确(v,shape->定义,{F,entry,existing,owner,language,"history-distinct",历史不同值索引++}));
+        std::size_t 命中记录索引=0;
         for(const auto& hit:full->历史值命中信息) {
-            copied.历史值命中信息.push_back({转准确(hit.值,shape->定义),hit.命中次数});
+            copied.历史值命中信息.push_back({转准确(hit.值,shape->定义,{F,entry,existing,owner,language,"history-hit",命中记录索引++}),hit.命中次数});
         }
         auto pos=existing.value_or(base.size());
         新模拟有序参数输入 input{{0,新方法参数信息类型::特征,shape->定义.概念节点},owner};
@@ -1081,7 +1119,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }else {base.push_back(std::move(input));defs.push_back(shape->定义);}
         来源F位置.emplace(F,pos);来源特征快照.emplace(F,*shape);来源完整特征快照.emplace(F,*full);return pos;
     };
-    for(const auto& [pos,F]:固定来源特征)复制F(F,pos,base.at(pos).所属存在参数,0);
+    for(const auto& [pos,F]:固定来源特征)复制F(F,pos,base.at(pos).所属存在参数,0,"fixed-source-feature");
     std::size_t nextE=0,nextD=0,nextU=0,nextC=0,nextR=0,nextL=0;
     const auto sourceRead=[&](const auto& read,const char* category)->const auto& {
         if(read.状态==新模拟需求状态::前提已变化)throw 模拟输入采集漂移{};
@@ -1113,7 +1151,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     &&defs[k]->特征类型根==shape->定义.特征类型根) {
                     if(existing)不支持(0,"source prototype contains ambiguous same-type feature aliases");existing=k;
                 }
-                复制F(F,existing,static_cast<std::uint32_t>(pos+1),0);
+                复制F(F,existing,static_cast<std::uint32_t>(pos+1),0,"source-existence-all-features");
             }
             continue;
         }
@@ -1170,7 +1208,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(read.状态!=新自然语言场景结构比较状态::已完成||!read.信息)throw std::runtime_error("language scene source unreadable");
             加保护(read.完整保护);const auto l=*read.信息;新模拟语言场景输入 input;input.序号=L位置.at(id);input.专属存在概念=l.场景.专属存在概念节点;input.来源身份=id;
             if(const auto e=来源存在位置.find(id);e!=来源存在位置.end())base.at(e->second).引用语言场景输入=input.序号;
-            for(const auto F:l.场景.特征节点组)input.特征输入组.push_back(static_cast<std::uint32_t>(复制F(F,{},0,input.序号)+1));
+            for(const auto F:l.场景.特征节点组)input.特征输入组.push_back(static_cast<std::uint32_t>(复制F(F,{},0,input.序号,"language-scene-all-features")+1));
             for(const auto E:l.场景.直接成员存在组)input.成员存在输入组.push_back(static_cast<std::uint32_t>(加入来源存在(E)+1));
             for(const auto E:l.场景.边界存在组)input.边界存在输入组.push_back(static_cast<std::uint32_t>(加入来源存在(E)+1));
             for(const auto& e:l.概念实例组)input.实例组.push_back({static_cast<std::uint32_t>(加入来源存在(e.节点)+1),e.概念节点,e.种类});
