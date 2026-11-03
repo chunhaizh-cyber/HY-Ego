@@ -174,3 +174,39 @@ v0.6四源完成后按root要求冻结等待新增条款，未启动v0.6构建�
 最终exe仍为上述同轮`bin/海中鱼巣.exe`，SHA256为`0F884685B258467FC00D0156D9428A063C04AF568DEDDCA89265F8D7FF61381A`。编译前后四输入blob及保留因果/self/需求/服务运行blob均与本节表相同，构建中未改生产文件。`build-v07.log`及全部旧日志分别保留，本轮没有失败构建或`build-v06.log`。
 
 最终`git diff --check`、`git diff --cached --check`通过；只有上述四生产文件及本原记录WIP，index未写。无MSBuild/cl/link/应用进程，源码/记录及同Release bin/obj交回root，root负责最终审查、精确发布和已授权正常入口验证。本owner未运行应用、浏览器、自检或测试，新增各源阶段/集合失败/发布枚举分支均为`NOT_RUN`；结论仅为“v0.6/v0.7实现已编译链接”，不证明诊断实际可见、根因修复、唤醒修复或上位目标完成。
+
+## 9. v0.8普通存在引用完整读取提供者
+
+root交回唯一特征两头源、原记录及同Release bin/obj后，本owner从clean的已发布`dee9b8c0c5cecc94a75d77c336c0eb1d539e1dd5`普通ff-only至仅文档前进的`8dcf9ba94119c7cbf9dd19d68c5aa1f649f69964`，main/origin相同。重新S0读取执行skill、知识三入口、现头源/helper及直接调用，核计划v0.8 blob`6a9d308cc7f0c09367aa0512988df6cbe76ccc5a`、详设§17 blob`2e247514723514ef1ebb684a26add90eab10f797`及索引同行可执行。工作树/分支沿前节，index空，无应用/MSBuild/cl/link进程，原`build-v08.log`不存在。特征h起点`841acc8479645572bfcdf81551e7752ac83b9394`、cpp起点`ac22f34a1c40d813536d8aec4bfd176af3b48793`；原四观测和因果blob与第8.2节一致，范围外生产不改，旧语言WIP不动。
+
+实现只在本特征owner补普通存在节点引用7的完整读口。原公开getter锁内体单份抽到private可抛核心，public保留原锁/空批调用/异常出口；普通7完整路径的顶层、子树和末次读回均直接用本次批核心。每F只在typed预采成功后形成私有批，跨F缓存本调用已成功取得的E/C回执；材料覆盖current/std、命中与legacy历史、两个实例域实际有限端点（即使最终聚合DTO被原getter reset）及旧生命周期字段全部端点。C只经正式上位保护口核身份，不作逐E较窄范围准入；E身份读取精确回执/非空保护，不猜EC布局，按本调用身份去重一次。空实际E无需成员接口，但仍需正式FC/C及实际结构保护。
+
+原解码的历史/标准/当前、计数/唯一性/父子/单位/身份比较及聚合输出保留；cache仅替代普通7相容与重复身份查询。原无生命周期字段分支保留，有字段时按旧重复/覆盖核验，绝不补写保护。cache身份不符/miss与预采故障先核本次已经取得的联合保护，发生变化用private信号到完整reader的前提变化出口，稳定缺缓存/错误身份才工程故障；入口F单次预期不等直接送变化，不再第二次采样改判。明确依赖/typed资源、bad_alloc/length_error与未知工程分别保留，不降为null/无交互者或业务子需求。新闭包合入原一次完整联合批及末次F/记录/子树/中性预期核同，无新状态、动态、事实写入、重试、线程或公共ABI。
+
+静态对照§17矩阵：空current与空E、E多字段/跨F去重、不同历史/legacy、物理有限域、旧保活/无字段、C身份非窄域、各typed失败/cache miss、已采保护变化、三处private与public空批分支、原I64/9路径、末次完整核同及零写。全部为静态核对，不作为运行命中。`git diff --check`、`git diff --cached --check`通过；两生产初次冻结差异204行新增/19行删除，h blob`18ba9c9ded29e72eb3d114db3b97716a73f04aea`、cpp blob`ce4ed187449168e3161806d817969c4d6a4c538f`。root可并行读diff，实际构建结果随后追加；本owner不运行应用/浏览器/测试、不写Git index或提交。
+
+### 9.1 本轮代码知识变更清单
+
+| 完整函数身份/位置/可见性 | 合同、用途、调用和错误责任变化 |
+| --- | --- |
+| `std::optional<新特征信息> 新_特征类::获取特征(稳定编码) const noexcept`；特征cpp public | 原锁和catch保留，新增唯一私有核心空批调用边；解码本体不复制，公开签名/结果及旧无缓存行为不变。仍本地工程诊断，不扩大迁移其它消费者。 |
+| 新增`std::optional<新特征信息> 新_特征类::获取特征可抛内部(稳定编码,const 普通存在引用完整读取批*) const`；特征h/cpp private | 调用者须已持原特征锁；单份旧解码，空批旧行为、本次普通7批以真实成功E缓存替代旧窄域bool与重复身份读取，保留其余规则。资源/变化向上送完整reader，稳定损坏仍原工程出口；无事实写或跨次缓存。 |
+| `新特征完整读取结果 新_特征类::读取特征完整保护(稳定编码) const noexcept`；特征cpp public | 扩现公开读口支持合法普通7；新调用C上位保护/E成员身份及private核心，复用原物理解码/原完整联合闭包；typed非成功保留现DTO/enum，private变化精确映射。其它类型原路径/原工程责任不扩大。 |
+
+新增private批类型及匿名变化信号只活于调用栈，不外泄或持久化；无函数退出。完整依据为原计划v0.8/详设§17和0050/1130/7160；相关用途卡无命中，发布后交知识维护owner按最终两blob建立/复核，结果提交待root。所有新增边/空值/异常/有限域等运行分支均为`NOT_RUN`；本清单不证明运行支持或目标完成。
+
+### 9.2 v0.8工程构建
+
+root与独审分别读取最终两源完整diff，无具名P1/P2；该结论仅为静态复核，不是运行证据。构建输入HEAD为本节`8dcf9ba94119c7cbf9dd19d68c5aa1f649f69964`及上述特征两源WIP（本记录WIP不参与编译），两源冻结不在构建中改动；原四观测及因果保持第8.2节blob，未消费其它树WIP。
+
+本轮沿实际项目原Release/x64参数复用已交权的bin/obj，保留全部旧日志，独立`build-v08.log`：
+
+```powershell
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' './海中鱼巣.vcxproj' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2 /nologo /v:minimal /fl '/p:OutDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/obj/' '/flp:logfile=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/build-v08.log;verbosity=normal;encoding=UTF-8'
+```
+
+构建开始`2026-11-04T02:08:01.6569890+08:00`，结束`2026-11-04T02:12:57.9276560+08:00`；本owner及时消费原exec session90251最终回执，真实exit为`0`。当时记录S0/知识清单已完成，源冻结且root/独审随后完成同两blob静态复核，按root确认保持本次构建自然完成，不中断/重启或修改源码。实际项目成功生成，`0`警告、`0`错误，MSBuild用时`00:04:55.81`；必要头依赖实际重编`68`个cpp（具体列表见独立build-v08.log），随后LTCG/链接完成，不声称仅编译特征cpp或扩大源码改动范围。既有组件过大改非增量LTCG提示仍非编译警告或业务结论。
+
+最终产物完整路径`D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/海中鱼巣.exe`，SHA256为`2F53E85F52887AEEA0D107C2D59D23055C46A01B3B4D2F0EF175B176D80350FB`。本轮无失败构建，原build-v08.log和所有旧日志保留；未清obj/复制工程。构建前后两特征源blob与本节冻结值一致，第8.2节四观测/因果blob亦逐一核同；无其它源码WIP输入，构建中未改生产文件。
+
+最终差异检查及index差异检查通过，仅两特征源及本原记录dirty，index空；无MSBuild/cl/link/应用进程。本owner不运行应用、测试或浏览器，新增普通7所有矩阵运行仍为`NOT_RUN`。代码、原记录和Release bin/obj全部交回root负责精确发布及正常入口复验；当前结论仅为“普通7完整reader实现已编译链接”，不证明实际reader成功、来源后继推进、任务区核同问题解决或上位目标完成。

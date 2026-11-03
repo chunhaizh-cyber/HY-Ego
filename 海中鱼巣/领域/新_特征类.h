@@ -587,6 +587,9 @@ public:
         稳定编码 右概念节点) const noexcept;
 
 private:
+    struct 普通存在引用完整读取批;
+    std::optional<新特征信息> 获取特征可抛内部(
+        稳定编码 特征节点, const 普通存在引用完整读取批* 本次批) const;
     特征概念规则状态 读取信息存在引用定义保护(const 特征概念信息&,
         std::vector<基础联合节点快照>&) const;
     特征概念规则状态 读取信息存在引用值保护(const 特征概念信息&, const 新特征准确值&,
