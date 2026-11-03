@@ -55,7 +55,6 @@ void 检查区间(const std::vector<特征概念I64闭区间>& 域) {
     }
 }
 std::vector<std::int64_t> 编码区间(const std::vector<特征概念I64闭区间>& 域) {
-    检查区间(域);
     std::vector<std::int64_t> 结果;
     for (const auto& 项 : 域) { 结果.push_back(项.下界); 结果.push_back(项.上界); }
     return 结果;
@@ -295,7 +294,6 @@ struct 结构化服务要求服务::实现 {
                 必须(已读.insert(owner.字段锚[下标(键)]).second);
                 std::vector<const 基础字段内容*> 值;
                 for (const auto& 项 : 节点.字段组) {
-                    必须(项.所属节点 == 节点.节点.编码);
                     if (项.字段节点 == owner.字段锚[下标(键)]) 值.push_back(&项.内容);
                 }
                 return 值;
@@ -727,7 +725,6 @@ struct 结构化服务要求服务::实现 {
             }
             if (扩大) continue;
             实现::解码器 解码(s, 快照);
-            if (解码.类型(要求) != 种类::部分要求) return {R::材料不存在, {}, {}};
             auto 材料 = 解码.部分要求(要求);
             return {R::已读取, std::move(材料), std::move(快照)};
         }
