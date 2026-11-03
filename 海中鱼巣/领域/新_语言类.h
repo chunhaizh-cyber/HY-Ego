@@ -8,6 +8,7 @@
 #include <variant>
 
 #include "../核心/基础数据集.h"
+#include "语言分界.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -651,6 +652,13 @@ public:
     static bool 严格UTF8字节串有效(const std::string& 文本) noexcept;
 
     bool 初始化() noexcept;
+
+    // 独立来源结构；不依赖完整含义、词条或被认知需求，不隐式初始化。
+    新语言分界工程状态 初始化分界结构();
+    新语言分界调用结果<新语言前置来源信息> 建立或取得前置来源(
+        const 新语言前置来源请求&, const 新语言分界消息读取接口&);
+    新语言分界调用结果<新语言前置来源信息> 读取前置来源(
+        const 新接收认知来源键&, const 新语言分界消息读取接口&) const;
 
     新语言建立结果 建立或取得语言(
         const 新语言建立请求& 请求) noexcept;

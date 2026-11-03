@@ -4,8 +4,10 @@
 #include <array>
 #include <algorithm>
 #include <chrono>
+#include <cwchar>
 #include <limits>
 #include <mutex>
+#include <new>
 #include <stdexcept>
 #include <set>
 #include <tuple>
@@ -24,6 +26,7 @@ std::mutex 外设互斥;
 
 基础联合节点快照 读取消息快照(稳定编码 节点) {
     const auto 结果 = 全局基础数据集.查询节点组完整结构({节点});
+    if (结果.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (结果.状态 != 基础结构操作状态::已完成 || 结果.节点组.size() != 1 || !结果.节点组[0].快照)
         throw std::runtime_error("peripheral message snapshot unavailable");
     return *结果.节点组[0].快照;
@@ -36,6 +39,7 @@ bool 消息快照相同(const 基础联合节点快照& 左, const 基础联合�
 std::optional<新外设消息信息> 读取正式消息(
     稳定编码 节点, std::vector<基础联合节点快照>* 保护 = nullptr) {
     const auto 结构 = 全局基础数据集.查询完整节点结构(节点);
+    if (结构.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (结构.状态 == 基础结构操作状态::节点不存在) return std::nullopt;
     if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构)
         throw std::runtime_error("peripheral message node read failed");
@@ -88,6 +92,7 @@ std::optional<新外设消息信息> 读取正式消息(
     // 其它消息追加导致的根变化当作消息损坏，也不跨批拼接保护快照。
     const auto 批 = 全局基础数据集.查询节点组完整结构(
         {节点, 消息根, 结果.场景节点, 结果.窗口节点, 结果.正文材料节点});
+    if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 5)
         throw std::runtime_error("peripheral message joint identity read failed");
     std::vector<基础联合节点快照> 快照;
@@ -832,6 +837,47 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设消息保护",
             L"消息保护读取发生未知工程异常。");
+    }
+}
+
+新分界消息读取结果 新_外设世界树类::读取分界消息正文(稳定编码 节点) const {
+    using 状态 = 新语言分界工程状态;
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(消息根)) return {状态::未初始化, {}, {}};
+        if (!有效(节点)) return {状态::输入拒绝, {}, {}};
+        std::vector<基础联合节点快照> 快照组;
+        auto 消息 = 读取正式消息(节点, &快照组);
+        if (!消息) return {状态::未找到, {}, {}};
+        if (消息->来源.方向 != 新外设消息方向::接收) return {状态::未支持, {}, {}};
+        新分界消息读取结果 结果{状态::已完成, std::move(消息), {}};
+        for (const auto& 快照 : 快照组) {
+            const auto 节点值 = 快照.结构.节点;
+            if (std::find(结果.发布前提.节点组.begin(), 结果.发布前提.节点组.end(), 节点值)
+                == 结果.发布前提.节点组.end()) 结果.发布前提.节点组.push_back(节点值);
+            if (节点值.编码 == 节点)
+                结果.发布前提.字段集合组.push_back({节点, std::nullopt, {}, 快照.结构.字段组});
+        }
+        if (结果.发布前提.字段集合组.size() != 1
+            || 结果.发布前提.字段集合组.front().字段组.size() != 10)
+            throw std::logic_error("boundary message final projection missing");
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {状态::资源失败, {}, {}};
+    } catch (const std::length_error&) {
+        return {状态::资源失败, {}, {}};
+    } catch (const std::exception& 异常) {
+        wchar_t 原因[160]{};
+        (void)swprintf_s(原因, L"正式接收消息窄投影读取失败；M=%llu。",
+            static_cast<unsigned long long>(节点.值));
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取分界消息正文",
+            原因, 异常.what());
+    } catch (...) {
+        wchar_t 原因[160]{};
+        (void)swprintf_s(原因, L"正式接收消息窄投影发生未知工程异常；M=%llu。",
+            static_cast<unsigned long long>(节点.值));
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取分界消息正文",
+            原因);
     }
 }
 

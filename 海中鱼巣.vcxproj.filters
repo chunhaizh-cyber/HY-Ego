@@ -31,6 +31,7 @@
     <ClCompile Include="海中鱼巣\领域\消息连接.规则.cpp"><Filter>领域</Filter></ClCompile>
     <ClInclude Include="海中鱼巣\领域\消息连接.规则.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\消息交互.数据.h"><Filter>领域</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\语言分界.数据.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\本能交互.运行接口.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h"><Filter>业务</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\连接.本能合同.h"><Filter>领域\合同</Filter></ClInclude>
