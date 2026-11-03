@@ -1400,9 +1400,8 @@ bool 处理请求(SOCKET 客户端,
         case 网页控制快照状态::已停止: 状态 = "已停止"; break;
         default: throw std::runtime_error("control snapshot state invalid");
         }
-        // 采集中或快照过大时不回传正文，避免单线程 accept 被控制轮询占满而饿死 /api/messages。
-        const bool 回传快照 = 快照.UTF8JSON && !快照.正在采集
-            && 快照.UTF8JSON->size() <= 8192;
+        // 回传已取得的不可变缓存；采集进度、年龄和各域状态仍如实保留。
+        const bool 回传快照 = 快照.UTF8JSON != nullptr;
         const bool 陈旧 = !回传快照
             || (快照.UTF8JSON && 快照.距采集完成毫秒 > 10000);
         const std::string 正文 = "{\"status\":\"" + std::string(状态)
