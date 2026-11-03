@@ -3804,8 +3804,9 @@ std::vector<新来源前驱规则信息> 读取规则全集(const 元数据组& 
     要求(定义==正式规则定义(所属,槽,定义.动作概念),"source predecessor supplied rule definition invalid");
     核验外部配置(所属.配置,存在概念服务_,特征概念服务_,场景服务_,存在服务_,状态服务_,动态服务_,批);核验动作(定义,所属,动态概念服务_,批);
     const auto 全集=读取规则全集(元数据,批,动态概念服务_);
-    for(auto 信息:全集)if(信息.定义.规则概念==定义.规则概念) {
-        要求(信息.定义==定义,"source predecessor same rule identity conflicting definition");批.核同();信息.完整保护=批.保护();return 信息;
+    for(const auto& 信息:全集)if(信息.定义.规则概念==定义.规则概念) {
+        要求(信息.定义==定义,"source predecessor same rule identity conflicting definition");批.核同();
+        auto 结果=信息;结果.完整保护=批.保护();return 结果;
     }
     const auto 节点=发布规则(定义,所属.节点,批);const auto 读回=读取来源前驱规则(节点);
     要求(读回&&读回->定义==定义,"source predecessor rule publication readback mismatch");return *读回;

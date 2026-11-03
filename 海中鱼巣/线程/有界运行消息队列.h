@@ -60,7 +60,7 @@ public:
         if (是停止消息) {
             消息.优先级 = 运行消息优先级::停止;
             停止态 = true;
-            while (队列.size() >= 容量上限 && !队列.empty()) {
+            while (队列.size() >= 容量上限) {
                 队列.pop_back();
             }
         } else if (队列.size() >= 容量上限) {

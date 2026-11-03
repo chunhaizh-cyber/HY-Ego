@@ -256,7 +256,7 @@ public:
         std::size_t 已删除数量 = 0;
         for (const auto 编号 : 待删除编号组) {
             const auto 位置 = 条目组_.find(编号);
-            if (位置 == 条目组_.end() || 当前总字节数_ < 位置->second.字节数) {
+            if (当前总字节数_ < 位置->second.字节数) {
                 continue;
             }
             当前总字节数_ -= 位置->second.字节数;

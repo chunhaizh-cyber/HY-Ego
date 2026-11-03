@@ -1187,7 +1187,8 @@ void 新_动态类::设置动作方法定义提供者(const 动作方法定义�
                 结果.状态 = 新动态操作状态::时间不合法;
                 return 结果;
             }
-            for (const auto& 状态 : {*前状态, *后状态}) {
+            for (const auto* 状态指针 : {&*前状态, &*后状态}) {
+                const auto& 状态 = *状态指针;
                 const auto [位置, 新增] = 唯一状态.emplace(
                     状态.节点.值, 时间状态{状态});
                 if (!新增 && 位置->second.状态 != 状态) {
@@ -1669,7 +1670,8 @@ std::optional<新动态信息> 新_动态类::获取动态(
                 || 后状态->强时间.纳秒 <= 前状态->强时间.纳秒) {
                 return std::nullopt;
             }
-            for (const auto& 状态 : {*前状态, *后状态}) {
+            for (const auto* 状态指针 : {&*前状态, &*后状态}) {
+                const auto& 状态 = *状态指针;
                 const auto [位置, 新增] = 状态索引.emplace(状态.节点.值, 状态);
                 if (!新增 && 位置->second != 状态) return std::nullopt;
             }
@@ -1708,19 +1710,19 @@ std::optional<新动态信息> 新_动态类::获取动态(
                 return std::nullopt;
             }
         }
-        std::vector<新状态信息> 排序状态;
-        for (const auto& [_, 状态] : 状态索引) 排序状态.push_back(状态);
-        std::sort(排序状态.begin(), 排序状态.end(), [](const auto& 左, const auto& 右) {
-            if (左.强时间.纳秒 != 右.强时间.纳秒) {
-                return 左.强时间.纳秒 < 右.强时间.纳秒;
+        std::vector<const 新状态信息*> 排序状态;
+        for (const auto& [_, 状态] : 状态索引) 排序状态.push_back(&状态);
+        std::sort(排序状态.begin(), 排序状态.end(), [](const auto* 左, const auto* 右) {
+            if (左->强时间.纳秒 != 右->强时间.纳秒) {
+                return 左->强时间.纳秒 < 右->强时间.纳秒;
             }
-            return 左.节点 < 右.节点;
+            return 左->节点 < 右->节点;
         });
         新动态信息 信息;
         信息.节点 = 动态节点;
         信息.种类 = 新动态种类::复合;
         信息.主题存在节点 = *主题;
-        for (const auto& 状态 : 排序状态) 信息.状态节点组.push_back(状态.节点);
+        for (const auto* 状态 : 排序状态) 信息.状态节点组.push_back(状态->节点);
         信息.成员动态节点组 = 成员组;
         信息.跨特征时间组 = *时间特征组;
         信息.动态概念节点 = *概念;
