@@ -4,13 +4,16 @@
 #include "语言含义图.数据.h"
 #include "新_特征类.h"
 #include "新_存在类.h"
+#include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <array>
+#include <cwchar>
 #include <initializer_list>
 #include <limits>
 #include <map>
 #include <mutex>
+#include <new>
 #include <set>
 #include <stdexcept>
 #include <string_view>
@@ -63,6 +66,14 @@ enum class 接收含义键 : std::size_t {
     定位宿主, 定位出现, 定位角色, 定位范围, 总数
 };
 std::array<稳定编码, static_cast<std::size_t>(接收含义键::总数)> 接收含义句柄{};
+enum class 语言分界键 : std::size_t {
+    角色, 所属语言组织, 来源消息, 来源根范围, 来源根路径,
+    来源正文材料, 来源登记, 总数
+};
+std::array<稳定编码, static_cast<std::size_t>(语言分界键::总数)> 语言分界句柄{};
+稳定编码 分界键(语言分界键 键) noexcept {
+    return 语言分界句柄[static_cast<std::size_t>(键)];
+}
 稳定编码 采用键(接收含义键 键) noexcept {
     return 接收含义句柄[static_cast<std::size_t>(键)];
 }
@@ -210,6 +221,306 @@ void 回滚语言节点(稳定编码 节点,
 
 } // namespace
 
+namespace {
+struct 分界来源记录 final {
+    稳定编码 节点, 正文材料;
+    新接收认知来源键 来源;
+};
+struct 分界来源闭包 final {
+    基础节点结构 语言组织;
+    std::vector<分界来源记录> 来源组;
+};
+// 只在本文件传递正常的中性前提变化，不进入工程异常或业务值域。
+struct 分界前提变化 final {};
+struct 分界输入拒绝 final {};
+
+[[noreturn]] void 分界来源工程终止(const wchar_t* 入口, 稳定编码 消息,
+    std::optional<稳定编码> 来源, const char* 异常说明) noexcept {
+    wchar_t 原因[192]{};
+    (void)swprintf_s(原因, L"来源工程不变量破坏；M=%llu，已发表来源=%llu。",
+        static_cast<unsigned long long>(消息.值),
+        static_cast<unsigned long long>(来源 ? 来源->值 : 0));
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, 入口, 原因, 异常说明);
+}
+
+const 基础联合节点快照& 取分界快照(
+    const 基础联合节点查询结果& 批, 稳定编码 节点) {
+    const auto 项 = std::find_if(批.节点组.begin(), 批.节点组.end(),
+        [节点](const auto& 值) { return 值.查询节点 == 节点; });
+    if (项 == 批.节点组.end() || !项->快照 || 项->快照->结构.节点.编码 != 节点)
+        throw std::logic_error("preunderstanding source endpoint disappeared");
+    return *项->快照;
+}
+
+基础联合节点查询结果 读取分界节点组(const std::vector<稳定编码>& 节点组) {
+    auto 批 = 全局基础数据集.查询节点组完整结构(节点组);
+    if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点组.size())
+        throw std::logic_error("preunderstanding source joint read failed");
+    for (const auto 节点 : 节点组) (void)取分界快照(批, 节点);
+    return 批;
+}
+
+bool 分界句柄已建立() {
+    const auto 数量 = std::count_if(语言分界句柄.begin(), 语言分界句柄.end(),
+        [](auto 节点) { return 有效(节点); });
+    if (!数量) return false;
+    if (static_cast<std::size_t>(数量) != 语言分界句柄.size()
+        || std::set<稳定编码>(语言分界句柄.begin(), 语言分界句柄.end()).size() != 语言分界句柄.size())
+        throw std::logic_error("preunderstanding source schema handles incomplete");
+    return true;
+}
+
+void 核验分界组织(const 基础联合节点快照& 根) {
+    if (!结构句柄完整() || 根.结构.节点.编码 != 语言组织根节点)
+        throw std::logic_error("preunderstanding source language organization unavailable");
+    std::size_t 类型数 = 0, 父数 = 0;
+    for (const auto& 字段 : 根.结构.字段组) if (字段.字段节点 == 节点类型字段) {
+        if (字段.内容 != 基础字段内容{语言组织根类型})
+            throw std::logic_error("preunderstanding source language organization type corrupt");
+        ++类型数;
+    }
+    for (const auto& 边 : 根.入向外部关系组) if (边.类型 == 基础外部关系类型::父子) {
+        if (边.源节点 != 自然语言组织根节点 || 边.角色或顺序 != 0)
+            throw std::logic_error("preunderstanding source language organization parent corrupt");
+        ++父数;
+    }
+    if (类型数 != 1 || 父数 != 1)
+        throw std::logic_error("preunderstanding source language organization identity corrupt");
+}
+
+void 核验分界基础批(const 基础联合节点查询结果& 批) {
+    核验分界组织(取分界快照(批, 语言组织根节点));
+    for (const auto 键 : 语言分界句柄)
+        if (!取分界快照(批, 键).结构.字段组.empty())
+            throw std::logic_error("preunderstanding source schema key has own fields");
+}
+
+bool 分界结构就绪已加锁() {
+    if (!分界句柄已建立()) return false;
+    if (!结构句柄完整())
+        throw std::logic_error("preunderstanding source base handles lost");
+    std::vector<稳定编码> 节点组{语言组织根节点};
+    节点组.insert(节点组.end(), 语言分界句柄.begin(), 语言分界句柄.end());
+    核验分界基础批(读取分界节点组(节点组));
+    return true;
+}
+
+std::uint64_t 计数分界原文标量(const std::string& 文本) {
+    std::uint64_t 数量 = 0;
+    for (std::size_t 位置 = 0; 位置 < 文本.size(); ++数量) {
+        if (数量 == (std::numeric_limits<std::uint64_t>::max)())
+            throw 分界输入拒绝{};
+        (void)读取已校验码点(文本, 位置);
+    }
+    return 数量;
+}
+
+分界来源记录 解析分界来源(const 基础节点结构& 结构) {
+    if (结构.字段组.size() != 6)
+        throw std::logic_error("preunderstanding source requires six fields");
+    const auto 取 = [&](语言分界键 键) -> const 基础字段内容& {
+        const 基础字段关系* 命中 = nullptr;
+        for (const auto& 字段 : 结构.字段组) if (字段.字段节点 == 分界键(键)) {
+            if (命中) throw std::logic_error("preunderstanding source field duplicated");
+            命中 = &字段;
+        }
+        if (!命中) throw std::logic_error("preunderstanding source field missing");
+        return 命中->内容;
+    };
+    if (std::get<std::int64_t>(std::get<基础值>(取(语言分界键::角色)).材料) != 1
+        || std::get<稳定编码>(取(语言分界键::所属语言组织)) != 语言组织根节点)
+        throw std::logic_error("preunderstanding source role or organization corrupt");
+    分界来源记录 结果{结构.节点.编码, std::get<稳定编码>(取(语言分界键::来源正文材料)), {}};
+    结果.来源.接收消息节点 = std::get<稳定编码>(取(语言分界键::来源消息));
+    const auto& 范围 = std::get<std::vector<std::uint64_t>>(
+        std::get<基础值>(取(语言分界键::来源根范围)).材料);
+    结果.来源.根出现路径 = std::get<std::vector<std::int64_t>>(
+        std::get<基础值>(取(语言分界键::来源根路径)).材料);
+    if (!有效(结果.节点) || !有效(结果.正文材料) || !有效(结果.来源.接收消息节点)
+        || 范围.size() != 2 || 范围[0] != 0 || !范围[1] || !结果.来源.根出现路径.empty())
+        throw std::logic_error("preunderstanding source root locator corrupt");
+    结果.来源.原文起点 = 范围[0];
+    结果.来源.原文终点 = 范围[1];
+    return 结果;
+}
+
+bool 分界消息投影相符(const 基础只读预期& 预期, const 基础联合节点查询结果& 批) {
+    for (const auto& 节点 : 预期.节点组) (void)取分界快照(批, 节点.编码);
+    for (const auto& 选择 : 预期.字段集合组) {
+        const auto& 字段组 = 取分界快照(批, 选择.节点).结构.字段组;
+        std::vector<基础字段关系> 当前;
+        for (const auto& 字段 : 字段组)
+            if ((!选择.字段节点 || 字段.字段节点 == *选择.字段节点)
+                && std::find(选择.排除字段键组.begin(), 选择.排除字段键组.end(), 字段.字段节点)
+                    == 选择.排除字段键组.end()) 当前.push_back(字段);
+        if (当前 != 选择.字段组) return false;
+    }
+    return true;
+}
+
+std::vector<稳定编码> 读取分界登记(const 基础节点结构& 根) {
+    std::vector<稳定编码> 登记;
+    for (const auto& 字段 : 根.字段组) if (字段.字段节点 == 分界键(语言分界键::来源登记)) {
+        const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+        if (!节点 || !有效(*节点)) throw std::logic_error("preunderstanding source registry corrupt");
+        登记.push_back(*节点);
+    }
+    std::sort(登记.begin(), 登记.end());
+    if (std::adjacent_find(登记.begin(), 登记.end()) != 登记.end())
+        throw std::logic_error("preunderstanding source registered twice");
+    return 登记;
+}
+
+分界来源闭包 读取分界来源闭包已加锁(const 基础只读预期& 预期) {
+    const auto 发现 = 读取分界节点组({语言组织根节点});
+    const auto 登记 = 读取分界登记(取分界快照(发现, 语言组织根节点).结构);
+    std::vector<稳定编码> 节点组{语言组织根节点};
+    节点组.insert(节点组.end(), 语言分界句柄.begin(), 语言分界句柄.end());
+    节点组.insert(节点组.end(), 登记.begin(), 登记.end());
+    for (const auto& 节点 : 预期.节点组) 节点组.push_back(节点.编码);
+    std::sort(节点组.begin(), 节点组.end());
+    节点组.erase(std::unique(节点组.begin(), 节点组.end()), 节点组.end());
+    const auto 批 = 读取分界节点组(节点组);
+    核验分界基础批(批);
+    const auto& 根 = 取分界快照(批, 语言组织根节点).结构;
+    if (读取分界登记(根) != 登记)
+        throw std::logic_error("preunderstanding source registry changed under language lock");
+    分界来源闭包 结果{根, {}};
+    std::set<std::tuple<稳定编码, std::uint64_t, std::uint64_t, std::vector<std::int64_t>>> 来源键组;
+    for (const auto 节点 : 登记) {
+        auto 来源 = 解析分界来源(取分界快照(批, 节点).结构);
+        const auto& 键 = 来源.来源;
+        if (!来源键组.emplace(键.接收消息节点, 键.原文起点, 键.原文终点, 键.根出现路径).second)
+            throw std::logic_error("preunderstanding source key duplicated");
+        结果.来源组.push_back(std::move(来源));
+    }
+    if (!分界消息投影相符(预期, 批)) throw 分界前提变化{};
+    return 结果;
+}
+
+void 核验分界消息端口(const 新分界消息读取结果& 读取, 稳定编码 消息节点) {
+    switch (读取.状态) {
+    case 新语言分界工程状态::已完成: case 新语言分界工程状态::未找到:
+    case 新语言分界工程状态::未初始化: case 新语言分界工程状态::输入拒绝:
+    case 新语言分界工程状态::未支持: case 新语言分界工程状态::前提已变化:
+    case 新语言分界工程状态::资源失败: break;
+    default: throw std::logic_error("boundary message unknown engineering state");
+    }
+    if (读取.状态 != 新语言分界工程状态::已完成) {
+        if (读取.消息 || !读取.发布前提.节点组.empty() || !读取.发布前提.字段集合组.empty()
+            || !读取.发布前提.外部关系集合组.empty())
+            throw std::logic_error("boundary message failure carries success payload");
+        return;
+    }
+    if (!读取.消息) throw std::logic_error("boundary message success without message");
+    const auto& 消息 = *读取.消息;
+    const auto& 预期 = 读取.发布前提;
+    if (消息.消息节点 != 消息节点 || 消息.来源.方向 != 新外设消息方向::接收
+        || !有效(消息.正文材料节点) || !有效(消息.场景节点) || !有效(消息.窗口节点)
+        || !新_语言类::严格UTF8字节串有效(消息.UTF8正文)
+        || 预期.字段集合组.size() != 1 || !预期.外部关系集合组.empty())
+        throw std::logic_error("boundary message success contract corrupt");
+    std::set<稳定编码> 节点组;
+    for (const auto& 节点 : 预期.节点组)
+        if (!有效(节点.编码) || !节点组.insert(节点.编码).second)
+            throw std::logic_error("boundary message endpoint projection duplicated");
+    for (const auto 节点 : {消息节点, 消息.正文材料节点, 消息.场景节点, 消息.窗口节点})
+        if (!节点组.contains(节点)) throw std::logic_error("boundary message endpoint projection missing");
+    const auto& 选择 = 预期.字段集合组.front();
+    if (节点组.size() != 5 || 选择.节点 != 消息节点 || 选择.字段节点
+        || !选择.排除字段键组.empty() || 选择.字段组.size() != 10)
+        throw std::logic_error("boundary message field selector contract corrupt");
+    std::set<稳定编码> 字段码组, 字段键组;
+    for (const auto& 字段 : 选择.字段组)
+        if (字段.所属节点 != 消息节点 || !有效(字段.编码) || !有效(字段.字段节点)
+            || !字段码组.insert(字段.编码).second || !字段键组.insert(字段.字段节点).second
+            || 字段.内容.valueless_by_exception())
+            throw std::logic_error("boundary message neutral field projection corrupt");
+}
+
+void 访问分界来源(const 新接收认知来源键& 来源, const 新语言分界消息读取接口& 端口,
+    bool 允许建立, 新语言分界调用结果<新语言前置来源信息>& 结果) {
+    using 状态 = 新语言分界工程状态;
+    if (!有效(来源.接收消息节点) || 来源.原文起点 != 0 || !来源.原文终点) return;
+    if (!来源.根出现路径.empty()) { 结果.状态 = 状态::未支持; return; }
+    {
+        std::lock_guard 锁(新语言互斥);
+        if (!分界结构就绪已加锁()) { 结果.状态 = 状态::未初始化; return; }
+    }
+    // 跨owner调用严格放在语言锁外；只借用本次调用，不保存端口。
+    auto 读取 = 端口.读取分界消息正文(来源.接收消息节点);
+    核验分界消息端口(读取, 来源.接收消息节点);
+    if (读取.状态 != 状态::已完成 && 读取.状态 != 状态::未找到) {
+        结果.状态 = 读取.状态;
+        return;
+    }
+    if (读取.消息 && 计数分界原文标量(读取.消息->UTF8正文) != 来源.原文终点) return;
+    std::lock_guard 锁(新语言互斥);
+    if (!分界句柄已建立()) throw std::logic_error("preunderstanding source schema lost during callback");
+    auto 闭包 = 读取分界来源闭包已加锁(读取.发布前提);
+    const auto 查找 = [&](const 分界来源闭包& 值) {
+        return std::find_if(值.来源组.begin(), 值.来源组.end(),
+            [&](const auto& 记录) { return 记录.来源 == 来源; });
+    };
+    auto 已有 = 查找(闭包);
+    if (!读取.消息) {
+        if (已有 != 闭包.来源组.end()) throw std::logic_error("registered source message is no longer readable");
+        结果.状态 = 状态::未找到;
+        return;
+    }
+    const auto& 消息 = *读取.消息;
+    for (const auto& 记录 : 闭包.来源组)
+        if (记录.来源.接收消息节点 == 来源.接收消息节点
+            && (记录.来源 != 来源 || 记录.正文材料 != 消息.正文材料节点))
+            throw std::logic_error("preunderstanding source root/body disagrees with formal message");
+    if (已有 != 闭包.来源组.end()) {
+        if (已有->正文材料 != 消息.正文材料节点)
+            throw std::logic_error("preunderstanding source immutable body identity changed");
+        结果.信息 = 新语言前置来源信息{已有->节点, 已有->正文材料, 已有->来源, 消息.UTF8正文};
+        结果.状态 = 状态::已完成;
+        return;
+    }
+    if (!允许建立) { 结果.状态 = 状态::未找到; return; }
+    // 发布前准备载荷；发表身份的无分配保存先于完整正式读回。
+    新语言前置来源信息 信息{{}, 消息.正文材料节点, 来源, 消息.UTF8正文};
+    基础节点组追加请求 请求;
+    请求.新节点组.push_back({{
+        {分界键(语言分界键::角色), 基础值{std::int64_t{1}}},
+        {分界键(语言分界键::所属语言组织), 语言组织根节点},
+        {分界键(语言分界键::来源消息), 来源.接收消息节点},
+        {分界键(语言分界键::来源根范围), 基础值{std::vector<std::uint64_t>{0, 来源.原文终点}}},
+        {分界键(语言分界键::来源根路径), 基础值{std::vector<std::int64_t>{}}},
+        {分界键(语言分界键::来源正文材料), 消息.正文材料节点}
+    }});
+    请求.追加字段组.push_back({语言组织根节点, 分界键(语言分界键::来源登记), 基础组内节点引用{0}});
+    请求.预期既有节点组.push_back(闭包.语言组织);
+    请求.只读预期 = 读取.发布前提;
+    for (const auto 键 : 语言分界句柄) {
+        请求.只读预期.节点组.push_back({键});
+        请求.只读预期.字段集合组.push_back({键, std::nullopt, {}, {}});
+    }
+    const auto 发表 = 全局基础数据集.原子追加节点组(请求);
+    if (发表.状态 == 基础节点组追加状态::预期不符) { 结果.状态 = 状态::前提已变化; return; }
+    if (发表.状态 == 基础节点组追加状态::资源失败) { 结果.状态 = 状态::资源失败; return; }
+    if (发表.状态 != 基础节点组追加状态::已完成 || 发表.新节点组.size() != 1)
+        throw std::logic_error("preunderstanding source atomic publication failed");
+    结果.本次已发表身份 = 发表.新节点组.front();
+    if (!有效(*结果.本次已发表身份) || 发表.新节点初始字段关系组.size() != 1
+        || 发表.新节点初始字段关系组.front().size() != 6 || 发表.追加字段关系组.size() != 1)
+        throw std::logic_error("preunderstanding source publication receipt corrupt");
+    闭包 = 读取分界来源闭包已加锁(读取.发布前提);
+    已有 = 查找(闭包);
+    if (已有 == 闭包.来源组.end() || 已有->节点 != *结果.本次已发表身份
+        || 已有->正文材料 != 信息.固定文本材料)
+        throw std::logic_error("preunderstanding source formal readback failed");
+    信息.节点 = 已有->节点;
+    信息.来源 = 已有->来源;
+    结果.信息 = std::move(信息);
+    结果.状态 = 状态::已完成;
+}
+} // namespace
+
 bool 新_语言类::严格UTF8字节串有效(const std::string& 文本) noexcept {
     if (文本.empty()) return false;
     const auto* 字节 = reinterpret_cast<const unsigned char*>(文本.data());
@@ -293,6 +604,69 @@ bool 新_语言类::初始化() noexcept {
     } catch (...) {
         return false;
     }
+}
+
+新语言分界工程状态 新_语言类::初始化分界结构() {
+    using 状态 = 新语言分界工程状态;
+    try {
+        std::lock_guard 锁(新语言互斥);
+        const bool 已有 = 分界句柄已建立();
+        if (!结构句柄完整()) {
+            if (已有) throw std::logic_error("preunderstanding source base handles lost");
+            return 状态::未初始化;
+        }
+        核验分界组织(取分界快照(读取分界节点组({语言组织根节点}), 语言组织根节点));
+        if (!已有) {
+            const auto 建立 = 全局基础数据集.原子建立节点组(
+                std::vector<基础组内新节点>(语言分界句柄.size()));
+            if (建立.状态 == 基础结构操作状态::资源失败) return 状态::资源失败;
+            if (建立.状态 != 基础结构操作状态::已完成 || 建立.节点组.size() != 语言分界句柄.size())
+                throw std::logic_error("preunderstanding source schema publication failed");
+            // 首次发布后无分配保留整组句柄，后续读回资源失败不能重新建组。
+            std::copy(建立.节点组.begin(), 建立.节点组.end(), 语言分界句柄.begin());
+        }
+        if (!分界结构就绪已加锁())
+            throw std::logic_error("preunderstanding source schema initialization incomplete");
+        return 状态::已完成;
+    } catch (const std::bad_alloc&) { return 状态::资源失败; }
+    catch (const std::length_error&) { return 状态::资源失败; }
+    catch (const std::exception& 异常) {
+        分界来源工程终止(L"初始化分界结构", {}, {}, 异常.what());
+    } catch (...) { 分界来源工程终止(L"初始化分界结构", {}, {}, nullptr); }
+}
+
+新语言分界调用结果<新语言前置来源信息> 新_语言类::建立或取得前置来源(
+    const 新语言前置来源请求& 请求, const 新语言分界消息读取接口& 端口) {
+    新语言分界调用结果<新语言前置来源信息> 结果;
+    try {
+        访问分界来源(请求.来源, 端口, true, 结果);
+    } catch (const 分界前提变化&) { 结果.状态 = 新语言分界工程状态::前提已变化; }
+    catch (const 分界输入拒绝&) { 结果.状态 = 新语言分界工程状态::输入拒绝; }
+    catch (const std::bad_alloc&) { 结果.状态 = 新语言分界工程状态::资源失败; }
+    catch (const std::length_error&) { 结果.状态 = 新语言分界工程状态::资源失败; }
+    catch (const std::exception& 异常) {
+        分界来源工程终止(L"建立或取得前置来源", 请求.来源.接收消息节点, 结果.本次已发表身份, 异常.what());
+    } catch (...) {
+        分界来源工程终止(L"建立或取得前置来源", 请求.来源.接收消息节点, 结果.本次已发表身份, nullptr);
+    }
+    if (结果.状态 != 新语言分界工程状态::已完成) 结果.信息.reset();
+    return 结果;
+}
+
+新语言分界调用结果<新语言前置来源信息> 新_语言类::读取前置来源(
+    const 新接收认知来源键& 来源, const 新语言分界消息读取接口& 端口) const {
+    新语言分界调用结果<新语言前置来源信息> 结果;
+    try {
+        访问分界来源(来源, 端口, false, 结果);
+    } catch (const 分界前提变化&) { 结果.状态 = 新语言分界工程状态::前提已变化; }
+    catch (const 分界输入拒绝&) { 结果.状态 = 新语言分界工程状态::输入拒绝; }
+    catch (const std::bad_alloc&) { 结果.状态 = 新语言分界工程状态::资源失败; }
+    catch (const std::length_error&) { 结果.状态 = 新语言分界工程状态::资源失败; }
+    catch (const std::exception& 异常) {
+        分界来源工程终止(L"读取前置来源", 来源.接收消息节点, {}, 异常.what());
+    } catch (...) { 分界来源工程终止(L"读取前置来源", 来源.接收消息节点, {}, nullptr); }
+    if (结果.状态 != 新语言分界工程状态::已完成) 结果.信息.reset();
+    return 结果;
 }
 
 新语言建立结果 新_语言类::建立或取得语言(

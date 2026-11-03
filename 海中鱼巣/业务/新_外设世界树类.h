@@ -2,6 +2,7 @@
 
 #include "新_世界树类.h"
 #include "../领域/消息交互.数据.h"
+#include "../领域/语言分界.数据.h"
 #include <string>
 #include <string_view>
 
@@ -61,7 +62,7 @@ struct 新外设对话框建立结果 final {
 };
 
 // 借用共享事实服务，只拥有独立外设根及其对话框组织；不解释对方身份。
-class 新_外设世界树类 final {
+class 新_外设世界树类 final : public 新语言分界消息读取接口 {
 public:
     explicit 新_外设世界树类(新_世界树类&) noexcept;
     新世界初始化结果 初始化() noexcept;
@@ -81,6 +82,7 @@ public:
     std::optional<新外设消息信息> 读取消息(稳定编码 消息节点) const noexcept;
     新外设接收记录完整结果 完整读取仍保留的接收记录() const noexcept;
     新外设消息保护结果 读取消息保护(稳定编码 消息节点) const noexcept;
+    新分界消息读取结果 读取分界消息正文(稳定编码 消息节点) const override;
     std::optional<新外设消息信息> 查找消息(const 新外设消息来源键&) const noexcept;
     std::vector<新外设消息信息> 读取当前消息(
         稳定编码 窗口节点, 新外设消息方向) const noexcept;
