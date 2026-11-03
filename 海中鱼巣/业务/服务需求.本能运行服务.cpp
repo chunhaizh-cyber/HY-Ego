@@ -445,8 +445,25 @@ public:
         新需求要求(published.状态==服务对象需求发布状态::已发布
             ||published.状态==服务对象需求发布状态::已复用
             ||published.状态==服务对象需求发布状态::已发布但当前读回变化);
-        if(published.变化&&published.变化->新状态节点)
-            out.结果状态节点组.push_back(*published.变化->新状态节点);
+        新需求要求(!published.本次新建发生||published.需求发生.has_value());
+        if(published.需求发生) {
+            const auto& 原=*published.需求发生;
+            const auto occurrence=s.发布.读取需求发生状态(原.状态.节点);
+            新需求要求(occurrence.状态==服务对象需求发生读取状态::已读取&&occurrence.发生.has_value());
+            const auto& 已读=*occurrence.发生;
+            const auto& 定位=已读.关联.定位;
+            新需求要求(已读.关联==原.关联&&定位.主体存在节点==material.服务对象
+                &&定位.特征节点==material.需求特征&&定位.需求节点==material.需求节点);
+            const auto 原动作=s.动态.获取动态(定位.动作节点);
+            新需求要求(原动作&&原动作->动作来源节点==std::optional{已读.关联.动作来源节点});
+            if(published.本次新建发生||已读.关联.动作来源节点==来源_)
+                新需求要求(定位.动作节点==action&&已读.关联.动作来源节点==来源_);
+            else {
+                const auto 首次=s.需求.读取主体需求特征发布关联(material.需求节点);
+                新需求要求(首次.关联&&首次.关联->动作节点==定位.动作节点);
+            }
+            out.结果状态节点组.push_back(已读.状态.节点);
+        }
         if(published.状态==服务对象需求发布状态::已发布但当前读回变化) {
             out.状态=S::已发布但当前读回变化;return out;
         }

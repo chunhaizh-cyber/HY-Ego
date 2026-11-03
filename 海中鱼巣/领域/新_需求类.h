@@ -470,7 +470,7 @@ enum class 新需求操作状态 : std::uint8_t {
     资源失败 = 20,
     权重不合法 = 21,
     执行域不适用, 认知来源不合法, 同来源目标冲突, 需重新确认, 前提已变化,
-    目标内容依赖未就绪=27, 目标内容未支持=28
+    目标内容依赖未就绪=27, 目标内容未支持=28, 需求未满足
 };
 struct 新接收认知需求读取结果 final {
     新需求操作状态 状态=新需求操作状态::入口拒绝;
@@ -523,6 +523,22 @@ struct 新需求建立结果 final {
 struct 新需求集合发布关联 final {
     稳定编码 需求节点, 主体存在节点, 场景节点, 动作节点;
     friend bool operator==(const 新需求集合发布关联&, const 新需求集合发布关联&) = default;
+};
+enum class 新需求发生方式 : std::uint8_t { 新需求=1, 已满足再次需要 };
+struct 新需求发生核心定位 final {
+    稳定编码 场景节点, 主体存在节点, 特征节点, 需求节点, 动作节点;
+    新需求发生方式 方式=新需求发生方式::新需求;
+    friend bool operator==(const 新需求发生核心定位&,const 新需求发生核心定位&)=default;
+};
+struct 新需求发生关联 final {
+    新需求发生核心定位 定位;
+    稳定编码 动作来源节点, 状态节点;
+    friend bool operator==(const 新需求发生关联&,const 新需求发生关联&)=default;
+};
+enum class 新需求发生关联读取状态 : std::uint8_t { 已读取=1, 未找到 };
+struct 新需求发生关联读取结果 final {
+    新需求发生关联读取状态 状态=新需求发生关联读取状态::未找到;
+    std::optional<新需求发生关联> 关联;
 };
 struct 新需求特征发布关联 final {
     稳定编码 需求节点, 主体存在节点, 场景节点, 动作节点;
@@ -633,6 +649,7 @@ public:
     新需求集合发布准备(const 新需求集合发布准备&) = delete;
     新需求集合发布准备& operator=(const 新需求集合发布准备&) = delete;
     const 基础封存追加片段& 片段() const noexcept;
+    const 新需求发生核心定位& 发生定位() const noexcept;
 private:
     struct 实现;
     std::unique_ptr<实现> 实现_;
@@ -839,6 +856,14 @@ public:
     新需求集合发布关联结果 读取主体需求集合发布关联(稳定编码 需求节点) const noexcept;
     新需求集合发布准备结果 准备主体需求特征发布(
         稳定编码, 稳定编码, 稳定编码, 稳定编码, 稳定编码, const 基础联合节点快照&) noexcept;
+    新需求集合发布准备结果 准备主体需求再次需要(
+        稳定编码,稳定编码,稳定编码,稳定编码,稳定编码,const 基础联合节点快照&) noexcept;
+    void 完成主体需求再次需要(const 新需求集合发布准备&,const 基础片段发布回执&) noexcept;
+    新需求发生关联读取结果 读取主体需求发生关联按动作(稳定编码) const noexcept;
+    新需求发生关联读取结果 读取主体需求发生关联按来源(稳定编码) const noexcept;
+    新需求发生关联读取结果 读取主体需求发生关联按状态(稳定编码) const noexcept;
+    新需求操作状态 记录主体需求发生关联(const 新需求发生关联&) noexcept;
+    bool 是需求迁移恢复状态(稳定编码) const noexcept;
     新需求特征发布关联结果 读取主体需求特征发布关联(稳定编码) const noexcept;
     void 完成主体需求特征发布(const 新需求集合发布准备&, const 基础片段发布回执&) noexcept;
     新需求操作状态 完成主体需求首状态关联(稳定编码, const 新需求特征事实凭据&) noexcept;
