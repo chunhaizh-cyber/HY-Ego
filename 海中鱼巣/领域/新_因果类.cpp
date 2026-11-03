@@ -3079,8 +3079,30 @@ void 核验关系元数据外部引用(const 新关系先天元数据请求& 局
     要求(存在->获取存在概念(局部结果.自我概念).has_value(),"relation innate self concept unavailable");
     // 整组读口已完整核验D/T正式定义和依赖闭包，不先重复执行两个单节点全图读取。
     const auto 先天=存在->读取先天需求任务方法概念();
-    要求(先天.信息&&先天.信息->需求==局部结果.需求概念&&先天.信息->任务==局部结果.任务概念,
-        "relation innate demand/task ranges not formal innate concepts");
+    if(!(先天.信息&&先天.信息->需求==局部结果.需求概念&&先天.信息->任务==局部结果.任务概念)){
+        const auto 状态编码=static_cast<unsigned int>(先天.状态);
+        std::string 状态名;
+        switch(先天.状态){
+        case 正式结构操作状态::已建立:状态名="已建立";break;
+        case 正式结构操作状态::已复用:状态名="已复用";break;
+        case 正式结构操作状态::已读取:状态名="已读取";break;
+        case 正式结构操作状态::未找到:状态名="未找到";break;
+        case 正式结构操作状态::输入拒绝:状态名="输入拒绝";break;
+        case 正式结构操作状态::依赖未就绪:状态名="依赖未就绪";break;
+        case 正式结构操作状态::前提已变化:状态名="前提已变化";break;
+        case 正式结构操作状态::定义冲突:状态名="定义冲突";break;
+        default:状态名="未识别（"+std::to_string(状态编码)+"）";break;
+        }
+        throw std::logic_error(std::string("relation innate demand/task ranges not formal innate concepts")
+            +"; provider=读取先天需求任务方法概念; status="+状态名
+            +"; statusCode="+std::to_string(状态编码)
+            +"; hasInfo="+(先天.信息.has_value() ? "true" : "false")
+            +"; expectedDemand="+std::to_string(局部结果.需求概念.值)
+            +"; expectedTask="+std::to_string(局部结果.任务概念.值)
+            +"; actualDemand="+(先天.信息 ? std::to_string(先天.信息->需求.值) : "null")
+            +"; actualTask="+(先天.信息 ? std::to_string(先天.信息->任务.值) : "null")
+            +"; failureKind="+(先天.信息 ? "先天信息身份不符" : "先天信息未取得"));
+    }
     for(const auto [局部节点,治理]:std::vector<std::pair<稳定编码,bool>>{
         {局部结果.服务任务投影场景范围概念,false},{局部结果.任务治理场景范围概念,true}}){
         const auto 局部概念=存在->获取存在概念(局部节点);
