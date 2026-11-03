@@ -124,3 +124,53 @@ root将文档ff至`f09ce6765a345286362ced3b898efe73cb874313`；重新S0精确核
 为补齐实际工程命令退出证据，root在同一实际project/同输出/未改源码上执行一次Build（已是最新），01:10:46.8664399至01:10:48.1493841 +08，实际exec exit0、0警告0错误，原样产物哈希仍FB57A38A；`build-v05-verify.log`与前两日志分别保留。命令沿原Release复验的完整MSBuild路径、`/t:Build /p:Configuration=Release /p:Platform=x64 /m:2 /nologo /v:minimal /fl`和同`OutDir/IntDir`，仅日志依次为上述三文件；不清obj、不重建临时工程、不把已最新复核称为第二次完整编译。
 
 最终源代码/index核回：HEAD9000d1956加唯一因果cpp和本记录WIP，index空；最终因果b7918d14e及原五blob一致，差异检查通过。root独立核最终exe/无构建残留，负责精确提交/集成/推送及后续正常入口复验。当前结论为“已编译、未运行本诊断版”，不是状态传播修复或需求树连续生长；未命中八态分支仍NOT_RUN。两轮失败/成功及原句柄缺口均保留，不用日志成功冒充原句柄回执。
+
+## 8. v0.6来源与调度失败只读观测施工
+
+root交回唯一四文件及原Release输出资源后，本owner从clean的`200940c957a0721b0ec3be7dafe388b6d8b67f16`普通ff-only至已发布`8fbca391ba478ad04d6f40bdb8b5eeb3cce147ae`，main/origin相同。重新增量S0核计划v0.6 blob`662dadd5f48660bc4fe44f7f4df9689ddf596de6`、详设v0.6 blob`a350775461a017396c17d7d21679597470c6ab4d`、索引唯一可执行行及详设§15四个起点；工作树/分支沿第7节，index空，无应用/MSBuild/cl/link进程，`build-v06.log`未存在。v0.5因果cpp为已发布`b7918d14e25b8c631d7b76e6ab1781a635f749e4`且不改；旧语言WIP和其它树未动。
+
+本轮临时诊断只包含静态string_view、optional编码/原enum码/bool，不持有动态字符串或新增事实。上下文自定义等价明确排除诊断；task cpp以静态断言确认观测值及optional值构造/赋值无抛。来源12族只在原依赖信号抛出前记同次原值，保留原catch聚合标签、候选清空及其它资源/取消/变化/工程出口；原组合重读按原OR首项记录。调度两个重载的返回optional记首失败T/具名门，核同原短路顺序和owner调用次数不变；完整纯筹办结果仅调用一次并仍全DTO比较。不增加getter、校验、重读、重试或业务修复。collector的tasks成功/暂不可用均追加readDiagnostic，items/null、reason和整轮完整性原样；source context仅从原筹办副本追加constructionDiagnostic，无任务区不可用时补来源读取。
+
+静态已逐项读回12族、核同各门、未知状态显示、bool/null/实际0、成功optional为空、静态view和JSON九字段。`git diff --check`及`git diff --cached --check`无诊断；当前四生产差异176行新增/43行删除。root/独审按安全读回点复核，待本段工程构建结果追加；未运行应用/浏览器/自检/测试，所有新增观测运行分支为NOT_RUN。本owner无Git/index/提交推送权。
+
+### 8.1 本轮代码知识变更清单
+
+| 完整函数身份/物理位置/可见性 | 用途、合同、调用与错误责任变化 |
+| --- | --- |
+| `新来源前驱查询上下文 新_任务类::构造来源前驱查询上下文(const 新需求信息&,稳定编码,const 新来源前驱当前集合材料&,std::stop_token,std::vector<基础联合节点快照>*) const`；task cpp private | 原provider调用和聚合结果不改，只把12族已持有失败材料存于本次上下文诊断；原工程异常向上送出、资源/取消/变化原样，不新写事实/锁/缓存。 |
+| `新任务调度材料读取结果 新_任务类::读取任务调度材料() const noexcept`及`(稳定编码) const noexcept`；task cpp public | 原采集/调度消费者不改，结果末尾窄optional保存首失败T/门/原bool或enum；资源仍清项组，工程仍最终诊断终止，成功无诊断，不新增读取或不完整业务项。 |
+| `bool 新_任务类::核同本次场景核验批(const 新任务本次场景核验批&,std::optional<新任务筹办观测诊断>*) const`；task cpp private | 增默认空出参，仅两个调度读取传本次optional，其它调用省略参数；原短路/调用/完整比较和返回bool保持，失败时无分配记录具名门，工程仍向上送出。 |
+| 新增`std::string 普通控制投影::观测诊断(const std::optional<新任务筹办观测诊断>&)`；装配cpp内部类private | 唯一新增DTO→JSON helper，只读临时值、转义/停止，不调用owner；空/未知/optional语义分开，取消/资源/工程向原采集边界送出，不吞错为null。 |
+| `普通控制采集结果 普通控制投影::采集完整材料()`及`std::string 普通控制投影::来源前驱(const 新任务因果子需求提议&)`；装配cpp内部类private | 原getter调用不变，只新增上述helper调用边；分别追加任务区诊断和既有context诊断，原完整性/不可用路径不升级，不改变缓存或HTTP生命周期。 |
+
+新临时值类型为`新任务筹办观测诊断`，两既有DTO追加optional；非持久字段，不参与来源等价、条件、事实身份或业务判断。无函数退出；无目标/规范/设计/工程/共享知识修改。用途卡无本轮相关函数命中，结果提交待root发布；发布后交知识维护owner按最终四blob建立/复核，现清单不宣称知识闭合或根因解决。
+
+### 8.2 v0.7窄发布回执投影与成组构建输入
+
+v0.6四源完成后按root要求冻结等待新增条款，未启动v0.6构建，未生成`build-v06.log`。root发布v0.7后，本owner保留四源/本记录WIP普通ff-only至仅文档提交`eb64668b8f97a0f32dbb093a5d50e3132699a648`，无冲突或stash。仅新增详设§16/计划§14增量S0：计划blob`2de650b1b64040327c3870957e8cbc2c95b7fea7`、详设`15ccbadc216fefb82927c1ccb04cad2d3a24d406`与索引同行可执行相符；当前`新任务操作状态`连续1—39名称逐项核同。
+
+只在既有`std::string 普通控制投影::任务(const 新任务调度材料项&)`的workResult拼接追加publicationResult，消费同工作原召回的发布结果；无工作结果仍原workResult=null，无召回/回执则publicationResult=null，回执存在时保留status中文/原statusCode十进制字符串及materialId可选实际编码（包括0）。复用原局部枚举JSON工具，未知原码仍显示未识别；不新增getter、摘要helper、重查、重试、阻塞或唤醒。这是8.1知识清单额外修改的现函数，内部类public，诊断仍向上送出，原getter边/事实/生命周期不变，仅增加本DTO字段投影；无新函数退出。
+
+成组构建输入为上述HEAD及本轮四生产WIP，原v0.5因果保持；记录WIP不参与编译，无旧语言或其它树输入：
+
+| 生产文件 | 冻结blob |
+| --- | --- |
+| 海中鱼巣/领域/因果筹办.只读合同.h | `7b18030f965a4a20cbd82c740b9039519f879cf9` |
+| 海中鱼巣/领域/新_任务类.h | `8dfc53ad9367fa3c42abe7b3300b4fe30e9af33e` |
+| 海中鱼巣/领域/新_任务类.cpp | `94c74526f13639f1738978817217f03e1d77eb45` |
+| 海中鱼巣/装配.普通应用.cpp | `d51039bca259cd6c2c43f09ddcde0108e7a1df18` |
+| 保留海中鱼巣/领域/新_因果类.cpp | `b7918d14e25b8c631d7b76e6ab1781a635f749e4` |
+
+原self/需求/服务运行三cpp分别保持`8da030cab6041f1d45d41de3a610510d21c4537e`、`cbd2e4236e4796e8fb54400d81af00e310e61f16`、`f321800c7e6be74c80517b990c106966fa247bd0`。四源冻结后不再写入；静态差异及index差异检查通过，root可并行复核完整diff。本次用实际项目原Release/x64及同bin/obj，原日志全部保留，只创建新`build-v07.log`：
+
+```powershell
+& 'C:/Program Files/Microsoft Visual Studio/18/Professional/MSBuild/Current/Bin/MSBuild.exe' './海中鱼巣.vcxproj' /t:Build /p:Configuration=Release /p:Platform=x64 /m:2 /nologo /v:minimal /fl '/p:OutDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/bin/' '/p:IntDir=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/obj/' '/flp:logfile=D:/TEMP/海中鱼巣/DUAL-ROOT-DEMAND-PREPARATION-GROWTH/build-20261104-release-v04-01/build-v07.log;verbosity=normal;encoding=UTF-8'
+```
+
+构建于`2026-11-04T01:36:46.0813603+08:00`启动，`2026-11-04T01:39:24.2420729+08:00`结束；本owner及时消费原exec session45536最终回执，真实exit为`0`。MSBuild成功生成，`0`警告、`0`错误，日志用时`00:02:37.73`。LTCG阶段沿既有工具集提示组件过大、改为非增量LTCG，最终编译链接成功；该提示不作为配置根因或业务证据。
+
+本次header依赖实际重编21个cpp：内部治理.世界、动作概念.方法投影服务、因果.任务筹办服务、因果.反向查询服务、接收需求认知.服务、服务值结算.本能运行服务、服务对象.本能运行服务、服务需求.本能运行服务、模拟任务需求来源.服务、模拟学习.服务、连接.本能运行服务、启动.应用程序、新_任务工作线程类、新_任务管理线程类、新_自我工作线程类、新_自我线程类、装配.普通应用、任务结算.规则、新_任务类、新_因果类、新_需求类；不是只有两个cpp编译，也不是源码变更扩大到这21文件。原项目增量编译/链接，未清obj或复制工程。
+
+最终exe仍为上述同轮`bin/海中鱼巣.exe`，SHA256为`0F884685B258467FC00D0156D9428A063C04AF568DEDDCA89265F8D7FF61381A`。编译前后四输入blob及保留因果/self/需求/服务运行blob均与本节表相同，构建中未改生产文件。`build-v07.log`及全部旧日志分别保留，本轮没有失败构建或`build-v06.log`。
+
+最终`git diff --check`、`git diff --cached --check`通过；只有上述四生产文件及本原记录WIP，index未写。无MSBuild/cl/link/应用进程，源码/记录及同Release bin/obj交回root，root负责最终审查、精确发布和已授权正常入口验证。本owner未运行应用、浏览器、自检或测试，新增各源阶段/集合失败/发布枚举分支均为`NOT_RUN`；结论仅为“v0.6/v0.7实现已编译链接”，不证明诊断实际可见、根因修复、唤醒修复或上位目标完成。

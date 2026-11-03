@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string_view>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -262,6 +263,12 @@ struct 新来源前驱当前集合材料 final {
             &&a.当前准确值==b.当前准确值&&a.当前完整材料==b.当前完整材料&&a.当前成员组==b.当前成员组;
     }
 };
+struct 新任务筹办观测诊断 final {
+    std::optional<稳定编码> 任务节点;
+    std::string_view 阶段,读取用途,结果类型,状态类型,状态名称;
+    std::optional<std::int64_t> 状态编码;
+    std::optional<bool> 判定值,依赖存在;
+};
 struct 新来源前驱查询上下文 final {
     新服务取得来源前驱配置 配置;
     新来源前驱交互者材料 交互者;
@@ -271,10 +278,12 @@ struct 新来源前驱查询上下文 final {
     std::optional<新服务取得目标实例信息> 本槽既有实例;
     std::vector<基础联合节点快照> 完整保护;
     friend bool operator==(const 新来源前驱查询上下文& a,const 新来源前驱查询上下文& b) {
+        // 构造诊断只供人读，不参与原来源上下文的业务等价。
         return a.配置==b.配置&&a.交互者==b.交互者&&a.当前集合==b.当前集合&&a.完成服务父需求==b.完成服务父需求
             &&a.服务根需求==b.服务根需求&&a.排除投影需求==b.排除投影需求
             &&a.完整候选组==b.完整候选组&&a.本槽既有实例==b.本槽既有实例;
     }
+    std::optional<新任务筹办观测诊断> 构造诊断;
 };
 struct 新来源前驱消息绑定 final {
     稳定编码 M;

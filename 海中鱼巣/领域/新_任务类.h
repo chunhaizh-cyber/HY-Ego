@@ -1497,6 +1497,7 @@ enum class 新任务调度读取状态 : std::uint8_t {
 struct 新任务调度材料读取结果 final {
     新任务调度读取状态 状态 = 新任务调度读取状态::结构不一致;
     std::vector<新任务调度材料项> 项组;
+    std::optional<新任务筹办观测诊断> 读取诊断;
 };
 
 class 新_任务类 final : public 新内部治理对象读取接口,
@@ -2048,7 +2049,8 @@ private:
     void 读取新增成员目标组(新任务本次场景核验批&,const std::vector<稳定编码>&) const;
     void 读取冲突候选目标组(新任务本次场景核验批&) const;
     新需求当前满足结果 读取批需求满足(const 新任务本次场景核验批&,const 新需求信息&) const;
-    bool 核同本次场景核验批(const 新任务本次场景核验批&) const;
+    bool 核同本次场景核验批(const 新任务本次场景核验批&,
+        std::optional<新任务筹办观测诊断>* 观测=nullptr) const;
     新方法参数特征读取结果 读取本次存在参数特征(const 新任务本次场景核验批&,
         稳定编码,std::optional<稳定编码>,std::uint32_t,稳定编码,稳定编码) const;
     const 新方法场景事实读取接口* 场景事实读取_ = nullptr;
