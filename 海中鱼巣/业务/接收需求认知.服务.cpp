@@ -5,6 +5,7 @@
 #include "../领域/新_自然语言世界树类.h"
 #include "../领域/新_场景类.h"
 #include "../领域/新_需求类.h"
+#include "../领域/语言分界.数据.h"
 #include "../领域/概念_二次特征类.h"
 #include "../核心/容错检查.h"
 #include "../核心/日志系统.h"
@@ -511,7 +512,28 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if(it==impl.会话组.end())throw 推进中断{阶段::非本次人类需求,"消息未接入正式会话语境，保留原始接收事实"};context=it->second.语境;}
         out.H=context.已绑定人类;
         if(!context.已绑定人类)throw 推进中断{阶段::非本次人类需求,"匿名会话不推定人类主体"};
-        const 新接收认知来源键 k{m.消息节点,0,标量数(m.UTF8正文),{}};
+        const 新接收认知来源键 请求键{m.消息节点,0,标量数(m.UTF8正文),{}};
+        进入步骤("建立或取得正式原文来源");
+        const auto pre=d.语言.建立或取得前置来源({请求键},d.外设);
+        const auto 来源工程错误=[&](const char* 原因) {
+            throw std::logic_error(std::string(原因)+"；M="+std::to_string(m.消息节点.值)
+                +"；来源状态="+std::to_string(static_cast<unsigned>(pre.状态))
+                +"；本次已发表来源="+std::to_string(pre.本次已发表身份 ? pre.本次已发表身份->值 : 0));
+        };
+        if(pre.状态!=新语言分界工程状态::已完成&&pre.信息)
+            来源工程错误("前置来源非成功携带业务信息");
+        switch(pre.状态) {
+        case 新语言分界工程状态::已完成:break;
+        case 新语言分界工程状态::资源失败:资源();
+        case 新语言分界工程状态::前提已变化:漂移();
+        default:来源工程错误("正式保留消息的前置来源返回不符合接线前置的状态");
+        }
+        if(!pre.信息)来源工程错误("前置来源成功却缺少正式载荷");
+        const auto& 固定来源=*pre.信息;
+        if(!有效(固定来源.节点)||固定来源.来源!=请求键
+            ||固定来源.固定文本材料!=m.正文材料节点||固定来源.固定UTF8原文!=m.UTF8正文)
+            来源工程错误("正式前置来源与选定消息不一致");
+        const auto& k=固定来源.来源;
         if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
         进入步骤("读取同源语言采用");
         auto adopted=d.语言.读取接收采用含义(k,d.特征);
@@ -604,7 +626,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             进入步骤("读取现实对象范围");
             const auto scope=读范围(d,context.现实根,stop);
             接收专名读取器 names(d,context.现实根,stop);
-            语言基础统一输入请求 req{context.语言,m.UTF8正文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
+            语言基础统一输入请求 req{context.语言,固定来源.固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
             if(context.已绑定自我)
                 req.交互上下文=语言图交互上下文{m.消息节点,*context.已绑定人类,*context.已绑定自我,context.现实根};
             进入步骤("纯统一解释");
@@ -643,7 +665,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             };
             接收采用读取器 reader(d,context,m,resources,scope,parsed,names.项目,stop,contextStill);
             进入步骤("发表同源语言采用");
-            const auto u=d.语言.建立或取得接收采用含义({k,*out.S,*context.已绑定人类,context.现实根,m.正文材料节点,graph,parsed.图角色原文定位组},d.特征,d.特征概念,reader);
+            const auto u=d.语言.建立或取得接收采用含义({k,*out.S,*context.已绑定人类,context.现实根,固定来源.固定文本材料,graph,parsed.图角色原文定位组},d.特征,d.特征概念,reader);
             if(u.状态==新语言含义采用状态::资源失败)资源();if(u.状态==新语言含义采用状态::前提已变化)漂移();
             if(u.状态==新语言含义采用状态::输入拒绝)
                 throw 推进中断{阶段::非支持输入,"语言角色的正式特征引用材料尚不受支持，保留原消息及来源场景"};
