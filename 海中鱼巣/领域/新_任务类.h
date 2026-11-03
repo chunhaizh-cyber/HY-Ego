@@ -1504,6 +1504,7 @@ class 新_任务类 final : public 新内部治理对象读取接口,
 public:
     void 装配前置语言输入读取接口(const 新前置语言输入读取接口*) noexcept;
     新任务治理承接结果 建立前置语言材料父任务(稳定编码 输入自我存在,稳定编码 服务根D) noexcept;
+    // 只判断前置语言读取的父域资格，不把同一T限制为排他的材料任务。
     bool 是前置语言材料父任务(稳定编码 T) const noexcept;
     新任务前置语言输入结果 筹办前置语言输入材料(const 新任务前置语言输入请求&,std::stop_token) const;
     新需求新增成员基准结果 读取新增成员目标基准(稳定编码,稳定编码) const noexcept override;
