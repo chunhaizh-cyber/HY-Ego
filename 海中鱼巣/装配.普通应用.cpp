@@ -1276,8 +1276,9 @@ public:
             return "{\"stage\":\"未处理\",\"reason\":\"尚无接收认知观察\",\"message\":null,\"speaker\":null,\"scene\":null,\"meaning\":null,\"demand\":null}";
         }
         auto item=*last;
-        static constexpr std::array<const char*,13> names{"未处理","已采用U","已建立D","已读回","非支持输入",
-            "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求"};
+        static constexpr std::array<const char*,15> names{"未处理","已采用U","已建立D","已读回","非支持输入",
+            "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求",
+            "前置输入待治理","前置输入治理等待"};
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
