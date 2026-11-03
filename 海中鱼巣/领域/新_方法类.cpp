@@ -3076,10 +3076,10 @@ bool 是服务对象空头前代(const 新方法信息& 旧, const std::vector<�
 std::vector<稳定编码> 读取旧网页退役成员(const 概念_特征类& 概念服务) {
     if (!节点仍存在(方法旧网页退役成员字段))
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
-    const auto 组 = 读取多节点字段(新方法组织根节点, 方法旧网页退役成员字段, 概念服务);
-    if (!组 || std::set<稳定编码>(组->begin(), 组->end()).size() != 组->size())
+    auto 组 = 读取多节点字段(新方法组织根节点, 方法旧网页退役成员字段, 概念服务);
+    if (!组)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验旧网页方法退役结构", L"退役引用或服务对象方法族拓扑不完整，保留历史材料。");
-    return *组;
+    return std::move(*组);
 }
 
 const 新方法信息& 核验服务对象方法族(const std::vector<新方法信息>& 组) {
@@ -3810,8 +3810,6 @@ struct 初始声明补齐候选 final {
         核验治理组织就绪();
         // 入口保护只用于预检；新M的完整保护由全部候选完成后的工厂独立取得。
         (void)初始必要保护;
-        if(请求.初始必要条件&&!通用概念必要声明形状有效(*请求.初始必要条件))
-            return {新方法操作状态::函数登记冲突,{}};
         for (const auto& 参数 : 请求.参数规格组) {
             if (参数.有序规格 && 参数.有序规格->信息类型 == 新方法参数信息类型::存在
                 && !方法存在范围有效(参数.有序规格->范围概念节点,存在概念服务_))
@@ -4070,11 +4068,6 @@ bool 新_方法类::初始化() noexcept {
                 模拟消息参数位置字段,模拟消息方向字段,模拟正文范围字段,模拟正文非空字段,模拟输入时机字段,模拟触发位置方向字段};
             const std::set<稳定编码> 扩展键(扩展键组.begin(), 扩展键组.end());
             if (扩展键.size() != 扩展键组.size()) throw std::runtime_error("method extension keys collide");
-            if (虚拟存在启用特征字段 == 虚拟存在专属概念字段
-                || 虚拟存在启用特征字段 == 方法父代字段 || 虚拟存在专属概念字段 == 方法父代字段
-                || 方法行为字段 == 方法父代字段 || 方法行为字段 == 虚拟存在启用特征字段
-                || 方法行为字段 == 虚拟存在专属概念字段)
-                throw std::runtime_error("method extension keys collide");
             if (!有效(方法启用特征类型)) {
                 特征概念定义 定义;
                 定义.值域 = std::vector<特征概念I64闭区间>{{0, 1}};
@@ -4691,10 +4684,6 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 结果.状态 = 新方法操作状态::结构不一致;
                 return 结果;
             }
-            std::vector<新方法条件结果定义> 已有配对;
-            for (const auto& 项 : 已有->条件结果组) {
-                已有配对.push_back({项.条件, 项.结果, 项.线性关系组});
-            }
             if (已有->作用域 == 请求.作用域
                 && 已有->行为 == 请求.行为
                 && 已有->实现方式 == 请求.实现方式
@@ -4703,8 +4692,8 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 && 分支定义组(*已有)==请求.执行分支组
                 && 已有->初始模拟输入方案组==请求.初始模拟输入方案组
                 && !已有->来源方法节点
-                && 已有配对.size() == 请求.条件结果组.size()
-                && std::equal(已有配对.begin(), 已有配对.end(), 请求.条件结果组.begin(),
+                && 已有->条件结果组.size() == 请求.条件结果组.size()
+                && std::equal(已有->条件结果组.begin(), 已有->条件结果组.end(), 请求.条件结果组.begin(),
                     [](const auto& 左, const auto& 右) {
                         return 左.条件 == 右.条件 && 同义结果(左.结果,右.结果)
                             && 线性关系等价(左.线性关系组, 右.线性关系组);
@@ -5059,7 +5048,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if(!结构仍存在())return {新方法操作状态::尚未初始化,{}};
         核验治理组织就绪();
         const auto members=读取多节点字段(新方法组织根节点,方法成员字段,特征概念服务_);
-        if(!members||std::set<稳定编码>(members->begin(),members->end()).size()!=members->size())
+        if(!members)
             throw std::runtime_error("legacy demand full method root unreadable");
         std::map<稳定编码,新方法信息> all;
         std::set<稳定编码> family;
@@ -5376,7 +5365,6 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             }
             结果.项组.push_back(std::move(项));
         }
-        std::sort(结果.项组.begin(), 结果.项组.end(), [](const auto& 左, const auto& 右) { return 左.节点 < 右.节点; });
         结果.方法组织根 = 新方法组织根节点;
         结果.状态 = 状态::已读取;
         return 结果;
@@ -6554,7 +6542,6 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
             记录监控([&](auto& 文本) { 文本 << L"纳入候选方法=" << 方法节点.值; });
 #endif
         }
-        std::sort(结果.方法节点组.begin(), 结果.方法节点组.end());
         结果.状态 = 新方法操作状态::已找到;
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
         记录监控([&](auto& 文本) { 文本 << L"查询完成；候选数量=" << 结果.方法节点组.size(); });
@@ -8132,7 +8119,7 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
 正式结构概念保护结果 新_方法类::读取初始场景事实概念保护(稳定编码 c) const noexcept {
     const auto proof=存在概念服务_.读取已确认消息连接概念保护();
     if(!proof.信息)return proof;
-    if(proof.信息&&proof.信息->节点==c)return proof;
+    if(proof.信息->节点==c)return proof;
     return {};
 }
 新方法建立结果 新_方法类::补齐空头初始必要条件(稳定编码 method,const 新方法信息& expected,
@@ -8173,7 +8160,7 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
             for(const auto& s:group) {
                 const auto it=std::find_if(protection.begin(),protection.end(),[&](const auto& old){return old.结构.节点==s.结构.节点;});
                 if(it!=protection.end()) {
-                    if(it->结构.节点!=s.结构.节点||it->结构.字段组!=s.结构.字段组
+                    if(it->结构.字段组!=s.结构.字段组
                         ||it->入向字段组!=s.入向字段组||it->入向外部关系组!=s.入向外部关系组
                         ||it->出向外部关系组!=s.出向外部关系组)throw 初始声明前提变化{};
                 }

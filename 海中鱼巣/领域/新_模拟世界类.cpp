@@ -53,7 +53,7 @@ void 合并模拟联合预期(基础节点组追加请求& q) {
             ||it->second.入向外部关系组!=p.入向外部关系组||it->second.出向外部关系组!=p.出向外部关系组))
             throw std::runtime_error("simulation input definition premise changed");
     }
-    q.预期联合节点组.clear();for(const auto& [n,p]:merged)q.预期联合节点组.push_back(p);
+    q.预期联合节点组.clear();for(auto& [n,p]:merged)q.预期联合节点组.push_back(std::move(p));
 }
 // 外部边及字段替换/删除必须保护既有端点的完整联合结构。
 void 补齐模拟追加联合预期(基础节点组追加请求& q) {
@@ -67,12 +67,12 @@ void 补齐模拟追加联合预期(基础节点组追加请求& q) {
         if (const auto* n = std::get_if<稳定编码>(&f.内容)) 节点.push_back(*n);
     std::sort(节点.begin(),节点.end());
     节点.erase(std::unique(节点.begin(),节点.end()),节点.end());
-    const auto r = 全局基础数据集.查询节点组完整结构(节点);
+    auto r = 全局基础数据集.查询节点组完整结构(节点);
     if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 节点.size())
         throw std::runtime_error("simulation joint snapshot read failed");
-    for (const auto& x : r.节点组) {
+    for (auto& x : r.节点组) {
         if (!x.快照) throw std::runtime_error("simulation joint snapshot missing");
-        q.预期联合节点组.push_back(*x.快照);
+        q.预期联合节点组.push_back(std::move(*x.快照));
     }
     合并模拟联合预期(q);
 }
@@ -95,9 +95,9 @@ void 补齐隔离追加联合预期(基础节点组追加请求& q) {
         if(const auto* n=std::get_if<稳定编码>(&e.源节点))nodes.insert(*n);
         if(const auto* n=std::get_if<稳定编码>(&e.目标节点))nodes.insert(*n);
     }
-    const auto r=全局基础数据集.查询节点组完整结构({nodes.begin(),nodes.end()});
+    auto r=全局基础数据集.查询节点组完整结构({nodes.begin(),nodes.end()});
     if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=nodes.size())throw std::runtime_error("isolation premise capture failed");
-    for(const auto& n:r.节点组){if(!n.快照)throw std::runtime_error("isolation endpoint missing");q.预期联合节点组.push_back(*n.快照);}
+    for(auto& n:r.节点组){if(!n.快照)throw std::runtime_error("isolation endpoint missing");q.预期联合节点组.push_back(std::move(*n.快照));}
     合并模拟联合预期(q);
 }
 
@@ -143,9 +143,9 @@ struct 创建批 final {
     }
 };
 std::optional<基础字段关系> 唯一字段(稳定编码 n, 字段 f) {
-    const auto 组 = 全局基础数据集.查询字段(n, 字段组[f]);
+    auto 组 = 全局基础数据集.查询字段(n, 字段组[f]);
     if (组.size() != 1) return std::nullopt;
-    return 组.front();
+    return std::move(组.front());
 }
 std::optional<std::int64_t> 读值(稳定编码 n, 字段 f) {
     const auto 项 = 唯一字段(n, f); if (!项) return std::nullopt;
@@ -197,9 +197,9 @@ std::vector<稳定编码> 读引用组(稳定编码 n,字段 key) {
     }return out;
 }
 template<class T>T 读结构材料(稳定编码 n,字段 key) {
-    const auto f=唯一字段(n,key);const auto* raw=f?std::get_if<基础值>(&f->内容):nullptr;
-    const auto* x=raw?std::get_if<T>(&raw->材料):nullptr;
-    if(!x)throw std::runtime_error("simulation typed material corrupt");return *x;
+    auto f=唯一字段(n,key);auto* raw=f?std::get_if<基础值>(&f->内容):nullptr;
+    auto* x=raw?std::get_if<T>(&raw->材料):nullptr;
+    if(!x)throw std::runtime_error("simulation typed material corrupt");return std::move(*x);
 }
 稳定编码 必读引用(稳定编码 n,字段 key) {
     const auto x=读引用(n,key);if(!x)throw std::runtime_error("simulation typed mandatory reference missing");return *x;
@@ -556,12 +556,12 @@ constexpr const char* 需求结果问题格式 = "方法问题场景归档/8";
     throw std::runtime_error("不支持的问题采用来源");
 }
 template<class T> T 读归档值(稳定编码 n,字段 f) {
-    const auto field=唯一字段(n,f);
+    auto field=唯一字段(n,f);
     if (!field) throw std::runtime_error("归档字段缺失或重复");
-    const auto* raw=std::get_if<基础值>(&field->内容);
-    const auto* v=raw ? std::get_if<T>(&raw->材料) : nullptr;
+    auto* raw=std::get_if<基础值>(&field->内容);
+    auto* v=raw ? std::get_if<T>(&raw->材料) : nullptr;
     if (!v) throw std::runtime_error("归档字段类型非法");
-    return *v;
+    return std::move(*v);
 }
 std::vector<std::uint64_t> 问题身份(const 新方法问题反馈材料& x) {
     if (x.采用来源==新方法问题采用来源::任务执行组织) {
@@ -914,13 +914,13 @@ std::optional<新特征值信息> 新_模拟世界类::读取模拟特征值材�
         if(实现_->通用) {
             const auto k=实现_->通用材料.find(节点);
             if(k==实现_->通用材料.end())return {};
-            const auto f=唯一字段(节点,数值);
-            const auto* v=f?std::get_if<基础值>(&f->内容):nullptr;
+            auto f=唯一字段(节点,数值);
+            auto* v=f?std::get_if<基础值>(&f->内容):nullptr;
             if(!v)throw std::runtime_error("registered local material payload missing");
             新特征值信息 r;r.节点=节点;r.物理类型=k->second;
-            if(const auto* a=std::get_if<std::vector<std::uint64_t>>(&v->材料))r.材料=*a;
-            else if(const auto* a=std::get_if<std::vector<std::int64_t>>(&v->材料))r.材料=*a;
-            else if(const auto* a=std::get_if<std::string>(&v->材料))r.材料=*a;
+            if(auto* a=std::get_if<std::vector<std::uint64_t>>(&v->材料))r.材料=std::move(*a);
+            else if(auto* a=std::get_if<std::vector<std::int64_t>>(&v->材料))r.材料=std::move(*a);
+            else if(auto* a=std::get_if<std::string>(&v->材料))r.材料=std::move(*a);
             else throw std::runtime_error("registered local material payload category corrupt");
             if(实现_->记录复制读取) {
                 for(const auto& [F,p]:实现_->通用参数)if(p.规格.信息类型==新方法参数信息类型::特征) {
@@ -1642,8 +1642,6 @@ namespace 海中鱼巣 {
             ||!范围包含(构造范围[*target],domain->存在概念节点))return {};
     }
     for(const auto& r:初始关系组)if(r.种类==新方法参数关系种类::特征引用存在) {
-        if(!r.左参数序号||!r.右参数序号||r.左参数序号>m->参数规格组.size()
-            ||r.右参数序号>m->参数规格组.size())return {};
         if(需求参数[r.右参数序号-1]) {
             const auto& F=输入[r.左参数序号-1];
             const auto d=s.方法.读取模拟特征范围(F.规格.范围概念节点);
@@ -2769,7 +2767,7 @@ bool 模拟需求业务相同(const 新本能需求材料& 左,const 新本能�
             追加.追加字段组.push_back({动作,字段组[动态引用],基础组内节点引用{*变化}});
             追加.追加字段组.push_back({调用.调用节点,字段组[动态引用],基础组内节点引用{*变化}});
         }
-        auto 历史=材料.动作前需求特征.历史不同值;
+        const auto& 历史=材料.动作前需求特征.历史不同值;
         std::set<稳定编码> 去重;
         for(const auto& 值:历史) {
             const auto* 节点=std::get_if<稳定编码>(&值);if(!节点)throw std::logic_error("demand history value is not a reference");
@@ -3642,17 +3640,15 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         result.状态=新交互求值状态::已取得;return result;
     }
     基础节点组追加请求 q;q.预期既有节点组.push_back(*before.结构);
-    if(changed) {
-        if(current)q.替换字段组.push_back({current->编码,b.对端});
-        else q.追加字段组.push_back({b.交互者特征,字段组[当前材料],b.对端});
-    }
+    if(current)q.替换字段组.push_back({current->编码,b.对端});
+    else q.追加字段组.push_back({b.交互者特征,字段组[当前材料],b.对端});
     const auto add=[&](节点种类 kind) {
         const auto n=q.新节点组.size();q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(kind)}},{字段组[根],模拟世界树根节点}}});
         q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{n},基础外部关系类型::父子});return n;
     };
     std::optional<std::size_t> previous;
     std::optional<稳定编码> prior;
-    if(changed&&f->当前值) {
+    if(f->当前值) {
         const auto* old=std::get_if<稳定编码>(&*f->当前值);
         if(!old)throw std::runtime_error("simulation old interactor reference shape invalid");
         std::int64_t latest=-1;
@@ -3675,18 +3671,16 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         {字段组[特征类型],d->概念节点},{字段组[当前材料],b.对端},{字段组[动作引用],A},{字段组[步骤],基础值{time}},
         {字段组[时间语义],基础值{static_cast<std::int64_t>(新状态时间语义::抽象相对)}}});
     std::optional<std::size_t> dynamic;
-    if(changed) {
-        dynamic=add(动态种类);
-        q.新节点组[*dynamic].字段组.insert(q.新节点组[*dynamic].字段组.end(),{{字段组[所属],b.自我},{字段组[状态特征引用],b.交互者特征},
-            {字段组[动作引用],A},{字段组[后状态引用],基础组内节点引用{state}}});
-        if(previous)q.新节点组[*dynamic].字段组.push_back({字段组[前状态引用],基础组内节点引用{*previous}});
-        if(prior)q.新节点组[*dynamic].字段组.push_back({字段组[前状态引用],*prior});
-        q.追加字段组.push_back({A,字段组[动态引用],基础组内节点引用{*dynamic}});
-        if(s.记录写回&&s.当前调用) {
-            q.新节点组[*dynamic].字段组.push_back({字段组[来源引用],*s.当前调用});
-            q.新节点组[*dynamic].字段组.push_back({字段组[方法直接写入值],基础值{std::int64_t{1}}});
-            q.追加字段组.push_back({*s.当前调用,字段组[动态引用],基础组内节点引用{*dynamic}});
-        }
+    dynamic=add(动态种类);
+    q.新节点组[*dynamic].字段组.insert(q.新节点组[*dynamic].字段组.end(),{{字段组[所属],b.自我},{字段组[状态特征引用],b.交互者特征},
+        {字段组[动作引用],A},{字段组[后状态引用],基础组内节点引用{state}}});
+    if(previous)q.新节点组[*dynamic].字段组.push_back({字段组[前状态引用],基础组内节点引用{*previous}});
+    if(prior)q.新节点组[*dynamic].字段组.push_back({字段组[前状态引用],*prior});
+    q.追加字段组.push_back({A,字段组[动态引用],基础组内节点引用{*dynamic}});
+    if(s.记录写回&&s.当前调用) {
+        q.新节点组[*dynamic].字段组.push_back({字段组[来源引用],*s.当前调用});
+        q.新节点组[*dynamic].字段组.push_back({字段组[方法直接写入值],基础值{std::int64_t{1}}});
+        q.追加字段组.push_back({*s.当前调用,字段组[动态引用],基础组内节点引用{*dynamic}});
     }
     std::vector<稳定编码> newHistory;
     const auto recordHistory=[&](稳定编码 E) {
@@ -4308,7 +4302,7 @@ std::optional<新外设消息信息> 新_模拟世界类::按提交读取发送�
         const auto state=M&&F?读取固定消息状态(*M,*F):std::nullopt;
         if(!msg||!S||!D||!state||state->节点!=*S||!读取本地变化(*D)||msg->来源.来源序号!=seq||msg->来源.方向!=新外设消息方向::发送)
             throw std::runtime_error("completed transmission lacks real message and state");
-        if(result)throw std::runtime_error("duplicate call-local submission sequence");result=msg;
+        result=msg;
     }
     return result;
 }

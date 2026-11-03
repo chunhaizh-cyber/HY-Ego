@@ -921,10 +921,10 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
         std::lock_guard 锁(存在概念图互斥);
         if (!结构仍存在() || !节点仍存在(概念节点)) return std::nullopt;
         const auto 种类 = 读取概念种类(概念节点);
-        const auto 特征组 = 读取特征组(概念节点, 特征概念服务_);
+        auto 特征组 = 读取特征组(概念节点, 特征概念服务_);
         if (!种类 || !特征组) return std::nullopt;
-        const auto 上位概念组 = 查询上位存在概念(概念节点);
-        const auto 下位概念组 = 查询下位存在概念(概念节点);
+        auto 上位概念组 = 查询上位存在概念(概念节点);
+        auto 下位概念组 = 查询下位存在概念(概念节点);
         // 自动抽象概念由共同特征定义；人工分类概念可以没有共同特征，
         // 但必须已经持有至少一个正式下位概念，不能成为孤立空概念。
         if (*种类 == 存在概念种类::抽象
@@ -942,7 +942,7 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
             概念节点, 对应存在字段).empty()) {
             return std::nullopt;
         }
-        结果.特征组 = *特征组;
+        结果.特征组 = std::move(*特征组);
         for (const auto& 字段 : 全局基础数据集.查询字段(
             概念节点, 名称关系字段)) {
             const auto* 关系节点 = std::get_if<稳定编码>(&字段.内容);
@@ -954,8 +954,8 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
             概念节点, 名称关系字段).size()) {
             return std::nullopt;
         }
-        结果.上位概念组 = 上位概念组;
-        结果.下位概念组 = 下位概念组;
+        结果.上位概念组 = std::move(上位概念组);
+        结果.下位概念组 = std::move(下位概念组);
         return 结果;
     } catch (const std::exception& 异常) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取存在概念", L"概念读取异常。", 异常.what());
@@ -1439,11 +1439,11 @@ std::vector<std::int64_t> 编码区间(const std::vector<特征概念I64闭区�
 }
 
 指代内部状态 读取结构(稳定编码 节点, 基础节点结构& 输出) {
-    const auto 读取 = 全局基础数据集.查询完整节点结构(节点);
+    auto 读取 = 全局基础数据集.查询完整节点结构(节点);
     if (读取.状态 != 基础结构操作状态::已完成)
         return 映射基础状态(读取.状态);
     if (!读取.结构) return 指代内部状态::读取未完成;
-    输出 = *读取.结构;
+    输出 = std::move(*读取.结构);
     return 指代内部状态::完成;
 }
 
@@ -2366,7 +2366,7 @@ bool 正式快照相同(const 基础联合节点快照&a,const 基础联合节�
     auto r=全局基础数据集.查询节点组完整结构({n});
     if(r.状态!=基础结构操作状态::已完成||r.节点组.size()!=1||!r.节点组[0].快照)
         正式定义故障("formal endpoint unreadable");
-    return *r.节点组[0].快照;
+    return std::move(*r.节点组[0].快照);
 }
 // 仅属于一次正式读取调用；不缓存末尾真实复核，也不跨线程/调用存活。
 struct 正式读取上下文 final {
@@ -2752,10 +2752,10 @@ struct 正式结构工作读取结果 final {
     auto info=解码正式定义(n,protect,visited,true,nullptr,&上下文);
     auto 有效定义组=核正式结构图(protect,&上下文);
     // 普通FT完整保护在锁外读取，不能持本owner锁回调。
-    const auto captured=protect;
-    for(const auto&s:captured) {
-        auto id=s.结构.节点.编码;
-        if(正式形状(s.结构))continue;
+    std::vector<稳定编码> captured;
+    captured.reserve(protect.size());
+    for(const auto& s:protect)if(!正式形状(s.结构))captured.push_back(s.结构.节点.编码);
+    for(const auto id:captured) {
         if(特征概念服务.是特征概念节点(id)) {
             auto r=特征概念服务.读取正式概念身份保护(id);
             if(r.状态==正式概念读取状态::前提已变化)throw 正式状态::前提已变化;
@@ -3726,10 +3726,10 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
         }
         核正式结构图(protect,&上下文);
         // 与单节点读口相同的FT保护规则；共享保护组使重复依赖只读取一次。
-        const auto captured=protect;
-        for(const auto&s:captured) {
-            const auto id=s.结构.节点.编码;
-            if(正式形状(s.结构))continue;
+        std::vector<稳定编码> captured;
+        captured.reserve(protect.size());
+        for(const auto& s:protect)if(!正式形状(s.结构))captured.push_back(s.结构.节点.编码);
+        for(const auto id:captured) {
             if(特征概念服务_.是特征概念节点(id)) {
                 auto r=特征概念服务_.读取正式概念身份保护(id);
                 if(r.状态==正式概念读取状态::前提已变化)throw 正式状态::前提已变化;

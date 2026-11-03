@@ -1552,7 +1552,7 @@ std::vector<稳定编码> 查询概念节点()
             抽象错误("概念场景引用不可读");
         if (定义材料.动作 && !动态概念服务_->是动作概念节点(定义材料.动作->动作概念节点))
             抽象错误("概念动作类别失效");
-        std::set<稳定编码> 发生身份集合, 来源集合;
+        std::set<稳定编码> 发生身份集合;
         std::optional<角色布局> 首个布局;
         std::optional<稳定编码> 前一来源;
         for (const auto &分支材料 : 定义材料.分支组)
@@ -1560,8 +1560,6 @@ std::vector<稳定编码> 查询概念节点()
             if (前一来源 && !(*前一来源 < 分支材料.来源具体因果节点))
                 抽象错误("概念来源次序不规范");
             前一来源 = 分支材料.来源具体因果节点;
-            if (!来源集合.insert(分支材料.来源具体因果节点).second)
-                抽象错误("概念分支重复来源");
             const auto 具体信息 = 读取因果信息(分支材料.来源具体因果节点);
             if (!具体信息 || !具体信息->发生场景节点)
                 抽象错误("概念来源证明失效");
@@ -1587,8 +1585,6 @@ std::vector<稳定编码> 查询概念节点()
                  角色序号 < 定义材料.角色组.size() && 角色序号 < 来源布局->参与存在组.size();
                  ++角色序号)
             {
-                if (定义材料.角色组[角色序号].角色 != static_cast<std::int64_t>(角色序号 + 1))
-                    抽象错误("概念角色不连续");
                 if (定义材料.角色组[角色序号].治理类别 != 来源布局->治理类别组[角色序号])
                     相容 = false;
                 const auto 公共概念 =
@@ -2729,7 +2725,7 @@ void 核验先天形状(const 新先天因果定义& d) {
     if(先天值<std::int64_t>(s,动作触发方式字段)!=static_cast<std::int64_t>(新因果动作触发方式::被动触发))
         throw std::logic_error("innate governance trigger must be explicitly passive");
     新先天因果信息 r;r.节点=n;auto& d=r.定义;
-    d.触发方式=static_cast<新因果动作触发方式>(先天值<std::int64_t>(s,动作触发方式字段));
+    d.触发方式=新因果动作触发方式::被动触发;
     d.治理定义=先天引用(s,先天存储::治理);d.合同版本概念=先天引用(s,先天存储::版本);
     d.作用场景范围概念=先天引用(s,先天存储::场景);d.动作概念=先天引用(s,先天存储::动作);
     const auto roles=先天值<std::vector<std::int64_t>>(s,先天存储::角色形状);
@@ -3330,8 +3326,9 @@ struct 读取批 final {
     void 合并(const std::vector<基础联合节点快照>& 保护) {
         for(const auto& 项:保护) {
             const auto [位置,新增]=快照组.emplace(项.结构.节点.编码,项);
-            if(!新增&&!快照相同(位置->second,项)&&只读变化可返回)throw 来源前驱只读变化{};
-            要求(新增||快照相同(位置->second,项),"source predecessor protection changed during read");
+            const bool 一致=新增||快照相同(位置->second,项);
+            if(!一致&&只读变化可返回)throw 来源前驱只读变化{};
+            要求(一致,"source predecessor protection changed during read");
         }
     }
     std::vector<基础联合节点快照> 保护() const {
@@ -3346,8 +3343,9 @@ struct 读取批 final {
         for(const auto& 项:当前.节点组) {
             const auto 位置=快照组.find(项.查询节点);
             要求(位置!=快照组.end(),"source predecessor final protection unexpected identity");
-            if((!项.快照||!快照相同(位置->second,*项.快照))&&只读变化可返回)throw 来源前驱只读变化{};
-            要求(项.快照&&位置!=快照组.end()&&快照相同(位置->second,*项.快照),
+            const bool 一致=项.快照&&快照相同(位置->second,*项.快照);
+            if(!一致&&只读变化可返回)throw 来源前驱只读变化{};
+            要求(一致,
                 "source predecessor final protection changed");
         }
     }

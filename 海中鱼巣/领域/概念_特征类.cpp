@@ -372,9 +372,6 @@ std::optional<特征概念定义> 规范化定义(const 特征概念定义& 输�
             }
             已有角色.push_back(分量.角色);
         }
-    } else if (const auto* 引用域 =
-        std::get_if<特征概念存在引用值域>(&结果.值域)) {
-        if (!有效(引用域->存在概念节点)) return std::nullopt;
     }
 
     if (结果.单位 && !有效(*结果.单位)) return std::nullopt;
@@ -621,11 +618,11 @@ struct 存在保护读取 final {
     const auto 引用 = 全局基础数据集.查询目标字段(来源, 存在集合保护来源字段);
     if (引用.empty()) return {};
     if (引用.size() != 1) throw std::logic_error("duplicate existence-set protection");
-    const auto b = 全局基础数据集.查询节点组完整结构({引用.front().所属节点});
+    auto b = 全局基础数据集.查询节点组完整结构({引用.front().所属节点});
     if (b.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (b.状态 != 基础结构操作状态::已完成 || b.节点组.size() != 1 || !b.节点组[0].快照)
         throw std::logic_error("unreadable existence-set protection");
-    存在保护读取 out{*b.节点组[0].快照, {}};
+    存在保护读取 out{std::move(*b.节点组[0].快照), {}};
     unsigned 类型数 = 0, 来源数 = 0;
     std::set<稳定编码> 成员;
     for (const auto& f : out.快照->结构.字段组) {
@@ -1274,9 +1271,9 @@ std::optional<特征概念值域> 规范化待比较值域(
         定义.比较规则 = 特征概念比较规则::完整材料精确;
         定义.聚合规则 = 特征概念聚合规则::完整材料精确集合;
     }
-    const auto 规范定义 = 规范化定义(定义);
+    auto 规范定义 = 规范化定义(定义);
     return 规范定义
-        ? std::optional<特征概念值域>{规范定义->值域}
+        ? std::optional<特征概念值域>{std::move(规范定义->值域)}
         : std::nullopt;
 }
 
@@ -1691,11 +1688,11 @@ bool 信息定义保护仍相同(const std::vector<基础联合节点快照>& ex
     return unchanged;
 }
 std::optional<基础联合节点快照> 信息定义快照(稳定编码 n) {
-    const auto q = 全局基础数据集.查询节点组完整结构({n});
+    auto q = 全局基础数据集.查询节点组完整结构({n});
     if (q.状态 == 基础结构操作状态::节点不存在) return {};
     if (q.状态 != 基础结构操作状态::已完成 || q.节点组.size() != 1 || q.节点组.front().查询节点 != n)
         信息引用定义故障(L"定义完整快照读取工程故障。");
-    return q.节点组.front().快照;
+    return std::move(q.节点组.front().快照);
 }
 std::optional<特征概念信息> 读取信息引用材料定义(稳定编码 n) {
     const auto s = 信息定义快照(n); if (!s) return {};
@@ -2065,7 +2062,6 @@ void 概念_特征类::装配消息成员读取接口(const 特征消息成员�
                 if (found == b.节点组.end()) return {S::内部不一致, {}};
                 const auto& current = *found;
                 const auto& old = 旧依据[i];
-                if (current.查询节点 != nodes[i]) return {S::内部不一致, {}};
                 if (!current.快照 || current.快照->结构.字段组 != old.结构.字段组
                     || current.快照->入向字段组 != old.入向字段组
                     || current.快照->入向外部关系组 != old.入向外部关系组
@@ -2193,7 +2189,6 @@ void 概念_特征类::装配消息成员读取接口(const 特征消息成员�
                 if (found == back.节点组.end()) return {S::内部不一致, {}};
                 const auto& current = *found;
                 const auto& expected = advanced[i];
-                if (current.查询节点 != nodes[i]) return {S::内部不一致, {}};
                 if (!current.快照 || current.快照->结构.字段组 != expected.结构.字段组
                     || current.快照->入向字段组 != expected.入向字段组
                     || current.快照->入向外部关系组 != expected.入向外部关系组
@@ -3188,13 +3183,12 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
             特征概念节点, 当前引用实例数字段);
         if (!当前引用实例数 || *当前引用实例数 < 0) return std::nullopt;
 
-        const auto 规范定义 = 规范化定义(定义);
+        auto 规范定义 = 规范化定义(定义);
         if (!规范定义) return std::nullopt;
         if (规范定义->材料类型 == 特征概念材料物理类型::需求节点引用) {
             const auto* 域 = std::get_if<std::vector<稳定编码>>(&规范定义->值域);
             const auto 保护字段 = 全局基础数据集.查询字段(特征概念节点, 需求域引用保护键);
             auto 保护目标 = 读取多节点字段(特征概念节点, 需求域引用保护键);
-            std::sort(保护目标.begin(), 保护目标.end());
             if (保护目标.size() != 保护字段.size()
                 || 保护目标 != (域 ? *域 : std::vector<稳定编码>{}))
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取需求引用概念", L"有限D域与正式保护不一致。");
@@ -3225,11 +3219,11 @@ std::optional<特征概念信息> 概念_特征类::获取特征概念(
         return 特征概念信息{
             特征概念节点,
             规范定义->材料类型,
-            规范定义->值域,
+            std::move(规范定义->值域),
             规范定义->单位,
             规范定义->比较规则,
             规范定义->聚合规则,
-            规范定义->名称关系,
+            std::move(规范定义->名称关系),
             *当前引用实例数};
     } catch (...) {
         if (已识别需求引用)
@@ -5104,7 +5098,6 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
                 return {正式概念读取状态::前提已变化, {}};
             return {正式概念读取状态::已读取, 正式概念身份保护{n, root.完整保护组}};
         }
-        if (type != 特征概念节点类型) return {};
         const auto p = 读取特征概念定义保护(n);
         if (p.前提已变化) return {正式概念读取状态::前提已变化, {}};
         if (p.状态 != 基础结构操作状态::已完成 || !p.信息 || p.预期节点组.empty())
