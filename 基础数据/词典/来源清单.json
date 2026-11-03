@@ -1,0 +1,76 @@
+{
+  "元数据格式": "HY-EGO-DICTIONARY-SOURCE/1",
+  "包标识": "zhwiktionary-20261101-zh-en-zh-gloss-v1",
+  "包格式": "HY-EGO-DICTIONARY/1",
+  "说明": "中文及英文词头的汉语释义外部材料；不是正式词条、概念或世界事实。",
+  "来源": {
+    "项目": "中文维基词典 / Kaikki.org",
+    "来源页": "https://kaikki.org/zhwiktionary/rawdata.html",
+    "原始下载URL": "https://kaikki.org/zhwiktionary/raw-wiktextract-data.jsonl.gz",
+    "dump日期": "2026-11-01",
+    "提取日期": "2026-11-02",
+    "Wiktextract提交": "19f9a3006a405fb7bfb40193dca41c7117a009a5",
+    "Wikitextprocessor提交": "6f96ddf5f3466707f1869fe6618390fd77dfd109",
+    "来源版本": "zhwiktionary-dump-20261101;kaikki-extract-20261102;wiktextract-19f9a3006a405fb7bfb40193dca41c7117a009a5",
+    "下载完成UTC": "2026-11-02T23:55:13.7077409Z",
+    "HTTP核对": {
+      "Date": "Mon, 02 Nov 2026 23:54:39 GMT",
+      "ETag": "\"6ae85b00-e5251bb\"",
+      "Last-Modified": "Mon, 02 Nov 2026 09:42:24 GMT",
+      "Content-Length": 240275899
+    },
+    "本地原始路径": "原始/zhwiktionary-20261101.jsonl.gz",
+    "原始字节数": 240275899,
+    "原始SHA256": "600f8dd8050369d614cd39c17d12ab24b8ce8b8bf97c7275f424ace0417220ea",
+    "原始解压JSONL行数": 2981622,
+    "注意": "下载地址及当前网页会更新；必须核对原始SHA256，不将更新后的同名URL当作同一输入。"
+  },
+  "构建": {
+    "工具": "工具/词典/构建词典.py",
+    "依赖": "Python 3.12 标准库；工具自身不联网",
+    "命令": "python 工具/词典/构建词典.py --input 基础数据/词典/原始/zhwiktionary-20261101.jsonl.gz --output-dir 基础数据/词典 --package-id zhwiktionary-20261101-zh-en-zh-gloss-v1 --source-version \"zhwiktionary-dump-20261101;kaikki-extract-20261102;wiktextract-19f9a3006a405fb7bfb40193dca41c7117a009a5\"",
+    "最终导入开始UTC": "2026-11-02T23:58:41.424454+00:00",
+    "最终导入完成UTC": "2026-11-02T23:59:56.734224+00:00",
+    "导入退出码": 0,
+    "说明": "这是完整真实数据生产导入，不是程序运行测试。",
+    "筛选": "lang_code为zh/en；sense.glosses非空并含汉字；同sense全部gloss按序用LF连接；重定向不收录；不翻译、不合并不同sense。",
+    "读音": "仅源sounds内ipa/zh_pron/enpr/roman及其tags的JSON；不下载音频。",
+    "例句": "例句原文及汉译两列始终为空，不收录源examples字段及其中的引文；未逐句识别gloss内可能的引文。",
+    "无效字符": "遇到拟输出字段含非法Unicode、U+0000/U+FEFF/U+FFFD/DEL或不允许的控制字符时中止，保留旧完整包；本次未遇到。",
+    "统计": {
+      "zh": { "词面数": 74799, "义项数": 110633 },
+      "en": { "词面数": 86907, "义项数": 124978 },
+      "总词面数": 161706,
+      "总义项数": 235611,
+      "跳过": {
+        "其它语种记录": 2538480,
+        "空词面记录": 0,
+        "重定向记录": 72174,
+        "无义项记录": 0,
+        "无释义义项": 194141,
+        "释义不含汉字义项": 209
+      },
+      "统计单位说明": "记录项与义项项不能相加核算总JSONL行数；一个JSONL记录可含多个sense。"
+    },
+    "输出路径": "词典.tsv",
+    "输出字节数": 316103858,
+    "输出SHA256": "a32d20b6d6601433c93678e475c036f569ec86ca8e8378887a397cfa6e61d4fc"
+  },
+  "许可": {
+    "数据声明": "CC-BY-SA-4.0；来源另声明GFDL-1.2-or-later；附加条款与个别来源声明仍适用，不伪重许可。",
+    "中文维基词典版权页": "https://zh.wiktionary.org/wiki/Wiktionary:%E7%89%88%E6%9D%83%E4%BF%A1%E6%81%AF",
+    "CC_BY_SA_4_0": "https://creativecommons.org/licenses/by-sa/4.0/legalcode",
+    "GFDL": "https://www.gnu.org/licenses/fdl-1.3.html",
+    "许可说明文件": "LICENSE.md",
+    "署名文件": "ATTRIBUTION.md",
+    "逐行署名": "中文维基词典贡献者（见来源页历史）；Kaikki.org / Tatu Ylonen / Wiktextract",
+    "核对日期": "2026-11-03",
+    "警示": "提取工具的MIT等代码许可不等于词典数据许可；未进行逐页人工版权审计。"
+  },
+  "分发": {
+    "Git保留": ["README.md", ".gitignore", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md", "../../工具/词典/构建词典.py"],
+    "本地忽略": ["原始/", "词典.tsv", ".词典-*.tmp"],
+    "程序构建复制": ["词典.tsv", "README.md", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md"],
+    "不复制": ["原始/", "临时文件", "工具"]
+  }
+}
