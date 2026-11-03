@@ -7899,6 +7899,77 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     }
 }
 
+void 新_任务类::装配前置语言输入读取接口(const 新前置语言输入读取接口* p) noexcept {
+    try {std::lock_guard 锁(新任务互斥);
+        if(前置语言读取_&&p&&前置语言读取_!=p)throw std::logic_error("preunderstanding reader owner replacement");
+        前置语言读取_=p;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"装配前置语言读取",L"只读端口所有者冲突");}
+}
+bool 新_任务类::是前置语言材料父任务(稳定编码 T) const noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if(!有效(T))return false;
+        const auto t=读取任务信息(T,特征服务_);
+        if(!t){if(节点仍存在(T))throw std::logic_error("task identity unreadable");return false;}
+        const auto d=需求服务_.读取需求治理信息(t->需求节点);
+        if(!d)throw std::logic_error("task demand identity missing");
+        if(d->根角色!=新需求根角色::服务)return false;
+        if(!自我服务结算配置_||!d->完整目标||d->父需求节点||d->执行域!=新需求执行域::自我执行
+            ||需求服务_.查询根需求(新需求根角色::服务)!=d->节点
+            ||d->完整目标->目标存在节点!=自我服务结算配置_->自我存在节点
+            ||d->需求主体存在节点!=自我服务结算配置_->自我存在节点)
+            throw std::logic_error("service root identity or self configuration inconsistent");
+        const auto 对应=全局基础数据集.查询目标字段(d->节点,任务需求字段);
+        if(对应.size()!=1||对应.front().所属节点!=T)throw std::logic_error("service root task not unique");
+        return true;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取前置材料父任务身份",L"正式根D/T身份或资源读取异常，不能作为普通任务放行");}
+}
+新任务治理承接结果 新_任务类::建立前置语言材料父任务(稳定编码 self,稳定编码 D) noexcept {
+    try {
+        {
+            std::lock_guard 锁(新任务互斥);
+            if(!治理已初始化_||!自我服务结算配置_){新任务治理承接结果 r;r.需求节点=D;r.状态=新任务治理承接状态::尚未初始化;return r;}
+            const auto d=需求服务_.读取需求治理信息(D);
+            if(self!=自我服务结算配置_->自我存在节点||!d||!d->完整目标||d->父需求节点
+                ||d->根角色!=新需求根角色::服务||d->执行域!=新需求执行域::自我执行
+                ||d->需求主体存在节点!=self||d->完整目标->目标存在节点!=self||需求服务_.查询根需求(新需求根角色::服务)!=D)
+                throw std::logic_error("fresh material parent root rejected");
+        }
+        auto r=建立需求任务关联(D);
+        if((r.状态==新任务治理承接状态::已读回||r.状态==新任务治理承接状态::既有终结任务)&&r.任务) {
+            if(!是前置语言材料父任务(r.任务->节点)||r.任务->方法实例节点||r.任务->方法执行组织节点
+                ||r.任务->当前候选方法材料节点||r.任务->当前状态==新任务状态::执行中)
+                throw std::logic_error("service root has conflicting ordinary method or execution");
+        }
+        return r;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立前置材料父任务",L"服务根父域或既有普通执行冲突，保留正式事实");}
+}
+新任务前置语言输入结果 新_任务类::筹办前置语言输入材料(const 新任务前置语言输入请求& q,std::stop_token stop) const {
+    using R=新前置语言读取状态;
+    新任务前置语言输入结果 out{q};
+    try {
+        if(stop.stop_requested()){out.状态=R::停止取消;return out;}
+        const 新前置语言输入读取接口* reader=nullptr;
+        {
+            std::lock_guard 锁(新任务互斥);reader=前置语言读取_;
+            if(!reader)throw std::logic_error("preunderstanding reader dependency absent");
+            const auto t=读取任务信息(q.父任务节点,特征服务_);
+            if(!t||t->需求节点!=q.父需求节点||!是前置语言材料父任务(q.父任务节点)
+                ||!自我服务结算配置_||q.输入.自我存在节点!=自我服务结算配置_->自我存在节点) {out.状态=R::输入不适用;return out;}
+        }
+        const auto r=reader->读取前置语言输入材料(q.输入,stop);
+        {
+            std::lock_guard 锁(新任务互斥);
+            const auto t=读取任务信息(q.父任务节点,特征服务_);
+            if(reader!=前置语言读取_||!t||t->需求节点!=q.父需求节点||!是前置语言材料父任务(q.父任务节点)) {out.状态=R::前提已变化;return out;}
+        }
+        if(stop.stop_requested()){out.状态=R::停止取消;return out;}
+        if((r.状态==R::已读取)!=r.材料.has_value()||(r.材料&&r.材料->定位!=q.输入))throw std::logic_error("material reader result inconsistent");
+        out.状态=r.状态;out.材料=r.材料;return out;
+    }catch(const std::bad_alloc&){out.状态=R::资源失败;return out;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"筹办前置输入材料",L"父域或实际只读材料结构异常");}
+}
+
 新任务调度材料项 新_任务类::读取任务调度项已加锁(
     稳定编码 任务节点, bool& 资源失败,const 新任务本次场景核验批& 场景批) const {
     新任务调度材料项 项;
@@ -7918,6 +7989,10 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     if (反向.size() != 1 || 反向.front().所属节点 != 任务节点) return 项;
     项.需求治理 = 需求服务_.读取需求治理信息(任务.需求节点);
     if (!项.需求治理 || 项.需求治理->执行域 != 新需求执行域::自我执行) return 项;
+    if(是前置语言材料父任务(任务节点)) {
+        项.需求=需求服务_.获取需求(任务.需求节点);
+        项.状态=新任务调度项状态::仅材料治理;项.等待原因=新任务等待原因::前置输入材料;return 项;
+    }
     auto 祖先 = 项.需求治理;
     std::set<稳定编码> 已见需求;
     while (祖先) {
@@ -8121,13 +8196,14 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         std::optional<std::vector<稳定编码>> 原全集;
         {std::lock_guard 锁(新任务互斥);原全集=读取任务登记全集();}
         if(原全集)for(const auto T:*原全集){
+            if(是前置语言材料父任务(T)) {新任务本次场景核验批 批;批.T=T;批组.push_back(std::move(批));continue;}
             const auto 上下文=std::make_shared<新方法内容核验上下文>();
             auto 批=准备本次场景核验批(T,{},nullptr,false,false,上下文,true);
             if(批.任务&&批.任务->当前状态==新任务状态::待检查条件&&批.任务->方法执行组织节点)
                 批=准备本次场景核验批(T);
             批组.push_back(std::move(批));
         }
-        for(auto& 批:批组)读取本次场景核验批(批);
+        for(auto& 批:批组)if(!是前置语言材料父任务(批.T))读取本次场景核验批(批);
         std::lock_guard 锁(新任务互斥);
         if (!治理已初始化_ || !结构仍存在()) {
             结果.状态 = 新任务调度读取状态::尚未初始化;
@@ -8136,7 +8212,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         const auto 全集 = 读取任务登记全集();
         if (!全集) return 结果;
         if(全集!=原全集)return 结果;
-        for(const auto& 批:批组)if(!核同本次场景核验批(批))return 结果;
+        for(const auto& 批:批组)if(!是前置语言材料父任务(批.T)&&!核同本次场景核验批(批))return 结果;
         结果.项组.reserve(全集->size());
         bool 资源失败 = false;
         for (const auto 任务节点 : *全集) {
@@ -8162,6 +8238,10 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     稳定编码 任务节点) const noexcept {
     新任务调度材料读取结果 结果;
     try {
+        if(是前置语言材料父任务(任务节点)) {
+            std::lock_guard 锁(新任务互斥);bool 资源失败=false;新任务本次场景核验批 批;
+            结果.项组.push_back(读取任务调度项已加锁(任务节点,资源失败,批));结果.状态=新任务调度读取状态::已读取;return 结果;
+        }
         const auto 上下文=std::make_shared<新方法内容核验上下文>();
         auto 批=准备本次场景核验批(任务节点,{},nullptr,false,false,上下文,true);
         if(批.任务&&批.任务->当前状态==新任务状态::待检查条件&&批.任务->方法执行组织节点)
@@ -9743,6 +9823,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
 新任务操作状态 新_任务类::重新启用任务(
     稳定编码 任务节点) noexcept {
     try {
+        if(是前置语言材料父任务(任务节点))return 新任务操作状态::任务状态不允许;
         std::lock_guard 锁(新任务互斥);
         if (!结构仍存在()) return 新任务操作状态::尚未初始化;
         const auto 虚拟存在 = 读取任务虚拟存在信息(任务节点, 特征服务_);
@@ -9766,6 +9847,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
 新任务候选方法发布结果 新_任务类::发布候选方法材料(
     新任务候选方法发布请求 请求) noexcept {
     新任务候选方法发布结果 结果;
+    if(是前置语言材料父任务(请求.任务节点)){结果.状态=新任务操作状态::任务状态不允许;return 结果;}
     if(请求.需求目标.引用内容定位&&!请求.需求目标.引用内容定位->正式内容路径.empty()) {
         // 新定位的真实粗召回不得通过旧发表入口变成普通E/FT候选。
         结果.状态=新任务操作状态::依赖未实现;return 结果;
@@ -10109,6 +10191,7 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
 新任务执行结果 新_任务类::开始方法执行(
     const 新任务执行开始请求& 请求) noexcept {
     try {
+        if(是前置语言材料父任务(请求.任务节点)){新任务执行结果 r;r.状态=新任务操作状态::任务状态不允许;return r;}
         const auto permit = 读取因果执行许可(请求.任务节点);
         if (!permit) { 新任务执行结果 changed; changed.状态 = 新任务操作状态::预期已变化; return changed; }
         auto 场景批=准备本次场景核验批(请求.任务节点,{},请求.本能采用 ? &*请求.本能采用 : nullptr);
@@ -16646,6 +16729,7 @@ std::optional<std::vector<新任务治理执行读回结果>>
 新任务操作状态 新_任务类::准备任务查找方法(
     稳定编码 任务节点) noexcept {
     try {
+        if(是前置语言材料父任务(任务节点))return 新任务操作状态::任务状态不允许;
         std::lock_guard 锁(新任务互斥);
         if (!治理已初始化_) {
             return 新任务操作状态::尚未初始化;
@@ -17425,6 +17509,7 @@ namespace {
     稳定编码 任务节点) noexcept {
     新任务治理方法召回结果 结果;
     结果.任务节点 = 任务节点;
+    if(是前置语言材料父任务(任务节点)){结果.状态=新任务治理方法召回状态::仅材料治理;return 结果;}
     try {
         std::shared_ptr<新方法内容核验上下文> 提议上下文;
         if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);D&&D->目标.引用内容定位){
@@ -18604,6 +18689,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
 新任务治理条件筹办结果 新_任务类::筹办任务条件和参数(
     稳定编码 任务节点) const noexcept {
     try {
+        if(是前置语言材料父任务(任务节点)){新任务治理条件筹办结果 r;r.任务节点=任务节点;r.状态=新任务治理条件筹办状态::仅材料治理;return r;}
         if(const auto T=获取任务(任务节点))if(const auto D=需求服务_.获取需求(T->需求节点);
             D&&D->目标.引用内容定位&&!是本叶内容目标(*D)) {
             新任务治理条件筹办结果 r;r.任务节点=任务节点;r.状态=新任务治理条件筹办状态::已完成;
@@ -18640,6 +18726,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
 新任务治理条件筹办结果 新_任务类::核验任务条件和参数(
     稳定编码 任务节点) const noexcept {
     try {
+        if(是前置语言材料父任务(任务节点)){新任务治理条件筹办结果 r;r.任务节点=任务节点;r.状态=新任务治理条件筹办状态::仅材料治理;return r;}
         auto 批=准备本次场景核验批(任务节点);
         读取本次场景核验批(批);
         std::lock_guard 锁(新任务互斥);
@@ -22898,6 +22985,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
 新任务治理本能执行结果 新_任务类::执行任务本能方法(
     const 新任务治理本能执行请求& 请求) noexcept {
     新任务治理本能执行结果 结果;
+    if(是前置语言材料父任务(请求.任务节点)){结果.原请求=请求;结果.状态=新任务治理本能执行状态::仅材料治理;return 结果;}
     if (!请求.完整())
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"执行任务本能方法", L"本能执行请求合同不完整");
 
@@ -23852,6 +23940,8 @@ std::optional<新任务完成结算信息>
     新任务治理承接结果 结果;
     结果.需求节点 = 需求节点;
     try {
+        const auto 根=需求服务_.读取需求治理信息(需求节点);
+        if(根&&根->根角色==新需求根角色::服务)return 建立需求任务关联(需求节点);
         const auto beforeGov=自我新鲜自动决议 ? 需求服务_.读取需求治理信息(需求节点)
             : std::optional<新需求治理信息>{};
         const auto before=自我新鲜自动决议 ? 需求服务_.获取需求(需求节点)

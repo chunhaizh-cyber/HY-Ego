@@ -14,6 +14,11 @@
 #include "../业务/模拟学习.服务.h"
 
 namespace 海中鱼巣 {
+struct 新前置语言筹办接收结果 final {
+    新任务工作接收状态 状态=新任务工作接收状态::入口拒绝;
+    std::optional<新任务工作请求> 工作;
+    std::shared_future<新任务工作处理结果> 处理结果;
+};
 
 class 新_世界树类;
 
@@ -417,6 +422,9 @@ struct 新贡献治理工作接收结果 final {
 
 class 新_任务管理线程类 final {
 public:
+    新前置语言筹办接收结果 提交前置语言输入筹办(const 新任务前置语言输入请求&) noexcept;
+    std::optional<新任务工作处理结果> 读取前置语言输入筹办结果(const 新任务工作请求&) const noexcept;
+    新任务工作操作状态 确认前置语言输入筹办已读回(const 新任务工作请求&) noexcept;
     新贡献治理工作接收结果 提交任务贡献治理工作(
         const void* 自我所有者, const 新任务贡献反馈定位&) noexcept;
     新任务完成结算确认状态 确认任务贡献治理工作(

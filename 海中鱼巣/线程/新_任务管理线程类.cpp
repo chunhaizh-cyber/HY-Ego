@@ -400,6 +400,7 @@ struct 新_任务管理线程类::实现 final {
     struct 工作占用 final {
         新任务工作请求 请求;
         std::shared_future<新任务工作处理结果> 结果;
+        std::optional<新任务工作处理结果> 前置已读回;
     };
     std::vector<工作占用> 活动工作;
     enum class 最终工作领取 : std::uint8_t { 自我待取, 自我确认中, 停止收束中, 已确认 };
@@ -428,6 +429,8 @@ struct 新_任务管理线程类::实现 final {
     // 同T技术占用覆盖pool ACK之后、贡献确认之前的窗口。
     // 该helper只从无manager锁的派发路径进入。
     新任务工作接收结果 提交普通工作(const 新任务工作请求& 请求) {
+        if((请求.种类==新任务工作种类::查找方法||请求.种类==新任务工作种类::检查条件||请求.种类==新任务工作种类::执行本能动作)
+            &&任务服务->是前置语言材料父任务(请求.任务节点))throw std::logic_error("manager ordinary dispatch attempted material root");
         {
             std::lock_guard 锁(互斥);
             if (停止 || 已完成) return {新任务工作接收状态::已停止接收, {}};
@@ -1355,6 +1358,7 @@ struct 新_任务管理线程类::实现 final {
                         || !项.任务 || !项.需求 || !项.定位.完整()
                         || 项.状态 == 新任务调度项状态::结构不一致
                         || 项.状态 == 新任务调度项状态::旧执行待结果
+                        || 项.状态 == 新任务调度项状态::仅材料治理
                         || 任务有执行保护已加锁(任务值)
                         || 有服务结算来源待处理已加锁(任务值)
                         || 学习复核占用.contains(任务值) || 新占用.contains(任务值)) continue;
@@ -1553,6 +1557,7 @@ struct 新_任务管理线程类::实现 final {
                 等待复核组.at(编号).已终结 = true;
                 等待复核占用.erase(任务值);
             };
+            if(任务服务->是前置语言材料父任务(记录.定位.定位.任务节点)){终结(false);return;}
             {
                 std::lock_guard 锁(互斥);
                 if (学习复核占用.contains(任务值) || 任务有执行保护已加锁(任务值)) return;
@@ -1625,6 +1630,7 @@ struct 新_任务管理线程类::实现 final {
                 }
             }
             if (!待接纳.请求.工作编号) return 筹办派发状态::无可派发任务;
+            if(任务服务->是前置语言材料父任务(待接纳.请求.任务节点))return 筹办派发状态::无可派发任务;
             const auto 接收 = 提交普通工作(待接纳.请求);
             if (接收.状态 == 新任务工作接收状态::已接收
                 || 接收.状态 == 新任务工作接收状态::精确重复) {
@@ -1684,6 +1690,7 @@ struct 新_任务管理线程类::实现 final {
                     }
                 }
                 if (重试) {
+                    if(任务服务->是前置语言材料父任务(重试->请求.任务节点))continue;
                     const auto 信息准备 = 任务服务->复核任务需求准备(重试->请求.任务节点);
                     if(信息准备.状态==新任务需求准备状态::来源前提已变化
                         ||信息准备.状态==新任务需求准备状态::资源延后) {
@@ -1712,6 +1719,7 @@ struct 新_任务管理线程类::实现 final {
                 }
                 for (const auto& 定位 : 就绪) {
                     const auto 任务节点 = 定位.任务节点;
+                    if(任务服务->是前置语言材料父任务(任务节点))continue;
                     if (工作种类 == 新任务工作种类::检查条件
                         ? 定位.任务状态 != 新任务状态::待检查条件
                         : (定位.任务状态 != 新任务状态::已建立 && 定位.任务状态 != 新任务状态::待查找方法)) continue;
@@ -2345,6 +2353,19 @@ struct 新_任务管理线程类::实现 final {
     }
 
     void 处理已完成工作(const 工作占用& 占用) noexcept {
+        if(占用.请求.种类==新任务工作种类::筹办前置语言输入) {
+            try {
+                const auto r=占用.结果.get();
+                if(r.原请求!=占用.请求||!占用.请求.前置语言输入||!r.前置语言输入
+                    ||r.前置语言输入->原请求!=*占用.请求.前置语言输入
+                    ||r.状态!=新任务工作处理状态::前置语言输入已返回
+                    ||!任务服务->是前置语言材料父任务(占用.请求.任务节点))throw std::logic_error("material worker result identity corrupt");
+                std::lock_guard 锁(互斥);
+                const auto i=std::find_if(活动工作.begin(),活动工作.end(),[&](const auto& w){return w.请求==占用.请求;});
+                if(i!=活动工作.end())i->前置已读回=r;
+                变化.notify_all();return;
+            }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"前置材料工作读回",L"原请求、父域或只读返回结构异常");}
+        }
         if (占用.请求.种类 == 新任务工作种类::执行最终服务消费
             || 占用.请求.种类 == 新任务工作种类::执行任务贡献治理)
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"普通任务工作回收", L"最终消费必须走专属领取和确认");
@@ -3273,6 +3294,11 @@ struct 新_任务管理线程类::实现 final {
                     });
                     continue;
                 }
+            } else if(占用.请求.种类==新任务工作种类::筹办前置语言输入) {
+                处理已完成工作(占用);
+                const auto 确认=工作线程->确认结果已接收(占用.请求.工作编号,占用.请求.任务节点);
+                if(确认!=新任务工作操作状态::已完成&&确认!=新任务工作操作状态::无变化){完整=false;break;}
+                std::lock_guard 锁(互斥);std::erase_if(活动工作,[&](const auto& w){return w.请求==占用.请求;});
             } else {
 #ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
                 记录管理停止阶段(L"普通已完成工作处理前");
@@ -3426,6 +3452,7 @@ struct 新_任务管理线程类::实现 final {
                     学习失效筹办工作.insert_or_assign(
                         项.任务节点.值, 旧->second.原工作.工作编号);
             }
+            if(任务服务->是前置语言材料父任务(项.任务节点)){终结(false);return;}
             const auto 任务 = 任务服务->获取任务(项.任务节点);
             if (!任务) { 终结(true); return; }
             新任务学习复核定位 当前定位{0, 交接, 通知.方法节点,
@@ -3591,7 +3618,7 @@ struct 新_任务管理线程类::实现 final {
                     const auto 已完成工作 = std::find_if(
                         活动工作.begin(), 活动工作.end(), [](const auto& 占用) {
                             return 占用.请求.种类 != 新任务工作种类::执行最终服务消费
-                                && 占用.请求.种类 != 新任务工作种类::执行任务贡献治理 && 占用.结果.valid()
+                                && 占用.请求.种类 != 新任务工作种类::执行任务贡献治理 && !占用.前置已读回 && 占用.结果.valid()
                                 && 占用.结果.wait_for(std::chrono::milliseconds(0))
                                     == std::future_status::ready;
                         });
@@ -5729,6 +5756,8 @@ std::optional<新任务等待复核定位> 新_任务管理线程类::读取等�
         || 决议.状态 > 新自我等待复核状态::需核查)
         return 新自我等待复核接收状态::入口拒绝;
     try {
+        if(决议.状态==新自我等待复核状态::允许重新筹办&&实现_->任务服务->是前置语言材料父任务(决议.定位.定位.任务节点))
+            return 新自我等待复核接收状态::定位已变化;
         if (决议.状态 == 新自我等待复核状态::允许重新筹办) {
             std::lock_guard 锁(实现_->互斥);
             if (实现_->停止 || 实现_->已完成) return 新自我等待复核接收状态::已停止接收;
@@ -5785,6 +5814,8 @@ std::optional<新任务等待复核定位> 新_任务管理线程类::读取等�
         || 决议.状态 > 新自我学习复核状态::需核查)
         return 新自我学习复核接收状态::入口拒绝;
     try {
+        if(决议.状态==新自我学习复核状态::允许重新筹办&&实现_->任务服务->是前置语言材料父任务(决议.定位.任务节点))
+            return 新自我学习复核接收状态::定位已变化;
         if (决议.状态 == 新自我学习复核状态::允许重新筹办) {
             std::lock_guard 锁(实现_->互斥);
             if (实现_->停止 || 实现_->已完成) return 新自我学习复核接收状态::已停止接收;
@@ -5948,6 +5979,73 @@ std::optional<新任务执行处理结果> 新_任务管理线程类::读取最�
     } catch (...) {
         return std::nullopt;
     }
+}
+
+新前置语言筹办接收结果 新_任务管理线程类::提交前置语言输入筹办(const 新任务前置语言输入请求& q) noexcept {
+    using S=新任务工作接收状态;
+    新前置语言筹办接收结果 out;
+    if(!实现_||!有效(q.父任务节点)||!有效(q.父需求节点))return out;
+    try {
+        if(!实现_->任务服务->是前置语言材料父任务(q.父任务节点))return out;
+        const auto t=实现_->任务服务->获取任务(q.父任务节点);
+        if(!t||t->需求节点!=q.父需求节点)throw std::logic_error("material parent request inconsistent");
+        新任务工作请求 w;
+        {
+            std::lock_guard 锁(实现_->互斥);
+            if(实现_->停止||实现_->已完成){out.状态=S::已停止接收;return out;}
+            if(!实现_->已进入||!实现_->工作线程){out.状态=S::尚未启动;return out;}
+            for(const auto& item:实现_->活动工作) {
+                if(item.请求.前置语言输入&&item.请求.前置语言输入->输入.来源==q.输入.来源) {
+                    if(*item.请求.前置语言输入!=q){out.状态=S::身份冲突;return out;}
+                    out.状态=S::精确重复;out.工作=item.请求;out.处理结果=item.结果;return out;
+                }
+                if(item.请求.任务节点==q.父任务节点){out.状态=S::任务已占用;return out;}
+            }
+            if(实现_->活动工作.size()>=实现_->配置.邮箱容量){out.状态=S::邮箱已满;return out;}
+            if(!实现_->下一工作编号||实现_->下一工作编号==(std::numeric_limits<std::uint64_t>::max)())throw std::logic_error("material work identity exhausted");
+            实现_->活动工作.reserve(实现_->活动工作.size()+1);
+            w.工作编号=实现_->下一工作编号++;w.种类=新任务工作种类::筹办前置语言输入;w.任务节点=q.父任务节点;w.前置语言输入=q;
+        }
+        const auto r=实现_->提交普通工作(w);out.状态=r.状态;
+        if(r.状态==S::已接收||r.状态==S::精确重复){out.工作=w;out.处理结果=r.处理结果;}
+        return out;
+    }catch(const std::bad_alloc&){out.状态=S::资源失败;return out;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"接纳前置输入筹办",L"同工作接纳或父域结构异常");}
+}
+std::optional<新任务工作处理结果> 新_任务管理线程类::读取前置语言输入筹办结果(const 新任务工作请求& q) const noexcept {
+    try {
+        if(!实现_||q.种类!=新任务工作种类::筹办前置语言输入||!q.前置语言输入)return {};
+        std::optional<新任务工作处理结果> r;
+        {
+            std::lock_guard 锁(实现_->互斥);
+            const auto i=std::find_if(实现_->活动工作.begin(),实现_->活动工作.end(),[&](const auto& w){return w.请求.工作编号==q.工作编号;});
+            if(i==实现_->活动工作.end()) {
+                if(实现_->停止||实现_->已完成)return {};
+                throw std::logic_error("accepted material work disappeared before acknowledgement");
+            }
+            if(i->请求!=q)throw std::logic_error("material readback request conflict");
+            r=i->前置已读回;
+        }
+        if(r&&(!r->前置语言输入||r->原请求!=q||r->前置语言输入->原请求!=*q.前置语言输入
+            ||!实现_->任务服务->是前置语言材料父任务(q.任务节点)))throw std::logic_error("material result readback corrupt");
+        return r;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取前置输入筹办",L"完整原结果或父域不变量异常");}
+}
+新任务工作操作状态 新_任务管理线程类::确认前置语言输入筹办已读回(const 新任务工作请求& q) noexcept {
+    using S=新任务工作操作状态;
+    try {
+        if(!实现_||q.种类!=新任务工作种类::筹办前置语言输入||!q.前置语言输入)return S::入口拒绝;
+        {
+            std::lock_guard 锁(实现_->互斥);
+            const auto i=std::find_if(实现_->活动工作.begin(),实现_->活动工作.end(),[&](const auto& w){return w.请求.工作编号==q.工作编号;});
+            if(i==实现_->活动工作.end())return S::无变化;
+            if(i->请求!=q||!i->前置已读回)throw std::logic_error("unread material work acknowledgement");
+        }
+        const auto ack=实现_->工作线程->确认结果已接收(q.工作编号,q.任务节点);
+        if(ack!=S::已完成&&ack!=S::无变化)throw std::logic_error("material worker acknowledgement failed");
+        std::lock_guard 锁(实现_->互斥);
+        std::erase_if(实现_->活动工作,[&](const auto& w){return w.请求==q;});实现_->变化.notify_all();return S::已完成;
+    }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确认前置输入筹办",L"只读工作资源释放不变量异常");}
 }
 
 } // namespace 海中鱼巣
