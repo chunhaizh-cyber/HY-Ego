@@ -227,14 +227,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         throw 新学习运行异常(m.节点, 新学习运行异常原因::规格未支持,
             "simulation parameter " + std::to_string(位置) + ": " + 原因);
     };
-    // 建立连接v4的收发判定在函数内部读取外设（R91、R92），隔离模拟尚未实现。
-    if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_建立连接)})
-        不支持(0,"connection v4 isolated simulation pending");
-    if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_进入场景)})
-        不支持(0,"enter scene isolated simulation pending");
-    // 获取服务对象v3的结果改为服务对象特征（R93），隔离模拟尚未适配。
-    if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_获取服务对象)})
-        不支持(0,"service object acquisition v3 isolated simulation pending");
     std::optional<稳定编码> 需求结果概念;
     for(const auto 概念:m.方法头.可能结果概念组) {
         if(方法_.读取模拟特征范围(概念))continue;
@@ -2093,12 +2085,18 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(std::find(已核结果事实.begin(),已核结果事实.end(),事实.限定)==已核结果事实.end())
                 已核结果事实.push_back(事实.限定);
         }
-        if(run.结果.状态!=新本能函数执行状态::已按合同返回
-            ||run.结果.结果取得状态!=新本能函数结果取得状态::已取得)
+        // 仅条件样例（5370 §5.3，R96）：本能按合同返回、未进入动作、未取得结果且无写回时，
+        // 模拟不能取得结果（例如需要真实读取外设）；条件为真，结果为空，只发表条件节点。
+        const bool 仅条件样例=run.结果.状态==新本能函数执行状态::已按合同返回
+            &&run.结果.结果取得状态==新本能函数结果取得状态::未取得
+            &&run.结果.动作阶段==新本能函数动作阶段::未进入动作
+            &&!run.结果.动作动态节点&&方法写回组.empty()&&run.结果.已形成状态节点组.empty();
+        if(!仅条件样例&&(run.结果.状态!=新本能函数执行状态::已按合同返回
+            ||run.结果.结果取得状态!=新本能函数结果取得状态::已取得))
             本支有未完成样例=true;
         std::optional<新方法条件结果定义> 本组已发表;
         if(run.结果.状态==新本能函数执行状态::已按合同返回
-            &&run.结果.结果取得状态==新本能函数结果取得状态::已取得) {
+            &&(run.结果.结果取得状态==新本能函数结果取得状态::已取得||仅条件样例)) {
             // 在调用真实返回之后、任何永久材料/域写入之前做内容完整性门。
             std::optional<std::array<std::size_t,3>> 需求位置;
             std::set<std::pair<std::uint8_t,稳定编码>> 已覆盖来源;

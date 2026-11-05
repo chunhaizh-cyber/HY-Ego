@@ -216,21 +216,26 @@ public:
         运行.条件.参数角色组.push_back(std::move(条件));
     }
     if (!复核()) return 运行;
-    const auto 动作=后端.建立本次动作(场景,绑定);
+    // 写回目标是容器中的参数5——自我的“服务对象”特征（R93）；交互者特征（参数4）只作连接条件。
+    const auto* 结果参数=场景.查询参数(5);
+    if (!结果参数) return 运行;
+    auto 写回绑定=绑定;
+    写回绑定.交互者特征=结果参数->信息节点;
+    const auto 动作=后端.建立本次动作(场景,写回绑定);
     if (!有效(动作)) return 运行;
     运行.结果.动作动态节点=动作;
     运行.结果.动作阶段=新本能函数动作阶段::已进入动作;
     运行.结果.状态=新本能函数执行状态::动作结果未知;
     运行.结果.结果取得状态=新本能函数结果取得状态::部分取得;
     if (!复核()) return 运行;
-    const auto 写回=后端.写入交互者(绑定,动作);
+    const auto 写回=后端.写入交互者(写回绑定,动作);
     if (写回.状态!=新交互求值状态::已取得) return 运行;
-    const auto F=后端.读取交互者(绑定.交互者特征);
-    if (!F||F->当前值!=std::optional<新特征准确值>{新特征准确值{绑定.对端}})
-        throw std::logic_error("interaction feature writeback differs after successful publication");
+    const auto F=后端.读取交互者(写回绑定.交互者特征);
+    if (!F||F->当前值!=std::optional<新特征准确值>{新特征准确值{写回绑定.对端}})
+        throw std::logic_error("service object feature writeback differs after successful publication");
     if (写回.新状态节点) 运行.结果.已形成状态节点组.push_back(*写回.新状态节点);
     if (写回.变化动态节点) 运行.结果.已形成动态节点组.push_back(*写回.变化动态节点);
-    运行.结果.建议观察特征节点组={绑定.交互者特征};
+    运行.结果.建议观察特征节点组={写回绑定.交互者特征};
     运行.结果.状态=新本能函数执行状态::已按合同返回;
     运行.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
     运行.结果.结果取得状态=新本能函数结果取得状态::已取得;
