@@ -1,4 +1,4 @@
-#include "新_任务管理线程类.h"
+﻿#include "新_任务管理线程类.h"
 #include "../领域/新_本能函数集.h"
 #include "../领域/新_方法类.h"
 #include "../业务/新_世界树类.h"
@@ -414,15 +414,12 @@ struct 新_任务管理线程类::实现 final {
         std::shared_future<新任务工作处理结果> 结果;
     };
     std::vector<工作占用> 活动工作;
-    std::vector<新需求字段追问来源> 待字段追问来源;
     std::vector<std::pair<稳定编码,新需求字段追问来源>> 待已有字段来源;
     std::set<std::uint64_t> 专有字段任务;
     std::chrono::steady_clock::time_point 下次字段追问推进{};
     void 推进字段追问() {
-        std::optional<新需求字段追问来源> source;
         {std::lock_guard lock(互斥);if(停止||std::chrono::steady_clock::now()<下次字段追问推进)return;
-            下次字段追问推进=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
-            if(!待字段追问来源.empty())source=待字段追问来源.front();}
+            下次字段追问推进=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);}
         std::optional<std::pair<稳定编码,新需求字段追问来源>> existing;
         {std::lock_guard lock(互斥);if(!待已有字段来源.empty())existing=待已有字段来源.front();}
         if(existing) {
@@ -433,38 +430,40 @@ struct 新_任务管理线程类::实现 final {
                 else std::rotate(待已有字段来源.begin(),待已有字段来源.begin()+1,待已有字段来源.end());
             }
         }
-        if(source) {
-            const auto t=任务服务->确保请求字段追问任务(*source);
-            std::lock_guard lock(互斥);
-            if(t)专有字段任务.insert(t->值);
-            if(!待字段追问来源.empty()&&待字段追问来源.front()==*source) {
-                // 未就绪来源公平轮转，不让单一来源挡住其它会话。
-                if(!t)std::rotate(待字段追问来源.begin(),待字段追问来源.begin()+1,待字段追问来源.end());
-                else 待字段追问来源.erase(待字段追问来源.begin());
-            }
-        }
         const auto tasks=任务服务->查询字段追问任务();
+        // 同一对话框一次只保留一个在途填项问，真实回答才有唯一字段绑定。
+        // 这是发送调度顺序，不裁决字段含义；所有字段仍由通用筹办/self确认。
+        using 问句会话键=std::pair<std::string,std::string>;
+        std::map<问句会话键,稳定编码> 当前问句;
+        for(const auto t:tasks) {
+            const auto r=任务服务->读取字段追问记录(t);
+            if(!r||!r->来源已具备)continue;
+            if(r->阶段!=新任务字段追问阶段::已采用&&r->阶段!=新任务字段追问阶段::已取得候选
+                &&r->阶段!=新任务字段追问阶段::已发送待字段满足)continue;
+            const 问句会话键 key{r->来源.公开宿主会话,r->来源.对话框标识};
+            if(!当前问句.contains(key)||r->阶段==新任务字段追问阶段::已发送待字段满足)当前问句[key]=t;
+        }
         for(const auto t:tasks) {
             auto r=任务服务->读取字段追问记录(t);if(!r)throw std::logic_error("question task record disappeared");
+            if(r->来源已具备) {
+                const auto chosen=当前问句.find({r->来源.公开宿主会话,r->来源.对话框标识});
+                if(chosen!=当前问句.end()&&chosen->second!=t)continue;
+            }
             {std::lock_guard lock(互斥);专有字段任务.insert(t.值);
                 if(停止||std::any_of(活动工作.begin(),活动工作.end(),[&](const auto& w){return w.请求.任务节点==t;}))continue;}
-            if(r->阶段==新任务字段追问阶段::字段已满足) {
-                // 当前字段满足后才筹办下一个确定必要缺项，绝不重问旧字段。
-                const auto next=任务服务->确保请求字段追问任务(r->来源);
-                if(next){std::lock_guard lock(互斥);专有字段任务.insert(next->值);}
-                continue;
-            }
-            if(r->阶段==新任务字段追问阶段::已发送待字段满足
-                ||r->阶段==新任务字段追问阶段::无可发送候选||r->阶段==新任务字段追问阶段::来源已变化) {
+            if(r->阶段==新任务字段追问阶段::字段已满足)continue; // 下一个字段仅由父目标通用复核与自我确认形成。
+            if(r->阶段==新任务字段追问阶段::无可发送候选||r->阶段==新任务字段追问阶段::来源已变化) {
                 (void)任务服务->复核任务字段追问满足(t);continue;
             }
-            if(r->阶段!=新任务字段追问阶段::已采用&&r->阶段!=新任务字段追问阶段::已取得候选)continue;
+            if(r->阶段!=新任务字段追问阶段::已采用&&r->阶段!=新任务字段追问阶段::已取得候选
+                &&r->阶段!=新任务字段追问阶段::已发送待字段满足)continue;
             新任务工作请求 request;
             {std::lock_guard lock(互斥);if(停止)return;
                 if(!下一工作编号||下一工作编号==(std::numeric_limits<std::uint64_t>::max)())throw std::logic_error("question work sequence exhausted");
                 request.工作编号=下一工作编号++;}
             request.任务节点=t;request.种类=r->阶段==新任务字段追问阶段::已采用
-                ? 新任务工作种类::取得字段追问候选:新任务工作种类::发送字段追问;
+                ? 新任务工作种类::取得字段追问候选:r->阶段==新任务字段追问阶段::已取得候选
+                    ? 新任务工作种类::发送字段追问:新任务工作种类::写回字段答案;
             (void)提交普通工作(request);
         }
     }
@@ -2433,7 +2432,8 @@ struct 新_任务管理线程类::实现 final {
             }catch(...){报告工程停止("普通字段叶询问候选回收失败");return;}
         }
 
-        if(占用.请求.种类==新任务工作种类::取得字段追问候选||占用.请求.种类==新任务工作种类::发送字段追问) {
+        if(占用.请求.种类==新任务工作种类::取得字段追问候选||占用.请求.种类==新任务工作种类::发送字段追问
+            ||占用.请求.种类==新任务工作种类::写回字段答案) {
             try {
                 const auto returned=占用.结果.get();
                 const auto current=任务服务->读取字段追问记录(占用.请求.任务节点);
@@ -2446,7 +2446,8 @@ struct 新_任务管理线程类::实现 final {
                 std::lock_guard lock(互斥);
                 std::erase_if(活动工作,[&](const auto& w){return w.请求==占用.请求;});
                 调度待触发=true;变化.notify_all();
-                记录字段追问观察(*current,占用.请求.种类 == 新任务工作种类::取得字段追问候选 ? L"追问表达候选工作读回" : L"独立发送工作门控读回");return;
+                记录字段追问观察(*current,占用.请求.种类 == 新任务工作种类::取得字段追问候选 ? L"追问表达候选工作读回"
+                    :占用.请求.种类 == 新任务工作种类::发送字段追问 ? L"独立发送工作门控读回" : L"入站答案写回后字段复核");return;
             }catch(...){报告工程停止("字段追问工作回收失败");return;}
         }
 
@@ -6054,19 +6055,6 @@ std::optional<新任务执行处理结果> 新_任务管理线程类::读取最�
     } catch (...) {
         return std::nullopt;
     }
-}
-
-新任务承接接收状态 新_任务管理线程类::提交字段追问(const 新需求字段追问来源& q) noexcept {
-    try {
-        if(!实现_)return 新任务承接接收状态::尚未启动;
-        std::lock_guard lock(实现_->互斥);
-        if(实现_->停止)return 新任务承接接收状态::已停止接收;
-        if(!实现_->已进入)return 新任务承接接收状态::尚未启动;
-        if(std::find(实现_->待字段追问来源.begin(),实现_->待字段追问来源.end(),q)!=实现_->待字段追问来源.end())return 新任务承接接收状态::精确重复;
-        if(实现_->待字段追问来源.size()>=实现_->配置.邮箱容量)return 新任务承接接收状态::邮箱已满;
-        实现_->待字段追问来源.push_back(q);实现_->变化.notify_all();return 新任务承接接收状态::已接收;
-    }catch(const std::bad_alloc&){return 新任务承接接收状态::资源失败;}
-    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"提交字段追问",L"任务追问交接工程错误");}
 }
 
 新任务承接接收状态 新_任务管理线程类::提交已有字段追问来源(稳定编码 T,const 新需求字段追问来源& q) noexcept {

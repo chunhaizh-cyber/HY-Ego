@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -491,8 +491,6 @@ private:
         std::function<void()> 最终服务工作唤醒,
         const 新长期服务值结算配置& 服务结算配置) noexcept;
     新任务承接接收结果 提交外部服务需求承接(const 新任务承接消息&) noexcept;
-    // self仅确认缺项来源；实际D/T、think和独立发送由task链推进。
-    新任务承接接收状态 提交字段追问(const 新需求字段追问来源&) noexcept;
     新任务承接接收状态 提交已有字段追问来源(稳定编码,const 新需求字段追问来源&) noexcept;
     新任务承接接收结果 提交行动请求需求承接(const 新任务承接消息&) noexcept;
     void 解除自我筹办反馈(const void* 所有者) noexcept;

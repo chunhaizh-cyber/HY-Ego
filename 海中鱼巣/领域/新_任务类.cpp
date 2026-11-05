@@ -1,4 +1,4 @@
-#include "新_任务类.h"
+﻿#include "新_任务类.h"
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
@@ -10,6 +10,7 @@
 #include "概念_二次特征类.h"
 #include "概念_存在类.h"
 #include "新_本能函数管理类.h"
+#include "新_本能函数集.h"
 #include "新_动态类.h"
 #include "新_二次特征类.h"
 #include "../业务/执行场景采集.服务.h"
@@ -24835,45 +24836,6 @@ bool 新_任务类::补齐字段追问来源(稳定编码 T,const 新需求字�
     q.替换字段组.push_back({raw.字(键::有来源)->编码,基础值{std::int64_t{1}}});
     更新(raw,新任务字段追问阶段::已采用,std::move(q));return true;
 }
-std::optional<稳定编码> 新_任务类::确保请求字段追问任务(const 新需求字段追问来源& source){
-    using namespace 字段追问存储;
-    const auto parent=查询需求任务(source.父需求);if(!parent)return {};
-    const auto created=需求服务_.建立请求字段完善需求(source,*parent);
-    if(created.状态==新需求操作状态::资源失败||created.状态==新需求操作状态::前提已变化)return {};
-    if(!created.需求节点)return {};
-    const auto method=方法服务_.查询本能登记(std::string(新本能函数登记名_询问指定需求字段));
-    if(!method.方法节点)return {};
-    const auto m=方法服务_.获取方法(*method.方法节点);
-    if(!m||m->启用状态!=新方法启用状态::启用)return {};
-    要求(m->实现方式==新方法实现方式::本能&&m->条件结果组.empty(),"question task requires pair-free registered method");
-    const auto port=新_本能函数管理类::租用字段询问端口();if(!port)return {};
-    const auto send=port->读取或确保发送方法登记();if(!send.方法节点)return {};
-    // M及跨owner来源在锁外读取；T建立到专有采用发布由同一task锁串行保护。
-    std::unique_lock lock(新任务互斥);
-    const auto task=建立或取得任务(*created.需求节点);if(!task.任务节点)return {};
-    const auto T=*task.任务节点;
-    if(const auto old=读取字段追问记录(T)){
-        if(!old->来源已具备){lock.unlock();(void)补齐字段追问来源(T,source);return T;}
-        if(old->来源!=source)更新(读(old->节点),新任务字段追问阶段::来源已变化);
-        return T;
-    }
-    基础节点组追加请求 q;q.新节点组.resize(1);auto& fields=q.新节点组[0].字段组;
-    const auto ref=[&](键 k,稳定编码 n){fields.push_back({取(k),n});};
-    const auto value=[&](键 k,基础原始值 v){fields.push_back({取(k),基础值{std::move(v)}});};
-    ref(键::类型,取(键::记录类型));ref(键::所属任务,T);ref(键::字段需求,*created.需求节点);ref(键::方法,*method.方法节点);ref(键::发送方法,*send.方法节点);
-    value(键::阶段,static_cast<std::int64_t>(新任务字段追问阶段::已采用));
-    const auto& a=source.请求;ref(键::接收消息,a.需求来源.键.接收消息节点);ref(键::采用含义,a.需求来源.采用含义节点);
-    ref(键::被认知需求,a.被认知需求节点);ref(键::来源人类,a.来源人类节点);ref(键::受请求者,a.受请求者节点);
-    value(键::原文范围,std::vector<std::uint64_t>{a.需求来源.键.原文起点,a.需求来源.键.原文终点});value(键::出现路径,a.需求来源.键.根出现路径);
-    ref(键::自我场景,source.自我场景);ref(键::窗口,source.窗口);ref(键::外设场景,source.外设场景);ref(键::输出特征,source.输出特征);ref(键::父需求,source.父需求);
-    value(键::宿主会话,source.公开宿主会话);value(键::对话框,source.对话框标识);
-    const auto capture=全局基础数据集.查询节点组完整结构({T,*created.需求节点});
-    要求(capture.状态==基础结构操作状态::已完成,"question adoption capture failed");
-    for(const auto& n:capture.节点组){要求(n.快照.has_value(),"question task disappeared");q.预期联合节点组.push_back(*n.快照);}
-    const auto r=全局基础数据集.原子追加节点组(q);要求(r.状态==基础节点组追加状态::已完成,"question adoption publication failed");
-    const auto state=修改任务状态(T,新任务状态::等待条件);
-    要求(state==新任务操作状态::已修改||state==新任务操作状态::无变化,"question task wait publication failed");return T;
-}
 新任务字段追问记录 新_任务类::取得任务字段追问候选(稳定编码 T){
     using namespace 字段追问存储;auto prior=读取字段追问记录(T);要求(prior.has_value(),"question adoption missing");
     if(prior->阶段!=新任务字段追问阶段::已采用)return *prior;
@@ -24993,6 +24955,39 @@ std::optional<稳定编码> 新_任务类::确保请求字段追问任务(const 
         更新(raw,新任务字段追问阶段::发送合同待对接);
     else 更新(raw,新任务字段追问阶段::来源已变化);
     方法服务_.收束直接调用身份(identity->节点);return *读取字段追问记录(T);
+}
+void 新_任务类::装配字段答案候选读取(
+    std::function<std::optional<新需求字段答案写回请求>(const 新任务字段追问记录&)> reader) {
+    std::lock_guard lock(新任务互斥);
+    if(字段答案候选读取_)throw std::logic_error("field answer reader already owned");
+    if(!reader)throw std::logic_error("field answer reader missing");
+    字段答案候选读取_=std::move(reader);
+}
+void 新_任务类::装配字段答案执行(
+    std::function<新本能函数本次条件结果对(const 新需求字段答案写回请求&,新_需求类&,const 方法参数场景&)> writer) {
+    std::lock_guard lock(新任务互斥);
+    if(字段答案执行_)throw std::logic_error("field answer writer already owned");
+    if(!writer)throw std::logic_error("field answer writer missing");
+    字段答案执行_=std::move(writer);
+}
+新任务字段追问记录 新_任务类::写回任务字段答案(稳定编码 T) {
+    const auto record=读取字段追问记录(T);
+    if(!record)throw std::logic_error("answer work question record missing");
+    if(record->阶段!=新任务字段追问阶段::已发送待字段满足)return *record;
+    std::function<std::optional<新需求字段答案写回请求>(const 新任务字段追问记录&)> reader;
+    std::function<新本能函数本次条件结果对(const 新需求字段答案写回请求&,新_需求类&,const 方法参数场景&)> writer;
+    {std::lock_guard lock(新任务互斥);reader=字段答案候选读取_;writer=字段答案执行_;}
+    if(!reader||!writer)return *record;
+    const auto candidate=reader(*record);
+    if(!candidate||新_本能函数管理类::本次停止已请求())return *record;
+    const auto current=读取字段追问记录(T);
+    if(!current)throw std::logic_error("answer work question record disappeared");
+    if(current->阶段!=新任务字段追问阶段::已发送待字段满足
+        ||current->节点!=record->节点||current->已提交输出!=record->已提交输出)return *current;
+    const auto scene=方法服务_.建立参数场景(record->方法节点,字段追问存储::绑定(*record));
+    if(!scene.参数场景)throw std::logic_error("field answer builtin parameter scene unavailable");
+    (void)writer(*candidate,需求服务_,*scene.参数场景);
+    return 复核任务字段追问满足(T);
 }
 新任务字段追问记录 新_任务类::复核任务字段追问满足(稳定编码 T){
     using namespace 字段追问存储;const auto old=读取字段追问记录(T);要求(old.has_value(),"question wait adoption missing");

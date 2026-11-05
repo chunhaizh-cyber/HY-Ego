@@ -12,7 +12,8 @@ class 新_外设世界树类; class 新_自然语言世界树类;
 class 新_语言类; class 新_词类; class 概念_名称关系类;
 class 概念_存在类; class 概念_特征类; class 概念_二次特征类;
 class 新_存在类; class 新_特征值类; class 新_特征类;
-class 新_场景类; class 新_需求类;
+class 新_场景类; class 新_需求类; class 新_任务类; class 新_方法类; class 新_动态类;
+struct 新任务字段追问记录; struct 新本能函数本次条件结果对; class 方法参数场景;
 struct 接收需求认知会话语境 final {
     std::string 公开宿主会话;
     std::optional<稳定编码> 已绑定人类;
@@ -55,6 +56,11 @@ public:
     接收行动请求交接确认状态 确认行动请求已交接(
         const 新行动请求承接来源&) noexcept;
     std::optional<接收需求认知观察> 读取最近观察() const;
+    void 装配任务读取接口(新_任务类&);
+    void 装配字段答案执行(新_方法类&,新_动态类&,稳定编码 通用存在概念);
+    std::optional<新需求字段答案写回请求> 读取字段答案候选(const 新任务字段追问记录&) const;
+    新本能函数本次条件结果对 执行字段答案写回本能(
+        const 新需求字段答案写回请求&,新_需求类&,const 方法参数场景&) const;
     // 仅从原M及仍活跃的正式会话投影，不回退到当前窗口或猜测对端。
     std::optional<新需求字段追问来源> 读取字段追问来源(
         稳定编码 被认知需求,稳定编码 自我,稳定编码 自我场景,稳定编码 父需求) const;

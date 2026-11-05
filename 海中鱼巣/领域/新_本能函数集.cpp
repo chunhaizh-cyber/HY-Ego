@@ -18,7 +18,7 @@ namespace {
 }
 }
 
-新本能函数本次条件结果对 新_本能函数集::获取服务对象新需求(
+新本能函数本次条件结果对 新_本能函数集::获取服务对象需求信息(
     const 方法参数场景& 场景) noexcept {
     新本能函数本次条件结果对 运行;
     try {
@@ -64,9 +64,9 @@ namespace {
         }
         return 运行;
     } catch (const std::exception& e) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取服务对象新需求", L"新本能登记或执行工程异常。", e.what());
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取服务对象需求信息", L"新本能登记或执行工程异常。", e.what());
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取服务对象新需求", L"新本能登记或执行未知工程异常。");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取服务对象需求信息", L"新本能登记或执行未知工程异常。");
     }
 }
 
@@ -288,6 +288,26 @@ namespace {
         return port->执行(scene,*context);
     }catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回语言场景主张",L"写回工程异常；主张不升级为真实特征，已发生动作保留。",e.what());}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回语言场景主张",L"未知写回工程异常。");}
+}
+
+namespace {
+thread_local const std::function<新本能函数本次条件结果对(const 方法参数场景&)>* 字段答案本次操作=nullptr;
+thread_local const 方法参数场景* 字段答案本次场景=nullptr;
+}
+新本能函数本次条件结果对 调用需求字段答案写回本能(const 方法参数场景& scene,
+    const std::function<新本能函数本次条件结果对(const 方法参数场景&)>& operation) {
+    if(字段答案本次操作||!operation)throw std::logic_error("answer builtin invocation overlaps or lacks runtime operation");
+    struct 守卫 {~守卫(){字段答案本次操作=nullptr;字段答案本次场景=nullptr;}} guard;
+    字段答案本次操作=&operation;字段答案本次场景=&scene;
+    return 新_本能函数管理类::执行(新本能函数登记名_写回服务对象需求字段,scene);
+}
+新本能函数本次条件结果对 新_本能函数集::写回服务对象需求字段(const 方法参数场景& scene) noexcept {
+    try {
+        if(scene.用途()!=新方法参数场景用途::执行){新本能函数本次条件结果对 r;r.结果.状态=新本能函数执行状态::参数不匹配;return r;}
+        if(字段答案本次场景!=&scene||!字段答案本次操作)throw std::logic_error("answer builtin is outside its typed worker invocation");
+        return (*字段答案本次操作)(scene);
+    }catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回服务对象需求字段",L"真实入站字段材料写回发生工程异常，保留已发生动作。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写回服务对象需求字段",L"真实入站字段材料写回发生未知工程异常。");}
 }
 
 } // namespace 海中鱼巣

@@ -133,7 +133,7 @@ bool 新需求保护仍在(const std::vector<基础联合节点快照>& source) 
 }
 
 bool 新需求规格一致(const 新方法信息& m, const 新服务对象新需求配置& c,bool 要求启用=true) {
-    if (m.本能函数登记名 != 新本能函数登记名_获取服务对象需求节点
+    if (m.本能函数登记名 != 新本能函数登记名_获取服务对象需求信息
         || m.作用域 != 新方法作用域::普通世界 || m.实现方式 != 新方法实现方式::本能
         || (要求启用&&m.启用状态 != 新方法启用状态::启用) || m.行为 != 新方法行为::改变
         || m.参数规格组.size() != 3
@@ -190,7 +190,7 @@ struct 服务对象新需求本能运行服务::实现 final {
             新需求要求(有效(current)&&visited.insert(current).second);
             const auto m=方法.获取方法(current);
             新需求要求(m.has_value());
-            if(chain.empty())named=m->本能函数登记名==新本能函数登记名_获取服务对象需求节点;
+            if(chain.empty())named=m->本能函数登记名==新本能函数登记名_获取服务对象需求信息;
             chain.push_back(current);
             if(registered&&current==*registered){reached=true;break;}
             if(!m->来源方法节点)break;
@@ -543,7 +543,7 @@ bool 服务对象新需求本能运行服务::初始化(const 新服务对象新
         场景观察.结束(static_cast<std::int64_t>(scene.状态), scene.参数场景 != nullptr);
         if (!scene.参数场景) { 总计.结束(0, false); return false; }
         新需求登记阶段观察 调用观察(L"调用本能函数生成头与规格");
-        const auto result = 新_本能函数管理类::执行(新本能函数登记名_获取服务对象需求节点, *scene.参数场景);
+        const auto result = 新_本能函数管理类::执行(新本能函数登记名_获取服务对象需求信息, *scene.参数场景);
         调用观察.结束(static_cast<std::int64_t>(result.结果.状态));
         if (result.结果.状态 != 新本能函数执行状态::已按合同返回) { 总计.结束(0, false); return false; }
         新需求登记阶段观察 就绪观察(L"发布本地就绪状态");
@@ -577,7 +577,7 @@ std::optional<新服务对象新需求配置> 服务对象新需求本能运行�
         if (!cfg || !request.条件结果组.empty()) return {};
         新需求登记阶段观察 声明观察(L"核对函数自身固定声明");
         新方法信息 expected;
-        expected.本能函数登记名 = 新本能函数登记名_获取服务对象需求节点;
+        expected.本能函数登记名 = 新本能函数登记名_获取服务对象需求信息;
         expected.作用域 = request.作用域; expected.实现方式 = request.实现方式;
         expected.方法头 = request.方法头; expected.参数规格组 = request.参数规格组;
         expected.行为 = request.行为; expected.初始模拟关系组 = request.初始模拟关系组;
@@ -589,7 +589,7 @@ std::optional<新服务对象新需求配置> 服务对象新需求本能运行�
         声明观察.结束(规格符合, 规格符合);
         if (!规格符合) return {新方法操作状态::参数规格不合法, {}};
         新需求登记阶段观察 建立观察(L"方法owner建立或复用头与规格");
-        const auto result = 实现_->方法.确保本能方法登记(std::string(新本能函数登记名_获取服务对象需求节点), request);
+        const auto result = 实现_->方法.确保本能方法登记(std::string(新本能函数登记名_获取服务对象需求信息), request);
         建立观察.结束(static_cast<std::int64_t>(result.状态), result.方法节点.has_value());
         if (!result.方法节点) { 总计.结束(static_cast<std::int64_t>(result.状态), false); return result; }
         auto 旧声明=request;

@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstddef>
 #include <atomic>
@@ -1698,10 +1698,13 @@ public:
         稳定编码 任务节点) const noexcept;
     std::optional<新任务字段追问记录> 采用字段询问候选(稳定编码);
     bool 补齐字段追问来源(稳定编码,const 新需求字段追问来源&);
-    std::optional<稳定编码> 确保请求字段追问任务(const 新需求字段追问来源&);
     std::optional<新任务字段追问记录> 读取字段追问记录(稳定编码) const;
     std::vector<稳定编码> 查询字段追问任务() const;
     新任务字段追问记录 取得任务字段追问候选(稳定编码);
+    void 装配字段答案候选读取(std::function<std::optional<新需求字段答案写回请求>(const 新任务字段追问记录&)>);
+    void 装配字段答案执行(std::function<新本能函数本次条件结果对(const 新需求字段答案写回请求&,新_需求类&,const 方法参数场景&)>);
+    新任务字段追问记录 写回任务字段答案(稳定编码);
+
     新任务字段追问记录 发送任务字段追问(稳定编码);
     新任务字段追问记录 复核任务字段追问满足(稳定编码);
     新任务治理承接结果 承接需求任务(
@@ -2110,6 +2113,8 @@ private:
     std::optional<新任务结算边界证据> 读取当前结算边界() const;
     struct 服务值治理读取上下文;
     std::atomic<std::shared_ptr<const 服务值治理读取上下文>> 服务值治理读取上下文_;
+    std::function<std::optional<新需求字段答案写回请求>(const 新任务字段追问记录&)> 字段答案候选读取_;
+    std::function<新本能函数本次条件结果对(const 新需求字段答案写回请求&,新_需求类&,const 方法参数场景&)> 字段答案执行_;
     新_动态类* 本能动作读取_ = nullptr;
     新本能需求任务参数工厂* 本能需求任务参数工厂_ = nullptr;
 };

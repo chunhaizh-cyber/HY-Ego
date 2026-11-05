@@ -781,6 +781,10 @@ void 服务对象需求发布服务::关闭() noexcept {
     using S=新需求目标定义核验状态;
     try {
         const auto s=实现_->取得(t.目标存在节点);
+        if(s==服务对象需求发布状态::前提已变化) {
+            std::wostringstream text;text<<L"主体="<<t.目标存在节点.值<<L"；同主体发布租约已占用；尚未读取定义";
+            (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"发布服务",L"定义读取未取得租约",text.str());
+        }
         if(s==服务对象需求发布状态::已关闭)return {S::依赖未就绪,{}};
         if(s==服务对象需求发布状态::前提已变化)return {S::前提已变化,{}};
         实现::调用结束 结束{*实现_,t.目标存在节点};return 实现_->核验内容定义(t);

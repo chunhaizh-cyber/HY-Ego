@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -43,7 +43,7 @@ enum class 新任务工作种类 : std::uint8_t {
     检测本能结果 = 6,
     执行最终服务消费 = 7,
     执行任务贡献治理 = 8,
-    取得字段追问候选 = 9, 发送字段追问 = 10
+    取得字段追问候选 = 9, 发送字段追问 = 10, 写回字段答案 = 11
 };
 
 struct 新任务结果检测请求 final {
