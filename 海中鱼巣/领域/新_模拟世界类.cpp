@@ -350,6 +350,7 @@ struct 新_模拟世界类::实现 final {
     稳定编码 通用方法,通用场景;
     std::optional<稳定编码> 通用执行分支;
     std::vector<新方法参数角色绑定> 通用绑定;
+    std::vector<稳定编码> 通用输入节点; // 全部有序输入（含N之后私有追加输入）的本地节点。
     std::map<稳定编码,新模拟有序参数输入> 通用参数;
     bool 是本地参数(稳定编码 n,新方法参数信息类型 kind) const {
         const auto it=通用参数.find(n);return it!=通用参数.end()&&it->second.规格.信息类型==kind;
@@ -761,6 +762,16 @@ std::optional<稳定编码> 查归档身份(稳定编码 task,稳定编码 execu
         if(实现_->通用) return 模拟世界树根节点; }
 
     return {};
+}
+std::optional<稳定编码> 新_模拟世界类::读取有序输入节点(std::uint32_t 位置) const noexcept {
+    try {
+        if(!实现_)return std::nullopt;
+        std::lock_guard lock(实现_->互斥);
+        if(!实现_->通用||!位置||位置>实现_->通用输入节点.size())return std::nullopt;
+        const auto n=实现_->通用输入节点[位置-1];
+        if(!n.值||!全局基础数据集.查询节点(n))return std::nullopt;
+        return n;
+    } catch (...) { return std::nullopt; }
 }
 std::optional<std::vector<新方法参数角色绑定>> 新_模拟世界类::读取参数绑定() const noexcept {
     try {
@@ -2148,7 +2159,7 @@ namespace 海中鱼巣 {
     s.通用节点.reserve(s.通用节点.size()+q.新节点组.size()+32);
     s.通用字段.reserve(q.新节点组.size()*8+q.追加字段组.size()+128);
     s.通用外部边.reserve(q.追加外部关系组.size()+32);
-    s.通用绑定.resize(m->参数规格组.size());s.通用事件=事件;
+    s.通用绑定.resize(m->参数规格组.size());s.通用输入节点.assign(输入.size(),稳定编码{});s.通用事件=事件;
     // 所有身份先私有预分配；将组内占位引用解析后，以一次追加发表全部字段与挂根。
     // 这也使数组材料中的场景引用有真实本地身份，而不需要第二次补写半成品。
     创建批 图身份准备;
@@ -2220,6 +2231,7 @@ namespace 海中鱼巣 {
                 throw std::runtime_error("模拟存在落图的有效构造范围读回不一致");
         }
         s.通用参数.emplace(n,std::move(本地参数));
+        s.通用输入节点[i]=n;
         if(i>=s.通用绑定.size())continue;
         auto& b=s.通用绑定[i];b.世界场景节点=s.通用场景;
         auto owner = 是普通存在(i)
@@ -2996,7 +3008,7 @@ void 新_模拟世界类::释放有序样例() {
     if(!s.通用)return;
     const auto r=全局基础数据集.原子删除节点结构(s.通用节点,s.通用字段,s.通用外部边);
     if(r!=基础结构操作状态::已完成) throw std::runtime_error("simulation temporary nodes still referenced");
-    s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用参数.clear();s.通用材料.clear();s.通用任务.clear();s.任务成员读取组.clear();
+    s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用输入节点.clear();s.通用参数.clear();s.通用材料.clear();s.通用任务.clear();s.任务成员读取组.clear();
     s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();
     s.记录复制读取=false;s.已读取复制上下文=false;s.本次已进入动作=false;s.本次存在特征读取.clear();
     s.交互事实.clear();s.本次场景读取.clear();
@@ -3606,13 +3618,25 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     const auto sourceConcept=it->second.构造存在概念.value_or(it->second.规格.范围概念节点);
     const auto source=s.方法.读取模拟存在范围(sourceConcept),target=s.方法.读取模拟存在范围(C);
     if(!source||!target)throw std::runtime_error("simulation existence formal definition unavailable");
-    if(target->种类==存在概念种类::抽象&&source->种类!=存在概念种类::专属)
-        return 新存在概念匹配状态::材料不足;
-    const auto proof=s.方法.读取模拟存在原型候选(C);
-    if(proof.状态!=存在概念实例候选读取状态::已完成)return 新存在概念匹配状态::材料不足;
-    if(sourceConcept!=C&&std::none_of(proof.候选组.begin(),proof.候选组.end(),[&](const auto& p){return p.专属概念节点==sourceConcept;}))
-        return 新存在概念匹配状态::材料不足;
-    if(source->特征组.empty()&&target->种类==存在概念种类::抽象)return 新存在概念匹配状态::材料不足;
+    // 本地存在两类来源：复制专属原型（专属C），或按正式定义构造的具体实例（构造C为抽象）。
+    // 构造实例的归类证明是构造C沿正式上下位链属于目标C；随后同样逐项比较目标必需特征，不因同概念直接判匹配。
+    if(source->种类==存在概念种类::抽象) {
+        std::set<稳定编码> 已访;
+        std::function<bool(稳定编码)> 属于=[&](稳定编码 c)->bool {
+            if(c==C)return true;
+            if(!已访.insert(c).second)return false;
+            const auto r=c==sourceConcept ? source : s.方法.读取模拟存在范围(c);
+            if(!r)throw std::runtime_error("simulation existence classification definition unavailable");
+            return std::any_of(r->上位概念组.begin(),r->上位概念组.end(),[&](稳定编码 p){return 属于(p);});
+        };
+        if(!属于(sourceConcept))return 新存在概念匹配状态::材料不足;
+    } else {
+        const auto proof=s.方法.读取模拟存在原型候选(C);
+        if(proof.状态!=存在概念实例候选读取状态::已完成)return 新存在概念匹配状态::材料不足;
+        if(sourceConcept!=C&&std::none_of(proof.候选组.begin(),proof.候选组.end(),[&](const auto& p){return p.专属概念节点==sourceConcept;}))
+            return 新存在概念匹配状态::材料不足;
+        if(source->特征组.empty()&&target->种类==存在概念种类::抽象)return 新存在概念匹配状态::材料不足;
+    }
     新存在概念匹配材料 material;material.存在节点=E;material.专属存在概念节点=sourceConcept;material.目标存在概念节点=C;
     auto required=source->特征组;
     for(const auto& f:target->特征组)if(std::none_of(required.begin(),required.end(),[&](const auto& x){return x.特征类型概念==f.特征类型概念;}))required.push_back(f);
@@ -4159,7 +4183,10 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
 新场景事实构成读取结果 新_模拟世界类::读取连接构成() const {
     if(!实现_||!实现_->场景构成)return {};
     const auto C=实现_->方法.确保已确认消息连接概念();
-    return 实现_->场景构成->读取场景事实构成(C);
+    // 正式构成读取只在并发写入使只读保护失配时报告前提变化；有限次重读，其它状态原样返回。
+    auto r=实现_->场景构成->读取场景事实构成(C);
+    for(int 重读=0;重读<16&&r.状态==新交互求值状态::前提变化;++重读)r=实现_->场景构成->读取场景事实构成(C);
+    return r;
 }
 
 新交互写入读回 新_模拟世界类::发布本地队列(稳定编码 F,const std::vector<std::uint64_t>& members,
@@ -4548,7 +4575,13 @@ bool 新_模拟世界类::提交已完整写出(std::uint64_t seq) const {return
     lock.unlock();out=写入交互者(b,request.主动作);
     if(out.状态!=新交互求值状态::已取得)return out;
     lock.lock();
-    基础节点组追加请求 q;q.预期联合节点组=definition.完整保护;
+    // 交互者写回本身会新增引用正式概念的状态/动态，旧构成保护随之过期；重读同一构成并用其当前保护发布过程。
+    const auto 当前构成=读取连接构成();
+    if(当前构成.状态!=新交互求值状态::已取得||!当前构成.构成||[&]{const auto& x=*当前构成.构成;const auto& y=*definition.构成;
+            return x.关系概念!=y.关系概念||x.连接方法!=y.连接方法||x.连接动作概念!=y.连接动作概念
+                ||x.通用存在概念!=y.通用存在概念||x.窗口范围概念!=y.窗口范围概念||x.接收数量特征概念!=y.接收数量特征概念;}())
+        throw std::runtime_error("isolated connection composition changed during target update");
+    基础节点组追加请求 q;q.预期联合节点组=当前构成.完整保护;
     q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(过程种类)}},{字段组[根],模拟世界树根节点},
         {字段组[所属],b.场景},{字段组[来源引用],request.调用节点},{字段组[动作引用],request.主动作},
         {字段组[对端引用],b.对端},{字段组[窗口引用],b.窗口},{字段组[状态特征引用],b.交互者特征},

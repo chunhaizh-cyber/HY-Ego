@@ -515,14 +515,27 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if (原型.状态!=存在概念实例候选读取状态::已完成)
                 不支持(static_cast<std::uint32_t>(i+1),"formal classification prototype enumeration unavailable");
             if(原型.候选组.empty())continue; // 完整抽象C可按必需字段构造，不要求现实样例。
-            for (const auto& 候选:原型.候选组) {
+            // 参数来源两类并列（7165§10）：复制合法专属原型，或按C正式定义在隔离世界构造具体实例。
+            // 已有原型不关闭构造路径；构造仍走原必需字段路径，依据不足时由该路径具名报告缺项。
+            // 某一组合规格未支持/输入不合法不阻断其它组合，全部尝试后再如实上报首个未完成原因。
+            std::exception_ptr 未完成;
+            const auto 尝试=[&](稳定编码 选择值) {
                 停止();
                 auto 后继=原型选择;
-                后继.emplace(static_cast<std::uint32_t>(i+1),候选.专属概念节点);
-                学习有序本能(原方法,停止检查,后继,执行分支,true,消息方案);
-            }
+                后继.emplace(static_cast<std::uint32_t>(i+1),选择值);
+                try { 学习有序本能(原方法,停止检查,后继,执行分支,true,消息方案); }
+                catch(const 新学习运行异常& e) {
+                    if(e.记录().原因!=新学习运行异常原因::规格未支持
+                        &&e.记录().原因!=新学习运行异常原因::输入不合法)throw;
+                    if(!未完成)未完成=std::current_exception();
+                }
+            };
+            for (const auto& 候选:原型.候选组)尝试(候选.专属概念节点);
+            尝试(稳定编码{}); // 空选择值表示“按概念正式定义构造”，不是概念节点充当实例。
+            if(未完成)std::rethrow_exception(未完成);
             return;
         }
+        if (!有效(选择->second)) continue; // 按概念构造：保留正式范围C，由原构造路径按必需字段生成实例。
         if (!范围包含(选择->second,范围))
             throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"prototype no longer belongs to required concept");
         base[i].构造存在概念=选择->second;
@@ -539,6 +552,29 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     for(std::size_t i=0;i<N;++i) {
         代表[i]=根(i);
         if(代表[i]!=i)base[i].同一参数=static_cast<std::uint32_t>(代表[i]+1);
+    }
+    // 原型逐个求值时，不同位置可能选中同一专属原型而成为同一存在；若初始关系要求两端不同
+    // （不同、场景包含存在），该原型组合不构成合法样例，只跳过本组合，不终止其它组合的求值。
+    if(!原型选择.empty()) {
+        for(const auto& r:初始关系组)
+            if((r.种类==新方法参数关系种类::不同||r.种类==新方法参数关系种类::场景包含存在)
+                &&代表[r.左参数序号-1]==代表[r.右参数序号-1])return;
+        // 初始场景事实的场景、主体、对象是三个不同参与者。
+        if(m.初始必要条件)for(const auto& 限定:m.初始必要条件->场景事实限定组) {
+            const std::uint32_t 位置组[]={限定.场景参数序号,限定.主体参数序号,限定.对象参数序号};
+            for(std::size_t a=0;a<3;++a)for(std::size_t b=a+1;b<3;++b)
+                if(位置组[a]&&位置组[b]&&位置组[a]<=N&&位置组[b]<=N&&代表[位置组[a]-1]==代表[位置组[b]-1])return;
+        }
+        // 事件特征的数值变化须发生在其所属存在所在的场景内；所属存在与样例场景重合时，
+        // 隔离世界没有可承载该变化的外层场景，本组合具名报告未支持，不当内部错误终止其它组合。
+        std::set<std::size_t> 场景代表;
+        for(const auto& r:初始关系组)if(r.种类==新方法参数关系种类::场景包含存在)场景代表.insert(代表[r.左参数序号-1]);
+        if(m.初始必要条件)for(const auto& 限定:m.初始必要条件->场景事实限定组)
+            if(限定.场景参数序号&&限定.场景参数序号<=N)场景代表.insert(代表[限定.场景参数序号-1]);
+        for(const auto pos:m.初始模拟事件参数组)for(const auto& r:初始关系组)
+            if(r.种类==新方法参数关系种类::特征所属存在&&r.左参数序号==pos&&r.右参数序号&&r.右参数序号<=N
+                &&场景代表.contains(代表[r.右参数序号-1]))
+                不支持(pos,"event feature owner coincides with the sample scene under this prototype combination");
     }
     for(std::size_t i=0;i<N;++i)if(是普通存在(i)&&代表[i]!=i)合入存在范围(代表[i],有效存在概念(i));
     for(std::size_t i=0;i<N;++i)if(是普通存在(i))base[i].构造存在概念=有效存在概念(代表[i]);
@@ -582,6 +618,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             &&定义->整数参数==std::vector<std::int64_t>{14}&&定义->引用参数.empty();
         if (!已确认连接||!场景构成_) 不支持(0,"formal scene relation construction provider unavailable");
         const auto 构成=场景构成_->读取场景事实构成(限定.关系概念节点);
+        if (构成.状态==新交互求值状态::前提变化) throw 模拟输入采集漂移{}; // 并发前提变化：沿既有采集重读
         if (构成.状态!=新交互求值状态::已取得||!构成.构成||构成.完整保护.empty()
             ||构成.构成->关系概念!=限定.关系概念节点)
             不支持(0,"complete formal scene relation construction unavailable");
@@ -1788,8 +1825,14 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             const auto f=world->读取模拟特征((*bindings)[i].有序引用->信息节点);
             const auto* value=f&&f->当前值 ? std::get_if<稳定编码>(&*f->当前值) : nullptr;
             const auto pos=input[i].引用存在参数;
-            if(!pos||pos>N||!value||*value!=(*bindings)[pos-1].有序引用->信息节点)
-                throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"local existence reference binding readback differs");
+            // 候选位置按K枚举（含N之后私有追加存在）；N内用正式绑定，N外用世界记录的同次输入节点。
+            const auto expected=!pos||pos>K ? std::optional<稳定编码>{}
+                : pos<=N ? std::optional<稳定编码>{(*bindings)[pos-1].有序引用->信息节点}
+                : world->读取有序输入节点(pos);
+            if(!expected||!value||*value!=*expected)
+                throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"local existence reference binding readback differs: i="
+                    + std::to_string(i+1) + " pos=" + std::to_string(pos) + " N=" + std::to_string(N) + " K=" + std::to_string(K)
+                    + " expected=" + std::to_string(expected ? expected->值 : 0) + " value=" + std::to_string(value ? value->值 : 0));
         }
         const auto 集合正式材料 = [&](const 新特征值信息& value,特征概念比较规则 rule) -> std::optional<新特征值信息> {
             const auto* members=std::get_if<std::vector<std::uint64_t>>(&value.材料);
@@ -2419,7 +2462,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                             if(std::find(now->入向字段组.begin(),now->入向字段组.end(),ref)==now->入向字段组.end())return false;
                         for(const auto& ref:now->入向字段组)
                             if(std::find(old.入向字段组.begin(),old.入向字段组.end(),ref)==old.入向字段组.end()
-                                &&!本次合法引用来源.contains(ref.所属节点))return false;
+                                &&!本次合法引用来源.contains(ref.所属节点)
+                                // 样例自身的本地节点引用正式定义是隔离构造的正常结果，样例释放后即撤销，不是定义漂移。
+                                &&!本地身份.contains(ref.所属节点))return false;
                     }
                     return true;
                 };
