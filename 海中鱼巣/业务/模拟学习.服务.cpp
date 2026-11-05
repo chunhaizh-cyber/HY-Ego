@@ -2241,10 +2241,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     return static_cast<std::uint32_t>(代表[j]+1);
                 const auto local=world->读取模拟存在特征组(*e);
                 if(!local)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dangling local existence reference");
-                不支持(0,"existence reference cannot be expressed by a formal parameter position");
+                // 引用值是样例本地的非参数存在（R96）：无法用参数位置表达，只省略这条引用关系；
+                // 条件项仍记录“值属于参数范围”，条件保持为真。
                 return 0;
             };
             const auto 加引用关系 = [&](auto& relations,std::uint32_t f,std::uint32_t e) {
+                if(e==0)return;
                 const 新方法参数关系 r{新方法参数关系种类::特征引用存在,f,e};
                 if(std::find(relations.begin(),relations.end(),r)==relations.end())relations.push_back(r);
             };
@@ -2425,7 +2427,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 增加项(路径.动作前.状态,after->状态);
                 if (after->服务值) 增加项(*路径.动作前.服务值,*after->服务值);
             }
-            if(!pair.结果.结果项组.empty()||!pair.结果.参数关系组.empty()||!pair.结果.场景事实限定组.empty()) {
+            // 仅条件样例结果为空也发表条件节点（5370 §5.3，R96）。
+            if(!pair.结果.结果项组.empty()||!pair.结果.参数关系组.empty()||!pair.结果.场景事实限定组.empty()||仅条件样例) {
                 const auto 当前闭包=方法_.读取方法执行结构闭包({m.节点});
                 std::set<稳定编码> 本次合法引用来源{调用证据->身份.调用节点};
                 for(const auto A:调用证据->阶段动作组) {
