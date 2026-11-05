@@ -304,7 +304,69 @@ struct 新_任务类::方法问题暂存 final {
 
 namespace {
 
-std::recursive_mutex 新任务互斥;
+// 递归任务锁；等待者阻塞在条件变量上，可由停止令牌唤醒，不以轮询重试取锁（代码规范6.2）。
+class 可停止递归任务互斥 final {
+public:
+    void lock() {
+        std::unique_lock 守{内部_};
+        const auto 本线程 = std::this_thread::get_id();
+        if (层数_ != 0 && 持有者_ == 本线程) { ++层数_; return; }
+        可用_.wait(守, [&] { return 层数_ == 0; });
+        持有者_ = 本线程; 层数_ = 1;
+    }
+    // 取得返回true；停止令牌先于取得触发返回false。
+    bool lock(std::stop_token 停止) {
+        std::unique_lock 守{内部_};
+        const auto 本线程 = std::this_thread::get_id();
+        if (层数_ != 0 && 持有者_ == 本线程) { ++层数_; return true; }
+        if (!可用_.wait(守, 停止, [&] { return 层数_ == 0; })) return false;
+        持有者_ = 本线程; 层数_ = 1;
+        return true;
+    }
+    bool try_lock() {
+        std::lock_guard 守{内部_};
+        const auto 本线程 = std::this_thread::get_id();
+        if (层数_ != 0 && 持有者_ != 本线程) return false;
+        持有者_ = 本线程; ++层数_;
+        return true;
+    }
+    void unlock() {
+        {
+            std::lock_guard 守{内部_};
+            if (--层数_ != 0) return;
+            持有者_ = {};
+        }
+        可用_.notify_all();
+    }
+private:
+    std::mutex 内部_;
+    std::condition_variable_any 可用_;
+    std::thread::id 持有者_{};
+    std::size_t 层数_ = 0;
+};
+
+可停止递归任务互斥 新任务互斥;
+
+// 一轮全量调度读取内共用一次D/T对应，避免每个任务各读全部需求。范围只覆盖该轮
+// 不持任务锁的预读阶段；该轮终段在任务锁内核同各场景批保护，对应变化由保护发现。
+struct 调度读取对应缓存 final {
+    const void* 所有者 = nullptr;
+    std::optional<新需求任务对应结果> 对应;
+};
+thread_local 调度读取对应缓存* 当前调度读取对应缓存 = nullptr;
+class 调度读取对应缓存范围 final {
+public:
+    explicit 调度读取对应缓存范围(const void* 所有者) noexcept : 原_(当前调度读取对应缓存) {
+        缓存_.所有者 = 所有者;
+        当前调度读取对应缓存 = &缓存_;
+    }
+    ~调度读取对应缓存范围() { 当前调度读取对应缓存 = 原_; }
+    调度读取对应缓存范围(const 调度读取对应缓存范围&) = delete;
+    调度读取对应缓存范围& operator=(const 调度读取对应缓存范围&) = delete;
+private:
+    调度读取对应缓存 缓存_;
+    调度读取对应缓存* 原_;
+};
 
 // 向上送出：只取消本次工程读取，不产生任务业务状态。
 struct 因果读取停止信号 final {};
@@ -318,17 +380,12 @@ struct 因果读取来源变化信号 final {
 void 检查因果读取停止(std::stop_token 停止) {
     if (停止.stop_requested()) throw 因果读取停止信号{};
 }
-std::unique_lock<std::recursive_mutex> 获取因果读取任务锁(std::stop_token 停止) {
+std::unique_lock<可停止递归任务互斥> 获取因果读取任务锁(std::stop_token 停止) {
     检查因果读取停止(停止);
-    std::unique_lock<std::recursive_mutex> 锁{新任务互斥, std::defer_lock};
+    std::unique_lock<可停止递归任务互斥> 锁{新任务互斥, std::defer_lock};
     if (!停止.stop_possible()) { 锁.lock(); return 锁; }
-    std::mutex 停车互斥;
-    std::condition_variable_any 停车;
-    while (!锁.try_lock()) {
-        检查因果读取停止(停止);
-        std::unique_lock 等待锁{停车互斥};
-        (void)停车.wait_for(等待锁, 停止, std::chrono::milliseconds{10}, [] { return false; });
-    }
+    if (!新任务互斥.lock(停止)) throw 因果读取停止信号{};
+    锁 = std::unique_lock<可停止递归任务互斥>{新任务互斥, std::adopt_lock};
     检查因果读取停止(停止);
     return 锁;
 }
@@ -7664,7 +7721,13 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
 新任务列表可停止结果 新_任务类::查询服务任务(稳定编码 排除需求, std::stop_token 停止) const noexcept {
     新任务列表结果 结果;
     try {
-        auto 锁 = 获取因果读取任务锁(停止);
+        // 不跨需求读取持任务锁（代码规范6.5）；对应读取自行在任务锁内复制并核同任务登记。
+        稳定编码 服务根, 安全根;
+        {
+            auto 锁 = 获取因果读取任务锁(停止);
+            服务根 = 服务根需求节点;
+            安全根 = 安全根需求节点;
+        }
         const auto 来源 = 提取因果正常读取<新需求任务对应结果>(读取需求列表任务对应(停止));
         if (来源.状态 != 新任务操作状态::已找到) {
             结果.状态 = 来源.状态;
@@ -7691,14 +7754,14 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
             }
             if (祖先->父需求节点) return 结果;
             if (*祖先->根角色 == 新需求根角色::服务) {
-                if (祖先->节点 != 服务根需求节点) return 结果;
+                if (祖先->节点 != 服务根) return 结果;
                 if (项.需求.节点 == 排除需求) {
                     排除合法 = 项.需求.父需求节点.has_value();
                 } else if (项.任务) {
                     成员.push_back(项.任务->节点);
                 }
             } else if (*祖先->根角色 != 新需求根角色::安全
-                || 祖先->节点 != 安全根需求节点) {
+                || 祖先->节点 != 安全根) {
                 return 结果;
             }
         }
@@ -7782,18 +7845,42 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
     因果构造观察范围 观察范围(L"正式需求列表任务对应");
 #endif
+    auto* const 本轮缓存 = 当前调度读取对应缓存 && 当前调度读取对应缓存->所有者 == this
+        ? 当前调度读取对应缓存 : nullptr;
+    if (本轮缓存 && 本轮缓存->对应) {
+        try { return *本轮缓存->对应; }
+        catch (...) { 新需求任务对应结果 失败; 失败.状态 = 新任务操作状态::资源失败; return 失败; }
+    }
     新需求任务对应结果 结果;
     结果.状态 = 新任务操作状态::结构不一致;
     try {
-        // 与既有任务写入保持task→demand方向。整个对应读取期间固定T，
-        // D快照之后新增的需求不属于本次快照，调用者下次须重新读取。
-        auto 锁 = 获取因果读取任务锁(停止);
-#ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
-        观察因果构造阶段(L"D/T对应已取得任务锁");
-#endif
-        if (!结构仍存在()) {
-            结果.状态 = 新任务操作状态::尚未初始化;
-            return 结果;
+        // 代码规范6.5：持任务锁期间不调用需求服务。任务锁内只复制任务登记及其所属需求，
+        // 释放后读取需求全集，再取任务锁核同任务登记未变后组装。核同不等时任务登记
+        // 已在需求读取期间变化，按新登记重新读取；这是快照一致性复读，不是取锁重试。
+        // 调用者已持任务递归锁时释放不生效，需求读取仍在其锁内，与旧行为相同。
+        using 登记副本 = std::vector<std::pair<稳定编码, 稳定编码>>;
+        const auto 读取登记 = [&](登记副本& 输出, std::vector<新任务信息>* 信息) -> bool {
+            std::set<稳定编码> 登记任务;
+            for (const auto& 字段 : 全局基础数据集.查询字段(任务集合根节点, 任务成员字段)) {
+                检查因果读取停止(停止);
+                const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+                if (!节点 || !登记任务.insert(*节点).second) return false;
+                auto 任务 = 获取任务(*节点);
+                if (!任务) return false;
+                输出.emplace_back(*节点, 任务->需求节点);
+                if (信息) 信息->push_back(std::move(*任务));
+            }
+            return true;
+        };
+        while (true) {
+        登记副本 原登记;
+        {
+            auto 锁 = 获取因果读取任务锁(停止);
+            if (!结构仍存在()) {
+                结果.状态 = 新任务操作状态::尚未初始化;
+                return 结果;
+            }
+            if (!读取登记(原登记, nullptr)) return 结果;
         }
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
         观察因果构造阶段(L"D/T对应即将读取需求owner完整列表");
@@ -7818,19 +7905,22 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
             if (需求.执行域 != 新需求执行域::自我执行) return 结果;
             需求映射.emplace(需求.节点, &需求);
         }
-        std::set<稳定编码> 登记任务;
+        auto 锁 = 获取因果读取任务锁(停止);
+        if (!结构仍存在()) {
+            结果.状态 = 新任务操作状态::尚未初始化;
+            return 结果;
+        }
+        登记副本 现登记;
+        std::vector<新任务信息> 现任务;
+        if (!读取登记(现登记, &现任务)) return 结果;
+        if (现登记 != 原登记) continue;
         std::map<稳定编码, 新任务信息> 需求任务;
         检查因果读取停止(停止);
-        for (const auto& 字段 : 全局基础数据集.查询字段(
-                任务集合根节点, 任务成员字段)) {
+        for (auto& 任务 : 现任务) {
             检查因果读取停止(停止);
-            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
-            if (!节点 || !登记任务.insert(*节点).second) return 结果;
-            auto 任务 = 获取任务(*节点);
-            if (!任务 || !需求映射.contains(任务->需求节点)) return 结果;
-            检查因果读取停止(停止);
-            const auto 需求节点 = 任务->需求节点;
-            if (!需求任务.emplace(需求节点, std::move(*任务)).second) {
+            if (!需求映射.contains(任务.需求节点)) return 结果;
+            const auto 需求节点 = 任务.需求节点;
+            if (!需求任务.emplace(需求节点, std::move(任务)).second) {
                 结果.状态 = 新任务操作状态::需求已有多个任务;
                 return 结果;
             }
@@ -7874,7 +7964,9 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
         结果.对应项组 = std::move(候选);
         结果.状态 = 新任务操作状态::已找到;
         检查因果读取停止(停止);
+        if (本轮缓存) 本轮缓存->对应 = 结果;
         return 结果;
+        }
     } catch (const 因果读取停止信号&) { return 新任务因果读取取消{}; }
     catch (...) {
         结果.状态 = 新任务操作状态::资源失败;
@@ -8232,6 +8324,7 @@ bool 新_任务类::是前置语言材料父任务(稳定编码 T) const noexcep
         std::vector<新任务本次场景核验批> 批组;
         std::optional<std::vector<稳定编码>> 原全集;
         {std::lock_guard 锁(新任务互斥);原全集=读取任务登记全集();}
+        std::optional<调度读取对应缓存范围> 本轮对应缓存;本轮对应缓存.emplace(this);
         if(原全集)for(const auto T:*原全集){
             当前T=T;当前阶段="场景批准备";
             const auto 上下文=std::make_shared<新方法内容核验上下文>();
@@ -8241,6 +8334,7 @@ bool 新_任务类::是前置语言材料父任务(稳定编码 T) const noexcep
             批组.push_back(std::move(批));
         }
         for(auto& 批:批组){当前T=批.T;当前阶段="场景批读取";读取本次场景核验批(批);}
+        本轮对应缓存.reset();
         当前T.reset();当前阶段="调度治理可用性";
         std::lock_guard 锁(新任务互斥);
         if (!治理已初始化_ || !结构仍存在()) {
@@ -10216,12 +10310,12 @@ std::optional<新任务虚拟存在语义读回> 新_任务类::读取任务虚�
 新任务操作状态 新_任务类::绑定方法实例(
     稳定编码 任务节点, 稳定编码 方法实例根节点) noexcept {
     稳定编码 新字段;
-    std::unique_lock<std::recursive_mutex> 锁;
+    std::unique_lock<可停止递归任务互斥> 锁;
     const auto 撤销 = [&]() noexcept {
         return !有效(新字段) || 全局基础数据集.删除字段(新字段);
     };
     try {
-        锁 = std::unique_lock<std::recursive_mutex>{新任务互斥};
+        锁 = std::unique_lock<可停止递归任务互斥>{新任务互斥};
         if (!有效(任务节点) || !有效(方法实例根节点)) return 新任务操作状态::入口拒绝;
         if (!结构仍存在()) return 新任务操作状态::尚未初始化;
         const auto 任务 = 获取任务(任务节点);
