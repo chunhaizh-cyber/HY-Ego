@@ -227,6 +227,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         throw 新学习运行异常(m.节点, 新学习运行异常原因::规格未支持,
             "simulation parameter " + std::to_string(位置) + ": " + 原因);
     };
+    // 建立连接v4的收发判定在函数内部读取外设（R91、R92），隔离模拟尚未实现。
+    if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_建立连接)})
+        不支持(0,"connection v4 isolated simulation pending");
     std::optional<稳定编码> 需求结果概念;
     for(const auto 概念:m.方法头.可能结果概念组) {
         if(方法_.读取模拟特征范围(概念))continue;

@@ -302,14 +302,49 @@ std::string 新_外设世界树类::读取文本特征(稳定编码 特征) cons
     return *文本;
 }
 
+std::pair<稳定编码, std::optional<稳定编码>> 新_外设世界树类::区分窗口与交互者(
+    const 新场景信息& 场景材料) const {
+    const auto& 成员 = 场景材料.直接成员存在组;
+    if (成员.empty() || 成员.size() > 2) throw std::runtime_error("peripheral dialogue member count invalid");
+    const auto 持有窗口特征 = [&](稳定编码 存在节点, bool& 有接收数量) {
+        const auto 存在材料 = 服务_.存在服务.获取存在(存在节点);
+        if (!存在材料) throw std::runtime_error("peripheral dialogue member unreadable");
+        bool 有窗口特征 = false;
+        for (const auto 特征节点 : 存在材料->特征节点组) {
+            const auto 特征 = 服务_.特征服务.获取特征(特征节点);
+            const auto 根 = 特征 ? 服务_.特征概念服务.比较单特征概念(
+                特征->特征概念节点, 特征->特征概念节点).特征类型根 : std::nullopt;
+            if (!根) throw std::runtime_error("peripheral dialogue member feature type unreadable");
+            if (*根 == 类型[2]) 有接收数量 = true;
+            for (const auto 窗口类型 : {类型[2], 类型[3], 类型[4], 类型[5], 消息类型[0], 消息类型[1], 输出队列类型})
+                if (*根 == 窗口类型) 有窗口特征 = true;
+        }
+        return 有窗口特征;
+    };
+    std::optional<稳定编码> 窗口, 交互者;
+    for (const auto 存在节点 : 成员) {
+        bool 有接收数量 = false;
+        const bool 有窗口特征 = 持有窗口特征(存在节点, 有接收数量);
+        if (有接收数量) {
+            if (窗口) throw std::runtime_error("peripheral dialogue window duplicated");
+            窗口 = 存在节点;
+        } else {
+            if (有窗口特征 || 交互者) throw std::runtime_error("peripheral dialogue interactor invalid");
+            交互者 = 存在节点;
+        }
+    }
+    if (!窗口) throw std::runtime_error("peripheral dialogue window missing");
+    return {*窗口, 交互者};
+}
+
 新外设对话框定位 新_外设世界树类::读取窗口定位(稳定编码 场景节点) const {
     const auto 场景材料 = 场景_.获取场景(场景节点);
-    if (!场景材料 || 场景材料->父场景节点 != 外设根 || 场景材料->直接成员存在组.size() != 1
+    if (!场景材料 || 场景材料->父场景节点 != 外设根
         || !场景材料->直接子场景组.empty() || 场景材料->特征节点组.size() != 2)
         throw std::runtime_error("peripheral dialogue scene incomplete");
     (void)读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0]));
     (void)读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1]));
-    const auto 存在材料 = 服务_.存在服务.获取存在(场景材料->直接成员存在组[0]);
+    const auto 存在材料 = 服务_.存在服务.获取存在(区分窗口与交互者(*场景材料).first);
     if (!存在材料 || 存在材料->父存在节点
         || 存在材料->特征节点组.size() < 2 || 存在材料->特征节点组.size() > 7
         || !存在材料->子存在节点组.empty())
@@ -395,6 +430,41 @@ std::optional<新外设对话框来源> 新_外设世界树类::读取对话框�
         return 命中;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设对话框来源", L"正式窗口定位结构不完整。");
+    }
+}
+
+std::vector<稳定编码> 新_外设世界树类::列出交互场景() const noexcept {
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return {};
+        const auto 根 = 场景_.获取场景(外设根);
+        if (!根) throw std::runtime_error("peripheral root unreadable");
+        for (const auto 场景节点 : 根->直接子场景组) (void)读取窗口定位(场景节点);
+        return 根->直接子场景组;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"列出外设交互场景", L"正式窗口定位结构不完整。");
+    }
+}
+
+std::optional<新外设交互场景读取> 新_外设世界树类::按场景读取交互场景(
+    稳定编码 场景节点) const noexcept {
+    if (!有效(场景节点)) return std::nullopt;
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return std::nullopt;
+        const auto 根 = 场景_.获取场景(外设根);
+        if (!根) throw std::runtime_error("peripheral root unreadable");
+        if (std::find(根->直接子场景组.begin(), 根->直接子场景组.end(), 场景节点) == 根->直接子场景组.end())
+            return std::nullopt;
+        const auto 定位 = 读取窗口定位(场景节点);
+        const auto 场景材料 = 场景_.获取场景(场景节点);
+        if (!场景材料) throw std::runtime_error("peripheral scene unreadable");
+        return 新外设交互场景读取{
+            {定位, 读取文本特征(读取类型特征(场景材料->特征节点组, 类型[0])),
+                读取文本特征(读取类型特征(场景材料->特征节点组, 类型[1]))},
+            区分窗口与交互者(*场景材料).second};
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"按场景读取外设交互场景", L"正式窗口定位结构不完整。");
     }
 }
 
@@ -708,6 +778,14 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
         if (!有效(外设根)) return 新外设事实状态::未初始化;
         if (读取窗口定位(定位.场景节点) != 定位)
             throw std::runtime_error("peripheral receive location changed");
+        // 首次收到消息时派生交互者：以存在根零特征建立，与窗口并列（6120 §11.1，Q2=A）。
+        if (const auto 场景材料 = 场景_.获取场景(定位.场景节点);
+            !场景材料 || !区分窗口与交互者(*场景材料).second) {
+            if (!场景材料) throw std::runtime_error("peripheral receive scene unreadable");
+            const auto 交互者 = 场景_.建立区间成员存在(定位.场景节点, {std::nullopt, {}});
+            if (交互者.状态 != 新场景操作状态::已完成 || !交互者.存在节点)
+                throw std::runtime_error("peripheral interactor derivation failed");
+        }
         const auto 消息结果 = 记录消息(定位, 新外设消息方向::接收, 来源序号, 实际UTF8正文, 接收时间);
         if (消息结果 == 新外设事实状态::无变化) return 消息结果;
         const auto 特征材料 = 服务_.特征服务.获取特征(定位.接收数量特征);

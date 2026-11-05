@@ -13,6 +13,8 @@ public:
     ~网页外设运行模块();
     新世界初始化结果 初始化() noexcept;
     网页外设运行回调组 取得运行回调();
+    // 新建外设交互场景后在模块锁外调用一次（6120 §11.1）；启动宿主前设置。
+    void 设置交互场景建立通知(void (*通知)() noexcept) noexcept;
     void 关闭() noexcept;
     网页外设运行模块(const 网页外设运行模块&) = delete;
     网页外设运行模块& operator=(const 网页外设运行模块&) = delete;

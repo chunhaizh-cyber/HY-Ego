@@ -5,6 +5,8 @@
 #include "../领域/语言分界.数据.h"
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace 海中鱼巣 {
 
@@ -56,6 +58,11 @@ struct 新外设消息保护结果 final {
     std::optional<新外设消息信息> 消息;
     std::vector<基础联合节点快照> 完整保护;
 };
+// 外设交互场景读取：交互者是与窗口并列的成员存在（6120 §11.1），不进入定位相等比较。
+struct 新外设交互场景读取 final {
+    新外设对话框来源 来源;
+    std::optional<稳定编码> 交互者节点;
+};
 struct 新外设对话框建立结果 final {
     新外设事实状态 状态 = 新外设事实状态::入口拒绝;
     std::optional<新外设对话框定位> 定位;
@@ -72,6 +79,10 @@ public:
     新外设对话框建立结果 查找对话框场景(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
     std::optional<新外设对话框来源> 读取对话框来源(稳定编码 窗口节点) const noexcept;
+    // 外设根下全部外设交互场景；只读，供自我线程补建现实交互场景。
+    std::vector<稳定编码> 列出交互场景() const noexcept;
+    // 按外设场景稳定编码读取；不是外设根下的外设交互场景时为空（编码可能已不存在）。
+    std::optional<新外设交互场景读取> 按场景读取交互场景(稳定编码 场景节点) const noexcept;
     const 新_场景类& 获取场景只读视图() const noexcept { return 场景_; }
     新外设事实状态 更新发送(
         const 新外设对话框定位&, std::uint64_t 来源序号, std::string_view 实际UTF8正文,
@@ -121,6 +132,8 @@ private:
         const 新特征准确值&, const 新状态强时间&, std::optional<稳定编码> 来源动作={});
     void 核验并处理已发布动态(稳定编码 场景节点, 稳定编码 动态节点);
     新外设对话框定位 读取窗口定位(稳定编码 场景节点) const;
+    // 按角色区分成员：窗口是唯一持有接收数量特征的成员；其余至多一个成员为交互者。
+    std::pair<稳定编码, std::optional<稳定编码>> 区分窗口与交互者(const 新场景信息& 场景材料) const;
     std::optional<新外设对话框定位> 查找正式窗口(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const;
     稳定编码 读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const;

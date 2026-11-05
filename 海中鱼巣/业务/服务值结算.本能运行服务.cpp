@@ -146,7 +146,8 @@ std::optional<新服务值结算登记材料> 服务值结算本能运行服务:
         auto& s = *实现_;
         { std::lock_guard 锁(s.互斥);
           if (s.停止) { 结果.状态 = 新服务值结算协作状态::工程停止; return 结果; }
-          if (s.材料 && (s.材料->自我所在场景 != 场景 || s.材料->自我存在 != 自我
+          // 自我所在场景随迁移变化（6220 §2），不作为登记身份比较。
+          if (s.材料 && (s.材料->自我存在 != 自我
               || s.材料->服务值特征 != 服务特征 || s.材料->服务根需求 != 服务根))
               throw std::logic_error("governance initialization identity changed"); }
         const auto 根 = s.需求.获取需求(服务根);
@@ -457,7 +458,10 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
             return 投影最终来源结果(定位, 读取);
         if (!读取.来源) throw std::logic_error("final source missing");
         const auto& 鲜读 = *读取.来源;
-        if (鲜读.边界.能力 != 能力 || 鲜读.自我场景节点 != m->自我所在场景
+        // 来源场景须是自我当前所在场景，不与登记时场景比较（6220 §2）。
+        const auto 当前自我场景 = s.世界.读取自我所在场景();
+        if (!当前自我场景) throw std::logic_error("final self scene unregistered");
+        if (鲜读.边界.能力 != 能力 || 鲜读.自我场景节点 != *当前自我场景
             || 鲜读.自我存在节点 != m->自我存在 || 鲜读.自我特征节点 != m->服务值特征)
             throw std::logic_error("final governance source identity mismatch");
         const auto E = s.世界.查询存在(m->自我存在);
@@ -500,7 +504,7 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
         const auto 冻结 = s.任务.读取任务最终消费准备(*准备.准备);
         const auto& 来源 = 冻结.来源;
         if (来源.来源 != 定位 || 来源.边界.能力 != 能力
-            || 来源.自我场景节点 != m->自我所在场景 || 来源.自我存在节点 != m->自我存在
+            || 来源.自我场景节点 != *当前自我场景 || 来源.自我存在节点 != m->自我存在
             || 来源.自我特征节点 != m->服务值特征 || !来源.任务特征.服务值
             || 来源.贡献值 != 来源.任务特征.服务值->当前值 || 来源.任务特征.状态.当前值 != 9)
             throw std::logic_error("published P identity mismatch");

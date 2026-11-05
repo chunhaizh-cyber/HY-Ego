@@ -21,7 +21,7 @@ inline constexpr std::string_view 新本能函数登记名_获取服务对象需
 inline constexpr std::string_view 新本能函数登记名_旧两参数获取服务对象 =
     "builtin.service_object.acquire.v1";
 inline constexpr std::string_view 新本能函数登记名_建立连接 =
-    "builtin.connection.establish.v3";
+    "builtin.connection.establish.v4";
 inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
     "builtin.connection.establish.v1";
 

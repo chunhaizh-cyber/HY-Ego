@@ -6,6 +6,7 @@
 #include <mutex>
 #include <stdexcept>
 #include <utility>
+#include <atomic>
 
 namespace 海中鱼巣 {
 namespace {
@@ -85,13 +86,19 @@ struct 网页外设运行模块::实现 final {
     bool 就绪 = false, 已关闭 = false;
     std::optional<std::string> 活跃会话;
     std::map<std::string, 新外设对话框定位, std::less<>> 页面目录;
+    std::atomic<void (*)() noexcept> 交互场景建立通知{nullptr};
+
+    void 通知交互场景建立() noexcept {
+        if (const auto 通知 = 交互场景建立通知.load(std::memory_order_acquire)) 通知();
+    }
 
     bool 会话匹配(std::string_view 会话) const noexcept {
         return !已关闭 && 就绪 && 世界 && 活跃会话 && *活跃会话 == 会话;
     }
 
-    const 新外设对话框定位& 建立页面(const 网页对话框目标& 目标) {
+    const 新外设对话框定位& 建立页面(const 网页对话框目标& 目标, bool* 新建 = nullptr) {
         const auto 正式 = 世界->建立或取得对话框场景(目标.公开会话标识, 目标.对话框标识);
+        if (新建 && 正式.状态 == 新外设事实状态::已完成) *新建 = true;
         if (!事实发布完成(正式.状态) || !正式.定位
             || !正式.定位->发送数量特征 || !正式.定位->发送内容特征
             || !正式.定位->接收消息特征 || !正式.定位->发送消息特征
@@ -144,9 +151,13 @@ struct 网页外设运行模块::实现 final {
 
     bool 确认页面(const 网页对话框目标& 目标) noexcept {
         try {
-            std::lock_guard 锁(互斥);
-            if (!目标格式有效(目标) || !会话匹配(目标.公开会话标识)) return false;
-            (void)建立页面(目标);
+            bool 新建 = false;
+            {
+                std::lock_guard 锁(互斥);
+                if (!目标格式有效(目标) || !会话匹配(目标.公开会话标识)) return false;
+                (void)建立页面(目标, &新建);
+            }
+            if (新建) 通知交互场景建立();
             return true;
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确认网页外设页面", L"正式外设页面建立或读回失败。", 异常.what());
@@ -158,15 +169,19 @@ struct 网页外设运行模块::实现 final {
     bool 接收消息(std::string_view 会话, std::string_view 页面,
         std::uint64_t 序号, std::string_view 正文) noexcept {
         try {
-            std::lock_guard 锁(互斥);
-            if (!会话匹配(会话) || !序号 || 正文.empty()
-                || !新_语言类::严格UTF8字节串有效(std::string(正文))) return false;
-            const 网页对话框目标 目标{std::string(会话), std::string(页面)};
-            if (!目标格式有效(目标)) return false;
-            const auto& 定位 = 建立页面(目标);
-            const auto 时间 = 取得正式发布时间();
-            if (!事实发布完成(世界->更新接收(定位, 序号, 正文, 时间)))
-                throw std::runtime_error("peripheral received fact publication incomplete");
+            bool 新建 = false;
+            {
+                std::lock_guard 锁(互斥);
+                if (!会话匹配(会话) || !序号 || 正文.empty()
+                    || !新_语言类::严格UTF8字节串有效(std::string(正文))) return false;
+                const 网页对话框目标 目标{std::string(会话), std::string(页面)};
+                if (!目标格式有效(目标)) return false;
+                const auto& 定位 = 建立页面(目标, &新建);
+                const auto 时间 = 取得正式发布时间();
+                if (!事实发布完成(世界->更新接收(定位, 序号, 正文, 时间)))
+                    throw std::runtime_error("peripheral received fact publication incomplete");
+            }
+            if (新建) 通知交互场景建立();
             return true;
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"接收网页外设事实", L"真实输入发布或正式读回失败，不返回可重发的正常否定。", 异常.what());
@@ -281,6 +296,10 @@ struct 网页外设运行模块::实现 final {
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得网页外设运行回调", L"模块尚未就绪或回调构造失败。");
     }
+}
+
+void 网页外设运行模块::设置交互场景建立通知(void (*通知)() noexcept) noexcept {
+    if (实现_) 实现_->交互场景建立通知.store(通知, std::memory_order_release);
 }
 
 void 网页外设运行模块::关闭() noexcept {

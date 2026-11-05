@@ -1278,12 +1278,23 @@ std::vector<特征概念I64闭区间> 逆算加数区间(
         查询错误("causal preparation rule result mismatch");
     const auto 自我 = 存在服务_.获取存在(上下文.自我存在节点);
     const auto 场景 = 场景服务_.获取场景(上下文.目标场景节点);
+    // 目标场景等于作用场景，或沿父场景链可达作用场景（INTERACTION-SCENE-LAYERING Q1=A）。
+    const auto 作用场景可达 = [&]() {
+        std::set<稳定编码> 已见;
+        auto 当前 = 场景;
+        while (当前 && 已见.insert(当前->节点).second) {
+            if (当前->专属存在概念节点 == 定义.作用场景范围概念) return true;
+            if (!当前->父场景节点) return false;
+            当前 = 场景服务_.获取场景(*当前->父场景节点);
+        }
+        return false;
+    };
     const auto 特征 = 特征服务_.获取特征(上下文.目标特征节点);
     if (!自我 || !场景 || !特征 || !上下文.成员枚举完整
         || 上下文.自我存在节点 != 请求.目标存在节点
         || 自我->专属存在概念节点 != 定义.角色组.at(0).范围概念
         || 上下文.任务范围概念 != 定义.角色组.at(1).范围概念
-        || 场景->专属存在概念节点 != 定义.作用场景范围概念
+        || !作用场景可达()
         || std::find(自我->特征节点组.begin(), 自我->特征节点组.end(), 上下文.目标特征节点) == 自我->特征节点组.end()
         || !特征->当前值 || !std::holds_alternative<std::int64_t>(*特征->当前值))
         查询错误("causal preparation source scope or feature invalid");
