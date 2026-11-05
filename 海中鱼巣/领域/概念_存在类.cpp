@@ -295,6 +295,27 @@ bool 向下可达(稳定编码 起点, 稳定编码 目标) {
     return false;
 }
 
+// 存在根在本owner初始化时先天建立并登记于存在概念图根节点；只读唯一登记，不核证明。
+std::optional<稳定编码> 登记存在根() {
+    return 读取唯一节点字段(存在概念图根节点, 存在语义根字段);
+}
+
+// 返回“存在根→概念”角色2直连边；没有返回空。
+std::optional<稳定编码> 存在根直连边(稳定编码 根, 稳定编码 概念) {
+    for (const auto& 关系 : 查询概念关系(概念, true))
+        if (关系.源节点 == 根) return 关系.编码;
+    return std::nullopt;
+}
+
+// 新上位已覆盖来源时删除被覆盖的“存在根→来源”冗余直连边（7110）；删除失败保留多父，不回滚。
+void 删除被覆盖存在根边(稳定编码 来源) noexcept {
+    try {
+        const auto 根 = 登记存在根();
+        if (!根 || *根 == 来源) return;
+        if (const auto 边 = 存在根直连边(*根, 来源)) (void)全局基础数据集.删除关系(*边);
+    } catch (...) {}
+}
+
 std::optional<稳定编码> 共同上位特征概念(
     稳定编码 左,
     稳定编码 右,
@@ -371,22 +392,38 @@ std::optional<稳定编码> 共同上位特征概念(
 bool 概念_存在类::初始化() noexcept {
     try {
         std::lock_guard 锁(存在概念图互斥);
-        if (结构已初始化()) return 结构仍存在();
-        auto 建立 = [](稳定编码& 节点) {
-            if (有效(节点)) return 节点仍存在(节点);
-            节点 = 全局基础数据集.新建节点();
-            return 有效(节点);
-        };
-        return 建立(存在概念图根节点)
-            && 建立(节点类型字段)
-            && 建立(专属存在概念节点类型)
-            && 建立(抽象存在概念节点类型)
-            && 建立(对应存在字段)
-            && 建立(特征项字段)
-            && 建立(特征项节点类型)
-            && 建立(特征类型概念字段)
-            && 建立(具体特征概念字段)
-            && 建立(名称关系字段) && 建立(存在语义根字段);
+        if (!结构已初始化()) {
+            auto 建立 = [](稳定编码& 节点) {
+                if (有效(节点)) return 节点仍存在(节点);
+                节点 = 全局基础数据集.新建节点();
+                return 有效(节点);
+            };
+            if (!(建立(存在概念图根节点)
+                && 建立(节点类型字段)
+                && 建立(专属存在概念节点类型)
+                && 建立(抽象存在概念节点类型)
+                && 建立(对应存在字段)
+                && 建立(特征项字段)
+                && 建立(特征项节点类型)
+                && 建立(特征类型概念字段)
+                && 建立(具体特征概念字段)
+                && 建立(名称关系字段) && 建立(存在语义根字段))) return false;
+        }
+        if (!结构仍存在()) return false;
+        // 存在根先天建立，早于任何存在概念（2220 §2、7100）；只登记一次，重复初始化精确复用。
+        const auto 登记组 = 全局基础数据集.查询字段(存在概念图根节点, 存在语义根字段);
+        if (登记组.size() > 1) return false;
+        if (登记组.size() == 1) return 登记存在根().has_value();
+        基础节点组追加请求 请求;
+        请求.新节点组.push_back({{{节点类型字段, 基础组内字段内容{抽象存在概念节点类型}}}});
+        请求.追加外部关系组.push_back({存在概念图根节点, 基础组内节点引用{0},
+            基础外部关系类型::父子, 组织归属关系角色});
+        请求.追加字段组.push_back({存在概念图根节点, 存在语义根字段,
+            基础组内字段内容{基础组内节点引用{0}}});
+        const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+        if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 1) return false;
+        const auto 根 = 登记存在根();
+        return 根 && *根 == 发布.新节点组.front();
     } catch (...) {
         return false;
     }
@@ -421,6 +458,11 @@ bool 概念_存在类::初始化() noexcept {
             return 结果;
         }
 
+        const auto 存在根 = 登记存在根();
+        if (!存在根) {
+            结果.状态 = 存在概念操作状态::结构不一致;
+            return 结果;
+        }
         const auto 节点 = 全局基础数据集.新建节点();
         if (!有效(节点)) {
             结果.状态 = 存在概念操作状态::资源失败;
@@ -444,11 +486,18 @@ bool 概念_存在类::初始化() noexcept {
                 存在概念图根节点, 节点,
                 基础外部关系类型::父子, 组织归属关系角色)
             : 稳定编码{};
-        if (有效(组织关系)) {
+        // 专属概念以存在根为直接上位（新概念无下位，不会成环）。
+        const auto 根关系 = 有效(组织关系)
+            ? 全局基础数据集.添加关系(
+                *存在根, 节点,
+                基础外部关系类型::父子, 概念上下位关系角色)
+            : 稳定编码{};
+        if (有效(根关系)) {
             结果.状态 = 存在概念操作状态::已建立;
             结果.概念节点 = 节点;
             return 结果;
         }
+        if (有效(组织关系)) (void)全局基础数据集.删除关系(组织关系);
         if (特征项组) 删除特征项节点组(*特征项组);
         for (auto 位置 = 已写字段.rbegin(); 位置 != 已写字段.rend(); ++位置) {
             (void)全局基础数据集.删除字段(*位置);
@@ -529,11 +578,14 @@ void 概念_存在类::核验初建单特征专属概念可回收(
         std::lock_guard 锁(存在概念图互斥);
         if (!结构仍存在() || !节点仍存在(对应存在节点))
             throw std::runtime_error("initial private existence concept identity invalid");
+        const auto 存在根 = 登记存在根();
+        if (!存在根) throw std::runtime_error("existence semantic root not registered");
         const auto 概念 = 获取存在概念(专属概念节点);
         if (!概念 || 概念->种类 != 存在概念种类::专属
             || 概念->对应存在节点 != 对应存在节点
             || 概念->特征组 != std::vector<存在概念特征项>{预期特征项}
-            || !概念->名称关系.empty() || !概念->上位概念组.empty()
+            || !概念->名称关系.empty()
+            || 概念->上位概念组 != std::vector<稳定编码>{*存在根}
             || !概念->下位概念组.empty())
             throw std::runtime_error("private existence concept is not an unchanged single-item projection");
         const auto 特征项 = 读取唯一节点字段(专属概念节点, 特征项字段);
@@ -569,14 +621,20 @@ void 概念_存在类::核验初建单特征专属概念可回收(
             if (节点 == 专属概念节点) {
                 核对字段(快照, {{节点类型字段, 专属存在概念节点类型},
                     {对应存在字段, 对应存在节点}, {特征项字段, *特征项}});
-                if (快照.入向外部关系组.size() != 1 || !快照.出向外部关系组.empty())
+                // 入向恰为组织归属边与存在根上位边各一条，两边都属本概念结构。
+                if (快照.入向外部关系组.size() != 2 || !快照.出向外部关系组.empty())
                     throw std::runtime_error("private existence concept organization is not exclusive");
-                const auto& 关系 = 快照.入向外部关系组.front();
-                if (关系.源节点 != 存在概念图根节点 || 关系.目标节点 != 专属概念节点
-                    || 关系.类型 != 基础外部关系类型::父子
-                    || 关系.角色或顺序 != 组织归属关系角色)
+                unsigned 组织数 = 0, 根边数 = 0;
+                for (const auto& 关系 : 快照.入向外部关系组) {
+                    if (关系.目标节点 != 专属概念节点 || 关系.类型 != 基础外部关系类型::父子)
+                        throw std::runtime_error("private existence concept inbound edge invalid");
+                    if (关系.源节点 == 存在概念图根节点 && 关系.角色或顺序 == 组织归属关系角色) ++组织数;
+                    else if (关系.源节点 == *存在根 && 关系.角色或顺序 == 概念上下位关系角色) ++根边数;
+                    else throw std::runtime_error("private existence concept organization edge invalid");
+                    结构关系.push_back(关系.编码);
+                }
+                if (组织数 != 1 || 根边数 != 1)
                     throw std::runtime_error("private existence concept organization edge invalid");
-                结构关系.push_back(关系.编码);
             } else if (节点 == *特征项) {
                 核对字段(快照, {{节点类型字段, 特征项节点类型},
                     {特征类型概念字段, 预期特征项.特征类型概念},
@@ -627,7 +685,12 @@ bool 概念_存在类::撤销未绑定专属存在概念(
         if (有所属 && 入口类型 != 专属存在概念节点类型)
             throw std::logic_error("exclusive concept owner contradicts type");
         if (入口类型 != 专属存在概念节点类型) return false;
-        if (!查询概念关系(专属概念节点, true).empty()
+        const auto 存在根 = 登记存在根();
+        if (!存在根) throw std::logic_error("existence semantic root not registered");
+        // 上位只允许为空或恰一条“存在根→本概念”边；其余上位或任何下位都表示已被分类使用。
+        const auto 上位关系组 = 查询概念关系(专属概念节点, true);
+        if (上位关系组.size() > 1
+            || (上位关系组.size() == 1 && 上位关系组.front().源节点 != *存在根)
             || !查询概念关系(专属概念节点, false).empty()
             || !全局基础数据集.查询字段(
                 专属概念节点, 名称关系字段).empty()) {
@@ -648,8 +711,13 @@ bool 概念_存在类::撤销未绑定专属存在概念(
                 组织关系 = 关系.编码;
             }
         }
-        if (!组织关系 || 组织关系组.size() != 1)
+        // 入向父子关系恰为组织归属边，加上（若有）存在根上位边。
+        if (!组织关系 || 组织关系组.size() != 1 + 上位关系组.size()
+            || (!上位关系组.empty()
+                && std::count(组织关系组.begin(), 组织关系组.end(), 上位关系组.front()) != 1))
             throw std::logic_error("exclusive concept organization damaged");
+        std::vector<稳定编码> 删除关系组{*组织关系};
+        if (!上位关系组.empty()) 删除关系组.push_back(上位关系组.front().编码);
         std::vector<稳定编码> 节点组{专属概念节点}, 字段组;
         for (const auto& f : 全局基础数据集.查询字段(专属概念节点, 特征项字段)) {
             const auto* n = std::get_if<稳定编码>(&f.内容);
@@ -688,7 +756,7 @@ bool 概念_存在类::撤销未绑定专属存在概念(
             if (类型数 != 1 || 一数 != 1 || (主 ? 二数 != 节点组.size()-1 : 二数 != 1))
                 throw std::logic_error("exclusive concept cleanup field multiplicity");
         }
-        const auto s = 全局基础数据集.原子删除节点结构(节点组, 字段组, {*组织关系});
+        const auto s = 全局基础数据集.原子删除节点结构(节点组, 字段组, 删除关系组);
         if (s == 基础结构操作状态::已完成) return true;
         if (s == 基础结构操作状态::引用仍存在) return false;
         throw std::logic_error("exclusive concept atomic cleanup failed");
@@ -770,6 +838,11 @@ bool 概念_存在类::撤销未绑定专属存在概念(
 
         bool 新建 = false;
         if (!抽象节点) {
+            const auto 存在根 = 登记存在根();
+            if (!存在根) {
+                结果.状态 = 存在概念操作状态::结构不一致;
+                return 结果;
+            }
             const auto 节点 = 全局基础数据集.新建节点();
             if (!有效(节点)) {
                 结果.状态 = 存在概念操作状态::资源失败;
@@ -786,7 +859,14 @@ bool 概念_存在类::撤销未绑定专属存在概念(
                     存在概念图根节点, 节点,
                     基础外部关系类型::父子, 组织归属关系角色)
                 : 稳定编码{};
-            if (!有效(组织关系)) {
+            // 新抽象以存在根为直接上位（新节点无下位，不会成环）。
+            const auto 根关系 = 有效(组织关系)
+                ? 全局基础数据集.添加关系(
+                    *存在根, 节点,
+                    基础外部关系类型::父子, 概念上下位关系角色)
+                : 稳定编码{};
+            if (!有效(根关系)) {
+                if (有效(组织关系)) (void)全局基础数据集.删除关系(组织关系);
                 if (特征项组) 删除特征项节点组(*特征项组);
                 if (有效(类型字段)) (void)全局基础数据集.删除字段(类型字段);
                 (void)全局基础数据集.删除节点(节点);
@@ -825,6 +905,10 @@ bool 概念_存在类::撤销未绑定专属存在概念(
                 return 结果;
             }
         }
+        // 全部“抽象→来源”边成功后，删除被抽象覆盖的“存在根→来源”冗余边（7110 §3）。
+        for (const auto 来源概念 : 来源) {
+            if (来源概念 != *抽象节点) 删除被覆盖存在根边(来源概念);
+        }
         结果.状态 = 新建
             ? 存在概念操作状态::已建立
             : 存在概念操作状态::已复用;
@@ -842,12 +926,14 @@ bool 概念_存在类::撤销未绑定专属存在概念(
     稳定编码 节点;
     稳定编码 类型字段;
     稳定编码 组织关系;
+    稳定编码 根关系;
     std::vector<稳定编码> 下位关系组;
     const auto 回滚 = [&]() noexcept {
         for (auto 位置 = 下位关系组.rbegin();
             位置 != 下位关系组.rend(); ++位置) {
             (void)全局基础数据集.删除关系(*位置);
         }
+        if (有效(根关系)) (void)全局基础数据集.删除关系(根关系);
         if (有效(组织关系)) (void)全局基础数据集.删除关系(组织关系);
         if (有效(类型字段)) (void)全局基础数据集.删除字段(类型字段);
         if (有效(节点)) (void)全局基础数据集.删除节点(节点);
@@ -867,6 +953,16 @@ bool 概念_存在类::撤销未绑定专属存在概念(
                 return 结果;
             }
         }
+        const auto 存在根 = 登记存在根();
+        if (!存在根) {
+            结果.状态 = 存在概念操作状态::结构不一致;
+            return 结果;
+        }
+        // 新抽象挂在存在根下，下位不得是存在根本身（否则成环）。
+        if (std::find(下位概念组.begin(), 下位概念组.end(), *存在根) != 下位概念组.end()) {
+            结果.状态 = 存在概念操作状态::会形成环;
+            return 结果;
+        }
 
         节点 = 全局基础数据集.新建节点();
         if (!有效(节点)) {
@@ -880,7 +976,12 @@ bool 概念_存在类::撤销未绑定专属存在概念(
                 存在概念图根节点, 节点,
                 基础外部关系类型::父子, 组织归属关系角色)
             : 稳定编码{};
-        if (有效(组织关系)) {
+        根关系 = 有效(组织关系)
+            ? 全局基础数据集.添加关系(
+                *存在根, 节点,
+                基础外部关系类型::父子, 概念上下位关系角色)
+            : 稳定编码{};
+        if (有效(根关系)) {
             for (const auto 下位概念 : 下位概念组) {
                 const auto 关系 = 全局基础数据集.添加关系(
                     节点, 下位概念,
@@ -890,7 +991,7 @@ bool 概念_存在类::撤销未绑定专属存在概念(
             }
         }
 
-        if (!有效(组织关系) || 下位关系组.size() != 下位概念组.size()) {
+        if (!有效(根关系) || 下位关系组.size() != 下位概念组.size()) {
             回滚();
             结果.状态 = 存在概念操作状态::资源失败;
             return 结果;
@@ -900,11 +1001,13 @@ bool 概念_存在类::撤销未绑定专属存在概念(
         if (!读回 || 读回->种类 != 存在概念种类::抽象
             || !读回->特征组.empty()
             || 读回->下位概念组 != 下位概念组
-            || !读回->上位概念组.empty()) {
+            || 读回->上位概念组 != std::vector<稳定编码>{*存在根}) {
             回滚();
             结果.状态 = 存在概念操作状态::结构不一致;
             return 结果;
         }
+        // 新上位已覆盖各直接下位，删除被覆盖的“存在根→下位”冗余边（7110 §3）。
+        for (const auto 下位概念 : 下位概念组) 删除被覆盖存在根边(下位概念);
         结果.状态 = 存在概念操作状态::已建立;
         结果.概念节点 = 节点;
         return 结果;
@@ -1117,6 +1220,8 @@ std::vector<稳定编码> 概念_存在类::查询上位存在概念(
         };
         const auto* 图根 = 读取(存在概念图根节点);
         if (!图根) return 结果;
+        // 存在根直连全部专属概念；从根出发只沿根到抽象分类概念的边展开（详细设计 v0.2 §10.2）。
+        const auto 存在根 = 登记存在根();
         struct 遍历项 { 稳定编码 节点; bool 退出; };
         std::vector<遍历项> 待查{{概念节点, false}};
         std::set<稳定编码> 活动, 完成;
@@ -1162,6 +1267,8 @@ std::vector<稳定编码> 概念_存在类::查询上位存在概念(
             std::set<稳定编码> 直接下位;
             for (const auto& 关系 : 快照->出向外部关系组) {
                 if (!是下位关系(关系)) continue;
+                if (存在根 && 当前.节点 == *存在根 && 有效(关系.目标节点)
+                    && 读取概念种类(关系.目标节点) == 存在概念种类::专属) continue;
                 if (!有效(关系.编码) || 关系.源节点 != 当前.节点 || !有效(关系.目标节点)
                     || *类型 != 抽象存在概念节点类型 || !直接下位.insert(关系.目标节点).second) {
                     结果.状态 = 状态::结构不一致; return 结果;
@@ -2490,15 +2597,10 @@ void 核存在根证明(稳定编码 n,std::vector<基础联合节点快照>&保
     for(const auto&r:s.入向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)
         正式定义故障("semantic root has parent");
     for(auto x:正式引用组(s.结构,名称关系字段))并保护(保护,{正式快照(x)});
-    std::set<稳定编码>active,done;
-    std::function<void(稳定编码)>visit=[&](稳定编码 x){
-        if(done.count(x))return;if(!active.insert(x).second)正式定义故障("ordinary classification cycle");
-        auto q=正式快照(x);并保护(保护,{q});核普通分类端点(q);
-        std::set<稳定编码>children;
-        for(const auto&r:q.出向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色){
-            if(!children.insert(r.目标节点).second)正式定义故障("duplicate ordinary child");visit(r.目标节点);}
-        active.erase(x);done.insert(x);
-    };visit(n);
+    // 根证明只核根本身，不递归展开下位（详细设计 v0.2 §10.2）；无环由建立上位边时的向下可达检查保证。
+    std::set<稳定编码>children;
+    for(const auto&r:s.出向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)
+        if(!children.insert(r.目标节点).second)正式定义故障("duplicate ordinary child");
 }
 bool 是登记存在根(稳定编码 n) {
     std::vector<基础联合节点快照>p;auto r=读取根登记(p);if(!r||*r!=n)return false;
@@ -2785,12 +2887,15 @@ struct 正式结构工作读取结果 final {
             if(正式单引用(item.结构,节点类型字段)!=特征项节点类型)正式定义故障("ordinary feature item type");
             value.特征组.push_back({正式单引用(item.结构,特征类型概念字段),正式单引用(item.结构,具体特征概念字段)});
         }
+        // 登记根直连全部存在概念：根的下位只按根自身快照列出，不逐个下位取快照（详细设计 v0.2 §10.2）。
+        const auto 登记=读取根登记(protect);
+        const bool 是根=登记&&*登记==n;
         for(const auto&r:first.入向外部关系组){并保护(protect,{正式快照(r.源节点)});
             if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)value.上位概念组.push_back(r.源节点);}
-        for(const auto&r:first.出向外部关系组){并保护(protect,{正式快照(r.目标节点)});
+        for(const auto&r:first.出向外部关系组){if(!是根)并保护(protect,{正式快照(r.目标节点)});
             if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)value.下位概念组.push_back(r.目标节点);}
-        if(value.种类==存在概念种类::抽象&&value.特征组.empty()&&value.下位概念组.empty())核存在根证明(n,protect);
-        {auto r=读取根登记(protect);if(r&&*r==n)核存在根证明(n,protect);}
+        if(是根)核存在根证明(n,protect);
+        else if(value.种类==存在概念种类::抽象&&value.特征组.empty()&&value.下位概念组.empty())核存在根证明(n,protect);
         if(value.对应存在节点)并保护(protect,{正式快照(*value.对应存在节点)});
         排序特征项(value.特征组);
         for(std::size_t i=1;i<value.特征组.size();++i)if(value.特征组[i-1].特征类型概念==value.特征组[i].特征类型概念)正式定义故障("duplicate ordinary feature type");
@@ -3249,12 +3354,18 @@ struct 正式结构工作读取结果 final {
                 info.形状=存在分类概念形状::信息结构;info.直接上位概念组=std::get<信息结构概念定义>(def.定义).上位结构概念组;
                 for(const auto&r:s.入向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)正式定义故障("structural concept has ordinary parents");
             }else throw 正式状态::输入拒绝;
-            for(const auto&r:s.出向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色){auto child=正式快照(r.目标节点);核普通分类端点(child);并保护(p,{child});
+            // 只为被请求节点列下位；沿上位访问到的祖先（含存在根）不枚举其下位（详细设计 v0.2 §10.2）。
+            const bool 列下位=x==n;
+            std::optional<稳定编码> 根登记;
+            if(列下位)根登记=读取根登记(p);
+            const bool 根直列=列下位&&根登记&&*根登记==x;
+            if(根直列){for(const auto&r:s.出向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)info.直接下位概念组.push_back(r.目标节点);}
+            else if(列下位)for(const auto&r:s.出向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色){auto child=正式快照(r.目标节点);核普通分类端点(child);并保护(p,{child});
                 if(正式schema就绪()&&!正式引用组(child.结构,正式键[上位键]).empty())
                     正式定义故障("ordinary classification child has structural parents");
                 if(std::count(child.入向外部关系组.begin(),child.入向外部关系组.end(),r)!=1)正式定义故障("ordinary classification backlink mismatch");
                 auto d=读取普通存在概念定义保护(r.目标节点);if(!d.信息)throw 正式状态::前提已变化;并保护(p,d.完整保护组);info.直接下位概念组.push_back(r.目标节点);}
-            if(正式schema就绪())for(const auto&f:s.入向字段组)if(f.字段节点==正式键[上位键]){auto child=正式快照(f.所属节点);并保护(p,{child});
+            if(列下位&&正式schema就绪())for(const auto&f:s.入向字段组)if(f.字段节点==正式键[上位键]){auto child=正式快照(f.所属节点);并保护(p,{child});
                 if(正式形状(child.结构)!=结构类型键||std::count(child.结构.字段组.begin(),child.结构.字段组.end(),f)!=1)正式定义故障("classification backlink type");
                 for(const auto&r:child.入向外部关系组)
                     if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)

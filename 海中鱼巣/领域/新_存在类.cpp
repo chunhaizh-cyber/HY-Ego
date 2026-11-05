@@ -1147,7 +1147,13 @@ std::vector<稳定编码> 新_存在类::查询全部特征(
         if (!状态服务_.按存在查询状态(存在节点).empty()) return S::仍被状态引用;
         if (!信息->子存在节点组.empty()) return S::仍有子存在;
         const auto 概念 = 存在概念服务_.获取存在概念(信息->专属存在概念节点);
-        if (!概念 || !概念->上位概念组.empty() || !概念->下位概念组.empty())
+        // 专属概念先天以存在根为直接上位；可释放条件为无上位或上位恰为存在根，且无下位（CONCEPT-ROOT-CHAIN v0.2 §10.4）。
+        // 本函数持有与概念owner同一把存在特征互斥，根读取不会观察到并发概念写入。
+        const auto 存在根 = 存在概念服务_.读取存在根概念保护();
+        if (!存在根.信息) throw std::logic_error("existence semantic root unavailable");
+        if (!概念 || !概念->下位概念组.empty()
+            || (!概念->上位概念组.empty()
+                && 概念->上位概念组 != std::vector<稳定编码>{存在根.信息->节点}))
             throw std::logic_error("exclusive concept not releasable");
         const auto 父 = 查询父存在关系(存在节点);
         if (父.size() > 1) throw std::logic_error("duplicate parent existence");
