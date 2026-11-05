@@ -8,6 +8,7 @@
 
 #include "新_本能函数集.h"
 #include "连接.本能合同.h"
+#include "进入场景.本能合同.h"
 #include "本能字段询问.运行接口.h"
 
 namespace 海中鱼巣 {
@@ -25,6 +26,9 @@ inline constexpr std::string_view 新本能函数登记名_旧两参数获取服
     "builtin.service_object.acquire.v1";
 inline constexpr std::string_view 新本能函数登记名_建立连接 =
     "builtin.connection.establish.v4";
+// 通用本能“进入场景”（6220 §2，R94/R95）。
+inline constexpr std::string_view 新本能函数登记名_进入场景 =
+    "builtin.self.enter_scene.v1";
 inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
     "builtin.connection.establish.v1";
 
@@ -109,6 +113,10 @@ public:
         std::shared_ptr<新连接本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭连接端口(
         新连接本能端口&) noexcept;
+    static 新本能函数端口装配状态 装配进入场景端口(
+        std::shared_ptr<新进入场景本能端口>) noexcept;
+    static 新本能函数端口装配状态 关闭进入场景端口(
+        新进入场景本能端口&) noexcept;
     static 新本能函数端口装配状态 装配字段询问端口(std::shared_ptr<新字段询问登记端口>) noexcept;
     static 新本能函数端口装配状态 关闭字段询问端口(新字段询问登记端口&) noexcept;
 
@@ -171,6 +179,7 @@ private:
     static std::shared_ptr<新字段询问登记端口> 租用字段询问端口() noexcept;
     static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
     static std::shared_ptr<新连接本能端口> 租用连接端口() noexcept;
+    static std::shared_ptr<新进入场景本能端口> 租用进入场景端口() noexcept;
     static std::shared_ptr<新服务对象新需求本能端口> 租用服务对象新需求端口() noexcept;
     enum class 网页对话入口 : std::uint8_t {
         读取已显示消息 = 1,

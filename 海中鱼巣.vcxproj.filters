@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="海中鱼巣\业务\连接.本能运行服务.cpp"><Filter>业务</Filter></ClCompile>
+    <ClCompile Include="海中鱼巣\业务\进入场景.本能运行服务.cpp"><Filter>业务</Filter></ClCompile>
     <ClCompile Include="海中鱼巣\业务\本能交互.执行核心.cpp"><Filter>业务</Filter></ClCompile>
     <ClInclude Include="海中鱼巣\业务\本能交互.执行核心.h"><Filter>业务</Filter></ClInclude>
     <ClCompile Include="海中鱼巣\业务\本能需求.执行核心.cpp"><Filter>业务</Filter></ClCompile>
@@ -37,6 +38,8 @@
     <ClInclude Include="海中鱼巣\领域\语言分界.数据.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\本能交互.运行接口.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h"><Filter>业务</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\业务\进入场景.本能运行服务.h"><Filter>业务</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\进入场景.本能合同.h"><Filter>领域</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\领域\连接.本能合同.h"><Filter>领域\合同</Filter></ClInclude>
     <Filter Include="源文件">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>

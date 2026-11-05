@@ -188,6 +188,7 @@ public:
     static 新本能函数本次条件结果对 建立连接(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 进入场景(const 方法参数场景&) noexcept;
 };
 
 } // namespace 海中鱼巣

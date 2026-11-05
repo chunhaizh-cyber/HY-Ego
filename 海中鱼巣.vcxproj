@@ -250,6 +250,7 @@
     <ClCompile Include="海中鱼巣\领域\新_本能函数集.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务值结算.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\连接.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\业务\进入场景.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\领域\消息连接.规则.cpp" />
     <ClCompile Include="海中鱼巣\业务\本能交互.执行核心.cpp" />
     <ClCompile Include="海中鱼巣\业务\本能需求.执行核心.cpp" />
@@ -345,6 +346,8 @@
     <ClInclude Include="海中鱼巣\业务\服务对象需求.发布服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\连接.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\业务\进入场景.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\领域\进入场景.本能合同.h" />
     <ClInclude Include="海中鱼巣\领域\消息交互.数据.h" />
     <ClInclude Include="海中鱼巣\领域\消息连接.规则.h" />
     <ClInclude Include="海中鱼巣\领域\本能交互.运行接口.h" />
