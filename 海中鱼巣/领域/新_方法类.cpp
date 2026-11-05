@@ -8140,19 +8140,20 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
             ||source.second!=std::optional{definition.场景事实限定组.front().关系概念节点}
             ||!新_本能函数管理类::解析(新本能函数登记名_获取服务对象).函数)
             return {新方法操作状态::函数登记冲突,{}};
-        const std::array<稳定编码,4> ranges{config->通用存在概念节点,config->自我概念节点,
-            config->通用存在概念节点,config->交互者特征类型节点};
+        const std::array<稳定编码,5> ranges{config->通用存在概念节点,config->自我概念节点,
+            config->通用存在概念节点,config->交互者特征类型节点,config->服务对象特征类型节点};
         if(expected.本能函数登记名!=新本能函数登记名_获取服务对象||expected.来源方法节点||expected.实例根节点
             ||expected.作用域!=新方法作用域::普通世界||expected.实现方式!=新方法实现方式::本能
             ||expected.行为!=新方法行为::改变||expected.启用状态!=新方法启用状态::启用
-            ||expected.参数规格组.size()!=4||!expected.初始模拟事件参数组.empty()
-            ||expected.初始模拟关系组!=std::vector<新方法参数关系>{{新方法参数关系种类::特征所属存在,4,2},{新方法参数关系种类::同属场景,2,3}}
+            ||expected.参数规格组.size()!=5||!expected.初始模拟事件参数组.empty()
+            ||expected.初始模拟关系组!=std::vector<新方法参数关系>{{新方法参数关系种类::特征所属存在,4,2},
+                {新方法参数关系种类::特征所属存在,5,2},{新方法参数关系种类::同属场景,2,3}}
             ||expected.方法头.作用存在概念组!=std::vector<稳定编码>{config->自我概念节点}
-            ||expected.方法头.涉及特征类型概念组!=std::vector<稳定编码>{config->交互者特征类型节点}
-            ||expected.方法头.可能结果概念组!=std::vector<稳定编码>{config->交互者特征类型节点})
+            ||expected.方法头.涉及特征类型概念组!=std::vector<稳定编码>{config->服务对象特征类型节点}
+            ||expected.方法头.可能结果概念组!=std::vector<稳定编码>{config->服务对象特征类型节点})
             return {新方法操作状态::函数登记冲突,{}};
-        for(std::uint32_t i=0;i<4;++i) {
-            新方法参数规格 spec;spec.有序规格=新方法有序参数规格{i+1,i==3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在,ranges[i]};
+        for(std::uint32_t i=0;i<5;++i) {
+            新方法参数规格 spec;spec.有序规格=新方法有序参数规格{i+1,i>=3 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在,ranges[i]};
             if(expected.参数规格组[i]!=spec)return {新方法操作状态::函数登记冲突,{}};
         }
         std::vector<基础联合节点快照> protection;
@@ -8177,10 +8178,12 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
             if(!p.信息||p.完整保护组.empty())throw std::runtime_error("initial existence concept protection unavailable");
             merge(p.完整保护组);
         }
-        const auto ft=特征概念服务_.读取特征概念定义保护(config->交互者特征类型节点);
-        if(ft.前提已变化)return {新方法操作状态::结构不一致,{}};
-        if(!ft.信息||ft.预期节点组.empty())throw std::runtime_error("initial feature concept protection unavailable");
-        merge(ft.预期节点组);
+        for(const auto c:{config->交互者特征类型节点,config->服务对象特征类型节点}) {
+            const auto ft=特征概念服务_.读取特征概念定义保护(c);
+            if(ft.前提已变化)return {新方法操作状态::结构不一致,{}};
+            if(!ft.信息||ft.预期节点组.empty())throw std::runtime_error("initial feature concept protection unavailable");
+            merge(ft.预期节点组);
+        }
         std::lock_guard lock(新方法互斥);
         if(!结构仍存在()||!方法属于根(method))return {新方法操作状态::结构不一致,{}};
         const auto registered=读取多节点字段(新方法组织根节点,方法成员字段,特征概念服务_);

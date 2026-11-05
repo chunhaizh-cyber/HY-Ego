@@ -230,6 +230,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     // 建立连接v4的收发判定在函数内部读取外设（R91、R92），隔离模拟尚未实现。
     if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_建立连接)})
         不支持(0,"connection v4 isolated simulation pending");
+    // 获取服务对象v3的结果改为服务对象特征（R93），隔离模拟尚未适配。
+    if(m.本能函数登记名==std::optional<std::string>{std::string(新本能函数登记名_获取服务对象)})
+        不支持(0,"service object acquisition v3 isolated simulation pending");
     std::optional<稳定编码> 需求结果概念;
     for(const auto 概念:m.方法头.可能结果概念组) {
         if(方法_.读取模拟特征范围(概念))continue;
