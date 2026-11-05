@@ -316,6 +316,12 @@
     <ClCompile Include="海中鱼巣\领域\新_自然语言世界树类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\领域\世界挂接.全局根.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\领域\世界挂接.全局根.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClInclude Include="海中鱼巣\领域\新_语言类.h">
       <Filter>头文件</Filter>
     </ClInclude>

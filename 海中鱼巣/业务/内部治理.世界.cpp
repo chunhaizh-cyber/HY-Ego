@@ -1,4 +1,5 @@
 #include "内部治理.世界.h"
+#include "../领域/世界挂接.全局根.h"
 #include "../领域/新_任务类.h"
 #include "../核心/容错检查.h"
 #include <algorithm>
@@ -156,6 +157,11 @@ bool 新_内部治理世界类::初始化() noexcept {
         if (!根.场景节点 || *根.场景节点 != 根场景节点_
             || 现实场景_.是场景节点(根场景节点_))
             throw std::runtime_error("governance root is not independent");
+        const auto 全局根 = 新_全局根类::初始化();
+        const auto 挂接 = 全局根 == 全局根操作状态::已完成 || 全局根 == 全局根操作状态::无变化
+            ? 新_全局根类::挂接世界根(世界类型登记键::内部治理, 根场景节点_) : 全局根;
+        if (挂接 != 全局根操作状态::已完成 && 挂接 != 全局根操作状态::无变化)
+            throw std::runtime_error("governance root global attachment failed");
         return true;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"内部治理世界初始化", L"独立根或共享依赖初始化异常。");

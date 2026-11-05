@@ -1,5 +1,6 @@
 #include "新_外设世界树类.h"
 #include "../核心/容错检查.h"
+#include "../领域/世界挂接.全局根.h"
 
 #include <array>
 #include <algorithm>
@@ -203,6 +204,9 @@ bool 更新完成(新外设事实状态 状态) {
             || (根.状态 != 新场景操作状态::已完成 && 根.状态 != 新场景操作状态::无变化)
             || 世界_.获取世界树根场景() == 根.场景节点)
             throw std::runtime_error("peripheral root invalid");
+        const auto 挂接 = 新_全局根类::挂接世界根(世界类型登记键::外设, *根.场景节点);
+        if (挂接 != 全局根操作状态::已完成 && 挂接 != 全局根操作状态::无变化)
+            throw std::runtime_error("peripheral root global attachment failed");
         const auto 语言 = 服务_.语言服务.建立或取得语言({"zh-CN", std::nullopt});
         if (!语言.语言节点) throw std::runtime_error("peripheral language unavailable");
         特征概念定义 文本;
