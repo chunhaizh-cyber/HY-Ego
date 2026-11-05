@@ -202,6 +202,8 @@ public:
     新模拟操作状态 模拟集合加入成员(稳定编码,稳定编码,稳定编码) override;
 
     std::optional<std::vector<新方法参数角色绑定>> 读取参数绑定() const noexcept;
+    // 读取第位置个有序输入（1起，含N之后私有追加输入）的本地节点；样例未建立时为空。
+    std::optional<稳定编码> 读取有序输入节点(std::uint32_t 位置) const noexcept;
     // 不可变的真实执行材料。来源编码按值保存，不对现实节点取得引用。
     新方法问题归档结果 保存方法问题(const 新方法问题反馈材料&) noexcept override;
     新方法问题归档读回结果 读取方法问题归档(稳定编码) const noexcept override;

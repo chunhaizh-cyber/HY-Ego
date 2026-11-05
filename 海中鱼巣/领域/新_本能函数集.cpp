@@ -76,6 +76,7 @@ namespace {
     }
     if(场景.用途()==新方法参数场景用途::模拟) {
         try { return 执行连接隔离场景(场景); }
+        catch(const std::exception& 异常) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"连接隔离求值",L"模拟输入或读写内部错误。",异常.what()); }
         catch(...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"连接隔离求值",L"模拟输入或读写内部错误。"); }
     }
     const auto 端口 = 新_本能函数管理类::租用连接端口();
