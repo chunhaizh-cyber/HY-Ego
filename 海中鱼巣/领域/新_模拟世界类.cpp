@@ -593,6 +593,9 @@ bool 问题入口有效(const 新方法问题反馈材料& x) {
     if (x.原值域验证值==2) expected.push_back(新方法问题种类::值域不符);
     if (!x.预计但未发生项组.empty()) expected.push_back(新方法问题种类::预计变化未发生);
     if (!x.计划外状态组.empty()) expected.push_back(新方法问题种类::发生计划外变化);
+    // 尝试执行（R96）：所采用配对结果为空的执行信息同样入档，供学习验证或补全。
+    if (x.任务采用 && x.任务采用->结果.结果项组.empty() && x.任务采用->结果.参数关系组.empty()
+        && x.任务采用->结果.场景事实限定组.empty()) expected.push_back(新方法问题种类::尝试执行);
     return expected==x.问题组;
 }
 std::int64_t 归档顺序(std::size_t n) {

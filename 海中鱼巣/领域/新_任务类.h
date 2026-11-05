@@ -1017,6 +1017,8 @@ struct 新任务条件子需求项 final {
     std::optional<特征概念任务集合值域> 集合目标;
     std::optional<新需求引用内容定位> 引用内容定位;
     std::optional<新需求新增成员见证要求> 新增成员见证要求;
+    // 存在引用目标（R96 切片4）：目标值域为“值属于所引用存在的专属概念”，自我用身份比较而非数值差。
+    bool 存在引用目标 = false;
     friend bool operator==(const 新任务条件子需求项&,
         const 新任务条件子需求项&) = default;
 };
