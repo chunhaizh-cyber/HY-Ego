@@ -1082,7 +1082,8 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
     const bool 有序参数 = !定义.参数规格组.empty() && 定义.参数规格组.front().有序规格.has_value();
     // 旧形状首项为正的对象类别；负标记与版本仅用于新布局，旧记录不插字段。
     if (定义.信息关系规格) 形状.insert(形状.begin(), {-2, 1});
-    else if (有序参数) 形状.insert(形状.begin(), {-1, 3});
+    // 版本4（R97）：每个有序参数在序号后追加必需特征类型数与所属存在位置。
+    else if (有序参数) 形状.insert(形状.begin(), {-1, 4});
     const auto 引用 = [&](稳定编码 值) { 字段.push_back({动作规格引用字段, 值}); };
     if (定义.信息关系规格) {
         const auto& 规格 = *定义.信息关系规格;
@@ -1103,8 +1104,11 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
             if(有序.信息类型==新方法参数信息类型::存在)
                 合并动作类别保护(类别保护,读取有序存在范围保护(有序.范围概念节点,*存在));
             形状.push_back(static_cast<std::int64_t>(有序.序号));
+            形状.push_back(形状数量(有序.必需特征类型组.size()));
+            形状.push_back(static_cast<std::int64_t>(有序.所属存在位置));
             引用(p.类别概念);
             引用(有序.范围概念节点);
+            for (const auto 类型 : 有序.必需特征类型组) 引用(类型);
             continue;
         }
         形状.insert(形状.end(), {static_cast<std::int64_t>(规格.对象类别),
@@ -1153,7 +1157,7 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
             throw std::runtime_error("unsupported information relation action version");
         si = 2;
     } else if (有序参数) {
-        if (形状->size() < 9 || ((*形状)[1] != 2 && (*形状)[1] != 3))
+        if (形状->size() < 9 || ((*形状)[1] != 2 && (*形状)[1] != 3 && (*形状)[1] != 4))
             throw std::runtime_error("unsupported ordered action specification version");
         版本 = (*形状)[1];
         si = 2;
@@ -1210,6 +1214,14 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
             if (序号 <= 0 || static_cast<std::uint64_t>(序号) > (std::numeric_limits<std::uint32_t>::max)()
                 || static_cast<std::uint64_t>(序号) != i + 1)
                 throw std::runtime_error("invalid ordered action parameter position");
+            std::size_t 必需数 = 0; std::uint32_t 所属位置 = 0;
+            if (版本 == 4) {
+                必需数 = 数量();
+                const auto 所属 = 数字();
+                if (所属 < 0 || static_cast<std::uint64_t>(所属) > (std::numeric_limits<std::uint32_t>::max)())
+                    throw std::runtime_error("invalid ordered action owner position");
+                所属位置 = static_cast<std::uint32_t>(所属);
+            }
             新方法参数信息类型 类型;
             if (版本 == 2) {
                 const auto hint = 数字();
@@ -1235,6 +1247,8 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
                 }
             }
             规格.有序规格 = 新方法有序参数规格{static_cast<std::uint32_t>(序号), 类型, 引用()};
+            for (std::size_t k = 0; k < 必需数; ++k) 规格.有序规格->必需特征类型组.push_back(引用());
+            规格.有序规格->所属存在位置 = 所属位置;
             if(类型==新方法参数信息类型::存在) {
                 if(!存在)throw std::runtime_error("ordered existence range provider missing");
                 if (方式 == 动作定义读取方式::普通语义)

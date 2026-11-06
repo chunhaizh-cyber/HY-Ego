@@ -1,6 +1,7 @@
 #pragma once
 #include "模拟学习.数据.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -110,9 +111,33 @@ struct 新方法有序参数规格 final {
     std::uint32_t 序号 = 0;
     新方法参数信息类型 信息类型 = 新方法参数信息类型::存在;
     稳定编码 范围概念节点;
+    // R97（5350 §6）：存在位置对象须具有的特征类型根，升序去重；特征位置为空。
+    std::vector<稳定编码> 必需特征类型组;
+    // R97：特征位置所属存在位置的序号；存在位置为0。
+    std::uint32_t 所属存在位置 = 0;
     friend bool operator==(const 新方法有序参数规格&,
         const 新方法有序参数规格&) = default;
 };
+
+// 声明侧统一把必需特征类型组整理为升序去重，登记校验只接受整理后的形状。
+inline 新方法有序参数规格 整理有序参数规格(新方法有序参数规格 规格) {
+    std::sort(规格.必需特征类型组.begin(), 规格.必需特征类型组.end());
+    规格.必需特征类型组.erase(std::unique(规格.必需特征类型组.begin(), 规格.必需特征类型组.end()),
+        规格.必需特征类型组.end());
+    return 规格;
+}
+// 方法头涉及特征类型：有序规格汇总（5350 §2）——存在位置必需类型 ∪ 特征位置范围概念，升序去重。
+inline std::vector<稳定编码> 有序规格涉及特征类型(const std::vector<新方法有序参数规格>& 组) {
+    std::vector<稳定编码> 结果;
+    for (const auto& 项 : 组) {
+        if (项.信息类型 == 新方法参数信息类型::存在)
+            结果.insert(结果.end(), 项.必需特征类型组.begin(), 项.必需特征类型组.end());
+        else 结果.push_back(项.范围概念节点);
+    }
+    std::sort(结果.begin(), 结果.end());
+    结果.erase(std::unique(结果.begin(), 结果.end()), 结果.end());
+    return 结果;
+}
 
 enum class 新外设消息方向 : std::int64_t;
 enum class 新方法模拟输入时机 : std::int64_t { 调用前=1, 参数新增消息后=2 };

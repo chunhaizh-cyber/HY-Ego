@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 #include "新_需求类.h"
+#include "新_方法公共类型.h"
 #include "概念_二次特征类.h"
 
 namespace 海中鱼巣 {
@@ -114,6 +115,13 @@ struct 新服务对象新需求配置 final {
     friend bool operator==(const 新服务对象新需求配置&,
         const 新服务对象新需求配置&) = default;
 };
+// 获取服务对象新需求唯一有序规格（R97）：1人类{对象需求}、2对象需求特征/1、3需求身份{}。
+inline std::vector<新方法有序参数规格> 服务对象新需求有序规格(const 新服务对象新需求配置& c) {
+    using T = 新方法参数信息类型;
+    return {{1, T::存在, c.人类概念节点, {c.对象需求类型}, 0},
+        {2, T::特征, c.对象需求类型, {}, 1},
+        {3, T::存在, c.需求身份概念, {}, 0}};
+}
 // 新需求的材料来自显式绑定的场景存在；本端口不筹办、不承接为自我需求。
 class 新服务对象新需求本能端口 {
 public:

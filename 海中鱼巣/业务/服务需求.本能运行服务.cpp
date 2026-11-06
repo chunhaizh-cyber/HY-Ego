@@ -140,11 +140,10 @@ bool 新需求规格一致(const 新方法信息& m, const 新服务对象新需
         || m.方法头.作用存在概念组 != std::vector<稳定编码>{c.人类概念节点}
         || m.方法头.涉及特征类型概念组 != std::vector<稳定编码>{c.对象需求类型}
         || m.方法头.可能结果概念组 != std::vector<稳定编码>{c.完整被认知需求概念}) return false;
-    const std::array ranges{c.人类概念节点, c.对象需求类型, c.需求身份概念};
+    const auto 预期 = 服务对象新需求有序规格(c);
     for (std::uint32_t i = 0; i < 3; ++i) {
         const auto& p = m.参数规格组[i];
-        if (p.有序规格 != 新方法有序参数规格{i + 1, i == 1 ? 新方法参数信息类型::特征
-                : 新方法参数信息类型::存在, ranges[i]}
+        if (p.有序规格 != std::optional{预期[i]}
             || p.参数角色节点.值 || p.存在概念节点 || p.要求场景 || !p.特征规格组.empty()
             || p.集合成员约束 || p.对象种类 != 新方法参数对象种类::普通世界) return false;
     }
@@ -153,7 +152,7 @@ bool 新需求规格一致(const 新方法信息& m, const 新服务对象新需
     新方法条件项定义 human;
     human.参数序号 = 1; human.存在概念节点 = c.人类概念节点;
     needed.条件.条件项组.push_back(std::move(human));
-    return m.初始模拟关系组 == std::vector<新方法参数关系>{{新方法参数关系种类::特征所属存在, 2, 1}}
+    return m.初始模拟关系组.empty()
         && m.初始必要条件 == std::optional{needed} && m.执行分支组.empty()
         && m.初始模拟事件参数组.empty() && m.初始模拟输入方案组.empty();
 }

@@ -554,11 +554,10 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(代表[i]!=i)base[i].同一参数=static_cast<std::uint32_t>(代表[i]+1);
     }
     // 原型逐个求值时，不同位置可能选中同一专属原型而成为同一存在；若初始关系要求两端不同
-    // （不同、场景包含存在），该原型组合不构成合法样例，只跳过本组合，不终止其它组合的求值。
+    // （不同），该原型组合不构成合法样例，只跳过本组合，不终止其它组合的求值。
     if(!原型选择.empty()) {
         for(const auto& r:初始关系组)
-            if((r.种类==新方法参数关系种类::不同||r.种类==新方法参数关系种类::场景包含存在)
-                &&代表[r.左参数序号-1]==代表[r.右参数序号-1])return;
+            if(r.种类==新方法参数关系种类::不同&&代表[r.左参数序号-1]==代表[r.右参数序号-1])return;
         // 初始场景事实的场景、主体、对象是三个不同参与者。
         if(m.初始必要条件)for(const auto& 限定:m.初始必要条件->场景事实限定组) {
             const std::uint32_t 位置组[]={限定.场景参数序号,限定.主体参数序号,限定.对象参数序号};
@@ -568,13 +567,14 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         // 事件特征的数值变化须发生在其所属存在所在的场景内；所属存在与样例场景重合时，
         // 隔离世界没有可承载该变化的外层场景，本组合具名报告未支持，不当内部错误终止其它组合。
         std::set<std::size_t> 场景代表;
-        for(const auto& r:初始关系组)if(r.种类==新方法参数关系种类::场景包含存在)场景代表.insert(代表[r.左参数序号-1]);
         if(m.初始必要条件)for(const auto& 限定:m.初始必要条件->场景事实限定组)
             if(限定.场景参数序号&&限定.场景参数序号<=N)场景代表.insert(代表[限定.场景参数序号-1]);
-        for(const auto pos:m.初始模拟事件参数组)for(const auto& r:初始关系组)
-            if(r.种类==新方法参数关系种类::特征所属存在&&r.左参数序号==pos&&r.右参数序号&&r.右参数序号<=N
-                &&场景代表.contains(代表[r.右参数序号-1]))
+        // R97：事件特征的所属存在由规格的所属存在位置给出。
+        for(const auto pos:m.初始模拟事件参数组)if(pos&&pos<=N&&m.参数规格组[pos-1].有序规格) {
+            const auto owner=m.参数规格组[pos-1].有序规格->所属存在位置;
+            if(owner&&owner<=N&&场景代表.contains(代表[owner-1]))
                 不支持(pos,"event feature owner coincides with the sample scene under this prototype combination");
+        }
     }
     for(std::size_t i=0;i<N;++i)if(是普通存在(i)&&代表[i]!=i)合入存在范围(代表[i],有效存在概念(i));
     for(std::size_t i=0;i<N;++i)if(是普通存在(i))base[i].构造存在概念=有效存在概念(代表[i]);
@@ -582,14 +582,17 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         const auto a=代表[r.左参数序号-1],b=代表[r.右参数序号-1];
         if(r.种类==新方法参数关系种类::不同&&a==b)
             throw 新学习运行异常(m.节点,新学习运行异常原因::输入不合法,"conflicting same/different relations");
-        if(r.种类==新方法参数关系种类::特征所属存在) {
-            auto& p=base[a]; const auto owner=static_cast<std::uint32_t>(b+1);
-            if(p.所属存在参数&&p.所属存在参数!=owner)
-                throw 新学习运行异常(m.节点,新学习运行异常原因::输入不合法,"conflicting feature owners");
-            p.所属存在参数=owner;
-        }
         if(r.种类==新方法参数关系种类::集合包含存在)
             base[a].集合成员参数组.push_back(static_cast<std::uint32_t>(b+1));
+    }
+    // R97：特征所属来自规格的所属存在位置（不再来自“特征所属存在”关系）。
+    for(std::size_t i=0;i<N&&i<m.参数规格组.size();++i) {
+        const auto& 规格=m.参数规格组[i].有序规格;
+        if(!规格||!规格->所属存在位置||规格->所属存在位置>N)continue;
+        auto& p=base[代表[i]]; const auto owner=static_cast<std::uint32_t>(代表[规格->所属存在位置-1]+1);
+        if(p.所属存在参数&&p.所属存在参数!=owner)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::输入不合法,"conflicting feature owners");
+        p.所属存在参数=owner;
     }
     for(std::size_t i=0;i<N;++i)if(代表[i]!=i) {
         base[i].所属存在参数=base[代表[i]].所属存在参数;
@@ -1502,8 +1505,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(m.初始必要条件)for(const auto& 条件:m.初始必要条件->条件.条件项组)核条件(条件);
             for(const auto& 配对:m.条件结果组)for(const auto& 条件:配对.条件.条件项组)核条件(条件);
             for(const auto& 关系:初始关系组)if((同簇(关系.左参数序号)||同簇(关系.右参数序号))
-                &&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同
-                &&关系.种类!=新方法参数关系种类::特征所属存在)允许未知=false;
+                &&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同)允许未知=false;
             if(允许未知)values.emplace_back(std::int64_t{0}); // 选择未知，不是节点或特征准确值。
             for(const auto id:需求候选序号[i])values.emplace_back(static_cast<std::int64_t>(id));
             if(values.empty())不支持(static_cast<std::uint32_t>(i+1),"single demand range has no legal constructed/copied candidate");
@@ -1912,9 +1914,10 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"attached feature sample locator unavailable");
                 bool 直接别名=false;
                 for(std::size_t j=0;j<N;++j)if(defs[j]&&(*bindings)[j].有序引用->信息节点==f.特征->节点) {
-                    const 新方法参数关系 r{新方法参数关系种类::特征所属存在,static_cast<std::uint32_t>(j+1),static_cast<std::uint32_t>(e+1)};
-                    if(std::find(初始关系组.begin(),初始关系组.end(),r)==初始关系组.end())
-                        不支持(static_cast<std::uint32_t>(e+1),"attached/direct alias lacks formal ownership relation");
+                    // R97：直接特征位置须在规格中声明所属为本存在位置。
+                    if(j>=m.参数规格组.size()||!m.参数规格组[j].有序规格
+                        ||m.参数规格组[j].有序规格->所属存在位置!=e+1)
+                        不支持(static_cast<std::uint32_t>(e+1),"attached/direct alias lacks formal ownership declaration");
                     直接别名=true;break;
                 }
                 if(!直接别名)附属组.push_back({static_cast<std::uint32_t>(e+1),FT,f});
@@ -2335,9 +2338,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 // 同D来源闭包、动作前确认读迹以及原reader固定语义核验均已在上方通过。
                 内容.引用内容条件=新方法引用内容条件{{},*需求结果概念,新方法内容作用点::参数自身,true};
                 pair.条件.条件项组.push_back(内容);
-                const 新方法参数关系 所属{新方法参数关系种类::特征所属存在,
-                    static_cast<std::uint32_t>(f+1),static_cast<std::uint32_t>(h+1)};
-                if(std::find(pair.条件.参数关系组.begin(),pair.条件.参数关系组.end(),所属)==pair.条件.参数关系组.end())
+                if(f>=m.参数规格组.size()||!m.参数规格组[f].有序规格
+                    ||m.参数规格组[f].有序规格->所属存在位置!=h+1)
                     不支持(0,"actual demand feature ownership is not declared by the method");
                 pair.条件.参数关系组.push_back({新方法参数关系种类::内容引用参数,
                     static_cast<std::uint32_t>(d+1),static_cast<std::uint32_t>(h+1),{*需求主体FT}});

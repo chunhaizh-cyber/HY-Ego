@@ -1639,8 +1639,7 @@ namespace 海中鱼巣 {
         if(m->初始必要条件)for(const auto& 条件:m->初始必要条件->条件.条件项组)核条件(条件);
         for(const auto& 配对:m->条件结果组)for(const auto& 条件:配对.条件.条件项组)核条件(条件);
         for(const auto& 关系:初始关系组)if((同簇(关系.左参数序号)||同簇(关系.右参数序号))
-            &&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同
-            &&关系.种类!=新方法参数关系种类::特征所属存在)受限=true;
+            &&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同)受限=true;
         if(受限)return {};
     }
     // 位置关系1..6与正式场景事实14分线；完整声明必须有同限定输入构成。
@@ -1734,14 +1733,9 @@ namespace 海中鱼巣 {
         }
     }
     // E先私有准备身份，不挂模拟根、不提供参数绑定；随后一次原子追加发布完整图。
+    // R97：场景包含存在退役——场景参数只来自场景事实限定，全部存在落入样例场景，不建独立成员子场景。
     std::optional<std::size_t> 场景参数;
     std::set<std::size_t> 显式场景成员;
-    for(const auto& relation:初始关系组)if(relation.种类==新方法参数关系种类::场景包含存在) {
-        const auto left=代表.at(relation.左参数序号-1),right=代表.at(relation.右参数序号-1);
-        if(!是普通存在(left)||!是普通存在(right)||left==right)return {};
-        if(场景参数&&*场景参数!=left)throw std::invalid_argument("multiple explicit sample scenes unsupported");
-        场景参数=left;显式场景成员.insert(right);
-    }
     for(const auto& fact:场景输入) {
         const auto pos=fact.限定.场景参数序号;
         if(!pos||pos>输入.size()||!是普通存在(pos-1))
