@@ -3,6 +3,7 @@
 #include "../领域/新_方法类.h"
 #include "../业务/新_世界树类.h"
 #include "../核心/日志系统.h"
+#include <sstream>
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -3406,6 +3407,15 @@ struct 新_任务管理线程类::实现 final {
                 if (合法 && !方法->条件结果组.empty())
                     相关 = 任务服务->查询受方法学习影响任务(通知.方法节点);
                 else if (合法) 相关.状态 = 新任务操作状态::已找到;
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                {
+                    std::wostringstream 文本;
+                    文本 << L"方法=" << 通知.方法节点.值 << L" 合法=" << 合法 << L" 配对数="
+                        << (方法 ? 方法->条件结果组.size() : 0) << L" 查询状态=" << static_cast<int>(相关.状态) << L" 任务=";
+                    for (const auto T : 相关.任务节点组) 文本 << T.值 << L",";
+                    (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"受影响任务", 文本.str());
+                }
+#endif
                 if (合法 && (相关.状态 == 新任务操作状态::资源失败||相关.状态==新任务操作状态::预期已变化)) return;
                 std::vector<学习任务项> 新任务组;
                 std::set<std::uint64_t> 新占用;
@@ -3461,12 +3471,23 @@ struct 新_任务管理线程类::实现 final {
                 事件.已终结 = std::all_of(事件.任务组.begin(), 事件.任务组.end(),
                     [](const auto& 当前) { return 当前.已终结; });
             };
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            const auto 学习诊断 = [&](const wchar_t* 出口) {
+                try {
+                    std::wostringstream 文本;
+                    文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值 << L" 出口=" << 出口;
+                    (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"逐任务复核", 文本.str());
+                } catch (...) {}
+            };
+#else
+            const auto 学习诊断 = [](const wchar_t*) {};
+#endif
             {
                 std::lock_guard 锁(互斥);
                 if (停止 || 已完成
                     || std::any_of(活动工作.begin(), 活动工作.end(), [&](const auto& 工作) {
                         return 工作.请求.任务节点 == 项.任务节点;
-                    })) return;
+                    })) { 学习诊断(L"任务有活动工作"); return; }
                 // 活动W1/W2完成后才出现的定位同样失效，不能趁占用释放派旧W3。
                 const auto 旧 = 最近筹办结果.find(项.任务节点.值);
                 if (旧 != 最近筹办结果.end())
@@ -3478,7 +3499,7 @@ struct 新_任务管理线程类::实现 final {
             新任务学习复核定位 当前定位{0, 交接, 通知.方法节点,
                 项.任务节点, 任务->需求节点, 任务->当前状态,
                 任务->当前候选方法材料节点, 任务->方法实例节点, 任务->方法执行组织节点};
-            if (!学习筹办安全状态(任务->当前状态)) { 终结(false); return; }
+            if (!学习筹办安全状态(任务->当前状态)) { 学习诊断(L"任务状态不安全"); 终结(false); return; }
             if (!有效(任务->需求节点)) { 终结(true); return; }
             bool 有保护 = false;
             {
@@ -3487,7 +3508,7 @@ struct 新_任务管理线程类::实现 final {
                     || 结果等待任务.contains(项.任务节点.值)
                     || 待结果反馈任务.contains(项.任务节点.值);
             }
-            if (有保护) { 终结(false); return; }
+            if (有保护) { 学习诊断(L"任务受保护"); 终结(false); return; }
 
             学习复核记录 记录;
             if (!项.复核编号) {
@@ -3519,6 +3540,7 @@ struct 新_任务管理线程类::实现 final {
             if (记录.准备已尝试 && 当前定位.任务状态 == 新任务状态::待查找方法)
                 可比较定位.任务状态 = 记录.定位.任务状态;
             if (可比较定位 != 记录.定位) {
+                学习诊断(L"定位已变化");
                 const auto 相关 = 任务服务->查询受方法学习影响任务(通知.方法节点);
                 if (相关.状态 == 新任务操作状态::资源失败||相关.状态==新任务操作状态::预期已变化) return;
                 if (相关.状态 != 新任务操作状态::已找到) { 终结(true); return; }
@@ -3539,6 +3561,7 @@ struct 新_任务管理线程类::实现 final {
                 }
                 const auto 状态 = 接收 ? 接收(记录.定位)
                     : 新任务学习复核反馈接收状态::尚未配置;
+                学习诊断(状态 == 新任务学习复核反馈接收状态::已接收 ? L"已发自我复核" : L"自我复核未接收");
                 if (状态 == 新任务学习复核反馈接收状态::已接收
                     || 状态 == 新任务学习复核反馈接收状态::精确重复) {
                     std::lock_guard 锁(互斥);
@@ -3548,6 +3571,14 @@ struct 新_任务管理线程类::实现 final {
                     && 状态 != 新任务学习复核反馈接收状态::资源失败) 终结(true);
                 return;
             }
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            {
+                std::wostringstream 文本;
+                文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值
+                    << L" 自我决议=" << static_cast<int>(记录.决议->状态);
+                (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"自我决议", 文本.str());
+            }
+#endif
             if (记录.决议->状态 != 新自我学习复核状态::允许重新筹办) {
                 终结(记录.决议->状态 == 新自我学习复核状态::需核查);
                 return;
@@ -3558,6 +3589,13 @@ struct 新_任务管理线程类::实现 final {
                 学习复核组.at(*项.复核编号).准备已尝试 = true;
             }
             const auto 准备 = 任务服务->准备学习后重新筹办(项.任务节点, 通知.方法节点);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            {
+                std::wostringstream 文本;
+                文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值 << L" 准备=" << static_cast<int>(准备);
+                (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"准备重新筹办", 文本.str());
+            }
+#endif
             if (准备 == 新任务操作状态::资源失败) return;
             if (准备 != 新任务操作状态::已修改 && 准备 != 新任务操作状态::无变化) {
                 终结(准备 != 新任务操作状态::任务状态不允许
