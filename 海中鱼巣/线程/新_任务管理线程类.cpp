@@ -365,6 +365,9 @@ struct 新_任务管理线程类::实现 final {
     std::optional<std::uint64_t> 当前学习交接;
     std::map<std::uint64_t, 学习复核记录> 学习复核组;
     std::set<std::uint64_t> 学习复核占用;
+    // 方法更新后任务须重新筹办（2026-11-06用户裁决）：受保护（阻塞/结果等待/待结果反馈）时挂起，
+    // 保护解除后重新挂回原学习事件补做。任务值→学习交接；不占学习复核占用，不阻塞后续学习事件。
+    std::map<std::uint64_t, std::uint64_t> 学习延后补筹办;
     std::map<std::uint64_t, std::uint64_t> 学习失效筹办工作;
     std::uint64_t 下一学习复核编号 = 1;
     std::optional<新学习结束通知> 最近方法学习结束;
@@ -3394,12 +3397,36 @@ struct 新_任务管理线程类::实现 final {
                             任务项.已终结 = true;
                         }
                         事件.已终结 = true;
+                        std::erase_if(学习延后补筹办, [&](const auto& 延后) { return 延后.second == 编号; });
                     }
                     调度待触发 = true;
                 }
                 待退出适用方法.clear();
                 if (当前学习交接 && 学习事件组.at(*当前学习交接).已终结)
                     当前学习交接.reset();
+                // 无批次推进时，把保护已解除的挂起任务挂回原事件（复用原任务项，重建fresh定位）。
+                if (!当前学习交接) {
+                    for (auto 延后 = 学习延后补筹办.begin(); 延后 != 学习延后补筹办.end(); ++延后) {
+                        const auto 任务值 = 延后->first;
+                        if (阻塞任务.contains(任务值) || 结果等待任务.contains(任务值)
+                            || 待结果反馈任务.contains(任务值) || 学习复核占用.contains(任务值)
+                            || 等待复核占用.contains(任务值) || 有服务结算来源待处理已加锁(任务值)
+                            || std::any_of(活动工作.begin(), 活动工作.end(), [&](const auto& 工作) {
+                                return 工作.请求.任务节点.值 == 任务值; })) continue;
+                        auto& 原事件 = 学习事件组.at(延后->second);
+                        const auto 原项 = std::find_if(原事件.任务组.begin(), 原事件.任务组.end(),
+                            [&](const auto& 当前) { return 当前.任务节点.值 == 任务值; });
+                        if (原项 == 原事件.任务组.end())
+                            throw std::logic_error("deferred learning task missing from its event");
+                        原项->已终结 = false;
+                        原项->复核编号.reset();
+                        原事件.已终结 = false;
+                        原事件.可处理时点 = std::chrono::steady_clock::now();
+                        学习复核占用.insert(任务值);
+                        学习延后补筹办.erase(延后);
+                        break;
+                    }
+                }
                 const auto 位置 = 当前学习交接 ? 学习事件组.find(*当前学习交接)
                     : std::find_if(学习事件组.begin(), 学习事件组.end(),
                         [](const auto& 候选) { return !候选.second.已终结; });
@@ -3538,7 +3565,15 @@ struct 新_任务管理线程类::实现 final {
                     : 结果等待任务.contains(项.任务节点.值) ? L"任务受保护(结果等待任务)"
                     : L"任务受保护(待结果反馈任务)";
             }
-            if (有保护) { 学习诊断(保护来源); 终结(false); return; }
+            if (有保护) {
+                学习诊断(保护来源);
+                {
+                    std::lock_guard 锁(互斥);
+                    学习延后补筹办.insert_or_assign(项.任务节点.值, 交接);
+                }
+                终结(false);
+                return;
+            }
 
             学习复核记录 记录;
             if (!项.复核编号) {
@@ -3650,6 +3685,7 @@ struct 新_任务管理线程类::实现 final {
                 等待目标复核.erase(项.任务节点.值);
                 筹办延后重入.erase(项.任务节点.值);
                 上次等待材料.erase(项.任务节点.值);
+                学习延后补筹办.erase(项.任务节点.值); // 已按较新学习重新筹办，旧挂起不再补做。
                 调度待触发 = true;
                 // 不清阻塞任务、执行/结果/恢复/结算材料。
             }
