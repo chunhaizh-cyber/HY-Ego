@@ -367,11 +367,6 @@ public:
     bool 是场景节点(稳定编码 节点) const noexcept;
 
     // 治理引用不改变普通存在的场景归属；任务owner回调在场景锁外执行。
-    // 在独立需求已成立后准备并原子发布其强归属场景；重复登记不写入。
-    新需求治理场景发布结果 准备需求治理场景(稳定编码 根, 稳定编码 需求) noexcept;
-    std::optional<新需求治理场景信息> 读取需求治理场景(稳定编码 需求) const noexcept;
-    新场景操作状态 添加治理状态(稳定编码 场景, 稳定编码 状态,
-        const 新需求治理对象读取接口&) noexcept;
     std::optional<新任务治理场景发布准备> 准备任务治理场景(
         稳定编码 父场景节点, const 新任务虚拟存在引用&) noexcept;
     void 撤销未发布任务治理场景(const 新任务治理场景发布准备&) noexcept;
@@ -549,8 +544,7 @@ private:
     新场景操作状态 添加已核验状态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
         std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,
-        新事实追加保护增量* 增量 = nullptr,
-        std::optional<稳定编码> 治理需求 = std::nullopt) noexcept;
+        新事实追加保护增量* 增量 = nullptr) noexcept;
     新场景操作状态 添加已核验动态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
         std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,

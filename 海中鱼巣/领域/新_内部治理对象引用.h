@@ -168,34 +168,7 @@ public:
 };
 
 enum class 新治理参与者种类 : std::uint8_t {
-    任务虚拟存在 = 1, 现实执行主体引用 = 2, 方法虚拟存在 = 3, 需求 = 4
-};
-struct 新需求治理场景信息 final {
-    稳定编码 需求节点, 场景节点;
-    friend bool operator==(const 新需求治理场景信息&, const 新需求治理场景信息&) = default;
-};
-enum class 新需求治理场景发布状态 : std::uint8_t { 已发布 = 1, 无变化, 结构不一致 };
-struct 新需求治理场景发布结果 final {
-    新需求治理场景发布状态 状态 = 新需求治理场景发布状态::结构不一致;
-    std::optional<新需求治理场景信息> 场景;
-};
-struct 新治理需求特征变化结果 final {
-    稳定编码 需求节点, 特征节点, 治理场景节点, 状态节点;
-};
-class 新需求治理世界协作接口 {
-public:
-    virtual 新需求治理场景发布结果 登记需求治理场景(稳定编码) noexcept = 0;
-    virtual std::optional<新需求治理场景信息> 读取需求治理场景(稳定编码) const noexcept = 0;
-    virtual 新治理需求特征变化结果 完成需求特征变化(稳定编码, 稳定编码, 稳定编码) noexcept = 0;
-protected:
-    ~新需求治理世界协作接口() = default;
-};
-class 新需求治理对象读取接口 {
-public:
-    virtual bool 是需求节点(稳定编码) const noexcept = 0;
-    virtual bool 需求持有特征(稳定编码, 稳定编码) const noexcept = 0;
-protected:
-    ~新需求治理对象读取接口() = default;
+    任务虚拟存在 = 1, 现实执行主体引用 = 2, 方法虚拟存在 = 3
 };
 struct 新治理场景参与者 final {
     稳定编码 场景节点, 参与节点, 专属存在概念节点;

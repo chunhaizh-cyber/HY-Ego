@@ -9,7 +9,6 @@ namespace 海中鱼巣 {
 // 仅组织治理实例；任务和方法仍是其虚拟存在及特征的唯一写入者。
 class 新_内部治理世界类 final : public 新任务治理世界协作接口,
     public 新方法治理世界协作接口,
-    public 新需求治理世界协作接口,
     public 新治理参与者读取接口, public 新因果动作证据提供者 {
 public:
     新_内部治理世界类(新_特征值类&, 概念_特征类&, 新_特征类&,
@@ -19,10 +18,6 @@ public:
     新_内部治理世界类& operator=(const 新_内部治理世界类&) = delete;
     bool 装配任务读取(const 新内部治理对象读取接口&) noexcept;
     bool 装配方法读取(const 新方法治理对象读取接口&) noexcept;
-    bool 装配需求读取(const 新需求治理对象读取接口&) noexcept;
-    新需求治理场景发布结果 登记需求治理场景(稳定编码) noexcept override;
-    std::optional<新需求治理场景信息> 读取需求治理场景(稳定编码) const noexcept override;
-    新治理需求特征变化结果 完成需求特征变化(稳定编码, 稳定编码, 稳定编码) noexcept override;
     bool 初始化() noexcept;
     std::optional<稳定编码> 获取根场景() const noexcept;
     新方法治理场景发布结果 发布新方法治理场景组(
@@ -76,7 +71,6 @@ private:
     const 新_场景类& 现实场景_;
     const 新内部治理对象读取接口* 任务读取_ = nullptr;
     const 新方法治理对象读取接口* 方法读取_ = nullptr;
-    const 新需求治理对象读取接口* 需求读取_ = nullptr;
     新_场景类 治理场景_;
     新_因果类 因果服务_;
     因果反向查询服务 反查服务_;
