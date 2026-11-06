@@ -1,4 +1,4 @@
-#include "新_方法类.h"
+﻿#include "新_方法类.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -4961,10 +4961,20 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
     std::vector<稳定编码>* 被替换配对组) noexcept {
     新方法学习发布结果 结果;
     结果.状态 = 新方法学习发布状态::精确重复;
+    const auto 返回 = [&]([[maybe_unused]] int 行) -> const 新方法学习发布结果& {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+        if (结果.状态 == 新方法学习发布状态::精确重复) try {
+            std::wostringstream 文本;
+            文本 << L"方法=" << 方法节点.值 << L" 新配对=" << 新配对节点.值 << L" 不融合出口行=" << 行;
+            (void)记录调试日志(L"PARAM_BINDING", L"方法配对融合", L"不融合", 文本.str());
+        } catch (...) {}
+#endif
+        return 结果;
+    };
     if (被替换配对组) 被替换配对组->clear();
     if (!有效(方法节点) || !有效(新配对节点)) {
         结果.状态 = 新方法学习发布状态::入口拒绝;
-        return 结果;
+        return 返回(__LINE__);
     }
     std::vector<稳定编码> 已建节点, 已写字段;
     bool 已发布 = false;
@@ -4972,23 +4982,23 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         std::lock_guard 锁(新方法互斥);
         if (!节点类型为(方法节点, 方法节点类型)) {
             结果.状态 = 新方法学习发布状态::方法不可用;
-            return 结果;
+            return 返回(__LINE__);
         }
         const auto 方法 = 读取方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
         if (!方法) {
             结果.状态 = 新方法学习发布状态::结构不一致;
-            return 结果;
+            return 返回(__LINE__);
         }
         if (方法->来源方法节点 || 方法->实例根节点
             || 方法->实现方式 != 新方法实现方式::本能
             || 方法->启用状态 != 新方法启用状态::启用) {
             结果.状态 = 新方法学习发布状态::方法不可用;
-            return 结果;
+            return 返回(__LINE__);
         }
         const auto 新项 = std::find_if(方法->条件结果组.begin(), 方法->条件结果组.end(),
             [&](const auto& 项) { return 项.配对节点 == 新配对节点; });
         if (新项 == 方法->条件结果组.end() || 新项->知识来源 != 新方法知识来源种类::模拟)
-            return 结果;
+            return 返回(__LINE__);
         using 区间 = 特征概念I64闭区间;
         // 条件只允许数值域不同；返回不同的条件项序号。
         const auto 条件差异 = [](const 新方法条件定义& a, const 新方法条件定义& b)
@@ -5055,7 +5065,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             });
             if (引用 == 引用组.end()) {
                 结果.状态 = 新方法学习发布状态::结构不一致;
-                return 结果;
+                return 返回(__LINE__);
             }
             发布请求.删除字段关系组.push_back(引用->编码);
             const auto 封存 = 封存方法片段(std::move(发布请求), {方法节点, 吸收->配对节点},
@@ -5063,7 +5073,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             const auto 发布 = 全局基础数据集.原子追加封存片段组({封存});
             if (发布.状态 != 基础节点组追加状态::已完成) {
                 结果.状态 = 新方法学习发布状态::资源失败;
-                return 结果;
+                return 返回(__LINE__);
             }
             已发布 = true;
             const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
@@ -5072,14 +5082,32 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 || std::none_of(读回->条件结果组.begin(), 读回->条件结果组.end(), [&](const auto& p) {
                     return p.配对节点 == 吸收->配对节点 && p.条件 == 吸收->条件 && p.结果 == 吸收->结果; })) {
                 结果.状态 = 新方法学习发布状态::发布结果未知;
-                return 结果;
+                return 返回(__LINE__);
             }
             结果.新配对节点组 = {吸收->配对节点};
             if (被替换配对组) *被替换配对组 = {新项->配对节点};
             结果.状态 = 新方法学习发布状态::已发布;
-            return 结果;
+            return 返回(__LINE__);
         }
-        if (候选.empty()) return 结果;
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+        if (候选.empty()) try {
+            std::wostringstream 文本;
+            文本 << L"方法=" << 方法节点.值 << L" 新配对=" << 新配对节点.值 << L" 逐对:";
+            int 已记 = 0;
+            for (const auto& p : 方法->条件结果组) {
+                if (p.配对节点 == 新项->配对节点 || 已记 >= 6) continue;
+                ++已记;
+                const auto 差 = 条件差异(新项->条件, p.条件);
+                文本 << L" [" << p.配对节点.值 << L" 来源=" << static_cast<int>(p.知识来源)
+                     << L" 条件差=" << (差 ? static_cast<long long>(差->size()) : -1LL)
+                     << L" 结果可比=" << 结果可比(新项->结果, p.结果)
+                     << L" 结果项数=" << p.结果.结果项组.size() << L"/" << 新项->结果.结果项组.size()
+                     << L" 结果关系=" << p.结果.参数关系组.size() << L"/" << 新项->结果.参数关系组.size() << L"]";
+            }
+            (void)记录调试日志(L"PARAM_BINDING", L"方法配对融合", L"无候选明细", 文本.str());
+        } catch (...) {}
+#endif
+        if (候选.empty()) return 返回(__LINE__);
         auto 最佳 = 候选.begin();
         for (auto it = 候选.begin(); it != 候选.end(); ++it)
             if (it->second.size() > 最佳->second.size()) 最佳 = it;
@@ -5087,13 +5115,13 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         std::vector<const 新方法条件结果信息*> 成员{&*新项};
         成员.insert(成员.end(), 最佳->second.begin(), 最佳->second.end());
         for (const auto* m : 成员)
-            for (const auto& r : m->线性关系组) if (r.条件序号 != k) return 结果;
+            for (const auto& r : m->线性关系组) if (r.条件序号 != k) return 返回(__LINE__);
         const auto 条件域 = [&](const 新方法条件结果信息* m) { return *m->条件.条件项组[k].精确数值域; };
         std::sort(成员.begin(), 成员.end(), [&](const auto* a, const auto* b) {
             return 条件域(a).下界 < 条件域(b).下界;
         });
         for (std::size_t i = 1; i < 成员.size(); ++i)
-            if (条件域(成员[i]).下界 <= 条件域(成员[i - 1]).上界) return 结果; // 条件区间重叠不融合
+            if (条件域(成员[i]).下界 <= 条件域(成员[i - 1]).上界) return 返回(__LINE__); // 条件区间重叠不融合
         新方法条件结果定义 合并定义{新项->条件, 新项->结果, {}, {}};
         const 区间 合并条件域{条件域(成员.front()).下界, 条件域(成员.back()).上界};
         合并定义.条件.条件项组[k].精确数值域 = 合并条件域;
@@ -5113,15 +5141,15 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 const auto r = std::find_if(m->线性关系组.begin(), m->线性关系组.end(),
                     [&](const auto& x) { return x.条件序号 == k && x.结果序号 == j; });
                 if (r != m->线性关系组.end()) {
-                    if (!记方向(static_cast<int>(r->方向))) return 结果;
+                    if (!记方向(static_cast<int>(r->方向))) return 返回(__LINE__);
                 } else if (条件域(m).下界 != 条件域(m).上界 && 结果域(m).下界 != 结果域(m).上界)
-                    return 结果; // 区间配对无方向记录，无法判定
+                    return 返回(__LINE__); // 区间配对无方向记录，无法判定
             }
             for (std::size_t i = 1; i < 成员.size(); ++i) {
                 const auto 前 = 结果域(成员[i - 1]), 后 = 结果域(成员[i]);
                 const int d = 后.下界 > 前.上界 ? 1 : 后.上界 < 前.下界 ? -1 : 0;
                 // 某一段结果没有同步变化（相同或交叠）即方向不一致，不融合。
-                if (!记方向(d)) return 结果;
+                if (!记方向(d)) return 返回(__LINE__);
             }
             区间 合并结果域 = 结果域(成员.front());
             for (const auto* m : 成员) {
@@ -5138,7 +5166,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         // 现行定义无法表达（如线性域含端点极值）时不融合，保留原配对。
         if (!条件结果有效(合并定义, 特征概念服务_)
             || !条件结果角色已声明(方法->参数规格组, 合并定义, 特征概念服务_, 存在概念服务_)
-            || !配对分支来源有效(*方法, 合并定义, 特征概念服务_, 存在概念服务_)) return 结果;
+            || !配对分支来源有效(*方法, 合并定义, 特征概念服务_, 存在概念服务_)) return 返回(__LINE__);
         const 新方法条件结果信息* 保留 = nullptr;
         for (const auto* m : 成员)
             if (m->条件 == 合并定义.条件 && m->结果 == 合并定义.结果
@@ -5158,7 +5186,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 const auto 顺序 = 读取唯一I64字段(配对.配对节点, 顺序字段);
                 if (!顺序 || *顺序 < 0 || *顺序 == (std::numeric_limits<std::int64_t>::max)()) {
                     结果.状态 = 新方法学习发布状态::结构不一致;
-                    return 结果;
+                    return 返回(__LINE__);
                 }
                 最大顺序 = (std::max)(最大顺序, *顺序);
             }
@@ -5166,7 +5194,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 || !写入I64字段(新配对, 配对知识来源字段, 1, 已写字段)) {
                 回滚(已写字段, 已建节点);
                 结果.状态 = 新方法学习发布状态::资源失败;
-                return 结果;
+                return 返回(__LINE__);
             }
             发布请求.追加字段组.push_back({方法节点, 方法条件结果字段, 新配对});
             发布图.insert(发布图.end(), 已建节点.begin(), 已建节点.end());
@@ -5183,7 +5211,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
             if (引用 == 引用组.end()) {
                 回滚(已写字段, 已建节点);
                 结果.状态 = 新方法学习发布状态::结构不一致;
-                return 结果;
+                return 返回(__LINE__);
             }
             发布请求.删除字段关系组.push_back(引用->编码);
             替换.push_back(m->配对节点);
@@ -5193,7 +5221,7 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
         if (发布.状态 != 基础节点组追加状态::已完成) {
             回滚(已写字段, 已建节点);
             结果.状态 = 新方法学习发布状态::资源失败;
-            return 结果;
+            return 返回(__LINE__);
         }
         已发布 = true;
         const auto 保留节点 = 保留 ? 保留->配对节点 : 新配对;
@@ -5205,17 +5233,17 @@ void 新_方法类::回收本批方法图(const std::vector<稳定编码>& 节�
                 return p.配对节点 == 保留节点 && p.条件 == 合并定义.条件 && p.结果 == 合并定义.结果
                     && 线性关系等价(p.线性关系组, 合并定义.线性关系组); })) {
             结果.状态 = 新方法学习发布状态::发布结果未知;
-            return 结果;
+            return 返回(__LINE__);
         }
         结果.新配对节点组 = {保留节点};
         if (被替换配对组) *被替换配对组 = 替换;
         结果.状态 = 新方法学习发布状态::已发布;
-        return 结果;
+        return 返回(__LINE__);
     } catch (...) {
         if (!已发布) 回滚(已写字段, 已建节点);
         结果.新配对节点组.clear();
         结果.状态 = 已发布 ? 新方法学习发布状态::发布结果未知 : 新方法学习发布状态::资源失败;
-        return 结果;
+        return 返回(__LINE__);
     }
 }
 
