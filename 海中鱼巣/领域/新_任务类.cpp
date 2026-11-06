@@ -30,6 +30,7 @@
 #include <tuple>
 #include <thread>
 #include <type_traits>
+#include <source_location>
 #include <utility>
 
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_ADOPTION
@@ -4769,8 +4770,9 @@ std::optional<新任务影响评估信息> 读取评估信息(稳定编码 评�
     return 结果;
 }
 
-void 贡献要求(bool 条件) {
-    if (!条件) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务完成贡献",
+void 贡献要求(bool 条件, std::source_location 位置 = std::source_location::current()) {
+    // 公共断言报告调用点行号，否则弹窗只能指向本函数。
+    if (!条件) 工程异常终止(HY_EGO_WIDEN(__FILE__), static_cast<int>(位置.line()), L"任务完成贡献",
         L"贡献材料读取、身份、归集求和或原子发布结构不一致。");
 }
 std::vector<稳定编码> 贡献引用组(稳定编码 节点, 稳定编码 字段) {
