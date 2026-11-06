@@ -147,9 +147,78 @@ bool 新_内部治理世界类::装配方法读取(const 新方法治理对象�
     return true;
 }
 
+bool 新_内部治理世界类::装配需求读取(const 新需求治理对象读取接口& 读取) noexcept {
+    if (需求读取_) return 需求读取_ == &读取;
+    if (有效(根场景节点_)) return false;
+    需求读取_ = &读取;
+    return true;
+}
+
+std::optional<新需求治理场景信息> 新_内部治理世界类::读取需求治理场景(稳定编码 D) const noexcept {
+    try {
+        if (!需求读取_ || !获取根场景()) throw std::runtime_error("demand scene dependencies missing");
+        const auto 场景 = 治理场景_.读取需求治理场景(D);
+        if (!场景) return {};
+        if (场景->需求节点 != D || !需求读取_->是需求节点(D))
+            throw std::runtime_error("demand scene owner readback mismatch");
+        return 场景;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取需求治理场景", L"需求归属读回工程异常。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取需求治理场景", L"未知工程异常。");
+    }
+}
+
+新需求治理场景发布结果 新_内部治理世界类::登记需求治理场景(稳定编码 D) noexcept {
+    try {
+        if (!需求读取_ || !获取根场景() || !需求读取_->是需求节点(D))
+            throw std::runtime_error("established demand or governance dependency missing");
+        const auto 结果 = 治理场景_.准备需求治理场景(根场景节点_, D);
+        if (结果.状态 == 新需求治理场景发布状态::结构不一致) return 结果;
+        const auto 读回 = 读取需求治理场景(D);
+        if (!结果.场景 || 读回 != 结果.场景)
+            throw std::runtime_error("registered demand scene readback mismatch");
+        return 结果;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记需求治理场景", L"登记工程失败；保留已成立需求和场景材料。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记需求治理场景", L"未知工程异常；不重放需求建立。");
+    }
+}
+
+新治理需求特征变化结果 新_内部治理世界类::完成需求特征变化(
+    稳定编码 D, 稳定编码 F, 稳定编码 S) noexcept {
+    try {
+        const auto 场景 = 读取需求治理场景(D);
+        const auto 状态 = 状态服务_.获取状态(S);
+        const auto 特征 = 特征服务_.获取特征(F);
+        if (!场景 || !需求读取_->需求持有特征(D, F) || !状态 || !特征
+            || 状态->被描述存在节点 != D || 状态->来源实例特征节点 != F)
+            throw std::runtime_error("demand feature completion material mismatch");
+        const auto 已有 = 治理场景_.获取场景(场景->场景节点);
+        if (!已有) throw std::runtime_error("demand scene unreadable");
+        // 已挂的同一个历史S允许幂等读取，不要求历史值仍等于当前F。
+        const bool 已挂 = 含节点(已有->状态节点组, S);
+        if (!已挂 && (状态->被引用次数 != 0 || 状态->固定准确值 != 特征->当前值))
+            throw std::runtime_error("demand feature state stale or partly consumed; do not replay");
+        核验挂接(治理场景_.添加治理状态(场景->场景节点, S, *需求读取_));
+        const auto 读回 = 治理场景_.获取场景(场景->场景节点);
+        const auto 状态读回 = 状态服务_.获取状态(S);
+        if (!读回 || std::count(读回->状态节点组.begin(), 读回->状态节点组.end(), S) != 1
+            || !状态读回 || 状态读回->被引用次数 < 1 || 读取需求治理场景(D) != 场景)
+            throw std::runtime_error("demand feature state attachment readback mismatch");
+        return {D, F, 场景->场景节点, S};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成需求特征变化",
+            L"F已提交后的状态组织失败；保留事实，禁止自动重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成需求特征变化", L"未知工程异常；保留事实。");
+    }
+}
+
 bool 新_内部治理世界类::初始化() noexcept {
     try {
-        if (!任务读取_ || !方法读取_) return false;
+        if (!任务读取_ || !方法读取_ || !需求读取_) return false;
         if (!治理场景_.初始化() || !因果服务_.初始化())
             throw std::runtime_error("governance dependencies initialization failed");
         const auto 根 = 治理场景_.建立根场景();
@@ -827,6 +896,11 @@ void 新_内部治理世界类::迁移已有方法治理场景(
                 throw std::runtime_error("governance child scene structure invalid");
             bool 已证所属 = false;
             for (const auto e : 治理场景_.查询治理参与节点(c)) {
+                if (const auto D = 读取需求治理场景(e); D && D->场景节点 == c) {
+                    if (已证所属 || 方法场景.contains(c)) throw std::runtime_error("mixed demand scene ownership");
+                    已证所属 = true;
+                    continue;
+                }
                 const auto 参与者 = 读取治理参与者(c, e);
                 if (!参与者) throw std::runtime_error("governance participant missing during method migration");
                 if (参与者->种类 == 新治理参与者种类::方法虚拟存在) {
@@ -933,6 +1007,11 @@ void 新_内部治理世界类::迁移已有任务治理场景(
             if (已有场景.contains(c)) continue;
             bool 已证方法场景 = false;
             for (const auto e : 治理场景_.查询治理参与节点(c)) {
+                if (const auto D = 读取需求治理场景(e); D && D->场景节点 == c) {
+                    if (已证方法场景) throw std::runtime_error("duplicate foreign governance owner");
+                    已证方法场景 = true;
+                    continue; // C(D)不进入任务状态/动态迁接集合。
+                }
                 const auto 参与者 = 读取治理参与者(c, e);
                 if (!参与者) throw std::runtime_error("foreign governance participant unreadable");
                 if (参与者->种类 != 新治理参与者种类::方法虚拟存在) continue;

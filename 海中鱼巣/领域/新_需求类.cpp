@@ -1569,13 +1569,94 @@ bool 构建子树权重修改(
     新_特征类& 特征服务,
     概念_特征类& 特征概念服务,
     概念_二次特征类& 二次特征概念服务,
-    概念_存在类& 存在概念服务) noexcept
+    概念_存在类& 存在概念服务, 新_状态类& 状态服务) noexcept
     : 特征值服务_(特征值服务),
       存在服务_(存在服务),
       特征服务_(特征服务),
+      状态服务_(状态服务),
       特征概念服务_(特征概念服务),
       二次特征概念服务_(二次特征概念服务),
       存在概念服务_(存在概念服务) {}
+
+bool 新_需求类::装配内部治理世界(新需求治理世界协作接口& 世界) noexcept {
+    if (内部治理世界_) return 内部治理世界_ == &世界;
+    if (结构已初始化()) return false;
+    内部治理世界_ = &世界;
+    return true;
+}
+
+void 新_需求类::登记已成立需求场景(稳定编码 D) noexcept {
+    if (!内部治理世界_)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记已成立需求场景", L"需求治理世界未装配。");
+    const auto r = 内部治理世界_->登记需求治理场景(D);
+    // 本入口仅用于刚成立的全新稳定编码。业务存量冲突由补登记返回false停门。
+    if (r.状态 == 新需求治理场景发布状态::结构不一致 || !r.场景 || r.场景->需求节点 != D)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记已成立需求场景", L"新成立D未取得唯一场景；保留D，不重放出生。");
+}
+
+bool 新_需求类::补登记已有需求场景() noexcept {
+    try {
+        if (!内部治理世界_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记已有需求场景", L"需求治理世界未装配。");
+        // 初始化阶段可能尚无双根；按正式类型反查，不把完整全集失败当空表。
+        for (const auto& f : 全局基础数据集.查询目标字段(需求节点类型, 节点类型字段)) {
+            const auto r = 内部治理世界_->登记需求治理场景(f.所属节点);
+            if (r.状态 == 新需求治理场景发布状态::结构不一致) return false;
+            if (!r.场景 || 内部治理世界_->读取需求治理场景(f.所属节点) != r.场景)
+                throw std::runtime_error("existing demand scene readback mismatch");
+        }
+        return true;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记已有需求场景", L"存量场景组织工程异常。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"补登记已有需求场景", L"未知工程异常。");
+    }
+}
+
+bool 新_需求类::需求持有特征(稳定编码 D, 稳定编码 F) const noexcept {
+    try {
+        std::lock_guard 锁(新需求互斥);
+        std::lock_guard 特征锁(领域同步内部::存在特征互斥);
+        if (!读取需求治理信息(D)) return false;
+        const auto raw = 全局基础数据集.查询完整节点结构(D);
+        要求需求物理(raw.状态 == 基础结构操作状态::已完成 && raw.结构);
+        if (!是F承载需求(*raw.结构)) return false;
+        for (const auto key : 需求目标字段键())
+            for (const auto& f : raw.结构->字段组) if (f.字段节点 == key) {
+                const auto* id = std::get_if<稳定编码>(&f.内容);
+                if (id && *id == F) return 特征服务_.获取特征(F).has_value();
+            }
+        return false;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"需求持有特征", L"需求实例特征归属读取失败。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"需求持有特征", L"未知工程异常。");
+    }
+}
+
+void 新_需求类::交付需求特征状态(稳定编码 D, 稳定编码 F) noexcept {
+    try {
+        if (!内部治理世界_ || !需求持有特征(D, F))
+            throw std::runtime_error("changed demand feature ownership unavailable");
+        const auto f = 特征服务_.获取特征(F);
+        if (!f) throw std::runtime_error("committed demand feature unreadable");
+        const auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count();
+        if (ns <= 0) throw std::runtime_error("invalid demand feature UTC time");
+        const 新状态强时间 时间{新状态时间语义::实例绝对UTC, ns};
+        const auto s = f->当前值 ? 状态服务_.建立状态(D, F, 时间)
+            : 状态服务_.建立变为未知状态(D, F, 时间);
+        if (s.状态 != 新状态操作状态::已完成 || !s.状态节点)
+            throw std::runtime_error("committed demand feature state publication failed");
+        const auto r = 内部治理世界_->完成需求特征变化(D, F, *s.状态节点);
+        if (r.需求节点 != D || r.特征节点 != F || r.状态节点 != *s.状态节点)
+            throw std::runtime_error("demand feature completion receipt mismatch");
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"交付需求特征状态", L"F已提交后的状态交付失败；保留事实，禁止自动重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"交付需求特征状态", L"未知工程异常；保留事实。");
+    }
+}
 
 bool 新_需求类::绑定关联检查通知(
     const void* 所有者, std::function<void()> 通知) noexcept {
@@ -1601,7 +1682,9 @@ void 新_需求类::解除关联检查通知(const void* 所有者) noexcept {
 bool 新_需求类::初始化() noexcept {
     try {
         std::lock_guard 锁(新需求互斥);
-        if (结构已初始化()) return 结构仍存在();
+        if (结构已初始化()) return 结构仍存在() && 补登记已有需求场景();
+        if (!内部治理世界_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"需求初始化", L"内部治理世界未装配。");
 
         std::vector<稳定编码*> 待建{
             &节点类型字段, &需求树根节点类型, &需求节点类型,
@@ -1651,7 +1734,7 @@ bool 新_需求类::初始化() noexcept {
             }
             return false;
         }
-        return true;
+        return 补登记已有需求场景();
     } catch (...) {
         return false;
     }
@@ -2088,6 +2171,8 @@ void 新_需求类::要求目标特征实例承载(稳定编码 D) noexcept {
 
         安全根需求节点 = 安全材料->需求;
         服务根需求节点 = 服务材料->需求;
+        登记已成立需求场景(安全根需求节点);
+        登记已成立需求场景(服务根需求节点);
         结果.状态 = 新需求操作状态::已建立;
         结果.安全根 = 安全根需求节点;
         结果.服务根 = 服务根需求节点;
@@ -2416,6 +2501,7 @@ struct 新_需求类::服务取得角色核验批 final {
             要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==(q.指定已有需求 ? 2u : 3u));
             info.出生记录=commit.新节点组[0];if(!q.指定已有需求)info.需求节点=commit.新节点组[2];
             out.信息=std::move(info);out.状态=S::已出生待补骨架;out.完整保护.clear();created=true;
+            if (!q.指定已有需求) 登记已成立需求场景(out.信息->需求节点);
         }
         if(!created&&!需求内容保护未变(request.预期联合节点组))throw S::前提已变化;
         const auto skeleton=确保目标特征实例承载可抛内部(out.信息->需求节点);
@@ -2723,6 +2809,7 @@ struct 新_需求类::服务取得角色核验批 final {
             if(committed.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
             要求需求物理(committed.状态==基础节点组追加状态::已完成&&committed.新节点组.size()==batch.新节点组.size());
             已成立前缀={S::已建立,committed.新节点组.front(),列表项 ? std::optional{列表项->节点} : std::optional{committed.新节点组[*listIndex]}};
+            登记已成立需求场景(*已成立前缀.需求节点);
             补齐目标实例(*已成立前缀.需求节点);
             const auto read=获取需求(*已成立前缀.需求节点);要求需求物理(read&&read->目标==请求.目标);
             const 关联检查离域通知 notice{关联检查通知_};return 已成立前缀;
@@ -2922,6 +3009,7 @@ struct 新_需求类::服务取得角色核验批 final {
         结果.需求节点 = 需求节点;
         结果.需求列表项节点 = 列表节点;
         已成立前缀=结果; // D/list/父子/来源与权重均已成立，随后失败不得回滚。
+        登记已成立需求场景(需求节点);
         if (初始服务要求确认) {
             const auto 读回 = 读取需求完整物理(需求目标读取上下文{特征服务_, 特征概念服务_}, 需求节点);
             要求需求物理(读回.服务需求取得执行节点 == 初始服务需求取得执行节点);
@@ -3782,6 +3870,7 @@ void 新_需求类::装配服务要求确认读取接口(
         if(commit.状态==基础节点组追加状态::预期不符)return {S::前提已变化,{},{}};
         if(commit.状态==基础节点组追加状态::资源失败)return {S::资源失败,{},{}};
         要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==publish.新节点组.size());
+        登记已成立需求场景(commit.新节点组.front());
         notify.emplace(关联检查通知_);
         return finish(commit.新节点组.front(),S::已建立);
     }catch(const 新需求目标定义核验状态 s){要求需求物理(s==新需求目标定义核验状态::前提已变化);return {S::前提已变化,{},{}};}
@@ -3991,6 +4080,7 @@ void 新_需求类::装配服务要求确认读取接口(
             要求需求物理(写入.状态 == 基础节点组追加状态::已完成
                 && 写入.新节点组.size() == 发布.新节点组.size());
             前缀.需求节点=写入.新节点组.front();
+            登记已成立需求场景(*前缀.需求节点);
             if(列表.需求列表项节点)前缀.需求列表项节点=列表.需求列表项节点;
             else 前缀.需求列表项节点=写入.新节点组[1];
             const 关联检查离域通知 通知{关联检查通知_};
@@ -5047,7 +5137,9 @@ std::optional<新需求信息> 新_需求类::读取提议源需求(稳定编码
         const auto 提交=全局基础数据集.原子追加节点组(请求);
         if(提交.状态==基础节点组追加状态::预期不符)return {S::前提已变化,{},{}};
         要求需求物理(提交.状态==基础节点组追加状态::已完成&&提交.新节点组.size()==请求.新节点组.size());
-        const auto D=提交.新节点组.front();const auto 读回=读取需求治理信息(D);
+        const auto D=提交.新节点组.front();
+        登记已成立需求场景(D);
+        const auto 读回=读取需求治理信息(D);
         要求需求物理(读回&&读回->完整目标==std::optional{新需求完整目标{q.目标存在节点,q.目标}}&&读回->复合来源==q.复合来源);
         const 关联检查离域通知 通知{关联检查通知_};
         要求目标特征实例承载(D);
@@ -5805,7 +5897,9 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         if(commit.状态==基础节点组追加状态::预期不符)return {S::前提已变化,{},{}};
         if(commit.状态==基础节点组追加状态::资源失败)return {S::资源失败,{},{}};
         要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==1);
-        const auto D=commit.新节点组.front();const auto read=读取需求治理信息(D);
+        const auto D=commit.新节点组.front();
+        登记已成立需求场景(D);
+        const auto read=读取需求治理信息(D);
         要求需求物理(read&&read->需求主体存在节点==q.需求主体存在节点&&read->已知目标==std::optional{q.已知目标}
             &&read->信息完善阶段==新需求信息完善阶段::待完善&&!read->认知来源&&read->首次接收认知来源==来源);
         要求目标特征实例承载(D);
@@ -5925,6 +6019,8 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             const auto completed=特征服务_.完成特征当前值组(*prepared.准备);
             要求需求物理(completed.项结果组.size()==settings.size());
             特征服务_.结束特征当前值组(*prepared.准备);
+            for (const auto& [F, result] : completed.项结果组)
+                if (result.当前值已改变) 交付需求特征状态(q.需求节点, F);
         } else {
             if(!rawChanged)return {S::无变化,*old};
             const auto commit=全局基础数据集.原子追加节点组(r);
@@ -6017,6 +6113,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             if (写入.状态 == 基础节点组追加状态::预期不符) continue;
             if (写入.状态 == 基础节点组追加状态::资源失败) return {S::资源失败, {}, {}};
             要求需求物理(写入.状态 == 基础节点组追加状态::已完成 && 写入.新节点组.size() == 1);
+            登记已成立需求场景(写入.新节点组.front());
             const auto 回读 = 获取需求(写入.新节点组.front());
             要求需求物理(回读 && 回读->执行域 == 新需求执行域::被认知
                 && 回读->需求主体存在节点 == 请求.需求主体存在节点 && 回读->目标存在节点 == 请求.目标存在节点
