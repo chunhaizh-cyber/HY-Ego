@@ -20,6 +20,11 @@
 #include <type_traits>
 #include <vector>
 
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+#define 派发诊断(任务值, 文字) do { try { static std::map<std::uint64_t, std::wstring> 上次_; std::wostringstream 流_; 流_ << 文字;     auto& 旧_ = 上次_[任务值]; if (旧_ != 流_.str()) { 旧_ = 流_.str(); std::wostringstream 全_; 全_ << L"任务=" << 任务值 << L" " << 旧_;     (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"后段", 全_.str()); } } catch (...) {} } while (false)
+#else
+#define 派发诊断(任务值, 文字) do { } while (false)
+#endif
 namespace 海中鱼巣 {
 
 namespace {
@@ -1371,6 +1376,15 @@ struct 新_任务管理线程类::实现 final {
             }
             const bool 诊断变化 = 返回.调度材料
                 && (最近调度读取状态 != 返回.调度材料->状态 || 最近调度异常任务 != 异常任务);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            if (诊断变化) try {
+                std::wostringstream 文本;
+                文本 << L"读取状态=" << static_cast<int>(返回.调度材料->状态) << L" 项数=" << 返回.调度材料->项组.size()
+                     << L" 异常任务=";
+                for (const auto t : 异常任务) 文本 << t.值 << L",";
+                (void)记录调试日志(L"PARAM_BINDING", L"调度扫描", L"结果变化", 文本.str());
+            } catch (...) {}
+#endif
             auto 新上次 = 上次等待材料;
             auto 新记录 = 等待复核组;
             auto 新占用 = 等待复核占用;
@@ -1743,7 +1757,16 @@ struct 新_任务管理线程类::实现 final {
                         return 筹办派发状态::资源暂不可用;
                     }
                     if (信息准备.状态 == 新任务需求准备状态::待完善
-                        || 信息准备.状态 == 新任务需求准备状态::工程故障) continue;
+                        || 信息准备.状态 == 新任务需求准备状态::工程故障) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                        try {
+                            std::wostringstream 文本;
+                            文本 << L"任务=" << 重试->请求.任务节点.值 << L" 需求准备=" << static_cast<int>(信息准备.状态);
+                            (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"需求准备未就绪", 文本.str());
+                        } catch (...) {}
+#endif
+                        continue;
+                    }
                     if (信息准备.状态 != 新任务需求准备状态::可筹办)
                         throw std::logic_error("planning retry demand readiness unreadable");
                     const auto 接收 = 提交普通工作(重试->请求);
@@ -1768,6 +1791,24 @@ struct 新_任务管理线程类::实现 final {
                         : (定位.任务状态 != 新任务状态::已建立 && 定位.任务状态 != 新任务状态::待查找方法)) continue;
                     {
                         std::lock_guard 锁(互斥);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                        try {
+                            const int 原因 = 贡献占用任务已加锁(任务节点.值) ? 1 : 阻塞任务.contains(任务节点.值) ? 2
+                                : 有服务结算来源待处理已加锁(任务节点.值) ? 3 : 筹办阻塞任务.contains(任务节点.值) ? 4
+                                : 学习复核占用.contains(任务节点.值) ? 5 : 等待复核占用.contains(任务节点.值) ? 6
+                                : 筹办延后重入.contains(任务节点.值) ? 7
+                                : std::any_of(活动工作.begin(), 活动工作.end(), [&](const auto& 占用) {
+                                    return 占用.请求.任务节点 == 任务节点; }) ? 8 : 0;
+                            static std::map<std::uint64_t, int> 上次原因;
+                            const auto 旧 = 上次原因.find(任务节点.值);
+                            if (旧 == 上次原因.end() || 旧->second != 原因) {
+                                上次原因[任务节点.值] = 原因;
+                                std::wostringstream 文本;
+                                文本 << L"任务=" << 任务节点.值 << L" 种类=" << static_cast<int>(工作种类) << L" 跳过原因=" << 原因;
+                                (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"过滤", 文本.str());
+                            }
+                        } catch (...) {}
+#endif
                         if (停止 || 已完成 || 贡献占用任务已加锁(任务节点.值) || 阻塞任务.contains(任务节点.值)
                             || 有服务结算来源待处理已加锁(任务节点.值)
                             || 筹办阻塞任务.contains(任务节点.值)
@@ -1787,13 +1828,23 @@ struct 新_任务管理线程类::实现 final {
                         return 筹办派发状态::资源暂不可用;
                     }
                     if (信息准备.状态 == 新任务需求准备状态::待完善
-                        || 信息准备.状态 == 新任务需求准备状态::工程故障) continue;
+                        || 信息准备.状态 == 新任务需求准备状态::工程故障) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                        try {
+                            std::wostringstream 文本;
+                            文本 << L"任务=" << 任务节点.值 << L" 需求准备=" << static_cast<int>(信息准备.状态);
+                            (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"需求准备未就绪", 文本.str());
+                        } catch (...) {}
+#endif
+                        continue;
+                    }
                     if (信息准备.状态 != 新任务需求准备状态::可筹办)
                         throw std::logic_error("planning demand readiness unreadable");
                     if (工作种类 == 新任务工作种类::查找方法) {
                         const auto 准备 = 任务服务->准备任务查找方法(任务节点);
                         if (准备 != 新任务操作状态::已修改
                             && 准备 != 新任务操作状态::无变化) {
+                            派发诊断(任务节点.值, L"查找准备=" << static_cast<int>(准备));
                             if (准备 != 新任务操作状态::任务状态不允许
                                 && 准备 != 新任务操作状态::资源失败) {
                                 std::lock_guard 锁(互斥);
@@ -1826,7 +1877,10 @@ struct 新_任务管理线程类::实现 final {
                                 && !有服务结算来源待处理已加锁(旧->任务节点.值)
                                 && !学习复核占用.contains(旧->任务节点.值)
                                 && !筹办阻塞任务.contains(旧->任务节点.值)
-                                && !阻塞任务.contains(旧->任务节点.值)) continue;
+                                && !阻塞任务.contains(旧->任务节点.值)) {
+                                派发诊断(任务节点.值, L"让位待派=" << 待派筹办工作->任务节点.值 << L" 种类=" << static_cast<int>(工作种类));
+                                continue;
+                            }
                             待派筹办工作.reset();
                         }
                         if (!待派筹办工作) {
@@ -1838,6 +1892,7 @@ struct 新_任务管理线程类::实现 final {
                         待接纳.请求 = 请求;
                     }
                     const auto 接收 = 提交普通工作(请求);
+                    派发诊断(任务节点.值, L"提交种类=" << static_cast<int>(工作种类) << L" 接收=" << static_cast<int>(接收.状态));
                     if (接收.状态 == 新任务工作接收状态::已接收
                         || 接收.状态 == 新任务工作接收状态::精确重复) {
                         std::lock_guard 锁(互斥);
@@ -2033,6 +2088,16 @@ struct 新_任务管理线程类::实现 final {
                     || (执行结果.零动作恢复.has_value()
                         != (执行结果.状态 == 新任务治理本能执行状态::零动作已回筹办)))
                     throw std::logic_error("action reply differs from its original request");
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                try {
+                    std::wostringstream 文本;
+                    文本 << L"任务=" << 占用.请求.任务节点.值 << L" 执行状态=" << static_cast<int>(执行结果.状态)
+                         << L" 已开始=" << (执行结果.执行开始 && 执行结果.执行开始->执行实例节点)
+                         << L" 有方法调用=" << 执行结果.方法调用.has_value()
+                         << L" 零动作=" << 执行结果.零动作恢复.has_value();
+                    (void)记录调试日志(L"PARAM_BINDING", L"执行工作", L"本能执行回执", 文本.str());
+                } catch (...) {}
+#endif
                 if (执行结果.执行开始
                     && 执行结果.执行开始->执行实例节点) {
                     处理.独立读回 = 任务服务->读回任务执行(
