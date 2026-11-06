@@ -93,8 +93,12 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新存在信息>) return std::tie(x.节点,x.父存在节点,
         x.专属存在概念节点,x.特征节点组,x.子存在节点组);
     else if constexpr (std::is_same_v<U, 新状态强时间>) return std::tie(x.语义,x.纳秒);
-    else if constexpr (std::is_same_v<U, 新状态信息>) return std::tie(x.节点,x.被描述存在节点,
-        x.来源实例特征节点,x.特征类型概念节点,x.固定准确值,x.强时间,x.被引用次数);
+    else if constexpr (std::is_same_v<U, 新状态信息>) {
+        // 忠实副本：固定准确值按可选型原样编解码，与新特征信息::当前值相同；
+        // 未知也保留，不过滤、不解包，保证保存方法问题的精确读回合同。
+        return std::tie(x.节点,x.被描述存在节点,
+            x.来源实例特征节点,x.特征类型概念节点,x.固定准确值,x.强时间,x.被引用次数);
+    }
     else if constexpr (std::is_same_v<U, 新任务虚拟存在引用>) return std::tie(x.任务节点,x.虚拟存在节点,x.状态特征节点);
     else if constexpr (std::is_same_v<U, 新动作结果关联>) return std::tie(x.类型,x.结果动态节点);
     else if constexpr (std::is_same_v<U, 新动态跨特征时间项>) return std::tie(x.前状态节点,x.后状态节点,

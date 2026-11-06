@@ -25,7 +25,7 @@ namespace 海中鱼巣 {
         return 有效(s.节点)&&s.被描述存在节点==绑定.窗口
             &&s.来源实例特征节点==绑定.接收数量特征
             &&有效(s.特征类型概念节点)
-            &&std::holds_alternative<std::int64_t>(s.固定准确值);
+            &&(s.固定准确值 && std::holds_alternative<std::int64_t>(*s.固定准确值));
     };
     if (FT.特征类型根!=定义.接收数量特征概念
         ||FT.材料类型!=特征概念材料物理类型::I64标量

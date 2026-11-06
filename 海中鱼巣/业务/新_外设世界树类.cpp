@@ -581,7 +581,7 @@ void 新_外设世界树类::核验并处理已发布动态(稳定编码 场景�
     if (!特征) throw std::runtime_error("peripheral feature publication missing feature");
     const bool 同值 = 特征->当前值 && *特征->当前值 == 新值;
     const auto 前 = 读取最近特征状态(定位.场景节点, 定位.窗口节点, 特征节点);
-    if ((前 && (!特征->当前值 || 前->固定准确值 != *特征->当前值))
+    if ((前 && (!特征->当前值 || 前->固定准确值 != 特征->当前值))
         || (!前 && 特征->当前值) || (!同值 && 前 && 时间.纳秒 <= 前->强时间.纳秒))
         throw std::runtime_error("peripheral state/current value or time mismatch");
     const auto 更新 = 场景_.更新场景内存在特征值(定位.场景节点, 定位.窗口节点, 特征节点, 新值, 时间);
@@ -688,7 +688,7 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     const auto 特征节点 = 方向 == 新外设消息方向::接收 ? *定位.接收消息特征 : *定位.发送消息特征;
     const auto 前 = 读取最近特征状态(定位.场景节点, 定位.窗口节点, 特征节点);
     const auto 原特征 = 服务_.特征服务.获取特征(特征节点);
-    if (!前 || !原特征 || 原特征->当前值 != std::optional<新特征准确值>{前->固定准确值}
+    if (!前 || !前->固定准确值 || !原特征 || 原特征->当前值 != 前->固定准确值
         || 时间.纳秒 <= 前->强时间.纳秒)
         throw std::runtime_error("peripheral message predecessor invalid");
     auto 成员 = 读取消息成员(特征节点);
@@ -1023,7 +1023,7 @@ std::vector<新外设消息信息> 新_外设世界树类::读取当前消息(
             throw std::runtime_error("peripheral message removal source mismatch");
         const auto 前 = 读取最近特征状态(定位.场景节点, 窗口, *特征节点);
         const auto 特征 = 服务_.特征服务.获取特征(*特征节点);
-        if (!前 || !特征 || 特征->当前值 != std::optional<新特征准确值>{前->固定准确值}
+        if (!前 || !前->固定准确值 || !特征 || 特征->当前值 != 前->固定准确值
             || 时间.纳秒 <= 前->强时间.纳秒)
             throw std::runtime_error("peripheral message removal predecessor invalid");
         成员.erase(位置);

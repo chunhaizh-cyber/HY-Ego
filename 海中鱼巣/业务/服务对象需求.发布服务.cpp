@@ -354,7 +354,8 @@ struct 服务对象需求发布服务::实现 final {
             const auto pre = 事实.状态服务.获取状态(dynamic->状态节点组.front()), post = 事实.状态服务.获取状态(dynamic->状态节点组.back());
             if (!pre || !post || pre->来源实例特征节点 != *oldId || post->来源实例特征节点 != *oldId
                 || pre->被描述存在节点 != E || post->被描述存在节点 != E) { gap("原前后状态来源不完整", D, source.动作节点); continue; }
-            auto before = 集合成员(pre->固定准确值), after = 集合成员(post->固定准确值), expected = before;
+            if (!pre->固定准确值 || !post->固定准确值) { gap("原前后状态缺少准确值材料", D, source.动作节点); continue; }
+            auto before = 集合成员(*pre->固定准确值), after = 集合成员(*post->固定准确值), expected = before;
             if (std::binary_search(before.begin(), before.end(), D)) { gap("需求在首次发布前已存在，命中次数不可恢复", D, source.动作节点); continue; }
             expected.push_back(D); std::sort(expected.begin(), expected.end());
             if (after != expected || pre->强时间.语义 != 新状态时间语义::实例绝对UTC
@@ -545,7 +546,8 @@ bool 服务对象需求发布服务::实现::核验已完成迁移关联(稳定�
         if(type.前提已变化)throw 需求结果读取变化{};
         require(type.信息&&type.信息->类型根==root,L"迁移需求结果状态特征类型不符");
         if(!合并需求内容保护(protection,type.预期节点组))throw 需求结果读取变化{};
-        if(const auto* v=std::get_if<稳定编码>(&s->固定准确值))capture(*v);
+        require(s->固定准确值.has_value(),L"迁移需求结果状态缺少准确值");
+        if(const auto* v=(s->固定准确值 ? std::get_if<稳定编码>(&*s->固定准确值) : nullptr))capture(*v);
         return *s;
     };
     uniqueInScene(source.动作节点,true);
@@ -564,7 +566,7 @@ bool 服务对象需求发布服务::实现::核验已完成迁移关联(稳定�
     const auto after=state(selected->后状态节点,mapping.原特征节点,oldType.信息->类型根);
     require(before.强时间.纳秒<=action->动作时间->纳秒&&action->动作时间->纳秒<after.强时间.纳秒,
         L"迁移需求结果原动作时间不符");
-    const auto previous=集合成员(before.固定准确值);const auto following=集合成员(after.固定准确值);
+    const auto previous=集合成员(*before.固定准确值);const auto following=集合成员(*after.固定准确值);
     require(!std::binary_search(previous.begin(),previous.end(),source.需求节点),L"迁移需求结果原前集合已含D");
     auto expected=previous;expected.push_back(source.需求节点);std::sort(expected.begin(),expected.end());
     require(expected==following,L"迁移需求结果不是唯一追加D");
@@ -1105,7 +1107,7 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
     }
     const auto 定义=事实.特征概念服务.读取特征概念定义保护(状态->特征类型概念节点);
     if(定义.状态!=基础结构操作状态::已完成||!定义.信息)发布故障(L"需求发生状态的特征概念不可读");
-    const auto* D=std::get_if<稳定编码>(&状态->固定准确值);
+    const auto* D=(状态->固定准确值 ? std::get_if<稳定编码>(&*状态->固定准确值) : nullptr);
     if(定义.信息->类型根!=类型||!D||!有效(*D))return {R::非需求状态,{}};
     const auto 记录=需求.读取主体需求发生关联按状态(S);
     if(需求.是需求迁移恢复状态(S))return {R::迁移恢复状态,{}};

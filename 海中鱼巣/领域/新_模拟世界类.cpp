@@ -3970,7 +3970,7 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         bool captured=false;
         for(const auto n:s.通用节点)if(属于样例(n,状态种类,s.通用场景)&&读引用(n,状态特征引用)==std::optional{F}) {
             const auto state=读取本地状态(n);
-            if(state&&state->固定准确值==*binding.特征->当前值)captured=true;
+            if(state&&state->固定准确值==binding.特征->当前值)captured=true;
         }
         if(!captured) {
             const auto S=node(状态种类);put(S,所属,target->信息节点);put(S,状态特征引用,F);
@@ -4074,9 +4074,11 @@ std::optional<新状态信息> 新_模拟世界类::读取最新特征状态(
     if(definition.状态!=新交互求值状态::已取得||!definition.构成)
         throw std::runtime_error("simulation quantity definition unavailable");
     const auto FT=definition.构成->接收数量特征概念;
+    // R98：接收数量必须有值；未知不进入二次比较DTO。
+    if (!最新.固定准确值 || !上轮.固定准确值) throw std::runtime_error("simulation quantity state value missing");
     新二次特征计算请求 request;
-    request.左输入=二次特征准确特征输入{最新.节点,FT,最新.固定准确值};
-    request.右输入=二次特征准确特征输入{上轮.节点,FT,上轮.固定准确值};
+    request.左输入=二次特征准确特征输入{最新.节点,FT,*最新.固定准确值};
+    request.右输入=二次特征准确特征输入{上轮.节点,FT,*上轮.固定准确值};
     return 实现_->二次计算->计算(request);
 }
 std::optional<新状态信息> 新_模拟世界类::读取固定消息状态(稳定编码 M,稳定编码 F) const {
@@ -4097,7 +4099,7 @@ std::optional<新状态信息> 新_模拟世界类::读取固定消息状态(稳
         const auto state=读取本地状态(n);
         if(!state||state->被描述存在节点!=msg->窗口节点||state->强时间!=msg->正式记录时间
             ||state->特征类型概念节点!=def->概念节点)continue;
-        const auto* V=std::get_if<稳定编码>(&state->固定准确值);
+        const auto* V=(state->固定准确值 ? std::get_if<稳定编码>(&*state->固定准确值) : nullptr);
         const auto material=V?读取模拟特征值材料(*V):std::nullopt;
         const auto* ids=material?std::get_if<std::vector<std::uint64_t>>(&material->材料):nullptr;
         if(!ids||std::count(ids->begin(),ids->end(),M.值)!=1)throw std::runtime_error("isolation message state payload differs");
@@ -4318,7 +4320,7 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
                 ||读引用(*D,来源引用)!=std::optional{identity.调用节点}||读引用(*D,动作引用)!=std::optional{request.动作}
                 ||读引用(*D,后状态引用)!=S||读值(*D,方法直接写入值)!=1)
                 throw std::runtime_error("local queue receipt idempotency conflict");
-            const auto* V=std::get_if<稳定编码>(&state->固定准确值);
+            const auto* V=(state->固定准确值 ? std::get_if<稳定编码>(&*state->固定准确值) : nullptr);
             const auto material=V ? 读取模拟特征值材料(*V) : std::nullopt;
             const auto* members=material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
             const auto source=读取本地动作(request.动作);
@@ -4391,7 +4393,8 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
             ||读引用(*D,动作引用)!=std::optional{request.阶段动作}||读引用(*D,后状态引用)!=S
             ||读值(*D,方法直接写入值)!=1||msg->来源.方向!=新外设消息方向::输出)
             throw std::runtime_error("local output idempotency conflict");
-        const auto material=读取模拟特征值材料(std::get<稳定编码>(state->固定准确值));
+        if (!state->固定准确值) throw std::runtime_error("local output state value missing");
+        const auto material=读取模拟特征值材料(std::get<稳定编码>(*state->固定准确值));
         const auto* members=material?std::get_if<std::vector<std::uint64_t>>(&material->材料):nullptr;
         if(!members||std::count(members->begin(),members->end(),M->值)!=1||reused)throw std::runtime_error("local output receipt ambiguous");
         reused=新隔离提交结果{number(*T),*M,*S,*D};

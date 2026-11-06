@@ -1261,8 +1261,10 @@ public:
         for (const auto& [S, 源] : 状态来源) {
             检查停止();
             const auto& 状态 = 状态缓存.at(S);
-            const auto* I64 = std::get_if<std::int64_t>(&状态.固定准确值);
-            const auto 值 = I64 ? 字符串(std::to_string(*I64)) : 控制编码(std::get<稳定编码>(状态.固定准确值));
+            // R98：本版显示投影跳过未知状态，不构造替代值。
+            if (!状态.固定准确值) continue;
+            const auto* I64 = (状态.固定准确值 ? std::get_if<std::int64_t>(&*状态.固定准确值) : nullptr);
+            const auto 值 = I64 ? 字符串(std::to_string(*I64)) : 控制编码(std::get<稳定编码>(*状态.固定准确值));
             const auto 实际时间 = 状态.强时间.语义 == 新状态时间语义::实例绝对UTC
                 ? std::optional<std::int64_t>(状态.强时间.纳秒) : std::nullopt;
             项组.push_back({实际时间, 0, S, "{\"kind\":\"状态\",\"id\":" + 控制编码(S)

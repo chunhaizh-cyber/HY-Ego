@@ -261,7 +261,7 @@ struct 新世界需求引用组合准备::实现 final {
             if (!d) 世界I64组合故障(L"需求当前值不是节点引用");
             const auto q = 特征服务_.按概念比较特征值(a.类型根, *f->当前值, *f->当前值);
             if (q.状态 != 新特征比较状态::已完成 || q.比较值 != 10000) 世界I64组合故障(L"需求当前身份不可读");
-            if (!s || s->来源实例特征节点 != F || s->固定准确值 != *f->当前值) return {S::前提已变化, {}};
+            if (!s || s->来源实例特征节点 != F || s->固定准确值 != f->当前值) return {S::前提已变化, {}};
             a.原需求节点 = *d; a.前状态节点 = s->节点;
             a.定位保护组.push_back(读取组合完整保护(s->节点));
         } else if (s || !f->历史不同值.empty() || f->标准值) return {S::前提已变化, {}};
@@ -574,7 +574,8 @@ struct 新世界需求引用组合准备::实现 final {
                     || a->动作时间->纳秒 < pre->强时间.纳秒 || a->动作时间->纳秒 >= post->强时间.纳秒
                     || (lastTime && (pre->强时间.纳秒 < *lastTime
                         || (pre->强时间.纳秒 == *lastTime && last && pre->节点 != last->节点)))) return {};
-                const auto before = members(pre->固定准确值), after = members(post->固定准确值);
+                if (!pre->固定准确值 || !post->固定准确值) return {};
+                const auto before = members(*pre->固定准确值), after = members(*post->固定准确值);
                 if (!before || !after || *before != current) return {};
                 auto expected = current; expected.push_back(item.需求节点); std::sort(expected.begin(), expected.end());
                 if (*after != expected) return {};
@@ -611,7 +612,8 @@ struct 新世界需求引用组合准备::实现 final {
                 if (!s) 世界I64组合故障(L"迁移场景状态不完整");
                 if (s->被描述存在节点 == in.主体存在节点 && s->来源实例特征节点 == in.原特征节点) {
                     if (std::find(seenStates.begin(), seenStates.end(), n) == seenStates.end()) return {};
-                    const auto m = members(s->固定准确值);
+                    if (!s->固定准确值) return {};
+                    const auto m = members(*s->固定准确值);
                     if (!m || std::find(prefixes.begin(), prefixes.end(), *m) == prefixes.end()) return {};
                 }
             }
@@ -2232,7 +2234,7 @@ std::optional<新状态信息> 新_世界树类::查找最近同类型状态(
         if (!状态结构有效) return 前提变化();
         if (F->当前值) {
             if (!前状态 || 前状态->来源实例特征节点 != 特征
-                || 前状态->固定准确值 != *F->当前值
+                || 前状态->固定准确值 != F->当前值
                 || 动作->动作时间->纳秒 <= 前状态->强时间.纳秒) return 前提变化();
             结果.前状态节点 = 前状态->节点;
             保护请求.预期联合节点组.push_back(读取组合完整保护(前状态->节点));

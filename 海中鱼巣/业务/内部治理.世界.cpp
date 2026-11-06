@@ -23,15 +23,15 @@ void 核验方法特征状态对(const 新方法虚拟存在读回& 方法,
         || 后.被描述存在节点 != 前.被描述存在节点
         || 前.来源实例特征节点 != 方法.引用.启用特征节点
         || 后.来源实例特征节点 != 前.来源实例特征节点
-        || !std::holds_alternative<std::int64_t>(前.固定准确值)
-        || !std::holds_alternative<std::int64_t>(后.固定准确值)
+        || !(前.固定准确值 && std::holds_alternative<std::int64_t>(*前.固定准确值))
+        || !(后.固定准确值 && std::holds_alternative<std::int64_t>(*后.固定准确值))
         || 前.固定准确值 == 后.固定准确值
         || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
         || 后.强时间.语义 != 新状态时间语义::实例绝对UTC
         || 前.强时间.纳秒 <= 0 || 后.强时间.纳秒 <= 前.强时间.纳秒)
         throw std::runtime_error("method feature state pair identity/value/time mismatch");
     for (const auto* 状态 : {&前, &后}) {
-        const auto 值 = std::get<std::int64_t>(状态->固定准确值);
+        const auto 值 = std::get<std::int64_t>(*状态->固定准确值);
         const auto 关系 = 概念服务.比较单特征概念(状态->特征类型概念节点, 状态->特征类型概念节点);
         if ((值 != 0 && 值 != 1) || 关系.状态 != 特征概念规则状态::已完成
             || 关系.关系 != 单特征概念关系::同一
@@ -48,8 +48,8 @@ const 新任务虚拟存在特征读回& 核验治理特征状态对(
         || 前.被描述存在节点 != 特征组.引用.虚拟存在节点
         || 后.被描述存在节点 != 前.被描述存在节点
         || 前.来源实例特征节点 != F || 后.来源实例特征节点 != F
-        || !std::holds_alternative<std::int64_t>(前.固定准确值)
-        || !std::holds_alternative<std::int64_t>(后.固定准确值)
+        || !(前.固定准确值 && std::holds_alternative<std::int64_t>(*前.固定准确值))
+        || !(后.固定准确值 && std::holds_alternative<std::int64_t>(*后.固定准确值))
         || 前.固定准确值 == 后.固定准确值
         || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
         || 后.强时间.语义 != 新状态时间语义::实例绝对UTC
