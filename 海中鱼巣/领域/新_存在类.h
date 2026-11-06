@@ -132,6 +132,8 @@ struct 新存在顶层特征定位结果 final {
 class 新_存在类 final : public 特征存在引用读取接口, public 特征存在成员读取接口 {
 public:
     特征存在成员读取结果 读取存在集合成员身份(稳定编码) const noexcept override;
+    // R102：上位链可达即属于；否则按特征合取匹配，材料不足为未知。只取共享递归锁。
+    特征成员概念归属结果 判定存在集合成员概念(稳定编码 存在节点, 稳定编码 概念节点) const noexcept override;
     bool 装配存在集合成员保护字段(稳定编码) noexcept;
     新存在身份保护结果 读取存在身份保护(稳定编码) const noexcept;
     // 只定位正式身份及顶层持有引用；各F及其值仍由特征owner读取。

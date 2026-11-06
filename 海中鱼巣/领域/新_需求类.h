@@ -853,6 +853,12 @@ public:
     新被认知需求信息更新结果 更新被认知需求信息(const 新被认知需求信息更新请求&) noexcept;
     特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept override;
     特征需求引用读取结果 读取需求节点引用身份(稳定编码) const noexcept override;
+    // R102（SET-DOMAIN-MEMBER-CONCEPT §4）：需求成员是否属于需求类别概念（槽1或其下位）；不取需求锁。
+    特征成员概念归属结果 判定需求集合成员概念(稳定编码 需求节点, 稳定编码 概念) const noexcept override;
+    // 无锁直接内容：冻结schema+L1读取，全部需求（不限被认知），按先天需求槽FT投影；保护含D快照与槽保护。
+    特征概念规则状态 读取需求直接内容无锁(稳定编码 需求节点,
+        std::vector<std::pair<稳定编码, 正式内容值>>& 内容组,
+        std::vector<基础联合节点快照>& 保护) const noexcept;
     新需求集合发布关联结果 读取主体需求集合发布关联(稳定编码 需求节点) const noexcept;
     新需求集合发布准备结果 准备主体需求特征发布(
         稳定编码, 稳定编码, 稳定编码, 稳定编码, 稳定编码, const 基础联合节点快照&) noexcept;

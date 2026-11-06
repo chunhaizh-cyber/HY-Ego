@@ -1537,7 +1537,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             for(auto v:*r)values.emplace_back(v);
             values=生成通用模拟枚举候选(std::move(values),m.节点.值+i);
         } else if(const auto* r=std::get_if<特征概念存在集合值域>(&defs[i]->值域)) {
-            if(r->至少一个存在||!r->必含存在节点组.empty()) 不支持(static_cast<std::uint32_t>(i+1),"referenced existence collection needs isolated binding");
+            // R102：概念成员同样要求非空集合（规范化后“至少一个”已归零），不能用空集原型代替。
+            if(r->至少一个存在||!r->必含存在节点组.empty()||!r->含概念成员组.empty()) 不支持(static_cast<std::uint32_t>(i+1),"referenced existence collection needs isolated binding");
             values.emplace_back(std::int64_t{0}); // 空集合原型的本地选择号，不是特征的数值。
         } else if (std::holds_alternative<特征概念全材料值域>(defs[i]->值域)
             &&(defs[i]->材料类型==特征概念材料物理类型::UTF8字符串
@@ -2549,6 +2550,26 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                         const auto v=c.精确数值域->下界;
                         const auto 所在=std::find_if(采样域->begin(),采样域->end(),[&](const auto& r){return r.下界<=v&&v<=r.上界;});
                         if(所在!=采样域->end())c.精确数值域=*所在;
+                    }
+                // R102（设计v0.2 §7）：无结果样例的存在集合条件，由“等于本次集合快照”改为概念成员约束：
+                // 成员是有序普通存在参数j的实参时，取参数j的范围概念为概念成员；集合非空则至少一个存在。
+                // “集合包含存在”参数关系照常保留；本次读过成员的集合参数（成员读取组）不改。
+                if(pair.结果.结果项组.empty()&&pair.结果.参数关系组.empty()&&pair.结果.场景事实限定组.empty())
+                    for(auto& c:pair.条件.条件项组) {
+                        if(c.参数序号==0||c.参数序号>N)continue;
+                        const auto i=static_cast<std::size_t>(c.参数序号-1);
+                        if(!defs[i]||defs[i]->比较规则!=特征概念比较规则::存在集合身份判等||!beforeMaterial[i])continue;
+                        if(!成员读取组.empty()&&成员读取组.front().集合参数序号==i+1)continue;
+                        const auto* members=std::get_if<std::vector<std::uint64_t>>(&beforeMaterial[i]->材料);
+                        if(!members)continue;
+                        特征概念存在集合值域 约束;
+                        for(std::size_t j=0;j<N;++j)
+                            if(是普通存在(j)&&std::find(members->begin(),members->end(),(*bindings)[j].有序引用->信息节点.值)!=members->end())
+                                约束.含概念成员组.push_back(base[j].规格.范围概念节点);
+                        std::sort(约束.含概念成员组.begin(),约束.含概念成员组.end());
+                        约束.含概念成员组.erase(std::unique(约束.含概念成员组.begin(),约束.含概念成员组.end()),约束.含概念成员组.end());
+                        约束.至少一个存在=!members->empty()&&约束.含概念成员组.empty();
+                        c.特征值域概念节点=方法_.保存模拟集合约束值域(base[i].规格.范围概念节点,特征概念值域{约束});
                     }
                 const auto published=方法_.追加模拟条件结果(m.节点,{pair});
                 HY_SIM_PROGRESS(L"追加条件结果返回，尚待读回",published.状态);

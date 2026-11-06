@@ -253,10 +253,17 @@ struct 模拟结构写入器 final {
             } else if constexpr(std::is_same_v<T,特征概念任务集合值域>) {
                 if(!value.必含任务节点组.empty()||!value.必含需求任务组.empty()||!value.必含服务要求任务组.empty())
                     throw std::invalid_argument("task domain instance closure is unsupported");
+                // R102：本地语义快照结构未承载概念成员/概念子集，显式拒绝而非静默丢弃。
+                if(!value.含概念成员组.empty()||!value.全部属于概念组.empty())
+                    throw std::invalid_argument("set domain concept members are unsupported in local snapshot");
                 数(n,结构顺序值,value.至少一个任务);
             } else if constexpr(std::is_same_v<T,特征概念需求集合值域>) {
+                if(!value.含概念成员组.empty()||!value.全部属于概念组.empty())
+                    throw std::invalid_argument("set domain concept members are unsupported in local snapshot");
                 for(const auto x:value.必含需求节点组)写(n,结构引用,x);数(n,结构顺序值,value.至少一个需求);
             } else if constexpr(std::is_same_v<T,特征概念存在集合值域>) {
+                if(!value.含概念成员组.empty()||!value.全部属于概念组.empty())
+                    throw std::invalid_argument("set domain concept members are unsupported in local snapshot");
                 for(const auto x:value.必含存在节点组)写(n,结构引用,x);数(n,结构顺序值,value.至少一个存在);
             }
         },d);return n;

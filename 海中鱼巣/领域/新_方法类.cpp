@@ -8665,4 +8665,36 @@ namespace 海中鱼巣 {
     if(!有效(result))throw std::runtime_error("simulation exact material domain publish failed");
     return result;
 }
+稳定编码 新_方法类::保存模拟集合约束值域(稳定编码 C,const 特征概念值域& 约束) {
+    const auto c=特征概念服务_.获取特征概念(C);
+    if(!c)throw std::runtime_error("simulation input concept unavailable");
+    if(!std::holds_alternative<特征概念存在集合值域>(约束)
+        ||c->比较规则!=特征概念比较规则::存在集合身份判等)
+        throw std::invalid_argument("collection constraint domain only supports existence sets in this slice");
+    特征概念定义 d;d.材料类型=c->材料类型;d.单位=c->单位;
+    d.比较规则=c->比较规则;d.聚合规则=c->聚合规则;d.值域=约束;
+    if(d.值域==c->值域)return C;
+    const auto result=特征概念服务_.建立或取得特征概念(d,特征值服务_,C);
+    if(!有效(result))throw std::runtime_error("simulation collection constraint domain publish failed");
+    return result;
+}
+// R102（SET-DOMAIN-MEMBER-CONCEPT §4.2）：不取方法锁。槽3方法按节点身份判定；下位子概念（221/222等）
+// 继承的共同约束、条件结果知识为成员组织项，通用判定器尚不判成员组织，本轮如实返回未知。
+特征成员概念归属结果 新_方法类::判定方法集合成员概念(稳定编码 M,稳定编码 C) const noexcept {
+    using R=特征概念规则状态;using G=特征成员概念归属;
+    try {
+        if(!有效(M)||!有效(C))return {R::入口拒绝,G::未知};
+        正式嵌套判定防护 防护(M,C);
+        if(!防护.允许())return {R::已完成,G::未知};
+        const auto 先天=存在概念服务_.读取先天需求任务方法概念();
+        if(先天.状态!=正式结构操作状态::已读取||!先天.信息)return {R::读取接口未装配,G::未知};
+        const auto 合法=存在概念服务_.正式结构概念属于(C,先天.信息->方法);
+        if(!合法)return {R::前提已变化,G::未知};
+        if(!*合法)return {R::入口拒绝,G::未知};
+        if(!节点类型为(M,方法节点类型))return {R::已完成,G::不属于};
+        if(C==先天.信息->方法)return {R::已完成,G::属于};
+        return {R::已完成,G::未知};
+    }catch(const std::bad_alloc&){return {R::资源失败,G::未知};}
+    catch(...){return {R::内部不一致,G::未知};}
+}
 }

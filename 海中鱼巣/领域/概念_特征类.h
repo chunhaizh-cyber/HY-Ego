@@ -71,6 +71,9 @@ struct 特征概念任务集合值域 final {
     std::vector<稳定编码> 必含需求任务组;
     // 正式确认身份；不以任意治理任务非空代替该来源要求。
     std::vector<稳定编码> 必含服务要求任务组;
+    // R102：概念成员（至少一个成员属于该概念）与概念子集（全部成员属于该概念）。
+    std::vector<稳定编码> 含概念成员组;
+    std::vector<稳定编码> 全部属于概念组;
     friend bool operator==(const 特征概念任务集合值域&,
         const 特征概念任务集合值域&) = default;
 };
@@ -78,6 +81,9 @@ struct 特征概念任务集合值域 final {
 struct 特征概念需求集合值域 final {
     std::vector<稳定编码> 必含需求节点组;
     bool 至少一个需求 = false;
+    // R102：概念成员（至少一个成员属于该概念）与概念子集（全部成员属于该概念）。
+    std::vector<稳定编码> 含概念成员组;
+    std::vector<稳定编码> 全部属于概念组;
     friend bool operator==(const 特征概念需求集合值域&,
         const 特征概念需求集合值域&) = default;
 };
@@ -85,6 +91,9 @@ struct 特征概念需求集合值域 final {
 struct 特征概念存在集合值域 final {
     std::vector<稳定编码> 必含存在节点组;
     bool 至少一个存在 = false;
+    // R102：概念成员（至少一个成员属于该概念）与概念子集（全部成员属于该概念）。
+    std::vector<稳定编码> 含概念成员组;
+    std::vector<稳定编码> 全部属于概念组;
     friend bool operator==(const 特征概念存在集合值域&,
         const 特征概念存在集合值域&) = default;
 };
@@ -174,7 +183,9 @@ enum class 特征概念规则状态 : std::uint8_t {
     资源失败 = 7,
     内部不一致 = 8,
     读取接口未装配 = 9,
-    前提已变化 = 10
+    前提已变化 = 10,
+    // R102：集合成员概念归属无法确定（不等于不满足）。
+    成员归属未知 = 11
 };
 enum class 正式概念读取状态 : std::uint8_t { 已读取=1, 非本提供者概念, 依赖未就绪, 前提已变化 };
 struct 正式概念身份保护 final {
@@ -246,10 +257,18 @@ struct 特征存在成员读取结果 final {
     std::optional<稳定编码> 存在节点;
     std::vector<基础联合节点快照> 身份保护;
 };
+// R102：集合成员是否属于概念，由成员原领域owner判定；判定不得取业务锁。
+enum class 特征成员概念归属 : std::uint8_t { 属于 = 1, 不属于, 未知 };
+struct 特征成员概念归属结果 final {
+    // 已完成时归属有效；读取接口未装配/资源失败/前提已变化/内部不一致按工程或重读路径处理。
+    特征概念规则状态 状态 = 特征概念规则状态::读取接口未装配;
+    特征成员概念归属 归属 = 特征成员概念归属::未知;
+};
 class 特征存在成员读取接口 {
 public:
     virtual ~特征存在成员读取接口() = default;
     virtual 特征存在成员读取结果 读取存在集合成员身份(稳定编码) const noexcept = 0;
+    virtual 特征成员概念归属结果 判定存在集合成员概念(稳定编码, 稳定编码) const noexcept { return {}; }
 };
 struct 特征消息成员读取结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
@@ -266,6 +285,7 @@ struct 特征存在集合条件比较结果 final {
     std::int64_t 满足 = 0;
     std::vector<稳定编码> 缺少存在节点组;
     bool 缺少任意存在 = false;
+    std::vector<稳定编码> 缺少概念成员组, 不属于概念组, 未知概念组;
 };
 
 enum class 特征任务成员读取状态 : std::uint8_t {
@@ -293,6 +313,7 @@ public:
     virtual ~特征需求成员读取接口() = default;
     virtual 特征需求成员读取结果 读取需求集合成员身份(稳定编码) const noexcept = 0;
     virtual 特征需求引用读取结果 读取需求节点引用身份(稳定编码) const noexcept;
+    virtual 特征成员概念归属结果 判定需求集合成员概念(稳定编码, 稳定编码) const noexcept { return {}; }
 };
 
 struct 特征需求集合条件比较结果 final {
@@ -300,6 +321,7 @@ struct 特征需求集合条件比较结果 final {
     std::int64_t 满足 = 0;
     std::vector<稳定编码> 缺少需求节点组;
     bool 缺少任意需求 = false;
+    std::vector<稳定编码> 缺少概念成员组, 不属于概念组, 未知概念组;
 };
 
 struct 特征任务成员读取结果 final {
@@ -315,6 +337,7 @@ public:
     virtual 特征概念规则状态 验证正式服务要求(稳定编码) const noexcept = 0;
     // 已读取+空需求表示确认合法但尚未采用；与读取失败分账。
     virtual 特征任务成员读取结果 读取服务要求对应需求(稳定编码) const noexcept = 0;
+    virtual 特征成员概念归属结果 判定任务集合成员概念(稳定编码, 稳定编码) const noexcept { return {}; }
 };
 
 struct 特征任务集合条件比较结果 final {
@@ -325,6 +348,7 @@ struct 特征任务集合条件比较结果 final {
     std::vector<稳定编码> 缺少需求节点组;
     bool 缺少任意任务 = false;
     std::vector<稳定编码> 缺少服务要求节点组;
+    std::vector<稳定编码> 缺少概念成员组, 不属于概念组, 未知概念组;
 };
 
 enum class 特征概念比较次序 : std::int8_t {

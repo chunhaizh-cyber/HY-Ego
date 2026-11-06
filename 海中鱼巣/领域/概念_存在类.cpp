@@ -3158,8 +3158,25 @@ struct 正式结构工作读取结果 final {
     catch(const std::exception&e){正式定义故障(e.what());}
     catch(...){正式定义故障("effective structure protection exception");}
 }
+std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,稳定编码 上) const noexcept {
+    try {
+        if(!有效(下)||!有效(上))return false;
+        std::vector<稳定编码> 待查{下};std::set<稳定编码> 已查;
+        while(!待查.empty()) {
+            const auto n=待查.back();待查.pop_back();
+            if(n==上)return true;
+            if(!已查.insert(n).second)continue;
+            const auto 定义=读取正式结构概念保护(n);
+            if(定义.状态==正式状态::前提已变化)return std::nullopt;
+            if(定义.状态!=正式状态::已读取||!定义.信息)continue;
+            if(const auto* 结构=std::get_if<信息结构概念定义>(&定义.信息->定义))
+                for(const auto p:结构->上位结构概念组)待查.push_back(p);
+        }
+        return false;
+    }catch(...){return std::nullopt;}
+}
 正式内容符合结果 概念_存在类::比较正式内容范围(稳定编码 C,const 正式内容值& 值,
-    const 正式引用身份核验器& 身份核验) const noexcept {
+    const 正式引用身份核验器& 身份核验,const 正式结构范围判定器& 结构判定) const noexcept {
     using S=正式内容符合状态;
     try {
         if(值.状态==正式内容值状态::当前未知)return {S::当前未知,{}};
@@ -3171,6 +3188,19 @@ struct 正式结构工作读取结果 final {
         if(定义.状态==正式状态::前提已变化)return {S::前提已变化,{}};
         if(定义.状态!=正式状态::已读取||!定义.信息)return {S::未支持,{}};
         const auto* 基础=std::get_if<基础范围概念定义>(&定义.信息->定义);
+        // R102 §4.2：引用型内容值遇信息结构范围概念时交对应领域判定；未提供判定器维持未支持。
+        if(!基础&&结构判定&&std::holds_alternative<信息结构概念定义>(定义.信息->定义)
+            &&(值.种类==正式内容值种类::存在引用||值.种类==正式内容值种类::需求引用
+                ||值.种类==正式内容值种类::任务引用||值.种类==正式内容值种类::方法引用)) {
+            const auto 归属=结构判定(值,C);
+            if(归属.状态==特征概念规则状态::资源失败)return {S::资源失败,{}};
+            if(归属.状态==特征概念规则状态::前提已变化)return {S::前提已变化,{}};
+            if(!正式保护未变(定义.完整保护组))return {S::前提已变化,{}};
+            if(归属.状态!=特征概念规则状态::已完成)return {S::未支持,std::move(定义.完整保护组)};
+            const auto 结果=归属.归属==特征成员概念归属::属于 ? S::符合
+                :归属.归属==特征成员概念归属::不属于 ? S::不符合 : S::当前未知;
+            return {结果,std::move(定义.完整保护组)};
+        }
         if(!基础)return {S::未支持,{}};
         auto 结果= S::未支持;
         if(基础->原语==基础概念原语::I64闭区间||基础->原语==基础概念原语::I64有限枚举) {
@@ -3197,10 +3227,15 @@ struct 正式结构工作读取结果 final {
 }
 正式结构内容判定结果 概念_存在类::判定正式结构内容(稳定编码 C,稳定编码 实例,
     const 正式直接内容读取器& 读取内容,const 正式引用身份核验器& 身份核验,
-    const 正式关联约束核验器& 关联核验) const noexcept {
+    const 正式关联约束核验器& 关联核验,std::span<const 正式已解析路径值> 路径值,
+    const 正式结构范围判定器& 结构判定) const noexcept {
     using S=正式内容符合状态;
     try {
         if(!读取内容||!有效(实例))return {};
+        // R102 §4.1：同一（实例, 完整路径）重复为调用方结构错误。
+        for(std::size_t i=0;i<路径值.size();++i)for(std::size_t j=i+1;j<路径值.size();++j)
+            if(路径值[i].实例==路径值[j].实例&&路径值[i].完整路径==路径值[j].完整路径)
+                正式定义故障("duplicate resolved path value");
         auto 定义=读取正式结构有效内容保护(C);
         if(定义.状态==正式结构有效内容读取状态::前提已变化)return {S::前提已变化,{},{},{}};
         if(定义.状态==正式结构有效内容读取状态::资源失败)return {S::资源失败,{},{},{}};
@@ -3211,7 +3246,7 @@ struct 正式结构工作读取结果 final {
         for(const auto& 项:定义.信息->内容项组)必需.emplace(std::pair{项.特征类型,项.内容概念},项);
         for(const auto& 项:定义.信息->约束组)约束.emplace(项.约束概念节点,项);
         const auto 比较=[&](稳定编码 FT,稳定编码 要求) {
-            auto 结果=比较正式内容范围(要求,读取内容(实例,FT),身份核验);
+            auto 结果=比较正式内容范围(要求,读取内容(实例,FT),身份核验,结构判定);
             if(结果.状态==S::前提已变化||结果.状态==S::资源失败)throw 结果.状态;
             并保护(输出.完整保护组,结果.完整保护组);return 结果.状态;
         };
@@ -3253,7 +3288,27 @@ struct 正式结构工作读取结果 final {
         for(const auto& [键,项]:必需) {
             const auto FT=项.特征类型;
             if(!待定判别.empty()&&!待定判别.contains(FT))continue;
-            if(!项.读取路径.empty())return {S::未支持,{},{},{}};
+            if(!项.读取路径.empty()) {
+                // R102 §4.1：读取路径项只采用（实例, 完整路径）精确匹配的已解析值；未提供维持未支持。
+                const 正式已解析路径值* 路径=nullptr;
+                for(const auto& 候选:路径值)
+                    if(候选.实例==实例&&候选.完整路径==项.读取路径){路径=&候选;break;}
+                if(!路径||路径->状态==正式路径值状态::未支持)return {S::未支持,{},{},{}};
+                并保护(输出.完整保护组,路径->保护);
+                auto 状态=S::当前未知;
+                if(路径->状态==正式路径值状态::已读取) {
+                    if(!路径->值)正式定义故障("resolved path value lacks content");
+                    auto 结果=比较正式内容范围(项.内容概念,*路径->值,身份核验,结构判定);
+                    if(结果.状态==S::前提已变化||结果.状态==S::资源失败)throw 结果.状态;
+                    并保护(输出.完整保护组,结果.完整保护组);
+                    状态=结果.状态==S::不适用 ? S::不符合 : 结果.状态;
+                } else if(路径->状态==正式路径值状态::不适用) 状态=S::不适用;
+                输出.项目组.push_back({FT,项.内容概念,状态});
+                if(状态==S::未支持)输出.状态=S::未支持;
+                else if(状态==S::不符合&&输出.状态!=S::未支持)输出.状态=S::不符合;
+                else if(状态==S::当前未知&&输出.状态==S::符合)输出.状态=S::当前未知;
+                continue;
+            }
             auto 状态=比较(FT,项.内容概念);
             if(状态==S::不适用)状态=S::不符合;
             输出.项目组.push_back({FT,项.内容概念,状态});

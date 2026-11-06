@@ -8286,4 +8286,159 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
     }
 }
 
+// R102（SET-DOMAIN-MEMBER-CONCEPT §4）：不取需求锁；只读冻结schema与L1，按先天需求槽投影全部需求。
+特征概念规则状态 新_需求类::读取需求直接内容无锁(稳定编码 D,
+    std::vector<std::pair<稳定编码, 正式内容值>>& 内容组,
+    std::vector<基础联合节点快照>& 保护) const noexcept {
+    using R = 特征概念规则状态;
+    内容组.clear(); 保护.clear();
+    try {
+        const auto 身份 = 读取需求节点引用身份(D);
+        if (身份.状态 != R::已完成) return 身份.状态;
+        if (!身份.身份 || 身份.身份保护.empty()) return R::内部不一致;
+        保护 = 身份.身份保护;
+        const auto 原D = std::find_if(保护.begin(), 保护.end(),
+            [&](const auto& 项) { return 项.结构.节点.编码 == D; });
+        if (原D == 保护.end()) return R::内部不一致;
+        const auto 需求 = 解码需求治理物理(需求目标读取上下文{特征服务_, 特征概念服务_}, 原D->结构);
+        for (std::uint32_t 槽 = 先天特征类型槽::需求主体; 槽 <= 先天特征类型槽::内容确认来源; ++槽) {
+            const auto r = 特征概念服务_.读取先天特征类型槽(槽);
+            if (r.状态 == R::值不存在) return R::读取接口未装配;
+            if (r.状态 != R::已完成) return r.状态;
+            if (!r.类型根) return R::内部不一致;
+            if (!并需求保护(保护, r.完整保护组)) return R::前提已变化;
+            内容组.emplace_back(*r.类型根, 投影需求内容(*r.类型根, 槽, 需求).内容);
+        }
+        return R::已完成;
+    } catch (新需求目标定义核验状态 s) {
+        return s == 新需求目标定义核验状态::前提已变化 ? R::前提已变化 : R::内部不一致;
+    } catch (const 需求物理读取失败& 错误) {
+        return 错误.原因 == 基础结构操作状态::节点不存在 ? R::前提已变化
+            : 错误.原因 == 基础结构操作状态::资源失败 ? R::资源失败 : R::内部不一致;
+    } catch (const std::bad_alloc&) { return R::资源失败; }
+    catch (...) { return R::内部不一致; }
+}
+
+特征成员概念归属结果 新_需求类::判定需求集合成员概念(稳定编码 D, 稳定编码 C) const noexcept {
+    using R = 特征概念规则状态; using F = 正式内容符合状态; using G = 特征成员概念归属;
+    try {
+        if (!有效(D) || !有效(C)) return {R::入口拒绝, G::未知};
+        正式嵌套判定防护 防护(D, C);
+        if (!防护.允许()) return {R::已完成, G::未知};
+        const auto 先天 = 存在概念服务_.读取先天需求任务方法概念();
+        if (先天.状态 != 正式结构操作状态::已读取 || !先天.信息) return {R::读取接口未装配, G::未知};
+        // 设计3.1：需求集合只认槽1需求或其下位信息结构概念。
+        const auto 合法 = 存在概念服务_.正式结构概念属于(C, 先天.信息->需求);
+        if (!合法) return {R::前提已变化, G::未知};
+        if (!*合法) return {R::入口拒绝, G::未知};
+        if (C == 先天.信息->需求) {
+            const auto 身份 = 读取需求节点引用身份(D);
+            if (身份.状态 == R::已完成) return {R::已完成, 身份.身份 ? G::属于 : G::不属于};
+            if (身份.状态 == R::值不存在) return {R::已完成, G::不属于};
+            return {身份.状态, G::未知};
+        }
+        std::vector<std::pair<稳定编码, 正式内容值>> 内容组;
+        std::vector<基础联合节点快照> 保护;
+        const auto 读 = 读取需求直接内容无锁(D, 内容组, 保护);
+        if (读 == R::值不存在) return {R::已完成, G::不属于};
+        if (读 != R::已完成) return {读, G::未知};
+        bool 依赖未就绪 = false;
+        const auto 查 = [&](稳定编码 FT) -> const 正式内容值* {
+            for (const auto& [ft, v] : 内容组) if (ft == FT) return &v;
+            return nullptr;
+        };
+        const 正式直接内容读取器 读取 = [&](稳定编码 实例, 稳定编码 FT) -> 正式内容值 {
+            if (实例 != D) throw std::runtime_error("需求归属判定切换了实例");
+            const auto* v = 查(FT);
+            if (!v) throw F::未支持;
+            return *v;
+        };
+        const 正式引用身份核验器 身份 = [&](基础概念原语 p, const std::vector<std::int64_t>& 数值,
+            const std::vector<稳定编码>&, const 正式内容值& v) -> 正式内容符合结果 {
+            if (v.种类 == 正式内容值种类::I64数值 || !v.值) return {F::不符合, {}};
+            const auto 节点 = std::get<稳定编码>(*v.值);
+            if (p == 基础概念原语::合法存在) {
+                if (v.种类 != 正式内容值种类::存在引用) return {F::不符合, {}};
+                const auto r = 存在服务_.读取存在身份保护(节点);
+                if (r.前提已变化) return {F::前提已变化, {}};
+                if (r.状态 == 基础结构操作状态::资源失败) return {F::资源失败, {}};
+                return {r.信息 ? F::符合 : F::不符合, r.预期节点组};
+            }
+            if (p == 基础概念原语::具名领域身份 && 数值.size() == 1) {
+                if (数值.front() == 2 || 数值.front() == 3) {
+                    const auto 种类 = 数值.front() == 2 ? 正式内容值种类::语言理解引用 : 正式内容值种类::内容确认引用;
+                    const bool 同来源 = v.种类 == 种类 && std::any_of(内容组.begin(), 内容组.end(),
+                        [&](const auto& x) { return x.second.种类 == 种类 && x.second.值 == v.值; });
+                    return {同来源 ? F::符合 : F::不符合, {}};
+                }
+                if (数值.front() == 15 && v.种类 == 正式内容值种类::需求引用) {
+                    const auto r = 读取需求节点引用身份(节点);
+                    if (r.状态 == R::资源失败) return {F::资源失败, {}};
+                    if (r.状态 == R::前提已变化) return {F::前提已变化, {}};
+                    if (r.状态 == R::读取接口未装配) { 依赖未就绪 = true; return {F::未支持, {}}; }
+                    return {r.身份 ? F::符合 : F::不符合, r.身份保护};
+                }
+                return {F::未支持, {}};
+            }
+            if (p == 基础概念原语::正式信息身份) return {F::符合, {}};
+            if (v.种类 != 正式内容值种类::概念引用) return {F::不符合, {}};
+            if (p == 基础概念原语::合法FT根 || p == 基础概念原语::合法特征概念) {
+                const auto r = 特征概念服务_.读取特征概念定义保护(节点);
+                if (r.前提已变化) return {F::前提已变化, {}};
+                if (r.状态 == 基础结构操作状态::资源失败) return {F::资源失败, {}};
+                return {r.信息 && (p != 基础概念原语::合法FT根 || r.信息->类型根 == 节点) ? F::符合 : F::不符合, r.预期节点组};
+            }
+            if (p == 基础概念原语::合法比较关系) {
+                const auto r = 二次特征概念服务_.读取二次特征定义保护(节点);
+                if (r.前提已变化) return {F::前提已变化, {}};
+                if (r.状态 == 基础结构操作状态::资源失败) return {F::资源失败, {}};
+                return {r.信息 ? F::符合 : F::不符合, r.预期节点组};
+            }
+            if (p == 基础概念原语::正式概念身份) {
+                const 正式概念身份读取接口* 提供者[]{&特征概念服务_, &二次特征概念服务_, &存在概念服务_};
+                for (const auto* owner : 提供者) {
+                    const auto r = owner->读取正式概念身份保护(节点);
+                    if (r.状态 == 正式概念读取状态::前提已变化) return {F::前提已变化, {}};
+                    if (r.状态 == 正式概念读取状态::依赖未就绪) { 依赖未就绪 = true; return {F::未支持, {}}; }
+                    if (r.身份) return {F::符合, r.身份->完整保护组};
+                }
+                return {F::不符合, {}};
+            }
+            return {F::未支持, {}};
+        };
+        // 801/802 同D关联：沿用判定被认知需求内容保护的同D读取口径。
+        const 正式关联约束核验器 关联 = [&](稳定编码 实例, const 结构约束定义& r) -> 正式内容符合结果 {
+            if (实例 != D) throw std::runtime_error("需求归属关联切换了实例");
+            if (r.原语 != 结构约束原语::域属于FT && r.原语 != 结构约束原语::比较适用于目标) return {F::未支持, {}};
+            for (const auto FT : r.项目FT组) {
+                const auto* 值 = 查(FT);
+                if (!值) return {F::未支持, {}};
+                if (值->状态 == 正式内容值状态::当前未知) return {F::当前未知, {}};
+                if (值->状态 == 正式内容值状态::不适用) return {F::不符合, {}};
+            }
+            return {F::符合, {}};
+        };
+        const 正式结构范围判定器 嵌套 = [&](const 正式内容值& v, 稳定编码 C2) -> 特征成员概念归属结果 {
+            if (!v.值 || !std::holds_alternative<稳定编码>(*v.值)) return {R::已完成, G::未知};
+            const auto 节点 = std::get<稳定编码>(*v.值);
+            特征成员概念归属结果 r;
+            if (v.种类 == 正式内容值种类::需求引用) r = 判定需求集合成员概念(节点, C2);
+            else if (v.种类 == 正式内容值种类::存在引用)
+                r = static_cast<const 特征存在成员读取接口&>(存在服务_).判定存在集合成员概念(节点, C2);
+            else return {R::已完成, G::未知}; // 需求内容不含任务/方法引用
+            if (r.状态 == R::读取接口未装配) 依赖未就绪 = true;
+            return r;
+        };
+        const auto 结果 = 存在概念服务_.判定正式结构内容(C, D, 读取, 身份, 关联, {}, 嵌套);
+        if (结果.状态 == F::资源失败) return {R::资源失败, G::未知};
+        if (结果.状态 == F::前提已变化) return {R::前提已变化, G::未知};
+        if (!并需求保护(保护, 结果.完整保护组) || !需求内容保护未变(保护)) return {R::前提已变化, G::未知};
+        if (结果.状态 == F::符合) return {R::已完成, G::属于};
+        if (结果.状态 == F::不符合) return {R::已完成, G::不属于};
+        if (依赖未就绪) return {R::读取接口未装配, G::未知};
+        return {R::已完成, G::未知};
+    } catch (const std::bad_alloc&) { return {R::资源失败, G::未知}; }
+    catch (...) { return {R::内部不一致, G::未知}; }
+}
+
 } // namespace 海中鱼巣

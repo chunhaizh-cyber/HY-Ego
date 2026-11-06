@@ -8,6 +8,8 @@
 #include <variant>
 #include <span>
 #include <functional>
+#include <set>
+#include <utility>
 
 #include "../核心/基础数据集.h"
 #include "信息内容.数据.h"
@@ -137,6 +139,41 @@ struct 正式结构内容判定结果 final {
     std::vector<正式结构项目判定> 项目组;
     std::vector<正式结构分支判定> 分支组;
     std::vector<基础联合节点快照> 完整保护组;
+};
+// R102（SET-DOMAIN-MEMBER-CONCEPT §4.1）：调用方已解析的读取路径值，按（实例, 完整路径）精确定位。
+enum class 正式路径值状态 : std::uint8_t { 已读取 = 1, 无值, 未知, 不适用, 未支持 };
+struct 正式已解析路径值 final {
+    稳定编码 实例;
+    std::vector<稳定编码> 完整路径;
+    正式路径值状态 状态 = 正式路径值状态::未支持;
+    std::optional<正式内容值> 值;
+    std::vector<基础联合节点快照> 保护;
+};
+// R102（§4.2）：引用型内容值遇结构型范围概念时，交对应领域继续判定。
+using 正式结构范围判定器=std::function<特征成员概念归属结果(const 正式内容值&,稳定编码)>;
+// 嵌套判定防护：同线程重复（对象,概念）或深度超过8时不允许继续，调用方返回未知。
+class 正式嵌套判定防护 final {
+public:
+    正式嵌套判定防护(稳定编码 对象, 稳定编码 概念) noexcept {
+        try {
+            auto& 集 = 访问集();
+            if (深度() >= 8) return;
+            键_ = {对象.值, 概念.值};
+            if (!集.insert(键_).second) return;
+            ++深度(); 允许_ = true;
+        } catch (...) { 允许_ = false; }
+    }
+    ~正式嵌套判定防护() { if (允许_) { 访问集().erase(键_); --深度(); } }
+    正式嵌套判定防护(const 正式嵌套判定防护&) = delete;
+    正式嵌套判定防护& operator=(const 正式嵌套判定防护&) = delete;
+    bool 允许() const noexcept { return 允许_; }
+private:
+    static std::set<std::pair<std::uint64_t, std::uint64_t>>& 访问集() noexcept {
+        thread_local std::set<std::pair<std::uint64_t, std::uint64_t>> 集; return 集;
+    }
+    static int& 深度() noexcept { thread_local int 值 = 0; return 值; }
+    std::pair<std::uint64_t, std::uint64_t> 键_{};
+    bool 允许_ = false;
 };
 using 正式直接内容读取器=std::function<正式内容值(稳定编码,稳定编码)>;
 using 正式引用身份核验器=std::function<正式内容符合结果(
@@ -411,10 +448,14 @@ public:
         std::span<const 正式概念身份读取接口* const>) noexcept;
     引用内容筹办概念结果 读取引用内容筹办概念() const noexcept;
     正式内容符合结果 比较正式内容范围(稳定编码,const 正式内容值&,
-        const 正式引用身份核验器&) const noexcept;
+        const 正式引用身份核验器&,const 正式结构范围判定器& 结构判定={}) const noexcept;
+    // R102：信息结构概念 下 是否沿上位结构概念组到达 上（相等也算）；读取失败或前提变化返回空。
+    std::optional<bool> 正式结构概念属于(稳定编码 下, 稳定编码 上) const noexcept;
+    // 路径值与结构判定器默认空，旧调用行为不变（SET-DOMAIN-MEMBER-CONCEPT §4.1、§4.2）。
     正式结构内容判定结果 判定正式结构内容(稳定编码,稳定编码,
         const 正式直接内容读取器&,const 正式引用身份核验器&,
-        const 正式关联约束核验器&) const noexcept;
+        const 正式关联约束核验器&,std::span<const 正式已解析路径值> 路径值={},
+        const 正式结构范围判定器& 结构判定={}) const noexcept;
     正式结构概念结果 建立或取得已确认消息连接概念() noexcept;
     正式结构概念保护结果 读取已确认消息连接概念保护() const noexcept;
     先天信息概念结果 建立或取得先天需求任务方法概念(const 先天信息类型依赖&,

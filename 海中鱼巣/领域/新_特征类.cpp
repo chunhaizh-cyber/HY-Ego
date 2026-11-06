@@ -1900,6 +1900,10 @@ std::optional<std::int64_t> 取得I64值域代表值(
         return 新特征比较状态::前提已变化;
     case 特征概念规则状态::内部不一致:
         return 新特征比较状态::结构不一致;
+    case 特征概念规则状态::成员归属未知:
+        return 新特征比较状态::材料不足;
+    default:
+        break;
     }
     return 新特征比较状态::结构不一致;
 }

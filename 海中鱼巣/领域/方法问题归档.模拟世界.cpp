@@ -19,7 +19,7 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 特征概念结构化I64值域>) return std::tie(x.分量);
     else if constexpr (std::is_same_v<U, 特征概念存在引用值域>) return std::tie(x.存在概念节点);
     else if constexpr (std::is_same_v<U, 特征概念任务集合值域>) return std::tie(x.必含任务节点组,
-        x.至少一个任务,x.必含需求任务组,x.必含服务要求任务组);
+        x.至少一个任务,x.必含需求任务组,x.必含服务要求任务组,x.含概念成员组,x.全部属于概念组);
     else if constexpr (std::is_same_v<U, 新方法参数特征规格>) return std::tie(x.特征类型概念节点,x.值域概念节点,x.二次特征概念组);
     else if constexpr (std::is_same_v<U, 新方法参数集合成员约束>) return std::tie(x.集合参数角色节点,x.集合特征类型概念节点);
     else if constexpr (std::is_same_v<U, 新方法有序参数规格>) return std::tie(x.序号,x.信息类型,x.范围概念节点);
@@ -80,8 +80,8 @@ template<格式 F, class T> auto 成员(T& x) {
     else if constexpr (std::is_same_v<U, 新特征值命中信息>) return std::tie(x.值,x.命中次数);
     else if constexpr (std::is_same_v<U, 新特征信息>) return std::tie(x.节点,x.上级特征节点,x.特征概念节点,
         x.实例区间值,x.实例历史聚合值域,x.实例单位,x.当前值,x.标准值,x.历史不同值,x.历史值命中信息);
-    else if constexpr (std::is_same_v<U, 特征概念需求集合值域>) return std::tie(x.必含需求节点组, x.至少一个需求);
-    else if constexpr (std::is_same_v<U, 特征概念存在集合值域>) return std::tie(x.必含存在节点组, x.至少一个存在);
+    else if constexpr (std::is_same_v<U, 特征概念需求集合值域>) return std::tie(x.必含需求节点组, x.至少一个需求, x.含概念成员组, x.全部属于概念组);
+    else if constexpr (std::is_same_v<U, 特征概念存在集合值域>) return std::tie(x.必含存在节点组, x.至少一个存在, x.含概念成员组, x.全部属于概念组);
     else if constexpr (std::is_same_v<U, 特征概念信息>) return std::tie(x.节点,x.材料类型,x.值域,x.单位,
         x.比较规则,x.聚合规则,x.名称关系,x.当前引用实例数量);
     else if constexpr (std::is_same_v<U, 存在概念特征项>) return std::tie(x.特征类型概念,x.具体特征概念);
