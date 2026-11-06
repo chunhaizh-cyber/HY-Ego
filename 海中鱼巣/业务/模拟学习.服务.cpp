@@ -2458,27 +2458,63 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                         throw std::logic_error("method definition reference has no independently verified first post-state");
                     本次合法引用来源.insert(后->节点);
                 }
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                std::wostringstream 闭包差异;
+#define HY_CLOSURE_DIFF(expr) (闭包差异<<expr)
+#else
+#define HY_CLOSURE_DIFF(expr) ((void)0)
+#endif
                 const auto 保护相同=[&] {
                     if(当前闭包.状态!=新_方法类::执行结构读取状态::已读取
                         ||当前闭包.根方法节点组!=结果声明闭包.根方法节点组
                         ||当前闭包.方法组!=结果声明闭包.方法组
-                        ||当前闭包.完整保护组.size()!=结果声明闭包.完整保护组.size())return false;
+                        ||当前闭包.完整保护组.size()!=结果声明闭包.完整保护组.size()) {
+                        HY_CLOSURE_DIFF(L"闭包整体 状态=" << static_cast<int>(当前闭包.状态)
+                            << L" 方法组相同=" << (当前闭包.方法组==结果声明闭包.方法组)
+                            << L" 保护数=" << 结果声明闭包.完整保护组.size() << L"->" << 当前闭包.完整保护组.size());
+                        return false;
+                    }
                     for(const auto& old:结果声明闭包.完整保护组) {
                         const auto now=std::find_if(当前闭包.完整保护组.begin(),当前闭包.完整保护组.end(),
                             [&](const auto& x){return x.结构.节点==old.结构.节点;});
                         if(now==当前闭包.完整保护组.end()||now->结构.字段组!=old.结构.字段组
                             ||now->入向外部关系组!=old.入向外部关系组
-                            ||now->出向外部关系组!=old.出向外部关系组)return false;
+                            ||now->出向外部关系组!=old.出向外部关系组) {
+                            HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 缺失=" << (now==当前闭包.完整保护组.end())
+                                << (now==当前闭包.完整保护组.end() ? L"" : (now->结构.字段组!=old.结构.字段组 ? L" 本体字段变化" : L" 外部关系变化")));
+                            return false;
+                        }
                         for(const auto& ref:old.入向字段组)
-                            if(std::find(now->入向字段组.begin(),now->入向字段组.end(),ref)==now->入向字段组.end())return false;
+                            if(std::find(now->入向字段组.begin(),now->入向字段组.end(),ref)==now->入向字段组.end()) {
+                                HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 入向引用消失 来源=" << ref.所属节点.值
+                                    << L" 字段=" << ref.字段节点.值);
+                                return false;
+                            }
                         for(const auto& ref:now->入向字段组)
                             if(std::find(old.入向字段组.begin(),old.入向字段组.end(),ref)==old.入向字段组.end()
                                 &&!本次合法引用来源.contains(ref.所属节点)
                                 // 样例自身的本地节点引用正式定义是隔离构造的正常结果，样例释放后即撤销，不是定义漂移。
-                                &&!本地身份.contains(ref.所属节点))return false;
+                                &&!本地身份.contains(ref.所属节点)) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                                const auto 来源方法=方法_.获取方法(ref.所属节点);
+                                HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 新入向引用 来源=" << ref.所属节点.值
+                                    << L" 字段=" << ref.字段节点.值 << L" 来源是方法=" << static_cast<bool>(来源方法)
+                                    << L" 来源方法的来源=" << (来源方法&&来源方法->来源方法节点 ? 来源方法->来源方法节点->值 : 0)
+                                    << L" 来源实例根=" << (来源方法&&来源方法->实例根节点 ? 来源方法->实例根节点->值 : 0));
+#endif
+                                return false;
+                            }
                     }
                     return true;
                 };
+#undef HY_CLOSURE_DIFF
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                if(!保护相同()) {
+                    try { (void)记录调试日志(L"PARAM_BINDING",L"模拟学习",L"结果声明闭包差异",
+                        L"方法=" + std::to_wstring(m.节点.值) + L" " + 闭包差异.str()); } catch(...) {}
+                    throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration closure changed before publication");
+                }
+#endif
                 if(!保护相同())throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration closure changed before publication");
                 const auto 核可选=[&](const std::optional<稳定编码>& id){if(id)不得本地引用(*id);};
                 const auto 核域=[&](const std::optional<稳定编码>& C) {
