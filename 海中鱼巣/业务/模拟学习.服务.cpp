@@ -2537,6 +2537,19 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 for(const auto& f:pair.条件.场景事实限定组)不得本地引用(f.关系概念节点);
                 for(const auto& f:pair.结果.场景事实限定组)不得本地引用(f.关系概念节点);
                 for(const auto id:pair.来源执行分支节点组)不得本地引用(id);
+                // 取不到结果的样例（仅条件节点）：I64条件记录本次取样所用的合法值域区间（采样值所在的
+                // 规范化闭区间），不记单个采样点（2026-11-06用户裁决，替代5370第108行“条件记录实际实参”）。
+                // 有结果的样例仍记实际实参，供尝试学习补全后按方向判断融合。
+                if(pair.结果.结果项组.empty()&&pair.结果.参数关系组.empty()&&pair.结果.场景事实限定组.empty())
+                    for(auto& c:pair.条件.条件项组) {
+                        if(!c.精确数值域||c.精确数值域->下界!=c.精确数值域->上界
+                            ||c.参数序号==0||c.参数序号>N||!defs[c.参数序号-1])continue;
+                        const auto* 采样域=std::get_if<std::vector<特征概念I64闭区间>>(&defs[c.参数序号-1]->值域);
+                        if(!采样域)continue;
+                        const auto v=c.精确数值域->下界;
+                        const auto 所在=std::find_if(采样域->begin(),采样域->end(),[&](const auto& r){return r.下界<=v&&v<=r.上界;});
+                        if(所在!=采样域->end())c.精确数值域=*所在;
+                    }
                 const auto published=方法_.追加模拟条件结果(m.节点,{pair});
                 HY_SIM_PROGRESS(L"追加条件结果返回，尚待读回",published.状态);
                 if(published.状态!=新方法学习发布状态::已发布&&published.状态!=新方法学习发布状态::精确重复
