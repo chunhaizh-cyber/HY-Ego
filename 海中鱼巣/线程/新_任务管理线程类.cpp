@@ -4791,6 +4791,18 @@ void 新_任务管理线程类::解除自我筹办反馈(const void* 所有者) 
     }
     // 首个正式修改开始后，不在原等待组织更新中途控制取消。
     检查因果提交停止(停止);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+    if (登记等待) try {
+        const auto& 诊断条件 = 当前->second.独立条件筹办 ? 当前->second.独立条件筹办 : 当前->second.条件筹办;
+        std::wostringstream 文本;
+        文本 << L"任务=" << 任务值 << L" 自我裁决=" << static_cast<int>(裁决.状态)
+             << L" 等待原因=" << static_cast<int>(原因)
+             << L" 条件筹办=" << (诊断条件 ? static_cast<int>(诊断条件->状态) : -1)
+             << L" 方法选择=" << (诊断条件 && 诊断条件->方法选择状态 ? static_cast<int>(*诊断条件->方法选择状态) : -1)
+             << L" 已完整核验=" << (诊断条件 ? 诊断条件->候选已完整核验 : false);
+        (void)记录调试日志(L"PARAM_BINDING", L"筹办裁决", L"登记等待", 文本.str());
+    } catch (...) {}
+#endif
     if (登记等待) 登记等待来源已加锁(*等待任务, 原因, 裁决.定位.原工作);
     最近自我筹办裁决.emplace(任务值, std::move(记录));
     最近任务后继决议.erase(任务值);
