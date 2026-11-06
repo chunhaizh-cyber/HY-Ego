@@ -28,6 +28,9 @@
 #include "../领域/消息连接.规则.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "../核心/容错检查.h"
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+#include "../核心/日志系统.h"
+#endif
 
 namespace 海中鱼巣 {
 namespace {
@@ -731,6 +734,11 @@ bool 连接本能运行服务::初始化(const 新连接登记配置& c) noexcep
                 || X->本能采用->参数绑定组 != q->现场.绑定
                 || X->状态 != 新任务执行状态::执行中
                 || T->当前状态 != 新任务状态::执行中 || T->最近执行实例节点 != 身份) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"来源失效",
+                    L"X=" + std::to_wstring(X ? 1 : 0) + L" T=" + std::to_wstring(T ? 1 : 0)
+                    + L" X状态=" + std::to_wstring(X ? static_cast<int>(X->状态) : -1) + L" T状态=" + std::to_wstring(T ? static_cast<int>(T->当前状态) : -1));
+#endif
                 q->现场.阶段 = 新连接状态::来源失效;
                 q->现场.运行.结果.状态 = q->现场.动作 ? 新本能函数执行状态::动作结果未知
                     : 新本能函数执行状态::入口拒绝;
@@ -747,8 +755,15 @@ bool 连接本能运行服务::初始化(const 新连接登记配置& c) noexcep
         }
         实现::真实连接后端 后端(*实现_, *q);
         const auto 运行 = 推进连接核心(场景, q->现场, 后端);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+        (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"推进本次",
+            L"阶段=" + std::to_wstring(static_cast<int>(q->现场.阶段)) + L" 执行状态=" + std::to_wstring(static_cast<int>(运行.结果.状态))
+            + L" 有基准=" + (q->现场.基准状态 ? L"1" : L"0") + L" 有动作=" + (q->现场.动作 ? L"1" : L"0"));
+#endif
         if (连接终态(q->现场.阶段)) 实现_->收束(*q);
         return 运行;
+    } catch (const std::exception& 异常) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立连接本能", L"连接单步推进异常。", 异常.what());
     } catch (...) { 连接工程故障(L"连接单步推进异常。"); }
 }
 
@@ -764,10 +779,21 @@ bool 连接本能运行服务::初始化(const 新连接登记配置& c) noexcep
         // v4：据参数6（交互窗口副本的外设场景标识）在函数内部读取外设交互场景（R91）。
         const auto 标识 = 实现_->特征.获取特征(r.外设标识特征);
         const auto* 编码 = 标识 && 标识->当前值 ? std::get_if<std::int64_t>(&*标识->当前值) : nullptr;
-        if (!编码 || *编码 <= 0) return {新连接状态::条件未具备};
+        if (!编码 || *编码 <= 0) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"条件未具备", std::wstring(L"外设标识缺失或无效 有特征=") + (标识 ? L"1" : L"0"));
+#endif
+            return {新连接状态::条件未具备};
+        }
         const auto 外设读取 = 实现_->外设.按场景读取交互场景(
             稳定编码{static_cast<std::uint64_t>(*编码)});
-        if (!外设读取 || !外设读取->交互者节点) return {新连接状态::条件未具备};
+        if (!外设读取 || !外设读取->交互者节点) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"条件未具备",
+                std::wstring(L"外设场景=") + std::to_wstring(*编码) + L" 读取=" + (外设读取 ? L"1" : L"0") + L" 无交互者");
+#endif
+            return {新连接状态::条件未具备};
+        }
         const auto 来源 = std::optional{外设读取->来源};
         auto q = std::make_shared<实现::调用>();
         q->请求 = r;
@@ -788,7 +814,12 @@ bool 连接本能运行服务::初始化(const 新连接登记配置& c) noexcep
         const auto 参数 = X ? 新方法参数场景结果{}
             : 实现_->方法.建立参数场景(q->现场.方法身份, q->现场.绑定);
         if (!X && (参数.状态 != 新方法操作状态::已建立 || !参数.参数场景)) {
-            if (参数场景业务缺口(参数.状态)) return {新连接状态::条件未具备};
+            if (参数场景业务缺口(参数.状态)) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"条件未具备", std::wstring(L"参数场景缺口 状态=") + std::to_wstring(static_cast<int>(参数.状态)));
+#endif
+                return {新连接状态::条件未具备};
+            }
             连接工程故障(L"连接开始参数场景发生非业务缺口。");
         }
         if (X) q->现场.身份 = *X;
@@ -820,24 +851,44 @@ bool 连接本能运行服务::初始化(const 新连接登记配置& c) noexcep
         拒绝.结果.状态 = 新本能函数执行状态::入口拒绝;
         if (新_本能函数管理类::读取本次执行实例(场景) != std::optional{X}
             || !新_本能函数管理类::本次停止可用()
-            || 新_本能函数管理类::本次停止已请求() || !实现_->进入(true)) return 拒绝;
+            || 新_本能函数管理类::本次停止已请求() || !实现_->进入(true)) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"执行入口拒绝", L"行=" + std::to_wstring(__LINE__));
+#endif
+            return 拒绝; }
         实现::入口票 票{实现_.get()};
         const auto M = 实现_->方法.获取方法(场景.方法节点());
         if (!M || M->本能函数登记名 != 新本能函数登记名_建立连接
-            || (M->来源方法节点.value_or(M->节点) != *实现_->方法节点)) return 拒绝;
+            || (M->来源方法节点.value_or(M->节点) != *实现_->方法节点)) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"执行入口拒绝", L"行=" + std::to_wstring(__LINE__));
+#endif
+            return 拒绝; }
         const auto& 绑定 = 场景.全部角色绑定();
-        if (绑定.size() != 6) return 拒绝;
+        if (绑定.size() != 6) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"执行入口拒绝", L"行=" + std::to_wstring(__LINE__));
+#endif
+            return 拒绝; }
         std::array<稳定编码, 6> 参数{};
         for (std::uint32_t i = 0; i < 6; ++i) {
             const auto* p = 场景.查询参数(i + 1);
             if (!p || p->信息类型 != (i == 3 || i >= 5 ? 新方法参数信息类型::特征
-                : 新方法参数信息类型::存在)) return 拒绝;
+                : 新方法参数信息类型::存在)) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"执行入口拒绝", L"行=" + std::to_wstring(__LINE__));
+#endif
+            return 拒绝; }
             参数[i] = p->信息节点;
         }
         新连接请求 请求{参数[1], 参数[2], 参数[3], 参数[0], {}, 参数[4], 参数[5]};
         const auto 首次 = 开始内部(请求, &场景, X);
         const auto q = 实现_->查找(X);
-        if (!q) return 首次.运行材料.value_or(拒绝);
+        if (!q) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            (void)记录调试日志(L"PARAM_BINDING", L"建立连接", L"开始未建立调用", L"阶段=" + std::to_wstring(static_cast<int>(首次.状态)) + L" 有材料=" + (首次.运行材料 ? L"1" : L"0"));
+#endif
+            return 首次.运行材料.value_or(拒绝); }
         for (;;) {
             bool 关闭 = false;
             { std::lock_guard 锁(实现_->互斥); 关闭 = 实现_->关闭中; }
