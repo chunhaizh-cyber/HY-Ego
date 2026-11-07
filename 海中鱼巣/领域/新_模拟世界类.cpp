@@ -519,6 +519,15 @@ void 新_模拟世界类::设置字段询问语言(std::shared_ptr<const 新字�
         throw std::invalid_argument("simulation question action materials differ");
     return 建立参数动作(scene,{2,4,5});
 }
+新出站表达留档状态 新_模拟世界类::留档出站具体表达(const 方法参数场景& scene,
+    const 新字段询问材料& 材料,稳定编码 动作,const 新字段询问文字结果& 文字) {
+    if(scene.用途()!=新方法参数场景用途::模拟||scene.获取模拟运行接口()!=this||!有效(动作)
+        ||文字.状态!=新字段询问文字状态::已生成且唯一回读)
+        throw std::invalid_argument("simulation archive call does not belong to this execution");
+    (void)材料;
+    // 模拟学习不构成真实交互；不在任何世界建立语言留档。
+    return 新出站表达留档状态::模拟不留档;
+}
 新字段询问入列读回 新_模拟世界类::提交询问输出(const 方法参数场景& scene,
     const 新字段询问材料& 材料,稳定编码 动作,std::string_view 正文) {
     const auto 窗口=scene.查询参数(4),对端=scene.查询参数(3),输出=scene.查询参数(5);

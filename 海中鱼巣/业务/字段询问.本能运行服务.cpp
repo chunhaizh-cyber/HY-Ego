@@ -1,4 +1,6 @@
 #include "字段询问.本能运行服务.h"
+#include "../领域/新_语言类.h"
+#include "../领域/新_自然语言世界树类.h"
 #include "新_世界树类.h"
 #include "新_外设世界树类.h"
 #include "../领域/新_方法类.h"
@@ -26,10 +28,11 @@ void 要求(bool ok,const char* text) { if (!ok) throw std::logic_error(text); }
 struct 字段询问本能运行服务::实现 final {
     实现(新_世界树类& w,新_外设世界树类& p,新_方法类& m,新_需求类& d,
         新_存在类& e,新_特征类& f,新_动态类& a,概念_存在类& ec,概念_特征类& fc,
-        std::shared_ptr<const 新字段询问语言接口> l) noexcept
-        : 世界(w),外设(p),方法(m),需求(d),存在(e),特征(f),动态(a),存在概念(ec),特征概念(fc),语言(std::move(l)) {}
+        新_语言类& owner,新_自然语言世界树类& world,std::shared_ptr<const 新字段询问语言接口> l) noexcept
+        : 世界(w),外设(p),方法(m),需求(d),存在(e),特征(f),动态(a),存在概念(ec),特征概念(fc),语言owner(owner),语言世界(world),语言(std::move(l)) {}
     新_世界树类& 世界;新_外设世界树类& 外设;新_方法类& 方法;新_需求类& 需求;
     新_存在类& 存在;新_特征类& 特征;新_动态类& 动态;概念_存在类& 存在概念;概念_特征类& 特征概念;
+    新_语言类& 语言owner;新_自然语言世界树类& 语言世界;
     std::shared_ptr<const 新字段询问语言接口> 语言;
     mutable std::mutex 锁;mutable std::condition_variable 空闲;
     mutable std::size_t 活动=0;bool 已关闭=false;
@@ -43,8 +46,9 @@ struct 字段询问本能运行服务::实现 final {
 };
 字段询问本能运行服务::字段询问本能运行服务(新_世界树类& w,新_外设世界树类& p,
     新_方法类& m,新_需求类& d,新_存在类& e,新_特征类& f,新_动态类& a,
-    概念_存在类& ec,概念_特征类& fc,std::shared_ptr<const 新字段询问语言接口> l) noexcept
-    :实现_(std::make_unique<实现>(w,p,m,d,e,f,a,ec,fc,std::move(l))) {}
+    概念_存在类& ec,概念_特征类& fc,新_语言类& owner,新_自然语言世界树类& world,
+    std::shared_ptr<const 新字段询问语言接口> l) noexcept
+    :实现_(std::make_unique<实现>(w,p,m,d,e,f,a,ec,fc,owner,world,std::move(l))) {}
 字段询问本能运行服务::~字段询问本能运行服务()=default;
 bool 字段询问本能运行服务::初始化(const 新字段询问登记配置& c) noexcept {
     try {
@@ -110,6 +114,37 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     if (own || 新_本能函数管理类::读取本次直接调用(scene)) s.方法.绑定直接调用动作(*source,a);
     if (own) { std::lock_guard lock(s.锁);要求(s.自建调用.emplace(a,*source).second,"field question action source repeated"); }
     return a;
+}
+新出站表达留档状态 字段询问本能运行服务::留档出站具体表达(const 方法参数场景& scene,
+    const 新字段询问材料& m,稳定编码 action,const 新字段询问文字结果& text) {
+    auto& s=*实现_;实现::租约 lease(s);
+    auto expected=新_本能函数管理类::读取本次执行实例(scene);
+    if(!expected)expected=新_本能函数管理类::读取本次直接调用(scene);
+    if(!expected){std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end())expected=i->second;}
+    const auto a=s.动态.获取动态(action);
+    要求(expected&&a&&a->动作来源节点==expected&&a->主题存在节点==m.自我
+        &&a->动作定义节点==scene.方法节点()&&a->动作目标存在节点==m.窗口&&a->动作目标特征节点==m.输出特征,
+        "field question archive explicit action mismatch");
+    要求(text.状态==新字段询问文字状态::已生成且唯一回读&&有效(text.所用组织知识节点),"field question archive meaning missing");
+    // 使用动作中正式保存的来源，不能用动作节点充当来源。
+    const auto 来源=*a->动作来源节点;
+    // 留档前提变化时本次不入列：自建直接调用身份须在此收束，与提交成功路径一致，不留未收束身份。
+    const auto 前提已变化=[&]{
+        std::optional<稳定编码> own;
+        { std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end()){own=i->second;s.自建调用.erase(i);} }
+        if(own)s.方法.收束直接调用身份(*own);
+        return 新出站表达留档状态::前提已变化;
+    };
+    const auto 场景=s.语言世界.建立或取得出站来源场景(来源);
+    if(场景.状态==新来源子场景状态::前提已变化)return 前提已变化();
+    要求((场景.状态==新来源子场景状态::已建立||场景.状态==新来源子场景状态::已存在)&&场景.信息.has_value(),"outbound language scene publication failed");
+    const auto 留档=s.语言owner.建立或取得出站具体表达(场景.信息->场景节点,text.含义网,text.所用组织知识节点,text.UTF8正文,来源);
+    if(!留档)return 前提已变化();
+    const auto back=s.语言owner.读取出站具体表达(场景.信息->场景节点);
+    要求(back&&back->节点==留档->节点&&back->场景==场景.信息->场景节点&&back->来源==来源
+        &&back->含义网==text.含义网&&back->所用组织知识==text.所用组织知识节点&&back->候选话语原文==text.UTF8正文,
+        "field question archive readback mismatch");
+    return 新出站表达留档状态::已留档;
 }
 新字段询问入列读回 字段询问本能运行服务::提交询问输出(const 方法参数场景& scene,
     const 新字段询问材料& m,稳定编码 action,std::string_view text) {
@@ -203,6 +238,14 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         const auto action=p->建立输出动作(场景,f);
         if (!有效(action)) throw std::logic_error("field question action was not published");
         r.结果.动作动态节点=action;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
+        const auto archive=p->留档出站具体表达(场景,f,action,text);
+        switch(archive){
+        case 新出站表达留档状态::前提已变化:
+            publishRead({新字段询问材料状态::前提已变化,{}});return r;
+        case 新出站表达留档状态::已留档:
+        case 新出站表达留档状态::模拟不留档:break;
+        default:throw std::logic_error("field question archive status undefined");
+        }
         const auto receipt=p->提交询问输出(场景,f,action,text.UTF8正文);
         if (!有效(receipt.消息节点)||!有效(receipt.入列状态)||!有效(receipt.入列动态)||receipt.提交序号==0)
             throw std::logic_error("field question output receipt incomplete");

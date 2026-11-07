@@ -34,6 +34,7 @@ struct 新字段询问入列读回 final {
     稳定编码 消息节点{}, 入列状态{}, 入列动态{};
     std::uint64_t 提交序号=0;
 };
+enum class 新出站表达留档状态 : std::uint8_t { 已留档=1, 前提已变化, 模拟不留档 };
 class 新本能字段询问运行接口 {
 public:
     virtual ~新本能字段询问运行接口()=default;
@@ -41,6 +42,8 @@ public:
     virtual 新字段询问文字结果 生成询问文字(const 新正式字段询问目标&) const=0;
     virtual bool 已请求停止() const noexcept=0;
     virtual 稳定编码 建立输出动作(const 方法参数场景&, const 新字段询问材料&)=0;
+    virtual 新出站表达留档状态 留档出站具体表达(
+        const 方法参数场景&,const 新字段询问材料&,稳定编码 动作,const 新字段询问文字结果&)=0;
     virtual 新字段询问入列读回 提交询问输出(
         const 方法参数场景&, const 新字段询问材料&, 稳定编码 动作,
         std::string_view UTF8正文)=0;

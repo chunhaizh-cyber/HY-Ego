@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "信息内容.数据.h"
+#include "语言含义网.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -23,6 +24,8 @@ struct 新字段询问文字结果 final {
     新字段询问文字状态 状态=新字段询问文字状态::缺知识;
     std::string UTF8正文;
     std::vector<稳定编码> 所用知识节点组;
+    新语言含义网 含义网;
+    稳定编码 所用组织知识节点{};
 };
 
 } // namespace 海中鱼巣

@@ -390,6 +390,10 @@
     <None Include="初始化材料\指代定义种子.txt" />
     <None Include="初始化材料\README.md" />
   </ItemGroup>
+  <Target Name="复制表达组织知识材料" AfterTargets="Build">
+    <MakeDir Directories="$(OutDir)初始化材料" />
+    <Copy SourceFiles="$(MSBuildProjectDirectory)\初始化材料\表达组织知识种子.txt" DestinationFiles="$(OutDir)初始化材料\表达组织知识种子.txt" SkipUnchangedFiles="true" />
+  </Target>
   <Target Name="复制初始化概念名称材料" AfterTargets="Build">
     <MakeDir Directories="$(OutDir)初始化材料" />
     <Copy SourceFiles="$(MSBuildProjectDirectory)\初始化材料\最小结构定义种子.txt" DestinationFiles="$(OutDir)初始化材料\最小结构定义种子.txt" SkipUnchangedFiles="true" />
@@ -410,4 +414,14 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
+  <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\语言含义网.数据.h" />
+    <ClInclude Include="海中鱼巣\业务\表达.组织.h" />
+    <ClCompile Include="海中鱼巣\业务\表达.组织.cpp" />
+    <ClInclude Include="海中鱼巣\业务\表达.含义网过渡.h" />
+    <ClCompile Include="海中鱼巣\业务\表达.含义网过渡.cpp" />
+    <ClInclude Include="海中鱼巣\业务\初始化.表达组织知识.h" />
+    <ClCompile Include="海中鱼巣\业务\初始化.表达组织知识.cpp" />
+    <None Include="初始化材料\表达组织知识种子.txt" />
+  </ItemGroup>
 </Project>
