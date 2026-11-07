@@ -2069,6 +2069,9 @@ private:
         std::source_location 调用点 = std::source_location::current()) const noexcept;
     // 受新任务互斥保护；销毁即释放，不是需求、方法或执行事实的第二账。
     std::map<稳定编码, std::shared_ptr<const 新任务前置方法材料>> 前置方法筹办材料组_;
+    // 受新任务互斥保护。调度全集扫描的上次场景批：其读取依据（保护快照）全部未变时沿用，
+    // 不重算条件筹办；任一依据变化才重新准备（用户2026-11-07：计算有问题后暂停，等新的因素出现再算）。
+    mutable std::map<稳定编码, std::shared_ptr<const 新任务本次场景核验批>> 调度场景批缓存_;
     bool 同步服务任务集合已加锁() noexcept;
     const void* 关联检查通知所有者_ = nullptr;
     std::function<void()> 关联检查通知_;

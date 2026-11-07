@@ -8508,15 +8508,24 @@ static void 调度项结构诊断(std::uint64_t, int) noexcept {}
         std::optional<std::vector<稳定编码>> 原全集;
         {std::lock_guard 锁(新任务互斥);原全集=读取任务登记全集();}
         std::optional<调度读取对应缓存范围> 本轮对应缓存;本轮对应缓存.emplace(this);
+        std::set<稳定编码> 沿用批;
         if(原全集)for(const auto T:*原全集){
             当前T=T;当前阶段="场景批准备";
+            {
+                // 依据未变就沿用上次场景批：核同即证明其读取的全部材料都未变化。
+                std::lock_guard 锁(新任务互斥);
+                const auto 旧=调度场景批缓存_.find(T);
+                if(旧!=调度场景批缓存_.end()&&旧->second&&核同本次场景核验批(*旧->second)){
+                    批组.push_back(*旧->second);沿用批.insert(T);continue;
+                }
+            }
             const auto 上下文=std::make_shared<新方法内容核验上下文>();
             auto 批=准备本次场景核验批(T,{},nullptr,false,false,上下文,true);
             if(批.任务&&批.任务->当前状态==新任务状态::待检查条件&&批.任务->方法执行组织节点)
                 批=准备本次场景核验批(T);
             批组.push_back(std::move(批));
         }
-        for(auto& 批:批组){当前T=批.T;当前阶段="场景批读取";读取本次场景核验批(批);}
+        for(auto& 批:批组){当前T=批.T;当前阶段="场景批读取";if(!沿用批.contains(批.T))读取本次场景核验批(批);}
         本轮对应缓存.reset();
         当前T.reset();当前阶段="调度治理可用性";
         std::lock_guard 锁(新任务互斥);
@@ -8534,6 +8543,14 @@ static void 调度项结构诊断(std::uint64_t, int) noexcept {}
             当前T=批.T;当前阶段="场景批核同";
             if(!核同本次场景核验批(批,&结果.读取诊断)){结果.状态=新任务调度读取状态::资源失败;return 结果;}
         }
+        // 本轮全部核同成立后才更新缓存；已不在任务全集中的任务一并移除。
+        for(auto 位置=调度场景批缓存_.begin();位置!=调度场景批缓存_.end();)
+            位置=std::find(全集->begin(),全集->end(),位置->first)==全集->end() ? 调度场景批缓存_.erase(位置) : std::next(位置);
+        for(const auto& 批:批组)
+            if(!沿用批.contains(批.T))调度场景批缓存_.insert_or_assign(批.T,std::make_shared<const 新任务本次场景核验批>(批));
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+        if(!沿用批.empty())海中鱼巣参数绑定诊断(L"调度扫描沿用场景批 数=" << 沿用批.size() << L" 总=" << 批组.size());
+#endif
         当前T.reset();当前阶段="调度项组预留";
         结果.项组.reserve(全集->size());
         bool 资源失败 = false;
