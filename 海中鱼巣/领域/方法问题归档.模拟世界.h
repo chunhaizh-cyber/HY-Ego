@@ -9,7 +9,9 @@ enum class 格式 : std::uint8_t {
     场景事实有序参数任务执行组织 = 5,
     正式分支有序参数任务执行组织 = 6,
     场景结果有序参数任务执行组织 = 7,
-    需求结果有序参数任务执行组织 = 8
+    需求结果有序参数任务执行组织 = 8,
+    // 格式9：格式8超集，另保存有序参数规格的R97必需特征类型组与所属存在位置。
+    R97有序参数任务执行组织 = 9
 };
 struct 编码记录 final {
     std::int64_t 类型 = 0;
@@ -28,4 +30,5 @@ bool 需要格式5(const 新方法问题反馈材料&) noexcept;
 bool 需要格式6(const 新方法问题反馈材料&) noexcept;
 bool 需要格式7(const 新方法问题反馈材料&) noexcept;
 bool 需要格式8(const 新方法问题反馈材料&) noexcept;
+bool 需要格式9(const 新方法问题反馈材料&) noexcept;
 } // namespace 海中鱼巣::方法问题归档内部
