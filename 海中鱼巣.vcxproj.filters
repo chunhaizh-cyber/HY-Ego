@@ -638,8 +638,8 @@
     <ClInclude Include="海中鱼巣\领域\语言含义网.数据.h" />
     <ClInclude Include="海中鱼巣\业务\表达.组织.h" />
     <ClCompile Include="海中鱼巣\业务\表达.组织.cpp" />
-    <ClInclude Include="海中鱼巣\业务\表达.含义网过渡.h" />
-    <ClCompile Include="海中鱼巣\业务\表达.含义网过渡.cpp" />
+    <ClInclude Include="海中鱼巣\业务\表达.含义网投影.h" />
+    <ClCompile Include="海中鱼巣\业务\表达.含义网投影.cpp" />
     <ClInclude Include="海中鱼巣\业务\初始化.表达组织知识.h" />
     <ClCompile Include="海中鱼巣\业务\初始化.表达组织知识.cpp" />
     <None Include="初始化材料\表达组织知识种子.txt" />
