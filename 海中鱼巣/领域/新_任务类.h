@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <source_location>
 #include <atomic>
 #include <cstdint>
 #include <functional>
@@ -2064,7 +2065,8 @@ private:
     新任务治理条件筹办结果 核验任务条件和参数内部(稳定编码 任务节点,
         const 新任务本能采用材料* 固定采用, bool 允许当前执行中,
         bool 允许未实现条件形状,
-        const 新任务本次场景核验批&) const noexcept;
+        const 新任务本次场景核验批&,
+        std::source_location 调用点 = std::source_location::current()) const noexcept;
     // 受新任务互斥保护；销毁即释放，不是需求、方法或执行事实的第二账。
     std::map<稳定编码, std::shared_ptr<const 新任务前置方法材料>> 前置方法筹办材料组_;
     bool 同步服务任务集合已加锁() noexcept;
