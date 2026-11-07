@@ -101,26 +101,8 @@ struct 结构化服务要求服务::实现 {
         必须(有效(来源), 状态::来源不合法);
         const auto 存在 = 服务.存在_.获取存在(来源);
         必须(存在.has_value());
-        // 三色迭代DFS允许共享祖先，但拒绝真正的回边，不按预算截断。
-        std::map<稳定编码, unsigned> 颜色;
-        struct 帧 { 稳定编码 节点; bool 退出; };
-        std::vector<帧> 栈{{存在->专属存在概念节点, false}};
-        bool 找到 = false;
-        while (!栈.empty()) {
-            const auto 当前 = 栈.back(); 栈.pop_back();
-            if (当前.退出) { 颜色[当前.节点] = 2; continue; }
-            const auto 色 = 颜色[当前.节点];
-            必须(色 != 1);
-            if (色 == 2) continue;
-            const auto 概念 = 服务.存在概念_.获取存在概念(当前.节点);
-            必须(概念.has_value());
-            if (当前.节点 == 人类) 找到 = true;
-            颜色[当前.节点] = 1;
-            栈.push_back({当前.节点, true});
-            for (auto i = 概念->上位概念组.rbegin(); i != 概念->上位概念组.rend(); ++i)
-                栈.push_back({*i, false});
-        }
-        必须(找到, 状态::来源不合法);
+        // CONCEPT-INFO-MEMBERSHIP：调用唯一归属算法；只有已证明属于人类才合法。
+        必须(服务.存在_.存在节点属于概念(来源, 人类), 状态::来源不合法);
     }
     稳定编码 类型根(稳定编码 概念) const {
         const auto 比较 = 服务.特征概念_.比较单特征概念(概念, 概念);
@@ -1110,21 +1092,13 @@ const std::vector<基础联合节点快照>& 新服务要求确认语义保护::
             return *r.信息;
         };
         const auto e = 接收(存在_.读取存在身份保护(c.理解.来源人类节点));
-        std::map<稳定编码, unsigned> 色;
-        struct 帧 { 稳定编码 节点; bool 退出; };
-        std::vector<帧> 栈{{e.专属存在概念节点, false}};
-        bool 人类 = false;
-        while (!栈.empty()) {
-            auto x = 栈.back(); 栈.pop_back();
-            if (x.退出) { 色[x.节点] = 2; continue; }
-            必须(色[x.节点] != 1);
-            if (色[x.节点] == 2) continue;
-            auto ec = 接收(存在概念_.读取存在概念上位保护(x.节点));
-            人类 = 人类 || x.节点 == s.人类;
-            色[x.节点] = 1; 栈.push_back({x.节点, true});
-            for (auto i = ec.上位概念组.rbegin(); i != ec.上位概念组.rend(); ++i) 栈.push_back({*i, false});
-        }
-        必须(人类);
+        // CONCEPT-INFO-MEMBERSHIP：来源人类判定调用唯一归属算法，并入其依据保护。
+        const auto 人类判定 = 存在_.比较存在与概念信息(e.存在节点, s.人类, true);
+        if (人类判定.状态 == 特征概念规则状态::前提已变化) throw 漂移{};
+        if (人类判定.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        必须(人类判定.状态 == 特征概念规则状态::已完成);
+        合并(人类判定.依据保护);
+        必须(人类判定.归属 == 特征成员概念归属::属于);
         (void)接收(存在_.读取存在身份保护(c.理解.目标存在节点));
         const auto& t = c.理解.目标;
         检查形状(t);

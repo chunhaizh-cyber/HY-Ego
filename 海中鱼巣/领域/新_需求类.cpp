@@ -879,7 +879,9 @@ std::optional<新需求复合分解来源> 读取复合来源(稳定编码 D) {
     来源.结构概念节点=*c.引用(复合结构概念字段);
     来源.择一约束节点=c.引用(复合择一约束字段,false);来源.所选分支概念=c.引用(复合所选分支字段,false);
     来源.子目标内容路径=c.引用组(复合子路径字段);来源.子目标要求概念=*c.引用(复合子要求字段);c.完成();
-    要求需求物理(来源.子目标内容路径.size()==1&&来源.父目标.引用内容定位
+    if(是存在归属分解(来源))
+        要求需求物理(!来源.子目标内容路径.empty()&&!来源.择一约束节点&&!来源.所选分支概念);
+    else 要求需求物理(来源.子目标内容路径.size()==1&&来源.父目标.引用内容定位
         &&来源.择一约束节点.has_value()==来源.所选分支概念.has_value());
     return 来源;
 }
@@ -1042,7 +1044,14 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
     if(d.完整目标&&d.完整目标->目标.引用内容定位) {
         要求需求物理(!d.根角色&&!d.外部要求节点&&d.服务要求确认组.empty()&&!d.服务需求取得执行节点);
     }
-    if(d.复合来源) {
+    if(d.复合来源&&是存在归属分解(*d.复合来源)) {
+        const auto& s=*d.复合来源;
+        要求需求物理(d.完整目标&&!d.完整目标->目标.引用内容定位
+            &&d.来源类型==新需求来源类型::任务子目标&&d.父需求节点==s.父需求节点
+            &&d.来源承接节点==s.父任务节点&&d.完整目标->目标.目标形式==新需求目标形式::值
+            &&!s.子目标内容路径.empty()&&d.完整目标->目标.目标特征类型概念节点==s.子目标内容路径.back()
+            &&d.完整目标->目标.目标值域概念节点==s.子目标要求概念);
+    } else if(d.复合来源) {
         const auto& s=*d.复合来源;
         要求需求物理(d.完整目标&&d.完整目标->目标.引用内容定位
             &&d.来源类型==新需求来源类型::任务子目标&&d.父需求节点==s.父需求节点
@@ -1291,6 +1300,9 @@ struct 准确值定位结果 final {
     bool 结构有效 = false;
     准确值目标位置 位置 = 准确值目标位置::域外但无单一方向;
     std::optional<std::int64_t> 准确差异;
+    // CONCEPT-INFO-MEMBERSHIP R-1：存在引用值的归属无法判定（认知不足），位置无效。
+    bool 认知不足 = false, 前提已变化 = false;
+    std::vector<存在概念认知缺口> 认知缺口组;
 };
 
 std::int64_t 饱和差(std::int64_t 目标, std::int64_t 当前) noexcept {
@@ -1348,11 +1360,19 @@ bool I64命中区间(std::int64_t 值,
             || !存在服务.是存在概念节点(引用域->存在概念节点)) {
             return 结果;
         }
+        // CONCEPT-INFO-MEMBERSHIP：属于为命中，不属于为域外；未知是认知不足，不是未满足。
+        const auto 判定 = 存在服务.比较存在与概念信息(*当前节点, 引用域->存在概念节点);
+        if (判定.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        if (判定.状态 == 特征概念规则状态::前提已变化) { 结果.结构有效 = true; 结果.前提已变化 = true; return 结果; }
+        if (判定.状态 != 特征概念规则状态::已完成) return 结果;
         结果.结构有效 = true;
-        结果.位置 = 存在服务.存在节点属于概念(
-                *当前节点, 引用域->存在概念节点)
-            ? 准确值目标位置::命中
-            : 准确值目标位置::域外但无单一方向;
+        if (判定.归属 == 特征成员概念归属::未知) {
+            结果.认知不足 = true;
+            结果.认知缺口组 = 判定.认知缺口组;
+            return 结果;
+        }
+        结果.位置 = 判定.归属 == 特征成员概念归属::属于
+            ? 准确值目标位置::命中 : 准确值目标位置::域外但无单一方向;
         return 结果;
     }
     const auto 当前信息 = 特征值服务.获取特征值(*当前节点);
@@ -2230,37 +2250,13 @@ struct 新_需求类::服务取得角色核验批 final {
         if(e.状态==基础结构操作状态::节点不存在||e.状态==基础结构操作状态::入口拒绝)return out;
         要求需求物理(e.状态==基础结构操作状态::已完成&&e.信息&&e.信息->存在节点==H);
         merge(e.预期节点组);
-        const auto specific=e.信息->专属存在概念节点;
-        const auto definition=ordinary(specific);
-        要求需求物理(definition.种类==存在概念种类::专属&&definition.对应存在节点==H);
-        std::map<稳定编码,std::vector<稳定编码>> edges;
-        std::vector<稳定编码> pending{specific};std::set<稳定编码> discovered{specific};
-        for(std::size_t i=0;i<pending.size();++i) {
-            const auto C=pending[i];
-            const auto current=C==specific ? definition : ordinary(C);
-            if(C!=specific)要求需求物理(current.种类==存在概念种类::抽象&&!current.对应存在节点);
-            const auto r=存在概念服务_.读取存在概念上位保护(C);
-            if(r.前提已变化)throw S::前提已变化;
-            if(r.状态==基础结构操作状态::资源失败)throw S::资源失败;
-            要求需求物理(r.状态==基础结构操作状态::已完成&&r.信息&&r.信息->概念节点==C);
-            merge(r.预期节点组);
-            auto up=r.信息->上位概念组;std::sort(up.begin(),up.end());
-            auto expected=current.上位概念组;std::sort(expected.begin(),expected.end());
-            if(up!=expected)throw S::前提已变化;
-            要求需求物理(std::adjacent_find(up.begin(),up.end())==up.end());
-            edges.emplace(C,up);
-            for(const auto parent:up) {要求需求物理(有效(parent));if(discovered.insert(parent).second)pending.push_back(parent);}
-        }
-        // 三色DFS：共享DAG的黑色节点合法，只有回到灰色祖先才是环。
-        std::map<稳定编码,std::uint8_t> colors;
-        std::vector<std::pair<稳定编码,std::size_t>> stack{{specific,0}};colors[specific]=1;
-        while(!stack.empty()) {
-            auto& [C,next]=stack.back();const auto& up=edges.at(C);
-            if(next==up.size()){colors[C]=2;stack.pop_back();continue;}
-            const auto parent=up[next++];要求需求物理(colors[parent]!=1);
-            if(colors[parent]==0){colors[parent]=1;stack.emplace_back(parent,0);}
-        }
-        if(!discovered.contains(human))return out;
+        // CONCEPT-INFO-MEMBERSHIP：H属于人类调用唯一归属算法，并入依据保护；未证明属于则不核验。
+        const auto 判定=存在服务_.比较存在与概念信息(H,human,true);
+        if(判定.状态==特征概念规则状态::资源失败)throw S::资源失败;
+        if(判定.状态==特征概念规则状态::前提已变化)throw S::前提已变化;
+        要求需求物理(判定.状态==特征概念规则状态::已完成);
+        merge(判定.依据保护);
+        if(判定.归属!=特征成员概念归属::属于)return out;
         if(!需求内容保护未变(out.完整保护))throw S::前提已变化;
         out.状态=S::已核验;return out;
     } catch(S s) {out.状态=s;out.完整保护.clear();return out;}
@@ -2469,6 +2465,12 @@ struct 新_需求类::服务取得角色核验批 final {
         || 批.需求->目标!=q.复合来源->父目标
         || 批.源前提.字段集合组.empty())return {新需求操作状态::入口拒绝,{},{}};
     return 建立或取得引用内容需求内部(q,true,批.判定.完整保护组,&批.源前提);
+}
+
+新需求建立结果 新_需求类::建立或取得归属分解需求已核验(const 新普通需求建立请求& q) noexcept {
+    if(!q.复合来源||!是存在归属分解(*q.复合来源)||q.目标.引用内容定位||q.目标.新增成员来源见证
+        ||q.目标.目标形式!=新需求目标形式::值)return {新需求操作状态::入口拒绝,{},{}};
+    return 建立或取得引用内容需求内部(q,true,{},nullptr);
 }
 
 新需求建立结果 新_需求类::建立或取得普通需求内部(
@@ -4923,17 +4925,20 @@ std::optional<新需求信息> 新_需求类::读取提议源需求(稳定编码
     const std::vector<基础联合节点快照>& 复合采用保护,const 基础只读预期* 源前提) noexcept {
     using S=新需求操作状态;
     try {
-        if(!q.目标.引用内容定位)return {S::入口拒绝,{},{}};
-        if(q.目标.引用内容定位->正式内容路径.size()>1)return {S::目标内容未支持,{},{}};
+        // CONCEPT-INFO-MEMBERSHIP §4.4：同一CAS出生路径也承接存在归属分解子需求（普通值目标）。
+        const bool 归属分解=q.复合来源&&是存在归属分解(*q.复合来源);
+        if(!q.目标.引用内容定位&&!归属分解)return {S::入口拒绝,{},{}};
+        if(q.目标.引用内容定位&&q.目标.引用内容定位->正式内容路径.size()>1)return {S::目标内容未支持,{},{}};
         if(!目标形状合法(q.目标))return {S::目标形式不合法,{},{}};
         if(q.来源类型!=新需求来源类型::本能定义&&q.来源类型!=新需求来源类型::任务子目标)return {S::入口拒绝,{},{}};
         if(q.来源类型==新需求来源类型::任务子目标&&(!允许任务子目标||!q.来源承接节点))return {S::任务来源未接通,{},{}};
         if(q.来源类型==新需求来源类型::本能定义&&(q.来源承接节点||q.复合来源))return {S::入口拒绝,{},{}};
-        if(q.复合来源&&复合采用保护.empty()&&!源前提)return {S::入口拒绝,{},{}};
+        if(q.复合来源&&!归属分解&&复合采用保护.empty()&&!源前提)return {S::入口拒绝,{},{}};
         const 新引用内容目标读取接口* 端口=nullptr;
         {std::lock_guard 锁(新需求互斥);if(!结构已初始化())return {S::尚未初始化,{},{}};端口=引用内容目标读取接口_;}
-        if(!端口)return {S::目标内容依赖未就绪,{},{}};
-        auto 定义=端口->核验引用内容目标定义保护({q.目标存在节点,q.目标});
+        if(!归属分解&&!端口)return {S::目标内容依赖未就绪,{},{}};
+        auto 定义=归属分解 ? 核验需求目标定义保护(q.目标,特征概念服务_,二次特征概念服务_)
+            : 端口->核验引用内容目标定义保护({q.目标存在节点,q.目标});
         switch(定义.状态) {
         case 新需求目标定义核验状态::已完成:break;
         case 新需求目标定义核验状态::依赖未就绪:return {S::目标内容依赖未就绪,{},{}};
@@ -4948,7 +4953,16 @@ std::optional<新需求信息> 新_需求类::读取提议源需求(稳定编码
             ||(源前提&&!需求提议源未变(*源前提)))return {S::前提已变化,{},{}};
         const auto 父=读取需求治理信息(q.父需求节点);
         if(!父||父->执行域!=新需求执行域::自我执行||!父->完整目标)return {S::父需求不合法,{},{}};
-        if(q.复合来源) {
+        if(归属分解) {
+            const auto& 来源=*q.复合来源;
+            if(!允许任务子目标||q.来源类型!=新需求来源类型::任务子目标||来源.父任务节点!=q.来源承接节点
+                ||来源.父需求节点!=q.父需求节点||来源.父目标存在节点!=父->完整目标->目标存在节点
+                ||来源.父目标!=父->完整目标->目标||来源.父目标.目标形式!=新需求目标形式::值
+                ||!来源.父目标.目标值域概念节点||来源.子目标内容路径.empty()
+                ||来源.子目标内容路径.back()!=q.目标.目标特征类型概念节点
+                ||来源.子目标要求概念!=q.目标.目标值域概念节点
+                ||来源.择一约束节点||来源.所选分支概念)return {S::前提已变化,{},{}};
+        } else if(q.复合来源) {
             const auto& 来源=*q.复合来源;
             if(!允许任务子目标||q.来源类型!=新需求来源类型::任务子目标||来源.父任务节点!=q.来源承接节点
                 ||来源.父需求节点!=q.父需求节点||来源.父目标存在节点!=父->完整目标->目标存在节点
@@ -7355,7 +7369,6 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
     要求需求物理(identity.状态==基础结构操作状态::已完成&&identity.信息&&identity.信息->存在节点==E
         &&!identity.预期节点组.empty());
     批.合并(identity.预期节点组);
-    const auto specific=identity.信息->专属存在概念节点;
     const auto ordinary=[&](稳定编码 n) {
         const auto r=存在概念服务_.读取普通存在概念定义保护(n);
         if(r.状态==正式概念读取状态::依赖未就绪)批.未就绪();
@@ -7364,30 +7377,13 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
         批.合并(r.完整保护组);return *r.信息;
     };
     (void)ordinary(C);
-    std::map<稳定编码,std::vector<稳定编码>> edges;
-    std::vector<稳定编码> pending{specific};std::set<稳定编码> discovered{specific};
-    for(std::size_t i=0;i<pending.size();++i) {
-        const auto n=pending[i];const auto definition=ordinary(n);
-        if(n==specific)要求需求物理(definition.种类==存在概念种类::专属&&definition.对应存在节点==E);
-        else 要求需求物理(definition.种类==存在概念种类::抽象&&!definition.对应存在节点);
-        const auto r=存在概念服务_.读取存在概念上位保护(n);
-        if(r.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
-        if(r.前提已变化)批.变化();
-        要求需求物理(r.状态==基础结构操作状态::已完成&&r.信息&&r.信息->概念节点==n&&!r.预期节点组.empty());
-        批.合并(r.预期节点组);
-        auto up=r.信息->上位概念组;std::sort(up.begin(),up.end());
-        auto expected=definition.上位概念组;std::sort(expected.begin(),expected.end());
-        if(up!=expected)批.变化();
-        要求需求物理(std::adjacent_find(up.begin(),up.end())==up.end());edges.emplace(n,up);
-        for(const auto parent:up)if(discovered.insert(parent).second)pending.push_back(parent);
-    }
-    std::map<稳定编码,std::uint8_t> color;
-    std::vector<std::pair<稳定编码,std::size_t>> stack{{specific,0}};color[specific]=1;
-    while(!stack.empty()) {
-        auto& [n,index]=stack.back();const auto& up=edges.at(n);
-        if(index==up.size()){color[n]=2;stack.pop_back();continue;}
-        const auto parent=up[index++];要求需求物理(color[parent]!=1);
-        if(color[parent]==0){color[parent]=1;stack.emplace_back(parent,0);}
+    // CONCEPT-INFO-MEMBERSHIP：保护唯一归属算法实际读取的材料（实例关系或定义匹配，含递归）。
+    const auto 判定=存在服务_.比较存在与概念信息(E,C,true);
+    if(判定.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+    if(判定.状态==特征概念规则状态::前提已变化)批.变化();
+    else {
+        要求需求物理(判定.状态==特征概念规则状态::已完成);
+        批.合并(判定.依据保护);
     }
     批.核同();
 }
@@ -7629,6 +7625,8 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
         case 新需求当前满足状态::需减少:
         case 新需求当前满足状态::未满足但无有向差值:
         case 新需求当前满足状态::需要执行前后比较: r.状态 = S::允许筹办; break;
+        // CONCEPT-INFO-MEMBERSHIP R-1：认知不足不结束、不等待，允许筹办以按目标分解形成认知子需求。
+        case 新需求当前满足状态::当前值认知不足: r.状态 = S::允许筹办; break;
         case 新需求当前满足状态::目标特征尚未形成:
         case 新需求当前满足状态::当前值不存在:
             r.状态 = !d.根角色 && r.派生定义 && d.目标.目标形式 == 新需求目标形式::值
@@ -7948,6 +7946,15 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
             *特征->当前值, *目标概念, 特征值服务_, 存在服务_);
         if (!定位.结构有效) {
             结果.状态 = 新需求当前满足状态::比较关系不适用;
+            return 结果;
+        }
+        if (定位.前提已变化) {
+            结果.状态 = 新需求当前满足状态::目标引用前提已变化;
+            return 结果;
+        }
+        if (定位.认知不足) {
+            结果.状态 = 新需求当前满足状态::当前值认知不足;
+            结果.认知缺口组 = 定位.认知缺口组;
             return 结果;
         }
         结果.准确差异 = 定位.准确差异;

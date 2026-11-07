@@ -2213,21 +2213,8 @@ bool 特征属于类型根(
         登录名匹配 = *文本 == 当前.配置.本次网页会话服务对象登录名;
     }
     if (登录名数量 != 1) return 状态::结构不一致;
-    bool 已见人类 = false;
-    std::set<稳定编码> 路径, 已读;
-    std::vector<std::pair<稳定编码, bool>> 栈{{人->专属存在概念节点, false}};
-    while (!栈.empty()) {
-        const auto [节点, 退出] = 栈.back(); 栈.pop_back();
-        if (退出) { 路径.erase(节点); 已读.insert(节点); continue; }
-        if (路径.contains(节点)) return 状态::结构不一致;
-        if (已读.contains(节点)) continue;
-        const auto 概念 = 当前.世界事实.存在概念服务.获取存在概念(节点);
-        if (!概念 || 概念->节点 != 节点) return 状态::结构不一致;
-        if (节点 == *当前.人类存在概念节点) 已见人类 = true;
-        路径.insert(节点); 栈.emplace_back(节点, true);
-        for (auto i = 概念->上位概念组.rbegin(); i != 概念->上位概念组.rend(); ++i)
-            栈.emplace_back(*i, false);
-    }
+    // CONCEPT-INFO-MEMBERSHIP：调用唯一归属算法；只有已证明属于人类才可绑定。
+    const bool 已见人类 = 当前.世界事实.存在服务.存在节点属于概念(人->节点, *当前.人类存在概念节点);
     return 登录名匹配 && 已见人类 ? 状态::已完成 : 状态::对象不匹配;
 }
 
