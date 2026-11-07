@@ -176,6 +176,12 @@
     <ClCompile Include="海中鱼巣\业务\方法问题学习.服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\方法学习评审.服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\方法学习评审.服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>

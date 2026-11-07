@@ -200,6 +200,8 @@
     <ClCompile Include="海中鱼巣\业务\执行场景采集.服务.cpp" />
     <ClInclude Include="海中鱼巣\业务\方法问题学习.服务.h" />
     <ClCompile Include="海中鱼巣\业务\方法问题学习.服务.cpp" />
+    <ClInclude Include="海中鱼巣\业务\方法学习评审.服务.h" />
+    <ClCompile Include="海中鱼巣\业务\方法学习评审.服务.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_模拟世界类.cpp" />
     <ClCompile Include="海中鱼巣\领域\任务结算.规则.cpp" />
     <ClInclude Include="海中鱼巣\领域\任务结算.规则.h" />

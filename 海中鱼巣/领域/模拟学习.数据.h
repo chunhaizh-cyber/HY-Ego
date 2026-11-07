@@ -17,5 +17,6 @@ struct 新方法参数关系 final {
     friend bool operator==(const 新方法参数关系&,const 新方法参数关系&) = default;
 };
 enum class 新模拟操作状态 : std::int64_t { 已完成=1, 输入不适用=2, 输入耗尽=3, 停止取消=4, 等待触发=5 };
-enum class 新方法知识来源种类 : std::int64_t { 未注明=0, 模拟=1 };
+// 尝试=2：尝试执行的实际条件与实际结果，经独立评审授权由方法owner发布（TRIAL-LEARNING-REVIEW）。
+enum class 新方法知识来源种类 : std::int64_t { 未注明=0, 模拟=1, 尝试=2 };
 }
