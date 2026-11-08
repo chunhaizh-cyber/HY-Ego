@@ -2293,10 +2293,12 @@ struct 新_需求类::服务取得角色核验批 final {
     if(!out.信息)out.完整保护.clear();return out;
 }
 
+thread_local int 服务取得出生失败行 = 0;
 新服务取得目标实例结果 新_需求类::建立或取得服务取得目标实例(
     const 新服务取得目标实例请求& q) noexcept {
     using S=新服务取得目标实例状态;
     using R=服务取得角色核验批::状态值;
+    服务取得出生失败行=0;
     新服务取得目标实例结果 out;
     const auto 返回=[&](S 当前状态) {
         out.状态=当前状态;
@@ -2333,25 +2335,27 @@ struct 新_需求类::服务取得角色核验批 final {
         }
         基础节点组追加请求 request;request.预期联合节点组=roles.完整保护;
         // 同一无H槽读取的完整范围进入出生CAS；旧H记录不能被完整key过滤掉。
-        if(!并需求保护(request.预期联合节点组,out.完整保护))throw S::前提已变化;
-        if(!并需求保护(request.预期联合节点组,q.正式前驱保护))throw S::前提已变化;
+        if(!并需求保护(request.预期联合节点组,out.完整保护)){服务取得出生失败行=__LINE__;throw S::前提已变化;}
+        // 正式前驱保护为本步依据（交互者特征、H属于人类的依据、本槽实例）；按容许新增入向预期
+        // （2026-11-08用户裁决：采用只复核要采用的这一步；本体改变或原引用删除即前提已变化，无关新增引用不影响）。
+        request.容许新增入向预期组.insert(request.容许新增入向预期组.end(),q.正式前驱保护.begin(),q.正式前驱保护.end());
         const auto parentRaw=取得服务实例物理保护(q.父需求,request.预期联合节点组);
         (void)投影需求目标实例(需求目标读取上下文{特征服务_,特征概念服务_},parentRaw.结构,&request.预期联合节点组);
         const auto parent=读取需求治理信息可抛内部(q.父需求);
         if(!parent||parent->执行域!=新需求执行域::自我执行||parent->完整目标!=std::optional{q.原父目标})
-            throw S::前提已变化;
+            {服务取得出生失败行=__LINE__;throw S::前提已变化;}
         const auto slot=特征概念服务_.读取特征概念定义保护(q.键.目标槽类型);
         if(slot.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
-        if(slot.前提已变化)throw S::前提已变化;
+        if(slot.前提已变化){服务取得出生失败行=__LINE__;throw S::前提已变化;}
         要求需求物理(slot.状态==基础结构操作状态::已完成&&slot.信息&&slot.信息->类型根==q.键.目标槽类型);
-        if(!并需求保护(request.预期联合节点组,slot.预期节点组))throw S::前提已变化;
+        if(!并需求保护(request.预期联合节点组,slot.预期节点组)){服务取得出生失败行=__LINE__;throw S::前提已变化;}
         std::vector<基础组内初始字段> savedFields{{节点类型字段,实例原父目标类型}};
         追加服务取得原父目标快照字段(savedFields,q.父需求,q.原父目标,request.预期联合节点组);
         bool created=false;
         if(out.信息) {
             const auto saved=*读取唯一节点字段(out.信息->出生记录,实例原父目标字段);
             if(读取唯一节点字段(saved,目标新增成员见证字段)!=读取唯一节点字段(q.父需求,目标新增成员见证字段))
-                throw S::前提已变化;
+                {服务取得出生失败行=__LINE__;throw S::前提已变化;}
         } else {
             (void)取得服务实例物理保护(需求树根节点,request.预期联合节点组);
             (void)取得服务实例物理保护(q.键.父取得任务,request.预期联合节点组);
@@ -2365,14 +2369,14 @@ struct 新_需求类::服务取得角色核验批 final {
                 case 新引用内容目标状态::未满足:
                 case 新引用内容目标状态::分支待定:break;
                 case 新引用内容目标状态::资源失败:throw std::bad_alloc{};
-                case 新引用内容目标状态::引用前提已变化:throw S::前提已变化;
+                case 新引用内容目标状态::引用前提已变化:{服务取得出生失败行=__LINE__;throw S::前提已变化;}
                 case 新引用内容目标状态::依赖未就绪:return 返回(S::依赖未就绪);
                 case 新引用内容目标状态::未支持:
                 case 新引用内容目标状态::定义不合法:return 返回(S::输入不适用);
                 default:要求需求物理(false);
                 }
                 要求需求物理(!check.完整保护组.empty());
-                if(!并需求保护(request.预期联合节点组,check.完整保护组))throw S::前提已变化;
+                if(!并需求保护(request.预期联合节点组,check.完整保护组)){服务取得出生失败行=__LINE__;throw S::前提已变化;}
                 (void)取得服务实例物理保护(*q.指定已有需求,request.预期联合节点组);
             }
             // 先分配值式前缀的所有动态存储，原子提交后只填新身份并move。
@@ -2407,16 +2411,28 @@ struct 新_需求类::服务取得角色核验批 final {
             }
             request.追加字段组.push_back({需求树根节点,服务取得实例登记字段,基础组内节点引用{0}});
             const auto commit=全局基础数据集.原子追加节点组(request);
-            if(commit.状态==基础节点组追加状态::预期不符)throw S::前提已变化;
+            if(commit.状态==基础节点组追加状态::预期不符){服务取得出生失败行=__LINE__;throw S::前提已变化;}
             if(commit.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
             要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==(q.指定已有需求 ? 2u : 3u));
             info.出生记录=commit.新节点组[0];if(!q.指定已有需求)info.需求节点=commit.新节点组[2];
             out.信息=std::move(info);out.状态=S::已出生待补骨架;out.完整保护.clear();created=true;
         }
-        if(!created&&!需求内容保护未变(request.预期联合节点组))throw S::前提已变化;
+        if(!created&&!需求内容保护未变(request.预期联合节点组)){服务取得出生失败行=__LINE__;throw S::前提已变化;}
+        // 复用/补骨架同样受本步依据（正式前驱保护，容许新增入向）约束：本体改变或原引用删除即前提已变化。
+        if(!created&&!request.容许新增入向预期组.empty()) {
+            std::vector<稳定编码> 依据节点;for(const auto& 项:request.容许新增入向预期组)依据节点.push_back(项.结构.节点.编码);
+            const auto 当前=全局基础数据集.查询节点组完整结构(依据节点);
+            if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(当前.状态!=基础结构操作状态::已完成||当前.节点组.size()!=依据节点.size()){服务取得出生失败行=__LINE__;throw S::前提已变化;}
+            for(const auto& 预期:request.容许新增入向预期组){
+                const auto 今=std::find_if(当前.节点组.begin(),当前.节点组.end(),[&](const auto& x){return x.查询节点==预期.结构.节点.编码;});
+                if(今==当前.节点组.end()||!今->快照||!联合快照容许新增入向判定(*今->快照,预期))
+                    {服务取得出生失败行=__LINE__;throw S::前提已变化;}
+            }
+        }
         const auto skeleton=确保目标特征实例承载可抛内部(out.信息->需求节点);
         if(skeleton==新需求操作状态::资源失败)throw std::bad_alloc{};
-        if(skeleton==新需求操作状态::前提已变化)throw S::前提已变化;
+        if(skeleton==新需求操作状态::前提已变化){服务取得出生失败行=__LINE__;throw S::前提已变化;}
         if(skeleton==新需求操作状态::目标内容依赖未就绪){out.状态=S::依赖未就绪;return out;}
         要求需求物理(skeleton==新需求操作状态::已修改||skeleton==新需求操作状态::无变化);
         新服务取得目标实例结果 fresh;
@@ -2431,10 +2447,16 @@ struct 新_需求类::服务取得角色核验批 final {
         return out;
     } catch(S s){
         if(s!=S::前提已变化)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立服务取得目标实例",L"未知实例控制状态。");
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
+#endif
         out.状态=s;
     }
     catch(新需求目标定义核验状态 s){
         if(s!=新需求目标定义核验状态::前提已变化)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立服务取得目标实例",L"未知目标控制状态。");
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"目标定义前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
+#endif
         out.状态=S::前提已变化;
     }
     catch(const 需求物理读取失败& e){
