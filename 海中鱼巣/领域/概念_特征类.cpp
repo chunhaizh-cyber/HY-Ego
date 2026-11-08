@@ -4468,6 +4468,24 @@ std::vector<稳定编码> 概念_特征类::查询特征概念内部(
     }
 }
 
+std::optional<bool> 概念_特征类::判定特征概念节点(稳定编码 节点) const noexcept {
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!结构仍存在()) return std::nullopt;
+        if (!节点仍存在(节点)) return false;
+        // 特征概念必有本模块唯一类型字段：字段确实缺失即其它模块节点（如存在概念），不是特征概念；
+        // 字段重复或内容不是节点引用为结构异常，归入读取未完成；底层查询故障以异常表现，同样未完成。
+        const auto 字段组 = 全局基础数据集.查询字段(节点, 节点类型字段);
+        if (字段组.empty()) return false;
+        if (字段组.size() != 1) return std::nullopt;
+        const auto* 类型 = std::get_if<稳定编码>(&字段组.front().内容);
+        if (!类型) return std::nullopt;
+        return *类型 == 特征概念节点类型;
+    } catch (...) {
+        return std::nullopt;
+    }
+}
+
 bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept {
     try {
         std::lock_guard 锁(特征概念树互斥);

@@ -580,6 +580,8 @@ public:
         const 新_特征值类& 特征值服务) const noexcept;
 
     bool 是特征概念节点(稳定编码 节点) const noexcept;
+    // 三态：是/否特征概念；结构或字段读取未完成返回空（不与“不是”混同）。
+    std::optional<bool> 判定特征概念节点(稳定编码 节点) const noexcept;
 
     特征概念比较结果 执行比较规则(
         特征概念材料物理类型 材料类型,
