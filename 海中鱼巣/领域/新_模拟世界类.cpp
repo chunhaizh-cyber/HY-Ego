@@ -3700,6 +3700,10 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
 #endif
     if(!source||!target)throw std::runtime_error("simulation existence formal definition unavailable");
     // 本地存在两类来源：复制专属原型（专属C），或按正式定义构造的具体实例（构造C为抽象）。
+    // 复制专属原型的样例在隔离世界中代表该原型，其专属概念即来源C；归属与现实算法（CONCEPT-INFO-MEMBERSHIP）一致
+    // （2026-11-08用户裁决）：实例关系（来源C沿上位链到达C）即属于；C为另一专属概念按身份不属于；
+    // 否则只按C的必需特征逐项定义匹配。
+    bool 仅目标定义匹配=false;
     // 构造实例的归类证明是构造C沿正式上下位链属于目标C；随后同样逐项比较目标必需特征，不因同概念直接判匹配。
     if(source->种类==存在概念种类::抽象) {
         std::set<稳定编码> 已访;
@@ -3712,11 +3716,18 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         };
         if(!属于(sourceConcept)){存在核验诊断(L"上位链不属于",3);return 新存在概念匹配状态::材料不足;}
     } else {
-        const auto proof=s.方法.读取模拟存在原型候选(C);
-        if(proof.状态!=存在概念实例候选读取状态::已完成){存在核验诊断(L"原型候选未完成",static_cast<int>(proof.状态));return 新存在概念匹配状态::材料不足;}
-        if(sourceConcept!=C&&std::none_of(proof.候选组.begin(),proof.候选组.end(),[&](const auto& p){return p.专属概念节点==sourceConcept;}))
-            {存在核验诊断(L"非目标原型",3);return 新存在概念匹配状态::材料不足;}
-        if(source->特征组.empty()&&target->种类==存在概念种类::抽象){存在核验诊断(L"专属无特征而目标抽象",3);return 新存在概念匹配状态::材料不足;}
+        std::set<稳定编码> 已访;
+        std::vector<稳定编码> 待访{sourceConcept};
+        while(!待访.empty()) {
+            const auto c=待访.back();待访.pop_back();
+            if(!已访.insert(c).second)continue;
+            if(c==C)return 新存在概念匹配状态::匹配;
+            const auto r=c==sourceConcept ? source : s.方法.读取模拟存在范围(c);
+            if(!r)throw std::runtime_error("simulation existence instance-chain definition unavailable");
+            待访.insert(待访.end(),r->上位概念组.begin(),r->上位概念组.end());
+        }
+        if(target->种类==存在概念种类::专属){存在核验诊断(L"身份不属于",2);return 新存在概念匹配状态::不符合;}
+        仅目标定义匹配=true;
     }
     新存在概念匹配材料 material;material.存在节点=E;material.专属存在概念节点=sourceConcept;material.目标存在概念节点=C;
     auto required=source->特征组;
@@ -3836,6 +3847,17 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         default:throw std::runtime_error("simulation existence matcher returned unknown state");}
         return 不符合 ? 匹配状态::不符合 : 不足 ? 匹配状态::材料不足 : 匹配状态::匹配;
     };
+    if(仅目标定义匹配) {
+        material.必需特征组.clear();
+        for(const auto& f:target->特征组) {
+            const auto d=s.方法.读取模拟特征范围(f.具体特征概念);
+            if(!d)throw std::runtime_error("simulation target feature definition unavailable");
+            material.必需特征组.push_back({f,*d});
+        }
+        const auto 定义匹配=比较阶段();
+        if(定义匹配!=匹配状态::匹配)存在核验诊断(L"定义匹配",static_cast<int>(定义匹配));
+        return 定义匹配;
+    }
     const auto first=比较阶段();
     if(first!=匹配状态::匹配){存在核验诊断(L"第一比较阶段",static_cast<int>(first));return first;}
     material.必需特征组.clear();
