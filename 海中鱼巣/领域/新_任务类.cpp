@@ -14,6 +14,7 @@
 #include "../业务/新_世界树类.h"
 #include "../核心/容错检查.h"
 
+#include <cstdio>
 #include <algorithm>
 #include <array>
 #include <bit>
@@ -4850,10 +4851,16 @@ std::optional<新任务影响评估信息> 读取评估信息(稳定编码 评�
     return 结果;
 }
 
+// D/T对应读取未完成时最近一次提前返回的源码行，只用于工程异常说明；0表示未记录位置（缓存复制异常等出口）。
+thread_local int 对应读取失败行 = 0;
 void 贡献要求(bool 条件, std::source_location 位置 = std::source_location::current()) {
-    // 公共断言报告调用点行号，否则弹窗只能指向本函数。
-    if (!条件) 工程异常终止(HY_EGO_WIDEN(__FILE__), static_cast<int>(位置.line()), L"任务完成贡献",
-        L"贡献材料读取、身份、归集求和或原子发布结构不一致。");
+    // 公共断言报告调用点行号，否则弹窗只能指向本函数；附本线程最近一次D/T对应读取提前返回行。
+    if (!条件) {
+        static thread_local char 说明[96];
+        std::snprintf(说明, sizeof 说明, "last D/T correspondence early return line %d", 对应读取失败行);
+        工程异常终止(HY_EGO_WIDEN(__FILE__), static_cast<int>(位置.line()), L"任务完成贡献",
+            L"贡献材料读取、身份、归集求和或原子发布结构不一致。", 说明);
+    }
 }
 std::vector<稳定编码> 贡献引用组(稳定编码 节点, 稳定编码 字段) {
     const auto 组 = 全局基础数据集.查询字段(节点, 字段);
@@ -5024,7 +5031,10 @@ using 贡献对应全集 = std::map<稳定编码, std::pair<新需求治理信�
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
     观察因果构造阶段(L"贡献对应正式读取已返回，即将转换map");
 #endif
-    贡献要求(读取.状态 == 新任务操作状态::已找到);
+    if (读取.状态 != 新任务操作状态::已找到)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"任务完成贡献", L"贡献对应全集读取未完成。",
+            ("D/T correspondence status " + std::to_string(static_cast<int>(读取.状态))
+             + " early return line " + std::to_string(对应读取失败行)).c_str());
     贡献对应全集 结果;
     for (const auto& 项 : 读取.对应项组) {
         检查因果读取停止(停止);
@@ -7265,6 +7275,22 @@ bool 新_任务类::初始化() noexcept {
     return 定义;
 }
 
+namespace {
+// 任务闭包：任务可读，所属需求正式可读且为自我执行（3100：待完善被认知需求不建任务）。
+// 失败时异常说明区分任务不可读、需求不可读与执行域不符，便于定位间歇闭包故障。
+template<class 任务信息, class 需求服务>
+void 核验任务需求闭包(稳定编码 任务节点, const std::optional<任务信息>& 任务, const 需求服务& 需求) {
+    if (!任务) throw std::logic_error("formal task closure invalid: task " + std::to_string(任务节点.值) + " info unreadable");
+    const auto 治理 = 需求.读取需求治理信息(任务->需求节点);
+    if (!治理)
+        throw std::logic_error("formal task closure invalid: task " + std::to_string(任务节点.值)
+            + " demand " + std::to_string(任务->需求节点.值) + " governance info unreadable");
+    if (治理->执行域 != 新需求执行域::自我执行)
+        throw std::logic_error("formal task closure invalid: task " + std::to_string(任务节点.值)
+            + " demand " + std::to_string(任务->需求节点.值) + " is not self-executed");
+}
+}
+
 新任务执行组织结果 新_任务类::建立或取得任务方法执行组织(
     稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组) noexcept {
     return 实施任务方法执行组织(任务节点, 来源方法节点组, false);
@@ -7301,7 +7327,7 @@ bool 新_任务类::初始化() noexcept {
         要求(节点.状态 == 基础结构操作状态::已完成 && 节点.结构, "task read failed");
         if (!节点类型为(任务节点, 任务节点类型)) return {状态::任务不存在, {}};
         const auto 任务 = 读取任务信息(任务节点, 特征服务_);
-        要求(任务.has_value() && 需求服务_.获取需求(任务->需求节点).has_value(), "formal task closure invalid");
+        核验任务需求闭包(任务节点, 任务, 需求服务_);
         auto 定义 = 转换定义(任务节点, 任务->任务虚拟存在节点, 闭包);
         核验图(定义); 核验概念引用(定义, 特征概念服务_, 存在概念服务_, 二次特征概念服务_);
         std::map<稳定编码, 基础节点结构> 原始结构;
@@ -7381,7 +7407,7 @@ bool 新_任务类::初始化() noexcept {
         要求(节点.状态 == 基础结构操作状态::已完成 && 节点.结构, "task read failed");
         if (!节点类型为(任务节点, 任务节点类型)) return {状态::任务不存在, {}};
         const auto 任务 = 读取任务信息(任务节点, 特征服务_);
-        要求(任务.has_value() && 需求服务_.获取需求(任务->需求节点).has_value(), "formal task closure invalid");
+        核验任务需求闭包(任务节点, 任务, 需求服务_);
         auto 组织 = 读取已加锁(任务节点, 任务->任务虚拟存在节点);
         if (!组织) return {状态::尚未建立, {}};
         核验概念引用(*组织, 特征概念服务_, 存在概念服务_, 二次特征概念服务_);
@@ -8084,6 +8110,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
 }
 
 新需求任务对应可停止结果 新_任务类::读取需求列表任务对应(std::stop_token 停止) const noexcept {
+    对应读取失败行 = 0;
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
     因果构造观察范围 观察范围(L"正式需求列表任务对应");
 #endif
@@ -8120,9 +8147,9 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
             auto 锁 = 获取因果读取任务锁(停止);
             if (!结构仍存在()) {
                 结果.状态 = 新任务操作状态::尚未初始化;
-                return 结果;
+                { 对应读取失败行 = __LINE__; return 结果; }
             }
-            if (!读取登记(原登记, nullptr)) return 结果;
+            if (!读取登记(原登记, nullptr)) { 对应读取失败行 = __LINE__; return 结果; }
         }
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
         观察因果构造阶段(L"D/T对应即将读取需求owner完整列表");
@@ -8139,32 +8166,32 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
                 结果.状态 = 新任务操作状态::尚未初始化;
             else if (列表.状态 == 新需求操作状态::资源失败)
                 结果.状态 = 新任务操作状态::资源失败;
-            return 结果;
+            { 对应读取失败行 = __LINE__; return 结果; }
         }
         std::map<稳定编码, const 新需求治理信息*> 需求映射;
         for (const auto& 需求 : 列表.需求组) {
             检查因果读取停止(停止);
-            if (需求.执行域 != 新需求执行域::自我执行) return 结果;
+            if (需求.执行域 != 新需求执行域::自我执行) { 对应读取失败行 = __LINE__; return 结果; }
             需求映射.emplace(需求.节点, &需求);
         }
         auto 锁 = 获取因果读取任务锁(停止);
         if (!结构仍存在()) {
             结果.状态 = 新任务操作状态::尚未初始化;
-            return 结果;
+            { 对应读取失败行 = __LINE__; return 结果; }
         }
         登记副本 现登记;
         std::vector<新任务信息> 现任务;
-        if (!读取登记(现登记, &现任务)) return 结果;
+        if (!读取登记(现登记, &现任务)) { 对应读取失败行 = __LINE__; return 结果; }
         if (现登记 != 原登记) continue;
         std::map<稳定编码, 新任务信息> 需求任务;
         检查因果读取停止(停止);
         for (auto& 任务 : 现任务) {
             检查因果读取停止(停止);
-            if (!需求映射.contains(任务.需求节点)) return 结果;
+            if (!需求映射.contains(任务.需求节点)) { 对应读取失败行 = __LINE__; return 结果; }
             const auto 需求节点 = 任务.需求节点;
             if (!需求任务.emplace(需求节点, std::move(任务)).second) {
                 结果.状态 = 新任务操作状态::需求已有多个任务;
-                return 结果;
+                { 对应读取失败行 = __LINE__; return 结果; }
             }
         }
         检查因果读取停止(停止);
@@ -8179,7 +8206,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
             检查因果读取停止(停止);
             for (const auto d : l.需求节点组) {
                 检查因果读取停止(停止);
-                if (!列表映射.emplace(d, l.节点).second) return 结果;
+                if (!列表映射.emplace(d, l.节点).second) { 对应读取失败行 = __LINE__; return 结果; }
             }
         }
         for (const auto& d : 列表.需求组) {
@@ -8189,14 +8216,14 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
                 const auto 任务 = 需求任务.find(需求节点);
                 std::optional<新任务信息> 对应任务;
                 if (任务 == 需求任务.end()) {
-                    if (!反向.empty()) return 结果;
+                    if (!反向.empty()) { 对应读取失败行 = __LINE__; return 结果; }
                 } else {
                     if (反向.size() != 1 || 反向.front().所属节点 != 任务->second.节点)
-                        return 结果;
+                        { 对应读取失败行 = __LINE__; return 结果; }
                     检查因果读取停止(停止);
                     const auto 正向 = 全局基础数据集.查询字段(任务->second.节点, 任务需求字段);
                     if (正向.size() != 1 || 正向.front().编码 != 反向.front().编码)
-                        return 结果;
+                        { 对应读取失败行 = __LINE__; return 结果; }
                     对应任务 = 任务->second;
                 }
                 const auto l = 列表映射.find(需求节点);
@@ -8213,7 +8240,7 @@ bool 新_任务类::同步服务任务集合已加锁() noexcept {
     catch (...) {
         结果.状态 = 新任务操作状态::资源失败;
         结果.对应项组.clear();
-        return 结果;
+        { 对应读取失败行 = __LINE__; return 结果; }
     }
 }
 

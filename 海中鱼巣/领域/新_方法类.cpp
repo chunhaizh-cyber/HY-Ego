@@ -15,6 +15,9 @@
 #include <utility>
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
 #include <sstream>
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+#include "../核心/日志系统.h"
+#endif
 #endif
 
 #include "新_存在类.h"
@@ -1276,12 +1279,19 @@ bool 追加需求主体路径保护(稳定编码 FT,const 概念_特征类& f,co
     return true;
 }
 
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+thread_local const wchar_t* 角色声明失败点=nullptr;
+#define HY_ROLE_POINT(x) (角色声明失败点=(x))
+#else
+#define HY_ROLE_POINT(x) ((void)0)
+#endif
 bool 条件结果角色已声明(
     const std::vector<新方法参数规格>& 参数规格组,
     const 新方法条件结果定义& 定义, const 概念_特征类& 概念服务,
     const 概念_存在类& 存在概念服务,
     引用内容条件校验模式 模式=引用内容条件校验模式::完整语义) {
     try {
+    HY_ROLE_POINT(nullptr);
 
     const auto 找规格 = [&](std::uint32_t n) -> const 新方法有序参数规格* {
         const 新方法有序参数规格* found = nullptr;
@@ -1327,12 +1337,24 @@ bool 条件结果角色已声明(
         visit(visit, 范围);
         return reached;
     };
+    // 被引用参数与引用特征值域相容：声明范围属于值域；或值域本身在声明范围之下（引用关系成立即把该参数
+    // 收窄到值域，如范围“存在”的参数被“人类”值域的特征引用）；或本配对合取条件中对该参数的存在概念条件项属于值域。
+    // 未满足上述可证明的相容条件时判不合法。
+    const bool 条件合取=定义.条件.关系规则==新方法项关系规则::全部成立||定义.条件.关系规则==新方法项关系规则::单项;
+    const auto 参数范围属于=[&](std::uint32_t 序号,稳定编码 声明范围,稳定编码 所需上位) {
+        if(包含存在范围(声明范围,所需上位)||包含存在范围(所需上位,声明范围))return true;
+        if(!条件合取)return false;
+        return std::any_of(定义.条件.条件项组.begin(),定义.条件.条件项组.end(),[&](const auto& c) {
+            return c.参数序号==序号&&c.存在概念节点&&!c.特征类型概念节点&&!c.引用内容条件
+                &&包含存在范围(*c.存在概念节点,所需上位);
+        });
+    };
     for(const auto* group:{&定义.条件.场景事实限定组,&定义.结果.场景事实限定组})for(const auto& r:*group) {
         const auto* f=找规格(r.特征参数序号);
         const auto fd=概念服务.获取特征概念(f->范围概念节点);
         const auto* domain=fd?std::get_if<特征概念存在引用值域>(&fd->值域):nullptr;
         const auto* peer=找规格(r.对象参数序号);
-        if(!domain||!peer||!包含存在范围(peer->范围概念节点,domain->存在概念节点))return false;
+        if(!domain||!peer||!参数范围属于(r.对象参数序号,peer->范围概念节点,domain->存在概念节点)){HY_ROLE_POINT(L"场景事实对象范围");return false;}
     }
     const auto 引用声明合法 = [&](const 新方法参数关系& r) {
         const auto* l = 找规格(r.左参数序号); const auto* e = 找规格(r.右参数序号);
@@ -1366,7 +1388,7 @@ bool 条件结果角色已声明(
         const auto* domain = f ? std::get_if<特征概念存在引用值域>(&f->值域) : nullptr;
         return f && root && domain && f->材料类型 == 特征概念材料物理类型::存在节点引用
             && f->比较规则 == 特征概念比较规则::存在身份精确
-            && 包含存在范围(e->范围概念节点, domain->存在概念节点);
+            && 参数范围属于(r.右参数序号, e->范围概念节点, domain->存在概念节点);
     };
 
     const auto 关系已声明=[&](const 新方法参数关系& r) {
@@ -1402,8 +1424,8 @@ bool 条件结果角色已声明(
         default: return false; // 特征所属存在、同属场景、场景包含存在已退役（R97）
         }
     };
-    if(!std::all_of(定义.条件.参数关系组.begin(),定义.条件.参数关系组.end(),关系已声明)
-        ||!std::all_of(定义.结果.参数关系组.begin(),定义.结果.参数关系组.end(),关系已声明)) return false;
+    if(!std::all_of(定义.条件.参数关系组.begin(),定义.条件.参数关系组.end(),关系已声明)){HY_ROLE_POINT(L"条件关系已声明");return false;}
+    if(!std::all_of(定义.结果.参数关系组.begin(),定义.结果.参数关系组.end(),关系已声明)){HY_ROLE_POINT(L"结果关系已声明");return false;}
 
     const auto 引用组合法 = [&](const std::vector<新方法参数关系>& group, bool result) {
         if (!参数关系结构有效(group)) return false;
@@ -1456,7 +1478,9 @@ bool 条件结果角色已声明(
         }
         return true;
     };
-    if (!引用组合法(定义.条件.参数关系组, false) || !引用组合法(定义.结果.参数关系组, true)) return false;
+    if (!引用组合法(定义.条件.参数关系组, false)){HY_ROLE_POINT(L"条件引用组合法");return false;}
+    if (!引用组合法(定义.结果.参数关系组, true)){HY_ROLE_POINT(L"结果引用组合法");return false;}
+    HY_ROLE_POINT(L"项已声明");
 
     const auto 已声明 = [&](const auto& 项) {
         if constexpr(requires{项.被动需求目标;}) if(项.被动需求目标) {
@@ -4814,18 +4838,53 @@ bool 学习配对定义合法(const 新方法信息& 方法信息, const 新方�
     };
     const bool 仅条件节点 = 定义.结果.结果项组.empty() && 定义.结果.参数关系组.empty()
         && 定义.结果.场景事实限定组.empty();
-    return !(!行为结果相容(方法->行为, 定义.结果)
-        || !配对分支来源有效(*方法,定义,特征概念服务_,存在概念服务_)
-        || !方法头有效(方法->方法头) || !参数规格有效(方法->参数规格组, 特征概念服务_)
-        // 仅条件节点（5370 §5.3，R96）：模拟取不到结果时结果为空，但条件不得为空。
-        || (仅条件节点 && 定义.条件.条件项组.empty() && 定义.条件.参数关系组.empty()
-            && 定义.条件.场景事实限定组.empty())
-        || !条件结果有效(定义, 特征概念服务_, false, 仅条件节点)
-        || !条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_)
-        || !std::all_of(定义.条件.条件项组.begin(), 定义.条件.条件项组.end(), 类型已声明)
-        || !std::all_of(定义.结果.结果项组.begin(), 定义.结果.结果项组.end(), 类型已声明)
-        || !std::all_of(定义.结果.确认要求.禁止结果项组.begin(),
-            定义.结果.确认要求.禁止结果项组.end(), 类型已声明));
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    const auto 不合法=[&](const wchar_t* 项) {
+        try { (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"不合法",
+            std::wstring(L"方法=")+std::to_wstring(方法->节点.值)+L"；检查="+项); } catch(...) {}
+        return false;
+    };
+#else
+    const auto 不合法=[](const wchar_t*) { return false; };
+#endif
+    if(!行为结果相容(方法->行为, 定义.结果))return 不合法(L"行为结果相容");
+    if(!配对分支来源有效(*方法,定义,特征概念服务_,存在概念服务_))return 不合法(L"配对分支来源");
+    if(!方法头有效(方法->方法头))return 不合法(L"方法头");
+    if(!参数规格有效(方法->参数规格组, 特征概念服务_))return 不合法(L"参数规格");
+    // 仅条件节点（5370 §5.3，R96）：模拟取不到结果时结果为空，但条件不得为空。
+    if(仅条件节点 && 定义.条件.条件项组.empty() && 定义.条件.参数关系组.empty()
+        && 定义.条件.场景事实限定组.empty())return 不合法(L"仅条件节点条件为空");
+    if(!条件结果有效(定义, 特征概念服务_, false, 仅条件节点))return 不合法(L"条件结果有效");
+    if(!条件结果角色已声明(方法->参数规格组, 定义, 特征概念服务_, 存在概念服务_)) {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        try {
+            std::wostringstream t;
+            const auto 关系=[&](const wchar_t* 名,const auto& 组){t<<名;for(const auto& r:组)t<<static_cast<int>(r.种类)<<L"("<<r.左参数序号<<L","<<r.右参数序号<<L") ";};
+            const auto 事实=[&](const wchar_t* 名,const auto& 组){t<<名;for(const auto& r:组)t<<r.关系概念节点.值<<L"["<<r.场景参数序号<<r.主体参数序号<<r.对象参数序号<<r.特征参数序号<<L"] ";};
+            const auto 项=[&](const wchar_t* 名,const auto& 组){t<<名;for(const auto& i:组)t<<i.参数序号<<L":"<<(i.特征类型概念节点 ? i.特征类型概念节点->值 : 0)<<L" ";};
+            关系(L"条件关系=",定义.条件.参数关系组);关系(L"；结果关系=",定义.结果.参数关系组);
+            事实(L"；条件事实=",定义.条件.场景事实限定组);事实(L"；结果事实=",定义.结果.场景事实限定组);
+            项(L"；条件项=",定义.条件.条件项组);项(L"；结果项=",定义.结果.结果项组);
+            t<<L"；参数范围=";for(const auto& p:方法->参数规格组)if(p.有序规格)t<<p.有序规格->序号<<L":"<<p.有序规格->范围概念节点.值<<L" ";
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"角色声明明细",t.str());
+        } catch(...) {}
+#endif
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        try {
+            std::wostringstream t;t<<L"失败点="<<(角色声明失败点 ? 角色声明失败点 : L"前段")<<L"；条件项存在概念=";
+            for(const auto& c:定义.条件.条件项组)t<<c.参数序号<<L":"<<(c.存在概念节点 ? c.存在概念节点->值 : 0)<<L" ";
+            t<<L"；结果项=";
+            for(const auto& r:定义.结果.结果项组)t<<r.参数序号<<L":域"<<(r.特征值域概念节点 ? r.特征值域概念节点->值 : 0)<<L"/精确"<<r.精确数值域.has_value()<<L" ";
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"角色声明失败点",t.str());
+        } catch(...) {}
+#endif
+        return 不合法(L"条件结果角色已声明");
+    }
+    if(!std::all_of(定义.条件.条件项组.begin(), 定义.条件.条件项组.end(), 类型已声明))return 不合法(L"条件项类型已声明");
+    if(!std::all_of(定义.结果.结果项组.begin(), 定义.结果.结果项组.end(), 类型已声明))return 不合法(L"结果项类型已声明");
+    if(!std::all_of(定义.结果.确认要求.禁止结果项组.begin(),
+        定义.结果.确认要求.禁止结果项组.end(), 类型已声明))return 不合法(L"禁止结果项类型已声明");
+    return true;
 }
 }
 
@@ -5794,7 +5853,18 @@ std::optional<新方法信息> 新_方法类::获取方法(
                 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取有序方法参数", L"存在参数范围不是可读取的正式存在概念。");
         }
         return 方法;
-    } catch (...) {
+    }
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    catch (const std::exception& 异常) {
+        try {
+            const std::string w=异常.what();
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"获取方法",L"读回异常",
+                L"方法="+std::to_wstring(方法节点.值)+L"；what="+std::wstring(w.begin(),w.end()));
+        } catch(...) {}
+        return std::nullopt;
+    }
+#endif
+    catch (...) {
         return std::nullopt;
     }
 }

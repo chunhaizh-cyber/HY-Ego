@@ -10,6 +10,10 @@
 #include "新_动态类.h"
 #include "新_存在类.h"
 #include "../核心/容错检查.h"
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+#include "../核心/日志系统.h"
+#include <sstream>
+#endif
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -3678,6 +3682,22 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     if(it==s.通用参数.end()||!s.是普通存在参数(E))return 新存在概念匹配状态::材料不足;
     const auto sourceConcept=it->second.构造存在概念.value_or(it->second.规格.范围概念节点);
     const auto source=s.方法.读取模拟存在范围(sourceConcept),target=s.方法.读取模拟存在范围(C);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    const auto 存在核验诊断=[&](const wchar_t* 步,int 值) {
+        try {
+            std::wostringstream t;
+            t<<L"步骤="<<步<<L"；状态="<<值<<L"；E="<<E.值<<L"；来源C="<<sourceConcept.值<<L"；目标C="<<C.值
+             <<L"；来源种类="<<(source ? static_cast<int>(source->种类) : -1)<<L"；目标种类="<<(target ? static_cast<int>(target->种类) : -1)
+             <<L"；来源必需特征类型=";
+            if(source)for(const auto& f:source->特征组)t<<f.特征类型概念.值<<L"/"<<f.具体特征概念.值<<L",";
+            t<<L"；目标必需特征类型=";
+            if(target)for(const auto& f:target->特征组)t<<f.特征类型概念.值<<L"/"<<f.具体特征概念.值<<L",";
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"模拟存在核验",L"未匹配",t.str());
+        } catch(...) {}
+    };
+#else
+    const auto 存在核验诊断=[](const wchar_t*,int) {};
+#endif
     if(!source||!target)throw std::runtime_error("simulation existence formal definition unavailable");
     // 本地存在两类来源：复制专属原型（专属C），或按正式定义构造的具体实例（构造C为抽象）。
     // 构造实例的归类证明是构造C沿正式上下位链属于目标C；随后同样逐项比较目标必需特征，不因同概念直接判匹配。
@@ -3690,13 +3710,13 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
             if(!r)throw std::runtime_error("simulation existence classification definition unavailable");
             return std::any_of(r->上位概念组.begin(),r->上位概念组.end(),[&](稳定编码 p){return 属于(p);});
         };
-        if(!属于(sourceConcept))return 新存在概念匹配状态::材料不足;
+        if(!属于(sourceConcept)){存在核验诊断(L"上位链不属于",3);return 新存在概念匹配状态::材料不足;}
     } else {
         const auto proof=s.方法.读取模拟存在原型候选(C);
-        if(proof.状态!=存在概念实例候选读取状态::已完成)return 新存在概念匹配状态::材料不足;
+        if(proof.状态!=存在概念实例候选读取状态::已完成){存在核验诊断(L"原型候选未完成",static_cast<int>(proof.状态));return 新存在概念匹配状态::材料不足;}
         if(sourceConcept!=C&&std::none_of(proof.候选组.begin(),proof.候选组.end(),[&](const auto& p){return p.专属概念节点==sourceConcept;}))
-            return 新存在概念匹配状态::材料不足;
-        if(source->特征组.empty()&&target->种类==存在概念种类::抽象)return 新存在概念匹配状态::材料不足;
+            {存在核验诊断(L"非目标原型",3);return 新存在概念匹配状态::材料不足;}
+        if(source->特征组.empty()&&target->种类==存在概念种类::抽象){存在核验诊断(L"专属无特征而目标抽象",3);return 新存在概念匹配状态::材料不足;}
     }
     新存在概念匹配材料 material;material.存在节点=E;material.专属存在概念节点=sourceConcept;material.目标存在概念节点=C;
     auto required=source->特征组;
@@ -3817,14 +3837,16 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         return 不符合 ? 匹配状态::不符合 : 不足 ? 匹配状态::材料不足 : 匹配状态::匹配;
     };
     const auto first=比较阶段();
-    if(first!=匹配状态::匹配)return first;
+    if(first!=匹配状态::匹配){存在核验诊断(L"第一比较阶段",static_cast<int>(first));return first;}
     material.必需特征组.clear();
     for(const auto& f:target->特征组) {
         const auto d=s.方法.读取模拟特征范围(f.具体特征概念);
         if(!d)throw std::runtime_error("simulation target feature definition unavailable");
         material.必需特征组.push_back({f,*d});
     }
-    return 比较阶段();
+    const auto second=比较阶段();
+    if(second!=匹配状态::匹配)存在核验诊断(L"第二比较阶段",static_cast<int>(second));
+    return second;
 }
 稳定编码 新_模拟世界类::建立本次动作(const 方法参数场景& scene,const 新交互绑定& b) {
     // 写回目标可以是环境交互者特征，或自我持有的其它本地特征参数（获取服务对象写参数5，R93）。

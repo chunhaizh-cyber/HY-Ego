@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <array>
 #include <utility>
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+#include "../核心/日志系统.h"
+#include <string>
+#endif
 namespace 海中鱼巣 {
 namespace {
 class 隔离连接后端 final : public 新连接执行后端 {
@@ -185,6 +189,15 @@ public:
     运行.结果.状态=新本能函数执行状态::入口拒绝;
     运行.结果.结果取得状态=新本能函数结果取得状态::待取得;
     新交互绑定 绑定;
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    const auto 复核诊断=[&](const wchar_t* 步,int 值) {
+        if (场景.用途()!=新方法参数场景用途::模拟) return;
+        try { (void)记录调试日志(L"SIMULATION_PROGRESS",L"获取服务对象核心",L"复核未通过",
+            std::wstring(L"步骤=")+步+L"；状态="+std::to_wstring(值)); } catch (...) {}
+    };
+#else
+    const auto 复核诊断=[](const wchar_t*,int) {};
+#endif
     const auto 复核=[&]() {
         if (后端.已请求停止()) {
             if (运行.结果.动作阶段==新本能函数动作阶段::未进入动作)
@@ -192,16 +205,18 @@ public:
             return false;
         }
         const auto 本次必要条件=后端.读取本次必要条件(场景);
-        if (!本次必要条件 || *本次必要条件!=必要条件) return false;
-        if (后端.读取绑定环境(场景,绑定)!=新交互求值状态::已取得) return false;
+        if (!本次必要条件 || *本次必要条件!=必要条件) { 复核诊断(L"必要条件",static_cast<int>(本次必要条件.has_value())); return false; }
+        if (const auto 环境=后端.读取绑定环境(场景,绑定); 环境!=新交互求值状态::已取得) { 复核诊断(L"绑定环境",static_cast<int>(环境)); return false; }
         for (const auto& 条件:必要条件.条件.条件项组) {
             const auto* 参数=场景.查询参数(条件.参数序号);
-            if (!参数||!条件.存在概念节点
-                ||后端.核验绑定存在概念(参数->信息节点,*条件.存在概念节点)!=新存在概念匹配状态::匹配) return false;
+            if (!参数||!条件.存在概念节点) { 复核诊断(L"条件项缺参数",static_cast<int>(条件.参数序号)); return false; }
+            if (const auto 匹配=后端.核验绑定存在概念(参数->信息节点,*条件.存在概念节点); 匹配!=新存在概念匹配状态::匹配) {
+                复核诊断(L"存在概念",static_cast<int>(条件.参数序号)*100+static_cast<int>(匹配)); return false; }
         }
         for (const auto& 限定:必要条件.场景事实限定组)
-            if (后端.读取场景事实(限定,场景.全部角色绑定())!=新交互求值状态::已取得) return false;
-        return 绑定.自我!=绑定.对端;
+            if (const auto 事实=后端.读取场景事实(限定,场景.全部角色绑定()); 事实!=新交互求值状态::已取得) { 复核诊断(L"场景事实",static_cast<int>(事实)); return false; }
+        if (绑定.自我==绑定.对端) { 复核诊断(L"自我等于对端",0); return false; }
+        return true;
     };
     if (!复核()) return 运行;
     运行.条件.执行分支节点=场景.执行分支节点();
