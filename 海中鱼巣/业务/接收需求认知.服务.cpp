@@ -742,7 +742,60 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if(!known.信息||!known.信息->首次接收认知来源)throw std::logic_error("same-source demand read returned no source");
                 out.D=known.信息->节点;
             } else if(known.状态!=新需求操作状态::需求不存在)throw std::logic_error("same-source demand lookup failed");
-            {
+            // CONV-INPUT 最小切片：本消息尚无同源D时，若自我曾就某个待完善被认知需求D向该说话者发出字段询问，
+            // 且回复的需求目标与D已知字段相容，则视为对该询问的回应，经需求owner补齐D缺失字段，不新建D（7240 §5.4 回应交被回应项提出方）。
+            bool 已回答写回=false;
+            if(known.状态==新需求操作状态::需求不存在) {
+                进入步骤("核对回应出站字段询问");
+                const auto asked=d.语言.查询出站字段询问(*context.已绑定人类);
+                // 被询字段FT → 部分目标字段：只在该字段仍未知且回复确实给出它时才算回应。
+                std::map<稳定编码,std::uint32_t> 字段槽;
+                if(!asked.empty())for(const auto 槽:{先天特征类型槽::需求目标存在,先天特征类型槽::需求目标FT,
+                        先天特征类型槽::需求目标形式,先天特征类型槽::目标域,先天特征类型槽::目标比较,先天特征类型槽::目标方向}) {
+                    const auto r=d.特征概念.读取先天特征类型槽(槽);
+                    if(r.状态==特征概念规则状态::资源失败)资源();if(r.状态==特征概念规则状态::前提已变化)漂移();
+                    if(r.状态!=特征概念规则状态::已完成||!r.类型根)throw std::logic_error("demand field innate FT slot unavailable");
+                    字段槽.emplace(*r.类型根,槽);
+                }
+                const auto 有字段=[](const 新部分服务要求目标& t,std::uint32_t 槽)->bool{
+                    using namespace 先天特征类型槽;
+                    return 槽==需求目标存在 ? t.目标存在节点.has_value() : 槽==需求目标FT ? t.目标特征类型概念节点.has_value()
+                        : 槽==需求目标形式 ? t.目标形式.has_value() : 槽==目标域 ? t.目标值域概念节点.has_value()
+                        : 槽==目标比较 ? t.目标比较关系概念节点.has_value() : t.目标变化方向.has_value();
+                };
+                std::optional<新部分服务要求目标> target;
+                for(auto it=asked.rbegin();it!=asked.rend()&&!已回答写回;++it) {
+                    const auto 槽=字段槽.find(it->字段特征类型);
+                    if(槽==字段槽.end())continue;
+                    const auto D=d.需求.读取需求治理信息(it->需求D);
+                    if(!D||D->执行域!=新需求执行域::被认知||D->需求主体存在节点!=*context.已绑定人类
+                        ||D->首次接收认知来源||D->信息完善阶段!=std::optional{新需求信息完善阶段::待完善})continue;
+                    auto merged=D->已知目标.value_or(新部分服务要求目标{});
+                    if(有字段(merged,槽->second))continue; // 被询字段已知：该询问已不再待回应
+                    if(!target)target=映射目标(d,projected,stop);
+                    if(!有字段(*target,槽->second))continue;
+                    bool conflict=false;
+                    const auto fill=[&](auto& dst,const auto& src){if(!src)return;if(dst&&*dst!=*src)conflict=true;else if(!dst)dst=src;};
+                    fill(merged.目标存在节点,target->目标存在节点);fill(merged.目标特征类型概念节点,target->目标特征类型概念节点);
+                    fill(merged.目标形式,target->目标形式);fill(merged.目标值域概念节点,target->目标值域概念节点);
+                    fill(merged.目标比较关系概念节点,target->目标比较关系概念节点);fill(merged.目标变化方向,target->目标变化方向);
+                    // 值目标与方向目标互斥：合并后混合即不相容，按原路径处理。
+                    const bool 有值=merged.目标值域概念节点||merged.目标比较关系概念节点;
+                    if(conflict||(merged.目标变化方向&&有值)
+                        ||(merged.目标形式==std::optional{新需求目标形式::值}&&merged.目标变化方向)
+                        ||(merged.目标形式==std::optional{新需求目标形式::变化方向}&&有值))continue;
+                    if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入回答写回"};
+                    进入步骤("经需求owner补齐被询需求字段");
+                    const auto upd=d.需求.更新被认知需求信息({D->节点,*D,merged,std::nullopt});
+                    if(upd.状态==新需求操作状态::资源失败)资源();if(upd.状态==新需求操作状态::前提已变化)漂移();
+                    // 只有实际补齐才消费本消息；owner拒绝的合法不相容目标退回原路径。
+                    if(upd.状态!=新需求操作状态::已修改)continue;
+                    out.D=D->节点;out.阶段=阶段::已回答写回;
+                    out.原因="回应对既有被认知需求的字段询问，已补齐需求字段；未新建需求";
+                    本次终结=true;已回答写回=true;
+                }
+            }
+            if(!已回答写回) {
                 进入步骤("映射正式需求目标");
                 const auto target=映射目标(d,projected,stop);
                 if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求发表"};

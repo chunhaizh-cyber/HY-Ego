@@ -6045,6 +6045,34 @@ void 新_语言类::初始化表达组织知识结构(){
 std::optional<新出站具体表达信息> 新_语言类::读取出站具体表达(稳定编码 key) const {
     std::lock_guard lock(新语言互斥);组织读取现场 r;return 读出站(r,key);
 }
+std::vector<新出站字段询问> 新_语言类::查询出站字段询问(稳定编码 受话者) const {
+    std::lock_guard lock(新语言互斥);组织读取现场 r;std::vector<新出站字段询问> out;
+    if(!有效(受话者)||!有效(组键(组织键::登记根)))return out;
+    for(const auto& f:r.字段(组键(组织键::登记根),组织键::出站登记)){
+        const auto id=std::get<稳定编码>(f);组织要求(r.整数(id,组织键::类型)==101);
+        std::set<稳定编码> path;
+        const auto 网=组织读值<新语言含义网>(r,r.引用(id,组织键::含义网),path);核验含义网结构(网);
+        std::map<std::int64_t,const 新含义内容项*> 项;for(const auto& i:网.内容项组)项.emplace(i.编号,&i);
+        for(const auto& i:网.内容项组){
+            const auto* a=std::get_if<新内容算子>(&i.内容);
+            if(!a||a->种类!=新内容算子种类::态度||a->态度种类!=新态度种类::询问
+                ||a->确认范围!=新确认范围::填项内容||a->内容引用组.size()!=1)continue;
+            const bool 向此人=std::any_of(a->角色组.begin(),a->角色组.end(),[&](const auto& x){
+                const auto* b=std::get_if<新绑定指称>(&x.指称);
+                return x.名称=="受询者"&&b&&b->类别==新指称类别::存在&&b->节点==受话者;});
+            const auto c=项.find(a->内容引用组.front());
+            if(!向此人||c==项.end())continue;
+            const auto* s=std::get_if<新静态含义单元>(&c->second->内容);
+            const auto* p=s?std::get_if<新特征值谓项>(&s->谓项):nullptr;
+            const auto* d=s?std::get_if<新绑定指称>(&s->主体):nullptr;
+            const auto* ft=p?std::get_if<新绑定指称>(&p->特征类型):nullptr;
+            const auto* v=p?std::get_if<新表达指称>(&p->值):nullptr;
+            if(!d||d->类别!=新指称类别::需求||!ft||ft->类别!=新指称类别::特征类型||!v||!std::holds_alternative<新疑问代词实例>(*v))continue;
+            out.push_back({id,d->节点,ft->节点});
+        }
+    }
+    return out;
+}
 std::optional<新出站具体表达信息> 新_语言类::建立或取得出站具体表达(稳定编码 scene,const 新语言含义网& meaning,
     稳定编码 knowledge,const std::string& text,稳定编码 source){
     核验含义网结构(meaning);组织要求(有效(scene)&&有效(source)&&有效(knowledge)&&!text.empty());

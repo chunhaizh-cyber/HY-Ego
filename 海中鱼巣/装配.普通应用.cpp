@@ -1356,9 +1356,9 @@ public:
             return "{\"stage\":\"未处理\",\"reason\":\"尚无接收认知观察\",\"message\":null,\"speaker\":null,\"scene\":null,\"meaning\":null,\"demand\":null}";
         }
         auto item=*last;
-        static constexpr std::array<const char*,15> names{"未处理","已采用U","已建立D","已读回","非支持输入",
+        static constexpr std::array<const char*,16> names{"未处理","已采用U","已建立D","已读回","非支持输入",
             "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求",
-            "前置输入待治理","前置输入治理等待"};
+            "前置输入待治理","前置输入治理等待","已回答写回"};
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
@@ -1397,10 +1397,13 @@ public:
             检查停止();
             const auto d=当前_.需求服务.读取需求治理信息(*item.D);
             检查停止();
-            if(!d||!d->首次接收认知来源||d->首次接收认知来源->键.接收消息节点!=item.M
+            // “已回答写回”更新的是既有被认知需求（无首次接收来源），按主体与执行域核验，不套同源新建D合同。
+            const bool 回答写回=item.阶段==接收需求认知阶段::已回答写回;
+            if(!d||(回答写回 ? (d->首次接收认知来源||d->执行域!=新需求执行域::被认知||!item.H||d->需求主体存在节点!=*item.H)
+                : (!d->首次接收认知来源||d->首次接收认知来源->键.接收消息节点!=item.M
                 ||d->首次接收认知来源->采用含义节点!=item.U
-                ||!item.需求来源||d->首次接收认知来源->键!=*item.需求来源) {
-                item.D.reset();item.待交接请求.reset();item.原因+="；当前正式需求来源读回暂不可用";
+                ||!item.需求来源||d->首次接收认知来源->键!=*item.需求来源))) {
+                item.D.reset();item.待交接请求.reset();item.原因+=回答写回 ? "；当前正式需求核验暂不可用" : "；当前正式需求来源读回暂不可用";
             }
         }
         std::string 来源="null";
