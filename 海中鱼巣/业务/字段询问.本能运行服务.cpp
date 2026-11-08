@@ -75,8 +75,16 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
 新方法建立结果 字段询问本能运行服务::确保方法登记(const 新方法知识建立请求& q) noexcept {
     try {
         auto& s=*实现_;实现::租约 lease(s);
-        要求(q.条件结果组.empty(),"field question registration must not create learned pairs");
-        return s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),q);
+        // 只接受恰一条先天被动结果配对；头与规格先登记，配对再经方法owner先天入口确保。
+        要求(q.条件结果组.size()==1&&q.条件结果组.front().结果.结果项组.size()==1
+            &&q.条件结果组.front().结果.结果项组.front().被动需求目标,"field question registration accepts only the innate passive pair");
+        auto head=q;head.条件结果组.clear();
+        const auto m=s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),head);
+        if(!m.方法节点)return m;
+        const auto pair=s.方法.确保先天被动配对(*m.方法节点,q.条件结果组.front());
+        要求(pair.状态==新方法学习发布状态::已发布||pair.状态==新方法学习发布状态::精确重复,
+            "field question innate passive pair could not be ensured");
+        return m;
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问登记",L"字段询问方法登记错误。"); }
 }
 新字段询问材料读回 字段询问本能运行服务::读取询问材料(const 方法参数场景& scene) const {

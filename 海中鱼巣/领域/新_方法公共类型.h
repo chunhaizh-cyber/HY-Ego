@@ -257,6 +257,9 @@ struct 新方法结果项定义 final {
     std::uint32_t 参数序号 = 0;
     std::uint32_t 任务成员变量序号 = 0;
     std::optional<新方法引用内容条件> 引用内容结果;
+    // 先天被动结果：执行后，参数序号所绑定需求的目标由外部事件（如对方回答写回）被动达成。
+    // 只出现在先天配对中，与特征、值域、方向、状态、引用内容结果互斥。
+    bool 被动需求目标 = false;
     friend bool operator==(const 新方法结果项定义&,
         const 新方法结果项定义&) = default;
 };

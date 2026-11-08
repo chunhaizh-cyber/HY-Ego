@@ -311,7 +311,16 @@ namespace {
             新方法条件项定义 output;
             output.参数序号=4;output.特征类型概念节点=c->输出队列类型;
             necessary.条件.条件项组.push_back(std::move(output));
-            q.初始必要条件=std::move(necessary);
+            q.初始必要条件=necessary;
+            // CONV-INSTINCT 6.3 先天被动结果：发出询问后，参数1所绑定补问需求的目标
+            // 由对方回答写回被动达成；本函数只声明，不自证效果。
+            新方法条件结果定义 passive;
+            passive.条件=necessary.条件;
+            passive.条件.参数关系组={{新方法参数关系种类::不同,2,3}};
+            新方法结果项定义 achieved;achieved.参数序号=1;achieved.被动需求目标=true;achieved.主要结果=true;
+            passive.结果.关系规则=新方法项关系规则::单项;
+            passive.结果.结果项组.push_back(std::move(achieved));
+            q.条件结果组.push_back(std::move(passive));
             const auto m=p->确保方法登记(q);
             if (!m.方法节点) throw std::logic_error("field question declaration failed");
             r.结果.状态=场景.全部角色绑定().empty() ? 新本能函数执行状态::已按合同返回 : 新本能函数执行状态::参数不匹配;

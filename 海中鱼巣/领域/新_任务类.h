@@ -387,6 +387,8 @@ struct 新任务结果获取方案 final {
     新方法项关系规则 禁止结果关系规则 = 新方法项关系规则::任一成立;
     std::vector<新任务禁止结果目标> 禁止结果组;
     std::optional<稳定编码> 服务需求取得数量类型;
+    // CONV-INSTINCT 6.3：先天被动结果。非空时目标组为空，结果由需求owner复核该需求目标得到。
+    std::optional<稳定编码> 被动达成需求节点;
     std::vector<新方法初始场景事实限定> 必需场景事实组;
 
     bool 完整() const noexcept;
