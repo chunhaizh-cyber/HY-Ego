@@ -20,6 +20,9 @@
 #include <type_traits>
 #include <vector>
 
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+namespace 海中鱼巣 { extern thread_local int 引用内容建立失败行; }
+#endif
 namespace 海中鱼巣 {
 
 稳定编码 新版自我所在场景节点;
@@ -3216,7 +3219,13 @@ struct 新_自我线程类::实现 final {
                 return std::find(当前.子需求项组.begin(), 当前.子需求项组.end(), 采用.原提议)
                     != 当前.子需求项组.end();
             };
-            const auto 停止剩余 = [&](新子需求采用状态 状态) {
+            const auto 停止剩余 = [&](新子需求采用状态 状态,std::source_location 位置=std::source_location::current()) {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"停止剩余",
+                    L"状态="+std::to_wstring(static_cast<int>(状态))+L"；行="+std::to_wstring(位置.line()));}catch(...){}
+#else
+                (void)位置;
+#endif
                 for (auto& 采用 : 回执.项组)
                     if (采用.状态 == 新子需求采用状态::未处理 || 采用.状态 == 新子需求采用状态::资源失败)
                         采用.状态 = 状态;
@@ -3290,6 +3299,11 @@ struct 新_自我线程类::实现 final {
                             auto 实例读取=任务服务->建立或取得来源前驱目标实例(*原.依据,模板,停止);
                             if(std::holds_alternative<新任务因果读取取消>(实例读取))throw 新任务因果读取取消{};
                             const auto& 实例结果=std::get<新服务取得目标实例结果>(实例读取);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"来源前驱实例",
+                                L"状态="+std::to_wstring(static_cast<int>(实例结果.状态))+L"；有信息="+std::to_wstring(实例结果.信息 ? 1 : 0)
+                                +L"；父任务="+std::to_wstring(原.依据->请求.父任务节点.值));}catch(...){}
+#endif
                             if(实例结果.信息) {
                                 auto 本次前缀=*实例结果.信息;
                                 if(采用.来源前驱实例) {
@@ -3351,6 +3365,10 @@ struct 新_自我线程类::实现 final {
                             结果.状态=新自我消息处理状态::已交接未收回;return 结果;
                         }
                         if(建立.状态==新需求操作状态::前提已变化) {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"内容子需求前提已变化",
+                                L"需求owner行="+std::to_wstring(引用内容建立失败行));}catch(...){}
+#endif
                             停止剩余(新子需求采用状态::来源过期);break;
                         }
                         if(!采用.需求节点||(建立.状态!=新需求操作状态::已建立&&建立.状态!=新需求操作状态::已复用))

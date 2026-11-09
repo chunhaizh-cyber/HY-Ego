@@ -463,7 +463,14 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
         if(派生.状态==新派生源反推状态::材料已变化){派生材料变化行=__LINE__;throw 派生材料变化{};}
         // 没有正式新增见证和完整投影的普通目标，不走本来源链。
         if(!派生.源约束||!派生.源约束->新增成员见证要求
-            ||!请求.派生源上下文||!请求.派生源上下文->正式投影)return 结果;
+            ||!请求.派生源上下文||!请求.派生源上下文->正式投影) {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"来源前驱逆推",L"不走来源链",
+                L"源约束="+std::to_wstring(派生.源约束 ? 1 : 0)+L"；见证要求="+std::to_wstring(派生.源约束&&派生.源约束->新增成员见证要求 ? 1 : 0)
+                +L"；派生状态="+std::to_wstring(static_cast<int>(派生.状态)));}catch(...){}
+#endif
+            return 结果;
+        }
         const auto& 约束=*派生.源约束;
         const auto& 投影=*请求.派生源上下文->正式投影;
         const auto& 要求=*约束.新增成员见证要求;
@@ -849,6 +856,15 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
             if(!当前||当前->定义!=项.正式定义){派生材料变化行=__LINE__;throw 派生材料变化{};}
         }
         核同来源保护(结果.完整保护);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        try{
+            std::wstring t=L"OR路径="+std::to_wstring(结果.OR路径组.size())+L"；前端="+std::to_wstring(结果.行动前端组.size())
+                +L"；未连接="+std::to_wstring(结果.未连接缺口组.size())+L"；交互者状态="+std::to_wstring(static_cast<int>(语境.交互者.状态));
+            for(const auto& 路:结果.OR路径组){t+=L"；路缺口=";for(const auto& g:路.缺口组)t+=std::to_wstring(static_cast<int>(g.种类))+L",";}
+            for(const auto& f:结果.行动前端组)t+=L"；前端种类="+std::to_wstring(static_cast<int>(f.种类));
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"来源前驱逆推",L"结果",t);
+        }catch(...){}
+#endif
         return 结果;
     } catch(const 来源配置未就绪&) {
         结果.OR路径组.clear();结果.行动前端组.clear();结果.完整保护.clear();
