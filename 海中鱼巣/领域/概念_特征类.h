@@ -338,6 +338,10 @@ public:
     // 已读取+空需求表示确认合法但尚未采用；与读取失败分账。
     virtual 特征任务成员读取结果 读取服务要求对应需求(稳定编码) const noexcept = 0;
     virtual 特征成员概念归属结果 判定任务集合成员概念(稳定编码, 稳定编码) const noexcept { return {}; }
+    // R108：任务服务需求集S(T)（建立需求及同列表项无直接任务的成员，升序）；读取失败返回空。
+    // 只读基础数据，不取任务锁；需求owner持需求锁调用安全。
+    virtual std::vector<稳定编码> 读取任务服务需求组(稳定编码) const noexcept { return {}; }
+    virtual bool 需求属于任务服务需求集(稳定编码, 稳定编码) const noexcept { return false; }
 };
 
 struct 特征任务集合条件比较结果 final {

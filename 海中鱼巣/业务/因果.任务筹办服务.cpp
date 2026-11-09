@@ -217,10 +217,10 @@ std::vector<特征概念I64闭区间> 规范新增目标域(const 新需求目�
     std::vector<稳定编码> 成员;
     std::map<稳定编码, const 新因果投影对应项*> 对应;
     if (p) {
-        std::set<稳定编码> 任务;
+        // R108：同项成员可映射到同一服务任务（唯一性由任务owner对应读取保证），成员按T去重。
         for (const auto& x : p->完整对应项组) {
             派生要求(x.需求节点.值 && 对应.emplace(x.需求节点, &x).second);
-            if (x.任务节点) 派生要求(x.任务节点->值 && 任务.insert(*x.任务节点).second);
+            if (x.任务节点) 派生要求(x.任务节点->值);
         }
         for (const auto& x : p->完整对应项组) {
             auto n = &x;
@@ -240,6 +240,7 @@ std::vector<特征概念I64闭区间> 规范新增目标域(const 新需求目�
             } else 派生要求(*n->根角色 == 新需求根角色::安全 && n->需求节点 == p->安全根需求节点);
         }
         std::sort(成员.begin(), 成员.end());
+        成员.erase(std::unique(成员.begin(), 成员.end()), 成员.end());
         派生要求(成员 == p->正式投影成员组 && 根正确 && 排除有父);
         完整 = true;
         结果.当前正式投影成员组 = 成员;

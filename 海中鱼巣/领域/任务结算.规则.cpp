@@ -25,11 +25,13 @@ std::int64_t 累加贡献(std::int64_t 当前, std::int64_t 增量) {
     for (const auto& [需求节点, 项] : 图.需求任务对应) {
         要求结算事实(需求节点 == 项.first.节点);
         if (!项.second) continue;
-        要求结算事实(项.second->需求节点 == 需求节点
-            && 任务身份组.insert(项.second->节点).second);
+        // R108：非直接成员映射到同项服务任务；任务身份唯一性只对直接项要求。
+        if (项.second->需求节点 != 需求节点) continue;
+        要求结算事实(任务身份组.insert(项.second->节点).second);
         if (项.second->节点 == 来源.任务节点) 本任务 = &*项.second;
     }
     要求结算事实(本任务 != nullptr);
+    const auto 本轮需求 = 有效(图.本轮服务需求) ? 图.本轮服务需求 : 本任务->需求节点;
     新结算贡献决策 决策;
     决策.来源 = 来源;
     if (本任务->最近执行实例节点 != 来源.执行实例节点
@@ -46,14 +48,14 @@ std::int64_t 累加贡献(std::int64_t 当前, std::int64_t 增量) {
         要求结算事实(接收.父任务节点 == 本任务->节点
             && 接收身份组.insert(接收.节点).second
             && 接收子任务组.insert(接收.子任务节点).second);
-        const auto 子 = std::find_if(图.需求任务对应.begin(), 图.需求任务对应.end(),
-            [&](const auto& 项) { return 项.second.second && 项.second.second->节点 == 接收.子任务节点; });
-        要求结算事实(子 != 图.需求任务对应.end() && 子->second.first.父需求节点 == 本任务->需求节点);
+        要求结算事实(std::any_of(图.需求任务对应.begin(), 图.需求任务对应.end(), [&](const auto& 项) {
+            return 项.second.second && 项.second.second->节点 == 接收.子任务节点
+                && 项.second.first.父需求节点 == 本轮需求; }));
     }
     新任务完成贡献 贡献;
     bool 有直接子需求 = false;
     for (const auto& [需求节点, 项] : 图.需求任务对应) {
-        if (项.first.父需求节点 != 本任务->需求节点) continue;
+        if (项.first.父需求节点 != 本轮需求) continue;
         有直接子需求 = true;
         const auto& 子 = 项.second;
         const auto 接收 = 子 ? std::find_if(接收组.begin(), 接收组.end(),
@@ -63,6 +65,25 @@ std::int64_t 累加贡献(std::int64_t 当前, std::int64_t 增量) {
         const bool 已失败或取消 = 子 && (子->当前状态 == 新任务状态::已失败
             || 子->当前状态 == 新任务状态::已取消);
         if (已失败或取消 && 接收 == 接收组.end()) continue;
+        // R108：子任务的最新K不属于本需求（由同项任务代为服务）：子任务已终结则零贡献收束，否则等待。
+        if (子) {
+            const auto 子K = 子->完成结算节点 ? 图.完成结算组.find(*子->完成结算节点) : 图.完成结算组.end();
+            const bool K属本需求 = 子K != 图.完成结算组.end() && 子K->second.需求节点 == 需求节点;
+            if (!K属本需求) {
+                const auto s = 子->当前状态;
+                const bool 子终结 = s == 新任务状态::已结算 || s == 新任务状态::放弃结算
+                    || s == 新任务状态::已失败 || s == 新任务状态::已取消
+                    || s == 新任务状态::未执行但目标已满足
+                    || (s == 新任务状态::已完成 && 子K != 图.完成结算组.end()
+                        && std::optional{子K->second.执行实例节点} == 子->最近执行实例节点);
+                // 采集层未读入该K（子任务尚在推进）：等待，不按零贡献收束。
+                if (子->完成结算节点 && 子K == 图.完成结算组.end()) {
+                    决策.待归集直接子需求节点组.push_back(需求节点); continue;
+                }
+                if (子终结) continue;
+                决策.待归集直接子需求节点组.push_back(需求节点); continue;
+            }
+        }
         if (!已失败或取消 && !未执行满足 && (!子 || (子->当前状态 != 新任务状态::已完成
             && 子->当前状态 != 新任务状态::已结算) || !子->完成结算节点)) {
             决策.待归集直接子需求节点组.push_back(需求节点);

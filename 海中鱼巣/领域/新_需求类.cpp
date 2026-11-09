@@ -2154,7 +2154,8 @@ void 新_需求类::要求目标特征实例承载(稳定编码 D) noexcept {
         const auto taskIdentity=taskReader->读取任务所属需求(*q.来源承接节点);
         if(taskIdentity.状态==特征任务成员读取状态::资源失败)return {S::资源失败,{},{}};
         if(taskIdentity.状态==特征任务成员读取状态::未装配)return {S::目标内容依赖未就绪,{},{}};
-        if(taskIdentity.状态!=特征任务成员读取状态::已读取||taskIdentity.需求节点!=q.父需求节点)return {S::任务来源未接通,{},{}};
+        // R108：新生子需求的父为来源任务当前满足需求（∈ S(T)），不再限于建立需求。
+        if(taskIdentity.状态!=特征任务成员读取状态::已读取||!taskReader->需求属于任务服务需求集(*q.来源承接节点,q.父需求节点))return {S::任务来源未接通,{},{}};
         新普通需求建立请求 request=q;std::vector<基础联合节点快照> protect;
         if(old)request.目标=old->目标;
         else {
@@ -4210,6 +4211,33 @@ std::optional<新需求列表项信息> 新_需求类::获取需求列表项(
         return 读取列表项信息(列表项节点);
     } catch (...) {
         return std::nullopt;
+    }
+}
+
+新需求列表项读取结果 新_需求类::读取需求所在列表项(稳定编码 D) const noexcept {
+    新需求列表项读取结果 r;
+    try {
+        if (!结构已初始化() || !节点仍存在(D) || !是需求类型节点(D)) return r;
+        std::vector<稳定编码> 项组;
+        for (const auto& f : 全局基础数据集.查询目标字段(D, 列表成员字段)) 项组.push_back(f.所属节点);
+        std::sort(项组.begin(), 项组.end());
+        项组.erase(std::unique(项组.begin(), 项组.end()), 项组.end());
+        if (项组.empty()) { r.状态 = 新需求列表项读取状态::不在列表项; return r; }
+        if (项组.size() != 1 || !是列表项类型节点(项组.front())) return r;
+        auto 成员 = 读取多节点字段(项组.front(), 列表成员字段);
+        std::sort(成员.begin(), 成员.end());
+        if (std::adjacent_find(成员.begin(), 成员.end()) != 成员.end()
+            || !std::binary_search(成员.begin(), 成员.end(), D)
+            || std::any_of(成员.begin(), 成员.end(), [](稳定编码 m) { return !是需求类型节点(m); }))
+            return r;
+        r.状态 = 新需求列表项读取状态::已读取;
+        r.列表项节点 = 项组.front();
+        r.成员组 = std::move(成员);
+        return r;
+    } catch (const std::bad_alloc&) {
+        r.状态 = 新需求列表项读取状态::资源失败; return r;
+    } catch (...) {
+        r.状态 = 新需求列表项读取状态::结构不一致; return r;
     }
 }
 

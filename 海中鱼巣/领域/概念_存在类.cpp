@@ -3589,10 +3589,12 @@ void 编译模板(const 定义模板&t,std::size_t index,基础节点组追加�
     std::set<稳定编码> visited;
     const auto info=解码正式定义(found->second,protect,visited);
     (void)核正式结构图(protect);
-    std::vector<std::int64_t> oldValues,newValues;
-    for(std::int64_t x=1;x<=13;++x) {
+    // R108：任务状态域 1..14（新增“放弃结算”）；旧域 1..12 与 1..13 幂等升级，不删旧值。
+    std::vector<std::int64_t> oldValues,oldValues13,newValues;
+    for(std::int64_t x=1;x<=14;++x) {
         newValues.push_back(x);
         if(x<=12)oldValues.push_back(x);
+        if(x<=13)oldValues13.push_back(x);
     }
     const auto* definition=std::get_if<基础范围概念定义>(&info.定义);
     if(!definition||definition->原语!=基础概念原语::I64有限枚举
@@ -3600,7 +3602,7 @@ void 编译模板(const 定义模板&t,std::size_t index,基础节点组追加�
     if(definition->整数参数==newValues) {
         return 正式保护未变(protect)?正式状态::已复用:正式状态::前提已变化;
     }
-    if(definition->整数参数!=oldValues)return 正式状态::定义冲突;
+    if(definition->整数参数!=oldValues&&definition->整数参数!=oldValues13)return 正式状态::定义冲突;
     稳定编码 field;
     for(const auto& snapshot:protect)if(snapshot.结构.节点.编码==found->second)
         for(const auto& item:snapshot.结构.字段组)if(item.字段节点==正式键[整数键]) {
@@ -3638,7 +3640,7 @@ std::vector<定义模板> 基础模板() {
     add(409,基础概念原语::I64闭区间,{0,10000});add(410,基础概念原语::I64闭区间,{1,UINT32_MAX});
     for(std::uint32_t s=411;s<=420;++s) {
         std::vector<std::int64_t> values;
-        if(s==413)values={1,2,3,4};else if(s==416)for(int x=1;x<=13;++x)values.push_back(x);
+        if(s==413)values={1,2,3,4};else if(s==416)for(int x=1;x<=14;++x)values.push_back(x);
         else if(s==420)values={0,1};else values={1,2};
         add(s,基础概念原语::I64有限枚举,std::move(values));
     }
@@ -3876,7 +3878,7 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
             if(p.前提已变化)return {正式状态::前提已变化,{}};
             if(p.状态!=基础结构操作状态::已完成||!p.信息||p.信息->类型根!=x)正式定义故障("business FT root unavailable");
             const auto&value=p.信息->定义;
-            if(x==dep.任务状态FT)核I64依赖(value,1,13);
+            if(x==dep.任务状态FT)核I64依赖(value,1,14);
             else if(x==dep.任务服务值FT)核I64依赖(value,INT64_MIN,INT64_MAX);
             else if(x==dep.方法启用FT)核I64依赖(value,0,1);
             else if(x==dep.方法可靠度FT)核I64依赖(value,0,10000);

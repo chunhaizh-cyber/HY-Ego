@@ -1955,7 +1955,7 @@ struct 新_自我线程类::实现 final {
                 if (!承接.承接 || !承接.承接->任务)
                     throw std::logic_error("complete service acceptance task missing");
                 const auto 当前任务 = 任务服务->获取任务(承接.承接->任务->节点);
-                if (!当前任务 || 当前任务->需求节点 != 项.外部服务承接消息->需求节点)
+                if (!当前任务 || !任务服务->需求属于任务服务集(当前任务->节点, 项.外部服务承接消息->需求节点))
                     throw std::logic_error("complete service receipt formal identity mismatch");
             }
             const 新外部服务需求采用结果* 已知前缀=nullptr;
@@ -1999,7 +1999,7 @@ struct 新_自我线程类::实现 final {
                     || !承接.承接 || !承接.承接->任务)
                     throw std::logic_error("complete service demand task receipt unreadable");
                 const auto 当前任务 = 任务服务->获取任务(承接.承接->任务->节点);
-                if (!当前任务 || 当前任务->需求节点 != *采用.需求节点)
+                if (!当前任务 || !任务服务->需求属于任务服务集(当前任务->节点, *采用.需求节点))
                     throw std::logic_error("complete service demand task identity changed");
                 结果.状态 = 新自我消息处理状态::任务已承接;
                 return 结果;
