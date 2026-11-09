@@ -7070,7 +7070,7 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
 #endif
     新方法候选结果 结果;
     try {
-        std::lock_guard 锁(新方法互斥);
+        std::unique_lock 锁(新方法互斥);
         if (!结构仍存在()) {
             结果.状态 = 新方法操作状态::尚未初始化;
             return 结果;
@@ -7082,6 +7082,18 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
             || !引用组有效(查询.作用存在概念组)
             || !引用组有效(查询.涉及特征类型概念组)
             || !引用组有效(查询.可能结果概念组)) return 结果;
+        // 撕裂读取（多次基础读取之间遇并发发布）：任一成员方法读不成或遇引用内容定义变化时，释放方法锁让发布者
+        // 完成，再从成员组起整轮重查（结果全部重建，不拼接不同时刻的筛选）；总共至多16轮，仍不成按原状态报告，
+        // 持久损坏不被当作暂态。
+        for (int 轮 = 0;; ++轮) {
+        if (轮) {
+            锁.unlock();
+            std::this_thread::yield();
+            锁.lock();
+            if (!结构仍存在()) { 结果.状态 = 新方法操作状态::尚未初始化; 结果.方法节点组.clear(); return 结果; }
+        }
+        结果.方法节点组.clear();
+        bool 重查 = false;
         const auto 成员组 = 读取多节点字段(新方法组织根节点, 方法成员字段, 特征概念服务_);
         if (!成员组) {
             结果.状态 = 新方法操作状态::结构不一致;
@@ -7093,10 +7105,22 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
         });
 #endif
         for (const auto 方法节点 : *成员组) {
-            const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+            std::optional<新方法信息> 方法;
+            bool 定义变化 = false;
+            try { 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true); }
+            catch (const 引用内容定义前提变化&) { 定义变化 = true; }
+            if (!方法 && 轮 < 15 && (定义变化 || (节点类型为(方法节点, 方法节点类型) && 方法属于根(方法节点)))) {
+                重查 = true;
+                break;
+            }
+            if (定义变化) throw 引用内容定义前提变化{};
             if (!方法) {
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
                 记录监控([&](auto& 文本) { 文本 << L"遍历方法=" << 方法节点.值 << L"；方法读取失败"; });
+#endif
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                try { (void)记录调试日志(L"SIMULATION_PROGRESS", L"查询候选方法", L"成员方法读不成",
+                    L"方法=" + std::to_wstring(方法节点.值) + L"；返回行=" + std::to_wstring(方法读失败行)); } catch (...) {}
 #endif
                 结果.状态 = 新方法操作状态::结构不一致;
                 结果.方法节点组.clear();
@@ -7138,6 +7162,9 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP
             记录监控([&](auto& 文本) { 文本 << L"纳入候选方法=" << 方法节点.值; });
 #endif
+        }
+        if (重查) continue;
+        break;
         }
         结果.状态 = 新方法操作状态::已找到;
 #ifdef HY_EGO_DEBUG_LOG_METHOD_LOOKUP

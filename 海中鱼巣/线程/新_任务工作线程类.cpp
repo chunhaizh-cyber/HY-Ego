@@ -350,8 +350,15 @@ struct 新_任务工作线程类::实现 final {
             case 新任务治理结果获取状态::执行结束失败:
             case 新任务治理结果获取状态::影响评估失败:
             case 新任务治理结果获取状态::结构不一致:
-            case 新任务治理结果获取状态::资源失败:
-                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"处理结果检测", L"结果获取或评估工程故障");
+            case 新任务治理结果获取状态::资源失败: {
+                // 诊断：如实给出结果获取、执行结束与影响评估的具体状态值。
+                const auto& 取 = *结果.结果获取;
+                const std::string 说明 = "结果获取状态=" + std::to_string(static_cast<int>(取.状态))
+                    + "；执行结束状态=" + (取.执行结束状态 ? std::to_string(static_cast<int>(*取.执行结束状态)) : std::string("无"))
+                    + "；影响评估状态=" + (取.影响评估 ? std::to_string(static_cast<int>(取.影响评估->状态)) : std::string("无"))
+                    + "；任务=" + std::to_string(请求.任务节点.值) + "；执行=" + std::to_string(请求.执行实例节点.值);
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"处理结果检测", L"结果获取或评估工程故障", 说明.c_str());
+            }
             }
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"处理结果检测", L"未知结果获取状态");
         } catch (...) {
