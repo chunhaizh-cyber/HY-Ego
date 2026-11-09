@@ -2411,7 +2411,30 @@ thread_local int 服务取得出生失败行 = 0;
             }
             request.追加字段组.push_back({需求树根节点,服务取得实例登记字段,基础组内节点引用{0}});
             const auto commit=全局基础数据集.原子追加节点组(request);
-            if(commit.状态==基础节点组追加状态::预期不符){服务取得出生失败行=__LINE__;throw S::前提已变化;}
+            if(commit.状态==基础节点组追加状态::预期不符){
+                服务取得出生失败行=__LINE__;
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                try {
+                    std::wostringstream t;
+                    auto 依据组=联合快照组节点(request.容许新增入向预期组);
+                    {const auto 严格=联合快照组节点(request.预期联合节点组);依据组.insert(严格.begin(),严格.end());}
+                    const auto 查=[&](const std::vector<基础联合节点快照>& 组,bool 严格,const wchar_t* 名){
+                        for(const auto& 预期:组){
+                            const auto 今=全局基础数据集.查询节点组完整结构({预期.结构.节点.编码});
+                            if(今.状态!=基础结构操作状态::已完成||今.节点组.size()!=1||!今.节点组[0].快照){t<<名<<L"节点="<<预期.结构.节点.编码.值<<L"(不可读)；";continue;}
+                            const auto& 当前=*今.节点组[0].快照;
+                            const bool 同=严格 ? (当前.结构.字段组==预期.结构.字段组&&当前.入向字段组==预期.入向字段组&&当前.入向外部关系组==预期.入向外部关系组&&当前.出向外部关系组==预期.出向外部关系组)
+                                : 联合快照容许变化判定(当前,预期,依据组);
+                            if(同)continue;
+                            t<<名<<L"节点="<<预期.结构.节点.编码.值<<L"本体"<<预期.结构.字段组.size()<<L"->"<<当前.结构.字段组.size()
+                             <<L"入向"<<预期.入向字段组.size()<<L"->"<<当前.入向字段组.size()<<L"；";
+                        }
+                    };
+                    查(request.预期联合节点组,true,L"严格");查(request.容许新增入向预期组,false,L"容许");
+                    (void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"预期不符明细",t.str());
+                } catch(...) {}
+#endif
+                throw S::前提已变化;}
             if(commit.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
             要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==(q.指定已有需求 ? 2u : 3u));
             info.出生记录=commit.新节点组[0];if(!q.指定已有需求)info.需求节点=commit.新节点组[2];
@@ -2424,9 +2447,11 @@ thread_local int 服务取得出生失败行 = 0;
             const auto 当前=全局基础数据集.查询节点组完整结构(依据节点);
             if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
             if(当前.状态!=基础结构操作状态::已完成||当前.节点组.size()!=依据节点.size()){服务取得出生失败行=__LINE__;throw S::前提已变化;}
+            auto 依据组=联合快照组节点(request.容许新增入向预期组);
+            {const auto 严格=联合快照组节点(request.预期联合节点组);依据组.insert(严格.begin(),严格.end());}
             for(const auto& 预期:request.容许新增入向预期组){
                 const auto 今=std::find_if(当前.节点组.begin(),当前.节点组.end(),[&](const auto& x){return x.查询节点==预期.结构.节点.编码;});
-                if(今==当前.节点组.end()||!今->快照||!联合快照容许新增入向判定(*今->快照,预期))
+                if(今==当前.节点组.end()||!今->快照||!联合快照容许变化判定(*今->快照,预期,依据组))
                     {服务取得出生失败行=__LINE__;throw S::前提已变化;}
             }
         }

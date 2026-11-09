@@ -2433,30 +2433,13 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             }
             // 仅条件样例结果为空也发表条件节点（5370 §5.3，R96）。
             if(!pair.结果.结果项组.empty()||!pair.结果.参数关系组.empty()||!pair.结果.场景事实限定组.empty()||仅条件样例) {
-                const auto 当前闭包=方法_.读取方法执行结构闭包({m.节点});
-                std::set<稳定编码> 本次合法引用来源{调用证据->身份.调用节点};
+                // 调用证据完整性：每个阶段动作须为本方法同次调用的动作；需求结果须有独立核同的首个后状态。
                 for(const auto A:调用证据->阶段动作组) {
                     const auto 动作=world->读取本地动作(A);
                     const bool 主动作=调用证据->身份.主动作==std::optional{A};
                     if(!动作||!动作->动作来源节点||动作->动作定义节点!=m.节点
                         ||(主动作&&动作->动作来源节点!=调用证据->身份.调用节点))
                         throw std::logic_error("method definition reference has no same-call action");
-                    本次合法引用来源.insert(A);
-                    // 非主动作以J为来源；关闭证据已核同N→J→A及A→J。
-                    if(!主动作)本次合法引用来源.insert(*动作->动作来源节点);
-                    // 正式需求结果已在独立reader中逐项核同该动作概念的正式方法投影。
-                    if(已核需求结果&&动作->动态概念节点
-                        &&已核需求保护.contains(*动作->动态概念节点))
-                        本次合法引用来源.insert(*动作->动态概念节点);
-                    // 本方法首次执行时由同次动作建立的动作概念（能力定义即本方法）会新引用其参数与结果的概念，
-                    // 属于本方法自身动作概念的出生，不是结果声明闭包的定义漂移。
-                    if(动作->动态概念节点&&动态概念_) {
-                        const auto 动作概念=动态概念_->读取动作概念定义保护(*动作->动态概念节点);
-                        if(动作概念.状态==动作概念定义保护状态::已读取&&动作概念.信息&&动作概念.信息->动作定义
-                            &&动作概念.信息->动作定义->能力类别==动作能力定义类别::方法能力
-                            &&动作概念.信息->动作定义->能力定义节点==m.节点)
-                            本次合法引用来源.insert(*动作->动态概念节点);
-                    }
                 }
                 if(已核需求结果) {
                     const auto& 结果=*已核需求结果;
@@ -2467,78 +2450,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                         ||std::find(run.结果.已形成状态节点组.begin(),run.结果.已形成状态节点组.end(),后->节点)
                             ==run.结果.已形成状态节点组.end())
                         throw std::logic_error("method definition reference has no independently verified first post-state");
-                    本次合法引用来源.insert(后->节点);
                 }
-#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                std::wostringstream 闭包差异;
-#define HY_CLOSURE_DIFF(expr) (闭包差异<<expr)
-#else
-#define HY_CLOSURE_DIFF(expr) ((void)0)
-#endif
-                const auto 保护相同=[&] {
-                    if(当前闭包.状态!=新_方法类::执行结构读取状态::已读取
-                        ||当前闭包.根方法节点组!=结果声明闭包.根方法节点组
-                        ||当前闭包.方法组!=结果声明闭包.方法组
-                        ||当前闭包.完整保护组.size()!=结果声明闭包.完整保护组.size()) {
-                        HY_CLOSURE_DIFF(L"闭包整体 状态=" << static_cast<int>(当前闭包.状态)
-                            << L" 方法组相同=" << (当前闭包.方法组==结果声明闭包.方法组)
-                            << L" 保护数=" << 结果声明闭包.完整保护组.size() << L"->" << 当前闭包.完整保护组.size());
-                        return false;
-                    }
-                    for(const auto& old:结果声明闭包.完整保护组) {
-                        const auto now=std::find_if(当前闭包.完整保护组.begin(),当前闭包.完整保护组.end(),
-                            [&](const auto& x){return x.结构.节点==old.结构.节点;});
-                        if(now==当前闭包.完整保护组.end()||now->结构.字段组!=old.结构.字段组
-                            ||now->入向外部关系组!=old.入向外部关系组
-                            ||now->出向外部关系组!=old.出向外部关系组) {
-                            HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 缺失=" << (now==当前闭包.完整保护组.end())
-                                << (now==当前闭包.完整保护组.end() ? L"" : (now->结构.字段组!=old.结构.字段组 ? L" 本体字段变化" : L" 外部关系变化")));
-                            return false;
-                        }
-                        for(const auto& ref:old.入向字段组)
-                            if(std::find(now->入向字段组.begin(),now->入向字段组.end(),ref)==now->入向字段组.end()) {
-                                HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 入向引用消失 来源=" << ref.所属节点.值
-                                    << L" 字段=" << ref.字段节点.值);
-                                return false;
-                            }
-                        for(const auto& ref:now->入向字段组)
-                            if(std::find(old.入向字段组.begin(),old.入向字段组.end(),ref)==old.入向字段组.end()
-                                &&!本次合法引用来源.contains(ref.所属节点)
-                                // 样例自身的本地节点引用正式定义是隔离构造的正常结果，样例释放后即撤销，不是定义漂移。
-                                &&!本地身份.contains(ref.所属节点)) {
-#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                                const auto 来源方法=方法_.获取方法(ref.所属节点);
-                                HY_CLOSURE_DIFF(L"保护节点=" << old.结构.节点.编码.值 << L" 新入向引用 来源=" << ref.所属节点.值
-                                    << L" 字段=" << ref.字段节点.值 << L" 来源是方法=" << static_cast<bool>(来源方法)
-                                    << L" 来源方法的来源=" << (来源方法&&来源方法->来源方法节点 ? 来源方法->来源方法节点->值 : 0)
-                                    << L" 来源实例根=" << (来源方法&&来源方法->实例根节点 ? 来源方法->实例根节点->值 : 0));
-                                try {
-                                    const auto 来源结构=全局基础数据集.查询完整节点结构(ref.所属节点);
-                                    if(来源结构.结构) {
-                                        闭包差异<<L" 来源字段=";
-                                        for(const auto& 字段:来源结构.结构->字段组) {
-                                            闭包差异<<字段.字段节点.值<<L":";
-                                            if(const auto* 引用=std::get_if<稳定编码>(&字段.内容))闭包差异<<L"#"<<引用->值;
-                                            else 闭包差异<<L"值";
-                                            闭包差异<<L",";
-                                        }
-                                    }
-                                } catch(...) {}
-#endif
-                                return false;
-                            }
-                    }
-                    return true;
-                };
-#undef HY_CLOSURE_DIFF
-#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                if(!保护相同()) {
-                    try { (void)记录调试日志(L"PARAM_BINDING",L"模拟学习",L"结果声明闭包差异",
-                        L"方法=" + std::to_wstring(m.节点.值) + L" " + 闭包差异.str()); } catch(...) {}
+                // 发布核验（2026-11-09用户裁决）：概念只维护当前状态、认知允许漂移，结果按身份引用概念，概念内容变化与
+                // 他处引用增删都不阻止发布。只核：①结果声明闭包读过的节点仍存在；②挂接的方法结构不变。此处提前核一次，
+                // 发布器在方法锁内对同一基线再核（追加模拟条件结果的学习基线参数）。
+                if(方法_.核对学习发布基线(结果声明闭包)!=新_方法类::学习发布基线状态::成立)
                     throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration closure changed before publication");
-                }
-#endif
-                if(!保护相同())throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration closure changed before publication");
                 const auto 核可选=[&](const std::optional<稳定编码>& id){if(id)不得本地引用(*id);};
                 const auto 核域=[&](const std::optional<稳定编码>& C) {
                     核可选(C);if(!C)return;const auto d=方法_.读取模拟特征范围(*C);if(!d)throw std::logic_error("knowledge domain missing before publication");
@@ -2592,8 +2509,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                         约束.至少一个存在=!members->empty()&&约束.含概念成员组.empty();
                         c.特征值域概念节点=方法_.保存模拟集合约束值域(base[i].规格.范围概念节点,特征概念值域{约束});
                     }
-                const auto published=方法_.追加模拟条件结果(m.节点,{pair});
+                const auto published=方法_.追加模拟条件结果(m.节点,{pair},&结果声明闭包);
                 HY_SIM_PROGRESS(L"追加条件结果返回，尚待读回",published.状态);
+                if(published.状态==新方法学习发布状态::前提已变化)
+                    throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration baseline changed at publication");
+                if(published.状态==新方法学习发布状态::资源失败)
+                    throw 新学习运行异常(m.节点,新学习运行异常原因::资源不足,"learning publication resource failure");
                 if(published.状态!=新方法学习发布状态::已发布&&published.状态!=新方法学习发布状态::精确重复
                     &&published.状态!=新方法学习发布状态::发布结果未知)
                     throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);

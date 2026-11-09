@@ -3333,11 +3333,6 @@ namespace {
 struct 来源前驱只读变化 final {};
 struct 来源前驱只读依赖未就绪 final {};
 namespace 来源前驱存储 {
-bool 快照相同(const 基础联合节点快照& 左,const 基础联合节点快照& 右) {
-    return 左.结构.节点==右.结构.节点&&左.结构.字段组==右.结构.字段组
-        &&左.入向字段组==右.入向字段组&&左.入向外部关系组==右.入向外部关系组
-        &&左.出向外部关系组==右.出向外部关系组;
-}
 struct 读取批 final {
     bool 只读变化可返回=false;
     std::map<稳定编码,基础联合节点快照> 快照组;
@@ -3349,12 +3344,21 @@ struct 读取批 final {
             "source predecessor referenced node unreadable");
         return 快照组.emplace(节点,*读取.节点组[0].快照).first->second;
     }
+    // 变化分类（2026-11-08用户裁决）：本批未读取的节点对批内节点的入向引用增删不算变化；
+    // 本体字段、内外关系改变或批内来源的入向引用被删除才算。合并时保留较新快照。
+    std::set<稳定编码> 读取组节点(const std::vector<基础联合节点快照>* 另=nullptr) const {
+        std::set<稳定编码> 组;for(const auto& [节点,快照]:快照组)组.insert(节点);
+        if(另)for(const auto& 项:*另)组.insert(项.结构.节点.编码);
+        return 组;
+    }
     void 合并(const std::vector<基础联合节点快照>& 保护) {
+        const auto 组=读取组节点(&保护);
         for(const auto& 项:保护) {
             const auto [位置,新增]=快照组.emplace(项.结构.节点.编码,项);
-            const bool 一致=新增||快照相同(位置->second,项);
+            const bool 一致=新增||联合快照容许变化判定(项,位置->second,组);
             if(!一致&&只读变化可返回)throw 来源前驱只读变化{};
             要求(一致,"source predecessor protection changed during read");
+            if(!新增)位置->second=项;
         }
     }
     std::vector<基础联合节点快照> 保护() const {
@@ -3362,6 +3366,7 @@ struct 读取批 final {
     }
     void 核同() const {
         std::vector<稳定编码> 节点组;for(const auto& [节点,快照]:快照组)节点组.push_back(节点);
+        const auto 组=读取组节点();
         const auto 当前=全局基础数据集.查询节点组完整结构(节点组);
         if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
         要求(当前.状态==基础结构操作状态::已完成&&当前.节点组.size()==快照组.size(),
@@ -3369,7 +3374,7 @@ struct 读取批 final {
         for(const auto& 项:当前.节点组) {
             const auto 位置=快照组.find(项.查询节点);
             要求(位置!=快照组.end(),"source predecessor final protection unexpected identity");
-            const bool 一致=项.快照&&快照相同(位置->second,*项.快照);
+            const bool 一致=项.快照&&联合快照容许变化判定(*项.快照,位置->second,组);
             if(!一致&&只读变化可返回)throw 来源前驱只读变化{};
             要求(一致,
                 "source predecessor final protection changed");

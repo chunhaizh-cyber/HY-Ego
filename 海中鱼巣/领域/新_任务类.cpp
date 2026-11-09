@@ -388,6 +388,15 @@ struct 因果读取来源变化信号 final {
     std::uint_least32_t 触发行 = 0;
 #endif
 };
+// 工程异常诊断：catch(...) 内调用，说明非 std::exception 的抛出物类型（只用于故障报告）。
+const char* 非标准异常名() noexcept {
+    try { throw; }
+    catch (const 因果读取来源变化信号&) { return "因果读取来源变化信号"; }
+    catch (const 因果读取停止信号&) { return "因果读取停止信号"; }
+    catch (新需求目标定义核验状态) { return "新需求目标定义核验状态"; }
+    catch (const std::exception& e) { return e.what(); }
+    catch (...) { return "未知非标准异常"; }
+}
 void 检查因果读取停止(std::stop_token 停止) {
     if (停止.stop_requested()) throw 因果读取停止信号{};
 }
@@ -5036,12 +5045,9 @@ std::vector<基础联合节点快照> 捕获需求结果执行保护(稳定编�
     for(const auto& 项:批.节点组){要求(项.快照.has_value(),"demand result execution identity missing");结果.push_back(*项.快照);}
     return 结果;
 }
-// 变化分类①（2026-11-08用户裁决）：节点本体字段、内外关系不变且原入向引用全部仍在时，新增入向引用不算变化。
-bool 快照容许新增入向(const 基础联合节点快照& 原,const 基础联合节点快照& 今) {
-    if(今.结构.节点!=原.结构.节点||今.结构.字段组!=原.结构.字段组
-        ||今.入向外部关系组!=原.入向外部关系组||今.出向外部关系组!=原.出向外部关系组)return false;
-    return std::all_of(原.入向字段组.begin(),原.入向字段组.end(),[&](const auto& r){
-        return std::find(今.入向字段组.begin(),今.入向字段组.end(),r)!=今.入向字段组.end();});
+// 变化分类（2026-11-08用户裁决，判据见基础层 联合快照容许变化判定：本体字段同；原外部关系全在、新增关系另一端在组外；组内来源的原入向引用仍在）。
+bool 快照容许新增入向(const 基础联合节点快照& 原,const 基础联合节点快照& 今,const std::set<稳定编码>& 读取组) {
+    return 联合快照容许变化判定(今,原,读取组);
 }
 // 采用流程的读取材料合并（2026-11-08用户裁决：采用只复核要采用的这一步是否仍成立）：不作整图预期，
 // 同一节点先后读到不同快照时保留较新者。
@@ -5060,8 +5066,8 @@ bool 核同需求结果保护(const std::vector<基础联合节点快照>& 保�
         "demand result protection reread failed");
     for(const auto& 原:保护){
         const auto 今=std::find_if(批.节点组.begin(),批.节点组.end(),[&](const auto& x){return x.查询节点==原.结构.节点.编码;});
-        // 变化分类（2026-11-08用户裁决）：其它节点新增指向本节点的引用不算前提变化；本体内容改变或引用被删除才失配。
-        if(今==批.节点组.end()||!今->快照||!快照容许新增入向(原,*今->快照)) {
+        // 变化分类（2026-11-08用户裁决）：组外节点指向本节点的引用增删不算前提变化；本体内容改变或组内引用被删除才失配。
+        if(今==批.节点组.end()||!今->快照||!快照容许新增入向(原,*今->快照,节点组)) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
             try {
                 std::wostringstream t;
@@ -5088,10 +5094,11 @@ bool 核同需求结果保护(const std::vector<基础联合节点快照>& 保�
     return true;
 }
 bool 合并需求结果保护(std::vector<基础联合节点快照>& 目标,const std::vector<基础联合节点快照>& 来源) {
+    auto 读取组=联合快照组节点(目标);{const auto 另=联合快照组节点(来源);读取组.insert(另.begin(),另.end());}
     for(const auto& p:来源){
         const auto 旧=std::find_if(目标.begin(),目标.end(),[&](const auto& x){return x.结构.节点.编码==p.结构.节点.编码;});
         if(旧==目标.end())目标.push_back(p);
-        else if(快照容许新增入向(*旧,p))*旧=p;          // 后取者只多新增入向：保留较新快照
+        else if(快照容许新增入向(*旧,p,读取组))*旧=p;   // 后取者只有组外入向增删：保留较新快照
         else return false;                             // 本体改变或后取者丢失原引用（删除）
     }
     return true;
@@ -7996,6 +8003,8 @@ std::optional<稳定编码> 新_任务类::查询需求任务(
             if(源)需求服务_.采集提议源需求本体保护(item.需求.节点,*源,protect);
             else graph.insert(item.需求.节点);
             if(item.任务)graph.insert(item.任务->节点);
+            // 对应表经列表项成员枚举得出：列表项本身是本步读取的来源，须纳入保护（成员引用删除才可被发现）。
+            if(item.需求列表项节点)graph.insert(*item.需求列表项节点);
         }
         捕获因果节点保护(protect,graph);
         const auto projectedAgain=查询服务任务(excluded);
@@ -14291,10 +14300,11 @@ thread_local int 发布后请求失败行 = 0;
             // 为第三方对本步依据的真实变化，放弃本次采用。
             std::set<稳定编码> 出生新节点{前缀.信息->出生记录};
             if(有效(前缀.信息->需求节点))出生新节点.insert(前缀.信息->需求节点);
+            const auto 依据组=联合快照组节点(本步依据);
             const auto 仅本次出生写入=[&](const 基础联合节点快照& 今,const 基础联合节点快照& 原) {
                 if(今.结构.节点!=原.结构.节点||今.入向外部关系组!=原.入向外部关系组||今.出向外部关系组!=原.出向外部关系组)return false;
                 for(const auto& f:原.结构.字段组)if(std::find(今.结构.字段组.begin(),今.结构.字段组.end(),f)==今.结构.字段组.end())return false;
-                for(const auto& r:原.入向字段组)if(std::find(今.入向字段组.begin(),今.入向字段组.end(),r)==今.入向字段组.end())return false;
+                for(const auto& r:原.入向字段组)if(依据组.contains(r.所属节点)&&std::find(今.入向字段组.begin(),今.入向字段组.end(),r)==今.入向字段组.end())return false;
                 for(const auto& f:今.结构.字段组){
                     if(std::find(原.结构.字段组.begin(),原.结构.字段组.end(),f)!=原.结构.字段组.end())continue;
                     const auto* 引用=std::get_if<稳定编码>(&f.内容);
@@ -14307,7 +14317,7 @@ thread_local int 发布后请求失败行 = 0;
                 const auto& 项=刷新.节点组[i];
                 if(!项.快照){来源实例失败行=__LINE__;return 返回(状态::前提已变化);}
                 const auto 旧=std::find_if(本步依据.begin(),本步依据.end(),[&](const auto& x){return x.结构.节点.编码==项.查询节点;});
-                if(旧==本步依据.end()||(!联合快照容许新增入向判定(*项.快照,*旧)&&!仅本次出生写入(*项.快照,*旧)))
+                if(旧==本步依据.end()||(!联合快照容许变化判定(*项.快照,*旧,依据组)&&!仅本次出生写入(*项.快照,*旧)))
                     {来源实例失败行=__LINE__;return 返回(状态::前提已变化);}
                 新依据.push_back(*项.快照);
             }
@@ -14772,13 +14782,14 @@ thread_local int 发布后请求失败行 = 0;
         贡献要求(交互者.状态==新来源前驱材料状态::依赖未就绪);
     } else {
         const auto 当前=全局基础数据集.查询节点组完整结构(节点组);
+        const std::set<稳定编码> 读取组(节点组.begin(),节点组.end());
         if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
         贡献要求(当前.状态==基础结构操作状态::已完成&&当前.节点组.size()==节点组.size());
         for(std::size_t 序号=0;序号<节点组.size();++序号) {
             const auto& 保护组=当前.节点组[序号];贡献要求(保护组.查询节点==节点组[序号]);
             const auto 原保护=std::find_if(结果.完整保护.begin(),结果.完整保护.end(),[&](const auto& 项目){return 项目.结构.节点.编码==节点组[序号];});
-            // 变化分类①：新增入向引用不算来源变化；本体改变或原引用删除才算。
-            if(!保护组.快照||原保护==结果.完整保护.end()||!快照容许新增入向(*原保护,*保护组.快照))throw 因果读取来源变化信号{};
+            // 变化分类：按容许变化判定（本体字段同；原外部关系全在、新增关系另一端在组外；组内来源的原入向引用仍在）。
+            if(!保护组.快照||原保护==结果.完整保护.end()||!快照容许新增入向(*原保护,*保护组.快照,读取组))throw 因果读取来源变化信号{};
         }
     }
     if(完整保护输出)合并(*完整保护输出,结果.完整保护);
@@ -14902,8 +14913,14 @@ thread_local int 发布后请求失败行 = 0;
             贡献要求(有效(节点)&&!准备组.contains(节点));准备组.emplace(节点,读取任务需求准备保护批(节点));}
         锁.lock();
         const auto 集合今=贡献完整快照({set->节点,materialId},true);
-        if(集合保护.size()!=集合今.size()||!std::equal(集合保护.begin(),集合保护.end(),集合今.begin(),贡献快照相同)){
-            throw 因果读取来源变化信号{};
+        {
+            // 变化分类：集合特征与材料按容许变化判定，读取组为集合、材料与成员任务。
+            auto 读取组=联合快照组节点(集合保护);
+            for(const auto& [节点,p]:准备组)读取组.insert(节点);
+            bool 同=集合保护.size()==集合今.size();
+            for(std::size_t i=0;同&&i<集合保护.size();++i)
+                同=集合保护[i].结构.节点==集合今[i].结构.节点&&联合快照容许变化判定(集合今[i],集合保护[i],读取组);
+            if(!同)throw 因果读取来源变化信号{};
         }
         for(const auto& [节点,p]:准备组)if(!核同任务需求准备保护批(p)){
             throw 因果读取来源变化信号{};
@@ -21032,7 +21049,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                 方法.参数绑定组 = std::move(已知); // 仅局部筹办视图，不交付执行采用。
             }
         }
-        struct 来源配对视图 {稳定编码 方法节点;新方法条件结果信息 配对;新任务本能采用定位 定位;std::vector<新方法参数规格> 参数规格组;};
+        struct 来源配对视图 {稳定编码 方法节点;新方法条件结果信息 配对;新任务本能采用定位 定位;std::vector<新方法参数规格> 参数规格组;std::optional<新方法行为> 行为;};
         std::vector<来源配对视图> 配对组;
         for(const auto& 域:组织.方法作用域组){
             if(std::find(组织.根方法作用域节点组.begin(),组织.根方法作用域节点组.end(),域.节点)==组织.根方法作用域节点组.end())continue;
@@ -21041,7 +21058,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
             for(const auto& 对:来源->条件结果组){
                 const auto 定位=std::find_if(域.配对要求组.begin(),域.配对要求组.end(),[&](const auto& x){return x.来源配对节点==对.配对节点;});
                 if(定位==域.配对要求组.end())throw std::logic_error("expanded branch lost task pair");
-                配对组.push_back({域.来源方法节点,对,{组织.节点,域.节点,定位->节点},来源->参数规格组});
+                配对组.push_back({域.来源方法节点,对,{组织.节点,域.节点,定位->节点},来源->参数规格组,来源->行为});
             }
         }
         struct 适用项 {
@@ -21054,9 +21071,9 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
         std::vector<适用项> 适用组;
         bool 有未知幅度 = false, 有未支持 = false;
         for (const auto& 项 : 配对组) {
-            const auto 行为方法 = 方法服务_.获取方法(项.方法节点);
-            if (!行为方法) throw std::logic_error("分支方法行为不可读");
-            const bool 读取行为 = 行为方法->行为 == 新方法行为::读取;
+            // 行为取自本次场景核验批的同一来源视图（与配对、参数规格同批一致），不另行重读：
+            // 并发学习写入期间的单独重读可能暂时不可读，且与批内材料不同步。
+            const bool 读取行为 = 项.行为 == 新方法行为::读取;
             if (读取行为 && (需求->目标.目标形式 != 新需求目标形式::值 || 取得目标)) continue;
             if (允许无前值静态分解 && !派生无前值 && !允许部分条件绑定 && !读取行为) continue;
             if (读取行为 && std::any_of(项.配对.结果.结果项组.begin(), 项.配对.结果.结果项组.end(),
@@ -23247,7 +23264,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
         std::lock_guard 锁(新任务互斥);
         if(!核同本次场景核验批(批)){新任务治理执行方向核验结果 r;r.任务节点=任务节点;r.状态=新任务治理执行方向核验状态::定位已变化;return r;}
         return 核验任务执行方向内部(任务节点,本能采用,自我存在节点,安全需求节点,服务需求节点,批);
-    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"任务执行方向",L"锁外场景核验故障");}
+    } catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"任务执行方向",L"锁外场景核验故障",非标准异常名());}
 }
 新任务治理执行方向核验结果 新_任务类::核验任务执行方向内部(
     稳定编码 任务节点,const 新任务本能采用材料& 本能采用,稳定编码 自我存在节点,
@@ -24140,7 +24157,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
     } catch (const std::bad_alloc&) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验任务执行方向", L"执行采用核验资源故障");
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验任务执行方向", L"执行采用核验工程故障");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"核验任务执行方向", L"执行采用核验工程故障", 非标准异常名());
     }
 }
 

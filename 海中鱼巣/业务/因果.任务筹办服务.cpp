@@ -29,12 +29,9 @@ struct 来源配置未就绪 final {};
 void 派生要求(bool 成立) {
     if (!成立) throw std::logic_error("derived causal preparation formal source inconsistent");
 }
-// 变化分类①（2026-11-08用户裁决）：本体字段、内外关系不变且原入向引用全部仍在时，新增入向引用不算变化。
-bool 来源快照容许新增入向(const 基础联合节点快照& 原,const 基础联合节点快照& 今) {
-    if(今.结构.节点!=原.结构.节点||今.结构.字段组!=原.结构.字段组
-        ||今.入向外部关系组!=原.入向外部关系组||今.出向外部关系组!=原.出向外部关系组)return false;
-    return std::all_of(原.入向字段组.begin(),原.入向字段组.end(),[&](const auto& r){
-        return std::find(今.入向字段组.begin(),今.入向字段组.end(),r)!=今.入向字段组.end();});
+// 变化分类（2026-11-08用户裁决，判据见基础层 联合快照容许变化判定：本体字段同；原外部关系全在、新增关系另一端在组外；组内来源的原入向引用仍在）。
+bool 来源快照容许新增入向(const 基础联合节点快照& 原,const 基础联合节点快照& 今,const std::set<稳定编码>& 读取组) {
+    return 联合快照容许变化判定(今,原,读取组);
 }
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
 void 记录来源变化(const wchar_t* 处,const 基础联合节点快照& 原,const 基础联合节点快照* 今) {
@@ -57,19 +54,21 @@ void 记录来源变化(const wchar_t* 处,const 基础联合节点快照& 原,c
 #endif
 void 合并来源保护(std::vector<基础联合节点快照>& 目标,
     const std::vector<基础联合节点快照>& 来源) {
+    auto 读取组=联合快照组节点(目标);{const auto 另=联合快照组节点(来源);读取组.insert(另.begin(),另.end());}
     for(const auto& 项:来源) {
         派生要求(项.结构.节点.编码.值!=0);
         const auto 旧=std::find_if(目标.begin(),目标.end(),[&](const auto& 值){
             return 值.结构.节点.编码==项.结构.节点.编码;
         });
         if(旧==目标.end())目标.push_back(项);
-        else if(来源快照容许新增入向(*旧,项))*旧=项;   // 后取者只多新增入向：保留较新快照
+        else if(来源快照容许新增入向(*旧,项,读取组))*旧=项;   // 后取者只有容许的变化：保留较新快照
         else {派生材料变化行=__LINE__;HY_来源变化(L"合并",*旧,&项);throw 派生材料变化{};} // 本体改变或删除
     }
 }
 void 核同来源保护(const std::vector<基础联合节点快照>& 保护) {
     std::vector<稳定编码> 编码组;
     for(const auto& 项:保护)编码组.push_back(项.结构.节点.编码);
+    const auto 读取组=联合快照组节点(保护);
     const auto 当前=全局基础数据集.查询节点组完整结构(编码组);
     if(当前.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
     派生要求(当前.状态==基础结构操作状态::已完成&&当前.节点组.size()==编码组.size());
@@ -77,7 +76,7 @@ void 核同来源保护(const std::vector<基础联合节点快照>& 保护) {
         const auto 今=std::find_if(当前.节点组.begin(),当前.节点组.end(),[&](const auto& 值){
             return 值.查询节点==项.结构.节点.编码;
         });
-        if(今==当前.节点组.end()||!今->快照||!来源快照容许新增入向(项,*今->快照))
+        if(今==当前.节点组.end()||!今->快照||!来源快照容许新增入向(项,*今->快照,读取组))
             {派生材料变化行=__LINE__;HY_来源变化(L"核同",项,(今==当前.节点组.end()||!今->快照)?nullptr:&*今->快照);throw 派生材料变化{};}
     }
 }
