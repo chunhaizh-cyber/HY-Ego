@@ -5361,6 +5361,22 @@ void 捕获因果节点保护(std::vector<基础联合节点快照>& 保护,cons
     for(const auto& n:p.节点组){if(!n.快照)throw 因果读取来源变化信号{};新保护.push_back(*n.快照);}
     if(!合并需求结果保护(保护,新保护))throw 因果读取来源变化信号{};
 }
+// 2026-11-09用户裁决：因果派生不需要来源保护，以实时读取的信息为准。实时合并：后取快照一律取代先取者，不因内容变化作废。
+void 合并实时保护(std::vector<基础联合节点快照>& 目标,const std::vector<基础联合节点快照>& 来源){
+    for(const auto& 项:来源){
+        const auto 旧=std::find_if(目标.begin(),目标.end(),[&](const auto& x){return x.结构.节点.编码==项.结构.节点.编码;});
+        if(旧==目标.end())目标.push_back(项);else *旧=项;
+    }
+}
+void 捕获实时节点保护(std::vector<基础联合节点快照>& 保护,const std::set<稳定编码>& 节点){
+    if(节点.empty())return;
+    const auto p=全局基础数据集.查询节点组完整结构({节点.begin(),节点.end()});
+    if(p.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    if(p.状态!=基础结构操作状态::已完成||p.节点组.size()!=节点.size())throw std::logic_error("因果请求保护读取失败");
+    std::vector<基础联合节点快照> 新保护;新保护.reserve(p.节点组.size());
+    for(const auto& n:p.节点组){if(!n.快照)throw 因果读取来源变化信号{};新保护.push_back(*n.快照);}
+    合并实时保护(保护,新保护);
+}
 bool 核同因果节点保护(const std::vector<基础联合节点快照>& 保护){
     return 保护.empty()||核同需求结果保护(保护);
 }
@@ -13646,14 +13662,14 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     新来源前驱当前集合材料 本次集合;
     检查因果读取停止(停止);
     std::vector<基础联合节点快照> 保护;
-    捕获因果节点保护(保护,{D.节点,D.目标存在节点,D.目标.目标特征类型概念节点});
+    捕获实时节点保护(保护,{D.节点,D.目标存在节点,D.目标.目标特征类型概念节点});
     新因果派生源上下文 result;
     const auto 返回 = [&](新因果派生来源状态 s) -> std::optional<新因果派生源上下文> {
         检查因果读取停止(停止);
         result.构造状态 = s;
         if (s != 新因果派生来源状态::已读取) { result.基准.reset(); result.正式投影.reset(); }
-        if(!核同因果节点保护(保护))throw 因果读取来源变化信号{};
-        if(完整保护输出&&!合并需求结果保护(*完整保护输出,保护))throw 因果读取来源变化信号{};
+        // 实时读取为准：不核同，不因合并冲突作废（2026-11-09用户裁决）。
+        if(完整保护输出)合并实时保护(*完整保护输出,保护);
         if (当前集合输出) {
             if (s == 新因果派生来源状态::已读取) {
                 贡献要求(有效(本次集合.自我存在节点) && 有效(本次集合.源特征类型)
@@ -13697,14 +13713,14 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     }
     贡献要求(identity.状态 == 正式概念读取状态::已读取 && identity.身份
         && identity.身份->概念节点 == D.目标.目标特征类型概念节点 && !identity.身份->完整保护组.empty());
-    if(!合并需求结果保护(保护,identity.身份->完整保护组))throw 因果读取来源变化信号{};
+    合并实时保护(保护,identity.身份->完整保护组);
     检查因果读取停止(停止);
     const auto definition = 二次特征概念服务_.读取二次特征定义保护(D.目标.目标特征类型概念节点);
     if (definition.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (definition.前提已变化 || definition.状态 == 基础结构操作状态::节点不存在)
         return 返回(新因果派生来源状态::材料已变化);
     贡献要求(definition.状态 == 基础结构操作状态::已完成 && definition.信息 && !definition.预期节点组.empty());
-    if(!合并需求结果保护(保护,definition.预期节点组))throw 因果读取来源变化信号{};
+    合并实时保护(保护,definition.预期节点组);
     result.正式派生定义 = *definition.信息;
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
     观察因果构造阶段(L"派生源正式定义已读取", D.节点);
@@ -13743,7 +13759,7 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     if (type.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (type.前提已变化) return 返回(新因果派生来源状态::材料已变化);
     贡献要求(type.状态 == 基础结构操作状态::已完成 && type.信息 && type.信息->类型根 == *FT);
-    if(!合并需求结果保护(保护,type.预期节点组))throw 因果读取来源变化信号{};
+    合并实时保护(保护,type.预期节点组);
     const auto& t = type.信息->定义;
     if (t.材料类型 != 特征概念材料物理类型::U64数组 || t.单位
         || !std::holds_alternative<特征概念全材料值域>(t.值域)
@@ -13757,14 +13773,14 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
         检查因果读取停止(停止);
         贡献要求(有效(n) && seen.insert(n).second);
         检查因果读取停止(停止);
-        捕获因果材料保护(保护,{n});
+        捕获实时节点保护(保护,{n}); // 只取特征节点本身，不展开到任务与任务状态（2026-11-09用户裁决）
         const auto f = 特征服务_.获取特征(n); 贡献要求(f.has_value());
         检查因果读取停止(停止);
         const auto root = 特征概念服务_.读取特征概念定义保护(f->特征概念节点);
         if (root.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
         if (root.前提已变化) return 返回(新因果派生来源状态::材料已变化);
         贡献要求(root.状态 == 基础结构操作状态::已完成 && root.信息);
-        if(!合并需求结果保护(保护,root.预期节点组))throw 因果读取来源变化信号{};
+        合并实时保护(保护,root.预期节点组);
         if (root.信息->类型根 == *FT) { 贡献要求(!F); F = f; }
     }
     检查因果读取停止(停止);
@@ -13777,7 +13793,7 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     if (!F->当前值) return 返回(新因果派生来源状态::源当前值未形成);
     const auto* id = std::get_if<稳定编码>(&*F->当前值); 贡献要求(id && 有效(*id));
     检查因果读取停止(停止);
-    捕获因果节点保护(保护,{*id});
+    捕获实时节点保护(保护,{*id});
     const auto material = 特征值服务_.获取特征值(*id);
     const auto* members = material ? std::get_if<std::vector<std::uint64_t>>(&material->材料) : nullptr;
     贡献要求(material && material->物理类型 == 材料物理类型::U64数组 && members);
@@ -13788,7 +13804,7 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     for (const auto n : *members) {
         检查因果读取停止(停止);
         const 稳定编码 member{n};
-        捕获因果节点保护(保护,{member});
+        捕获实时节点保护(保护,{member});
         贡献要求(有效(member) && 获取任务(member).has_value());
         baseline.基准成员组.push_back(member);
     }
@@ -13805,7 +13821,7 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
     if(D.目标.新增成员来源见证) {
         const auto& c=*D.目标.新增成员来源见证;
         if(c.要求.源特征类型概念节点!=*FT)return 返回(新因果派生来源状态::输入关系未支持);
-        捕获因果节点保护(保护,{c.基准材料节点});
+        捕获实时节点保护(保护,{c.基准材料节点});
         const auto fixed=特征值服务_.获取特征值(c.基准材料节点);
         const auto* values=fixed?std::get_if<std::vector<std::uint64_t>>(&fixed->材料):nullptr;
         贡献要求(values&&std::is_sorted(values->begin(),values->end())&&std::adjacent_find(values->begin(),values->end())==values->end());
@@ -13842,7 +13858,7 @@ std::optional<新因果派生源上下文> 新_任务类::构造因果派生源�
         观察因果构造阶段(L"派生源即将读取完整D/T对应", D.节点);
 #endif
         检查因果读取停止(停止);
-        捕获因果贡献保护(*this,{D.节点},保护);
+        // 不再收集贡献闭包（任务虚拟存在与任务状态特征）：派生不依赖任务状态（2026-11-09用户裁决）。
         const auto mapping = 提取因果正常读取<新需求任务对应结果>(读取需求列表任务对应(停止));
 #ifdef HY_EGO_DEBUG_LOG_CAUSAL_PREPARATION
         观察因果构造阶段(L"派生源完整D/T对应已返回", D.节点);
@@ -14051,6 +14067,15 @@ bool 新_任务类::核验来源前驱静态支持(const 来源前驱当前定�
 }
 
 新_任务类::来源前驱本槽读取结果 新_任务类::读取来源前驱本槽实例可抛内部(
+    稳定编码 父T,稳定编码 槽,const std::vector<稳定编码>& 根路径) const {
+    // 2026-11-09用户裁决：内部世界随时变化，以实时读取为准——读取期间材料被改动时重新读取，取一份自洽的实时结果，
+    // 不把读取撕裂当作采用前提已变化。持续撕裂（并发写入极频繁）才交由调用者按来源变化处理。
+    for(int 次=0;;++次){
+        try{return 读取来源前驱本槽实例一次(父T,槽,根路径);}
+        catch(const 因果读取来源变化信号&){if(次>=7)throw;}
+    }
+}
+新_任务类::来源前驱本槽读取结果 新_任务类::读取来源前驱本槽实例一次(
     稳定编码 父T,稳定编码 槽,const std::vector<稳定编码>& 根路径) const {
     using 状态=新服务取得目标实例状态;
     来源前驱本槽读取结果 结果;
@@ -15503,7 +15528,8 @@ std::optional<新因果筹办请求> 新_任务类::构造来源前端自身发�
     检查因果读取停止(停止);
     const auto 完整读回=读取接口->逆推(当前);
     检查因果读取停止(停止);
-    if(完整读回.状态==新因果筹办读取状态::材料已变化||!完整读回.来源前驱读回){发布后请求失败行=__LINE__;return {};}
+    if(完整读回.状态==新因果筹办读取状态::材料已变化){发布后请求失败行=__LINE__;return {};}
+    if(!完整读回.来源前驱读回){发布后请求失败行=__LINE__+100000*static_cast<int>(完整读回.状态);return {};}
     const auto& 今=*完整读回.来源前驱读回;
     const bool 已采用同D内容=已有采用&&实例;
     if(!已采用同D内容&&std::none_of(今.行动前端组.begin(),今.行动前端组.end(),

@@ -44,6 +44,16 @@ void 记录来源变化(const wchar_t* 处,const 基础联合节点快照& 原,c
             std::size_t 去=0;for(const auto& f:原.结构.字段组)if(std::find(今->结构.字段组.begin(),今->结构.字段组.end(),f)==今->结构.字段组.end()){if(++去<=3)t+=L"；去字段="+std::to_wstring(f.字段节点.值);}
             std::size_t 失=0;for(const auto& r:原.入向字段组)if(std::find(今->入向字段组.begin(),今->入向字段组.end(),r)==今->入向字段组.end())++失;
             t+=L"；入向消失="+std::to_wstring(失)+L"；外部关系="+std::to_wstring(原.入向外部关系组.size()+原.出向外部关系组.size())+L"->"+std::to_wstring(今->入向外部关系组.size()+今->出向外部关系组.size());
+            // 诊断：列出本体字段（字段节点:引用目标），用于识别节点身份。
+            t+=L"；本体=";
+            for(const auto& f:今->结构.字段组){
+                t+=std::to_wstring(f.字段节点.值)+L":";
+                if(const auto* r=std::get_if<稳定编码>(&f.内容))t+=std::to_wstring(r->值);else t+=L"值";
+                t+=L",";
+            }
+            t+=L"；原值=";
+            for(const auto& f:原.结构.字段组)if(std::find(今->结构.字段组.begin(),今->结构.字段组.end(),f)==今->结构.字段组.end()){
+                if(const auto* r=std::get_if<稳定编码>(&f.内容))t+=std::to_wstring(r->值);else t+=L"值";t+=L",";}
         }
         (void)记录调试日志(L"SIMULATION_PROGRESS",L"因果来源变化",L"内容变化",t);
     } catch(...) {}
@@ -61,9 +71,13 @@ void 合并来源保护(std::vector<基础联合节点快照>& 目标,
             return 值.结构.节点.编码==项.结构.节点.编码;
         });
         if(旧==目标.end())目标.push_back(项);
-        else if(来源快照容许新增入向(*旧,项,读取组))*旧=项;   // 后取者只有容许的变化：保留较新快照
-        else {派生材料变化行=__LINE__;HY_来源变化(L"合并",*旧,&项);throw 派生材料变化{};} // 本体改变或删除
+        else {
+            // 2026-11-09用户裁决：因果派生不需要来源保护，以实时读取的信息为准——后取者一律取代先取者。
+            if(!来源快照容许新增入向(*旧,项,读取组))HY_来源变化(L"合并",*旧,&项);
+            *旧=项;
+        }
     }
+    (void)读取组;
 }
 void 核同来源保护(const std::vector<基础联合节点快照>& 保护) {
     std::vector<稳定编码> 编码组;
@@ -76,8 +90,10 @@ void 核同来源保护(const std::vector<基础联合节点快照>& 保护) {
         const auto 今=std::find_if(当前.节点组.begin(),当前.节点组.end(),[&](const auto& 值){
             return 值.查询节点==项.结构.节点.编码;
         });
-        if(今==当前.节点组.end()||!今->快照||!来源快照容许新增入向(项,*今->快照,读取组))
-            {派生材料变化行=__LINE__;HY_来源变化(L"核同",项,(今==当前.节点组.end()||!今->快照)?nullptr:&*今->快照);throw 派生材料变化{};}
+        // 2026-11-09用户裁决：以实时读取为准，内容变化不作废派生；只有节点已被删除（依据消失）才视为材料已变化。
+        if(今==当前.节点组.end()||!今->快照)
+            {派生材料变化行=__LINE__;HY_来源变化(L"核同",项,nullptr);throw 派生材料变化{};}
+        if(!来源快照容许新增入向(项,*今->快照,读取组))HY_来源变化(L"核同",项,&*今->快照);
     }
 }
 template<class 键类型>
