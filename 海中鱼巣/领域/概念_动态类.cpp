@@ -1,4 +1,5 @@
 #include "概念_动态类.h"
+#include "../核心/日志系统.h"
 #include "概念_存在类.h"
 #include "../核心/容错检查.h"
 
@@ -237,6 +238,23 @@ std::optional<稳定编码> 取得准确值域概念(
     const auto 查找 = 特征概念服务.查找值对应的最具体概念(
         *定位.特征类型根, *状态.固定准确值, 根->单位, 特征值服务);
     if (查找.状态 != 特征概念查找状态::已找到 || !查找.概念节点) {
+        try { (void)记录运行日志(L"动态概念", L"按值查找概念未找到",
+            L"状态=" + std::to_wstring(状态.节点.值) + L"；类型根=" + std::to_wstring(定位.特征类型根->值)
+            + L"；查找状态=" + std::to_wstring(static_cast<int>(查找.状态))
+            + L"；候选数=" + std::to_wstring(查找.冲突候选.size())
+            + [&]{
+                std::wstring t;
+                for (const auto c : 查找.冲突候选) {
+                    t += L"；候选=" + std::to_wstring(c.值);
+                    const auto 定义 = 特征概念服务.获取特征概念(c);
+                    if (!定义) { t += L"(不可读)"; continue; }
+                    t += L"(引用实例=" + std::to_wstring(定义->当前引用实例数量) + L"；名称数=" + std::to_wstring(定义->名称关系.size()) + L"；值域=";
+                    if (const auto* 区间 = std::get_if<std::vector<特征概念I64闭区间>>(&定义->值域))
+                        for (const auto& q : *区间) t += L"[" + std::to_wstring(q.下界) + L"," + std::to_wstring(q.上界) + L"]";
+                    else t += L"非区间";
+                    t += L")";
+                }
+                return t; }()); } catch (...) {}
         return std::nullopt;
     }
     const auto 单值域 = 形成准确单值域(状态);
@@ -1459,6 +1477,24 @@ bool 概念_动态类::是动作概念节点(稳定编码 节点) const noexcept
         const auto 状态变化 = 形成状态变化组(
             有序状态组, 特征概念服务_, 特征值服务_);
         if (!状态变化) {
+            // 诊断：如实记录状态对不一致的材料（主体、时间、特征类型、值域是否可取）。
+            try {
+                const auto& 前 = 有序状态组[0]; const auto& 后 = 有序状态组[1];
+                const auto 前根 = 特征概念服务_.比较单特征概念(前.特征类型概念节点, 前.特征类型概念节点).特征类型根;
+                const auto 后根 = 特征概念服务_.比较单特征概念(后.特征类型概念节点, 后.特征类型概念节点).特征类型根;
+                const bool 前域 = 取得准确值域概念(前, 特征概念服务_, 特征值服务_).has_value();
+                const bool 后域 = 取得准确值域概念(后, 特征概念服务_, 特征值服务_).has_value();
+                (void)记录运行日志(L"动态概念", L"实例动态概念状态不一致",
+                    L"动态=" + std::to_wstring(实际动态节点.值) + L"；前状态=" + std::to_wstring(前.节点.值) + L"；后状态=" + std::to_wstring(后.节点.值)
+                    + L"；主体同=" + std::to_wstring(前.被描述存在节点 == 后.被描述存在节点 ? 1 : 0)
+                    + L"；前时=" + std::to_wstring(前.强时间.纳秒) + L"；后时=" + std::to_wstring(后.强时间.纳秒)
+                    + L"；前语义=" + std::to_wstring(static_cast<int>(前.强时间.语义)) + L"；后语义=" + std::to_wstring(static_cast<int>(后.强时间.语义))
+                    + L"；前根=" + std::to_wstring(前根 ? 前根->值 : 0) + L"；后根=" + std::to_wstring(后根 ? 后根->值 : 0)
+                    + L"；前域=" + std::to_wstring(前域 ? 1 : 0) + L"；后域=" + std::to_wstring(后域 ? 1 : 0)
+                    + L"；前有值=" + std::to_wstring(前.固定准确值 ? 1 : 0)
+                    + L"；前值=" + std::to_wstring(前.固定准确值 && std::holds_alternative<std::int64_t>(*前.固定准确值) ? std::get<std::int64_t>(*前.固定准确值) : -999)
+                    + L"；后值=" + std::to_wstring(后.固定准确值 && std::holds_alternative<std::int64_t>(*后.固定准确值) ? std::get<std::int64_t>(*后.固定准确值) : -999));
+            } catch (...) {}
             结果.状态 = 动态概念操作状态::状态不一致;
             return 结果;
         }
