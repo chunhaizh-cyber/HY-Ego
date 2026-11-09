@@ -514,6 +514,11 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
             *存在材料.存在节点, 类型[5], 特征概念全材料值域{});
         if (发送内容.状态 != 新场景操作状态::已完成)
             throw std::runtime_error("peripheral unknown outbound text feature creation failed");
+        // INTERACT-SCENE-INSTINCT（2026-11-09用户裁决）：对方打开窗口即进入交互状态——窗口建立时同时派生
+        // 交互者（存在根零特征，与窗口并列），不再等首条消息。接收路径的派生保留为补齐旧场景。
+        const auto 交互者 = 场景_.建立区间成员存在(*场景材料.场景节点, {std::nullopt, {}});
+        if (交互者.状态 != 新场景操作状态::已完成 || !交互者.存在节点)
+            throw std::runtime_error("peripheral interactor derivation at window open failed");
         return {新外设事实状态::已完成, 补齐消息集合(读取窗口定位(*场景材料.场景节点))};
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得外设对话框", L"定位或场景成员不完整，保留现场。", e.what());
