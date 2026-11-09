@@ -2482,8 +2482,33 @@ struct 新_自我线程类::实现 final {
             if(采用.原提议!=新任务条件子需求项{}||!采用.来源前驱具体目标||!d
                 ||d->父需求节点!=父需求||d->来源类型!=新需求来源类型::任务子目标
                 ||d->来源承接节点!=父任务||d->执行域!=新需求执行域::自我执行
-                ||d->复合来源||新需求完整目标{d->目标存在节点,d->目标}!=*采用.来源前驱具体目标)
+                ||d->复合来源||新需求完整目标{d->目标存在节点,d->目标}!=*采用.来源前驱具体目标) {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                try{
+                    std::wstring t=L"需求="+std::to_wstring(采用.需求节点->值)+L"；原提议空="+std::to_wstring(采用.原提议==新任务条件子需求项{} ? 1 : 0)
+                        +L"；有具体目标="+std::to_wstring(采用.来源前驱具体目标 ? 1 : 0)+L"；有D="+std::to_wstring(d ? 1 : 0);
+                    if(d){
+                        t+=L"；父需求="+std::to_wstring(d->父需求节点 ? d->父需求节点->值 : 0)+L"/期望"+std::to_wstring(父需求.值)
+                          +L"；来源类型="+std::to_wstring(d->来源类型 ? static_cast<int>(*d->来源类型) : -1)
+                          +L"；承接="+std::to_wstring(d->来源承接节点 ? d->来源承接节点->值 : 0)+L"/期望"+std::to_wstring(父任务.值)
+                          +L"；执行域="+std::to_wstring(static_cast<int>(d->执行域))+L"；复合="+std::to_wstring(d->复合来源 ? 1 : 0);
+                        if(采用.来源前驱具体目标){
+                            const auto& g=*采用.来源前驱具体目标;
+                            t+=L"；目标存在="+std::to_wstring(d->目标存在节点.值)+L"/"+std::to_wstring(g.目标存在节点.值)
+                              +L"；FT="+std::to_wstring(d->目标.目标特征类型概念节点.值)+L"/"+std::to_wstring(g.目标.目标特征类型概念节点.值)
+                              +L"；域同="+std::to_wstring(d->目标.目标值域概念节点==g.目标.目标值域概念节点 ? 1 : 0)
+                              +L"；比较同="+std::to_wstring(d->目标.目标比较关系概念节点==g.目标.目标比较关系概念节点 ? 1 : 0)
+                              +L"；形式同="+std::to_wstring(d->目标.目标形式==g.目标.目标形式 ? 1 : 0)
+                              +L"；内容同="+std::to_wstring(d->目标.引用内容定位==g.目标.引用内容定位 ? 1 : 0)
+                              +L"；方向同="+std::to_wstring(d->目标.目标变化方向==g.目标.目标变化方向 ? 1 : 0)
+                              +L"；见证同="+std::to_wstring(d->目标.新增成员来源见证==g.目标.新增成员来源见证 ? 1 : 0);
+                        }
+                    }
+                    (void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"来源子需求不一致",t);
+                }catch(...){}
+#endif
                 throw std::logic_error("来源子需求固定身份或具体目标损坏");
+            }
             const bool 仍活动=d->活动状态==新需求活动状态::活动;
             const auto& 模板=*采用.来源前驱模板;
             const auto& 目标=*采用.来源前驱具体目标;

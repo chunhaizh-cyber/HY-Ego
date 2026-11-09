@@ -652,7 +652,9 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
         核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
         const auto 变化 = 动态服务_.建立原子动态(目标.任务引用.虚拟存在节点, 前节点, 后节点);
         if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
-            throw std::runtime_error("task feature atomic dynamic publication failed");
+            throw std::runtime_error("task feature atomic dynamic publication failed; status="
+                + std::to_string(static_cast<int>(变化.状态)) + " pre=" + std::to_string(前节点.值)
+                + " post=" + std::to_string(后节点.值) + " vt=" + std::to_string(目标.任务引用.虚拟存在节点.值));
         核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *任务读取_));
         const auto 读回 = 读取任务特征变化(目标, 前节点, 后节点);
         if (!读回 || 读回->变化动态节点 != *变化.动态节点)
