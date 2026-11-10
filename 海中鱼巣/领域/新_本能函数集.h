@@ -181,6 +181,8 @@ public:
     static 新本能函数本次条件结果对 提交网页对话消息(
         const 方法参数场景& 参数场景) noexcept;
 
+    static 新本能函数本次条件结果对 获取交互者(
+        const 方法参数场景& 场景) noexcept;
     static 新本能函数本次条件结果对 获取服务对象(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取服务对象新需求(

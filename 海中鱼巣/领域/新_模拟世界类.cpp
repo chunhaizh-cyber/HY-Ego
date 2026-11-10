@@ -24,6 +24,7 @@
 
 namespace 海中鱼巣 {
 稳定编码 模拟世界树根节点{};
+thread_local int 模拟样例拒绝行=0;
 namespace {
 enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数值, 任务引用, 虚拟引用,
     状态特征引用, 方法引用, 动作引用, 前状态引用, 后状态引用, 动态引用, 时间语义, 步骤,
@@ -1157,7 +1158,7 @@ namespace 海中鱼巣 {
     auto& s=*实现_;
     if(执行主体输入) {
         if(!s.源身份||!s.存在概念||!s.特征概念||!s.二次概念||!有效(执行主体输入->来源存在)
-            ||!有效(执行主体输入->专属概念)||执行主体输入->来源身份保护.empty())return {};
+            ||!有效(执行主体输入->专属概念)||执行主体输入->来源身份保护.empty()){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto 身份=s.源身份->读取存在身份保护(执行主体输入->来源存在);
         if(身份.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
         if(身份.前提已变化||!身份.信息||身份.信息->专属存在概念节点!=执行主体输入->专属概念)
@@ -1169,7 +1170,7 @@ namespace 海中鱼巣 {
             throw std::logic_error("simulation actor dedicated concept source invalid");
     }
     auto m=s.方法.获取方法(M);
-    if(!m||m->参数规格组.size()>输入.size()) return {};
+    if(!m||m->参数规格组.size()>输入.size()) { 模拟样例拒绝行=__LINE__; return {}; }
     新_方法类::执行结构读取结果 消息声明保护;
     if(消息输入) {
         消息声明保护=s.方法.读取方法执行结构闭包({M});
@@ -1177,23 +1178,23 @@ namespace 海中鱼巣 {
             ||消息声明保护.方法组.front()!=*m)return {新模拟世界状态::定义前提已变化,{}};
     }
     std::unique_lock lock(s.互斥);
-    if(s.通用) return {};
+    if(s.通用) { 模拟样例拒绝行=__LINE__; return {}; }
     s.消息定义保护=消息声明保护;
-    if(m->初始模拟输入方案组.empty()!=!消息输入)return {};
+    if(m->初始模拟输入方案组.empty()!=!消息输入){ 模拟样例拒绝行=__LINE__; return {}; }
     if(消息输入) {
-        if(消息输入->方案序号>=m->初始模拟输入方案组.size())return {};
+        if(消息输入->方案序号>=m->初始模拟输入方案组.size()){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto& plan=m->初始模拟输入方案组[消息输入->方案序号];
-        if(plan.消息组.size()!=消息输入->消息组.size())return {};
+        if(plan.消息组.size()!=消息输入->消息组.size()){ 模拟样例拒绝行=__LINE__; return {}; }
         for(std::size_t i=0;i<plan.消息组.size();++i) {
             const auto& e=plan.消息组[i];const auto& body=消息输入->消息组[i];
-            if(body.消息序号!=i||!新_语言类::严格UTF8字节串有效(body.UTF8正文)||(e.正文非空&&body.UTF8正文.empty()))return {};
+            if(body.消息序号!=i||!新_语言类::严格UTF8字节串有效(body.UTF8正文)||(e.正文非空&&body.UTF8正文.empty())){ 模拟样例拒绝行=__LINE__; return {}; }
             const auto d=s.方法.读取模拟特征范围(e.正文范围概念);
-            if(!d||d->材料类型!=特征概念材料物理类型::UTF8字符串)return {};
+            if(!d||d->材料类型!=特征概念材料物理类型::UTF8字符串){ 模拟样例拒绝行=__LINE__; return {}; }
             if(const auto* ids=std::get_if<std::vector<稳定编码>>(&d->值域)) {
                 bool found=false;for(const auto id:*ids){const auto v=s.方法.读取模拟候选材料(id);if(!v)throw std::runtime_error("message payload material missing");
                     if(v->材料==新特征值材料{body.UTF8正文})found=true;}
-                if(!found)return {};
-            } else if(!std::holds_alternative<特征概念全材料值域>(d->值域))return {};
+                if(!found){ 模拟样例拒绝行=__LINE__; return {}; }
+            } else if(!std::holds_alternative<特征概念全材料值域>(d->值域)){ 模拟样例拒绝行=__LINE__; return {}; }
         }
     }
     for(const auto& in:输入)if(in.规格.信息类型==新方法参数信息类型::特征) {
@@ -1201,14 +1202,14 @@ namespace 海中鱼巣 {
         const auto d=s.方法.读取模拟特征范围(in.规格.范围概念节点);
         if(d&&d->比较规则==特征概念比较规则::消息集合身份判等) {
             const auto* a=in.材料 ? std::get_if<std::vector<std::uint64_t>>(&*in.材料):nullptr;
-            if(!a||!a->empty()||in.值)return {};
+            if(!a||!a->empty()||in.值){ 模拟样例拒绝行=__LINE__; return {}; }
         }
     }
     {
         const auto 有效声明=s.方法.读取执行分支必要条件(M,执行分支);
         if(有效声明.状态==新方法执行分支读取状态::前提已变化)
             return {新模拟世界状态::定义前提已变化,{}};
-        if(有效声明.状态!=新方法执行分支读取状态::已读取) return {};
+        if(有效声明.状态!=新方法执行分支读取状态::已读取) { 模拟样例拒绝行=__LINE__; return {}; }
         m->初始必要条件=有效声明.有效必要条件;
     }
     s.通用执行分支=执行分支;
@@ -1221,7 +1222,7 @@ namespace 海中鱼巣 {
     }
     for(std::size_t i=0;i<m->参数规格组.size();++i)
         if(!m->参数规格组[i].有序规格||*m->参数规格组[i].有序规格!=输入[i].规格
-            ||输入[i].规格.序号!=i+1) return {};
+            ||输入[i].规格.序号!=i+1) { 模拟样例拒绝行=__LINE__; return {}; }
     std::vector<bool> 需求参数(输入.size(),false);
     for(std::size_t i=0;i<输入.size();++i) {
         const auto& p=输入[i];
@@ -1231,17 +1232,17 @@ namespace 海中鱼巣 {
             if(formal.信息&&std::holds_alternative<信息结构概念定义>(formal.信息->定义)) {
                 const auto roots=s.方法.读取模拟需求概念组();
                 if(roots.状态==正式结构操作状态::前提已变化)return {新模拟世界状态::定义前提已变化,{}};
-                if(roots.状态!=正式结构操作状态::已读取||!roots.信息||p.规格.范围概念节点!=roots.信息->需求)return {};
+                if(roots.状态!=正式结构操作状态::已读取||!roots.信息||p.规格.范围概念节点!=roots.信息->需求){ 模拟样例拒绝行=__LINE__; return {}; }
                 需求参数[i]=true;
                 if(!p.需求参数输入||p.需求参数输入>需求图.需求组.size()
                     ||p.所属存在参数||p.值||p.材料||!p.集合成员参数组.empty()||p.引用存在参数
                     ||p.来源存在||!p.来源任务成员组.empty()||p.构造存在概念||!p.历史引用存在参数组.empty()
                     ||p.引用需求输入||p.初值方式!=新模拟特征初值方式::常规输入||p.完整复制特征
-                    ||p.所属语言场景输入||p.引用语言场景输入)return {};
-                if(需求图.需求组[p.需求参数输入-1].内容概念!=roots.信息->需求)return {};
+                    ||p.所属语言场景输入||p.引用语言场景输入){ 模拟样例拒绝行=__LINE__; return {}; }
+                if(需求图.需求组[p.需求参数输入-1].内容概念!=roots.信息->需求){ 模拟样例拒绝行=__LINE__; return {}; }
             }
         }
-        if(!需求参数[i]&&p.需求参数输入)return {};
+        if(!需求参数[i]&&p.需求参数输入){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     const auto 是普通存在=[&](std::size_t i){return 输入[i].规格.信息类型==新方法参数信息类型::存在&&!需求参数[i];};
     std::vector<std::size_t> 代表(输入.size());
@@ -1249,12 +1250,12 @@ namespace 海中鱼巣 {
     const auto 查代表=[&](std::size_t i) { while(代表[i]!=i)i=代表[i];return i; };
     for(std::size_t i=0;i<输入.size();++i) if(输入[i].同一参数) {
         const auto j=static_cast<std::size_t>(输入[i].同一参数-1);
-        if(j>=输入.size()||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]) return {};
+        if(j>=输入.size()||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]) { 模拟样例拒绝行=__LINE__; return {}; }
         const auto a=查代表(i),b=查代表(j);代表[(std::max)(a,b)]=(std::min)(a,b);
     }
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
     const auto 引用代表 = [&](const 新模拟有序参数输入& p) -> std::optional<std::size_t> {
-        if(!p.引用存在参数)return {};
+        if(!p.引用存在参数){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto pos=static_cast<std::size_t>(p.引用存在参数-1);
         if(pos>=输入.size()||!是普通存在(pos))
             throw std::invalid_argument("simulation reference target is not an existence parameter");
@@ -1279,11 +1280,11 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<输入.size();++i) {
         if(需求参数[i])continue;
         if(输入[i].规格.信息类型!=新方法参数信息类型::存在) {
-            if(输入[i].构造存在概念)return {};
+            if(输入[i].构造存在概念){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
         }
         构造范围[i]=输入[i].构造存在概念.value_or(输入[i].规格.范围概念节点);
-        if(!范围包含(构造范围[i],输入[i].规格.范围概念节点))return {};
+        if(!范围包含(构造范围[i],输入[i].规格.范围概念节点)){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     for(std::size_t i=0;i<输入.size();++i)if(是普通存在(i)&&代表[i]!=i) {
         const auto 主=代表[i];
@@ -1295,51 +1296,51 @@ namespace 海中鱼巣 {
     auto 初始关系组=m->初始模拟关系组;
     if(m->初始必要条件) {
         const auto& 必要=*m->初始必要条件;
-        if(必要.条件.关系规则!=新方法项关系规则::全部成立)return {};
+        if(必要.条件.关系规则!=新方法项关系规则::全部成立){ 模拟样例拒绝行=__LINE__; return {}; }
         for(auto 条件:必要.条件.条件项组) {
             if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()&&需求参数[条件.参数序号-1]) {
                 新方法条件项定义 expected;expected.参数序号=条件.参数序号;
                 expected.存在概念节点=输入[条件.参数序号-1].规格.范围概念节点;
-                if(条件!=expected)return {};
+                if(条件!=expected){ 模拟样例拒绝行=__LINE__; return {}; }
                 continue;
             }
             if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()
                 &&输入[条件.参数序号-1].规格.信息类型==新方法参数信息类型::存在
                 &&条件.特征类型概念节点) {
                 const auto E位置=条件.参数序号-1;
-                if(条件.存在概念节点&&!范围包含(构造范围[E位置],*条件.存在概念节点))return {};
+                if(条件.存在概念节点&&!范围包含(构造范围[E位置],*条件.存在概念节点)){ 模拟样例拒绝行=__LINE__; return {}; }
                 std::optional<std::size_t> F位置;
                 for(std::size_t j=0;j<输入.size();++j)if(代表[j]==j&&输入[j].规格.信息类型==新方法参数信息类型::特征
                     &&输入[j].所属存在参数&&输入[j].所属存在参数<=输入.size()
                     &&代表[输入[j].所属存在参数-1]==代表[E位置]) {
                     const auto d=s.方法.读取模拟特征范围(输入[j].规格.范围概念节点);
                     if(!d)throw std::logic_error("attached simulation input feature definition missing");
-                    if(d->特征类型根==*条件.特征类型概念节点){if(F位置)return {};F位置=j;}
+                    if(d->特征类型根==*条件.特征类型概念节点){if(F位置){ 模拟样例拒绝行=__LINE__; return {}; }F位置=j;}
                 }
-                if(!F位置)return {};
+                if(!F位置){ 模拟样例拒绝行=__LINE__; return {}; }
                 条件.参数序号=static_cast<std::uint32_t>(*F位置+1);条件.存在概念节点.reset();
                 const auto& in=输入[*F位置];
                 const auto d=s.方法.读取模拟特征范围(in.规格.范围概念节点);
                 if(!d)throw std::logic_error("attached simulation input type missing");
                 if(d->材料类型!=特征概念材料物理类型::I64标量) {
-                    if(条件.精确数值域)return {};
+                    if(条件.精确数值域){ 模拟样例拒绝行=__LINE__; return {}; }
                     if(条件.特征值域概念节点) {
                         const auto 域=s.方法.读取模拟特征范围(*条件.特征值域概念节点);
-                        if(!域||域->特征类型根!=d->特征类型根||域->材料类型!=d->材料类型)return {};
+                        if(!域||域->特征类型根!=d->特征类型根||域->材料类型!=d->材料类型){ 模拟样例拒绝行=__LINE__; return {}; }
                         if(const auto* 有限=std::get_if<std::vector<稳定编码>>(&域->值域)) {
-                            if(!in.材料)return {};
+                            if(!in.材料){ 模拟样例拒绝行=__LINE__; return {}; }
                             bool 命中=false;
                             for(const auto V:*有限){const auto v=s.方法.读取模拟候选材料(V);if(v&&v->材料==*in.材料)命中=true;}
-                            if(!命中)return {};
+                            if(!命中){ 模拟样例拒绝行=__LINE__; return {}; }
                         } else if(const auto* ref=std::get_if<特征概念存在引用值域>(&域->值域)) {
                             if(!in.引用存在参数||in.引用存在参数>输入.size()
-                                ||!范围包含(构造范围[in.引用存在参数-1],ref->存在概念节点))return {};
+                                ||!范围包含(构造范围[in.引用存在参数-1],ref->存在概念节点)){ 模拟样例拒绝行=__LINE__; return {}; }
                         } else if(const auto* a=std::get_if<特征概念结构化I64值域>(&域->值域)) {
                             const auto* values=in.材料 ? std::get_if<std::vector<std::int64_t>>(&*in.材料) : nullptr;
-                            if(!values||values->size()!=a->分量.size())return {};
+                            if(!values||values->size()!=a->分量.size()){ 模拟样例拒绝行=__LINE__; return {}; }
                             for(std::size_t k=0;k<values->size();++k)
-                                if(std::none_of(a->分量[k].值域.begin(),a->分量[k].值域.end(),[&](const auto& r){return r.下界<=(*values)[k]&&(*values)[k]<=r.上界;}))return {};
-                        } else if(!std::holds_alternative<特征概念全材料值域>(域->值域))return {};
+                                if(std::none_of(a->分量[k].值域.begin(),a->分量[k].值域.end(),[&](const auto& r){return r.下界<=(*values)[k]&&(*values)[k]<=r.上界;})){ 模拟样例拒绝行=__LINE__; return {}; }
+                        } else if(!std::holds_alternative<特征概念全材料值域>(域->值域)){ 模拟样例拒绝行=__LINE__; return {}; }
                     }
                     continue;
                 }
@@ -1351,53 +1352,58 @@ namespace 海中鱼巣 {
                 const auto d=s.方法.读取模拟特征范围(in.规格.范围概念节点);
                 auto shape=条件;shape.特征类型概念节点.reset();shape.特征值域概念节点.reset();shape.精确数值域.reset();
                 新方法条件项定义 expected;expected.参数序号=条件.参数序号;
-                if(!v||!d||shape!=expected||条件.特征类型概念节点!=std::optional{d->特征类型根})return {};
-                if(条件.精确数值域&&(*v<条件.精确数值域->下界||*v>条件.精确数值域->上界))return {};
+                // 存在引用特征参数的值域条件（如“自我.交互者有值”）：模拟只记录条件实参、不构造值存在，
+                // 值域由筹办按分支必要条件核验（与模拟学习侧口径一致）。
+                if(d&&d->材料类型==特征概念材料物理类型::存在节点引用&&shape==expected
+                    &&条件.特征类型概念节点==std::optional{d->特征类型根}&&条件.特征值域概念节点&&!条件.精确数值域)
+                    continue;
+                if(!v||!d||shape!=expected||条件.特征类型概念节点!=std::optional{d->特征类型根}){ 模拟样例拒绝行=__LINE__; return {}; }
+                if(条件.精确数值域&&(*v<条件.精确数值域->下界||*v>条件.精确数值域->上界)){ 模拟样例拒绝行=__LINE__; return {}; }
                 if(条件.特征值域概念节点) {
                     const auto 范围=s.方法.读取模拟特征范围(*条件.特征值域概念节点);
                     const auto* 域=范围 ? std::get_if<std::vector<特征概念I64闭区间>>(&范围->值域) : nullptr;
                     if(!范围||范围->特征类型根!=d->特征类型根||!域||
-                        !std::any_of(域->begin(),域->end(),[&](const auto& r){return r.下界<=*v&&*v<=r.上界;}))return {};
+                        !std::any_of(域->begin(),域->end(),[&](const auto& r){return r.下界<=*v&&*v<=r.上界;})){ 模拟样例拒绝行=__LINE__; return {}; }
                 }
                 continue;
             }
             新方法条件项定义 仅存在范围;仅存在范围.参数序号=条件.参数序号;仅存在范围.存在概念节点=条件.存在概念节点;
             if(!条件.参数序号||条件.参数序号>m->参数规格组.size()||!条件.存在概念节点
-                ||条件!=仅存在范围||输入[条件.参数序号-1].规格.信息类型!=新方法参数信息类型::存在)return {};
-            if(!范围包含(构造范围[条件.参数序号-1],*条件.存在概念节点))return {};
+                ||条件!=仅存在范围||输入[条件.参数序号-1].规格.信息类型!=新方法参数信息类型::存在){ 模拟样例拒绝行=__LINE__; return {}; }
+            if(!范围包含(构造范围[条件.参数序号-1],*条件.存在概念节点)){ 模拟样例拒绝行=__LINE__; return {}; }
         }
         for(const auto& 关系:必要.条件.参数关系组)
             if(std::find(初始关系组.begin(),初始关系组.end(),关系)==初始关系组.end())初始关系组.push_back(关系);
     }
     for(const auto& 关系:初始关系组) {
-        if(static_cast<std::int64_t>(关系.种类)<1||static_cast<std::int64_t>(关系.种类)>8)return {};
-        if(!关系.左参数序号||!关系.右参数序号||关系.左参数序号>m->参数规格组.size()||关系.右参数序号>m->参数规格组.size())return {};
+        if(static_cast<std::int64_t>(关系.种类)<1||static_cast<std::int64_t>(关系.种类)>8){ 模拟样例拒绝行=__LINE__; return {}; }
+        if(!关系.左参数序号||!关系.右参数序号||关系.左参数序号>m->参数规格组.size()||关系.右参数序号>m->参数规格组.size()){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto 左=代表[关系.左参数序号-1],右=代表[关系.右参数序号-1];
-        if(关系.种类!=新方法参数关系种类::内容引用参数&&!关系.左正式内容路径.empty())return {};
+        if(关系.种类!=新方法参数关系种类::内容引用参数&&!关系.左正式内容路径.empty()){ 模拟样例拒绝行=__LINE__; return {}; }
         if(关系.种类==新方法参数关系种类::内容引用参数) {
-            if(!需求参数[左]||!是普通存在(右)||关系.左正式内容路径.size()!=1||!s.特征概念)return {};
+            if(!需求参数[左]||!是普通存在(右)||关系.左正式内容路径.size()!=1||!s.特征概念){ 模拟样例拒绝行=__LINE__; return {}; }
             const auto 主体FT=s.特征概念->读取先天特征类型槽(先天特征类型槽::需求主体);
             if(主体FT.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
             if(主体FT.状态==特征概念规则状态::前提已变化)return {新模拟世界状态::定义前提已变化,{}};
-            if(!主体FT.类型根||关系.左正式内容路径.front()!=*主体FT.类型根)return {};
+            if(!主体FT.类型根||关系.左正式内容路径.front()!=*主体FT.类型根){ 模拟样例拒绝行=__LINE__; return {}; }
             const auto D=std::find_if(需求图.需求组.begin(),需求图.需求组.end(),[&](const auto& d){return d.序号==输入[左].需求参数输入;});
             if(D==需求图.需求组.end()||!D->主体存在输入||D->主体存在输入>代表.size()
-                ||代表[D->主体存在输入-1]!=右)return {};
+                ||代表[D->主体存在输入-1]!=右){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
         }
         if((需求参数[左]||需求参数[右])&&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同
-            &&!(关系.种类==新方法参数关系种类::特征引用存在&&需求参数[右]))return {};
-        if(关系.种类==新方法参数关系种类::同一&&左!=右)return {};
-        if(关系.种类==新方法参数关系种类::不同&&左==右)return {};
+            &&!(关系.种类==新方法参数关系种类::特征引用存在&&需求参数[右])){ 模拟样例拒绝行=__LINE__; return {}; }
+        if(关系.种类==新方法参数关系种类::同一&&左!=右){ 模拟样例拒绝行=__LINE__; return {}; }
+        if(关系.种类==新方法参数关系种类::不同&&左==右){ 模拟样例拒绝行=__LINE__; return {}; }
         if(关系.种类==新方法参数关系种类::不同&&需求参数[左]&&需求参数[右]
-            &&输入[左].需求参数输入==输入[右].需求参数输入)return {};
+            &&输入[左].需求参数输入==输入[右].需求参数输入){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     for(std::size_t 位置=0;位置<输入.size();++位置)if(输入[位置].初值方式==新模拟特征初值方式::概念构造未知) {
         const auto& 项=输入[位置];const auto 定义=s.方法.读取模拟特征范围(项.规格.范围概念节点);
         if(项.规格.信息类型!=新方法参数信息类型::特征||!定义
             ||定义->材料类型!=特征概念材料物理类型::需求节点引用||定义->比较规则!=特征概念比较规则::需求身份精确
             ||项.复制上下文||项.来源存在||项.完整复制特征||项.值||项.材料||项.引用需求输入||项.引用存在参数
-            ||!项.历史引用存在参数组.empty()||!项.集合成员参数组.empty()||!项.来源任务成员组.empty())return {};
+            ||!项.历史引用存在参数组.empty()||!项.集合成员参数组.empty()||!项.来源任务成员组.empty()){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto 同簇=[&](std::uint32_t 参数){return 参数&&参数<=代表.size()&&代表[参数-1]==代表[位置];};
         bool 受限=false;
         const auto 核条件=[&](const 新方法条件项定义& 条件) {
@@ -1418,7 +1424,7 @@ namespace 海中鱼巣 {
         for(const auto& 配对:m->条件结果组)for(const auto& 条件:配对.条件.条件项组)核条件(条件);
         for(const auto& 关系:初始关系组)if((同簇(关系.左参数序号)||同簇(关系.右参数序号))
             &&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同)受限=true;
-        if(受限)return {};
+        if(受限){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     // 位置关系1..6与正式场景事实14分线；完整声明必须有同限定输入构成。
     if(m->初始必要条件)for(const auto& 限定:m->初始必要条件->场景事实限定组) {
@@ -1433,12 +1439,12 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<输入.size();++i) {
         const auto target=引用代表(输入[i]);
         if(!target)continue;
-        if(输入[i].规格.信息类型!=新方法参数信息类型::特征)return {};
+        if(输入[i].规格.信息类型!=新方法参数信息类型::特征){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto d=s.方法.读取模拟特征范围(输入[i].规格.范围概念节点);
         const auto* domain=d ? std::get_if<特征概念存在引用值域>(&d->值域) : nullptr;
         if(!d||d->材料类型!=特征概念材料物理类型::存在节点引用
             ||d->比较规则!=特征概念比较规则::存在身份精确||!domain
-            ||!范围包含(构造范围[*target],domain->存在概念节点))return {};
+            ||!范围包含(构造范围[*target],domain->存在概念节点)){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     for(const auto& r:初始关系组)if(r.种类==新方法参数关系种类::特征引用存在) {
         if(需求参数[r.右参数序号-1]) {
@@ -1446,26 +1452,26 @@ namespace 海中鱼巣 {
             const auto d=s.方法.读取模拟特征范围(F.规格.范围概念节点);
             if(F.规格.信息类型!=新方法参数信息类型::特征||!d
                 ||d->材料类型!=特征概念材料物理类型::需求节点引用||d->比较规则!=特征概念比较规则::需求身份精确
-                ||!F.引用需求输入||F.引用需求输入!=输入[r.右参数序号-1].需求参数输入)return {};
+                ||!F.引用需求输入||F.引用需求输入!=输入[r.右参数序号-1].需求参数输入){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
         }
         const auto target=引用代表(输入[r.左参数序号-1]);
-        if(!target||*target!=代表[r.右参数序号-1])return {};
+        if(!target||*target!=代表[r.右参数序号-1]){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     for(std::size_t i=0;i<输入.size();++i) if(代表[i]!=i) {
         const auto& a=输入[i];const auto& b=输入[代表[i]];
         if(a.值!=b.值||a.材料!=b.材料||a.来源任务成员组!=b.来源任务成员组
-            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征)return {};
-        if(引用代表(a)!=引用代表(b))return {};
+            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征){ 模拟样例拒绝行=__LINE__; return {}; }
+        if(引用代表(a)!=引用代表(b)){ 模拟样例拒绝行=__LINE__; return {}; }
         if(a.规格.信息类型==新方法参数信息类型::特征) {
             if(a.所属存在参数&&b.所属存在参数
-                &&代表.at(a.所属存在参数-1)!=代表.at(b.所属存在参数-1))return {};
+                &&代表.at(a.所属存在参数-1)!=代表.at(b.所属存在参数-1)){ 模拟样例拒绝行=__LINE__; return {}; }
             if(a.规格.范围概念节点!=b.规格.范围概念节点) {
                 const auto x=s.方法.读取模拟特征范围(a.规格.范围概念节点);
                 const auto y=s.方法.读取模拟特征范围(b.规格.范围概念节点);
                 if(!x||!y)throw std::runtime_error("simulation alias definition missing");
                 if(x->特征类型根!=y->特征类型根||x->材料类型!=y->材料类型
-                    ||x->比较规则!=y->比较规则)return {};
+                    ||x->比较规则!=y->比较规则){ 模拟样例拒绝行=__LINE__; return {}; }
                 const auto 符合=[&](const 新特征匹配定义快照& d) {
                     if(std::holds_alternative<特征概念全材料值域>(d.值域))return true;
                     if(const auto* ref=std::get_if<特征概念存在引用值域>(&d.值域)) {
@@ -1506,7 +1512,7 @@ namespace 海中鱼巣 {
                     }
                     throw std::runtime_error("simulation alias domain shape unsupported");
                 };
-                if(!符合(*x)||!符合(*y))return {};
+                if(!符合(*x)||!符合(*y)){ 模拟样例拒绝行=__LINE__; return {}; }
             }
         }
     }
@@ -1613,7 +1619,7 @@ namespace 海中鱼巣 {
     if(执行主体输入&&执行主体输入->同源存在输入) {
         const auto 位置=static_cast<std::size_t>(执行主体输入->同源存在输入-1);
         if(位置>=输入.size()||!是普通存在(位置)||输入[位置].来源存在!=std::optional{执行主体输入->来源存在}
-            ||构造范围[位置]!=执行主体输入->专属概念)return {};
+            ||构造范围[位置]!=执行主体输入->专属概念){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     std::map<std::size_t,std::size_t> 独立成员场景;
     if(!显式场景成员.empty())for(const auto position:E位置)
@@ -1846,7 +1852,7 @@ namespace 海中鱼巣 {
             if(p.所属存在参数)throw std::invalid_argument("copied feature has two owners");
             q.新节点组[index[i]].字段组.push_back({字段组[所属],图引用(L节点,p.所属语言场景输入)});
         } else if(p.所属存在参数) {
-            if(p.所属存在参数>输入.size()||!是普通存在(p.所属存在参数-1))return {};
+            if(p.所属存在参数>输入.size()||!是普通存在(p.所属存在参数-1)){ 模拟样例拒绝行=__LINE__; return {}; }
             q.新节点组[index[i]].字段组.push_back({字段组[所属],字段引用(p.所属存在参数-1)});
         } else q.新节点组[index[i]].字段组.push_back({字段组[所属],基础组内节点引用{场景}});
         if(p.初值方式==新模拟特征初值方式::概念构造未知)continue;
@@ -1879,14 +1885,14 @@ namespace 海中鱼巣 {
         }
         if(p.引用存在参数) {
             if(p.引用存在参数>输入.size()
-                ||!是普通存在(p.引用存在参数-1))return {};
+                ||!是普通存在(p.引用存在参数-1)){ 模拟样例拒绝行=__LINE__; return {}; }
             q.新节点组[index[i]].字段组.push_back({字段组[当前材料],字段引用(p.引用存在参数-1)});
             continue;
         }        auto 材料=p.材料;
         std::vector<std::uint64_t> 成员;
         for(std::size_t j=0;j<输入.size();++j)if(代表[j]==i)
             for(const auto 位置:输入[j].集合成员参数组) {
-                if(!位置||位置>输入.size()||!是普通存在(位置-1))return {};
+                if(!位置||位置>输入.size()||!是普通存在(位置-1)){ 模拟样例拒绝行=__LINE__; return {}; }
                 if(场景参数&&代表[位置-1]==*场景参数)成员.push_back(场景预留.值);
                 else 成员.push_back(E节点.at(代表[位置-1]).值);
             }
@@ -1898,7 +1904,7 @@ namespace 海中鱼巣 {
             }
         if(!成员.empty()) {
             if(材料&&(!std::holds_alternative<std::vector<std::uint64_t>>(*材料)
-                ||!std::get<std::vector<std::uint64_t>>(*材料).empty()))return {};
+                ||!std::get<std::vector<std::uint64_t>>(*材料).empty())){ 模拟样例拒绝行=__LINE__; return {}; }
             std::sort(成员.begin(),成员.end());成员.erase(std::unique(成员.begin(),成员.end()),成员.end());
             材料=新特征值材料{std::move(成员)};
         }
@@ -1935,7 +1941,7 @@ namespace 海中鱼巣 {
             material.emplace(v,物理类型);
             q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{v},基础外部关系类型::父子});
         } else {
-            if(!p.值||!std::holds_alternative<std::int64_t>(*p.值))return {};
+            if(!p.值||!std::holds_alternative<std::int64_t>(*p.值)){ 模拟样例拒绝行=__LINE__; return {}; }
             q.新节点组[index[i]].字段组.push_back({字段组[数值],基础值{std::get<std::int64_t>(*p.值)}});
         }
     }

@@ -28,8 +28,16 @@ class 服务对象本能运行服务 final : public 新服务对象获取本能�
     std::optional<稳定编码> 读取初始连接关系概念() const noexcept override;
     新方法建立结果 确保方法登记(const 新方法知识建立请求 &) noexcept override;
     新本能函数本次条件结果对 执行任务(const 方法参数场景 &, 稳定编码 执行实例节点) noexcept override;
+    新方法建立结果 确保交互者方法登记(const 新方法知识建立请求 &) noexcept override;
+    新本能函数本次条件结果对 执行交互者任务(const 方法参数场景 &, 稳定编码 执行实例节点) noexcept override;
 
   private:
+    新方法建立结果 确保族方法登记(const 新方法知识建立请求 &, bool 交互者) noexcept;
+    std::optional<std::vector<稳定编码>> 读取族参数(const 方法参数场景 &, 稳定编码, bool) const;
+    bool 复核族条件(const 方法参数场景 &, 稳定编码, bool, const 新服务对象获取配置 &, 稳定编码,
+        const std::vector<稳定编码> &) const;
+    稳定编码 记录族动作(const 方法参数场景 &, 稳定编码, 稳定编码, 稳定编码, 稳定编码);
+    bool 写族结果(新本能函数本次条件结果对 &, 稳定编码, 稳定编码, 稳定编码, 稳定编码, 稳定编码);
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };

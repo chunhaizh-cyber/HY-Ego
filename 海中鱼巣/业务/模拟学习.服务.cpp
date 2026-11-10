@@ -26,6 +26,7 @@
 #endif
 
 namespace 海中鱼巣 {
+extern thread_local int 模拟样例拒绝行;
 namespace { struct 模拟输入采集漂移 final {}; }
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
 namespace {
@@ -338,6 +339,17 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     ||(!条件.特征值域概念节点&&!条件.精确数值域))
                     不支持(条件.参数序号,"unsupported numeric branch condition shape");
                 初始数值条件.push_back(条件);continue;
+            }
+            // 存在引用特征参数的值域条件（如“自我.交互者有值”）：模拟只记录条件实参、不构造值存在；
+            // 值域作为分支必要条件由筹办按声明核验（2026-11-10 获取服务对象以交互者为条件）。
+            if(条件.参数序号&&条件.参数序号<=N&&defs[条件.参数序号-1]
+                &&defs[条件.参数序号-1]->材料类型==特征概念材料物理类型::存在节点引用) {
+                auto 形状=条件;形状.特征类型概念节点.reset();形状.特征值域概念节点.reset();
+                新方法条件项定义 预期;预期.参数序号=条件.参数序号;
+                if(形状!=预期||!条件.特征类型概念节点||!条件.特征值域概念节点
+                    ||*条件.特征类型概念节点!=defs[条件.参数序号-1]->特征类型根)
+                    不支持(条件.参数序号,"unsupported existence-reference value condition shape");
+                continue;
             }
             新方法条件项定义 可构造条件;
             可构造条件.参数序号=条件.参数序号;可构造条件.存在概念节点=条件.存在概念节点;
@@ -1819,7 +1831,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(created.状态==新模拟世界状态::定义前提已变化)
             throw 模拟输入采集漂移{};
         if(created.状态!=新模拟世界状态::已完成)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
-            "ordered sample construction rejected: state=" + std::to_string(static_cast<int>(created.状态)));
+            "ordered sample construction rejected: state=" + std::to_string(static_cast<int>(created.状态))
+            + " line=" + std::to_string(模拟样例拒绝行));
         本支有合法样例=true;
         const auto bindings=world->读取参数绑定();
         if(!bindings)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
