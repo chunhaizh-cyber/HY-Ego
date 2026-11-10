@@ -7,7 +7,6 @@
 #include <chrono>
 
 #include "新_本能函数集.h"
-#include "连接.本能合同.h"
 #include "进入场景.本能合同.h"
 #include "本能字段询问.运行接口.h"
 
@@ -29,31 +28,9 @@ inline constexpr std::string_view 新本能函数登记名_获取服务对象需
     "builtin.service_object.demand.acquire_node.v1";
 inline constexpr std::string_view 新本能函数登记名_旧两参数获取服务对象 =
     "builtin.service_object.acquire.v1";
-inline constexpr std::string_view 新本能函数登记名_建立连接 =
-    "builtin.connection.establish.v4";
 // 通用本能“进入场景”（6220 §2，R94/R95）。
 inline constexpr std::string_view 新本能函数登记名_进入场景 =
     "builtin.self.enter_scene.v1";
-inline constexpr std::string_view 新本能函数登记名_旧六参数建立连接 =
-    "builtin.connection.establish.v1";
-
-// 稳定程序内登记名不是自然语言方法名称，也不作为能力判断依据。
-inline constexpr std::string_view 新本能函数登记名_读取网页对话消息 =
-    "builtin.web_dialog.read_messages.v1";
-inline constexpr std::string_view 新本能函数登记名_设置网页对话输入文本 =
-    "builtin.web_dialog.set_input_text.v1";
-inline constexpr std::string_view 新本能函数登记名_提交网页对话消息 =
-    "builtin.web_dialog.submit_message.v1";
-
-// 网页宿主或浏览器适配层提供这三个入口。本结构只传函数，不传DOM对象、
-// 浏览器句柄、文本副本或持久状态；外设提供者必须比所有调用存活更久。
-struct 新本能网页对话函数端口 final {
-    新本能函数 读取已显示消息 = nullptr;
-    新本能函数 设置输入框文本 = nullptr;
-    新本能函数 提交消息 = nullptr;
-    friend bool operator==(const 新本能网页对话函数端口&,
-        const 新本能网页对话函数端口&) = default;
-};
 
 enum class 新本能函数端口装配状态 : std::uint8_t {
     已装配 = 1,
@@ -103,9 +80,6 @@ public:
     // 登记新_本能函数集提供的首批普通本能函数。重复调用不重复登记。
     static 新本能函数登记状态 初始化() noexcept;
 
-    // 进程内只允许一个真实网页对话端口；同一端口可重复装配，不允许替换。
-    static 新本能函数端口装配状态 装配网页对话端口(
-        const 新本能网页对话函数端口& 端口) noexcept;
     static 新本能函数端口装配状态 装配服务对象新需求端口(
         std::shared_ptr<新服务对象新需求本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭服务对象新需求端口(
@@ -114,10 +88,6 @@ public:
         std::shared_ptr<新服务对象获取本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭服务对象获取端口(
         新服务对象获取本能端口&) noexcept;
-    static 新本能函数端口装配状态 装配连接端口(
-        std::shared_ptr<新连接本能端口>) noexcept;
-    static 新本能函数端口装配状态 关闭连接端口(
-        新连接本能端口&) noexcept;
     static 新本能函数端口装配状态 装配进入场景端口(
         std::shared_ptr<新进入场景本能端口>) noexcept;
     static 新本能函数端口装配状态 关闭进入场景端口(
@@ -183,20 +153,11 @@ public:
 private:
     static std::shared_ptr<新字段询问登记端口> 租用字段询问端口() noexcept;
     static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
-    static std::shared_ptr<新连接本能端口> 租用连接端口() noexcept;
     static std::shared_ptr<新进入场景本能端口> 租用进入场景端口() noexcept;
     static std::shared_ptr<新服务对象新需求本能端口> 租用服务对象新需求端口() noexcept;
-    enum class 网页对话入口 : std::uint8_t {
-        读取已显示消息 = 1,
-        设置输入框文本,
-        提交消息
-    };
 
     friend class 新_本能函数集;
     friend class 新_方法类;
-    static 新本能函数本次条件结果对 调用网页对话入口(
-        网页对话入口 入口,
-        const 方法参数场景& 参数场景) noexcept;
 };
 
 } // namespace 海中鱼巣

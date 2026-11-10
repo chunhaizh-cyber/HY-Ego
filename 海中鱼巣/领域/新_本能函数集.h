@@ -173,21 +173,11 @@ using 新本能函数 = 新本能函数本次条件结果对 (*)(
 // 本类不持有注册表或方法节点，不以函数入口注册代替方法树中的正式信息。
 class 新_本能函数集 final {
 public:
-    // 以下三项是函数实现，不负责登记或外设端口所有权。
-    static 新本能函数本次条件结果对 读取网页对话消息(
-        const 方法参数场景& 参数场景) noexcept;
-    static 新本能函数本次条件结果对 设置网页对话输入文本(
-        const 方法参数场景& 参数场景) noexcept;
-    static 新本能函数本次条件结果对 提交网页对话消息(
-        const 方法参数场景& 参数场景) noexcept;
-
     static 新本能函数本次条件结果对 获取交互者(
         const 方法参数场景& 场景) noexcept;
     static 新本能函数本次条件结果对 获取服务对象(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取服务对象新需求(
-        const 方法参数场景&) noexcept;
-    static 新本能函数本次条件结果对 建立连接(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 进入场景(const 方法参数场景&) noexcept;

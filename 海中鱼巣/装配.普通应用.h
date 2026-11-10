@@ -3,7 +3,6 @@
 #include "领域/新_自然语言世界树类.h"
 #include "领域/新_方法公共类型.h"
 #include "业务/新_世界树类.h"
-#include "业务/连接.本能运行服务.h"
 #include "业务/治理二次特征.应用服务.h"
 #include "业务/初始化.概念名称.h"
 #include "业务/初始化.结构化子概念.h"
@@ -72,9 +71,7 @@ struct 普通应用装配结果 final {
     普通应用装配状态 状态 = 普通应用装配状态::入口拒绝;
     std::optional<新世界初始化结果> 世界树;
     std::optional<新世界初始化结果> 外设世界树;
-    std::optional<新方法建立结果> 旧网页读取退役;
     std::optional<新方法建立结果> 旧服务对象退役;
-    std::optional<新方法建立结果> 旧网页设置核验, 旧网页提交核验;
     std::optional<新自然语言世界初始化结果> 自然语言世界树;
     std::optional<初始化概念名称结果> 初始概念名称;
     std::optional<初始化结构化子概念结果> 结构化子概念;
@@ -109,7 +106,6 @@ struct 普通应用装配结果 final {
     std::optional<稳定编码> 服务任务特征概念节点;
     std::optional<稳定编码> 服务任务特征节点;
     std::optional<稳定编码> 获取服务对象方法节点;
-    std::optional<稳定编码> 建立连接方法节点;
 
     bool 成功() const noexcept;
 };
@@ -184,10 +180,6 @@ void 回收普通应用上下文() noexcept;
 // 普通控制面板专用；回调只读取共享不可变缓存，不触碰业务owner。
 网页控制面板回调组 取得普通应用控制面板回调() noexcept;
 
-// 可信进程内调用；不从网页请求自动推断目标与窗口的对应关系。
-新连接返回 开始普通应用连接(const 新连接请求&) noexcept;
-新连接返回 推进普通应用连接(稳定编码 调用身份) noexcept;
-新连接返回 取消普通应用连接(稳定编码 调用身份) noexcept;
 
 网页服务输入状态 开始普通应用网页会话(std::string_view 公开会话标识) noexcept;
 void 结束普通应用网页会话(std::string_view 公开会话标识) noexcept;

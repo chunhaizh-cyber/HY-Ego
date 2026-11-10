@@ -370,6 +370,15 @@ struct 新方法初始必要条件定义 final {
     std::vector<新方法初始场景事实限定> 场景事实限定组;
     friend bool operator==(const 新方法初始必要条件定义&,const 新方法初始必要条件定义&)=default;
 };
+// 登记结果组（R110，3300 v4.6、5350 v2.4 §2）：方法函数生成方法头时同时提交的结果组，
+// 每项写明作用对象（参数序号；不依附参数时为0并给作用存在概念）及被改变的特征类型。
+// 召回据此判定方法能否改变目标特征类型；具体取值、方向与关系由运行结果完善。
+struct 新方法登记结果项 final {
+    std::uint32_t 参数序号 = 0;
+    std::optional<稳定编码> 作用存在概念节点;
+    稳定编码 特征类型概念节点;
+    friend bool operator==(const 新方法登记结果项&, const 新方法登记结果项&) = default;
+};
 struct 新方法知识建立请求 final {
     新方法作用域 作用域 = 新方法作用域::普通世界;
     新方法实现方式 实现方式 = 新方法实现方式::本能;
@@ -382,6 +391,7 @@ struct 新方法知识建立请求 final {
     std::vector<新方法模拟输入方案定义> 初始模拟输入方案组;
     std::optional<新方法初始必要条件定义> 初始必要条件;
     std::vector<新方法执行分支定义> 执行分支组;
+    std::vector<新方法登记结果项> 登记结果组;
 };
 
 struct 新方法条件结果信息 final {
@@ -477,6 +487,7 @@ struct 新方法信息 final {
     std::vector<新方法模拟输入方案定义> 初始模拟输入方案组;
     std::optional<新方法初始必要条件定义> 初始必要条件;
     std::vector<新方法执行分支信息> 执行分支组;
+    std::vector<新方法登记结果项> 登记结果组;
     friend bool operator==(const 新方法信息&, const 新方法信息&) = default;
 };
 

@@ -103,6 +103,8 @@ std::wstring 处理状态文字(新方法问题处理状态 s) {
     for (const auto ft : m.方法头.可能结果概念组)
         if (const auto d = 方法读取.读取模拟特征范围(ft)) 声明结果类型.insert(d->特征类型根);
     std::map<std::uint32_t, const 新状态信息*> 按参数;
+    // 登记结果组（R110）中不依附参数的项：本次状态落在其作用对象上时按“结果作用存在”记录（零参数方法）。
+    std::vector<const 新状态信息*> 按作用存在;
     for (const auto 节点 : 运行.结果.已形成状态节点组) {
         const auto s = std::find_if(材料.实际状态组.begin(), 材料.实际状态组.end(),
             [&](const auto& x) { return x.节点 == 节点; });
@@ -111,12 +113,61 @@ std::wstring 处理状态文字(新方法问题处理状态 s) {
         for (const auto& 角色 : 运行.条件.参数角色组)
             if (角色.有序引用 && 角色.有序引用->信息类型 == 新方法参数信息类型::特征
                 && 角色.有序引用->信息节点 == s->来源实例特征节点) 参 = &角色;
-        if (!参) return 缺口(L"表达能力不足：本次形成状态不在参数特征上 状态=" + std::to_wstring(s->节点.值)
-            + L" 特征=" + std::to_wstring(s->来源实例特征节点.值));
+        if (!参) {
+            const auto ds = 方法读取.读取模拟特征范围(s->特征类型概念节点);
+            const bool 属登记项 = ds && std::any_of(m.登记结果组.begin(), m.登记结果组.end(), [&](const auto& 项) {
+                if (项.参数序号 != 0 || !项.作用存在概念节点) return false;
+                const auto d = 方法读取.读取模拟特征范围(项.特征类型概念节点);
+                return d && d->特征类型根 == ds->特征类型根
+                    && 概念.存在.存在节点属于概念(s->被描述存在节点, *项.作用存在概念节点);
+            });
+            if (!属登记项) return 缺口(L"表达能力不足：本次形成状态不在参数特征上 状态=" + std::to_wstring(s->节点.值)
+                + L" 特征=" + std::to_wstring(s->来源实例特征节点.值));
+            if (std::any_of(按作用存在.begin(), 按作用存在.end(), [&](const auto* x) {
+                    return x->来源实例特征节点 == s->来源实例特征节点; }))
+                return 缺口(L"同特征多个本次状态 特征=" + std::to_wstring(s->来源实例特征节点.值));
+            按作用存在.push_back(&*s);
+            continue;
+        }
         if (!按参数.emplace(参->有序引用->序号, &*s).second)
             return 缺口(L"同特征多个本次状态 参数=" + std::to_wstring(参->有序引用->序号));
     }
-    if (按参数.empty()) return 缺口(L"已取得但本次无形成状态");
+    if (按参数.empty() && 按作用存在.empty()) return 缺口(L"已取得但本次无形成状态");
+    // 写回值取值域：存在身份精确时为“值域＝该存在专属概念”的特征概念（2026-11-10 用户裁决，记实际写回的存在本身）。
+    const auto 存在值域 = [&](稳定编码 类型根, 稳定编码 E) -> std::optional<稳定编码> {
+        const auto 存在 = 概念.存在.获取存在(E);
+        const auto 根 = 概念.特征概念.获取特征概念(类型根);
+        if (!存在 || !根) return std::nullopt;
+        特征概念定义 定义;
+        定义.材料类型 = 根->材料类型; 定义.单位 = 根->单位;
+        定义.比较规则 = 根->比较规则; 定义.聚合规则 = 根->聚合规则;
+        定义.值域 = 特征概念存在引用值域{存在->专属存在概念节点};
+        const auto 值域概念 = 概念.特征概念.建立或取得特征概念(定义, 概念.特征值, 类型根);
+        if (!有效(值域概念)) return std::nullopt;
+        return 值域概念;
+    };
+    for (const auto* s : 按作用存在) {
+        const auto ds = 方法读取.读取模拟特征范围(s->特征类型概念节点);
+        if (!ds) return 缺口(L"结果类型定义不可读 作用存在=" + std::to_wstring(s->被描述存在节点.值));
+        if (!声明结果类型.contains(ds->特征类型根))
+            return 逻辑错误(L"合同违规：本次形成状态的特征类型未在方法头声明为结果 作用存在="
+                + std::to_wstring(s->被描述存在节点.值));
+        if (!s->固定准确值) return 缺口(L"本次状态值未知 作用存在=" + std::to_wstring(s->被描述存在节点.值));
+        新方法结果项定义 r; r.结果作用存在 = s->被描述存在节点; r.特征类型概念节点 = ds->特征类型根;
+        if (ds->比较规则 == 特征概念比较规则::存在身份精确) {
+            const auto* E = std::get_if<稳定编码>(&*s->固定准确值);
+            if (!E) return 缺口(L"存在引用结果值形状不符 作用存在=" + std::to_wstring(s->被描述存在节点.值));
+            const auto 值域 = 存在值域(ds->特征类型根, *E);
+            if (!值域) return 缺口(L"写回存在值域概念未能建立 值=" + std::to_wstring(E->值));
+            r.特征值域概念节点 = *值域;
+        } else if (const auto* v = std::get_if<std::int64_t>(&*s->固定准确值)) {
+            r.精确数值域 = 特征概念I64闭区间{*v, *v};
+        } else {
+            return 缺口(L"结果材料类型未支持 作用存在=" + std::to_wstring(s->被描述存在节点.值));
+        }
+        c.实际结果.结果项组.push_back(r);
+        c.差异项组.push_back({新尝试补全差异种类::结果新增, 0, 0});
+    }
     for (const auto& [p, s] : 按参数) {
         const auto 规格 = std::find_if(m.参数规格组.begin(), m.参数规格组.end(),
             [&](const auto& x) { return x.有序规格 && x.有序规格->序号 == p; });
