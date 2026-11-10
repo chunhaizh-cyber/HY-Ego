@@ -9,6 +9,9 @@
 #include <map>
 #include <new>
 #include <set>
+#include <source_location>
+#include <sstream>
+#include <thread>
 #include <stdexcept>
 
 namespace 海中鱼巣 {
@@ -114,6 +117,11 @@ struct 服务对象需求发布服务::实现 final {
     mutable std::condition_variable 等待;
     bool 就绪 = false;
     mutable std::set<稳定编码> 占用;
+    // 只读调用的共享占用：读与读可并行，与独占（发布、迁移）互斥。
+    mutable std::map<稳定编码,std::uint32_t> 共享占用;
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    mutable std::map<稳定编码,std::pair<std::uint_least32_t,std::thread::id>> 占用持有者;
+#endif
     实现(新_世界树类& w, 新_需求类& d) : 世界(w), 需求(d), 事实(w.获取事实服务引用()) {}
     服务对象需求发布结果 发布(const 服务对象需求发布请求&,新需求发生方式) const;
     服务对象需求发生读取结果 读取发生(稳定编码) const;
@@ -123,17 +131,40 @@ struct 服务对象需求发布服务::实现 final {
         std::vector<基础联合节点快照>&) const;
     服务对象需求内容读取结果 读取当前结构(稳定编码,稳定编码,稳定编码,std::optional<稳定编码>) const;
     新需求目标定义核验结果 核验内容定义(const 新需求完整目标&) const;
-    服务对象需求发布状态 取得(稳定编码 E) const {
+    服务对象需求发布状态 取得(稳定编码 E,bool 共享=false,std::source_location 位置=std::source_location::current()) const {
         std::lock_guard 锁(互斥);
         if (!就绪) return 服务对象需求发布状态::已关闭;
-        return 占用.insert(E).second ? 服务对象需求发布状态::已读取 : 服务对象需求发布状态::前提已变化;
+        // 并发只读不是业务前提变化；只有与独占调用相遇才返回前提已变化。
+        const bool 取得成功=共享 ? (!占用.contains(E)&&(++共享占用[E],true))
+            : (!共享占用.contains(E)&&占用.insert(E).second);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        if(取得成功&&!共享)占用持有者[E]={位置.line(),std::this_thread::get_id()};
+        else if(!取得成功)try{
+            const auto h=占用持有者.find(E);
+            std::wostringstream t;t<<L"E="<<E.值<<L" 请求行="<<位置.line()
+                <<L" 持有行="<<(h!=占用持有者.end()?h->second.first:0)
+                <<L" 同线程="<<(h!=占用持有者.end()&&h->second.second==std::this_thread::get_id());
+            (void)记录调试日志(L"SIMULATION_PROGRESS",L"需求发布主体占用冲突",L"占用",t.str());
+        }catch(...){}
+#else
+        (void)位置;
+#endif
+        return 取得成功 ? 服务对象需求发布状态::已读取 : 服务对象需求发布状态::前提已变化;
     }
-    void 释放(稳定编码 E) const noexcept {
-        std::lock_guard 锁(互斥); 占用.erase(E); 等待.notify_all();
+    void 释放(稳定编码 E,bool 共享=false) const noexcept {
+        std::lock_guard 锁(互斥);
+        if(共享){const auto i=共享占用.find(E);if(i!=共享占用.end()&&--i->second==0)共享占用.erase(i);}
+        else {
+            占用.erase(E);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+            占用持有者.erase(E);
+#endif
+        }
+        等待.notify_all();
     }
     struct 调用结束 final {
-        const 实现& 服务; 稳定编码 主体;
-        ~调用结束() { 服务.释放(主体); }
+        const 实现& 服务; 稳定编码 主体; bool 共享=false;
+        ~调用结束() { 服务.释放(主体,共享); }
     };
     bool 场景有效(稳定编码 C, 稳定编码 E) const {
         const auto root = 世界.获取世界树根场景();
@@ -685,7 +716,10 @@ bool 服务对象需求发布服务::初始化(稳定编码 T, 稳定编码 oldT
                 if (!实现_->找特征(E, oldT)) continue;
                 {
                     std::lock_guard lock(实现_->互斥);
-                    if (!实现_->占用.insert(E).second) return false;
+                    if (实现_->共享占用.contains(E)||!实现_->占用.insert(E).second) return false;
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+                    实现_->占用持有者[E]={static_cast<std::uint_least32_t>(__LINE__),std::this_thread::get_id()};
+#endif
                 }
                 实现::调用结束 release{*实现_, E};
                 std::vector<需求特征迁移缺口> gaps;
@@ -704,7 +738,7 @@ void 服务对象需求发布服务::关闭() noexcept {
     try {
         if (!实现_) return;
         std::unique_lock lock(实现_->互斥); 实现_->就绪 = false;
-        实现_->等待.wait(lock, [&] { return 实现_->占用.empty(); });
+        实现_->等待.wait(lock, [&] { return 实现_->占用.empty()&&实现_->共享占用.empty(); });
     } catch (...) { 发布故障(L"关闭需求发布服务失败"); }
 }
 服务对象需求读取结果 服务对象需求发布服务::读取主体需求(稳定编码 C, 稳定编码 E) const noexcept {
@@ -718,11 +752,11 @@ void 服务对象需求发布服务::关闭() noexcept {
     const 新本能已发布需求结果& result) const noexcept {
     using S=新本能已发布需求核验状态;
     try {
-        const auto acquired=实现_->取得(result.主体存在节点);
+        const auto acquired=实现_->取得(result.主体存在节点,true);
         if(acquired==服务对象需求发布状态::已关闭)return {S::已关闭,{},{}};
         if(acquired==服务对象需求发布状态::前提已变化)return {};
         if(acquired!=服务对象需求发布状态::已读取)发布故障(L"需求结果核验调用占用状态异常");
-        实现::调用结束 release{*实现_,result.主体存在节点};
+        实现::调用结束 release{*实现_,result.主体存在节点,true};
         return 实现_->核验已发布结果材料(result);
     } catch(const 需求结果读取变化&) {return {};}
     catch(const std::bad_alloc&) {return {S::资源失败,{},{}};}
@@ -819,10 +853,10 @@ void 服务对象需求发布服务::关闭() noexcept {
 新需求目标定义核验结果 服务对象需求发布服务::核验引用内容目标定义保护(const 新需求完整目标& t) const noexcept {
     using S=新需求目标定义核验状态;
     try {
-        const auto s=实现_->取得(t.目标存在节点);
+        const auto s=实现_->取得(t.目标存在节点,true);
         if(s==服务对象需求发布状态::已关闭)return {S::依赖未就绪,{}};
         if(s==服务对象需求发布状态::前提已变化)return {S::前提已变化,{}};
-        实现::调用结束 结束{*实现_,t.目标存在节点};return 实现_->核验内容定义(t);
+        实现::调用结束 结束{*实现_,t.目标存在节点,true};return 实现_->核验内容定义(t);
     }catch(const std::bad_alloc&){return {S::资源失败,{}};}
     catch(...){发布故障(L"引用内容目标定义核验工程错误");}
 }
@@ -931,16 +965,16 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
     const 新需求完整目标& t,bool 要求当前引用) const noexcept {
     using S=新引用内容目标状态;
     try {
-        const auto 占用=实现_->取得(t.目标存在节点);
+        const auto 占用=实现_->取得(t.目标存在节点,true);
         if(占用==服务对象需求发布状态::已关闭)return {};
-        if(占用==服务对象需求发布状态::前提已变化)return {S::引用前提已变化,{},{},{},{},{}};
-        实现::调用结束 结束{*实现_,t.目标存在节点};
+        if(占用==服务对象需求发布状态::前提已变化){HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
+        实现::调用结束 结束{*实现_,t.目标存在节点,true};
         auto 定义=实现_->核验内容定义(t);
         switch(定义.状态) {
         case 新需求目标定义核验状态::已完成:break;
         case 新需求目标定义核验状态::依赖未就绪:return {};
         case 新需求目标定义核验状态::未支持:return {S::未支持,{},{},{},{},{}};
-        case 新需求目标定义核验状态::前提已变化:return {S::引用前提已变化,{},{},{},{},{}};
+        case 新需求目标定义核验状态::前提已变化:{HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
         case 新需求目标定义核验状态::资源失败:return {S::资源失败,{},{},{},{},{}};
         case 新需求目标定义核验状态::输入不合法:return {S::定义不合法,{},{},{},{},{}};
         default:发布故障(L"引用内容目标定义端口返回内部不一致");
@@ -948,7 +982,7 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
         auto 保护=std::move(定义.完整保护);
         const auto E=t.目标存在节点;const auto& 定位=*t.目标.引用内容定位;const auto C=*t.目标.目标值域概念节点;
         const auto 场景=实现_->事实.场景服务.是场景节点(E) ? std::optional{E} : 实现_->事实.场景服务.查询所属场景(E);
-        if(!场景)return {S::引用前提已变化,{},{},{},{},{}};
+        if(!场景){HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
         std::optional<稳定编码> 实际特征;
         bool 已关联=true;
         if(要求当前引用&&定位.正式内容路径.empty()) {
@@ -958,33 +992,33 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
             case A::已读取:break;
             case A::依赖未就绪:return {};
             case A::未支持:return {S::未支持,{},{},{},{},{}};
-            case A::前提已变化:return {S::引用前提已变化,{},{},{},{},{}};
+            case A::前提已变化:{HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
             case A::资源失败:return {S::资源失败,{},{},{},{},{}};
             default:发布故障(L"整体需求目标关联读取状态异常");
             }
-            if(!合并需求内容保护(保护,关联.完整保护组))return {S::引用前提已变化,{},{},{},{},{}};
+            if(!合并需求内容保护(保护,关联.完整保护组)){HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
             实际特征=关联.特征节点;已关联=关联.已关联;
         // CONV-INSTINCT 6.3／5170 §2.2：路径非空的内容目标（补问叶子及按字段的方法内容条件）
         // 不以H需求特征当前引用D为前提：待完善D不进当前引用，字段是否已有确定值只由D owner内容判定。
         } else {
             // 只固定主体的真实场景，不以需求特征及其current作为内容判断前提。
-            if(!实现_->场景有效(*场景,E))return {S::引用前提已变化,{},{},{},{},{}};
+            if(!实现_->场景有效(*场景,E)){HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
             捕获需求结果节点(保护,*场景);
         }
         // 同一主体占用内只消费D owner纯内容判定，不回入publisher。
         const auto 内容=实现_->需求.判定被认知需求内容保护(
             定位.引用需求节点,E,C,定位.正式内容路径);
         if(内容.状态==S::资源失败||内容.状态==S::引用前提已变化)
-            return {内容.状态,{},{},{},{},{}};
+            {HY_前提诊断(L"内容求值D判定",__LINE__);return {内容.状态,{},{},{},{},{}};}
         if(!合并需求内容保护(保护,内容.完整保护组)||!需求内容联合仍相同(保护))
-            return {S::引用前提已变化,{},{},{},{},{}};
+            {HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}
         新引用内容目标判定 输出;
         输出.场景节点=*场景;输出.实际特征节点=实际特征;
         输出.状态=内容.状态;
         输出.必要项目组=内容.必要项目组;输出.分支组=内容.分支组;
         if(输出.状态==S::已满足&&!已关联)输出.状态=S::未满足;
         输出.完整保护组=std::move(保护);return 输出;
-    }catch(const 需求结果读取变化&){return {S::引用前提已变化,{},{},{},{},{}};}
+    }catch(const 需求结果读取变化&){{HY_前提诊断(L"内容求值",__LINE__);return {S::引用前提已变化,{},{},{},{},{}};}}
     catch(const std::bad_alloc&){return {S::资源失败,{},{},{},{},{}};}
     catch(...){发布故障(L"引用内容目标实际求值工程错误");}
 }
@@ -1093,11 +1127,11 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
     using S=服务对象需求内容读取状态;
     try {
         if(!有效(C)||!有效(E)||!有效(结构概念)||(预期D&&!有效(*预期D)))return {};
-        const auto 状态=实现_->取得(E);
+        const auto 状态=实现_->取得(E,true);
         if(状态==服务对象需求发布状态::已关闭)return {S::未就绪,{},{}};
         if(状态==服务对象需求发布状态::前提已变化)return {S::前提已变化,{},{}};
         if(状态!=服务对象需求发布状态::已读取)发布故障(L"当前需求内容调用占用状态异常");
-        实现::调用结束 结束{*实现_,E};
+        实现::调用结束 结束{*实现_,E,true};
         return 实现_->读取当前结构(C,E,结构概念,预期D);
     }catch(const std::bad_alloc&) {return {S::资源失败,{},{}};}
     catch(const std::exception&) {发布故障(L"当前需求结构内容读取工程异常");}

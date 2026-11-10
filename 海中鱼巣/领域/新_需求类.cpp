@@ -5428,6 +5428,11 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         if(内容.状态==新需求内容读取状态::依赖未就绪)return {};
         if(内容.状态==新需求内容读取状态::内容项未支持)return {S::未支持,{},{},{}};
         if(内容.状态==新需求内容读取状态::输入不合法)return {S::定义不合法,{},{},{}};
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        if(内容.状态!=新需求内容读取状态::已读取||!内容.信息)
+            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"被认知需求内容判定",L"读取未成功",
+                L"D="+std::to_wstring(D.值)+L" E="+std::to_wstring(E.值)+L" 状态="+std::to_wstring(static_cast<int>(内容.状态)));}catch(...){}
+#endif
         if(内容.状态!=新需求内容读取状态::已读取||!内容.信息)return {S::引用前提已变化,{},{},{}};
         if(!并需求保护(保护,内容.完整保护组))return {S::引用前提已变化,{},{},{}};
         std::map<稳定编码,正式内容值> 值组;
