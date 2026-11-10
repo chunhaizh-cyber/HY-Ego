@@ -13,6 +13,7 @@
 #include "../领域/概念_特征类.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "../核心/容错检查.h"
+#include "../核心/日志系统.h"
 #include <algorithm>
 #include <condition_variable>
 #include <map>
@@ -55,7 +56,7 @@ bool 字段询问本能运行服务::初始化(const 新字段询问登记配置
         auto& s=*实现_;std::lock_guard lock(s.锁);
         要求(!s.已关闭 && s.语言,"field question initialization dependency unavailable");
         if (s.配置) { 要求(*s.配置==c,"field question immutable configuration mismatch");return true; }
-        for (const auto id:{c.需求根概念,c.自我范围概念,c.人类概念,c.通用存在概念,c.输出队列类型,
+        for (const auto id:{c.需求根概念,c.自我范围概念,c.人类概念,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
             c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型}) 要求(有效(id),"field question configuration identity missing");
         要求(c.支持字段类型组.size()==6,"field question supported slot count invalid");
         std::set<稳定编码> unique;
@@ -89,11 +90,19 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
 }
 新字段询问材料读回 字段询问本能运行服务::读取询问材料(const 方法参数场景& scene) const {
     auto& s=*实现_;实现::租约 lease(s);
-    auto out=读取通用询问材料(scene,*s.配置,s.需求);
+    // 方案乙：窗口副本经外设场景标识对应外设对话框；副本须是该外设场景在现实世界的唯一副本。
+    const auto 对应=[&](稳定编码 外设场景,稳定编码 副本)->std::optional<std::pair<稳定编码,稳定编码>> {
+        const auto 现实=s.世界.查找现实交互场景(外设场景,s.配置->外设场景标识类型);
+        if (现实.状态!=新场景操作状态::无变化 || 现实.存在节点!=std::optional{副本}) return std::nullopt;
+        const auto 外设=s.外设.按场景读取交互场景(外设场景);
+        if (!外设 || !外设->来源.定位.输出队列特征) return std::nullopt;
+        return std::pair{外设->来源.定位.窗口节点,*外设->来源.定位.输出队列特征};
+    };
+    auto out=读取通用询问材料(scene,*s.配置,s.需求,对应);
     if (!out.材料) return out;
     const auto& m=*out.材料;
     const auto w=s.外设.读取对话框来源(m.窗口);
-    const auto f=scene.读取绑定特征(m.输出特征);
+    const auto f=s.特征.获取特征(m.输出特征);
     const auto e=s.存在.获取存在(m.窗口);
     if (!w || w->定位.场景节点!=m.外设场景 || w->定位.输出队列特征!=m.输出特征
         || !f || !e || std::count(e->特征节点组.begin(),e->特征节点组.end(),m.输出特征)!=1)
@@ -193,6 +202,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         }
     };
         const auto material=p->读取询问材料(场景);
+        if (场景.用途()!=新方法参数场景用途::模拟)
+            (void)记录运行日志(L"字段询问",L"读取询问材料",L"材料状态="+std::to_wstring(static_cast<int>(material.状态)));
         if (material.材料) capture();
         auto publishRead=[&](const 新字段询问材料读回& read) {
             新本能字段询问返回材料 v;
@@ -218,6 +229,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         target.说话者=m.自我; target.受询者=m.受询者;
         target.交互窗口=m.窗口; target.交互作用域=m.外设场景;
         const auto text=p->生成询问文字(target);
+        if (场景.用途()!=新方法参数场景用途::模拟)
+            (void)记录运行日志(L"字段询问",L"生成询问文字",L"文字状态="+std::to_wstring(static_cast<int>(text.状态)));
         if (text.状态!=新字段询问文字状态::已生成且唯一回读) {
             新本能字段询问返回材料 v; v.正式定位=m.定位;v.已读取字段=m.字段内容;
             switch (text.状态) {

@@ -13,20 +13,27 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
 }
 }
 新字段询问材料读回 读取通用询问材料(const 方法参数场景& scene,
-    const 新字段询问登记配置& c,const 正式信息参数读取接口& reader) {
+    const 新字段询问登记配置& c,const 正式信息参数读取接口& reader,const 新字段询问外设窗口对应& 对应外设窗口) {
     using R=新字段询问材料状态;
     if (scene.全部角色绑定().size()!=5) return {R::定位未支持,{}};
     for (std::uint32_t i=1;i<=5;++i) {
         const auto p=scene.查询参数(i);
         if (!p || p->信息类型!=(i==5 ? 新方法参数信息类型::特征 : 新方法参数信息类型::存在)) return {R::定位未支持,{}};
     }
-    const auto output=scene.读取存在参数特征(4,c.输出队列类型);
-    if (output.状态==新方法参数特征读取状态::定义前提已变化 || output.状态==新方法参数特征读取状态::特征未取得)
+    // 参数4为现实交互场景中的窗口副本，参数5为其外设场景标识特征（值为外设场景稳定编码）。
+    const auto ident=scene.读取存在参数特征(4,c.外设场景标识类型);
+    if (ident.状态==新方法参数特征读取状态::定义前提已变化 || ident.状态==新方法参数特征读取状态::特征未取得
+        || ident.状态==新方法参数特征读取状态::当前值未取得)
         return {R::前提已变化,{}};
-    if (output.状态==新方法参数特征读取状态::特征匹配不唯一) return {R::定位未支持,{}};
-    要求((output.状态==新方法参数特征读取状态::已读取 || output.状态==新方法参数特征读取状态::当前值未取得)
-        && output.特征.has_value(),"declared output queue feature unreadable");
-    if (output.特征->节点!=scene.查询参数(5)->信息节点) return {R::定位未支持,{}};
+    if (ident.状态==新方法参数特征读取状态::特征匹配不唯一) return {R::定位未支持,{}};
+    要求(ident.状态==新方法参数特征读取状态::已读取 && ident.特征.has_value(),"declared peripheral scene identifier unreadable");
+    if (ident.特征->节点!=scene.查询参数(5)->信息节点) return {R::定位未支持,{}};
+    const auto* 标识值=ident.特征->当前值 ? std::get_if<std::int64_t>(&*ident.特征->当前值) : nullptr;
+    if (!标识值 || *标识值<=0) return {R::前提已变化,{}};
+    const 稳定编码 外设场景{static_cast<std::uint64_t>(*标识值)};
+    if (!对应外设窗口) return {R::定位未支持,{}};
+    const auto 外设窗口=对应外设窗口(外设场景,scene.查询参数(4)->信息节点);
+    if (!外设窗口) return {R::前提已变化,{}};
     const auto q=scene.读取正式信息参数保护(1);
     if (!正式读取成功(q)) return {R::前提已变化,{}};
     if (!q.信息->引用概念语义 || !q.信息->引用概念语义->引用内容定位) return {R::定位未支持,{}};
@@ -38,10 +45,11 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     要求(d.信息->信息节点==loc.信息节点 && d.信息->类别概念==c.需求根概念,"formal target projection identity mismatch");
     新字段询问材料 m;m.定位=loc;m.定位需求=q;m.待完善需求=d;
     m.自我=scene.查询参数(2)->信息节点;m.受询者=scene.查询参数(3)->信息节点;
-    m.窗口=scene.查询参数(4)->信息节点;m.输出特征=scene.查询参数(5)->信息节点;
+    m.窗口副本=scene.查询参数(4)->信息节点;m.标识特征=scene.查询参数(5)->信息节点;
+    m.窗口=外设窗口->first;m.输出特征=外设窗口->second;
     const auto& roles=scene.全部角色绑定();
     if (m.自我==m.受询者 || !roles[1].世界场景节点 || !roles[3].世界场景节点) return {R::定位未支持,{}};
-    m.执行场景=*roles[1].世界场景节点;m.外设场景=*roles[3].世界场景节点;
+    m.执行场景=*roles[1].世界场景节点;m.外设场景=外设场景;
     const 正式内容值* value=nullptr;const 正式内容值* subject=nullptr;
     for (const auto& item:d.信息->直接内容组) {
         if (item.特征类型==loc.正式内容路径.front()) { 要求(!value,"formal slot repeated");value=&item.内容; }
