@@ -58,7 +58,7 @@ bool 字段询问本能运行服务::初始化(const 新字段询问登记配置
         auto& s=*实现_;std::lock_guard lock(s.锁);
         要求(!s.已关闭 && s.语言,"field question initialization dependency unavailable");
         if (s.配置) { 要求(*s.配置==c,"field question immutable configuration mismatch");return true; }
-        for (const auto id:{c.需求根概念,c.自我范围概念,c.人类概念,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
+        for (const auto id:{c.需求根概念,c.自我范围概念,c.交互者特征类型,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
             c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型}) 要求(有效(id),"field question configuration identity missing");
         要求(c.支持字段类型组.size()==6,"field question supported slot count invalid");
         std::set<稳定编码> unique;
@@ -78,16 +78,9 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
 新方法建立结果 字段询问本能运行服务::确保方法登记(const 新方法知识建立请求& q) noexcept {
     try {
         auto& s=*实现_;实现::租约 lease(s);
-        // 只接受恰一条先天被动结果配对；头与规格先登记，配对再经方法owner先天入口确保。
-        要求(q.条件结果组.size()==1&&q.条件结果组.front().结果.结果项组.size()==1
-            &&q.条件结果组.front().结果.结果项组.front().被动需求目标,"field question registration accepts only the innate passive pair");
-        auto head=q;head.条件结果组.clear();
-        const auto m=s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),head);
-        if(!m.方法节点)return m;
-        const auto pair=s.方法.确保先天被动配对(*m.方法节点,q.条件结果组.front());
-        要求(pair.状态==新方法学习发布状态::已发布||pair.状态==新方法学习发布状态::精确重复,
-            "field question innate passive pair could not be ensured");
-        return m;
+        // 先天被动结果配对已撤回（2026-11-10用户裁决 5380 v1.4）：只登记方法头、规格与必要条件，结果从实际运行学得。
+        要求(q.条件结果组.empty(),"field question registration must not preset condition-result pairs");
+        return s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),q);
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问登记",L"字段询问方法登记错误。"); }
 }
 新字段询问材料读回 字段询问本能运行服务::读取询问材料(const 方法参数场景& scene) const {
@@ -101,7 +94,21 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
         return std::pair{外设->来源.定位.窗口节点,*外设->来源.定位.输出队列特征};
     };
     字段询问运行核对行=0;
-    auto out=读取通用询问材料(scene,*s.配置,s.需求,对应);
+    // §6.6：受话者＝自我当前交互者，直接读取自我的交互者特征当前值（不经参数窄读）。
+    const auto 当前交互者=[&](稳定编码 自我)->std::optional<稳定编码> {
+        const auto E=s.存在.获取存在(自我);
+        if (!E) return std::nullopt;
+        for (const auto f:E->特征节点组) {
+            const auto F=s.特征.获取特征(f);
+            if (!F) return std::nullopt;
+            if (s.特征概念.比较单特征概念(F->特征概念节点,F->特征概念节点).特征类型根!=std::optional{s.配置->交互者特征类型}) continue;
+            if (!F->当前值) return std::nullopt;
+            const auto* v=std::get_if<稳定编码>(&*F->当前值);
+            return v ? std::optional{*v} : std::nullopt;
+        }
+        return std::nullopt;
+    };
+    auto out=读取通用询问材料(scene,*s.配置,s.需求,对应,当前交互者);
     if (!out.材料) return out;
     const auto& m=*out.材料;
     const auto w=s.外设.读取对话框来源(m.窗口);
@@ -196,7 +203,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         r.条件.参数角色组.clear();
         for (const auto& b:场景.全部角色绑定()) {
             新本能函数条件角色材料 c;c.有序引用=b.有序引用;c.世界场景节点=b.世界场景节点;
-            if (b.有序引用 && b.有序引用->序号==5) {
+            if (b.有序引用 && b.有序引用->序号==4) {
                 const auto feature=场景.读取绑定特征(b.有序引用->信息节点);
                 if (!feature) throw std::logic_error("output feature disappeared before action");
                 c.实际特征组.push_back({feature->节点,feature->当前值});
@@ -207,7 +214,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         const auto material=p->读取询问材料(场景);
         if (场景.用途()!=新方法参数场景用途::模拟)
             (void)记录运行日志(L"字段询问",L"读取询问材料",L"材料状态="+std::to_wstring(static_cast<int>(material.状态))
-                +L" 通用读取行="+std::to_wstring(字段询问材料诊断行)+L" 运行核对行="+std::to_wstring(字段询问运行核对行));
+                +L" 通用读取行="+std::to_wstring(字段询问材料诊断行)+L" 运行核对行="+std::to_wstring(字段询问运行核对行)
+                );
         if (material.材料) capture();
         auto publishRead=[&](const 新字段询问材料读回& read) {
             新本能字段询问返回材料 v;
@@ -230,7 +238,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         // 最简表达需求只在本次调用内部派生，不新增正式D或任务。
         auto target=m.表达上下文;
         target.被询内容=m.定位;
-        target.说话者=m.自我; target.受询者=m.受询者;
+        target.说话者=m.自我; target.受询者=m.交互者; // §6.6：受话者取自我当前交互者
         target.交互窗口=m.窗口; target.交互作用域=m.外设场景;
         const auto text=p->生成询问文字(target);
         if (场景.用途()!=新方法参数场景用途::模拟)
@@ -253,7 +261,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         if (!fresh.材料) throw std::logic_error("field question recheck missing");
         const auto& f=*fresh.材料;
         if (f.定位.信息节点!=m.定位.信息节点 || f.定位.正式内容路径!=m.定位.正式内容路径
-            || f.自我!=m.自我 || f.受询者!=m.受询者 || f.窗口!=m.窗口 || f.输出特征!=m.输出特征) {
+            || f.自我!=m.自我 || f.交互者!=m.交互者 || f.窗口!=m.窗口 || f.输出特征!=m.输出特征) {
             publishRead({新字段询问材料状态::前提已变化,{}});return r;
         }
         if (p->已请求停止()) return r;

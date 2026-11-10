@@ -515,12 +515,9 @@ void 新_模拟世界类::设置字段询问语言(std::shared_ptr<const 新字�
     }
     return 语言->生成字段询问(目标,*this);
 }
-稳定编码 新_模拟世界类::建立输出动作(const 方法参数场景& scene,const 新字段询问材料& 材料) {
-    const auto 自我=scene.查询参数(2),窗口=scene.查询参数(4),输出=scene.查询参数(5);
-    if(!自我||!窗口||!输出||自我->信息节点!=材料.自我||窗口->信息节点!=材料.窗口
-        ||输出->信息节点!=材料.输出特征)
-        throw std::invalid_argument("simulation question action materials differ");
-    return 建立参数动作(scene,{2,4,5});
+稳定编码 新_模拟世界类::建立输出动作(const 方法参数场景&,const 新字段询问材料&) {
+    // 方案乙与§6.6后，模拟世界无外设窗口对应，读取询问材料恒为“定位未支持”，不会进入动作。
+    throw std::logic_error("simulation field question cannot reach output action");
 }
 新出站表达留档状态 新_模拟世界类::留档出站具体表达(const 方法参数场景& scene,
     const 新字段询问材料& 材料,稳定编码 动作,const 新字段询问文字结果& 文字) {
@@ -531,14 +528,9 @@ void 新_模拟世界类::设置字段询问语言(std::shared_ptr<const 新字�
     // 模拟学习不构成真实交互；不在任何世界建立语言留档。
     return 新出站表达留档状态::模拟不留档;
 }
-新字段询问入列读回 新_模拟世界类::提交询问输出(const 方法参数场景& scene,
-    const 新字段询问材料& 材料,稳定编码 动作,std::string_view 正文) {
-    const auto 窗口=scene.查询参数(4),对端=scene.查询参数(3),输出=scene.查询参数(5);
-    if(!窗口||!对端||!输出||窗口->信息节点!=材料.窗口||对端->信息节点!=材料.受询者
-        ||输出->信息节点!=材料.输出特征)
-        throw std::invalid_argument("simulation question output materials differ");
-    const auto r=提交本地输出队列(scene,{4,3,5,动作,std::string(正文)});
-    return {r.输出消息,r.入列状态,r.入列动态,r.提交序号};
+新字段询问入列读回 新_模拟世界类::提交询问输出(const 方法参数场景&,
+    const 新字段询问材料&,稳定编码,std::string_view) {
+    throw std::logic_error("simulation field question cannot reach output submission");
 }
 新_模拟世界类::~新_模拟世界类() {
     try { 释放有序样例(); }

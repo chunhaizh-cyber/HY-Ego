@@ -1678,10 +1678,12 @@ struct 新_自我线程类::实现 final {
         新自我等待复核决议 决议{定位, 新自我等待复核状态::需核查, {}};
         const auto 出口 = [&]([[maybe_unused]] int 行) -> const 新自我等待复核决议& {
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-            if (决议.状态 == 新自我等待复核状态::需核查) try {
+            try {
                 std::wostringstream 文本;
                 文本 << L"任务=" << 定位.定位.任务节点.值 << L" 等待原因=" << static_cast<int>(定位.原因)
-                     << L" 任务状态=" << static_cast<int>(定位.定位.任务状态) << L" 出口行=" << 行;
+                     << L" 任务状态=" << static_cast<int>(定位.定位.任务状态) << L" 出口行=" << 行
+                     << L" 决议=" << static_cast<int>(决议.状态)
+                     << L" 当前满足=" << (决议.当前满足状态 ? static_cast<int>(*决议.当前满足状态) : -1);
                 (void)记录调试日志(L"PARAM_BINDING", L"自我等待复核", L"需核查出口", 文本.str());
             } catch (...) {}
 #endif
@@ -2461,6 +2463,11 @@ struct 新_自我线程类::实现 final {
         const auto 事实 = 世界树服务->获取事实服务引用();
         const auto 域 = 事实.特征概念服务.获取特征概念(目标.目标值域概念节点);
         if (!域 || 域->单位 != 目标.单位) return false;
+        // 存在引用目标（R96 切片4；2026-11-10 无关系的存在引用值域条件）：目标值域须是存在引用值域概念。
+        if (目标.存在引用目标)
+            return 目标.目标区间组.empty() && !目标.集合目标
+                && 域->材料类型 == 特征概念材料物理类型::存在节点引用
+                && std::holds_alternative<特征概念存在引用值域>(域->值域);
         if (目标.集合目标) {
             const auto* 集合 = std::get_if<特征概念任务集合值域>(&域->值域);
             return 目标.目标区间组.empty() && !目标.单位
@@ -2814,6 +2821,18 @@ struct 新_自我线程类::实现 final {
                     }
                 }
                 回执.已完成处理 = true;
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                try {
+                    std::wstring 文 = L"任务=" + std::to_wstring(定位.任务节点.值);
+                    for (const auto& 采用 : 回执.项组)
+                        文 += L" 项状态=" + std::to_wstring(static_cast<int>(采用.状态))
+                            + L" 需求=" + std::to_wstring(采用.需求节点 ? 采用.需求节点->值 : 0)
+                            + L" 目标存在=" + std::to_wstring(采用.原提议.目标存在节点.值)
+                            + L" 目标FT=" + std::to_wstring(采用.原提议.目标特征类型概念节点.值)
+                            + L" 目标域=" + std::to_wstring(采用.原提议.目标值域概念节点.值);
+                    (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"条件子需求逐项", 文);
+                } catch (...) {}
+#endif
             }
             新自我筹办裁决 裁决;
             裁决.定位 = 定位;
@@ -3676,6 +3695,10 @@ struct 新_自我线程类::实现 final {
         }
         if (!结果.筹办独立读回
             || 结果.筹办独立读回->原工作 != 定位.原工作) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            try { (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"定位已变化",
+                L"任务=" + std::to_wstring(定位.任务节点.值) + L" 有读回=" + std::to_wstring(结果.筹办独立读回.has_value())); } catch (...) {}
+#endif
             结果.状态 = 新自我消息处理状态::任务筹办定位已变化;
             return 结果;
         }
@@ -3750,6 +3773,10 @@ struct 新_自我线程类::实现 final {
                 && 结果.筹办独立读回->独立子需求提议->状态
                     == 新任务条件子需求提议状态::已形成)) {
             auto 采用 = 处理条件子需求提议(项, *结果.筹办独立读回);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+            try { (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"条件子需求采用",
+                L"任务=" + std::to_wstring(定位.任务节点.值) + L" 处理状态=" + std::to_wstring(static_cast<int>(采用.状态))); } catch (...) {}
+#endif
             if (采用.状态 == 新自我消息处理状态::已交接未收回)
                 return std::nullopt;
             return 采用;
