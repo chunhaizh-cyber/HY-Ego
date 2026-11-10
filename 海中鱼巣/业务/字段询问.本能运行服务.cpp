@@ -23,6 +23,8 @@
 #include <utility>
 
 namespace 海中鱼巣 {
+extern thread_local int 字段询问材料诊断行;
+thread_local int 字段询问运行核对行=0;
 namespace {
 void 要求(bool ok,const char* text) { if (!ok) throw std::logic_error(text); }
 }
@@ -93,11 +95,12 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
     // 方案乙：窗口副本经外设场景标识对应外设对话框；副本须是该外设场景在现实世界的唯一副本。
     const auto 对应=[&](稳定编码 外设场景,稳定编码 副本)->std::optional<std::pair<稳定编码,稳定编码>> {
         const auto 现实=s.世界.查找现实交互场景(外设场景,s.配置->外设场景标识类型);
-        if (现实.状态!=新场景操作状态::无变化 || 现实.存在节点!=std::optional{副本}) return std::nullopt;
+        if (现实.状态!=新场景操作状态::无变化 || 现实.存在节点!=std::optional{副本}) { 字段询问运行核对行=__LINE__; return std::nullopt; }
         const auto 外设=s.外设.按场景读取交互场景(外设场景);
-        if (!外设 || !外设->来源.定位.输出队列特征) return std::nullopt;
+        if (!外设 || !外设->来源.定位.输出队列特征) { 字段询问运行核对行=__LINE__; return std::nullopt; }
         return std::pair{外设->来源.定位.窗口节点,*外设->来源.定位.输出队列特征};
     };
+    字段询问运行核对行=0;
     auto out=读取通用询问材料(scene,*s.配置,s.需求,对应);
     if (!out.材料) return out;
     const auto& m=*out.材料;
@@ -106,7 +109,7 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
     const auto e=s.存在.获取存在(m.窗口);
     if (!w || w->定位.场景节点!=m.外设场景 || w->定位.输出队列特征!=m.输出特征
         || !f || !e || std::count(e->特征节点组.begin(),e->特征节点组.end(),m.输出特征)!=1)
-        return {新字段询问材料状态::前提已变化,{}};
+        { 字段询问运行核对行=__LINE__; return {新字段询问材料状态::前提已变化,{}}; }
     return out;
 }
 新字段询问文字结果 字段询问本能运行服务::生成询问文字(const 新正式字段询问目标& target) const {
@@ -203,7 +206,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     };
         const auto material=p->读取询问材料(场景);
         if (场景.用途()!=新方法参数场景用途::模拟)
-            (void)记录运行日志(L"字段询问",L"读取询问材料",L"材料状态="+std::to_wstring(static_cast<int>(material.状态)));
+            (void)记录运行日志(L"字段询问",L"读取询问材料",L"材料状态="+std::to_wstring(static_cast<int>(material.状态))
+                +L" 通用读取行="+std::to_wstring(字段询问材料诊断行)+L" 运行核对行="+std::to_wstring(字段询问运行核对行));
         if (material.材料) capture();
         auto publishRead=[&](const 新字段询问材料读回& read) {
             新本能字段询问返回材料 v;

@@ -5,6 +5,7 @@
 #include <utility>
 
 namespace 海中鱼巣 {
+thread_local int 字段询问材料诊断行=0;
 namespace {
 void 要求(bool ok,const char* text) { if (!ok) throw std::logic_error(text); }
 bool 正式读取成功(const 正式信息参数读取结果& r) {
@@ -15,6 +16,7 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
 新字段询问材料读回 读取通用询问材料(const 方法参数场景& scene,
     const 新字段询问登记配置& c,const 正式信息参数读取接口& reader,const 新字段询问外设窗口对应& 对应外设窗口) {
     using R=新字段询问材料状态;
+    字段询问材料诊断行=0;
     if (scene.全部角色绑定().size()!=5) return {R::定位未支持,{}};
     for (std::uint32_t i=1;i<=5;++i) {
         const auto p=scene.查询参数(i);
@@ -24,24 +26,24 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     const auto ident=scene.读取存在参数特征(4,c.外设场景标识类型);
     if (ident.状态==新方法参数特征读取状态::定义前提已变化 || ident.状态==新方法参数特征读取状态::特征未取得
         || ident.状态==新方法参数特征读取状态::当前值未取得)
-        return {R::前提已变化,{}};
+        { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     if (ident.状态==新方法参数特征读取状态::特征匹配不唯一) return {R::定位未支持,{}};
     要求(ident.状态==新方法参数特征读取状态::已读取 && ident.特征.has_value(),"declared peripheral scene identifier unreadable");
     if (ident.特征->节点!=scene.查询参数(5)->信息节点) return {R::定位未支持,{}};
     const auto* 标识值=ident.特征->当前值 ? std::get_if<std::int64_t>(&*ident.特征->当前值) : nullptr;
-    if (!标识值 || *标识值<=0) return {R::前提已变化,{}};
+    if (!标识值 || *标识值<=0) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     const 稳定编码 外设场景{static_cast<std::uint64_t>(*标识值)};
     if (!对应外设窗口) return {R::定位未支持,{}};
     const auto 外设窗口=对应外设窗口(外设场景,scene.查询参数(4)->信息节点);
-    if (!外设窗口) return {R::前提已变化,{}};
+    if (!外设窗口) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     const auto q=scene.读取正式信息参数保护(1);
-    if (!正式读取成功(q)) return {R::前提已变化,{}};
+    if (!正式读取成功(q)) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     if (!q.信息->引用概念语义 || !q.信息->引用概念语义->引用内容定位) return {R::定位未支持,{}};
     要求(q.信息->信息节点==scene.查询参数(1)->信息节点 && q.信息->类别概念==c.需求根概念,"formal locator projection identity mismatch");
     const auto loc=*q.信息->引用概念语义->引用内容定位;
     if (loc.正式内容路径.size()!=1 || std::find(c.支持字段类型组.begin(),c.支持字段类型组.end(),loc.正式内容路径.front())==c.支持字段类型组.end()) return {R::定位未支持,{}};
     const auto d=reader.读取正式信息参数保护(loc.信息节点,c.需求根概念);
-    if (!正式读取成功(d)) return {R::前提已变化,{}};
+    if (!正式读取成功(d)) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     要求(d.信息->信息节点==loc.信息节点 && d.信息->类别概念==c.需求根概念,"formal target projection identity mismatch");
     新字段询问材料 m;m.定位=loc;m.定位需求=q;m.待完善需求=d;
     m.自我=scene.查询参数(2)->信息节点;m.受询者=scene.查询参数(3)->信息节点;
@@ -57,7 +59,7 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     }
     要求(value && subject,"formal field question projection missing required slots");
     if (subject->状态!=正式内容值状态::已知 || !subject->值
-        || !std::holds_alternative<稳定编码>(*subject->值) || std::get<稳定编码>(*subject->值)!=m.受询者) return {R::前提已变化,{}};
+        || !std::holds_alternative<稳定编码>(*subject->值) || std::get<稳定编码>(*subject->值)!=m.受询者) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     m.字段内容=*value;
     m.表达上下文={loc,c.需求根概念,c.语言节点,m.自我,m.受询者,m.窗口,m.外设场景,c.第三方指代概念,c.第三方别名关系};
     if (value->状态==正式内容值状态::不适用) return {R::字段不适用,std::move(m)};

@@ -410,7 +410,7 @@ struct 新方法学习发布结果 final {
     std::optional<稳定编码> 已有配对节点;
 };
 
-// TRIAL-LEARNING-REVIEW：尝试执行实际结果入方法知识的候选、评审依据与一次性授权。
+// TRIAL-LEARNING-DIRECT：尝试执行实际结果入方法知识的候选（无评审授权，由方法owner直接发布）。
 enum class 新尝试补全差异种类 : std::uint8_t { 条件收窄 = 1, 结果新增, 结果关系新增 };
 struct 新尝试补全差异项 final {
     新尝试补全差异种类 种类 = 新尝试补全差异种类::结果新增;
@@ -418,9 +418,10 @@ struct 新尝试补全差异项 final {
     std::uint32_t 右参数序号 = 0;  // 仅结果关系新增
     friend bool operator==(const 新尝试补全差异项&, const 新尝试补全差异项&) = default;
 };
-// 学习侧可重建、不持久；同键（方法、原配对、归档、规则版本）同义复用。
+// 学习侧可重建、不持久；同键（方法、原配对、执行实例、规则版本）同义复用。
 struct 新尝试补全候选 final {
-    稳定编码 方法节点, 原配对节点, 归档节点;
+    稳定编码 方法节点, 原配对节点, 执行实例节点;
+    新方法条件定义 原配对条件;
     std::uint32_t 规则版本 = 1;
     新方法条件定义 实际条件;
     新方法结果定义 实际结果;
@@ -429,34 +430,6 @@ struct 新尝试补全候选 final {
     std::vector<新尝试补全差异项> 差异项组;
     friend bool operator==(const 新尝试补全候选&, const 新尝试补全候选&) = default;
 };
-// 评审时fresh读取的方法入口与原配对材料副本。
-struct 新尝试补全评审依据 final {
-    std::string 本能函数登记名;
-    std::vector<新方法参数规格> 参数规格组;
-    稳定编码 原配对节点;
-    新方法条件定义 原配对条件;
-    新方法结果定义 原配对结果;
-    std::vector<稳定编码> 方法现有配对节点组;
-    friend bool operator==(const 新尝试补全评审依据&, const 新尝试补全评审依据&) = default;
-};
-class 方法学习评审服务;
-// 进程内一次性授权：只有评审服务能构造；只能移动；方法owner按右值消费。
-class 新尝试补全授权 final {
-public:
-    新尝试补全授权(新尝试补全授权&&) noexcept = default;
-    新尝试补全授权& operator=(新尝试补全授权&&) noexcept = default;
-    新尝试补全授权(const 新尝试补全授权&) = delete;
-    新尝试补全授权& operator=(const 新尝试补全授权&) = delete;
-    const 新尝试补全候选& 候选() const noexcept { return 候选_; }
-    const 新尝试补全评审依据& 依据() const noexcept { return 依据_; }
-private:
-    friend class 方法学习评审服务;
-    新尝试补全授权(新尝试补全候选 候选, 新尝试补全评审依据 依据) noexcept
-        : 候选_(std::move(候选)), 依据_(std::move(依据)) {}
-    新尝试补全候选 候选_;
-    新尝试补全评审依据 依据_;
-};
-
 struct 新方法组合步骤信息 final {
     稳定编码 步骤节点;
     稳定编码 调用方法节点;

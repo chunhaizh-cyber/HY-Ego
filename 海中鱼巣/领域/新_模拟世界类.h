@@ -93,7 +93,7 @@ struct 新模拟队列提交请求 final {
 class 动作方法定义只读提供者;
 class 概念_动态类;
 class 新_模拟世界类 final : public 新方法模拟运行接口,
-    public 新方法问题归档接口, public 新本能交互运行接口, public 新方法隔离执行接口,
+    public 新本能交互运行接口, public 新方法隔离执行接口,
     public 新本能需求运行接口, public 正式信息参数读取接口,
     public 新本能字段询问运行接口 {
 public:
@@ -207,9 +207,6 @@ public:
     // 读取第位置个有序输入（1起，含N之后私有追加输入）的本地节点；样例未建立时为空。
     std::optional<稳定编码> 读取有序输入节点(std::uint32_t 位置) const noexcept;
     // 不可变的真实执行材料。来源编码按值保存，不对现实节点取得引用。
-    新方法问题归档结果 保存方法问题(const 新方法问题反馈材料&) noexcept override;
-    新方法问题归档读回结果 读取方法问题归档(稳定编码) const noexcept override;
-    新方法问题归档读回结果 查询方法问题归档(稳定编码, 稳定编码) const noexcept override;
     稳定编码 模拟根节点() const noexcept override;
     bool 核验模拟参数(稳定编码, const std::vector<新方法参数角色绑定>&) const noexcept override;
     std::optional<新特征信息> 读取模拟特征(稳定编码) const noexcept override;

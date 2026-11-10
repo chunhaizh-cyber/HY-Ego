@@ -36,7 +36,7 @@ struct 新学习工作快照项 final {
     新学习工作种类 种类 = 新学习工作种类::方法模拟;
     新学习工作阶段 阶段 = 新学习工作阶段::排队中;
     稳定编码 方法节点;
-    std::optional<稳定编码> 问题归档节点, 任务节点, 执行实例节点;
+    std::optional<稳定编码> 任务节点, 执行实例节点;
     std::optional<std::uint64_t> 排队序号;
 };
 struct 新学习工作快照 final {
@@ -57,9 +57,9 @@ public:
     新学习操作状态 启动(std::uint64_t 等待毫秒) noexcept;
     新学习接收结果 提交学习(稳定编码 方法节点) noexcept;
     新学习接收结果 提交方法问题学习(const 新方法问题学习消息&) noexcept;
-    新学习操作状态 确认方法问题结果已接收(稳定编码 归档节点) noexcept;
+    新学习操作状态 确认方法问题结果已接收(稳定编码 执行实例节点) noexcept;
     std::optional<新方法问题学习收集结果> 读取方法问题收集结果(
-        稳定编码 归档节点) const noexcept;
+        稳定编码 执行实例节点) const noexcept;
     新学习操作状态 确认结果已接收(稳定编码 方法节点) noexcept;
     新学习操作状态 请求停止() noexcept;
     新学习操作状态 等待停止(std::uint64_t 等待毫秒) noexcept;
