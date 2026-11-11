@@ -1050,7 +1050,7 @@ private:
         const 新普通需求建立请求&,bool,std::optional<稳定编码>,
         std::optional<稳定编码>,新需求建立结果& 已成立前缀,
         const std::vector<基础联合节点快照>& 新增目标保护 = {});
-    void 要求目标特征实例承载(稳定编码) noexcept;
+    新需求操作状态 要求目标特征实例承载(稳定编码) noexcept;
     bool 目标特征实例承载已启用_ = false;
     新需求操作状态 迁移既有自我需求归属(稳定编码 唯一自我) noexcept;
     friend class 新_自我线程类;

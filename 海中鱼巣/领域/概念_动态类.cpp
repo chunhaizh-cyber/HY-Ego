@@ -846,15 +846,16 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
 struct 动作类别前提变化 final {};
 enum class 动作定义读取方式 { 完整保护, 普通语义 };
 
+// 仅供普通语义读取（获取动态概念）：获取只取值、不判定是否变化，范围owner报告并发变化时不再核对。
 void 核对有序存在范围语义(稳定编码 范围, const 概念_存在类& 存在) {
     const auto 普通 = 存在.读取存在范围语义保护(范围);
-    if (普通.状态 == 正式概念读取状态::前提已变化) throw 动作类别前提变化{};
+    if (普通.状态 == 正式概念读取状态::前提已变化) return;
     if (普通.状态 == 正式概念读取状态::已读取 && 普通.信息) return;
     if (普通.状态 != 正式概念读取状态::非本提供者概念)
         throw std::runtime_error("ordered existence semantic range owner read failed");
     // 正式信息结构仍由其owner解释，不在动作类猜测schema或退化成节点存在判断。
     const auto 信息 = 存在.读取正式结构概念(范围);
-    if (信息.状态 == 正式结构操作状态::前提已变化) throw 动作类别前提变化{};
+    if (信息.状态 == 正式结构操作状态::前提已变化) return;
     if (信息.状态 != 正式结构操作状态::已读取 || !信息.信息
         || !std::holds_alternative<信息结构概念定义>(信息.信息->定义))
         throw std::runtime_error("ordered semantic information range is not a formal information structure");
@@ -2194,8 +2195,8 @@ std::optional<动态概念信息> 概念_动态类::获取动态概念(
                 && *类别 != static_cast<std::int64_t>(动态概念定义类别::变化)))
                 throw std::runtime_error("invalid dynamic concept definition category");
             if (*类别 == static_cast<std::int64_t>(动态概念定义类别::动作)) {
-                // 类别根/正式结构owner尚可能报告瞬时前提变化；整份fresh重读，
-                // 不复用上一份部分材料、不无限重试、不将未完成伪装成概念不存在。
+                // 范围语义核对已不判定变化；剩余来源只有参数类别根读取：类别根owner报告前提变化时
+                // 不返回根身份，无值可取，故仍整份fresh重读，不无限重试、不将未完成伪装成概念不存在。
                 for (unsigned 次数 = 0; 次数 < 3; ++次数) {
                     try {
                         return 读取动作概念材料(概念节点, 特征概念服务_, 二次特征概念服务_,

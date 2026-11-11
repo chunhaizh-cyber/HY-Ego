@@ -219,7 +219,9 @@ struct 服务对象需求发布服务::实现 final {
         case Q::需重新确认: return S::需重新确认;
         case Q::前提已变化: return S::前提已变化;
         case Q::资源失败: throw std::bad_alloc{};
-        default: 发布故障(L"需求完整资格依赖未就绪或返回工程状态");
+        // 依赖未就绪属合法等待；本服务对外已把已关闭映射为依赖未就绪。
+        case Q::依赖未就绪: return S::已关闭;
+        default: 发布故障(L"需求完整资格返回未约定的工程状态");
         }
         if (!q.信息 || q.完整保护.empty()) 发布故障(L"需求完整资格成功缺少实际材料");
         const auto& actual = q.信息->需求;
@@ -369,6 +371,7 @@ struct 服务对象需求发布服务::实现 final {
             const auto d = 需求.获取需求(D);
             if (!d || d->执行域 != 新需求执行域::被认知 || d->需求主体存在节点 != E) 发布故障(L"旧需求集合引用非法需求或异主体");
             const auto origin = 需求.读取主体需求集合发布关联(D);
+            if (origin.状态 == 新需求操作状态::前提已变化) return S::前提已变化;
             if (origin.状态 != 新需求操作状态::已找到) 发布故障(L"旧需求发布来源读取失败");
             if (!origin.关联) { gap("缺少需求原首次发布来源", D); continue; }
             const auto& source = *origin.关联;
@@ -506,7 +509,7 @@ struct 服务对象需求发布服务::实现 final {
                 if(!full){out.状态=S::前提已变化;return out;}
                 const auto status=确认(*full);
                 if(status==S::需重新确认)out.需重新确认节点组.push_back(n);
-                else if(status==S::前提已变化){out.状态=status;return out;}
+                else if(status==S::前提已变化||status==S::已关闭){out.状态=status;return out;}
                 else if(status!=S::已读取)发布故障(L"需求历史确认来源损坏");
             }
         }
@@ -1297,7 +1300,10 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
         const auto S节点=*published.变化->新状态节点;
         if(事实.状态服务.增加引用(S节点)!=新状态操作状态::已完成)发布故障(L"需求发生状态引用保留失败");
         const 新需求发生关联 关联{{q.场景节点,q.服务对象节点,target,q.需求节点,*out.动作节点,方式},*a->动作来源节点,S节点};
-        if(需求.记录主体需求发生关联(关联)!=新需求操作状态::已建立)发布故障(L"需求发生关联追加失败");
+        const auto 关联状态=需求.记录主体需求发生关联(关联);
+        // 已发布的状态/动态保留；引用并发变化按前提已变化返回，幂等已复用视同成功。
+        if(关联状态==新需求操作状态::前提已变化){out.状态=S::前提已变化;return out;}
+        if(关联状态!=新需求操作状态::已建立&&关联状态!=新需求操作状态::已复用)发布故障(L"需求发生关联追加失败");
         const auto 发生=读取发生(S节点);
         if(发生.状态!=服务对象需求发生读取状态::已读取||!发生.发生)发布故障(L"需求发生发表后读回失败");
         out.需求发生=发生.发生;out.本次新建发生=true;

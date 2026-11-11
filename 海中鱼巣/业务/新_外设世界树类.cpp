@@ -1321,7 +1321,7 @@ std::vector<新外设消息信息> 新_外设世界树类::读取输出队列成
         if (旧->场景节点 != 请求.定位.场景节点
             || 旧->窗口节点 != 请求.定位.窗口节点
             || 旧->UTF8正文 != 请求.UTF8正文)
-            throw std::runtime_error("peripheral output source conflicts with immutable record");
+            return {新外设输出队列状态::目标不符, {}};
         const auto 在列 = std::find_if(成员.begin(), 成员.end(),
             [&](const auto& 项) { return 项.消息节点 == 旧->消息节点; });
         return {在列 == 成员.end() ? 新外设输出队列状态::不在队列

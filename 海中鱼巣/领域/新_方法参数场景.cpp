@@ -102,7 +102,9 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         if(!p||p->信息类型!=新方法参数信息类型::存在||!方法读取_)
             工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"参数未绑定或类型不符。");
         const auto m=方法读取_->获取方法(方法节点_);
-        if(!m||位置==0||位置>m->参数规格组.size()||!m->参数规格组[位置-1].有序规格)
+        // 方法被回收或替换与下方“快照不同”同属并发变化。
+        if(!m)return {正式信息参数读取状态::前提已变化,{},{}};
+        if(位置==0||位置>m->参数规格组.size()||!m->参数规格组[位置-1].有序规格)
             工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"方法固定规格已失效。");
         const auto& s=*m->参数规格组[位置-1].有序规格;
         if(s.序号!=位置||s.信息类型!=p->信息类型)
@@ -149,7 +151,11 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         const auto current=全局基础数据集.查询节点组完整结构(ids);
         if(current.状态==基础结构操作状态::资源失败)
             return {正式信息参数读取状态::资源失败,{},{}};
-        if(current.状态!=基础结构操作状态::已完成||current.节点组.size()!=ids.size())
+        // 保护节点被并发删除与“快照不同”同判前提已变化；入口拒绝、内部不一致仍为工程错误。
+        if(current.状态==基础结构操作状态::节点不存在
+            ||(current.状态==基础结构操作状态::已完成&&current.节点组.size()!=ids.size()))
+            return {正式信息参数读取状态::前提已变化,{},{}};
+        if(current.状态!=基础结构操作状态::已完成)
             throw std::runtime_error("formal parameter protection read unavailable");
         for(const auto& item:current.节点组)
             if(!item.快照||!same(expected.at(item.快照->结构.节点.编码),*item.快照))
