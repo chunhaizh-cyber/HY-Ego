@@ -227,9 +227,12 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
             default:v.原因=新本能字段询问原因::定位未支持;break;
             }
             r.结果.字段询问=std::move(v);
+            // 目标判定（5380 §2.4、§3.6）：D该字段已有值或不适用 → 零动作返回目标已满足，不报“已取得”。
+            // 只在动作前到达（动作后的中断只以前提已变化发布）。
             if (read.状态==新字段询问材料状态::字段已有值 || read.状态==新字段询问材料状态::字段不适用) {
-                r.结果.状态=新本能函数执行状态::已按合同返回;
-                r.结果.结果取得状态=新本能函数结果取得状态::已取得;
+                要求(r.结果.动作阶段==新本能函数动作阶段::未进入动作,"field question goal judgment after action");
+                r.结果.状态=新本能函数执行状态::目标已满足;
+                r.结果.结果取得状态=新本能函数结果取得状态::未取得;
             }
         };
         if (material.状态!=新字段询问材料状态::已取得) { publishRead(material); return r; }
@@ -271,6 +274,9 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         const auto action=p->建立输出动作(场景,f);
         if (!有效(action)) throw std::logic_error("field question action was not published");
         r.结果.动作动态节点=action;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
+        // 已进入动作后的中断（留档前提变化）报动作结果未知，不保留默认“入口拒绝”（5380 §2.5）。
+        r.结果.状态=新本能函数执行状态::动作结果未知;
+        r.结果.结果取得状态=新本能函数结果取得状态::部分取得;
         const auto archive=p->留档出站具体表达(场景,f,action,text);
         switch(archive){
         case 新出站表达留档状态::前提已变化:
