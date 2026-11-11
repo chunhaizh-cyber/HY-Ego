@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <vector>
 #include "../核心/基础数据集.h"
 #include "新_状态类.h"
 
@@ -27,10 +29,39 @@ struct 新任务虚拟存在特征读回 final {
     std::int64_t 当前值 = 0;
     friend bool operator==(const 新任务虚拟存在特征读回&, const 新任务虚拟存在特征读回&) = default;
 };
+// TASK-STATE-CAUSAL 切片2（5260 §4.2第5项）：任务虚拟存在的因素特征。只在末尾追加，不重排。
+enum class 新任务因素特征种类 : std::uint8_t {
+    承接依据 = 1, 候选结论, 条件结论, 执行进入结论, 影响评估结论, 后继决议, 不合法子需求
+};
+inline constexpr std::size_t 新任务因素特征种类数 = 7;
+// 各I64因素特征的取值（与5260 §4.2因素特征表逐项对应）；“影响评估结论”取影响评估的需求结果
+// （新需求当前满足状态）原值；“不合法子需求”以U64数组材料保存子需求节点编码组（升序去重）。
+enum class 新任务承接依据值 : std::int64_t {
+    自我首次复核 = 1, 状态变化复核, 条件子需求, 因果子需求, 复合子需求, 外部服务要求, 行动请求, 扫描补齐
+};
+enum class 新任务候选结论值 : std::int64_t { 有候选 = 1, 无候选 };
+enum class 新任务条件结论值 : std::int64_t { 具备 = 1, 等待条件, 需子需求 };
+enum class 新任务执行进入结论值 : std::int64_t { 已进入动作 = 1, 零动作 };
+enum class 新任务后继决议值 : std::int64_t { 继续查找 = 1, 等待条件, 完成, 失败, 取消 };
+struct 新任务因素特征读回 final {
+    新任务因素特征种类 种类 = 新任务因素特征种类::承接依据;
+    稳定编码 特征节点, 特征类型概念节点;
+    friend bool operator==(const 新任务因素特征读回&, const 新任务因素特征读回&) = default;
+};
 struct 新任务虚拟存在特征组 final {
     新任务虚拟存在引用 引用;
     新任务虚拟存在特征读回 状态;
     std::optional<新任务虚拟存在特征读回> 服务值;
+    // 已登记的因素特征（旧任务补齐前可缺）；只引用任务自身材料，不为需求生成状态。
+    std::vector<新任务因素特征读回> 因素组;
+    const 新任务因素特征读回* 查找因素(稳定编码 F) const noexcept {
+        for (const auto& 项 : 因素组) if (项.特征节点 == F) return &项;
+        return nullptr;
+    }
+    // 状态、服务值或因素特征之一：任务治理场景状态的来源实例特征只能是这些。
+    bool 含任务特征(稳定编码 F) const noexcept {
+        return F == 状态.特征节点 || (服务值 && F == 服务值->特征节点) || 查找因素(F) != nullptr;
+    }
     friend bool operator==(const 新任务虚拟存在特征组&, const 新任务虚拟存在特征组&) = default;
 };
 struct 新任务虚拟存在特征引用 final {
@@ -282,6 +313,9 @@ public:
         稳定编码 记录节点, 稳定编码 后状态节点) noexcept = 0;
     virtual std::optional<新治理任务状态迁移结果> 读取任务状态迁移(
         稳定编码 记录节点) const noexcept = 0;
+    // TASK-STATE-CAUSAL 切片2：把任务owner为因素特征新值建立的单个状态挂入该任务治理场景。
+    // 只认可本任务因素特征、值类型合法的状态；挂接失败为工程故障。
+    virtual void 登记任务因素状态(const 新任务虚拟存在引用&, 稳定编码 状态节点) noexcept = 0;
 };
 
 // 中立只读合同：目标结构由其唯一owner核验，动态/场景不依赖任务实现。

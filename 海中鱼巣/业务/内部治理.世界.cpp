@@ -39,9 +39,36 @@ void 核验方法特征状态对(const 新方法虚拟存在读回& 方法,
             throw std::runtime_error("method enable state value/type is invalid");
     }
 }
-const 新任务虚拟存在特征读回& 核验治理特征状态对(
+// TASK-STATE-CAUSAL 切片2：任务治理场景中的单个因素特征状态（任务owner在迁移前为因素新值建立）。
+// 只认可本任务Vt的因素特征；“不合法子需求”值为U64数组材料引用，其余为I64枚举值。
+const 新任务因素特征读回& 核验治理因素状态(const 新任务虚拟存在特征组& 特征组,
+    const 新状态信息& 状态, const 概念_特征类& 概念服务) {
+    const auto* 因素 = 特征组.查找因素(状态.来源实例特征节点);
+    const bool 引用值 = 因素 && 因素->种类 == 新任务因素特征种类::不合法子需求;
+    if (!因素 || 状态.被描述存在节点 != 特征组.引用.虚拟存在节点 || !状态.固定准确值
+        || (引用值 ? !std::holds_alternative<稳定编码>(*状态.固定准确值)
+            : !(std::holds_alternative<std::int64_t>(*状态.固定准确值)
+                && std::get<std::int64_t>(*状态.固定准确值) >= 1))
+        || 状态.强时间.语义 != 新状态时间语义::实例绝对UTC || 状态.强时间.纳秒 <= 0)
+        throw std::runtime_error("governance factor state identity/value/time mismatch");
+    const auto 关系 = 概念服务.比较单特征概念(状态.特征类型概念节点, 状态.特征类型概念节点);
+    if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+        || 关系.特征类型根 != 因素->特征类型概念节点)
+        throw std::runtime_error("governance factor state has a different feature type root");
+    return *因素;
+}
+// 返回状态或服务值特征的读回；F为因素特征时按因素状态逐端核验并返回空（因素无I64读回值）。
+const 新任务虚拟存在特征读回* 核验治理特征状态对(
     const 新任务虚拟存在特征组& 特征组, 稳定编码 F,
     const 新状态信息& 前, const 新状态信息& 后, const 概念_特征类& 概念服务) {
+    if (特征组.查找因素(F)) {
+        if (前.节点 == 后.节点 || 前.来源实例特征节点 != F || 后.来源实例特征节点 != F
+            || 前.固定准确值 == 后.固定准确值 || 后.强时间.纳秒 <= 前.强时间.纳秒)
+            throw std::runtime_error("governance factor state pair identity/value/time mismatch");
+        (void)核验治理因素状态(特征组, 前, 概念服务);
+        (void)核验治理因素状态(特征组, 后, 概念服务);
+        return nullptr;
+    }
     const auto* 特征 = F == 特征组.状态.特征节点 ? &特征组.状态
         : 特征组.服务值 && F == 特征组.服务值->特征节点 ? &*特征组.服务值 : nullptr;
     if (!特征 || 前.节点 == 后.节点
@@ -61,7 +88,7 @@ const 新任务虚拟存在特征读回& 核验治理特征状态对(
             || 关系.特征类型根 != 特征->特征类型概念节点)
             throw std::runtime_error("historical governance feature concept has a different type root");
     }
-    return *特征;
+    return 特征;
 }
 const 新任务虚拟存在特征读回& 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
     const 新任务贡献动作定义& 定义, const 新任务虚拟存在特征组& 特征组,
@@ -741,6 +768,26 @@ std::optional<新治理任务状态迁移结果> 新_内部治理世界类::读�
     }
 }
 
+void 新_内部治理世界类::登记任务因素状态(
+    const 新任务虚拟存在引用& 引用, 稳定编码 状态节点) noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("factor state task reader is not assembled");
+        const auto 治理 = 读取任务治理场景(引用);
+        const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(引用);
+        const auto 状态 = 状态服务_.获取状态(状态节点);
+        if (!治理 || !特征组 || 特征组->引用 != 引用 || !状态)
+            throw std::runtime_error("factor state material missing");
+        (void)核验治理因素状态(*特征组, *状态, 特征概念服务_);
+        if (状态->被引用次数 != 0) throw std::runtime_error("new factor state is already consumed");
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 状态节点, *任务读取_));
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记任务因素状态",
+            L"因素特征状态无法挂入任务治理场景；保留事实，不重做。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记任务因素状态", L"未知工程异常；保留事实。");
+    }
+}
+
 std::optional<新治理任务特征变化结果> 新_内部治理世界类::读取任务特征变化(
     const 新任务虚拟存在特征引用& 目标, 稳定编码 前节点, 稳定编码 后节点) const noexcept {
     try {
@@ -797,6 +844,14 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
             已覆盖状态.insert(b->节点);
             if (a->节点 == 前节点 && b->节点 == 后节点)
                 结果 = 新治理任务特征变化结果{目标, 场景->节点, 前节点, 后节点, d};
+        }
+        // 切片2：因素特征的单个状态（不成对、无动态）是合法的任务治理场景状态。
+        for (const auto s : 场景->状态节点组) {
+            if (已覆盖状态.contains(s)) continue;
+            const auto 状态 = 状态服务_.获取状态(s);
+            if (!状态 || !特征组->查找因素(状态->来源实例特征节点)) continue;
+            (void)核验治理因素状态(*特征组, *状态, 特征概念服务_);
+            已覆盖状态.insert(s);
         }
         if (已覆盖状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end()))
             throw std::runtime_error("task scene contains orphan state facts");
@@ -858,8 +913,9 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
         const auto 治理 = 读取任务治理场景(目标.任务引用);
         const auto 前 = 状态服务_.获取状态(前节点), 后 = 状态服务_.获取状态(后节点);
         if (!特征组 || !治理 || !前 || !后) throw std::runtime_error("task feature completion material missing");
-        const auto& 特征 = 核验治理特征状态对(*特征组, 目标.特征节点, *前, *后, 特征概念服务_);
-        if (后->固定准确值 != 新特征准确值{特征.当前值}
+        const auto* 特征 = 核验治理特征状态对(*特征组, 目标.特征节点, *前, *后, 特征概念服务_);
+        if (!特征) throw std::runtime_error("task feature change target is a factor feature");
+        if (后->固定准确值 != 新特征准确值{特征->当前值}
             || 前->被引用次数 != 0 || 后->被引用次数 != 0)
             throw std::runtime_error("new task change is stale or partly consumed; do not replay");
         核验挂接(治理场景_.添加治理状态(治理->场景节点, 前节点, *任务读取_));
@@ -1304,6 +1360,12 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                     包状态.insert(前.节点);
                     包状态.insert(后.节点); // 合法历史D可以共享端点。
                     包动态.insert(d); // 9→12的D已覆盖，不再生成或交付因果。
+                }
+                // 切片2：本任务因素特征的单个状态属于C(T)自身事实，不进迁移包。
+                for (const auto s : 场景->状态节点组) {
+                    if (包状态.contains(s) || !特征组.查找因素(状态快照.at(s).来源实例特征节点)) continue;
+                    (void)核验治理因素状态(特征组, 状态快照.at(s), 特征概念服务_);
+                    包状态.insert(s);
                 }
             }
             if (包状态 != std::set<稳定编码>(场景->状态节点组.begin(), 场景->状态节点组.end())

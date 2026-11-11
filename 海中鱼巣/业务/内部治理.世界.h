@@ -56,6 +56,7 @@ public:
     新治理动作登记结果 建立任务状态迁移动作(稳定编码) noexcept override;
     新治理任务状态迁移结果 完成任务状态迁移(稳定编码, 稳定编码) noexcept override;
     std::optional<新治理任务状态迁移结果> 读取任务状态迁移(稳定编码) const noexcept override;
+    void 登记任务因素状态(const 新任务虚拟存在引用&, 稳定编码) noexcept override;
     std::optional<新治理场景参与者> 读取治理参与者(
         稳定编码, 稳定编码) const noexcept override;
     std::optional<新因果动作定义> 读取自我动作事实(稳定编码) const noexcept override;
