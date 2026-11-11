@@ -269,12 +269,6 @@ public:
         稳定编码 场景节点, 稳定编码 参与节点) const noexcept = 0;
 };
 
-struct 新治理任务动作请求 final {
-    新任务虚拟存在引用 目标;
-    稳定编码 执行主体节点, 现实来源场景节点;
-    稳定编码 动作定义节点, 来源普通动作节点, 前状态节点;
-    新状态强时间 动作时间;
-};
 struct 新治理任务变化结果 final {
     稳定编码 治理场景节点, 动作节点, 前状态节点, 后状态节点, 变化动态节点;
 };
@@ -292,9 +286,6 @@ public:
         const std::vector<新任务虚拟存在引用>&) noexcept = 0;
     virtual std::optional<新任务治理场景信息> 读取任务治理场景(
         const 新任务虚拟存在引用&) const noexcept = 0;
-    virtual 新治理动作登记结果 建立任务状态动作(const 新治理任务动作请求&) noexcept = 0;
-    virtual 新治理任务变化结果 完成任务状态变化(
-        稳定编码 动作, 稳定编码 前状态, 稳定编码 后状态) noexcept = 0;
     virtual std::optional<新治理任务变化结果> 读取任务状态变化(
         const 新任务虚拟存在引用&, 稳定编码 来源普通动作) const noexcept = 0;
     virtual 新治理任务特征变化结果 完成任务特征变化(

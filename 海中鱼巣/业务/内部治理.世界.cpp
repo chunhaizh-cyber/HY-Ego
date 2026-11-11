@@ -90,6 +90,21 @@ const 新任务虚拟存在特征读回* 核验治理特征状态对(
     }
     return 特征;
 }
+// TASK-STATE-CAUSAL 切片3（5260 §4.2第3项、6190 §3.4）：贡献阶段的动作定义。服务值阶段及历史状态收尾J
+// 持贡献定义（种类相符）；新的状态收尾J（直属/最终结算收尾）持“已完成→已结算”迁移定义，以J为迁移记录。
+// 迁移定义按贡献定义形状返回（种类取阶段种类），供既有前状态核验；迁移定义置位“迁移”。
+std::optional<新任务贡献动作定义> 读取贡献阶段定义(const 新内部治理对象读取接口& 读取,
+    const 新任务贡献动作阶段& 阶段, bool& 迁移) {
+    迁移 = false;
+    if (auto 定义 = 读取.读取任务贡献动作定义(阶段.动作定义节点)) return 定义;
+    if (阶段.种类 != 新任务贡献动作种类::直属结算收尾
+        && 阶段.种类 != 新任务贡献动作种类::最终结算收尾) return std::nullopt;
+    const auto 定义 = 读取.读取任务状态迁移定义(阶段.动作定义节点);
+    if (!定义 || 定义->前状态值 != static_cast<std::int64_t>(新任务状态::已完成)
+        || 定义->后状态值 != static_cast<std::int64_t>(新任务状态::已结算)) return std::nullopt;
+    迁移 = true;
+    return 新任务贡献动作定义{定义->节点, 定义->目标特征类型概念节点, 定义->任务参数角色节点, 阶段.种类};
+}
 const 新任务虚拟存在特征读回& 核验贡献阶段前状态(const 新任务贡献动作阶段& 阶段,
     const 新任务贡献动作定义& 定义, const 新任务虚拟存在特征组& 特征组,
     const 新状态信息& 前, const 概念_特征类& 概念服务) {
@@ -390,7 +405,8 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
         if (!任务读取_) throw std::runtime_error("contribution task reader is not assembled");
         const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
         if (!阶段 || 阶段->节点 != 阶段节点) throw std::runtime_error("formal contribution phase missing");
-        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        bool 迁移定义 = false;
+        const auto 定义 = 读取贡献阶段定义(*任务读取_, *阶段, 迁移定义);
         const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
         const auto 前 = 状态服务_.获取状态(阶段->前状态节点);
         const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
@@ -416,8 +432,14 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取治理�
         核验挂接(治理场景_.添加治理执行主体引用(治理->场景节点,
             阶段->执行主体节点, 阶段->现实来源场景节点, 现实场景_));
         核验挂接(治理场景_.添加治理状态(治理->场景节点, 阶段->前状态节点, *任务读取_));
-        const auto 动作 = 动态服务_.建立内部治理特征动作动态({阶段->执行主体节点,
-            阶段->动作定义节点, 阶段节点, 阶段->目标, 阶段->动作时间}, *任务读取_);
+        // 状态收尾J持迁移定义：按任务状态迁移治理动作建立（目标＝任务状态特征，来源＝J）。
+        if (迁移定义 && 阶段->目标.特征节点 != 阶段->目标.任务引用.状态特征节点)
+            throw std::runtime_error("settlement migration phase does not target the task state feature");
+        const auto 动作 = 迁移定义
+            ? 动态服务_.建立内部治理动作动态({阶段->执行主体节点,
+                阶段->动作定义节点, 阶段节点, 阶段->目标.任务引用, 阶段->动作时间}, *任务读取_)
+            : 动态服务_.建立内部治理特征动作动态({阶段->执行主体节点,
+                阶段->动作定义节点, 阶段节点, 阶段->目标, 阶段->动作时间}, *任务读取_);
         if (动作.状态 != 新动态操作状态::已完成 || !动作.动态节点)
             throw std::runtime_error("contribution action publication failed");
         核验挂接(治理场景_.添加治理动态(治理->场景节点, *动作.动态节点, *任务读取_));
@@ -441,7 +463,8 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
         if (!任务读取_) throw std::runtime_error("contribution task reader is not assembled");
         const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
         if (!阶段) return std::nullopt;
-        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        bool 迁移定义 = false;
+        const auto 定义 = 读取贡献阶段定义(*任务读取_, *阶段, 迁移定义);
         const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
         const auto 前 = 状态服务_.获取状态(阶段->前状态节点);
         const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
@@ -544,7 +567,8 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
         const auto 阶段 = 任务读取_->读取任务贡献动作阶段(阶段节点);
         if (!阶段 || 阶段->节点 != 阶段节点 || !阶段->发表结果节点)
             throw std::runtime_error("contribution core has not been published");
-        const auto 定义 = 任务读取_->读取任务贡献动作定义(阶段->动作定义节点);
+        bool 迁移定义 = false;
+        const auto 定义 = 读取贡献阶段定义(*任务读取_, *阶段, 迁移定义);
         const auto 特征组 = 任务读取_->读取任务虚拟存在特征组(阶段->目标.任务引用);
         const auto 前 = 状态服务_.获取状态(阶段->前状态节点), 后 = 状态服务_.获取状态(后节点);
         const auto 治理 = 读取任务治理场景(阶段->目标.任务引用);
@@ -580,7 +604,11 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
         const auto 完整 = 读取任务特征动作(阶段节点);
         if (!完整 || 完整->后状态节点 != 后节点 || 完整->变化动态节点 != *变化.动态节点)
             throw std::runtime_error("contribution completion readback failed");
-        // Q/K/R/H缺少共同治理场景的完整原因窗口，不投递旧9→12因果窗口。
+        // TASK-STATE-CAUSAL 切片3（5260 §4.2第3、6项）：持迁移定义的结算收尾J即“已完成→已结算”迁移记录，
+        // 完成后同步交付实际发生；服务值阶段及历史状态收尾J不交付。
+        if (迁移定义)
+            交付实际发生(新治理任务变化结果{完整->治理场景节点, 完整->动作节点,
+                完整->前状态节点, 完整->后状态节点, 完整->变化动态节点});
         return *完整;
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务特征动作",
@@ -810,7 +838,9 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
                 if (动态->动作目标任务虚拟存在 != 目标.任务引用
                     || !动态->动作来源节点 || !动态->动作定义节点)
                     throw std::runtime_error("unsupported task scene action");
-                if (任务读取_->读取任务贡献动作定义(*动态->动作定义节点)) {
+                // 切片3：以贡献阶段为来源的动作（含持迁移定义的结算收尾J）按贡献包读回。
+                if (任务读取_->读取任务贡献动作定义(*动态->动作定义节点)
+                    || 任务读取_->读取任务贡献动作阶段(*动态->动作来源节点)) {
                     const auto 包 = 读取任务特征动作(*动态->动作来源节点);
                     if (!包 || 包->动作节点 != d || 包->治理场景节点 != 场景->节点
                         || !动作结果.insert(包->变化动态节点).second)
@@ -1279,7 +1309,9 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                     || !任务快照.contains(动作.动作目标任务虚拟存在->任务节点)
                     || 任务快照.at(动作.动作目标任务虚拟存在->任务节点).状态.引用 != *动作.动作目标任务虚拟存在)
                     throw std::runtime_error("legacy action has no reconstructible task/definition/concept");
-                if (任务读取_->读取任务贡献动作定义(*动作.动作定义节点)) {
+                // 切片3：以贡献阶段为来源的动作（含持迁移定义的结算收尾J）按贡献包读回。
+                const bool 贡献定义 = 任务读取_->读取任务贡献动作定义(*动作.动作定义节点).has_value();
+                if (贡献定义 || 任务读取_->读取任务贡献动作阶段(*动作.动作来源节点)) {
                     // 新贡献包只在独占C(T)中成立，不扩张旧Cg迁移白名单。
                     if (c == 根场景节点_) throw std::runtime_error("contribution action cannot be migrated from governance root");
                     const auto 变化 = 读取任务特征动作(*动作.动作来源节点);
@@ -1293,7 +1325,8 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                     for (const auto n : {变化->动作节点, 变化->变化动态节点})
                         if (!包动态.insert(n).second)
                             throw std::runtime_error("contribution dynamic belongs to multiple packages");
-                    // 不加入旧动作包和旧因果发生身份；它有自己的阶段来源。
+                    // 不加入旧动作包；它有自己的阶段来源。持迁移定义的结算收尾J已交付因果，发生身份归本场景。
+                    if (!贡献定义) 动作所属场景.emplace(d, c);
                     continue;
                 }
                 if (任务读取_->读取任务状态迁移定义(*动作.动作定义节点)) {
@@ -1502,101 +1535,6 @@ std::optional<新治理场景参与者> 新_内部治理世界类::读取范围�
     return 结果;
 }
 
-新治理动作登记结果 新_内部治理世界类::建立任务状态动作(
-    const 新治理任务动作请求& 请求) noexcept {
-    try {
-        if (!任务读取_ || !获取根场景()) return {};
-        const auto 正式定义 = 任务读取_->获取任务已结算动作定义();
-        if (!正式定义 || *正式定义 != 请求.动作定义节点) return {};
-        const auto 治理 = 读取任务治理场景(请求.目标);
-        if (!治理) throw std::runtime_error("task has no published governance scene");
-        const auto 本场景 = 治理->场景节点;
-        const auto 目标 = 任务读取_->读取任务虚拟存在语义(请求.目标);
-        const auto 前 = 状态服务_.获取状态(请求.前状态节点);
-        const auto 来源 = 动态服务_.获取动态(请求.来源普通动作节点);
-        if (!目标 || !前 || !来源 || 来源->种类 != 新动态种类::动作
-            || 来源->动作目标种类 != 新动作目标种类::普通存在
-            || 来源->动作来源节点 != 请求.目标.任务节点
-            || 来源->主题存在节点 != 请求.执行主体节点 || !来源->动作时间
-            || 请求.动作时间.语义 != 新状态时间语义::实例绝对UTC
-            || 来源->动作时间->纳秒 >= 请求.动作时间.纳秒
-            || 前->被描述存在节点 != 请求.目标.虚拟存在节点
-            || 前->来源实例特征节点 != 请求.目标.状态特征节点
-            || 前->强时间 != 请求.动作时间
-            || !现实场景_.存在属于场景范围(请求.现实来源场景节点, 请求.执行主体节点)) return {};
-        const auto 现实 = 现实场景_.获取场景(请求.现实来源场景节点);
-        if (!现实 || !含节点(现实->动态节点组, 来源->节点)) return {};
-        const auto 已有 = 动态服务_.按来源查询动作(请求.来源普通动作节点);
-        if (已有.状态 != 新动态操作状态::已完成)
-            throw std::runtime_error("governance action source lookup failed");
-        if (已有.动作) {
-            const auto& 动作 = *已有.动作;
-            if (动作.动作目标任务虚拟存在 != 请求.目标 || 动作.动作定义节点 != 请求.动作定义节点
-                || 动作.主题存在节点 != 请求.执行主体节点 || 动作.动作时间 != 请求.动作时间)
-                return {};
-            const auto 完整 = 读取任务状态变化(请求.目标, 请求.来源普通动作节点);
-            if (!完整 || 完整->前状态节点 != 请求.前状态节点)
-                throw std::runtime_error("partial governance action cannot be replayed");
-            return {新治理动作登记状态::精确重复, 动作.节点};
-        }
-        if (目标->状态.当前状态 != static_cast<std::int64_t>(新任务状态::已完成)
-            || 前->固定准确值 != 新特征准确值{目标->状态.当前状态}) return {};
-        核验挂接(治理场景_.添加治理任务引用(本场景, 请求.目标, *任务读取_));
-        核验挂接(治理场景_.添加治理执行主体引用(本场景, 请求.执行主体节点,
-            请求.现实来源场景节点, 现实场景_));
-        核验挂接(治理场景_.添加治理状态(本场景, 请求.前状态节点, *任务读取_));
-        const auto 动作 = 动态服务_.建立内部治理动作动态({请求.执行主体节点,
-            请求.动作定义节点, 请求.来源普通动作节点, 请求.目标, 请求.动作时间}, *任务读取_);
-        if (动作.状态 != 新动态操作状态::已完成 || !动作.动态节点)
-            throw std::runtime_error("governance action publication failed");
-        核验挂接(治理场景_.添加治理动态(本场景, *动作.动态节点, *任务读取_));
-        return {新治理动作登记状态::已建立, 动作.动态节点};
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务状态动作", L"治理动作或前状态组织异常。");
-    }
-}
-
-新治理任务变化结果 新_内部治理世界类::完成任务状态变化(
-    稳定编码 动作节点, 稳定编码 前节点, 稳定编码 后节点) noexcept {
-    try {
-        const auto 动作 = 动态服务_.获取动态(动作节点);
-        const auto 前 = 状态服务_.获取状态(前节点);
-        const auto 后 = 状态服务_.获取状态(后节点);
-        if (!任务读取_ || !动作 || !动作->动作目标任务虚拟存在 || !动作->动作来源节点
-            || !动作->动作时间 || !前 || !后) throw std::runtime_error("governance completion materials missing");
-        const auto& 目标 = *动作->动作目标任务虚拟存在;
-        const auto 治理 = 读取任务治理场景(目标);
-        if (!治理) throw std::runtime_error("governance completion has no task scene");
-        const auto 当前 = 任务读取_->读取任务虚拟存在语义(目标);
-        if (!当前 || 前->被描述存在节点 != 目标.虚拟存在节点
-            || 后->被描述存在节点 != 目标.虚拟存在节点
-            || 前->来源实例特征节点 != 目标.状态特征节点 || 后->来源实例特征节点 != 目标.状态特征节点
-            || 前->强时间 != *动作->动作时间 || 后->强时间.语义 != 新状态时间语义::实例绝对UTC
-            || 后->强时间.纳秒 <= 动作->动作时间->纳秒
-            || 后->固定准确值 != 新特征准确值{当前->状态.当前状态})
-            throw std::runtime_error("governance completion identity/value/time mismatch");
-        if (!动作->动作结果组.empty()) {
-            const auto 完整 = 读取任务状态变化(目标, *动作->动作来源节点);
-            if (!完整 || 完整->前状态节点 != 前节点 || 完整->后状态节点 != 后节点)
-                throw std::runtime_error("governance completion replay conflicts");
-            return *完整;
-        }
-        核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
-        const auto 变化 = 动态服务_.建立原子动态(目标.虚拟存在节点, 前节点, 后节点);
-        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
-            throw std::runtime_error("governance atomic dynamic publication failed");
-        const auto 关联 = 动态服务_.关联动作结果(动作节点, *变化.动态节点, 新动作结果关系类型::导致变化);
-        if (关联 != 新动态操作状态::已完成) throw std::runtime_error("governance action result association failed");
-        核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *任务读取_));
-        const auto 完整 = 读取任务状态变化(目标, *动作->动作来源节点);
-        if (!完整) throw std::runtime_error("governance completion readback failed");
-        交付实际发生(*完整);
-        return *完整;
-    } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务状态变化", L"已发生治理变化无法完整组织；不重做动作。");
-    }
-}
-
 std::optional<新治理任务变化结果> 新_内部治理世界类::读取任务状态变化(
     const 新任务虚拟存在引用& 目标, 稳定编码 来源普通动作) const noexcept {
     const auto 场景 = 读取任务治理场景(目标);
@@ -1723,6 +1661,14 @@ std::optional<新因果动作定义> 新_内部治理世界类::读取自我动�
             if (!完整 || 完整->动作节点 != 节点)
                 throw std::runtime_error("settlement governance causal action is not complete");
             // 只确认既有owner收尾路径的触发方式，不把结果反作触发前提。
+            结果.触发方式 = 新因果动作触发方式::被动触发;
+        } else if (动作->动作定义节点 && 动作->动作来源节点
+            && 任务读取_->读取任务状态迁移定义(*动作->动作定义节点)
+            && 任务读取_->读取任务贡献动作阶段(*动作->动作来源节点)) {
+            // 切片3：结算收尾J（直属/最终）为“已完成→已结算”迁移记录，按贡献包读回。
+            const auto 完整 = 读取任务特征动作(*动作->动作来源节点);
+            if (!完整 || 完整->动作节点 != 节点 || 完整->治理场景节点 != 场景->节点)
+                throw std::runtime_error("settlement migration causal projection is not complete");
             结果.触发方式 = 新因果动作触发方式::被动触发;
         } else if (动作->动作定义节点
             && 任务读取_->读取任务状态迁移定义(*动作->动作定义节点)) {
