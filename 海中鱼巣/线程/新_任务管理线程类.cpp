@@ -534,6 +534,24 @@ struct 新_任务管理线程类::实现 final {
     std::map<std::uint64_t, 筹办知识记录> 筹办知识基线;
     std::uint64_t 下一等待复核编号 = 1;
     std::chrono::steady_clock::time_point 下一条件复核时点{};
+    // 复核自适应限频（仅调度节奏，不含业务语义）：一轮复核结束后，下次不早于“本轮耗时×3”之后，
+    // 使同步领域读取在主循环中的占比不超过约四分之一，派发不被连续复核挤占。
+    struct 复核限频守卫 final {
+        实现& 主;
+        std::chrono::steady_clock::time_point& 下次;
+        std::chrono::steady_clock::time_point 起 = std::chrono::steady_clock::now();
+        复核限频守卫(实现& m, std::chrono::steady_clock::time_point& n) noexcept : 主(m), 下次(n) {}
+        复核限频守卫(const 复核限频守卫&) = delete;
+        复核限频守卫& operator=(const 复核限频守卫&) = delete;
+        ~复核限频守卫() {
+            try {
+                const auto 末 = std::chrono::steady_clock::now();
+                const auto 候 = 末 + (末 - 起) * 3;
+                std::lock_guard 锁(主.互斥);
+                if (候 > 下次) 下次 = 候;
+            } catch (...) {}
+        }
+    };
     std::chrono::steady_clock::time_point 下一工作消费时点{};
     std::optional<新任务调度读取状态> 最近调度读取状态;
     std::vector<稳定编码> 最近调度异常任务;
@@ -882,6 +900,7 @@ struct 新_任务管理线程类::实现 final {
                 if (此刻 < 下一条件复核时点) return;
                 下一条件复核时点 = 此刻 + 等待时长(配置.调度复核间隔毫秒);
             }
+            const 复核限频守卫 限频(*this, 下一条件复核时点);
             const auto 停止令牌 = 停止源.get_token();
             尝试交付条件准备依据(停止令牌);
             {
@@ -2911,6 +2930,11 @@ struct 新_任务管理线程类::实现 final {
                 auto 锁=获取因果提交锁(互斥,停止令牌);
                 if (停止 || 已完成 || std::chrono::steady_clock::now() < 下一因果复核时点) return;
                 下一因果复核时点 = std::chrono::steady_clock::now() + 等待时长(配置.调度复核间隔毫秒);
+            }
+            const 复核限频守卫 限频(*this, 下一因果复核时点);
+            {
+                auto 锁=获取因果提交锁(互斥,停止令牌);
+                if (停止 || 已完成) return;
                 for (const auto& [任务值,原记录] : 因果等待组) {
                     检查因果提交停止(停止令牌);
                     因果等待记录 复制;
