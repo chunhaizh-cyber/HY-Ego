@@ -79,6 +79,8 @@ struct 新任务工作请求 final {
     std::optional<新服务值最终来源定位> 最终来源;
     std::optional<新任务贡献反馈定位> 贡献来源;
     std::optional<新任务前置语言输入请求> 前置语言输入;
+    // R111：筹办工作（查找方法、检查条件）携带的排除集，由任务管理线程按挂起依据填写；默认空。
+    新任务筹办排除集 筹办排除{};
     friend bool operator==(const 新任务工作请求&,
         const 新任务工作请求&) = default;
 };
