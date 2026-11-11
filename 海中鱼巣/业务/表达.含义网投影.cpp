@@ -39,6 +39,8 @@ public:
         case 新表达用途::陈述: if(根态度==新态度种类::询问||根态度==新态度种类::请求达成)return {}; break;
         case 新表达用途::疑问: if(根态度!=新态度种类::询问)return {}; 根域=域::提问范围; break;
         case 新表达用途::祈使: if(根态度!=新态度种类::请求达成)return {}; 根域=域::请求范围; break;
+        // 招呼（CONV-EXPR-TEXT §3.5）：顶层内容只能是招呼单元，投影为零角色招呼节点。
+        case 新表达用途::招呼: if(!std::holds_alternative<新招呼含义单元>(根->内容))return {}; break;
         default: return {};
         }
         图_.语言节点=上下文_.语言节点;
@@ -100,6 +102,20 @@ private:
         return 语言图引用值{类别::存在概念,b->节点,{},{}};
     }
 
+    std::optional<投影出现> 投影招呼(const 新招呼含义单元& g,std::int64_t 编号,域 作用域) {
+        if(编号!=网_.顶层项组.front().内容引用||作用域!=域::普通陈述)return std::nullopt;
+        新语言图含义节点 节点;
+        switch(g.种类) {
+        case 新招呼种类::发起: 节点.操作=新语言知识含义操作::招呼发起; break;
+        case 新招呼种类::维持: 节点.操作=新语言知识含义操作::招呼维持; break;
+        case 新招呼种类::结束: 节点.操作=新语言知识含义操作::招呼结束; break;
+        default: throw std::logic_error("含义网招呼种类非法");
+        }
+        const auto p=预留();
+        填入(p,std::move(节点),作用域,{});
+        return p.编号;
+    }
+
     std::optional<投影出现> 投影项(std::int64_t 编号,域 作用域) {
         if(!项表_.contains(编号)||!已用_.insert(编号).second)return std::nullopt;
         const auto& 项=*项表_.at(编号);
@@ -107,6 +123,7 @@ private:
         当前项_=编号;
         if(const auto* s=std::get_if<新静态含义单元>(&项.内容))return 投影静态(*s,作用域);
         if(const auto* a=std::get_if<新内容算子>(&项.内容))return 投影态度(*a,作用域);
+        if(const auto* g=std::get_if<新招呼含义单元>(&项.内容))return 投影招呼(*g,编号,作用域);
         return std::nullopt; // 事件、篇章组合、跨场景引用：CONV-INPUT/CONV-EVENT-LOGIC 承接
     }
 

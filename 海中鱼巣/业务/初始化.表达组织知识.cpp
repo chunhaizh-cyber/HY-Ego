@@ -21,6 +21,7 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
     };
     const auto 用途=[&](const std::string& t){
         if(t=="陈述")return 新表达用途::陈述;if(t=="疑问")return 新表达用途::疑问;
+        if(t=="招呼")return 新表达用途::招呼;
         要求(t=="祈使");return 新表达用途::祈使;
     };
     const auto 角色=[&](const std::string& t){
@@ -36,7 +37,10 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
         }
         要求(当前.has_value());auto& d=*当前;
         if(t[0]=="适用"){
-            要求(t.size()==3&&!有适用&&t[2]=="需求字段");d.适用类型={用途(t[1]),0};有适用=true;
+            要求(t.size()==3&&!有适用&&(t[2]=="需求字段"||t[2]=="招呼对象"));
+            // 对象种类为正式表达需求的variant序号：0 需求字段，1 招呼（CONV-EXPR-TEXT §3.5）。
+            d.适用类型={用途(t[1]),t[2]=="招呼对象"?1:0};
+            要求((d.适用类型.对象种类==1)==(d.适用类型.用途==新表达用途::招呼));有适用=true;
         } else if(t[0]=="条件"){
             要求(t==std::vector<std::string>{"条件","需求字段内容状态","等于","当前未知"});
             要求(d.适用条件组.empty());d.适用条件组.push_back(新组织取材算子::需求字段内容状态);
@@ -49,6 +53,12 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
                 step.算子=新组织取材算子::需求字段值域概念;step.输出角色=新组织绑定角色::字段值域概念;
             }
             要求(步骤.emplace(step.编号,step.输出角色).second);d.取材步骤组.push_back(step);
+        } else if(t[0]=="模板"&&t.size()==4&&t[2]=="招呼"){
+            要求(t[3].starts_with("种类="));const auto k=t[3].substr(7);
+            新招呼含义单元 g;
+            if(k=="发起")g.种类=新招呼种类::发起;else if(k=="维持")g.种类=新招呼种类::维持;
+            else {要求(k=="结束");g.种类=新招呼种类::结束;}
+            d.含义网模板.内容项组.push_back({编号(t[1]),g,{},{},{}});
         } else if(t[0]=="模板"){
             要求(t.size()>=5);
             if(t[1]=="顶层"){

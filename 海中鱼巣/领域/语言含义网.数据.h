@@ -12,7 +12,8 @@
 #include "../核心/基础数据集.h"
 
 namespace 海中鱼巣 {
-enum class 新表达用途 : std::uint8_t { 陈述=1, 疑问, 祈使 };
+// 招呼（7240 §2.1）：发起、维持或结束交往，顶层内容为招呼套语（CONV-EXPR-TEXT §3.5）。
+enum class 新表达用途 : std::uint8_t { 陈述=1, 疑问, 祈使, 招呼 };
 enum class 新指称类别 : std::uint8_t { 存在=1, 场景, 特征, 状态, 动态, 关系, 因果, 需求, 任务, 方法, 概念, 特征类型 };
 struct 新绑定指称 final {
     新指称类别 类别=新指称类别::存在; 稳定编码 节点{},范围概念{};
@@ -125,13 +126,19 @@ struct 新跨场景含义引用 final {
     std::variant<std::int64_t,稳定编码> 目标项或指代实例;
     friend bool operator==(const 新跨场景含义引用&,const 新跨场景含义引用&)=default;
 };
+enum class 新招呼种类 : std::uint8_t { 发起=1, 维持, 结束 };
+// 招呼套语；只作顶层内容，不引用也不被其它内容项引用。
+struct 新招呼含义单元 final {
+    新招呼种类 种类=新招呼种类::发起;
+    friend bool operator==(const 新招呼含义单元&,const 新招呼含义单元&)=default;
+};
 struct 新含义原文范围 final {
     std::int64_t 起始=0,长度=0;
     friend bool operator==(const 新含义原文范围&,const 新含义原文范围&)=default;
 };
 struct 新含义内容项 final {
     std::int64_t 编号=0;
-    std::variant<新静态含义单元,新事件含义单元,新内容算子,新篇章组合,新跨场景含义引用> 内容;
+    std::variant<新静态含义单元,新事件含义单元,新内容算子,新篇章组合,新跨场景含义引用,新招呼含义单元> 内容;
     std::vector<新含义原文范围> 原文范围组; std::vector<稳定编码> 所用知识组;
     std::vector<新含义具名角色> 角色映射;
     friend bool operator==(const 新含义内容项&,const 新含义内容项&)=default;
@@ -150,11 +157,13 @@ struct 新语言含义网 final {
 inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=false) {
     const auto 要求=[](bool 条件){if(!条件)throw std::logic_error("含义网结构不合法");};
     要求(网.顶层项组.size()==1);
-    要求(网.顶层项组.front().表达用途>=新表达用途::陈述&&网.顶层项组.front().表达用途<=新表达用途::祈使);
+    要求(网.顶层项组.front().表达用途>=新表达用途::陈述&&网.顶层项组.front().表达用途<=新表达用途::招呼);
     if(网.身份)要求(有效(*网.身份));if(网.所属语言场景)要求(有效(*网.所属语言场景));
     std::map<std::int64_t,const 新含义内容项*> 项;
     for(const auto& i:网.内容项组)要求(i.编号>=0&&项.emplace(i.编号,&i).second);
     要求(项.contains(网.顶层项组.front().内容引用));
+    const auto 根项=网.顶层项组.front().内容引用;
+    要求((网.顶层项组.front().表达用途==新表达用途::招呼)==std::holds_alternative<新招呼含义单元>(项.at(根项)->内容));
     std::map<std::int64_t,int> 路径;
     std::vector<std::int64_t> 查询作用域;
     std::function<void(std::int64_t,bool)> 检查;
@@ -223,6 +232,8 @@ inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=fals
                 if(x.动作发生){要求(有效(x.动作发生->动作概念));if(x.动作发生->主体)指称(*x.动作发生->主体,询问);for(const auto& r:x.动作发生->对象角色组)指称(r.指称,询问);}
                 if(x.状态变化){const auto& s=*x.状态变化;指称(s.对象,询问);要求(有效(s.特征类型));if(s.前值)值(*s.前值,询问);if(s.后值或方向)值(*s.后值或方向,询问);if(s.时间)指称(*s.时间,询问);}
                 if(x.关联主张){检查(x.关联主张->动作发生引用,询问);检查(x.关联主张->状态变化引用,询问);}
+            } else if constexpr(std::is_same_v<T,新招呼含义单元>){
+                要求(id==根项&&x.种类>=新招呼种类::发起&&x.种类<=新招呼种类::结束&&i.角色映射.empty());
             } else {
                 要求(有效(x.目标语言场景)&&(x.种类==新跨场景引用种类::回应||x.种类==新跨场景引用种类::引用));
                 std::visit([&](const auto& target){using V=std::decay_t<decltype(target)>;
@@ -245,7 +256,7 @@ struct 新组织取材步骤 final {
 };
 struct 新表达需求类型 final {
     新表达用途 用途=新表达用途::疑问;
-    // 表达对象的variant索引；当前唯一合法对象是需求字段。
+    // 表达对象的variant索引：0 需求字段，1 招呼（正式表达需求.h）。
     std::int64_t 对象种类=0;
     friend bool operator==(const 新表达需求类型&,const 新表达需求类型&)=default;
 };

@@ -3966,6 +3966,15 @@ bool 解释图整数(std::string& 原文) {
     if(起==原文.size()||!std::all_of(原文.begin()+起,原文.end(),[](char 字){return 字>='0'&&字<='9';}))return false;
     const auto 非零=原文.find_first_not_of('0',起);原文=非零==std::string::npos ? "0" : (负 ? "-" : "")+原文.substr(非零);return true;
 }
+bool 解释招呼图知识(const 新语言知识定义& 定义) {
+    if(定义.目标.目的!=新语言知识表达目的::招呼||!定义.目标.含义图||定义.目标.含义图->节点组.size()!=1)return false;
+    const auto& 根=定义.目标.含义图->节点组.front();
+    return 根.局部编号==定义.目标.含义图->根含义编号
+        &&(根.操作==新语言知识含义操作::招呼发起||根.操作==新语言知识含义操作::招呼维持||根.操作==新语言知识含义操作::招呼结束)
+        &&根.作用域==新语言知识作用域::普通陈述&&根.角色组.empty()&&根.参数组.empty()&&根.子含义组.empty()
+        &&!根.特征值分支&&!根.确认范围&&!根.方向
+        &&std::all_of(定义.结构.有序项组.begin(),定义.结构.有序项组.end(),[](const auto& 项){return std::holds_alternative<新语言知识固定词项>(项.载荷);});
+}
 bool 解释行动请求图(const 语言图含义材料& 图) {
     const auto 根=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==图.定义图.根含义编号;});
     return 根!=图.定义图.节点组.end()&&根->操作==新语言知识含义操作::行动请求;
@@ -4077,6 +4086,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             if(根!=图.节点组.end()&&根->操作==新语言知识含义操作::行动请求
                 &&知识.定义.目标.目的==新语言知识表达目的::提出需求)根知识.insert(知识.节点);
         }
+        // 招呼知识（CONV-EXPR-TEXT §3.5）为单节点零角色图，与生成器对称直接召回。
+        for(const auto& 知识:全知识.信息组)if(解释招呼图知识(知识.定义))根知识.insert(知识.节点);
         using 角色键=std::pair<std::int64_t,std::int64_t>;
         struct 图短语结果 final {
             std::map<角色键,语言图绑定值> 值组;

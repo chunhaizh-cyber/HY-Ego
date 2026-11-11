@@ -1,13 +1,55 @@
 ﻿#include "表达.组织.h"
 #include "表达.基础语言.h"
+#include <algorithm>
 #include "../领域/概念_存在类.h"
 #include "../领域/概念_特征类.h"
 
 namespace 海中鱼巣 {
+namespace {
+// 招呼（CONV-EXPR-TEXT §3.5）：无条件、无取材；模板顶层招呼单元的种类与请求种类相同即成立。
+// 同一种类多条成立返回多规则待选：选用哪种说法属于自我意识，本函数不选。
+新表达结构组织结果 组织招呼(const 正式表达需求& 请求,const 正式表达招呼& g,const 新_语言类& 语言) {
+    using S=新表达结构组织状态;
+    const auto 失败=[](S s){新表达结构组织结果 r;r.状态=s;return r;};
+    if(请求.表达用途!=新表达用途::招呼)return 失败(S::范围未支持);
+    const auto 候选=语言.查询适用表达组织知识({新表达用途::招呼,static_cast<std::int64_t>(请求.表达对象.index())});
+    std::vector<const 新表达组织知识信息*> 成立;
+    for(const auto& k:候选.候选组){
+        const auto& 网=k.定义.含义网模板;
+        if(网.顶层项组.size()!=1)throw std::logic_error("招呼组织知识模板顶层不唯一");
+        const auto 根=std::find_if(网.内容项组.begin(),网.内容项组.end(),[&](const auto& i){return i.编号==网.顶层项组.front().内容引用;});
+        if(根==网.内容项组.end())throw std::logic_error("招呼组织知识模板根项缺失");
+        const auto* u=std::get_if<新招呼含义单元>(&根->内容);
+        if(!u)throw std::logic_error("招呼组织知识模板根项不是招呼单元");
+        if(u->种类==g.种类)成立.push_back(&k);
+    }
+    if(成立.size()>1)return 失败(S::多规则待选);
+    if(成立.empty())return 失败(S::缺组织知识);
+    新表达结构组织结果 out;
+    out.含义网=成立.front()->定义.含义网模板;
+    核验含义网结构(out.含义网);
+    out.完整保护=候选.完整保护;
+    std::vector<稳定编码> ids;for(const auto& v:out.完整保护)ids.push_back(v.结构.节点.编码);
+    if(!ids.empty()){
+        const auto fresh=全局基础数据集.查询节点组完整结构(ids);
+        if(fresh.状态!=基础结构操作状态::已完成)throw std::logic_error("招呼组织材料完整复读工程失败");
+        for(std::size_t i=0;i<fresh.节点组.size();++i){
+            const auto& v=fresh.节点组[i];
+            const auto o=std::find_if(out.完整保护.begin(),out.完整保护.end(),[&](const auto& x){return x.结构.节点.编码==v.查询节点;});
+            if(!v.快照||o==out.完整保护.end()||!(v.快照->结构.节点==o->结构.节点&&v.快照->结构.字段组==o->结构.字段组
+                &&v.快照->入向字段组==o->入向字段组&&v.快照->入向外部关系组==o->入向外部关系组&&v.快照->出向外部关系组==o->出向外部关系组))
+                return 失败(S::前提已变化);
+        }
+    }
+    out.状态=S::已组织;out.所用组织知识节点=成立.front()->节点;return out;
+}
+} // namespace
+
 新表达结构组织结果 组织具体表达结构(const 正式表达需求& 请求,const 新_语言类& 语言,
     const 正式信息参数读取接口& 读取,const 概念_存在类& 存在概念,const 概念_特征类& 特征概念) {
     using S=新表达结构组织状态;新表达结构组织结果 out;
     const auto 失败=[&](S s){新表达结构组织结果 r;r.状态=s;return r;};
+    if(const auto* g=std::get_if<正式表达招呼>(&请求.表达对象))return 组织招呼(请求,*g,语言);
     const auto* d=std::get_if<正式表达需求字段>(&请求.表达对象);
     if(!d)return 失败(S::范围未支持);
     if(!有效(d->需求D)||!有效(d->字段特征类型)||!有效(d->需求范围概念))return 失败(S::缺材);

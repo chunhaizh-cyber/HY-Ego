@@ -661,6 +661,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         if(!提交进度())return {};保存观察(out);return out;
     }
     bool 本次终结=work.终结;
+    bool 招呼不交接=false; // 招呼只保存为场景信息（7240 §2.1），不交前置输入治理、不形成需求。
     const auto 进入步骤=[&](const char* name){
         步骤=name;
         if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
@@ -859,6 +860,11 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if(parsed.状态==语言场景基础输入状态::读取漂移)漂移();
             if(parsed.状态==语言场景基础输入状态::工程未完成||parsed.状态==语言场景基础输入状态::额度不足)资源();
             if(parsed.状态==语言场景基础输入状态::内部不一致)throw std::logic_error("pure language explanation reported internal inconsistency");
+            if(parsed.状态==语言场景基础输入状态::已形成值式图&&parsed.含义
+                &&std::holds_alternative<语言图含义材料>(*parsed.含义)&&parsed.构式==语言基础统一构式::招呼) {
+                招呼不交接=true;
+                throw 推进中断{阶段::非支持输入,"收到招呼：只保存为场景信息，不形成需求"};
+            }
             if(parsed.状态!=语言场景基础输入状态::已形成值式图||!parsed.含义
                 ||!std::holds_alternative<语言图含义材料>(*parsed.含义)
                 ||(parsed.构式!=语言基础统一构式::需求陈述&&parsed.构式!=语言基础统一构式::行动请求))
@@ -893,7 +899,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             out.原因=roles.受请求者 ? "已采用明确请求及本句需求内容，尚未建立需求D" : "已采用真实消息的唯一需求含义，尚未建立需求D";
         } else throw std::logic_error("same-source meaning lookup failed");
     }catch(const 推进中断& e){out.阶段=e.状态;out.原因=std::string(步骤)+"："+e.原因;本次终结=e.状态!=阶段::资源延后&&e.状态!=阶段::前提变化&&e.状态!=阶段::停止未完成;
-        if(!out.U&&!out.D&&work.定位&&(e.状态==阶段::对象未决||e.状态==阶段::非支持输入)) {
+        if(!out.U&&!out.D&&work.定位&&!招呼不交接&&(e.状态==阶段::对象未决||e.状态==阶段::非支持输入)) {
             work.前置=实现::前置阶段::待接纳;out.待交接前置输入=work.定位;
             out.阶段=阶段::前置输入待治理;本次终结=false;
         }
