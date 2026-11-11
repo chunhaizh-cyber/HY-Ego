@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <utility>
 #include <vector>
 
 #include "新_方法参数场景.h"
@@ -183,6 +184,12 @@ public:
     static 新本能函数本次条件结果对 获取服务对象新需求(
         const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 询问指定需求字段(const 方法参数场景&) noexcept;
+    // ASK-READ-SCENE v0.4 §3.2：询问等待回应的观察定位（只读，经字段询问端口）。
+    // 字段询问外设场景标识类型：端口或配置未装配时为空。
+    static std::optional<稳定编码> 字段询问外设场景标识类型() noexcept;
+    // 入参（外设场景, 窗口副本）；返回（外设对话框, 接收数量特征）；端口未装配或对应不成立时为空。
+    static std::optional<std::pair<稳定编码, 稳定编码>> 读取字段询问回应观察定位(
+        稳定编码 外设场景, 稳定编码 窗口副本) noexcept;
     static 新本能函数本次条件结果对 进入场景(const 方法参数场景&) noexcept;
 };
 

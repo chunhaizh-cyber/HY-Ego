@@ -12,7 +12,7 @@ class 新_语言类; class 新_自然语言世界树类;
 新本能函数本次条件结果对 执行指定需求字段询问核心(
     const 方法参数场景&,新本能字段询问运行接口&);
 
-// 只实现问题入列，不等待、解释回复或写回需求。
+// 只实现问题入列，不解释回复、不写回需求；等待对方回应由任务按回应观察定位获取结果（ASK-READ-SCENE v0.4 §3.2）。
 class 字段询问本能运行服务 final : public 新本能字段询问运行接口,
     public 新字段询问登记端口 {
 public:
@@ -25,6 +25,7 @@ public:
     void 关闭() noexcept;
     std::optional<新字段询问登记配置> 读取登记材料() const noexcept override;
     新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept override;
+    std::optional<新字段询问回应观察定位> 读取回应观察定位(稳定编码,稳定编码) const noexcept override;
     新字段询问材料读回 读取询问材料(const 方法参数场景&) const override;
     新字段询问文字结果 生成询问文字(const 新正式字段询问目标&) const override;
     bool 已请求停止() const noexcept override;

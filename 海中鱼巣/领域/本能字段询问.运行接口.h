@@ -67,11 +67,19 @@ using 新字段询问外设窗口对应 = std::function<std::optional<std::pair<
     const 方法参数场景&, const 新字段询问登记配置&,
     const 正式信息参数读取接口&, const 新字段询问外设窗口对应& 对应外设窗口 = {},
     const std::function<std::optional<稳定编码>(稳定编码)>& 读取当前交互者 = {});
+// 询问等待回应（ASK-READ-SCENE v0.4 §3.2）：窗口副本经外设场景标识对应的外设对话框及其接收数量特征。
+// 对方消息经外设世界树接收后在该特征上形成状态并投递事实变化；任务按此定位冻结结果获取目标。
+struct 新字段询问回应观察定位 final {
+    稳定编码 外设窗口{}, 接收数量特征{};
+    friend bool operator==(const 新字段询问回应观察定位&, const 新字段询问回应观察定位&)=default;
+};
 class 新字段询问登记端口 {
 public:
     virtual ~新字段询问登记端口()=default;
     virtual std::optional<新字段询问登记配置> 读取登记材料() const noexcept=0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept=0;
+    // 入参（外设场景, 窗口副本）；副本不是该外设场景在现实世界的唯一副本或外设对话框已不在时为空。
+    virtual std::optional<新字段询问回应观察定位> 读取回应观察定位(稳定编码 外设场景, 稳定编码 窗口副本) const noexcept=0;
 };
 
 } // namespace 海中鱼巣

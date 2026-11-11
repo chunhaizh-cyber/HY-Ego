@@ -2119,7 +2119,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             // 在调用真实返回之后、任何永久材料/域写入之前做内容完整性门。
             std::optional<std::array<std::size_t,3>> 需求位置;
             std::set<std::pair<std::uint8_t,稳定编码>> 已覆盖来源;
-            if(!需求参数位置.empty()) {
+            // 仅条件样例（ASK-READ-SCENE v0.4 §3.1，例如询问以补问需求为参数）：模拟执行不了、不取得需求结果，
+            // 需求参数只按方法头记存在归属条件，不要求独立核同的需求结果。
+            if(!需求参数位置.empty()&&!仅条件样例) {
                 if(!已核需求结果||!需求结果概念||!需求主体FT)
                     不支持(0,"formal demand content has no independently verified result");
                 const auto& result=*已核需求结果;
