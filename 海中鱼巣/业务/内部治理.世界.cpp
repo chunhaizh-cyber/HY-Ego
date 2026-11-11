@@ -123,6 +123,35 @@ void 核验贡献阶段动作(const 新任务贡献动作阶段& 阶段, const �
         || 动作.主题存在节点 != 阶段.执行主体节点 || 动作.动作时间 != 阶段.动作时间)
         throw std::runtime_error("contribution action differs from its formal phase");
 }
+// TASK-STATE-CAUSAL：治理动作与其治理迁移记录逐项一致（来源、定义、主体、目标、动作时间）。
+void 核验迁移记录动作(const 新任务状态迁移记录& 记录, const 新动态信息& 动作) {
+    if (动作.种类 != 新动态种类::动作 || !动作.动态概念节点
+        || 动作.动作目标种类 != 新动作目标种类::任务虚拟存在
+        || 动作.动作目标任务虚拟存在 != 记录.任务引用
+        || 动作.动作目标特征节点 != 记录.任务引用.状态特征节点
+        || 动作.动作目标存在节点 || 动作.动作来源节点 != 记录.节点
+        || 动作.动作定义节点 != 记录.动作定义节点
+        || 动作.主题存在节点 != 记录.执行主体节点 || 动作.动作时间 != 记录.动作时间)
+        throw std::runtime_error("task state migration action differs from its record");
+}
+// 迁移记录、迁移定义与前状态一致：前状态是本任务状态特征在动作时间之前的前值观察。
+void 核验迁移记录前状态(const 新任务状态迁移记录& 记录, const 新任务状态迁移定义& 定义,
+    const 新任务虚拟存在读回& 任务, const 新状态信息& 前, const 概念_特征类& 概念服务) {
+    if (定义.节点 != 记录.动作定义节点 || 定义.前状态值 != 记录.前状态值
+        || 定义.后状态值 != 记录.后状态值 || 定义.目标特征类型概念节点 != 任务.状态特征类型概念节点
+        || 任务.引用 != 记录.任务引用 || 前.节点 != 记录.前状态节点
+        || 前.被描述存在节点 != 记录.任务引用.虚拟存在节点
+        || 前.来源实例特征节点 != 记录.任务引用.状态特征节点
+        || 前.固定准确值 != 新特征准确值{记录.前状态值}
+        || 前.强时间.语义 != 新状态时间语义::实例绝对UTC
+        || 记录.动作时间.语义 != 新状态时间语义::实例绝对UTC
+        || 前.强时间.纳秒 <= 0 || 前.强时间.纳秒 > 记录.动作时间.纳秒)
+        throw std::runtime_error("task state migration record/definition/before state mismatch");
+    const auto 关系 = 概念服务.比较单特征概念(前.特征类型概念节点, 前.特征类型概念节点);
+    if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+        || 关系.特征类型根 != 任务.状态特征类型概念节点)
+        throw std::runtime_error("task state migration before state has a different feature type");
+}
 }
 
 新_内部治理世界类::新_内部治理世界类(新_特征值类& 值, 概念_特征类& 特征概念,
@@ -534,6 +563,184 @@ std::optional<新治理任务特征动作变化结果> 新_内部治理世界类
     }
 }
 
+// ---- TASK-STATE-CAUSAL：任务状态迁移治理动作（来源＝治理迁移记录，主体＝自我）----
+新治理动作登记结果 新_内部治理世界类::建立任务状态迁移动作(稳定编码 记录节点) noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("migration task reader is not assembled");
+        const auto 记录 = 任务读取_->读取任务状态迁移记录(记录节点);
+        if (!记录 || 记录->节点 != 记录节点) throw std::runtime_error("formal migration record missing");
+        const auto 定义 = 任务读取_->读取任务状态迁移定义(记录->动作定义节点);
+        const auto 当前 = 任务读取_->读取任务虚拟存在引用(记录->任务引用);
+        const auto 前 = 状态服务_.获取状态(记录->前状态节点);
+        const auto 治理 = 读取任务治理场景(记录->任务引用);
+        if (!定义 || !当前 || !前 || !治理) throw std::runtime_error("migration action material missing");
+        核验迁移记录前状态(*记录, *定义, *当前, *前, 特征概念服务_);
+        if (!现实场景_.存在属于场景范围(记录->现实来源场景节点, 记录->执行主体节点))
+            throw std::runtime_error("migration actor has no real scene source");
+        const auto 已有 = 动态服务_.按来源查询动作(记录节点);
+        if (已有.状态 != 新动态操作状态::已完成) throw std::runtime_error("migration action lookup failed");
+        if (已有.动作) {
+            核验迁移记录动作(*记录, *已有.动作);
+            const auto 完整 = 读取任务状态迁移(记录节点);
+            if (!完整 || 完整->动作节点 != 已有.动作->节点)
+                throw std::runtime_error("partial migration action cannot be replayed");
+            return {新治理动作登记状态::精确重复, 已有.动作->节点};
+        }
+        if (当前->当前状态 != 记录->前状态值)
+            throw std::runtime_error("migration record is stale against current task state");
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景 || 含节点(场景->状态节点组, 记录->前状态节点))
+            throw std::runtime_error("migration before state is attached without its action");
+        核验挂接(治理场景_.添加治理任务引用(治理->场景节点, 记录->任务引用, *任务读取_));
+        核验挂接(治理场景_.添加治理执行主体引用(治理->场景节点,
+            记录->执行主体节点, 记录->现实来源场景节点, 现实场景_));
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 记录->前状态节点, *任务读取_));
+        const auto 动作 = 动态服务_.建立内部治理动作动态({记录->执行主体节点,
+            记录->动作定义节点, 记录节点, 记录->任务引用, 记录->动作时间}, *任务读取_);
+        if (动作.状态 != 新动态操作状态::已完成 || !动作.动态节点)
+            throw std::runtime_error("migration action publication failed; status="
+                + std::to_string(static_cast<int>(动作.状态)));
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *动作.动态节点, *任务读取_));
+        const auto 读回 = 动态服务_.按来源查询动作(记录节点);
+        if (读回.状态 != 新动态操作状态::已完成 || !读回.动作
+            || 读回.动作->节点 != *动作.动态节点 || !读回.动作->动作结果组.empty())
+            throw std::runtime_error("new migration action readback failed");
+        核验迁移记录动作(*记录, *读回.动作);
+        return {新治理动作登记状态::已建立, 动作.动态节点};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务状态迁移动作",
+            L"治理迁移记录或治理动作不完整；保留已发布事实，不重放。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立任务状态迁移动作", L"未知工程异常；保留事实。");
+    }
+}
+
+std::optional<新治理任务状态迁移结果> 新_内部治理世界类::读取任务状态迁移(
+    稳定编码 记录节点) const noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("migration task reader is not assembled");
+        const auto 记录 = 任务读取_->读取任务状态迁移记录(记录节点);
+        if (!记录) return std::nullopt;
+        const auto 定义 = 任务读取_->读取任务状态迁移定义(记录->动作定义节点);
+        const auto 当前 = 任务读取_->读取任务虚拟存在引用(记录->任务引用);
+        const auto 前 = 状态服务_.获取状态(记录->前状态节点);
+        const auto 治理 = 读取任务治理场景(记录->任务引用);
+        if (记录->节点 != 记录节点 || !定义 || !当前 || !前 || !治理)
+            throw std::runtime_error("migration record material is incomplete");
+        核验迁移记录前状态(*记录, *定义, *当前, *前, 特征概念服务_);
+        const auto 来源 = 动态服务_.按来源查询动作(记录节点);
+        if (来源.状态 != 新动态操作状态::已完成) throw std::runtime_error("migration action lookup failed");
+        // 记录已发布而动作或结果尚未形成：只可能处于同一owner锁内的迁移过程中，按未完成返回。
+        if (!来源.动作) return std::nullopt;
+        const auto& 动作 = *来源.动作;
+        核验迁移记录动作(*记录, 动作);
+        if (动作.动作结果组.empty()) return std::nullopt;
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        const auto 主体 = 读取治理参与者(治理->场景节点, 记录->执行主体节点);
+        const auto 客体 = 读取治理参与者(治理->场景节点, 记录->任务引用.虚拟存在节点);
+        if (!场景 || !含节点(场景->动态节点组, 动作.节点) || !主体
+            || 主体->种类 != 新治理参与者种类::现实执行主体引用
+            || 主体->现实来源场景节点 != 记录->现实来源场景节点
+            || !现实场景_.存在属于场景范围(记录->现实来源场景节点, 记录->执行主体节点)
+            || !客体 || 客体->任务引用 != 记录->任务引用
+            || 动作.动作结果组.size() != 1
+            || 动作.动作结果组.front().类型 != 新动作结果关系类型::导致变化)
+            throw std::runtime_error("migration action scene/result ownership mismatch");
+        const auto 变化 = 动态服务_.获取动态(动作.动作结果组.front().结果动态节点);
+        if (!变化 || 变化->种类 != 新动态种类::原子 || !变化->动态概念节点
+            || 变化->主题存在节点 != 记录->任务引用.虚拟存在节点
+            || 变化->状态节点组.size() != 2 || 变化->状态节点组.front() != 前->节点
+            || !含节点(场景->动态节点组, 变化->节点))
+            throw std::runtime_error("migration result dynamic is incomplete");
+        const auto 后 = 状态服务_.获取状态(变化->状态节点组.back());
+        if (!后 || !含节点(场景->状态节点组, 前->节点) || !含节点(场景->状态节点组, 后->节点)
+            || 后->被描述存在节点 != 记录->任务引用.虚拟存在节点
+            || 后->来源实例特征节点 != 记录->任务引用.状态特征节点
+            || 后->固定准确值 != 新特征准确值{记录->后状态值}
+            || 后->强时间.语义 != 新状态时间语义::实例绝对UTC
+            || 后->强时间.纳秒 <= 记录->动作时间.纳秒)
+            throw std::runtime_error("migration after state does not match its record");
+        const auto 关系 = 特征概念服务_.比较单特征概念(后->特征类型概念节点, 后->特征类型概念节点);
+        if (关系.状态 != 特征概念规则状态::已完成 || 关系.关系 != 单特征概念关系::同一
+            || 关系.特征类型根 != 当前->状态特征类型概念节点)
+            throw std::runtime_error("migration after state has a different feature type");
+        for (const auto d : 场景->动态节点组) {
+            if (d == 动作.节点 || d == 变化->节点) continue;
+            const auto 候选 = 动态服务_.获取动态(d);
+            if (!候选) throw std::runtime_error("migration scene dynamic unreadable");
+            if (候选->种类 == 新动态种类::原子 && 候选->状态节点组 == 变化->状态节点组)
+                throw std::runtime_error("duplicate migration state-pair dynamic");
+            if (候选->种类 == 新动态种类::动作)
+                for (const auto& 关系项 : 候选->动作结果组)
+                    if (关系项.结果动态节点 == 变化->节点)
+                        throw std::runtime_error("migration result belongs to more than one action");
+        }
+        return 新治理任务状态迁移结果{记录节点, 场景->节点, 动作.节点, 前->节点, 后->节点, 变化->节点};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务状态迁移",
+            L"治理迁移记录、动作或状态动态闭包不一致；保留现场。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取任务状态迁移", L"未知工程读取异常。");
+    }
+}
+
+新治理任务状态迁移结果 新_内部治理世界类::完成任务状态迁移(
+    稳定编码 记录节点, 稳定编码 后节点) noexcept {
+    try {
+        if (!任务读取_) throw std::runtime_error("migration task reader is not assembled");
+        const auto 记录 = 任务读取_->读取任务状态迁移记录(记录节点);
+        if (!记录 || 记录->节点 != 记录节点) throw std::runtime_error("formal migration record missing");
+        const auto 定义 = 任务读取_->读取任务状态迁移定义(记录->动作定义节点);
+        const auto 当前 = 任务读取_->读取任务虚拟存在引用(记录->任务引用);
+        const auto 前 = 状态服务_.获取状态(记录->前状态节点), 后 = 状态服务_.获取状态(后节点);
+        const auto 治理 = 读取任务治理场景(记录->任务引用);
+        const auto 来源 = 动态服务_.按来源查询动作(记录节点);
+        if (!定义 || !当前 || !前 || !后 || !治理
+            || 来源.状态 != 新动态操作状态::已完成 || !来源.动作)
+            throw std::runtime_error("migration completion material missing");
+        核验迁移记录前状态(*记录, *定义, *当前, *前, 特征概念服务_);
+        核验迁移记录动作(*记录, *来源.动作);
+        if (后->节点 == 前->节点 || 后->被描述存在节点 != 记录->任务引用.虚拟存在节点
+            || 后->来源实例特征节点 != 记录->任务引用.状态特征节点
+            || 后->固定准确值 != 新特征准确值{记录->后状态值}
+            || 后->强时间.语义 != 新状态时间语义::实例绝对UTC
+            || 后->强时间.纳秒 <= 记录->动作时间.纳秒)
+            throw std::runtime_error("migration after state differs from its record");
+        if (!来源.动作->动作结果组.empty()) {
+            const auto 完整 = 读取任务状态迁移(记录节点);
+            if (!完整 || 完整->后状态节点 != 后节点)
+                throw std::runtime_error("migration completion replay conflicts");
+            return *完整; // 精确重放不重复交付。
+        }
+        if (当前->当前状态 != 记录->后状态值 || 后->被引用次数 != 0)
+            throw std::runtime_error("new migration result is stale or partly consumed");
+        const auto 场景 = 治理场景_.获取场景(治理->场景节点);
+        if (!场景 || !含节点(场景->动态节点组, 来源.动作->节点)
+            || !含节点(场景->状态节点组, 前->节点) || 含节点(场景->状态节点组, 后节点))
+            throw std::runtime_error("migration action was not completely attached before state commit");
+        核验挂接(治理场景_.添加治理状态(治理->场景节点, 后节点, *任务读取_));
+        const auto 变化 = 动态服务_.建立原子动态(记录->任务引用.虚拟存在节点, 前->节点, 后节点);
+        if (变化.状态 != 新动态操作状态::已完成 || !变化.动态节点)
+            throw std::runtime_error("migration result dynamic publication failed");
+        核验挂接(治理场景_.添加治理动态(治理->场景节点, *变化.动态节点, *任务读取_));
+        if (动态服务_.关联动作结果(来源.动作->节点, *变化.动态节点,
+            新动作结果关系类型::导致变化) != 新动态操作状态::已完成)
+            throw std::runtime_error("migration action result association failed");
+        const auto 完整 = 读取任务状态迁移(记录节点);
+        if (!完整 || 完整->后状态节点 != 后节点 || 完整->变化动态节点 != *变化.动态节点)
+            throw std::runtime_error("migration completion readback failed");
+        // 5260 §4.2第6项：迁移完成后同步交付实际发生，前置窗口规则不变。
+        交付实际发生(新治理任务变化结果{完整->治理场景节点, 完整->动作节点,
+            完整->前状态节点, 完整->后状态节点, 完整->变化动态节点});
+        return *完整;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务状态迁移",
+            L"任务状态已提交后的治理组织或交付异常；保留动作及全部事实，不重做迁移。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成任务状态迁移", L"未知工程异常；保留事实。");
+    }
+}
+
 std::optional<新治理任务特征变化结果> 新_内部治理世界类::读取任务特征变化(
     const 新任务虚拟存在特征引用& 目标, 稳定编码 前节点, 稳定编码 后节点) const noexcept {
     try {
@@ -561,6 +768,13 @@ std::optional<新治理任务特征变化结果> 新_内部治理世界类::读�
                     if (!包 || 包->动作节点 != d || 包->治理场景节点 != 场景->节点
                         || !动作结果.insert(包->变化动态节点).second)
                         throw std::runtime_error("task scene contribution package mismatch");
+                    continue;
+                }
+                if (任务读取_->读取任务状态迁移定义(*动态->动作定义节点)) {
+                    const auto 包 = 读取任务状态迁移(*动态->动作来源节点);
+                    if (!包 || 包->动作节点 != d || 包->治理场景节点 != 场景->节点
+                        || !动作结果.insert(包->变化动态节点).second)
+                        throw std::runtime_error("task scene migration package mismatch");
                     continue;
                 }
                 if (动态->动作定义节点 != 任务读取_->获取任务已结算动作定义())
@@ -1026,6 +1240,22 @@ void 新_内部治理世界类::迁移已有任务治理场景(
                     // 不加入旧动作包和旧因果发生身份；它有自己的阶段来源。
                     continue;
                 }
+                if (任务读取_->读取任务状态迁移定义(*动作.动作定义节点)) {
+                    // TASK-STATE-CAUSAL：迁移包只在独占C(T)中成立；不进旧包，但其交付的因果发生身份归本场景。
+                    if (c == 根场景节点_) throw std::runtime_error("migration action cannot be migrated from governance root");
+                    const auto 变化 = 读取任务状态迁移(*动作.动作来源节点);
+                    if (!变化 || 变化->动作节点 != d || 变化->治理场景节点 != c
+                        || !动态快照.contains(变化->变化动态节点)
+                        || !动态快照.at(变化->变化动态节点).动态概念节点)
+                        throw std::runtime_error("migration action package is incomplete");
+                    包状态.insert(变化->前状态节点);
+                    包状态.insert(变化->后状态节点);
+                    for (const auto n : {变化->动作节点, 变化->变化动态节点})
+                        if (!包动态.insert(n).second)
+                            throw std::runtime_error("migration dynamic belongs to multiple packages");
+                    动作所属场景.emplace(d, c);
+                    continue;
+                }
                 if (!正式动作定义 || 动作.动作定义节点 != 正式动作定义)
                     throw std::runtime_error("unrecognized governance action definition");
                 const auto 变化 = 读取场景内任务状态变化(*动作.动作目标任务虚拟存在, *动作.动作来源节点, c);
@@ -1431,6 +1661,14 @@ std::optional<新因果动作定义> 新_内部治理世界类::读取自我动�
             if (!完整 || 完整->动作节点 != 节点)
                 throw std::runtime_error("settlement governance causal action is not complete");
             // 只确认既有owner收尾路径的触发方式，不把结果反作触发前提。
+            结果.触发方式 = 新因果动作触发方式::被动触发;
+        } else if (动作->动作定义节点
+            && 任务读取_->读取任务状态迁移定义(*动作->动作定义节点)) {
+            // TASK-STATE-CAUSAL：任务状态迁移治理动作（来源＝治理迁移记录），按已知动作交付（1190 §4.1）。
+            if (!动作->动作来源节点) throw std::runtime_error("migration action record missing");
+            const auto 完整 = 读取任务状态迁移(*动作->动作来源节点);
+            if (!完整 || 完整->动作节点 != 节点 || 完整->治理场景节点 != 场景->节点)
+                throw std::runtime_error("migration causal projection is not complete");
             结果.触发方式 = 新因果动作触发方式::被动触发;
         } else if (动作->动作定义节点
             && 任务读取_->读取任务贡献动作定义(*动作->动作定义节点)) {
