@@ -3958,22 +3958,47 @@ struct 新_任务管理线程类::实现 final {
                     const auto 占用 = *已完成工作;
                     生命周期 = 新任务管理生命周期::处理消息;
                     锁.unlock();
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                    {
+                        const auto 起 = std::chrono::steady_clock::now();
+                        处理已完成工作(占用);
+                        const auto 毫秒 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - 起).count();
+                        if (毫秒 >= 200) (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"主循环计时",
+                            [&] { return L"处理已完成工作 种类=" + std::to_wstring(static_cast<int>(占用.请求.种类)) + L" 任务="
+                                + std::to_wstring(占用.请求.任务节点.值) + L" 毫秒=" + std::to_wstring(毫秒); });
+                    }
+#else
                     处理已完成工作(占用);
+#endif
                     锁.lock();
                     调度待触发 = true;
                 }
                 if (停止) continue;
 
                 锁.unlock();
-                处理最终工作通知();
-                推进服务结算来源事件();
-                推进学习事件();
-                推进等待复核();
-                尝试反馈筹办结果();
-                尝试反馈任务结果();
-                尝试反馈任务完成贡献();
-                尝试复核条件子需求();
-                尝试复核因果等待();
+                {
+                    // 诊断：主循环各推进步骤耗时（超过200毫秒才记）；调试开关关闭时直接调用。
+                    const auto 计时 = [&]([[maybe_unused]] const wchar_t* 名, auto&& 步骤) {
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                        const auto 起 = std::chrono::steady_clock::now();
+                        步骤();
+                        const auto 毫秒 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - 起).count();
+                        if (毫秒 >= 200) (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"主循环计时",
+                            [&] { return std::wstring(名) + L" 毫秒=" + std::to_wstring(毫秒); });
+#else
+                        步骤();
+#endif
+                    };
+                    计时(L"处理最终工作通知", [&] { 处理最终工作通知(); });
+                    计时(L"推进服务结算来源事件", [&] { 推进服务结算来源事件(); });
+                    计时(L"推进学习事件", [&] { 推进学习事件(); });
+                    计时(L"推进等待复核", [&] { 推进等待复核(); });
+                    计时(L"尝试反馈筹办结果", [&] { 尝试反馈筹办结果(); });
+                    计时(L"尝试反馈任务结果", [&] { 尝试反馈任务结果(); });
+                    计时(L"尝试反馈任务完成贡献", [&] { 尝试反馈任务完成贡献(); });
+                    计时(L"尝试复核条件子需求", [&] { 尝试复核条件子需求(); });
+                    计时(L"尝试复核因果等待", [&] { 尝试复核因果等待(); });
+                }
                 锁.lock();
 
                 if (停止) continue;
@@ -4281,11 +4306,21 @@ struct 新_任务管理线程类::实现 final {
                     return 状态;
                 };
                 bool 本次为结果检测 = 下次优先结果检测;
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                const auto 派发起 = std::chrono::steady_clock::now();
+#endif
                 auto 派发 = 本次为结果检测 ? 尝试派发结果检测() : 普通派发();
                 if (派发 == 筹办派发状态::无可派发任务) {
                     本次为结果检测 = !本次为结果检测;
                     派发 = 本次为结果检测 ? 尝试派发结果检测() : 普通派发();
                 }
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                {
+                    const auto 毫秒 = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - 派发起).count();
+                    if (毫秒 >= 200) (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"主循环计时",
+                        [&] { return L"派发 结果=" + std::to_wstring(static_cast<int>(派发)) + L" 毫秒=" + std::to_wstring(毫秒); });
+                }
+#endif
                 锁.lock();
                 if (派发 == 筹办派发状态::已派发) {
                     下次优先结果检测 = !本次为结果检测;

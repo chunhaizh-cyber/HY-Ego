@@ -47,13 +47,20 @@
 #endif
 #endif
 
-#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+#if defined(HY_EGO_DEBUG_LOG_PARAM_BINDING) || defined(HY_EGO_DEBUG_LOG_PARAM_BINDING_DETAIL)
 #include "../核心/日志系统.h"
 #include <sstream>
-#define 海中鱼巣参数绑定诊断(表达式) do { try { std::wostringstream 诊断流_; 诊断流_ << 表达式; \
-    (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::PARAM_BINDING>(L"任务条件筹办", L"有序存在参数", 诊断流_.str()); } catch (...) {} } while (false)
+// 逐参数、逐条件的绑定明细（量大）：PARAM_BINDING_DETAIL 切片；内容只在切片开启时拼接。
+#define 海中鱼巣参数绑定诊断(表达式) do { try { \
+    (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::PARAM_BINDING_DETAIL>(L"任务条件筹办", L"有序存在参数", \
+        [&] { std::wostringstream 诊断流_; 诊断流_ << 表达式; return 诊断流_.str(); }); } catch (...) {} } while (false)
+// 排查要点（计时等少量记录点）：PARAM_BINDING 切片。
+#define 海中鱼巣参数绑定要点(表达式) do { try { \
+    (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::PARAM_BINDING>(L"任务条件筹办", L"要点", \
+        [&] { std::wostringstream 诊断流_; 诊断流_ << 表达式; return 诊断流_.str(); }); } catch (...) {} } while (false)
 #else
 #define 海中鱼巣参数绑定诊断(表达式) do { } while (false)
+#define 海中鱼巣参数绑定要点(表达式) do { } while (false)
 #endif
 
 namespace 海中鱼巣 {
@@ -8917,7 +8924,7 @@ static void 调度项结构诊断(std::uint64_t, int) noexcept {}
             if(完整重备)
                 批=准备本次场景核验批(T);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-            海中鱼巣参数绑定诊断(L"调度扫描计时 准备 任务=" << T.值 << L" 完整重备=" << 完整重备 << L" 毫秒="
+            海中鱼巣参数绑定要点(L"调度扫描计时 准备 任务=" << T.值 << L" 完整重备=" << 完整重备 << L" 毫秒="
                 << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-准备起点).count());
 #endif
             批组.push_back(std::move(批));
@@ -8926,7 +8933,7 @@ static void 调度项结构诊断(std::uint64_t, int) noexcept {}
             const auto 读取起点=std::chrono::steady_clock::now();
             读取本次场景核验批(批);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-            海中鱼巣参数绑定诊断(L"调度扫描计时 读取 任务=" << 批.T.值 << L" 毫秒="
+            海中鱼巣参数绑定要点(L"调度扫描计时 读取 任务=" << 批.T.值 << L" 毫秒="
                 << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now()-读取起点).count());
 #endif
         }}
@@ -24713,7 +24720,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
     try {
         结果.原请求 = 请求;
         const auto 恢复零动作 = [&](int 出口行 = 0) {
-            海中鱼巣参数绑定诊断(L"零动作出口 任务=" << 请求.任务节点.值 << L" 行=" << 出口行);
+            海中鱼巣参数绑定要点(L"零动作出口 任务=" << 请求.任务节点.值 << L" 行=" << 出口行);
             std::lock_guard 锁(新任务互斥);
             if (!开始前任务) throw std::logic_error("零动作恢复缺少开始前定位");
             std::optional<稳定编码> 撤销X;

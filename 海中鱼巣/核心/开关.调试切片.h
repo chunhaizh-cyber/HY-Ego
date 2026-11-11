@@ -19,6 +19,10 @@ enum class 调试切片 : std::uint8_t {
     // 业务/方法问题学习.服务.cpp、业务/服务对象.本能运行服务.cpp。关闭条件：INSTINCT-CONTRACT 阶段排查结束。
     // 验证方式：诊断版运行读 调试_PARAM_BINDING.log。
     PARAM_BINDING,
+    // 目的：参数绑定逐参数、逐条件明细（宏 海中鱼巣参数绑定诊断；量大，每轮调度扫描上万条）。
+    // 启用宏：HY_EGO_DEBUG_LOG_PARAM_BINDING_DETAIL。影响文件：领域/新_任务类.cpp。输出位置：调试_PARAM_BINDING_DETAIL.log。
+    // 关闭条件：参数绑定明细排查结束。验证方式：诊断版运行读 调试_PARAM_BINDING_DETAIL.log。
+    PARAM_BINDING_DETAIL,
     // 目的：模拟学习进度（分支、采集、样例、漂移）。启用宏：HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS。
     // 影响文件：业务/模拟学习.服务.cpp、业务/因果.任务筹办服务.cpp、业务/服务对象需求.发布服务.cpp、
     // 领域/新_任务类.cpp、领域/新_方法类.cpp、领域/新_模拟世界类.cpp、领域/新_需求类.cpp、线程/新_自我线程类.cpp。
@@ -88,6 +92,11 @@ template <调试切片 切片> struct 调试切片信息;
 HY_调试切片登记(PARAM_BINDING, true);
 #else
 HY_调试切片登记(PARAM_BINDING, false);
+#endif
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING_DETAIL
+HY_调试切片登记(PARAM_BINDING_DETAIL, true);
+#else
+HY_调试切片登记(PARAM_BINDING_DETAIL, false);
 #endif
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
 HY_调试切片登记(SIMULATION_PROGRESS, true);
