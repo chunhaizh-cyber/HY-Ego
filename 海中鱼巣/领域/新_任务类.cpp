@@ -9871,6 +9871,12 @@ std::optional<新任务状态迁移记录> 新_任务类::读取任务状态迁�
         }
         请求.新节点组.push_back(std::move(记录));
         请求.追加字段组.push_back({任务节点, m::记录列表, 基础组内节点引用{记录索引}});
+        {   // 调用方保护可能含同一宿主的多份快照（各读取路径分别捕获）；原子追加要求宿主唯一。
+            // 按既有合并规则去重：可合并者保留较新快照，冲突者即前提已变化。
+            std::vector<基础联合节点快照> 去重;
+            if (!合并需求结果保护(去重, 保护)) { 清理前状态(); return 新任务操作状态::任务状态不允许; }
+            保护 = std::move(去重);
+        }
         请求.预期联合节点组 = std::move(保护);
         const auto 发布 = 全局基础数据集.原子追加节点组(请求);
         if (发布.状态 == 基础节点组追加状态::资源失败) { 清理前状态(); return 新任务操作状态::资源失败; }
@@ -9878,8 +9884,29 @@ std::optional<新任务状态迁移记录> 新_任务类::读取任务状态迁�
             || 发布.状态 == 基础节点组追加状态::引用不存在) {
             清理前状态(); return 新任务操作状态::任务状态不允许;
         }
-        if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 请求.新节点组.size())
-            throw std::logic_error("治理迁移记录发布失败 状态=" + std::to_string(static_cast<int>(发布.状态)));
+        if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 请求.新节点组.size()) {
+            // 诊断材料：入口拒绝时写出请求形状，便于定位哪条入口校验不过。
+            std::string 说明 = "治理迁移记录发布失败 状态=" + std::to_string(static_cast<int>(发布.状态))
+                + " 原因种类=" + std::to_string(static_cast<int>(原因.种类))
+                + " 前=" + std::to_string(static_cast<int>(前状态)) + " 后=" + std::to_string(static_cast<int>(后状态))
+                + " 共同发布=" + (共同发布 ? "1" : "0")
+                + " 新节点=" + std::to_string(请求.新节点组.size()) + " 追加字段=" + std::to_string(请求.追加字段组.size())
+                + " 替换=" + std::to_string(请求.替换字段组.size()) + " 删除=" + std::to_string(请求.删除字段关系组.size())
+                + " 外部=" + std::to_string(请求.追加外部关系组.size()) + " 联合=" + std::to_string(请求.预期联合节点组.size())
+                + " 既有=" + std::to_string(请求.预期既有节点组.size()) + " 容许=" + std::to_string(请求.容许新增入向预期组.size());
+            std::set<std::uint64_t> 见过; std::string 重复;
+            for (const auto& q : 请求.预期联合节点组) if (!见过.insert(q.结构.节点.编码.值).second) 重复 += std::to_string(q.结构.节点.编码.值) + ",";
+            if (!重复.empty()) 说明 += " 联合重复=" + 重复;
+            std::string 无效键;
+            for (const auto& 节点 : 请求.新节点组) for (const auto& f : 节点.字段组) if (!有效(f.字段节点)) 无效键 += "新节点字段;";
+            for (const auto& f : 请求.追加字段组) {
+                if (!有效(f.字段节点)) 无效键 += "追加字段键;";
+                if (!有效(f.所属节点)) 无效键 += "追加宿主;";
+                else if (!见过.contains(f.所属节点.值)) 说明 += " 追加宿主未受联合保护=" + std::to_string(f.所属节点.值);
+            }
+            if (!无效键.empty()) 说明 += " 无效=" + 无效键;
+            throw std::logic_error(说明);
+        }
         记录已发布 = true;
         未消费前状态.reset(); // 已由记录持有。
         const auto 记录节点 = 发布.新节点组[记录索引];
