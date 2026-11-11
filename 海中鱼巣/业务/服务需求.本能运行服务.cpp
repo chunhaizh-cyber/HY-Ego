@@ -221,8 +221,14 @@ struct 服务对象新需求本能运行服务::实现 final {
         const auto adopted=任务.读取执行本能采用(request.执行实例节点);
         新需求要求(adopted&&execution->本能采用==adopted
             &&adopted->参数绑定组==request.参数绑定组&&adopted->执行分支节点==request.执行分支节点);
-        const auto chain=读取支持方法链(request.方法节点,false);
+        const auto chain=读取支持方法链(request.方法节点,false,false);
         新需求要求(!chain.empty()&&std::find(chain.begin(),chain.end(),adopted->来源方法节点)!=chain.end());
+        // 链上方法停用属执行前并发变化：零动作回筹办（复核执行本能输入对停用方法返回条件已变化）。
+        for(const auto id:chain) {
+            const auto m=方法.获取方法(id);
+            新需求要求(m.has_value());
+            if(m->启用状态!=新方法启用状态::启用)throw 新本能需求任务前提变化{};
+        }
         return {*execution,*adopted};
     }
 
@@ -395,6 +401,10 @@ public:
         bool 已有发布=false;
         if(特征发布已尝试_) {
             const auto old=s.需求.读取主体需求特征发布关联(material.需求节点);
+            if(old.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+            if(old.状态==新需求操作状态::前提已变化)return out;
+            // 目标内容依赖未就绪属合法等待：D已建，发布尚未确认。
+            if(old.状态==新需求操作状态::目标内容依赖未就绪){out.状态=S::已建需求尚未发布;return out;}
             新需求要求(old.状态==新需求操作状态::已找到);
             已有发布=old.关联.has_value();
             if(已有发布)新需求要求(old.关联->需求节点==material.需求节点
@@ -441,6 +451,8 @@ public:
         if(published.状态==服务对象需求发布状态::前提已变化)return out;
         if(published.状态==服务对象需求发布状态::需重新确认){out.状态=S::需重新确认;return out;}
         if(published.状态==服务对象需求发布状态::需求信息待完善)return out;
+        // 发布服务以已关闭对外表示需求完整资格依赖未就绪：D已建尚未发布，合法等待。
+        if(published.状态==服务对象需求发布状态::已关闭)return out;
         新需求要求(published.状态==服务对象需求发布状态::已发布
             ||published.状态==服务对象需求发布状态::已复用
             ||published.状态==服务对象需求发布状态::已发布但当前读回变化);
@@ -459,6 +471,9 @@ public:
                 新需求要求(定位.动作节点==action&&已读.关联.动作来源节点==来源_);
             else {
                 const auto 首次=s.需求.读取主体需求特征发布关联(material.需求节点);
+                if(首次.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+                if(首次.状态==新需求操作状态::前提已变化
+                    ||首次.状态==新需求操作状态::目标内容依赖未就绪)return out;
                 新需求要求(首次.关联&&首次.关联->动作节点==定位.动作节点);
             }
             out.结果状态节点组.push_back(已读.状态.节点);
@@ -467,6 +482,9 @@ public:
             out.状态=S::已发布但当前读回变化;return out;
         }
         const auto origin=s.需求.读取主体需求特征发布关联(material.需求节点);
+        if(origin.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+        if(origin.状态==新需求操作状态::前提已变化
+            ||origin.状态==新需求操作状态::目标内容依赖未就绪)return out;
         新需求要求(origin.状态==新需求操作状态::已找到&&origin.关联
             &&origin.关联->需求节点==material.需求节点&&origin.关联->主体存在节点==material.服务对象
             &&origin.关联->场景节点==*targetScene);
@@ -662,7 +680,8 @@ std::shared_ptr<新本能需求运行接口> 服务对象新需求本能运行�
         &实现_->材料读取, {}, {}, std::move(provider));
 }
 bool 服务对象新需求本能运行服务::支持任务方法(稳定编码 method) const noexcept {
-    try { return !实现_->读取支持方法链(method).empty(); }
+    // 只判族归属；派生方法停用属执行前并发变化，由任务请求链核验按前提变化回筹办。
+    try { return !实现_->读取支持方法链(method,true,false).empty(); }
     catch(const std::exception& error) {
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"新需求任务参数工厂",
             L"方法来源、固定规格或运行服务状态不合法。",error.what());

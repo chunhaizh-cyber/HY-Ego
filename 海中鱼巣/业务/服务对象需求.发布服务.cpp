@@ -497,6 +497,9 @@ struct 服务对象需求发布服务::实现 final {
             const auto d = 需求.读取需求治理信息(n);
             if (!d || d->执行域 != 新需求执行域::被认知 || d->需求主体存在节点 != E) 发布故障(L"需求历史含非法或异主体需求");
             const auto source = 需求.读取主体需求特征发布关联(n);
+            // 并发变化与依赖未就绪按本函数既有口径返回；资源失败在发布链属工程故障，保持终止。
+            if (source.状态 == 新需求操作状态::前提已变化) { out.状态 = S::前提已变化; return out; }
+            if (source.状态 == 新需求操作状态::目标内容依赖未就绪) { out.状态 = S::已关闭; return out; }
             if (source.状态 != 新需求操作状态::已找到 || !source.关联) 发布故障(L"需求历史缺少首次发布来源");
             const auto oldItem = mapping.信息 ? std::find_if(mapping.信息->有序来源组.begin(), mapping.信息->有序来源组.end(), [&](const auto& x) { return x.需求节点 == n; }) : std::vector<新需求特征迁移来源项>::const_iterator{};
             if (mapping.信息 && oldItem != mapping.信息->有序来源组.end()) {
@@ -1236,6 +1239,9 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
         const auto target = 有效(F) ? F : 建空特征(q.服务对象节点);
         out.需求特征节点 = target; out.需求节点 = q.需求节点;
         const auto origin = 需求.读取主体需求特征发布关联(q.需求节点);
+        // 与本函数准备来源的既有口径一致：前提已变化原样返回，目标内容依赖未就绪按需求信息待完善等待。
+        if (origin.状态 == 新需求操作状态::前提已变化) { out.状态 = S::前提已变化; return out; }
+        if (origin.状态 == 新需求操作状态::目标内容依赖未就绪) { out.状态 = S::需求信息待完善; return out; }
         if (origin.状态 != 新需求操作状态::已找到) 发布故障(L"需求发布来源读取失败");
         const bool present = std::binary_search(read.历史需求节点组.begin(), read.历史需求节点组.end(), q.需求节点);
         if (present != origin.关联.has_value()) 发布故障(L"需求历史与发布来源不一致");
@@ -1308,7 +1314,8 @@ struct 服务对象需求发布服务::整体目标关联读取结果 final {
         if(发生.状态!=服务对象需求发生读取状态::已读取||!发生.发生)发布故障(L"需求发生发表后读回失败");
         out.需求发生=发生.发生;out.本次新建发生=true;
         const auto final = 读取(q.场景节点, q.服务对象节点);
-        if (final.状态 == S::前提已变化) { out.状态 = S::已发布但当前读回变化; return out; }
+        // 已发布事实保留；读回遇并发变化或依赖未就绪（已关闭）均不能确认当前值。
+        if (final.状态 == S::前提已变化 || final.状态 == S::已关闭) { out.状态 = S::已发布但当前读回变化; return out; }
         if (final.状态 != S::已读取 || final.需求特征节点 != target
             || !std::binary_search(final.历史需求节点组.begin(), final.历史需求节点组.end(), q.需求节点)) 发布故障(L"需求发布最终来源和历史读回失败");
         out.状态 = final.当前需求节点 != q.需求节点

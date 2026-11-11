@@ -196,12 +196,18 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         if(身份.状态!=基础结构操作状态::已完成||!身份.信息)
             throw std::logic_error("bound existence identity unreadable");
         const auto E=存在读取_->获取存在(p->信息节点);
-        if(!E)throw std::logic_error("bound existence membership unreadable");
+        // 身份读到后存在被并发删除：属前提变化，与快照不同同口径。
+        if(!E)return {S::定义前提已变化,{},{}};
         std::map<稳定编码,新特征匹配实例快照> 全部;
         std::vector<稳定编码> 命中;
         for(const auto F:E->特征节点组) {
             const auto f=特征服务_->捕获特征匹配实例(F);
-            if(!f||f->特征节点!=F||!全部.emplace(F,*f).second)
+            if(!f) {
+                // 比照后轮：存在成员已变化（或存在已删除）即前提已变化；成员未变而特征不可读仍属工程故障。
+                if(存在读取_->获取存在(p->信息节点)!=E)return {S::定义前提已变化,{},{}};
+                throw std::logic_error("existence feature membership or definition unreadable");
+            }
+            if(f->特征节点!=F||!全部.emplace(F,*f).second)
                 throw std::logic_error("existence feature membership or definition unreadable");
             if(f->定义.特征类型根==FT)命中.push_back(F);
         }

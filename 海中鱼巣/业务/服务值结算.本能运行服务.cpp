@@ -461,9 +461,11 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
         // 来源场景须是自我当前所在场景，不与登记时场景比较（6220 §2）。
         const auto 当前自我场景 = s.世界.读取自我所在场景();
         if (!当前自我场景) throw std::logic_error("final self scene unregistered");
-        if (鲜读.边界.能力 != 能力 || 鲜读.自我场景节点 != *当前自我场景
+        if (鲜读.边界.能力 != 能力
             || 鲜读.自我存在节点 != m->自我存在 || 鲜读.自我特征节点 != m->服务值特征)
             throw std::logic_error("final governance source identity mismatch");
+        // 自我已移动到其它场景：来源场景不再是当前所在场景，属来源已变化（准备前、无写入）。
+        if (鲜读.自我场景节点 != *当前自我场景) return {新服务值最终消费状态::来源已变化, 定位};
         const auto E = s.世界.查询存在(m->自我存在);
         if (!E) throw std::logic_error("final self unreadable");
         std::optional<新特征信息> 集合;
@@ -483,9 +485,12 @@ std::optional<新服务值最终消费结果> 服务值结算本能运行服务:
         const auto* 成员 = 集合值 ? std::get_if<std::vector<std::uint64_t>>(&集合值->材料) : nullptr;
         if (!成员) throw std::logic_error("final task collection payload invalid");
         std::set<std::uint64_t> 已见;
-        for (auto 编码 : *成员)
-            if (!编码 || !已见.insert(编码).second || !s.任务.获取任务(稳定编码{编码}))
+        for (auto 编码 : *成员) {
+            if (!编码 || !已见.insert(编码).second)
                 throw std::logic_error("final task collection member invalid or duplicated");
+            // 成员任务可被并发删除：集合尚未同步，属来源已变化（准备前、无写入）。
+            if (!s.任务.获取任务(稳定编码{编码})) return {新服务值最终消费状态::来源已变化, 定位};
+        }
         if (!已见.contains(定位.来源任务节点.值))
             return {新服务值最终消费状态::来源条件不具备, 定位};
         auto 准备 = s.任务.准备任务最终消费(定位, 能力);

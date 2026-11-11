@@ -993,6 +993,9 @@ namespace {
         const auto rootAfter=s.方法.读取模拟正式结构(C);
         if(rootsAfter.状态==正式结构操作状态::前提已变化||rootsAfter.信息!=roots.信息
             ||rootAfter.状态==正式结构操作状态::前提已变化)return {S::前提已变化,{},{}};
+        // 复读时定义已被并发删除：属内部世界变化；输入拒绝、定义冲突等仍属工程故障。
+        if(rootsAfter.状态==正式结构操作状态::未找到||rootAfter.状态==正式结构操作状态::未找到)
+            return {S::前提已变化,{},{}};
         if(rootsAfter.状态!=正式结构操作状态::已读取||rootAfter.状态!=正式结构操作状态::已读取||!rootAfter.信息)
             throw std::runtime_error("formal demand definition disappeared during parameter read");
         if(!merge(rootAfter.完整保护组))return {S::前提已变化,{},{}};
@@ -1013,6 +1016,9 @@ namespace {
         std::vector<稳定编码> ids;for(const auto& [id,item]:expected)ids.push_back(id);
         const auto current=全局基础数据集.查询节点组完整结构(ids);
         if(current.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+        // 最终保护读取时节点已被并发删除：前提已变化；内部不一致仍属工程故障。
+        if(current.状态==基础结构操作状态::节点不存在||current.状态==基础结构操作状态::引用不存在)
+            return {S::前提已变化,{},{}};
         if(current.状态!=基础结构操作状态::已完成||current.节点组.size()!=ids.size())
             throw std::runtime_error("formal simulation parameter final protection unavailable");
         for(const auto& item:current.节点组)
