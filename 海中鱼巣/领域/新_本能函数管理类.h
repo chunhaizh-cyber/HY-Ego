@@ -14,8 +14,9 @@ namespace 海中鱼巣 {
 inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_获取交互者 =
     "builtin.interactor.acquire.v1";
+// v5（5380 §3.4）：6参数，在当前交互场景中确认交互者为服务对象；v4 已删除（AGENTS §5）。
 inline constexpr std::string_view 新本能函数登记名_获取服务对象 =
-    "builtin.service_object.acquire.v4";
+    "builtin.service_object.acquire.v5";
 // v4内置监听、不以交互者为条件（INTERACT-SCENE-INSTINCT）；v3停用。
 inline constexpr std::string_view 新本能函数登记名_旧五参数获取服务对象 =
     "builtin.service_object.acquire.v3";

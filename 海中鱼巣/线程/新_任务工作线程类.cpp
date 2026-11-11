@@ -48,10 +48,10 @@ public:
         try {
             static std::atomic<std::uint64_t> 条数{0};
             const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
-            if (序号 > 256) return;
-            if (序号 == 256) {
+            if (序号 > 8192) return;
+            if (序号 == 8192) {
                 (void)记录调试日志(L"WORKER_EXECUTION", L"任务工作线程", L"日志截断",
-                    L"本进程仅观察前256项工作的起止，不裁剪实际工作。");
+                    L"本进程仅观察前8192项工作的起止，不裁剪实际工作。");
                 return;
             }
             已启用_ = true;
@@ -485,6 +485,11 @@ struct 新_任务工作线程类::实现 final {
             case 新任务治理条件筹办状态::结构不一致:
             case 新任务治理条件筹办状态::资源失败:
                 结果.状态 = 新任务工作处理状态::需核查;
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                try { std::wostringstream 文; 文 << L"检查条件需核查 任务=" << 项->请求.任务节点.值
+                    << L" 组织交付=" << static_cast<int>(交付) << L" 条件筹办=" << static_cast<int>(结果.条件筹办->状态);
+                    (void)记录调试日志(L"PARAM_BINDING", L"任务工作", L"检查条件", 文.str()); } catch (...) {}
+#endif
                 break;
             }
         } else if (项->请求.种类 == 新任务工作种类::执行本能动作 && 项->请求.本能执行请求) {

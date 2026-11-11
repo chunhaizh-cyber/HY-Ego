@@ -1250,7 +1250,12 @@ struct 新_自我线程类::实现 final {
         return 0; // 永久耗尽，不回绕、不换键重试。
     }
 
+    // 2026-11-11 用户裁决：暂停需求树全树扫描（兜底补齐与正式条件子需求承接争抢同一需求）。
+    // 恢复时改回 false；暂停期间不提交扫描工作、不发“自我全树扫描”承接消息。
+    static constexpr bool 全树扫描已暂停 = true;
+
     bool 提交需求工作已加锁(新自我工作种类 种类) noexcept {
+        if constexpr (全树扫描已暂停) { (void)种类; return false; }
         if (当前扫描请求 || 扫描工作结果.valid()) return false;
         关联复核待触发 = true;
         新自我需求树扫描请求 请求;
@@ -2881,6 +2886,11 @@ struct 新_自我线程类::实现 final {
                     }
                     消息.需求节点 = *采用.需求节点;
                     const auto 接收 = 任务管理->提交已确认条件子需求(定位, 消息);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                    try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我发条件子需求承接",
+                        L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
+                        + L" 消息=" + std::to_wstring(消息.消息编号) + L" 接收=" + std::to_wstring(static_cast<int>(接收.状态))); } catch (...) {}
+#endif
                     if (接收.状态 == 新任务承接接收状态::邮箱已满
                         || 接收.状态 == 新任务承接接收状态::资源失败) {
                         尚有交接 = true;
@@ -2896,6 +2906,13 @@ struct 新_自我线程类::实现 final {
                     continue;
                 }
                 const auto 承接 = 异步.get();
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我收条件子需求承接",
+                    L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
+                    + L" 处理=" + std::to_wstring(static_cast<int>(承接.状态))
+                    + L" 承接=" + std::to_wstring(承接.承接 ? static_cast<int>(承接.承接->状态) : -1)
+                    + L" 有任务=" + std::to_wstring(承接.承接 && 承接.承接->任务 ? 1 : 0)); } catch (...) {}
+#endif
                 if (承接.原消息 != 消息 || !承接.承接 || !承接.承接->任务
                     || (承接.状态 != 新任务承接处理状态::已承接
                         && 承接.状态 != 新任务承接处理状态::已重新启用
@@ -2903,6 +2920,11 @@ struct 新_自我线程类::实现 final {
                         && 承接.状态 != 新任务承接处理状态::既有终结)) return 结果;
                 const auto 读回 = 任务服务->读回需求任务(
                     消息.需求节点, 承接.承接->任务->节点);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我读回条件子需求任务",
+                    L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
+                    + L" 读回=" + std::to_wstring(static_cast<int>(读回.状态))); } catch (...) {}
+#endif
                 if (读回.状态 == 新任务治理承接状态::资源失败) return 等待();
                 if (读回.状态 != 新任务治理承接状态::已读回
                     && 读回.状态 != 新任务治理承接状态::既有终结任务) return 结果;
