@@ -219,10 +219,11 @@ template<class 端口类型>
     新本能函数本次条件结果对 r;
     try {
         if (场景.用途()==新方法参数场景用途::登记) {
+            // 与同族本能对齐：登记端口或配置未装配返回依赖未装配。
             const auto p=新_本能函数管理类::租用字段询问端口();
-            if (!p) throw std::logic_error("field question declaration provider unavailable");
+            if (!p) { r.结果.状态=新本能函数执行状态::依赖未装配; return r; }
             const auto c=p->读取登记材料();
-            if (!c) throw std::logic_error("field question declaration is not configured");
+            if (!c) { r.结果.状态=新本能函数执行状态::依赖未装配; return r; }
             新方法知识建立请求 q;
             q.作用域=新方法作用域::普通世界;
             q.实现方式=新方法实现方式::本能;
@@ -261,7 +262,8 @@ template<class 端口类型>
             单路径.必要条件.条件项组.push_back(std::move(有交互者));
             q.执行分支组.push_back(std::move(单路径));
             const auto m=p->确保方法登记(q);
-            if (!m.方法节点) throw std::logic_error("field question declaration failed");
+            // 与同族本能对齐：登记未取得方法节点按参数不匹配返回。
+            if (!m.方法节点) { r.结果.状态=新本能函数执行状态::参数不匹配; return r; }
             r.结果.状态=场景.全部角色绑定().empty() ? 新本能函数执行状态::已按合同返回 : 新本能函数执行状态::参数不匹配;
             return r;
         }

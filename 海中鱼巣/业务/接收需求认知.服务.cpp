@@ -739,6 +739,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             进入步骤("读取同源被认知需求");
             const auto known=d.需求.查询接收认知来源需求(source,d.语言,d.特征);
             if(known.状态==新需求操作状态::资源失败)资源();if(known.状态==新需求操作状态::前提已变化)漂移();
+            if(known.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
             if(known.状态==新需求操作状态::已找到){
                 if(!known.信息||!known.信息->首次接收认知来源)throw std::logic_error("same-source demand read returned no source");
                 out.D=known.信息->节点;
@@ -803,6 +804,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 进入步骤("发表同源被认知需求");
                 const auto created=d.需求.建立或取得接收认知需求({source,target},d.语言,d.特征);
                 if(created.状态==新需求操作状态::资源失败)资源();if(created.状态==新需求操作状态::前提已变化)漂移();
+                if(created.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                 if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)
                     throw std::logic_error("same-source demand publication failed");
                 // 同源D即使上次已发表，也必须经原owner补齐五F再报告阶段完成。
@@ -812,6 +814,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     进入步骤("正式读回同源被认知需求");
                     const auto verified=d.需求.查询接收认知来源需求(source,d.语言,d.特征);
                     if(verified.状态==新需求操作状态::资源失败)资源();if(verified.状态==新需求操作状态::前提已变化)漂移();
+                    if(verified.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                     if(verified.状态!=新需求操作状态::已找到||!verified.信息||verified.信息->节点!=*out.D
                         ||verified.信息->首次接收认知来源!=std::optional{source}
                         ||verified.信息->已知目标!=std::optional{target})
