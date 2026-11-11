@@ -1616,6 +1616,50 @@ void 新_需求类::解除关联检查通知(const void* 所有者) noexcept {
     } catch (...) {}
 }
 
+bool 新_需求类::绑定需求就绪通知(
+    const void* 所有者, std::function<void(稳定编码)> 通知) noexcept {
+    try {
+        std::lock_guard 锁(需求就绪通知互斥_);
+        if (!所有者 || !通知) return false;
+        if (需求就绪通知所有者_) return 需求就绪通知所有者_ == 所有者;
+        需求就绪通知_ = std::move(通知);
+        需求就绪通知所有者_ = 所有者;
+        return true;
+    } catch (...) { return false; }
+}
+
+void 新_需求类::解除需求就绪通知(const void* 所有者) noexcept {
+    try {
+        std::lock_guard 锁(需求就绪通知互斥_);
+        if (!所有者 || 需求就绪通知所有者_ != 所有者) return;
+        需求就绪通知_ = {};
+        需求就绪通知所有者_ = nullptr;
+    } catch (...) {}
+}
+
+// 调用者不持需求owner锁；投递期间持端口互斥，解除绑定等待在途投递结束。
+void 新_需求类::发出需求就绪通知(稳定编码 需求节点) noexcept {
+    try {
+        std::lock_guard 锁(需求就绪通知互斥_);
+        if (需求就绪通知_) 需求就绪通知_(需求节点);
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发出需求就绪通知", L"端口互斥或投递发生工程故障。");
+    }
+}
+
+新被认知需求信息更新结果 新_需求类::完善接收认知需求信息(
+    稳定编码 D,const 新需求治理信息& 预期) noexcept {
+    auto 结果 = 完善接收认知需求信息内部(D, 预期);
+    if (结果.状态 == 新需求操作状态::已修改) 发出需求就绪通知(D);
+    return 结果;
+}
+
+新被认知需求信息更新结果 新_需求类::更新被认知需求信息(const 新被认知需求信息更新请求& q) noexcept {
+    auto 结果 = 更新被认知需求信息内部(q);
+    if (结果.状态 == 新需求操作状态::已修改) 发出需求就绪通知(q.需求节点);
+    return 结果;
+}
+
 bool 新_需求类::初始化() noexcept {
     try {
         std::lock_guard 锁(新需求互斥);
@@ -5432,7 +5476,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
     }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取被认知需求资格",L"完整资格读取工程错误");}
 }
-新被认知需求信息更新结果 新_需求类::完善接收认知需求信息(
+新被认知需求信息更新结果 新_需求类::完善接收认知需求信息内部(
     稳定编码 D,const 新需求治理信息& 预期) noexcept {
     using S=新需求操作状态;
     try {
@@ -6012,7 +6056,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
     catch(const std::length_error&){return {新需求操作状态::资源失败,{},{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立待完善被认知需求",L"待完善需求建立发生工程故障");}
 }
-新被认知需求信息更新结果 新_需求类::更新被认知需求信息(const 新被认知需求信息更新请求& q) noexcept {
+新被认知需求信息更新结果 新_需求类::更新被认知需求信息内部(const 新被认知需求信息更新请求& q) noexcept {
     try {
         std::unique_lock lock(新需求互斥);using S=新需求操作状态;
         const auto old=读取需求治理信息(q.需求节点);if(!old)return {S::需求不存在,{}};

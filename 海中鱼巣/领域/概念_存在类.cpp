@@ -3705,6 +3705,16 @@ void 编译模板(const 定义模板&t,std::size_t index,基础节点组追加�
     if(!正式保护未变(readback))return 正式状态::前提已变化;
     return 正式状态::已建立;
 }
+// 槽421..426依次为承接依据、候选结论、条件结论、执行进入结论、影响评估结论、后继决议的取值上界。
+std::int64_t 任务因素枚举上界(std::uint32_t s) {
+    switch(s){case 421:return 8;case 422:return 2;case 423:return 3;case 424:return 2;case 425:return 21;case 426:return 5;}
+    正式定义故障("unknown task factor enumeration slot");
+}
+std::vector<稳定编码> 业务FT组(const 先天信息类型依赖&dep) {
+    std::vector<稳定编码> out{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT};
+    out.insert(out.end(),dep.任务因素FT.begin(),dep.任务因素FT.end());
+    return out;
+}
 std::vector<定义模板> 基础模板() {
     std::vector<定义模板> out;
     auto add=[&](std::uint32_t s,基础概念原语 p,std::vector<std::int64_t> ints={}){
@@ -3716,6 +3726,12 @@ std::vector<定义模板> 基础模板() {
         std::vector<std::int64_t> values;
         if(s==413)values={1,2,3,4};else if(s==416)for(int x=1;x<=15;++x)values.push_back(x);
         else if(s==420)values={0,1};else values={1,2};
+        add(s,基础概念原语::I64有限枚举,std::move(values));
+    }
+    // TASK-STATE-CAUSAL 切片2：任务因素特征枚举域（与任务owner登记的FT值域一致）。
+    for(std::uint32_t s=421;s<=426;++s) {
+        std::vector<std::int64_t> values;
+        for(std::int64_t x=1;x<=任务因素枚举上界(s);++x)values.push_back(x);
         add(s,基础概念原语::I64有限枚举,std::move(values));
     }
     for(std::uint32_t n=1;n<=13;++n)add(500+n,基础概念原语::具名领域身份,{n});
@@ -3832,6 +3848,11 @@ std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天�
     structure(221,{3},{{本能登记,510}},{{方法实现方式,821}});
     structure(222,{3},{{执行组织,504}},{{方法实现方式,822}});
     structure(301,{},{});out.back().项目={{dep.任务状态FT,416,{}},{dep.任务服务值FT,407,{}}};
+    // TASK-STATE-CAUSAL 切片2：I64因素特征条目；建立时无当前值，故各带“允许未知当前值”约束813..818。
+    for(std::size_t i=0;i<dep.任务因素FT.size();++i) {
+        out.back().项目.push_back({dep.任务因素FT[i],static_cast<std::uint32_t>(421+i),{}});
+        out.back().约束槽.push_back(static_cast<std::uint32_t>(813+i));
+    }
     structure(302,{},{{有序参数规格,706}},{},{804,805,809});
     out.back().项目.insert(out.back().项目.begin(),{dep.方法启用FT,420,{}});
     out.back().项目.push_back({dep.方法运行次数FT,408,{}});out.back().项目.push_back({dep.方法成功次数FT,408,{}});
@@ -3856,6 +3877,8 @@ std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天�
     constraint(807,结构约束原语::固定配对基数,{f.at(配对结果)},{1,1});
     constraint(808,结构约束原语::固定配对基数,{f.at(配对结果)},{2,-1});
     constraint(809,结构约束原语::允许未知当前值,{dep.方法可靠度FT});
+    for(std::size_t i=0;i<dep.任务因素FT.size();++i)
+        constraint(static_cast<std::uint32_t>(813+i),结构约束原语::允许未知当前值,{dep.任务因素FT[i]});
     constraint(811,结构约束原语::需求父链合法,{f.at(父需求)},{},{f.at(需求根角色)});
     if(有效(root))for(auto&t:out)if(t.槽==1||t.槽==2||t.槽==3)t.普通上位引用组.push_back(root);
     return out;
@@ -3946,7 +3969,7 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
         核对模板读回(bases,ids,*this);
         // 现有业务类型与新槽在本owner锁外完整prepare。
         std::vector<基础联合节点快照> protect;登记映射 f;
-        for(auto x:{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT}) {
+        for(auto x:业务FT组(dep)) {
             if(!有效(x))return {正式状态::依赖未就绪,{}};
             auto p=特征概念服务_.读取特征概念定义保护(x);
             if(p.前提已变化)return {正式状态::前提已变化,{}};
@@ -3956,6 +3979,8 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
             else if(x==dep.任务服务值FT)核I64依赖(value,INT64_MIN,INT64_MAX);
             else if(x==dep.方法启用FT)核I64依赖(value,0,1);
             else if(x==dep.方法可靠度FT)核I64依赖(value,0,10000);
+            else if(const auto it=std::find(dep.任务因素FT.begin(),dep.任务因素FT.end(),x);it!=dep.任务因素FT.end())
+                核I64依赖(value,1,任务因素枚举上界(static_cast<std::uint32_t>(421+(it-dep.任务因素FT.begin()))));
             else 核I64依赖(value,0,INT64_MAX);
         }
         for(auto slot:所需FT槽()) {
@@ -3968,7 +3993,7 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
         }
         for(auto slot:所需FT槽()) {auto r=特征概念服务_.读取先天特征类型槽(slot);
             if(!r.类型根||*r.类型根!=f.at(slot))正式定义故障("FT slot readback mismatch");并保护(protect,r.完整保护组);}
-        for(auto x:{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT}) {
+        for(auto x:业务FT组(dep)) {
             auto p=特征概念服务_.读取特征概念定义保护(x);
             if(p.前提已变化)return {正式状态::前提已变化,{}};
             if(p.状态!=基础结构操作状态::已完成||!p.信息)正式定义故障("business FT final prepare");
@@ -3990,7 +4015,7 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
         // 迁移增加父字段及入向引用；旧prepare不能跨发布继续使用，重采完整定义闭包。
         protect.clear();
         for(auto slot:所需FT槽()){auto r=特征概念服务_.读取先天特征类型槽(slot);if(!r.类型根)return {正式状态::依赖未就绪,{}};并保护(protect,r.完整保护组);}
-        for(auto x:{dep.任务状态FT,dep.任务服务值FT,dep.方法启用FT,dep.方法运行次数FT,dep.方法成功次数FT,dep.方法可靠度FT}){auto r=特征概念服务_.读取特征概念定义保护(x);if(r.前提已变化)return {正式状态::前提已变化,{}};if(!r.信息)正式定义故障("DTM migration FT reprepare failed");并保护(protect,r.预期节点组);}
+        for(auto x:业务FT组(dep)){auto r=特征概念服务_.读取特征概念定义保护(x);if(r.前提已变化)return {正式状态::前提已变化,{}};if(!r.信息)正式定义故障("DTM migration FT reprepare failed");并保护(protect,r.预期节点组);}
         for(const auto&t:bases){auto r=读取正式结构概念保护(ids.at(t.槽));if(!r.信息)return {r.状态,{}};并保护(protect,r.完整保护组);}
         核存在根证明(semantic,protect);
         auto templates=三类定义模板(f,dep,semantic);

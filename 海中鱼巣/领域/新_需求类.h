@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <mutex>
 
 #include <cstdint>
 #include <functional>
@@ -841,6 +842,10 @@ public:
     // 通知只表示关联结构可能变化；在owner锁内调用，不得反入owner或读写领域。
     bool 绑定关联检查通知(const void* 所有者, std::function<void()> 通知) noexcept;
     void 解除关联检查通知(const void* 所有者) noexcept;
+    // TASK-STATE-CAUSAL 切片4：需求字段更新后的就绪通知端口（以需求节点为键，只提示重读，不携带结论）。
+    // 装配阶段绑定、上下文回收前解除；端口在owner锁外、持端口互斥调用，解除等待在途投递结束。
+    bool 绑定需求就绪通知(const void* 所有者, std::function<void(稳定编码)> 通知) noexcept;
+    void 解除需求就绪通知(const void* 所有者) noexcept;
 
     新需求双根初始化结果 建立或取得本能双根(
         const 新需求双根初始化请求& 请求) noexcept;
@@ -863,6 +868,7 @@ public:
     新被认知需求资格读取结果 读取被认知需求完整资格保护(稳定编码,稳定编码) const noexcept;
     新需求内容判定结果 判定被认知需求内容保护(稳定编码,稳定编码,稳定编码,
         const std::vector<稳定编码>& 正式内容路径 = {}) const noexcept;
+    // 两个被认知需求字段更新入口：已修改时于owner锁外发出需求就绪通知（切片4）。
     新被认知需求信息更新结果 完善接收认知需求信息(稳定编码,const 新需求治理信息&) noexcept;
     void 装配部分服务要求读取接口(const 新部分服务要求读取接口*) noexcept;
     std::optional<新需求列表项信息> 获取需求列表项(
@@ -1102,6 +1108,13 @@ private:
     概念_存在类& 存在概念服务_;
     const void* 关联检查通知所有者_ = nullptr;
     std::function<void()> 关联检查通知_;
+    // 切片4：需求就绪通知端口（独立互斥，不取需求owner锁）。
+    std::mutex 需求就绪通知互斥_;
+    const void* 需求就绪通知所有者_ = nullptr;
+    std::function<void(稳定编码)> 需求就绪通知_;
+    void 发出需求就绪通知(稳定编码 需求节点) noexcept;
+    新被认知需求信息更新结果 完善接收认知需求信息内部(稳定编码,const 新需求治理信息&) noexcept;
+    新被认知需求信息更新结果 更新被认知需求信息内部(const 新被认知需求信息更新请求&) noexcept;
     const 新服务要求确认读取接口* 服务要求确认读取接口_ = nullptr;
     const 新部分服务要求读取接口* 部分服务要求读取接口_ = nullptr;
     const 新_语言类* 接收认知语言读取接口_ = nullptr;

@@ -40,8 +40,6 @@ public:
     void 迁移已有任务治理场景(const std::vector<新任务虚拟存在引用>&) noexcept override;
     std::optional<新任务治理场景信息> 读取任务治理场景(
         const 新任务虚拟存在引用&) const noexcept override;
-    新治理动作登记结果 建立任务状态动作(const 新治理任务动作请求&) noexcept override;
-    新治理任务变化结果 完成任务状态变化(稳定编码, 稳定编码, 稳定编码) noexcept override;
     std::optional<新治理任务变化结果> 读取任务状态变化(
         const 新任务虚拟存在引用&, 稳定编码) const noexcept override;
     新治理任务特征变化结果 完成任务特征变化(
@@ -53,6 +51,10 @@ public:
         稳定编码, 稳定编码) noexcept override;
     std::optional<新治理任务特征动作变化结果> 读取任务特征动作(
         稳定编码) const noexcept override;
+    新治理动作登记结果 建立任务状态迁移动作(稳定编码) noexcept override;
+    新治理任务状态迁移结果 完成任务状态迁移(稳定编码, 稳定编码) noexcept override;
+    std::optional<新治理任务状态迁移结果> 读取任务状态迁移(稳定编码) const noexcept override;
+    void 登记任务因素状态(const 新任务虚拟存在引用&, 稳定编码) noexcept override;
     std::optional<新治理场景参与者> 读取治理参与者(
         稳定编码, 稳定编码) const noexcept override;
     std::optional<新因果动作定义> 读取自我动作事实(稳定编码) const noexcept override;

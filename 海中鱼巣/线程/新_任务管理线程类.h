@@ -489,6 +489,9 @@ public:
         稳定编码 任务节点) const noexcept;
     std::optional<新任务执行处理结果> 读取最近执行结果(
         稳定编码 任务节点) const noexcept;
+    // TASK-STATE-CAUSAL 切片4：需求owner在需求字段更新后的就绪通知（以需求节点为键），只提示重读；装配端口投递，不经自我线程。
+    新任务结果状态接收状态 提交需求就绪通知(
+        稳定编码 需求节点) noexcept;
 
 private:
     friend class 新_自我线程类;
