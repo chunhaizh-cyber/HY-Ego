@@ -1345,6 +1345,14 @@ struct 新_任务管理线程类::实现 final {
         std::optional<新任务工作请求> 原工作 = {}) {
         等待来源.insert_or_assign(任务.节点.值, 等待来源记录{任务, 原因, std::move(原工作)});
         上次等待材料.erase(任务.节点.值);
+        // 查找方法后的“候选条件未齐”（因果路径待选择等）：查找方法本身已改变任务状态与候选材料，
+        // 派发前W0基线必然不同，会使每轮扫描立即复核、重新筹办而空转。改由登记后首个扫描材料建立
+        // 基线，此后只在材料真实变化时复核；方法知识变化另经学习唤醒处理。
+        if (原因 == 新任务等待原因::候选条件未齐 && 等待来源.at(任务.节点.值).原工作
+            && 等待来源.at(任务.节点.值).原工作->种类 == 新任务工作种类::查找方法) {
+            调度待触发 = true;
+            return;
+        }
         if (原因 == 新任务等待原因::尚无方法
             || 原因 == 新任务等待原因::候选条件未齐) {
             const auto& 来源 = 等待来源.at(任务.节点.值);
@@ -3065,11 +3073,29 @@ struct 新_任务管理线程类::实现 final {
                 }
                 // 包含零子D等待；每次由正式事实判断，不依赖方法选择或单条唤醒消息。
                 检查因果提交停止(停止令牌);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                const auto 边起 = std::chrono::steady_clock::now();
+#endif
                 const auto 边 = 读取因果等待边内部(nullptr,停止令牌);
 #ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
                 记录管理因果阶段(L"因果等待复核前", 记录.定位.任务节点);
 #endif
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                const auto 复核起 = std::chrono::steady_clock::now();
+#endif
                 auto 复核读取=任务服务->复核任务因果等待(记录.依据,边,停止令牌);
+#ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
+                {
+                    const auto 末 = std::chrono::steady_clock::now();
+                    const auto 边毫秒 = std::chrono::duration_cast<std::chrono::milliseconds>(复核起 - 边起).count();
+                    const auto 复核毫秒 = std::chrono::duration_cast<std::chrono::milliseconds>(末 - 复核起).count();
+                    const auto* 正 = std::get_if<新任务因果复核结果>(&复核读取);
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"因果等待计时", [&] {
+                        return L"任务=" + std::to_wstring(任务值) + L" 子需求数=" + std::to_wstring(记录.依据.子需求节点组.size())
+                            + L" 来源已变化=" + std::to_wstring(记录.来源已变化) + L" 读边毫秒=" + std::to_wstring(边毫秒)
+                            + L" 复核毫秒=" + std::to_wstring(复核毫秒) + L" 结果=" + std::to_wstring(正 ? static_cast<int>(正->状态) : -1); });
+                }
+#endif
                 if(std::holds_alternative<新任务因果读取取消>(复核读取))return;
                 const auto* 正常复核=std::get_if<新任务因果复核结果>(&复核读取);
                 if(!正常复核)throw std::logic_error("因果等待复核variant无合法分支");
