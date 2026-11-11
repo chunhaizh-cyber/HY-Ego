@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cwchar>
+#include <functional>
 #include <limits>
 #include <mutex>
 #include <new>
@@ -775,10 +776,34 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     return 新外设事实状态::已完成;
 }
 
+namespace {
+std::mutex 外设事实变化端口互斥;
+std::function<void(稳定编码)> 外设事实变化端口;
+// 调用者已释放外设互斥；端口调用期间持端口互斥，解除绑定等待在途投递结束。
+void 投递外设事实变化(const std::vector<稳定编码>& 状态组) {
+    std::lock_guard 锁(外设事实变化端口互斥);
+    if (!外设事实变化端口) return;
+    for (const auto 节点 : 状态组) 外设事实变化端口(节点);
+}
+}
+
+// DEP-READY-WAKE B（设计4.3②）：外设接收形成状态后投递“事实变化”的端口。装配阶段在治理线程
+// 启动前绑定，上下文回收前以空函数解除；端口只转交状态身份，不携带结论。
+void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> 端口) noexcept {
+    try {
+        std::lock_guard 锁(外设事实变化端口互斥);
+        外设事实变化端口 = std::move(端口);
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"绑定外设事实变化端口", L"端口互斥或函数交换失败。");
+    }
+}
+
 新外设事实状态 新_外设世界树类::更新接收(const 新外设对话框定位& 定位,
     std::uint64_t 来源序号, std::string_view 实际UTF8正文, const 新状态强时间& 接收时间) noexcept {
     if (实际UTF8正文.empty()) return 新外设事实状态::入口拒绝;
     try {
+        std::vector<稳定编码> 新状态组;
+        {
         std::lock_guard 锁(外设互斥);
         if (!有效(外设根)) return 新外设事实状态::未初始化;
         if (读取窗口定位(定位.场景节点) != 定位)
@@ -798,16 +823,20 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
         if (!数量 || *数量 < 0 || *数量 == (std::numeric_limits<std::int64_t>::max)())
             throw std::runtime_error("peripheral receive count invalid");
         const auto 值材料 = 服务_.特征值服务.保存或取得特征值(材料物理类型::UTF8字符串, std::string(实际UTF8正文));
-        if (!有效(值材料) || !更新完成(更新窗口特征并形成动态(定位,
-                定位.接收内容特征, 值材料, 接收时间))
-            || !更新完成(更新窗口特征并形成动态(定位,
-                定位.接收数量特征, *数量 + 1, 接收时间)))
-            throw std::runtime_error("peripheral receive publication incomplete");
+        if (!有效(值材料)) throw std::runtime_error("peripheral receive publication incomplete");
+        const auto 内容变化 = 更新窗口特征并形成动态(定位, 定位.接收内容特征, 值材料, 接收时间);
+        if (!更新完成(内容变化)) throw std::runtime_error("peripheral receive publication incomplete");
+        const auto 数量变化 = 更新窗口特征并形成动态(定位, 定位.接收数量特征, *数量 + 1, 接收时间);
+        if (!更新完成(数量变化)) throw std::runtime_error("peripheral receive publication incomplete");
+        if (内容变化.状态节点) 新状态组.push_back(*内容变化.状态节点);
+        if (数量变化.状态节点) 新状态组.push_back(*数量变化.状态节点);
         const auto 后 = 服务_.特征服务.获取特征(定位.接收数量特征);
         const auto 当前内容 = 读取文本特征(定位.接收内容特征);
         if (!后 || !后->当前值 || *后->当前值 != 新特征准确值{*数量 + 1}
             || 当前内容 != 实际UTF8正文)
             throw std::runtime_error("peripheral receive readback failed");
+        }
+        投递外设事实变化(新状态组);
         return 新外设事实状态::已完成;
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设接收",
