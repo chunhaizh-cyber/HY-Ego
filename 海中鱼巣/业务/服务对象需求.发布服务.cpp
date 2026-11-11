@@ -144,7 +144,7 @@ struct 服务对象需求发布服务::实现 final {
             std::wostringstream t;t<<L"E="<<E.值<<L" 请求行="<<位置.line()
                 <<L" 持有行="<<(h!=占用持有者.end()?h->second.first:0)
                 <<L" 同线程="<<(h!=占用持有者.end()&&h->second.second==std::this_thread::get_id());
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"需求发布主体占用冲突",L"占用",t.str());
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"需求发布主体占用冲突",L"占用",t.str());
         }catch(...){}
 #else
         (void)位置;
@@ -764,7 +764,7 @@ void 服务对象需求发布服务::关闭() noexcept {
 }
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
 #ifndef HY_前提诊断
-#define HY_前提诊断(文件,行) do{try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"前提已变化返回",文件,L"行="+std::to_wstring(行));}catch(...){}}while(0)
+#define HY_前提诊断(文件,行) do{try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"前提已变化返回",文件,L"行="+std::to_wstring(行));}catch(...){}}while(0)
 #endif
 #else
 #ifndef HY_前提诊断

@@ -11,6 +11,9 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <type_traits>
+
+#include "开关.调试切片.h"
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -199,7 +202,8 @@ inline std::string 转为UTF8(std::wstring_view 文本) {
     return 结果;
 }
 
-inline bool 写入日志(日志类别 类别, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容, std::wstring_view 调试切片名 = {}) {
+namespace 日志系统内部 {
+inline bool 写入日志实现(日志类别 类别, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容, std::wstring_view 调试切片名) {
     if (内容.empty()) {
         return false;
     }
@@ -236,6 +240,13 @@ inline bool 写入日志(日志类别 类别, std::wstring_view 模块, std::wst
     日志 << UTF8内容;
     return 日志.good();
 }
+} // namespace 日志系统内部
+
+// 非调试类别的公开写入口；调试类别只能经 调试日志<调试切片::名>(...)（见 核心/开关.调试切片.h）。
+inline bool 写入日志(日志类别 类别, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容) {
+    if (类别 == 日志类别::调试) return false;
+    return 日志系统内部::写入日志实现(类别, 模块, 入口, 内容, {});
+}
 
 inline bool 记录逻辑错误日志(std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容) {
     return 写入日志(日志类别::逻辑错误, 模块, 入口, 内容);
@@ -271,8 +282,33 @@ inline bool 记录结构事件日志(const 事件材料& 材料) {
     return 记录事件日志(L"结构事件", 材料.入口名称, 内容.str());
 }
 
-inline bool 记录调试日志(std::wstring_view 调试切片名, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容) {
-    return 写入日志(日志类别::调试, 模块, 入口, 内容, 调试切片名);
+template <调试切片 切片, class 内容型>
+bool 调试日志(std::wstring_view 模块, std::wstring_view 入口, 内容型&& 内容);
+
+// 调试日志的唯一写入口：私有，只对 调试日志<切片> 开放，不能绕过切片开关直接调用。
+class 调试日志写入口 final {
+    static bool 写(std::wstring_view 切片名, std::wstring_view 模块, std::wstring_view 入口, std::wstring_view 内容) {
+        return 日志系统内部::写入日志实现(日志类别::调试, 模块, 入口, 内容, 切片名);
+    }
+    template <调试切片 切片, class 内容型>
+    friend bool 调试日志(std::wstring_view 模块, std::wstring_view 入口, 内容型&& 内容);
+};
+
+// 统一调试日志入口。切片未开启时整段在编译期丢弃；内容可传文本，或传返回文本的可调用对象
+// （只在切片开启时求值，避免关闭时仍拼接字符串）。
+template <调试切片 切片, class 内容型>
+bool 调试日志(std::wstring_view 模块, std::wstring_view 入口, 内容型&& 内容) {
+    if constexpr (调试切片信息<切片>::开启) {
+        if constexpr (std::is_invocable_v<内容型&>) {
+            const std::wstring 文本(内容());
+            return 调试日志写入口::写(调试切片信息<切片>::名称, 模块, 入口, 文本);
+        } else {
+            return 调试日志写入口::写(调试切片信息<切片>::名称, 模块, 入口, std::wstring_view(内容));
+        }
+    } else {
+        (void)模块; (void)入口; (void)内容;
+        return false;
+    }
 }
 
 }
@@ -280,7 +316,7 @@ inline bool 记录调试日志(std::wstring_view 调试切片名, std::wstring_v
 #ifdef HY_EGO_DEBUG_LOG_MIN_LOOP
 #define 海中鱼巣记录最小闭环调试日志(模块, 入口, 内容) \
     do { \
-        (void)::海中鱼巣::记录调试日志(L"MIN_LOOP", 模块, 入口, 内容); \
+        (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::MIN_LOOP>(模块, 入口, 内容); \
     } while (false)
 #else
 #define 海中鱼巣记录最小闭环调试日志(模块, 入口, 内容) do { } while (false)

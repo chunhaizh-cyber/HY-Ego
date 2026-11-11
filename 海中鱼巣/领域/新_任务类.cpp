@@ -51,7 +51,7 @@
 #include "../核心/日志系统.h"
 #include <sstream>
 #define 海中鱼巣参数绑定诊断(表达式) do { try { std::wostringstream 诊断流_; 诊断流_ << 表达式; \
-    (void)::海中鱼巣::记录调试日志(L"PARAM_BINDING", L"任务条件筹办", L"有序存在参数", 诊断流_.str()); } catch (...) {} } while (false)
+    (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::PARAM_BINDING>(L"任务条件筹办", L"有序存在参数", 诊断流_.str()); } catch (...) {} } while (false)
 #else
 #define 海中鱼巣参数绑定诊断(表达式) do { } while (false)
 #endif
@@ -112,7 +112,7 @@ struct 因果阶段监控缓冲 final {
     因果阶段监控缓冲() noexcept { 当前因果阶段监控 = this; }
     ~因果阶段监控缓冲() noexcept {
         当前因果阶段监控 = 前层;
-        try { (void)记录调试日志(L"CAUSAL_PREPARATION", L"任务筹办", L"提议任务因果子需求", 内容); }
+        try { (void)调试日志<调试切片::CAUSAL_PREPARATION>(L"任务筹办", L"提议任务因果子需求", 内容); }
         catch (...) {}
     }
     template<class 写入类型>
@@ -5171,7 +5171,7 @@ bool 核同需求结果保护(const std::vector<基础联合节点快照>& 保�
                     t<<L"；本体首字段=";
                     for(const auto& f:原.结构.字段组){t<<f.字段节点.值<<L",";break;}
                 } else t<<L"；节点已消失";
-                (void)记录调试日志(L"SIMULATION_PROGRESS",L"因果保护",L"失配",t.str());
+                (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"因果保护",L"失配",t.str());
             } catch(...) {}
 #endif
             return false;
@@ -13299,7 +13299,7 @@ struct 新_任务类::结算因果资格核心 final {
         try{std::wostringstream 文;文<<L"因果候选需求准备状态 任务="<<T.值<<L" 需求="<<task->需求节点.值
             <<L" 准备="<<static_cast<int>(preparation.状态)<<L" 守卫="<<static_cast<int>(准备批.守卫.状态)
             <<L" 完整目标="<<(准备批.需求&&准备批.需求->完整目标);
-            (void)记录调试日志(L"PARAM_BINDING",L"任务条件筹办",L"因果候选",文.str());}catch(...){}
+            (void)调试日志<调试切片::PARAM_BINDING>(L"任务条件筹办",L"因果候选",文.str());}catch(...){}
     }
 #endif
     贡献要求(preparation.状态 == 新任务需求准备状态::待完善
@@ -14453,7 +14453,7 @@ thread_local int 发布后请求失败行 = 0;
     const auto 返回=[&](状态 当前状态)->新来源前驱实例可停止结果 {
         前缀.状态=当前状态;
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-        if(当前状态==状态::前提已变化||当前状态==状态::绑定冲突||当前状态==状态::输入不适用){try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"来源前驱目标实例",L"未成立",L"状态="+std::to_wstring(static_cast<int>(当前状态))+L"；返回行="+std::to_wstring(来源实例失败行)+L"；发布后请求行="+std::to_wstring(发布后请求失败行));}catch(...){}}
+        if(当前状态==状态::前提已变化||当前状态==状态::绑定冲突||当前状态==状态::输入不适用){try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"来源前驱目标实例",L"未成立",L"状态="+std::to_wstring(static_cast<int>(当前状态))+L"；返回行="+std::to_wstring(来源实例失败行)+L"；发布后请求行="+std::to_wstring(发布后请求失败行));}catch(...){}}
 #endif
         if(!前缀.信息)前缀.完整保护.clear();return std::move(前缀);
     };
@@ -15231,7 +15231,7 @@ thread_local int 发布后请求失败行 = 0;
         &&request.派生源上下文->基准->源特征类型==服务取得来源前驱配置_->服务任务类型;
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
     if(服务取得来源前驱配置_&&demand->目标.新增成员来源见证&&!需来源前驱) {
-        try{ (void)记录调试日志(L"SIMULATION_PROGRESS",L"因果请求",L"未带来源前驱",
+        try{ (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"因果请求",L"未带来源前驱",
             L"任务="+std::to_wstring(T.值)+L"；派生源="+std::to_wstring(request.派生源上下文 ? 1 : 0)
             +L"；构造状态="+std::to_wstring(request.派生源上下文 ? static_cast<int>(request.派生源上下文->构造状态) : -1)
             +L"；基准="+std::to_wstring(request.派生源上下文&&request.派生源上下文->基准 ? 1 : 0)
@@ -16201,7 +16201,7 @@ bool 新_任务类::核验因果子需求身份内部(
                     << L"；前状态字段数=" << 样本.前状态字段数
                     << L"；准备状态=" << 样本.准备状态 << L"；提交状态=" << 样本.提交状态
                     << L"；写入状态=" << 样本.写入状态 << 差异;
-                (void)记录调试日志(L"TASK_STATE_PREMISE", L"任务状态发表",
+                (void)调试日志<调试切片::TASK_STATE_PREMISE>(L"任务状态发表",
                     L"承接已确认因果子需求", 文本.str());
             } catch (...) {} // 日志分配/输出失败不改变正式返回或异常。
         }
@@ -16224,7 +16224,7 @@ bool 新_任务类::核验因果子需求身份内部(
                     << L"；异常展开=" << (std::uncaught_exceptions() > 原异常数)
                     << L"；耗时毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::steady_clock::now() - 开始).count();
-                (void)记录调试日志(L"CAUSAL_ADOPTION", L"任务因果承接",
+                (void)调试日志<调试切片::CAUSAL_ADOPTION>(L"任务因果承接",
                     L"承接已确认因果子需求", 文本.str());
             } catch (...) {} // 诊断不可改变正式返回或异常传播。
         }
@@ -21792,7 +21792,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                 <<L" 未支持="<<有未支持<<L" 未知幅度="<<有未知幅度<<L" 配对=";
             for(const auto& 项:配对组)文<<项.方法节点.值<<L"/"<<项.配对.配对节点.值<<L"(结果项="<<项.配对.结果.结果项组.size()
                 <<L",关系="<<项.配对.结果.参数关系组.size()<<L",限定="<<项.配对.结果.场景事实限定组.size()<<L") ";
-            (void)记录调试日志(L"PARAM_BINDING",L"任务条件筹办",L"方法选择",文.str());
+            (void)调试日志<调试切片::PARAM_BINDING>(L"任务条件筹办",L"方法选择",文.str());
         }
 #endif
         // 尝试执行（5260 §5 第8项，R96）：候选方法唯一且无适用结果时，以其结果为空的条件节点尝试；
@@ -22407,7 +22407,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
         try{std::wostringstream 文;文<<L"条件准备静态身份 任务="<<输入.原提议.任务节点.值<<L" 子需求="<<输入.已确认项.需求节点.值
             <<L" 状态="<<static_cast<int>(s)<<L" 行="<<位置.line();
-            (void)记录调试日志(L"PARAM_BINDING",L"任务条件筹办",L"条件准备静态身份",文.str());}catch(...){}
+            (void)调试日志<调试切片::PARAM_BINDING>(L"任务条件筹办",L"条件准备静态身份",文.str());}catch(...){}
 #else
         (void)位置;
 #endif
@@ -25498,7 +25498,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
     } catch (...) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         try { const std::string w = 非标准异常名();
-            (void)记录调试日志(L"SIMULATION_PROGRESS", L"获取任务本能结果", L"异常",
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取任务本能结果", L"异常",
                 L"任务=" + std::to_wstring(请求.任务节点.值) + L"；异常=" + std::wstring(w.begin(), w.end())); } catch (...) {}
 #endif
         结果.状态 = 新任务治理结果获取状态::结构不一致;
@@ -25892,7 +25892,7 @@ std::optional<新任务完成结算信息>
 }
 
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-#define HY_条件承接未完成诊断(行) do{try{(void)记录调试日志(L"PARAM_BINDING",L"消息收发",L"条件承接未完成出口",L"子需求="+std::to_wstring(子需求节点.值)+L" 行="+std::to_wstring(行));}catch(...){}}while(false)
+#define HY_条件承接未完成诊断(行) do{try{(void)调试日志<调试切片::PARAM_BINDING>(L"消息收发",L"条件承接未完成出口",L"子需求="+std::to_wstring(子需求节点.值)+L" 行="+std::to_wstring(行));}catch(...){}}while(false)
 #else
 #define HY_条件承接未完成诊断(行) do{}while(false)
 #endif

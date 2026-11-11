@@ -3408,7 +3408,7 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
             if(source)for(const auto& f:source->特征组)t<<f.特征类型概念.值<<L"/"<<f.具体特征概念.值<<L",";
             t<<L"；目标必需特征类型=";
             if(target)for(const auto& f:target->特征组)t<<f.特征类型概念.值<<L"/"<<f.具体特征概念.值<<L",";
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"模拟存在核验",L"未匹配",t.str());
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"模拟存在核验",L"未匹配",t.str());
         } catch(...) {}
     };
 #else

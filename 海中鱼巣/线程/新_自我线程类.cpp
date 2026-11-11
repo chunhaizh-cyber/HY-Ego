@@ -102,7 +102,7 @@ struct 主线因果阶段观察 final {
             const auto 行 = 主线因果阶段日志条数.fetch_add(1, std::memory_order_relaxed);
             if (行 > 256) return;
             if (行 == 256) {
-                (void)记录调试日志(L"MAINLINE_PHASE", L"自我线程", L"输出截断",
+                (void)调试日志<调试切片::MAINLINE_PHASE>(L"自我线程", L"输出截断",
                     L"本进程自我因果阶段诊断已达256条；仅停止诊断，不限制业务推进。");
                 return;
             }
@@ -115,7 +115,7 @@ struct 主线因果阶段观察 final {
             if (子需求) 文本 << L"；子需求引用=" << 子需求->值;
             文本 << L"；自我处理状态=" << 主线因果状态文字(结果.状态);
             if (结果.筹办裁决接收状态) 文本 << L"；裁决接收=" << 主线因果状态文字(*结果.筹办裁决接收状态);
-            (void)记录调试日志(L"MAINLINE_PHASE", L"自我线程", L"处理因果子需求提议", 文本.str());
+            (void)调试日志<调试切片::MAINLINE_PHASE>(L"自我线程", L"处理因果子需求提议", 文本.str());
         } catch (...) {} // 诊断失败不能修改原分支、回执或返回结果。
     }
     ~主线因果阶段观察() noexcept {
@@ -136,7 +136,7 @@ void 记录因果提议差异(稳定编码 父任务, const 新任务因果子�
         const auto 行 = 条数.fetch_add(1, std::memory_order_relaxed);
         if (行 > 32) return;
         if (行 == 32) {
-            (void)记录调试日志(L"CAUSAL_PROPOSAL_DIFF", L"自我线程", L"输出截断",
+            (void)调试日志<调试切片::CAUSAL_PROPOSAL_DIFF>(L"自我线程", L"输出截断",
                 L"本进程仅保留32次提议差异观察；不限制实际筹办。");
             return;
         }
@@ -232,7 +232,7 @@ void 记录因果提议差异(稳定编码 父任务, const 新任务因果子�
                 }
             }
         }
-        (void)记录调试日志(L"CAUSAL_PROPOSAL_DIFF", L"自我线程", L"fresh提议与原提议比较", 文本.str());
+        (void)调试日志<调试切片::CAUSAL_PROPOSAL_DIFF>(L"自我线程", L"fresh提议与原提议比较", 文本.str());
     } catch (...) {} // 包括相等运算中的材料复制失败；只丢诊断，不影响原筹办。
 }
 #endif
@@ -1689,7 +1689,7 @@ struct 新_自我线程类::实现 final {
                      << L" 任务状态=" << static_cast<int>(定位.定位.任务状态) << L" 出口行=" << 行
                      << L" 决议=" << static_cast<int>(决议.状态)
                      << L" 当前满足=" << (决议.当前满足状态 ? static_cast<int>(*决议.当前满足状态) : -1);
-                (void)记录调试日志(L"PARAM_BINDING", L"自我等待复核", L"需核查出口", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"自我等待复核", L"需核查出口", 文本.str());
             } catch (...) {}
 #endif
             return 决议;
@@ -2514,7 +2514,7 @@ struct 新_自我线程类::实现 final {
                               +L"；见证同="+std::to_wstring(d->目标.新增成员来源见证==g.目标.新增成员来源见证 ? 1 : 0);
                         }
                     }
-                    (void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"来源子需求不一致",t);
+                    (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"自我因果采用",L"来源子需求不一致",t);
                 }catch(...){}
 #endif
                 throw std::logic_error("来源子需求固定身份或具体目标损坏");
@@ -2835,7 +2835,7 @@ struct 新_自我线程类::实现 final {
                             + L" 目标存在=" + std::to_wstring(采用.原提议.目标存在节点.值)
                             + L" 目标FT=" + std::to_wstring(采用.原提议.目标特征类型概念节点.值)
                             + L" 目标域=" + std::to_wstring(采用.原提议.目标值域概念节点.值);
-                    (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"条件子需求逐项", 文);
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"自我筹办反馈", L"条件子需求逐项", 文);
                 } catch (...) {}
 #endif
             }
@@ -2887,7 +2887,7 @@ struct 新_自我线程类::实现 final {
                     消息.需求节点 = *采用.需求节点;
                     const auto 接收 = 任务管理->提交已确认条件子需求(定位, 消息);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                    try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我发条件子需求承接",
+                    try { (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"自我发条件子需求承接",
                         L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
                         + L" 消息=" + std::to_wstring(消息.消息编号) + L" 接收=" + std::to_wstring(static_cast<int>(接收.状态))); } catch (...) {}
 #endif
@@ -2907,7 +2907,7 @@ struct 新_自我线程类::实现 final {
                 }
                 const auto 承接 = 异步.get();
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我收条件子需求承接",
+                try { (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"自我收条件子需求承接",
                     L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
                     + L" 处理=" + std::to_wstring(static_cast<int>(承接.状态))
                     + L" 承接=" + std::to_wstring(承接.承接 ? static_cast<int>(承接.承接->状态) : -1)
@@ -2921,7 +2921,7 @@ struct 新_自我线程类::实现 final {
                 const auto 读回 = 任务服务->读回需求任务(
                     消息.需求节点, 承接.承接->任务->节点);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"自我读回条件子需求任务",
+                try { (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"自我读回条件子需求任务",
                     L"任务=" + std::to_wstring(定位.任务节点.值) + L" 子需求=" + std::to_wstring(消息.需求节点.值)
                     + L" 读回=" + std::to_wstring(static_cast<int>(读回.状态))); } catch (...) {}
 #endif
@@ -3285,7 +3285,7 @@ struct 新_自我线程类::实现 final {
             };
             const auto 停止剩余 = [&](新子需求采用状态 状态,std::source_location 位置=std::source_location::current()) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-                try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"停止剩余",
+                try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"自我因果采用",L"停止剩余",
                     L"状态="+std::to_wstring(static_cast<int>(状态))+L"；行="+std::to_wstring(位置.line()));}catch(...){}
 #else
                 (void)位置;
@@ -3364,7 +3364,7 @@ struct 新_自我线程类::实现 final {
                             if(std::holds_alternative<新任务因果读取取消>(实例读取))throw 新任务因果读取取消{};
                             const auto& 实例结果=std::get<新服务取得目标实例结果>(实例读取);
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-                            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"来源前驱实例",
+                            try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"自我因果采用",L"来源前驱实例",
                                 L"状态="+std::to_wstring(static_cast<int>(实例结果.状态))+L"；有信息="+std::to_wstring(实例结果.信息 ? 1 : 0)
                                 +L"；父任务="+std::to_wstring(原.依据->请求.父任务节点.值));}catch(...){}
 #endif
@@ -3430,7 +3430,7 @@ struct 新_自我线程类::实现 final {
                         }
                         if(建立.状态==新需求操作状态::前提已变化) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-                            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"自我因果采用",L"内容子需求前提已变化",
+                            try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"自我因果采用",L"内容子需求前提已变化",
                                 L"需求owner行="+std::to_wstring(引用内容建立失败行));}catch(...){}
 #endif
                             停止剩余(新子需求采用状态::来源过期);break;
@@ -3560,7 +3560,7 @@ struct 新_自我线程类::实现 final {
             标记因果停止并移交进度(项, 结果);
             return 结果;
         } catch (const 接收认知让出最终&) {
-            try { (void)记录调试日志(L"RECEIVED_DEMAND_SCHED", L"自我线程", L"筹办让出接收认知",
+            try { (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"自我线程", L"筹办让出接收认知",
                 L"因果筹办检查点见接收认知待唤醒，交回运行循环入口。"); } catch (...) {}
             结果.状态 = 新自我消息处理状态::已交接未收回;
             return 结果;
@@ -3685,7 +3685,7 @@ struct 新_自我线程类::实现 final {
         {
             std::lock_guard 锁(状态互斥);
             if (接收认知 && 接收认知待唤醒) {
-                try { (void)记录调试日志(L"RECEIVED_DEMAND_SCHED", L"自我线程", L"筹办入口让出",
+                try { (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"自我线程", L"筹办入口让出",
                     L"处理筹办反馈入口见接收认知待唤醒，先回运行循环。"); } catch (...) {}
                 return std::nullopt;
             }
@@ -3718,7 +3718,7 @@ struct 新_自我线程类::实现 final {
         if (!结果.筹办独立读回
             || 结果.筹办独立读回->原工作 != 定位.原工作) {
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-            try { (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"定位已变化",
+            try { (void)调试日志<调试切片::PARAM_BINDING>(L"自我筹办反馈", L"定位已变化",
                 L"任务=" + std::to_wstring(定位.任务节点.值) + L" 有读回=" + std::to_wstring(结果.筹办独立读回.has_value())); } catch (...) {}
 #endif
             结果.状态 = 新自我消息处理状态::任务筹办定位已变化;
@@ -3796,7 +3796,7 @@ struct 新_自我线程类::实现 final {
                     == 新任务条件子需求提议状态::已形成)) {
             auto 采用 = 处理条件子需求提议(项, *结果.筹办独立读回);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-            try { (void)记录调试日志(L"PARAM_BINDING", L"自我筹办反馈", L"条件子需求采用",
+            try { (void)调试日志<调试切片::PARAM_BINDING>(L"自我筹办反馈", L"条件子需求采用",
                 L"任务=" + std::to_wstring(定位.任务节点.值) + L" 处理状态=" + std::to_wstring(static_cast<int>(采用.状态))); } catch (...) {}
 #endif
             if (采用.状态 == 新自我消息处理状态::已交接未收回)
@@ -3878,7 +3878,7 @@ struct 新_自我线程类::实现 final {
                      << L" 获取方案=" << (核.结果获取方案 ? (核.结果获取方案->完整() ? 2 : 1) : 0)
                      << L" 目标数=" << (核.结果获取方案 ? 核.结果获取方案->目标组.size() : 0)
                      << L" 采用同=" << (核.本能采用 == 结果.筹办裁决->本能采用);
-                (void)记录调试日志(L"PARAM_BINDING", L"执行前判断", L"方向核验", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"执行前判断", L"方向核验", 文本.str());
             } catch (...) {}
 #endif
             // 2026-11-07 用户裁决：执行前判断暂时全部判通过。任务状态/定位已变化（事实变化）
@@ -3927,7 +3927,7 @@ struct 新_自我线程类::实现 final {
                  << L" 有请求=" << 判.本能执行请求.has_value()
                  << L" 请求完整=" << (判.本能执行请求 && 判.本能执行请求->完整())
                  << L" 接收=" << static_cast<int>(*结果.筹办裁决接收状态);
-            (void)记录调试日志(L"PARAM_BINDING", L"执行前判断", L"提交", 文本.str());
+            (void)调试日志<调试切片::PARAM_BINDING>(L"执行前判断", L"提交", 文本.str());
         } catch (...) {}
 #endif
         switch (*结果.筹办裁决接收状态) {
@@ -4679,7 +4679,7 @@ struct 新_自我线程类::实现 final {
                         try {
                             std::wostringstream 诊断;
                             诊断<<L"由唤醒="<<(由唤醒 ? 1 : 0);
-                            (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"自我线程",L"推进接收需求认知入口",诊断.str());
+                            (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"自我线程",L"推进接收需求认知入口",诊断.str());
                         } catch (...) {}
                         const auto observed=provider->推进一次(token);
                         if(!token.stop_requested()&&observed&&observed->待交接前置输入) {

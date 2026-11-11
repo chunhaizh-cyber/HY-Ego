@@ -33,7 +33,7 @@ void 输出新需求启动观察() noexcept {
         auto items = std::move(新需求启动观察缓存);
         新需求启动观察缓存.clear();
         for (const auto& item : items)
-            (void)记录调试日志(L"NEW_DEMAND_STARTUP", item.模块, item.入口, item.内容);
+            (void)调试日志<调试切片::NEW_DEMAND_STARTUP>(item.模块, item.入口, item.内容);
     } catch (...) {}
 }
 #endif

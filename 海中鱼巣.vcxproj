@@ -359,6 +359,7 @@
     <ClInclude Include="海中鱼巣\领域\动作概念.只读投影合同.h" />
     <ClInclude Include="海中鱼巣\业务\动作概念.方法投影服务.h" />
     <ClInclude Include="海中鱼巣\核心\日志系统.h" />
+    <ClInclude Include="海中鱼巣\核心\开关.调试切片.h" />
     <ClInclude Include="海中鱼巣\核心\容错检查.h" />
     <ClInclude Include="海中鱼巣\线程\线程生命周期.数据.h" />
     <ClInclude Include="海中鱼巣\线程\支持线程候选.数据.h" />

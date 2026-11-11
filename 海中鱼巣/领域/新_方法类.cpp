@@ -4977,7 +4977,7 @@ bool 学习配对定义合法(const 新方法信息& 方法信息, const 新方�
         && 定义.结果.场景事实限定组.empty();
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
     const auto 不合法=[&](const wchar_t* 项) {
-        try { (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"不合法",
+        try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"学习配对合法性",L"不合法",
             std::wstring(L"方法=")+std::to_wstring(方法->节点.值)+L"；检查="+项); } catch(...) {}
         return false;
     };
@@ -5004,7 +5004,7 @@ bool 学习配对定义合法(const 新方法信息& 方法信息, const 新方�
             事实(L"；条件事实=",定义.条件.场景事实限定组);事实(L"；结果事实=",定义.结果.场景事实限定组);
             项(L"；条件项=",定义.条件.条件项组);项(L"；结果项=",定义.结果.结果项组);
             t<<L"；参数范围=";for(const auto& p:方法->参数规格组)if(p.有序规格)t<<p.有序规格->序号<<L":"<<p.有序规格->范围概念节点.值<<L" ";
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"角色声明明细",t.str());
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"学习配对合法性",L"角色声明明细",t.str());
         } catch(...) {}
 #endif
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
@@ -5013,7 +5013,7 @@ bool 学习配对定义合法(const 新方法信息& 方法信息, const 新方�
             for(const auto& c:定义.条件.条件项组)t<<c.参数序号<<L":"<<(c.存在概念节点 ? c.存在概念节点->值 : 0)<<L" ";
             t<<L"；结果项=";
             for(const auto& r:定义.结果.结果项组)t<<r.参数序号<<L":域"<<(r.特征值域概念节点 ? r.特征值域概念节点->值 : 0)<<L"/精确"<<r.精确数值域.has_value()<<L" ";
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"学习配对合法性",L"角色声明失败点",t.str());
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"学习配对合法性",L"角色声明失败点",t.str());
         } catch(...) {}
 #endif
         return 不合法(L"条件结果角色已声明");
@@ -5322,7 +5322,7 @@ bool 提交前提已变化(基础节点组追加状态 s) {
         if (结果.状态 == 新方法学习发布状态::精确重复) try {
             std::wostringstream 文本;
             文本 << L"方法=" << 方法节点.值 << L" 新配对=" << 新配对节点.值 << L" 不融合出口行=" << 行;
-            (void)记录调试日志(L"PARAM_BINDING", L"方法配对融合", L"不融合", 文本.str());
+            (void)调试日志<调试切片::PARAM_BINDING>(L"方法配对融合", L"不融合", 文本.str());
         } catch (...) {}
 #endif
         return 结果;
@@ -5465,7 +5465,7 @@ bool 提交前提已变化(基础节点组追加状态 s) {
                      << L" 结果项数=" << p.结果.结果项组.size() << L"/" << 新项->结果.结果项组.size()
                      << L" 结果关系=" << p.结果.参数关系组.size() << L"/" << 新项->结果.参数关系组.size() << L"]";
             }
-            (void)记录调试日志(L"PARAM_BINDING", L"方法配对融合", L"无候选明细", 文本.str());
+            (void)调试日志<调试切片::PARAM_BINDING>(L"方法配对融合", L"无候选明细", 文本.str());
         } catch (...) {}
 #endif
         if (候选.empty()) return 返回(__LINE__);
@@ -6088,7 +6088,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
         }
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         if (!方法 && 有效(方法节点) && 节点类型为(方法节点, 方法节点类型) && 方法属于根(方法节点))
-            try { (void)记录调试日志(L"SIMULATION_PROGRESS", L"获取方法", L"读不成方法",
+            try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法", L"读不成方法",
                 L"方法=" + std::to_wstring(方法节点.值) + L"；返回行=" + std::to_wstring(方法读失败行)); } catch (...) {}
 #endif
         std::lock_guard 锁(新方法互斥);
@@ -6103,7 +6103,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
     catch (const std::exception& 异常) {
         try {
             const std::string w=异常.what();
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"获取方法",L"读回异常",
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法",L"读回异常",
                 L"方法="+std::to_wstring(方法节点.值)+L"；what="+std::wstring(w.begin(),w.end()));
         } catch(...) {}
         return std::nullopt;
@@ -7171,7 +7171,7 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
         }
         ~查找监控() noexcept {
             try {
-                (void)记录调试日志(L"METHOD_LOOKUP", L"方法查找", L"查询候选方法", 内容);
+                (void)调试日志<调试切片::METHOD_LOOKUP>(L"方法查找", L"查询候选方法", 内容);
             } catch (...) {}
         }
     } 监控;
@@ -7245,7 +7245,7 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
                 记录监控([&](auto& 文本) { 文本 << L"遍历方法=" << 方法节点.值 << L"；方法读取失败"; });
 #endif
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-                try { (void)记录调试日志(L"SIMULATION_PROGRESS", L"查询候选方法", L"成员方法读不成",
+                try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"查询候选方法", L"成员方法读不成",
                     L"方法=" + std::to_wstring(方法节点.值) + L"；返回行=" + std::to_wstring(方法读失败行)); } catch (...) {}
 #endif
                 结果.状态 = 新方法操作状态::结构不一致;

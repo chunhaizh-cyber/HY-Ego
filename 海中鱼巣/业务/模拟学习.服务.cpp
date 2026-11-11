@@ -43,7 +43,7 @@ struct 模拟学习进度观察 final {
             const auto 行=模拟进度日志条数.fetch_add(1, std::memory_order_relaxed);
             if(行>8192)return;
             if(行==8192) {
-                (void)记录调试日志(L"SIMULATION_PROGRESS",L"模拟学习",L"输出截断",
+                (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"模拟学习",L"输出截断",
                     L"本进程已达到8192条详细诊断；仅停止日志，不限制学习或组合。");
                 return;
             }
@@ -65,7 +65,7 @@ struct 模拟学习进度观察 final {
                 <<L"；采集="<<采集次数<<L"；样例="<<样例次数
                 <<L"；外层漂移="<<外层漂移<<L"；来源漂移="<<来源漂移
                 <<L"；规模或状态="<<规模;
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"模拟学习",阶段,文本.str());
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"模拟学习",阶段,文本.str());
         } catch(...) {} // 诊断失败不影响原返回、异常、采样或调用。
     }
 };
@@ -2566,7 +2566,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     std::wostringstream 文本;
                     文本<<L"方法="<<m.节点.值<<L" 新配对="<<本组配对节点->值<<L" 融合状态="<<static_cast<int>(融合.状态)
                         <<L" 保留="<<(融合.新配对节点组.empty() ? 0 : 融合.新配对节点组.front().值);
-                    (void)记录调试日志(L"PARAM_BINDING",L"模拟学习",L"配对融合",文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"模拟学习",L"配对融合",文本.str());
                 } catch(...) {}
 #endif
                 if(融合.状态==新方法学习发布状态::发布结果未知||融合.状态==新方法学习发布状态::结构不一致)

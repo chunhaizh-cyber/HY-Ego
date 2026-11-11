@@ -65,7 +65,7 @@ namespace 普通应用装配内部 {
 #ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
 static void 记录装配停止阶段(const wchar_t* 阶段) noexcept {
     try {
-        (void)记录调试日志(L"MAINLINE_PHASE", L"普通应用停止", 阶段,
+        (void)调试日志<调试切片::MAINLINE_PHASE>(L"普通应用停止", 阶段,
             L"仅观察原停止调用前后，不读取快照或改变停止合同。");
     } catch (...) {}
 }
@@ -3549,7 +3549,7 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         try {
             std::wostringstream text;
             text << L"阶段=结束；耗时毫秒=" << elapsed << L"；装配累计毫秒=" << total << L"；返回值=" << 返回值;
-            (void)记录调试日志(L"STARTUP_TIMING", L"普通应用装配", 步骤, text.str());
+            (void)调试日志<调试切片::STARTUP_TIMING>(L"普通应用装配", 步骤, text.str());
         } catch (...) {}
     };
 #endif

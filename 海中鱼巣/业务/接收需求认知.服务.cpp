@@ -43,7 +43,7 @@ void 记录接收解释调用(std::uint64_t 序号, 稳定编码 消息,
                 << L"；完整候选数=" << 结果->完整候选组.size()
                 << L"；受阻节点数=" << 结果->受阻节点组.size();
         }
-        (void)记录调试日志(L"RECEIVED_DEMAND_PARSE", L"接收需求认知", L"只读解释单句基础语言", 文本.str());
+        (void)调试日志<调试切片::RECEIVED_DEMAND_PARSE>(L"接收需求认知", L"只读解释单句基础语言", 文本.str());
     } catch (...) {} // 仅人读观察，日志分配或写入失败不改变原返回和重试。
 }
 #endif
@@ -570,7 +570,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             t<<L"M="<<out.M.值<<L"；阶段="<<static_cast<unsigned>(out.阶段)
              <<L"；U="<<(out.U?out.U->值:0)<<L"；D="<<(out.D?out.D->值:0)
              <<L"；原因字节="<<out.原因.size();
-            (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"接收需求认知",L"推进一次观察",t.str());
+            (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"接收需求认知",L"推进一次观察",t.str());
         }catch(...){}
     };
     try {
@@ -615,7 +615,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     if(!chosen)chosen=轮转选取(false);
     if(!chosen){
         try{std::wostringstream t;t<<L"保留接收条数="<<records.消息组.size()<<L"；本拍无合格M";
-            (void)记录调试日志(L"RECEIVED_DEMAND_SCHED",L"接收需求认知",L"推进一次",t.str());}catch(...){}
+            (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"接收需求认知",L"推进一次",t.str());}catch(...){}
         return {};}
     const auto& m=*chosen;本次消息=m.消息节点;
     实现::调度 work;

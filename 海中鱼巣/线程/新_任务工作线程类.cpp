@@ -50,7 +50,7 @@ public:
             const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
             if (序号 > 8192) return;
             if (序号 == 8192) {
-                (void)记录调试日志(L"WORKER_EXECUTION", L"任务工作线程", L"日志截断",
+                (void)调试日志<调试切片::WORKER_EXECUTION>(L"任务工作线程", L"日志截断",
                     L"本进程仅观察前8192项工作的起止，不裁剪实际工作。");
                 return;
             }
@@ -75,7 +75,7 @@ private:
                  << L"；任务引用=" << 请求_.任务节点.值
                  << L"；耗时毫秒=" << 耗时
                  << L"；观察到池停止=" << (停止_.stop_requested() ? L"是" : L"否");
-            (void)记录调试日志(L"WORKER_EXECUTION", L"任务工作线程", 阶段, 文本.str());
+            (void)调试日志<调试切片::WORKER_EXECUTION>(L"任务工作线程", 阶段, 文本.str());
         } catch (...) {} // 不查询领域材料、不加业务锁、不影响原异常展开。
     }
 
@@ -126,7 +126,7 @@ void 记录召回诊断(const 新任务工作请求& 请求,
         const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
         if (序号 > 256) return;
         if (序号 == 256) {
-            (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务工作线程", L"日志截断",
+            (void)调试日志<调试切片::TASK_METHOD_RECALL>(L"任务工作线程", L"日志截断",
                 L"本进程仅保留前256条召回诊断，不裁剪实际查询或任务。");
             return;
         }
@@ -151,7 +151,7 @@ void 记录召回诊断(const 新任务工作请求& 请求,
             if (召回.候选材料节点) 文本 << L" 正式候选材料引用=" << 召回.候选材料节点->值;
             else 文本 << L" 正式候选材料引用=未取得";
         }
-        (void)记录调试日志(L"TASK_METHOD_RECALL", L"任务工作线程",
+        (void)调试日志<调试切片::TASK_METHOD_RECALL>(L"任务工作线程",
             结果 ? L"召回已返回" : L"进入召回", 文本.str());
     } catch (...) {} // 诊断失败不改变实际工作返回、映射及停止行为。
 }
@@ -470,7 +470,7 @@ struct 新_任务工作线程类::实现 final {
                        << L" 子需求项=" << 提.子需求项组.size() << L" 已知项=" << 提.已知条件项组.size()
                        << L" 方法=" << 提.方法节点.值 << L" 配对=" << 提.配对节点.值
                        << L" 未解析=" << (提.分解依据 ? 提.分解依据->未解析条件序号组.size() : 0);
-                    (void)记录调试日志(L"PARAM_BINDING", L"条件子需求", L"提议结果", 文.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"条件子需求", L"提议结果", 文.str());
                 } catch (...) {}
 #endif
                 break;
@@ -488,7 +488,7 @@ struct 新_任务工作线程类::实现 final {
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
                 try { std::wostringstream 文; 文 << L"检查条件需核查 任务=" << 项->请求.任务节点.值
                     << L" 组织交付=" << static_cast<int>(交付) << L" 条件筹办=" << static_cast<int>(结果.条件筹办->状态);
-                    (void)记录调试日志(L"PARAM_BINDING", L"任务工作", L"检查条件", 文.str()); } catch (...) {}
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"任务工作", L"检查条件", 文.str()); } catch (...) {}
 #endif
                 break;
             }

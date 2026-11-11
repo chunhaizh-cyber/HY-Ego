@@ -299,7 +299,7 @@ std::pair<新方法问题处理状态, std::wstring> 方法问题学习服务::�
         if (处理.first==新方法问题处理状态::逻辑错误) (void)记录逻辑错误日志(L"方法问题学习", L"尝试补全", 文本);
         else (void)记录运行日志(L"方法问题学习", L"尝试补全", 文本);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-        try { (void)记录调试日志(L"PARAM_BINDING", L"方法问题学习", L"尝试补全", 文本); } catch (...) {}
+        try { (void)调试日志<调试切片::PARAM_BINDING>(L"方法问题学习", L"尝试补全", 文本); } catch (...) {}
 #endif
         return {消息.方法节点};
     } catch (const std::bad_alloc&) { 拒绝(新学习运行异常原因::资源不足); }

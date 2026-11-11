@@ -2432,7 +2432,7 @@ thread_local int 服务取得出生失败行 = 0;
                         }
                     };
                     查(request.预期联合节点组,true,L"严格");查(request.容许新增入向预期组,false,L"容许");
-                    (void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"预期不符明细",t.str());
+                    (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"服务取得目标实例出生",L"预期不符明细",t.str());
                 } catch(...) {}
 #endif
                 throw S::前提已变化;}
@@ -2474,14 +2474,14 @@ thread_local int 服务取得出生失败行 = 0;
     } catch(S s){
         if(s!=S::前提已变化)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立服务取得目标实例",L"未知实例控制状态。");
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-        try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
+        try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"服务取得目标实例出生",L"前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
 #endif
         out.状态=s;
     }
     catch(新需求目标定义核验状态 s){
         if(s!=新需求目标定义核验状态::前提已变化)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立服务取得目标实例",L"未知目标控制状态。");
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-        try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"服务取得目标实例出生",L"目标定义前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
+        try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"服务取得目标实例出生",L"目标定义前提已变化",L"行="+std::to_wstring(服务取得出生失败行));}catch(...){}
 #endif
         out.状态=S::前提已变化;
     }
@@ -5151,7 +5151,7 @@ void 实时并保护(std::vector<基础联合节点快照>& 保护,const std::ve
 }
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
 #ifndef HY_前提诊断
-#define HY_前提诊断(文件,行) do{try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"前提已变化返回",文件,L"行="+std::to_wstring(行));}catch(...){}}while(0)
+#define HY_前提诊断(文件,行) do{try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"前提已变化返回",文件,L"行="+std::to_wstring(行));}catch(...){}}while(0)
 #endif
 #else
 #ifndef HY_前提诊断
@@ -5430,7 +5430,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         if(内容.状态==新需求内容读取状态::输入不合法)return {S::定义不合法,{},{},{}};
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         if(内容.状态!=新需求内容读取状态::已读取||!内容.信息)
-            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"被认知需求内容判定",L"读取未成功",
+            try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"被认知需求内容判定",L"读取未成功",
                 L"D="+std::to_wstring(D.值)+L" E="+std::to_wstring(E.值)+L" 状态="+std::to_wstring(static_cast<int>(内容.状态)));}catch(...){}
 #endif
         if(内容.状态!=新需求内容读取状态::已读取||!内容.信息)return {S::引用前提已变化,{},{},{}};

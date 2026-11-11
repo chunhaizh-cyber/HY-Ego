@@ -55,7 +55,7 @@ void 记录来源变化(const wchar_t* 处,const 基础联合节点快照& 原,c
             for(const auto& f:原.结构.字段组)if(std::find(今->结构.字段组.begin(),今->结构.字段组.end(),f)==今->结构.字段组.end()){
                 if(const auto* r=std::get_if<稳定编码>(&f.内容))t+=std::to_wstring(r->值);else t+=L"值";t+=L",";}
         }
-        (void)记录调试日志(L"SIMULATION_PROGRESS",L"因果来源变化",L"内容变化",t);
+        (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"因果来源变化",L"内容变化",t);
     } catch(...) {}
 }
 #define HY_来源变化(处,原,今) 记录来源变化(处,原,今)
@@ -466,7 +466,7 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
         if(!派生.源约束||!派生.源约束->新增成员见证要求
             ||!请求.派生源上下文||!请求.派生源上下文->正式投影) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-            try{(void)记录调试日志(L"SIMULATION_PROGRESS",L"来源前驱逆推",L"不走来源链",
+            try{(void)调试日志<调试切片::SIMULATION_PROGRESS>(L"来源前驱逆推",L"不走来源链",
                 L"源约束="+std::to_wstring(派生.源约束 ? 1 : 0)+L"；见证要求="+std::to_wstring(派生.源约束&&派生.源约束->新增成员见证要求 ? 1 : 0)
                 +L"；派生状态="+std::to_wstring(static_cast<int>(派生.状态)));}catch(...){}
 #endif
@@ -863,7 +863,7 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
                 +L"；未连接="+std::to_wstring(结果.未连接缺口组.size())+L"；交互者状态="+std::to_wstring(static_cast<int>(语境.交互者.状态));
             for(const auto& 路:结果.OR路径组){t+=L"；路缺口=";for(const auto& g:路.缺口组)t+=std::to_wstring(static_cast<int>(g.种类))+L",";}
             for(const auto& f:结果.行动前端组)t+=L"；前端种类="+std::to_wstring(static_cast<int>(f.种类));
-            (void)记录调试日志(L"SIMULATION_PROGRESS",L"来源前驱逆推",L"结果",t);
+            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"来源前驱逆推",L"结果",t);
         }catch(...){}
 #endif
         return 结果;
@@ -881,7 +881,7 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
         // 声明在结果之后：先于结果析构，读取时结果仍有效。
         struct 逆推诊断 { const 新因果筹办读回* 结果 = nullptr; int 阶段 = 0;
             ~逆推诊断() { try { if (结果 && 结果->状态 == 新因果筹办读取状态::材料已变化)
-                (void)记录调试日志(L"SIMULATION_PROGRESS", L"因果逆推", L"材料已变化",
+                (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"因果逆推", L"材料已变化",
                     L"阶段=" + std::to_wstring(阶段) + L"；派生行=" + std::to_wstring(派生材料变化行)); } catch (...) {} } } 诊断;
         诊断.结果 = &结果; 诊断.阶段 = 1;
 #endif

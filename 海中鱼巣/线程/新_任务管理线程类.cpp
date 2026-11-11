@@ -21,12 +21,12 @@
 #include <vector>
 
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-#define 派发诊断(任务值, 文字) do { try { static std::map<std::uint64_t, std::wstring> 上次_; std::wostringstream 流_; 流_ << 文字;     auto& 旧_ = 上次_[任务值]; if (旧_ != 流_.str()) { 旧_ = 流_.str(); std::wostringstream 全_; 全_ << L"任务=" << 任务值 << L" " << 旧_;     (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"后段", 全_.str()); } } catch (...) {} } while (false)
+#define 派发诊断(任务值, 文字) do { try { static std::map<std::uint64_t, std::wstring> 上次_; std::wostringstream 流_; 流_ << 文字;     auto& 旧_ = 上次_[任务值]; if (旧_ != 流_.str()) { 旧_ = 流_.str(); std::wostringstream 全_; 全_ << L"任务=" << 任务值 << L" " << 旧_;     (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"后段", 全_.str()); } } catch (...) {} } while (false)
 #else
 #define 派发诊断(任务值, 文字) do { } while (false)
 #endif
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-#define HY_交接失败诊断(行) do { try { (void)::海中鱼巣::记录调试日志(L"PARAM_BINDING", L"任务管理", L"条件交接失败", std::wstring(L"行=") + std::to_wstring(行)); } catch (...) {} } while (false)
+#define HY_交接失败诊断(行) do { try { (void)::海中鱼巣::调试日志<::海中鱼巣::调试切片::PARAM_BINDING>(L"任务管理", L"条件交接失败", std::wstring(L"行=") + std::to_wstring(行)); } catch (...) {} } while (false)
 #else
 #define HY_交接失败诊断(行) do {} while (false)
 #endif
@@ -80,7 +80,7 @@ void 记录管理因果阶段(const wchar_t* 阶段, 稳定编码 父任务,
         const auto 序号 = 条数.fetch_add(1, std::memory_order_relaxed);
         if (序号 > 256) return;
         if (序号 == 256) {
-            (void)记录调试日志(L"MAINLINE_PHASE", L"管理因果等待", L"日志截断",
+            (void)调试日志<调试切片::MAINLINE_PHASE>(L"管理因果等待", L"日志截断",
                 L"因果等待阶段投影已达256条，仅停止诊断，不裁剪真实任务。");
             return;
         }
@@ -89,12 +89,12 @@ void 记录管理因果阶段(const wchar_t* 阶段, 稳定编码 父任务,
         if (子需求.值) 文本 << L"；子需求引用=" << 子需求.值;
         if (状态) 文本 << L"；状态=" << 状态;
         if (子任务) 文本 << L"；子任务引用=" << 子任务->值;
-        (void)记录调试日志(L"MAINLINE_PHASE", L"管理因果等待", 阶段, 文本.str());
+        (void)调试日志<调试切片::MAINLINE_PHASE>(L"管理因果等待", 阶段, 文本.str());
     } catch (...) {}
 }
 void 记录管理停止阶段(const wchar_t* 阶段) noexcept {
     try {
-        (void)记录调试日志(L"MAINLINE_PHASE", L"任务管理停止", 阶段,
+        (void)调试日志<调试切片::MAINLINE_PHASE>(L"任务管理停止", 阶段,
             L"仅观察原工作池停止和回执收束，不跳过或取消真实结果。");
     } catch (...) {}
 }
@@ -901,7 +901,7 @@ struct 新_任务管理线程类::实现 final {
                             << L"/" << 记录.子需求承接完成组.size();
                         static std::map<std::uint64_t, std::wstring> 上次;
                         if (上次[任务值] != 文.str()) { 上次[任务值] = 文.str();
-                            (void)记录调试日志(L"PARAM_BINDING", L"任务管理", L"条件复核候选", 文.str()); }
+                            (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"条件复核候选", 文.str()); }
                     } catch (...) {}
 #endif
                     if (学习占用或旧筹办已失效已加锁(记录.裁决.定位)
@@ -939,7 +939,7 @@ struct 新_任务管理线程类::实现 final {
                     << L" 就绪=" << static_cast<int>(就绪.状态) << L" 全部满足=" << 就绪.全部需求已满足
                     << L" 选择=" << (就绪.当前选择 ? static_cast<int>(就绪.当前选择->状态) : -1)
                     << L" 提议=" << static_cast<int>(当前.状态) << L" 来源过期=" << 项.来源过期;
-                    (void)记录调试日志(L"PARAM_BINDING", L"任务管理", L"条件子需求复核", 文.str()); } catch (...) {}
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"任务管理", L"条件子需求复核", 文.str()); } catch (...) {}
 #endif
                 if(!全部就绪&&!项.来源过期) {
                     if(条件提议等材料(当前))continue;
@@ -1414,7 +1414,7 @@ struct 新_任务管理线程类::实现 final {
                 文本 << L"读取状态=" << static_cast<int>(返回.调度材料->状态) << L" 项数=" << 返回.调度材料->项组.size()
                      << L" 异常任务=";
                 for (const auto t : 异常任务) 文本 << t.值 << L",";
-                (void)记录调试日志(L"PARAM_BINDING", L"调度扫描", L"结果变化", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"调度扫描", L"结果变化", 文本.str());
             } catch (...) {}
 #endif
             auto 新上次 = 上次等待材料;
@@ -1570,7 +1570,7 @@ struct 新_任务管理线程类::实现 final {
                     }
                     const auto 本次诊断 = 文本.str();
                     if (本次诊断 != 上次调度诊断) {
-                        (void)记录调试日志(L"TASK_SCHEDULING", L"任务管理线程",
+                        (void)调试日志<调试切片::TASK_SCHEDULING>(L"任务管理线程",
                             L"处理调度扫描结果", 本次诊断);
                         上次调度诊断 = 本次诊断;
                     }
@@ -1647,7 +1647,7 @@ struct 新_任务管理线程类::实现 final {
                 if (硬错误) try {
                     std::wostringstream 文本;
                     文本 << L"任务=" << 任务值 << L" 出口=" << 出口 << L" 值=" << 值;
-                    (void)记录调试日志(L"PARAM_BINDING", L"等待复核", L"硬错误入阻塞", 文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"等待复核", L"硬错误入阻塞", 文本.str());
                 } catch (...) {}
 #endif
                 std::lock_guard 锁(互斥);
@@ -1768,7 +1768,7 @@ struct 新_任务管理线程类::实现 final {
             static int 上次行 = 0; static int 上次态 = -1;
             if (true) {
                 上次行 = 行; 上次态 = static_cast<int>(状态);
-                (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"出口",
+                (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"出口",
                     L"行=" + std::to_wstring(行) + L" 状态=" + std::to_wstring(上次态));
             }
         } catch (...) {}
@@ -1801,7 +1801,7 @@ struct 新_任务管理线程类::实现 final {
                 for (const auto& 定 : 就绪) 文 << 定.任务节点.值 << L"/" << static_cast<int>(定.任务状态) << L",";
                 static std::wstring 上次就绪;
                 if (!就绪.empty()) { 上次就绪 = 文.str();
-                    (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"就绪", 文.str()); }
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"就绪", 文.str()); }
             } catch (...) {}
 #endif
             for (const auto 工作种类 : {
@@ -1836,7 +1836,7 @@ struct 新_任务管理线程类::实现 final {
                         try {
                             std::wostringstream 文本;
                             文本 << L"任务=" << 重试->请求.任务节点.值 << L" 需求准备=" << static_cast<int>(信息准备.状态);
-                            (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"需求准备未就绪", 文本.str());
+                            (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"需求准备未就绪", 文本.str());
                         } catch (...) {}
 #endif
                         continue;
@@ -1882,7 +1882,7 @@ struct 新_任务管理线程类::实现 final {
                                 上次原因[键] = 原因;
                                 std::wostringstream 文本;
                                 文本 << L"任务=" << 任务节点.值 << L" 种类=" << static_cast<int>(工作种类) << L" 跳过原因=" << 原因;
-                                (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"过滤", 文本.str());
+                                (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"过滤", 文本.str());
                             }
                         } catch (...) {}
 #endif
@@ -1911,7 +1911,7 @@ struct 新_任务管理线程类::实现 final {
                         try {
                             std::wostringstream 文本;
                             文本 << L"任务=" << 任务节点.值 << L" 需求准备=" << static_cast<int>(信息准备.状态);
-                            (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"需求准备未就绪", 文本.str());
+                            (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"需求准备未就绪", 文本.str());
                         } catch (...) {}
 #endif
                         continue;
@@ -2183,7 +2183,7 @@ struct 新_任务管理线程类::实现 final {
                         文本 << L" 观察=";
                         for (const auto 节点 : r.建议观察特征节点组) 文本 << 节点.值 << L",";
                     }
-                    (void)记录调试日志(L"PARAM_BINDING", L"执行工作", L"本能执行回执", 文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"执行工作", L"本能执行回执", 文本.str());
                 } catch (...) {}
 #endif
                 if (执行结果.执行开始
@@ -2339,7 +2339,7 @@ struct 新_任务管理线程类::实现 final {
                  << L" 处理状态=" << static_cast<int>(处理.状态)
                  << L" 获取状态=" << (处理.工作结果 && 处理.工作结果->本能结果获取 ? static_cast<int>(处理.工作结果->本能结果获取->状态) : -1)
                  << L" 读回=" << (处理.独立读回 ? static_cast<int>(处理.独立读回->状态) : -1);
-            (void)记录调试日志(L"PARAM_BINDING", L"执行工作", L"处理完成", 文本.str());
+            (void)调试日志<调试切片::PARAM_BINDING>(L"执行工作", L"处理完成", 文本.str());
         } catch (...) {}
 #endif
         if (处理.状态 == 新任务执行处理状态::内部错误
@@ -2417,7 +2417,7 @@ struct 新_任务管理线程类::实现 final {
                 try {
                     std::wostringstream 文本;
                     文本 << L"任务=" << 占用.请求.任务节点.值 << L" 执行处理状态=" << static_cast<int>(处理.状态);
-                    (void)记录调试日志(L"PARAM_BINDING", L"执行结果", L"入阻塞", 文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"执行结果", L"入阻塞", 文本.str());
                 } catch (...) {}
 #endif
             }
@@ -2855,7 +2855,7 @@ struct 新_任务管理线程类::实现 final {
                      << L" 条件筹办=" << (条件 ? static_cast<int>(条件->状态) : -1)
                      << L" 方法选择=" << (条件 && 条件->方法选择状态 ? static_cast<int>(*条件->方法选择状态) : -1)
                      << L" 旧筹办已变化=" << 旧筹办已变化 << L" 需要反馈=" << 需要反馈;
-                (void)记录调试日志(L"PARAM_BINDING", L"筹办结果", L"检查条件完成", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"筹办结果", L"检查条件完成", 文本.str());
             } catch (...) {}
 #endif
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
@@ -2868,7 +2868,7 @@ struct 新_任务管理线程类::实现 final {
                      << L" 条件筹办=" << (处理.条件筹办 ? static_cast<int>(处理.条件筹办->状态) : -1)
                      << L" 方法选择=" << (处理.条件筹办 && 处理.条件筹办->方法选择状态 ? static_cast<int>(*处理.条件筹办->方法选择状态) : -1)
                      << L" 已完整核验=" << (处理.条件筹办 ? 处理.条件筹办->候选已完整核验 : false) << L" 读回失败行=" << 读回失败行;
-                (void)记录调试日志(L"PARAM_BINDING", L"筹办结果", L"技术失败入阻塞", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"筹办结果", L"技术失败入阻塞", 文本.str());
             } catch (...) {}
 #endif
             if ((占用.请求.种类 == 新任务工作种类::检查条件
@@ -3671,7 +3671,7 @@ struct 新_任务管理线程类::实现 final {
                     文本 << L"方法=" << 通知.方法节点.值 << L" 合法=" << 合法 << L" 配对数="
                         << (方法 ? 方法->条件结果组.size() : 0) << L" 查询状态=" << static_cast<int>(相关.状态) << L" 任务=";
                     for (const auto T : 相关.任务节点组) 文本 << T.值 << L",";
-                    (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"受影响任务", 文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"学习唤醒", L"受影响任务", 文本.str());
                 }
 #endif
                 // 方法读取未取得（读取期间并发写入等暂时失败）按事件退避重试，不当作方法不合法终结整批。
@@ -3736,7 +3736,7 @@ struct 新_任务管理线程类::实现 final {
                 try {
                     std::wostringstream 文本;
                     文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值 << L" 出口=" << 出口;
-                    (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"逐任务复核", 文本.str());
+                    (void)调试日志<调试切片::PARAM_BINDING>(L"学习唤醒", L"逐任务复核", 文本.str());
                 } catch (...) {}
             };
 #else
@@ -3848,7 +3848,7 @@ struct 新_任务管理线程类::实现 final {
                 std::wostringstream 文本;
                 文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值
                     << L" 自我决议=" << static_cast<int>(记录.决议->状态);
-                (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"自我决议", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"学习唤醒", L"自我决议", 文本.str());
             }
 #endif
             if (记录.决议->状态 != 新自我学习复核状态::允许重新筹办) {
@@ -3865,7 +3865,7 @@ struct 新_任务管理线程类::实现 final {
             {
                 std::wostringstream 文本;
                 文本 << L"方法=" << 通知.方法节点.值 << L" 任务=" << 项.任务节点.值 << L" 准备=" << static_cast<int>(准备);
-                (void)记录调试日志(L"PARAM_BINDING", L"学习唤醒", L"准备重新筹办", 文本.str());
+                (void)调试日志<调试切片::PARAM_BINDING>(L"学习唤醒", L"准备重新筹办", 文本.str());
             }
 #endif
             // 预期已变化为读取期间材料并发变化，与资源失败同按事件退避重入，不放弃本次重新筹办。
@@ -4014,7 +4014,7 @@ struct 新_任务管理线程类::实现 final {
                                 std::lock_guard 定位锁(互斥);
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
                                 if (!停止 && !子需求承接定位有效已加锁(*项)) try {
-                                    (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"管理条件子需求定位失效",
+                                    (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"管理条件子需求定位失效",
                                         L"子需求=" + std::to_wstring(项->消息.需求节点.值)); } catch (...) {}
 #endif
                                 if (!停止 && 子需求承接定位有效已加锁(*项)) {
@@ -4043,7 +4043,7 @@ struct 新_任务管理线程类::实现 final {
                                 const auto 身份 = 任务服务->复核已发布条件子需求身份(
                                     项->父筹办定位->任务节点, 单项组.front());
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
-                                try { (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"管理条件子需求身份",
+                                try { (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"管理条件子需求身份",
                                     L"子需求=" + std::to_wstring(项->消息.需求节点.值) + L" 身份=" + std::to_wstring(static_cast<int>(身份))); } catch (...) {}
 #endif
                                 if (身份 == 新任务已发布条件子需求核验状态::结构不一致)
@@ -4096,7 +4096,7 @@ struct 新_任务管理线程类::实现 final {
                                         << L" 定位有效=" << 定位有效;
                                         static std::map<std::uint64_t, std::wstring> 上次;
                                         if (上次[项->消息.消息编号] != 文.str()) { 上次[项->消息.消息编号] = 文.str();
-                                            (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"管理条件子需求必要性", 文.str()); } } catch (...) {}
+                                            (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"管理条件子需求必要性", 文.str()); } } catch (...) {}
 #endif
                                     if (定位有效 && !读取资源失败 && !读取暂缓) {
                                         // 过期或当前无需推进的项只补齐D-T前缀，不重新启用。
@@ -4140,7 +4140,7 @@ struct 新_任务管理线程类::实现 final {
                            << L" 有任务=" << (结果.承接 && 结果.承接->任务 ? 1 : 0);
                         static std::map<std::uint64_t, std::wstring> 上次;
                         if (上次[项->消息.消息编号] != 文.str()) { 上次[项->消息.消息编号] = 文.str();
-                            (void)记录调试日志(L"PARAM_BINDING", L"消息收发", L"管理处理条件子需求承接", 文.str()); }
+                            (void)调试日志<调试切片::PARAM_BINDING>(L"消息收发", L"管理处理条件子需求承接", 文.str()); }
                     } catch (...) {}
 #endif
                     if (条件暂缓) {
@@ -4274,7 +4274,7 @@ struct 新_任务管理线程类::实现 final {
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
                     try { static std::wstring 上次; const std::wstring 文 = L"扫描=" + std::to_wstring(扫)
                             + L" 执行=" + std::to_wstring(执) + L" 筹办=" + std::to_wstring(筹);
-                        if (文 != 上次) { 上次 = 文; (void)记录调试日志(L"PARAM_BINDING", L"筹办派发", L"普通派发链", 文); } } catch (...) {}
+                        if (文 != 上次) { 上次 = 文; (void)调试日志<调试切片::PARAM_BINDING>(L"筹办派发", L"普通派发链", 文); } } catch (...) {}
 #else
                     (void)扫; (void)执; (void)筹;
 #endif
@@ -5061,7 +5061,7 @@ void 新_任务管理线程类::解除自我筹办反馈(const void* 所有者) 
              << L" 条件筹办=" << (诊断条件 ? static_cast<int>(诊断条件->状态) : -1)
              << L" 方法选择=" << (诊断条件 && 诊断条件->方法选择状态 ? static_cast<int>(*诊断条件->方法选择状态) : -1)
              << L" 已完整核验=" << (诊断条件 ? 诊断条件->候选已完整核验 : false);
-        (void)记录调试日志(L"PARAM_BINDING", L"筹办裁决", L"登记等待", 文本.str());
+        (void)调试日志<调试切片::PARAM_BINDING>(L"筹办裁决", L"登记等待", 文本.str());
     } catch (...) {}
 #endif
     if (登记等待) 登记等待来源已加锁(*等待任务, 原因, 裁决.定位.原工作);

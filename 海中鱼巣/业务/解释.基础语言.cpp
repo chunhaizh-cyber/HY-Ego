@@ -45,7 +45,7 @@ public:
                 << L"；累计毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 开始_).count()
                 << L"；阶段间隔毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(当前 - 上次_).count();
             上次_ = 当前;
-            (void)记录调试日志(L"LANGUAGE_INPUT_PHASE", L"含义图解释", L"解释单句含义图实现", 文本.str());
+            (void)调试日志<调试切片::LANGUAGE_INPUT_PHASE>(L"含义图解释", L"解释单句含义图实现", 文本.str());
         } catch (...) {} // 只隔离诊断失败，不消费原解释异常。
     }
 private:
