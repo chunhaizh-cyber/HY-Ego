@@ -6325,6 +6325,22 @@ std::vector<新语言问题信息> 新_语言类::查询同结构问题(稳定�
     }
     组织要求(false);return {};
 }
+std::optional<新问题答案信息> 新_语言类::读取问题答案信息(稳定编码 信息节点) const {
+    组织要求(有效(信息节点));
+    std::lock_guard lock(新语言互斥);组织读取现场 r;
+    for(const auto& x:读全部场景信息(r))if(x.陈述节点==信息节点){
+        if(!是值陈述答案(x.内容))return std::nullopt;
+        const auto& v=x.内容;
+        return 新问题答案信息{信息节点,新问题答案来源::消息转换,v.主体存在,*v.特征类型,*v.值种类,
+            v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向};
+    }
+    for(const auto& x:读全部自我写入(r))if(x.节点==信息节点){
+        const auto& v=x.内容;
+        return 新问题答案信息{信息节点,新问题答案来源::自我写入,v.主体存在,v.特征类型,v.值种类,
+            v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向};
+    }
+    return std::nullopt;
+}
 bool 新_语言类::绑定问题答案就绪通知(const void* 所有者,std::function<void(稳定编码)> 通知) noexcept {
     try {
         if(!所有者||!通知)return false;

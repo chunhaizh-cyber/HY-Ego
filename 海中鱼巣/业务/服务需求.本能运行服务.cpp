@@ -282,8 +282,9 @@ struct 服务对象新需求本能运行服务::实现 final {
         新需求要求(qualification.信息->来源种类==新被认知需求来源种类::旧理解内容确认
             ||qualification.信息->来源种类==新被认知需求来源种类::首次接收认知);
         if(qualification.信息->需求!=*d)throw 新需求材料变化{};
-        if(qualification.信息->来源种类==新被认知需求来源种类::旧理解内容确认
-            &&d->信息完善阶段!=新需求信息完善阶段::已完善)throw 新需求材料未齐{};
+        // 5380 §3.5 必要条件“D信息完善阶段为已完善”：本函数不改写阶段（由需求owner按必需字段自动维护），
+        // 执行前运行时复核；未完善时材料未齐，由补问链路补齐。
+        if(d->信息完善阶段!=新需求信息完善阶段::已完善)throw 新需求材料未齐{};
         新需求合保护(out.完整保护,qualification.完整保护);
         if(!新需求保护仍在(out.完整保护))throw 新需求材料变化{};
         return out;
@@ -299,9 +300,8 @@ class 服务对象新需求本能运行服务::实现::参数提供者 final : p
     std::vector<新方法参数角色绑定> 参数_;
     std::optional<稳定编码> 动作_;
     mutable std::optional<新需求治理信息> 动作前需求基线_;
-    std::optional<新需求治理信息> 阶段后需求基线_;
     mutable std::optional<新特征信息> 动作前特征基线_;
-    bool 阶段完善已尝试_=false, 特征发布已尝试_=false;
+    bool 特征发布已尝试_=false;
     mutable std::mutex 调用互斥_;
     bool 同参数(const 方法参数场景& scene) const {
         return scene.方法节点() == 方法_ && scene.全部角色绑定() == 参数_
@@ -389,14 +389,7 @@ public:
         if(fresh.状态==新本能需求材料状态::需重新确认){out.状态=S::需重新确认;return out;}
         if(fresh.状态!=新本能需求材料状态::已读取||!fresh.材料)return out;
         if(material.需求节点!=fresh.材料->需求节点)return out;
-        // 写后返回漂移时只接纳“同一份原内容、仅阶段完善”的实际读回，
-        // 不把任意fresh DTO当成本provider的阶段结果，也不推断阶段由谁造成。
-        if(阶段完善已尝试_&&!阶段后需求基线_) {
-            auto expected=*动作前需求基线_;
-            expected.信息完善阶段=新需求信息完善阶段::已完善;
-            if(fresh.材料->动作前需求==expected)阶段后需求基线_=fresh.材料->动作前需求;
-        }
-        const auto& expected=阶段后需求基线_ ? *阶段后需求基线_ : *动作前需求基线_;
+        const auto& expected=*动作前需求基线_;
         if(fresh.材料->动作前需求!=expected)return out;
         bool 已有发布=false;
         if(特征发布已尝试_) {
@@ -411,24 +404,6 @@ public:
                 &&old.关联->主体存在节点==material.服务对象);
         }
         if(!已有发布&&fresh.材料->动作前需求特征!=*动作前特征基线_)return out;
-        if(fresh.材料->动作前需求.首次接收认知来源
-            &&fresh.材料->动作前需求.信息完善阶段==新需求信息完善阶段::待完善) {
-            out.状态=S::已建需求尚未发布;
-            阶段完善已尝试_=true;
-            const auto completed=s.需求.完善接收认知需求信息(material.需求节点,expected);
-            if(completed.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
-            if(completed.状态==新需求操作状态::前提已变化)return out;
-            新需求要求((completed.状态==新需求操作状态::已修改||completed.状态==新需求操作状态::无变化)
-                &&completed.信息.has_value());
-            auto after=expected;after.信息完善阶段=新需求信息完善阶段::已完善;
-            新需求要求(*completed.信息==after);
-            阶段后需求基线_=*completed.信息;
-            fresh=读取实际材料(scene);
-            if(fresh.状态==新本能需求材料状态::需重新确认){out.状态=S::需重新确认;return out;}
-            if(fresh.状态!=新本能需求材料状态::已读取||!fresh.材料
-                ||fresh.材料->动作前需求!=*阶段后需求基线_
-                ||fresh.材料->动作前需求特征!=*动作前特征基线_)return out;
-        }
         const auto targetScene=s.世界.获取事实服务引用().场景服务.查询所属场景(material.服务对象);
         if(!targetScene)return out;
         const auto basis=s.世界.读取需求引用更新依据(*targetScene,material.服务对象,material.需求特征);
@@ -443,7 +418,7 @@ public:
             新需求要求(before.has_value());
             if(a->动作时间->纳秒<=before->强时间.纳秒)return out;
         }
-        // D阶段完善与F引用发布分开保留；这里只落实同一D，不新建或覆盖目标。
+        // 这里只落实同一D，不新建或覆盖目标；D信息完善阶段由需求owner维护，本函数不改写。
         out.状态=S::已建需求尚未发布;
         特征发布已尝试_=true;
         const auto published=s.发布.发布已确认需求({*targetScene,material.服务对象,material.需求节点,
@@ -498,7 +473,7 @@ public:
         新需求要求(proof.状态==新本能已发布需求核验状态::已核验&&proof.结果==std::optional{typed});
         const auto ready=读取实际材料(scene);
         if(ready.状态!=新本能需求材料状态::已读取||!ready.材料
-            ||ready.材料->动作前需求!=(阶段后需求基线_ ? *阶段后需求基线_ : *动作前需求基线_)
+            ||ready.材料->动作前需求!=*动作前需求基线_
             ||!新需求保护仍在(proof.完整保护))return out;
         out.已发布需求=typed;
         out.状态=published.状态==服务对象需求发布状态::已发布

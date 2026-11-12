@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <charconv>
 #include <chrono>
 #include <condition_variable>
 #include <cwchar>
@@ -216,6 +217,8 @@ bool 加需求存在保护(稳定编码, 新_存在类&, std::vector<基础联�
 稳定编码 需求发生关联类型{}, 发生场景字段{}, 发生主体字段{}, 发生特征字段{}, 发生需求字段{};
 稳定编码 发生动作字段{}, 发生来源字段{}, 发生状态字段{}, 发生方式字段{};
 稳定编码 需求信息完善阶段字段{};
+// ASK-READ-SCENE v0.5：补问需求“答案”项（答案信息引用＋来源）；被认知需求目标形式及载荷的字段内容来源。
+稳定编码 补问答案信息字段{}, 补问答案来源字段{}, 目标形式内容来源字段{};
 稳定编码 需求迁移记录类型{}, 需求迁移来源项类型{}, 需求迁移登记字段{};
 稳定编码 迁移场景字段{}, 迁移主体字段{}, 迁移原特征字段{}, 迁移新特征字段{}, 迁移当前需求字段{}, 迁移当前状态字段{};
 稳定编码 迁移来源项字段{}, 迁移项需求字段{}, 迁移项动作字段{}, 迁移项前状态字段{}, 迁移项后状态字段{}, 迁移项序号字段{};
@@ -256,6 +259,7 @@ std::vector<稳定编码> 需求结构固定节点组() {
         行动请求消息字段, 行动请求含义字段, 行动请求原需求字段, 行动请求人类字段,
         行动请求受话者字段, 行动请求范围字段, 行动请求路径字段,
         集合发布场景字段, 集合发布动作字段, 需求首次发布首状态字段, 需求信息完善阶段字段,
+        补问答案信息字段, 补问答案来源字段, 目标形式内容来源字段,
         需求发生关联类型,发生场景字段,发生主体字段,发生特征字段,发生需求字段,
         发生动作字段,发生来源字段,发生状态字段,发生方式字段,
         需求迁移记录类型, 需求迁移来源项类型, 需求迁移登记字段,
@@ -966,6 +970,15 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
         d.认知来源 = 新需求认知来源{*理解, *确认, 要求};
     }
     const auto 阶段=c.数值(需求信息完善阶段字段,false);
+    const auto 答案信息=c.引用(补问答案信息字段,false);
+    const auto 答案来源=c.数值(补问答案来源字段,false);
+    要求需求物理(答案信息.has_value()==答案来源.has_value());
+    if(答案信息) {
+        要求需求物理(*答案来源==static_cast<std::int64_t>(新补问答案来源::消息转换)
+            ||*答案来源==static_cast<std::int64_t>(新补问答案来源::自我写入));
+        d.补问答案=新补问需求答案{*答案信息,static_cast<新补问答案来源>(*答案来源)};
+    }
+    d.目标形式内容来源=c.引用(目标形式内容来源字段,false);
     const auto 目标存在 = c.引用(目标存在字段, false);
     if(阶段) {
         要求需求物理(d.执行域==新需求执行域::被认知&&(*阶段==1||*阶段==2));
@@ -1002,17 +1015,19 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
     const auto 父 = 查询父需求关系(d.节点);
     if (d.执行域 == 新需求执行域::被认知) {
         要求需求物理(!d.行动请求来源&&!d.复合来源&&(!d.完整目标||(!d.完整目标->目标.引用内容定位&&!d.完整目标->目标.新增成员来源见证)));
-        要求需求物理(!(d.首次接收认知来源&&d.认知来源));
-        if(d.首次接收认知来源)要求需求物理(阶段&&d.完整目标);
+        要求需求物理(!(d.首次接收认知来源&&d.认知来源)&&!d.补问答案);
+        // 首次接收认知的D也可经补问答案补字段（5170 §2.2），不再要求出生时目标完整。
+        if(d.首次接收认知来源)要求需求物理(阶段.has_value());
         if(!阶段){要求需求物理(d.完整目标&&d.认知来源);d.信息完善阶段=新需求信息完善阶段::已完善;d.已知目标=转已知需求目标(*d.完整目标);}
-        if(d.信息完善阶段==新需求信息完善阶段::已完善)要求需求物理(d.完整目标&&(d.认知来源||d.首次接收认知来源));
+        // 信息完善阶段按必需字段是否全部确定由owner维护（R110）：已完善⇔目标完整。
+        if(d.信息完善阶段==新需求信息完善阶段::已完善)要求需求物理(d.完整目标.has_value());
         else 要求需求物理(!d.认知来源);
         要求需求物理(!根 && !来源 && !d.来源承接节点
             && !d.外部要求节点 && d.服务要求确认组.empty() && !d.服务需求取得执行节点
             && d.权重 == 0 && 父.empty() && 查询子需求关系(d.节点).empty());
         return d;
     }
-    要求需求物理(!d.认知来源&&!d.首次接收认知来源);
+    要求需求物理(!d.认知来源&&!d.首次接收认知来源&&!d.目标形式内容来源);
     if (根) {
         d.根角色 = 转换根角色(*根);
         要求需求物理(d.根角色 && d.完整目标 && !d.外部要求节点 && !来源 && !d.来源承接节点
@@ -1042,6 +1057,7 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
     if(d.完整目标&&d.完整目标->目标.引用内容定位) {
         要求需求物理(!d.根角色&&!d.外部要求节点&&d.服务要求确认组.empty()&&!d.服务需求取得执行节点);
     }
+    要求需求物理(!d.补问答案||(d.复合来源&&!是存在归属分解(*d.复合来源)));
     if(d.复合来源&&是存在归属分解(*d.复合来源)) {
         const auto& s=*d.复合来源;
         要求需求物理(d.完整目标&&!d.完整目标->目标.引用内容定位
@@ -1051,6 +1067,8 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
             &&d.完整目标->目标.目标值域概念节点==s.子目标要求概念);
     } else if(d.复合来源) {
         const auto& s=*d.复合来源;
+        要求需求物理(!d.补问答案||(d.完整目标&&d.完整目标->目标.引用内容定位
+            &&d.完整目标->目标.引用内容定位->正式内容路径.size()==1));
         要求需求物理(d.完整目标&&d.完整目标->目标.引用内容定位
             &&d.来源类型==新需求来源类型::任务子目标&&d.父需求节点==s.父需求节点
             &&d.来源承接节点==s.父任务节点&&s.父目标.引用内容定位
@@ -1067,7 +1085,7 @@ std::optional<新需求完整目标> 投影已知需求目标(const 新部分服
     return {d.节点, d.根角色, d.父需求节点, d.完整目标->目标存在节点,
         d.完整目标->目标, d.来源类型, d.来源承接节点, d.权重, d.活动状态,
         d.服务要求确认组, d.服务需求取得执行节点,
-        d.需求主体存在节点, d.执行域, d.认知来源,d.复合来源,d.首次接收认知来源,d.行动请求来源};
+        d.需求主体存在节点, d.执行域, d.认知来源,d.复合来源,d.首次接收认知来源,d.行动请求来源,d.补问答案};
 }
 新需求信息 解码需求物理(const 需求目标读取上下文& 上下文, const 基础节点结构& 结构) {
     return 投影完整需求(解码需求治理物理(上下文, 结构));
@@ -1647,17 +1665,222 @@ void 新_需求类::发出需求就绪通知(稳定编码 需求节点) noexcept
     }
 }
 
-新被认知需求信息更新结果 新_需求类::完善接收认知需求信息(
-    稳定编码 D,const 新需求治理信息& 预期) noexcept {
-    auto 结果 = 完善接收认知需求信息内部(D, 预期);
-    if (结果.状态 == 新需求操作状态::已修改) 发出需求就绪通知(D);
-    return 结果;
-}
-
 新被认知需求信息更新结果 新_需求类::更新被认知需求信息(const 新被认知需求信息更新请求& q) noexcept {
     auto 结果 = 更新被认知需求信息内部(q);
     if (结果.状态 == 新需求操作状态::已修改) 发出需求就绪通知(q.需求节点);
     return 结果;
+}
+
+void 新_需求类::装配主体需求特征类型(稳定编码 类型) noexcept {
+    if(有效(主体需求特征类型_)&&类型!=主体需求特征类型_)
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"装配主体需求特征类型",L"不得替换已装配的需求特征类型");
+    主体需求特征类型_=类型;
+}
+// 5380 §3.5：被认知需求的主体须有一个顶层“需求”特征（无当前值）；已有则无变化。未装配类型（非生产装配）时不处理。
+// 在需求owner锁外调用（存在owner自行加锁）；与D出生不在同一原子发布内，失败时D不出生。
+新需求操作状态 新_需求类::确保主体需求特征(稳定编码 E) noexcept {
+    using S=新需求操作状态;
+    try {
+        if(!有效(主体需求特征类型_))return S::无变化;
+        if(!存在服务_.是存在节点(E))return S::目标存在不合法;
+        const auto 找=[&]()->std::optional<稳定编码> {
+            const auto e=存在服务_.获取存在(E);
+            if(!e)throw std::logic_error("recognized demand subject unreadable");
+            std::optional<稳定编码> found;
+            for(const auto F:e->特征节点组) {
+                const auto f=特征服务_.获取特征(F);
+                const auto t=f ? 特征服务_.捕获特征匹配定义(f->特征概念节点) : std::nullopt;
+                if(!f||!t)throw std::logic_error("subject feature unreadable");
+                if(t->特征类型根!=主体需求特征类型_)continue;
+                if(found||f->上级特征节点)throw std::logic_error("subject demand feature not unique or not top level");
+                found=F;
+            }
+            return found;
+        };
+        if(找())return S::无变化;
+        const auto add=存在服务_.添加无当前值特征(E,主体需求特征类型_);
+        if(add.状态==新存在操作状态::资源失败)return S::资源失败;
+        if(add.状态!=新存在操作状态::已完成){
+            if(找())return S::无变化; // 并发已建
+            return S::前提已变化;
+        }
+        if(!找())throw std::logic_error("subject demand feature readback missing");
+        return S::已修改;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确保主体需求特征",L"主体需求特征读取或建立工程故障",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确保主体需求特征",L"主体需求特征读取或建立工程故障");}
+}
+namespace {
+bool 是补问需求形状(const 新需求治理信息& Q) {
+    return Q.执行域==新需求执行域::自我执行&&Q.复合来源&&!是存在归属分解(*Q.复合来源)&&Q.完整目标
+        &&Q.完整目标->目标.引用内容定位&&Q.完整目标->目标.引用内容定位->正式内容路径.size()==1;
+}
+新补问答案来源 转补问答案来源(新问题答案来源 v) {
+    switch(v){
+    case 新问题答案来源::消息转换:return 新补问答案来源::消息转换;
+    case 新问题答案来源::自我写入:return 新补问答案来源::自我写入;
+    default:throw std::logic_error("question answer source undefined");
+    }
+}
+std::int64_t 答案整数(const std::string& s,bool& ok) {
+    std::int64_t v=0;const auto r=std::from_chars(s.data(),s.data()+s.size(),v);
+    ok=r.ec==std::errc{}&&r.ptr==s.data()+s.size();return v;
+}
+bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息& b) {
+    return a.值种类==b.值种类&&a.准确整数==b.准确整数&&a.区间下界==b.区间下界&&a.区间上界==b.区间上界
+        &&a.单位==b.单位&&a.特征概念==b.特征概念&&a.方向==b.方向;
+}
+}
+新需求操作状态 新_需求类::写入补问需求答案(稳定编码 Qn,稳定编码 出站来源) noexcept {
+    using S=新需求操作状态;
+    try {
+        if(!接收认知语言读取接口_)throw std::logic_error("demand owner language reader not installed");
+        if(!有效(Qn)||!有效(出站来源))return S::入口拒绝;
+        const auto q=接收认知语言读取接口_->按出站来源读取问题(出站来源);
+        if(!q||!q->答案)return S::入口拒绝;
+        const 新补问需求答案 want{q->答案->答案信息,转补问答案来源(q->答案->来源)};
+        std::lock_guard lock(新需求互斥);
+        if(!结构仍存在())return S::尚未初始化;
+        const auto Q=读取需求治理信息(Qn);
+        if(!Q)return S::需求不存在;
+        if(!是补问需求形状(*Q)||Q->完整目标->目标.引用内容定位->引用需求节点!=q->定义.被认知需求)return S::入口拒绝;
+        if(Q->补问答案)return *Q->补问答案==want ? S::无变化 : S::同来源目标冲突;
+        const auto captured=全局基础数据集.查询节点组完整结构({Qn,want.答案信息});
+        if(captured.状态==基础结构操作状态::资源失败)return S::资源失败;
+        要求需求物理(captured.状态==基础结构操作状态::已完成&&captured.节点组.size()==2);
+        基础节点组追加请求 r;
+        for(const auto& x:captured.节点组){if(!x.快照)return S::前提已变化;r.预期联合节点组.push_back(*x.快照);}
+        if(读取需求治理信息(Qn)!=Q)return S::前提已变化;
+        r.追加字段组.push_back({Qn,补问答案信息字段,want.答案信息});
+        r.追加字段组.push_back({Qn,补问答案来源字段,基础值{static_cast<std::int64_t>(want.来源)}});
+        const auto commit=全局基础数据集.原子追加节点组(r);
+        if(commit.状态==基础节点组追加状态::预期不符)return S::前提已变化;
+        if(commit.状态==基础节点组追加状态::资源失败)return S::资源失败;
+        要求需求物理(commit.状态==基础节点组追加状态::已完成);
+        const auto back=读取需求治理信息(Qn);
+        要求需求物理(back&&back->补问答案==std::optional{want});
+        return S::已修改;
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(const std::length_error&){return S::资源失败;}
+    catch(const 需求物理读取失败& e){
+        if(e.原因==基础结构操作状态::资源失败)return S::资源失败;
+        if(e.原因==基础结构操作状态::节点不存在)return S::前提已变化;
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写入补问需求答案",L"需求结构损坏");}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写入补问需求答案",L"补问答案写入工程故障",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"写入补问需求答案",L"补问答案写入工程故障");}
+}
+新补问答案写入结果 新_需求类::按补问答案写入被认知需求(稳定编码 Qn) noexcept {
+    using W=新补问答案写入状态;
+    新补问答案写入结果 out;
+    const auto 结束=[&](W s,std::wstring why={}){out.状态=s;out.原因=std::move(why);return out;};
+    try {
+        if(!接收认知语言读取接口_)throw std::logic_error("demand owner language reader not installed");
+        const auto Q=读取需求治理信息(Qn);
+        if(!Q)return 结束(W::前提已变化);
+        if(!是补问需求形状(*Q))throw std::logic_error("answer write requested for a non field-question demand");
+        if(!Q->补问答案)return 结束(W::无答案);
+        const auto Dn=Q->完整目标->目标.引用内容定位->引用需求节点;
+        const auto 栏=Q->完整目标->目标.引用内容定位->正式内容路径.front();
+        out.被认知需求=Dn;out.答案信息=Q->补问答案->答案信息;
+        const auto D=读取需求治理信息(Dn);
+        if(!D||D->执行域!=新需求执行域::被认知||!D->已知目标)return 结束(W::前提已变化);
+        const auto& t=*D->已知目标;
+        // 被问栏：目标形式或其载荷（先天槽：需求目标形式、目标域、目标比较、目标方向）。
+        const auto slots=需求目标字段槽();
+        std::array<稳定编码,4> roots{};
+        for(std::size_t i=0;i<4;++i) {
+            const auto root=特征概念服务_.读取先天特征类型槽(slots[i+1]);
+            if(root.状态==特征概念规则状态::资源失败)return 结束(W::资源失败);
+            if(root.状态==特征概念规则状态::前提已变化)return 结束(W::前提已变化);
+            if(root.状态==特征概念规则状态::值不存在||root.状态==特征概念规则状态::读取接口未装配)return 结束(W::目标内容依赖未就绪);
+            要求需求物理(root.状态==特征概念规则状态::已完成&&root.类型根);
+            roots[i]=*root.类型根;
+        }
+        const auto 栏位=std::find(roots.begin(),roots.end(),栏);
+        if(栏位==roots.end())return 结束(W::答案不可用,L"被问栏不是目标形式或其载荷");
+        const bool 栏已知[4]{t.目标形式.has_value(),t.目标值域概念节点.has_value(),
+            t.目标比较关系概念节点.has_value(),t.目标变化方向.has_value()};
+        if(栏已知[栏位-roots.begin()])return 结束(W::栏已有值);
+        if(!t.目标存在节点||!t.目标特征类型概念节点)return 结束(W::答案不可用,L"被认知需求目标存在或目标特征类型未知");
+        // 答案未被采用：没有任何被认知需求以该答案信息为字段内容来源。
+        for(const auto other:读取多节点字段(需求树根节点,被认知需求登记字段)) {
+            const auto o=读取需求治理信息(other);
+            if(!o)return 结束(W::前提已变化);
+            if(o->目标形式内容来源==out.答案信息)return 结束(W::答案已被采用);
+        }
+        // 同问题的全部答案（7240 §5.5第4项）：值不同不写。
+        std::optional<新语言问题信息> 问题;
+        for(auto& x:接收认知语言读取接口_->查询同结构问题(Dn,*t.目标存在节点,*t.目标特征类型概念节点))
+            if(x.答案&&x.答案->答案信息==*out.答案信息&&转补问答案来源(x.答案->来源)==Q->补问答案->来源)问题=std::move(x);
+        if(!问题)throw std::logic_error("field question answer has no matching outbound question");
+        std::vector<新问题答案信息> 全部;
+        for(const auto& a:接收认知语言读取接口_->查找问题答案(问题->问题节点).答案组) {
+            auto v=接收认知语言读取接口_->读取问题答案信息(a.答案信息);
+            if(!v)throw std::logic_error("structure-matched answer information unreadable");
+            全部.push_back(std::move(*v));
+        }
+        const auto 本答案=std::find_if(全部.begin(),全部.end(),[&](const auto& v){return v.信息节点==*out.答案信息;});
+        if(本答案==全部.end())throw std::logic_error("registered answer not among structure-matched answers");
+        const auto v=*本答案;
+        if(std::any_of(全部.begin(),全部.end(),[&](const auto& x){return !答案值相同(x,v);}))
+            return 结束(W::答案冲突,L"同一问题有多条值不同的答案 条数="+std::to_wstring(全部.size()));
+        // 目标形式由值陈述推出（计划 v0.5 §3.5第2项）：具体值/闭区间→值，方向→变化方向；形式与载荷同次写入。
+        auto 新目标=t;
+        if(v.值种类==新值陈述值种类::变化方向) {
+            if(!v.方向)throw std::logic_error("direction answer without direction");
+            if((t.目标形式&&*t.目标形式!=新需求目标形式::变化方向)||t.目标值域概念节点||t.目标比较关系概念节点)
+                return 结束(W::答案不可用,L"方向答案与已知目标形式或载荷不相容");
+            新目标.目标形式=新需求目标形式::变化方向;
+            新目标.目标变化方向=*v.方向==新语言知识特征方向::增加 ? 新需求变化方向::增加 : 新需求变化方向::减少;
+        } else if(v.值种类==新值陈述值种类::准确整数||v.值种类==新值陈述值种类::整数闭区间) {
+            if((t.目标形式&&*t.目标形式!=新需求目标形式::值)||t.目标变化方向)
+                return 结束(W::答案不可用,L"值答案与已知目标形式或载荷不相容");
+            const auto FT=*t.目标特征类型概念节点;
+            const auto r=特征概念服务_.读取特征概念定义保护(FT);
+            if(r.前提已变化)return 结束(W::前提已变化);
+            if(r.状态==基础结构操作状态::资源失败)return 结束(W::资源失败);
+            if(r.状态!=基础结构操作状态::已完成||!r.信息)throw std::logic_error("demand target FT unreadable");
+            const auto& def=r.信息->定义;
+            if(r.信息->类型根!=FT||def.材料类型!=特征概念材料物理类型::I64标量||def.单位!=v.单位)
+                return 结束(W::答案不可用,L"目标特征类型不是同单位I64标量");
+            bool ok1=true,ok2=true;
+            const auto lo=答案整数(v.准确整数 ? *v.准确整数 : *v.区间下界,ok1);
+            const auto hi=v.准确整数 ? lo : 答案整数(*v.区间上界,ok2);
+            if(!ok1||!ok2)return 结束(W::答案不可用,L"答案整数超出I64");
+            const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
+            if(!ranges||lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))
+                return 结束(W::答案不可用,L"答案值不在目标特征类型准入值域内");
+            特征概念定义 target{def.材料类型,std::vector<特征概念I64闭区间>{{lo,hi}},def.单位,def.比较规则,def.聚合规则,{}};
+            const auto tc=特征概念服务_.建立或取得特征概念强类型(target,特征值服务_,FT);
+            if(tc.状态==特征概念规则状态::资源失败)return 结束(W::资源失败);
+            if(tc.状态==特征概念规则状态::前提已变化)return 结束(W::前提已变化);
+            if(tc.状态!=特征概念规则状态::已完成&&tc.状态!=特征概念规则状态::无变化)return 结束(W::目标内容依赖未就绪);
+            if(!tc.概念节点)throw std::logic_error("target domain creation returned no node");
+            const auto cmp=二次特征概念服务_.建立或取得默认二次特征概念(二次特征算法::有向特征差值,
+                {{0,二次特征输入角色::左输入,二次特征输入来源种类::特征准确值,FT},
+                 {1,二次特征输入角色::右输入,二次特征输入来源种类::特征准确值,FT}},*tc.概念节点);
+            if(cmp.状态==二次特征概念操作状态::资源失败)return 结束(W::资源失败);
+            if(!cmp.概念节点)return 结束(W::目标内容依赖未就绪);
+            const auto profile=二次特征概念服务_.建立或取得参照结果域概念(*cmp.概念节点,二次特征结果域种类::包含于参照值域);
+            if(profile.状态==二次特征概念操作状态::资源失败)return 结束(W::资源失败);
+            if(!profile.概念节点)return 结束(W::目标内容依赖未就绪);
+            if((t.目标值域概念节点&&t.目标值域概念节点!=tc.概念节点)||(t.目标比较关系概念节点&&t.目标比较关系概念节点!=profile.概念节点))
+                return 结束(W::答案不可用,L"值答案与已知目标载荷不一致");
+            新目标.目标形式=新需求目标形式::值;新目标.目标值域概念节点=tc.概念节点;新目标.目标比较关系概念节点=profile.概念节点;
+        } else return 结束(W::答案不可用,L"答案值种类不能推出目标形式 种类="+std::to_wstring(static_cast<int>(v.值种类)));
+        const auto 写=更新被认知需求信息内部({Dn,*D,新目标,std::nullopt},*out.答案信息);
+        using S=新需求操作状态;
+        switch(写.状态) {
+        case S::已修改:发出需求就绪通知(Dn);return 结束(W::已写入);
+        case S::前提已变化:case S::需求不存在:return 结束(W::前提已变化);
+        case S::资源失败:return 结束(W::资源失败);
+        case S::目标内容依赖未就绪:return 结束(W::目标内容依赖未就绪);
+        default:return 结束(W::答案不可用,L"需求owner拒绝写入 状态="+std::to_wstring(static_cast<int>(写.状态)));
+        }
+    }catch(const std::bad_alloc&){return 结束(W::资源失败);}
+    catch(const std::length_error&){return 结束(W::资源失败);}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"按补问答案写入被认知需求",L"答案读取或写入工程故障",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"按补问答案写入被认知需求",L"答案读取或写入工程故障");}
 }
 
 bool 新_需求类::初始化() noexcept {
@@ -1679,6 +1902,7 @@ bool 新_需求类::初始化() noexcept {
             &行动请求消息字段, &行动请求含义字段, &行动请求原需求字段, &行动请求人类字段,
             &行动请求受话者字段, &行动请求范围字段, &行动请求路径字段,
             &集合发布场景字段, &集合发布动作字段, &需求首次发布首状态字段, &需求信息完善阶段字段,
+            &补问答案信息字段, &补问答案来源字段, &目标形式内容来源字段,
             &需求发生关联类型,&发生场景字段,&发生主体字段,&发生特征字段,&发生需求字段,
             &发生动作字段,&发生来源字段,&发生状态字段,&发生方式字段,
             &需求迁移记录类型, &需求迁移来源项类型, &需求迁移登记字段,
@@ -5476,51 +5700,6 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
     }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取被认知需求资格",L"完整资格读取工程错误");}
 }
-新被认知需求信息更新结果 新_需求类::完善接收认知需求信息内部(
-    稳定编码 D,const 新需求治理信息& 预期) noexcept {
-    using S=新需求操作状态;
-    try {
-        const auto 资格=读取被认知需求完整资格保护(D,预期.需求主体存在节点);
-        if(资格.状态==新被认知需求资格状态::资源失败)return {S::资源失败,{}};
-        if(资格.状态==新被认知需求资格状态::前提已变化)return {S::前提已变化,{}};
-        if(资格.状态==新被认知需求资格状态::依赖未就绪)return {S::尚未初始化,{}};
-        if(资格.状态==新被认知需求资格状态::需求不存在)return {S::需求不存在,{}};
-        if(资格.状态!=新被认知需求资格状态::已读取)return {S::认知来源不合法,{}};
-        要求需求物理(资格.信息.has_value());
-        if(资格.信息->来源种类!=新被认知需求来源种类::首次接收认知)return {S::认知来源不合法,{}};
-        std::unique_lock 锁(新需求互斥);
-        const auto 当前=读取需求治理信息(D);
-        if(!当前||D!=预期.节点||*当前!=预期||资格.信息->需求!=预期)return {S::前提已变化,{}};
-        if(当前->信息完善阶段==新需求信息完善阶段::已完善) {
-            if(!需求内容保护未变(资格.完整保护))return {S::前提已变化,{}};
-            return {S::无变化,*当前};
-        }
-        要求需求物理(当前->信息完善阶段==新需求信息完善阶段::待完善);
-        基础节点组追加请求 请求;请求.预期联合节点组=资格.完整保护;
-        const auto 原D=std::find_if(请求.预期联合节点组.begin(),请求.预期联合节点组.end(),
-            [&](const auto& n){return n.结构.节点.编码==D;});
-        要求需求物理(原D!=请求.预期联合节点组.end());
-        const auto 阶段=std::find_if(原D->结构.字段组.begin(),原D->结构.字段组.end(),
-            [](const auto& f){return f.字段节点==需求信息完善阶段字段;});
-        要求需求物理(阶段!=原D->结构.字段组.end());
-        请求.替换字段组.push_back({阶段->编码,基础值{static_cast<std::int64_t>(新需求信息完善阶段::已完善)}});
-        const auto 提交=全局基础数据集.原子追加节点组(请求);
-        if(提交.状态==基础节点组追加状态::预期不符)return {S::前提已变化,{}};
-        if(提交.状态==基础节点组追加状态::资源失败)return {S::资源失败,{}};
-        要求需求物理(提交.状态==基础节点组追加状态::已完成);
-        auto 预期后=预期;预期后.信息完善阶段=新需求信息完善阶段::已完善;
-        锁.unlock();
-        const auto 读回=读取被认知需求完整资格保护(D,预期.需求主体存在节点);
-        if(读回.状态==新被认知需求资格状态::资源失败)return {S::资源失败,{}};
-        if(读回.状态==新被认知需求资格状态::前提已变化)return {S::前提已变化,{}};
-        if(读回.状态!=新被认知需求资格状态::已读取||!读回.信息||读回.信息->需求!=预期后) {
-            if(读取需求治理信息(D)!=std::optional{预期后})return {S::前提已变化,{}};
-            要求需求物理(false);
-        }
-        return {S::已修改,读回.信息->需求};
-    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
-    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"完善接收认知需求",L"同需求阶段发布工程错误");}
-}
 新需求内容判定结果 新_需求类::判定被认知需求内容保护(
     稳定编码 D,稳定编码 E,稳定编码 C,const std::vector<稳定编码>& 正式内容路径) const noexcept {
     using S=新引用内容目标状态;using F=正式内容符合状态;
@@ -5980,6 +6159,8 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             return {S::认知来源不合法,{},{}};
         }
         要求需求物理(U.信息&&!U.完整保护.empty());
+        // 5380 §3.5：先确保主体的“需求”特征存在，再读取来源保护（避免主体快照随后变化）。
+        if(const auto f=确保主体需求特征(U.信息->说话者节点);f!=S::已修改&&f!=S::无变化)return {f,{},{}};
         auto 来源=读取接收认知需求来源保护(language,features,q.来源,U.信息->说话者节点,q.已知目标);
         if(来源.状态!=S::已找到)return {来源.状态,{},{}};
         if(!并需求保护(来源.完整保护,U.完整保护))return {S::前提已变化,{},{}};
@@ -5991,6 +6172,8 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
 }
 
 新需求建立结果 新_需求类::建立待完善被认知需求(const 新待完善被认知需求建立请求& q) noexcept {
+    // 5380 §3.5：主体的“需求”特征由需求owner在建立被认知需求时确保存在。
+    if(const auto f=确保主体需求特征(q.需求主体存在节点);f!=新需求操作状态::已修改&&f!=新需求操作状态::无变化)return {f,{},{}};
     return 建立待完善被认知需求内部(q,{},{});
 }
 新需求建立结果 新_需求类::建立待完善被认知需求内部(const 新待完善被认知需求建立请求& q,
@@ -6028,7 +6211,9 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         基础组内新节点 d;d.字段组={{节点类型字段,需求节点类型},{需求主体字段,q.需求主体存在节点},
             {需求执行域字段,基础值{static_cast<std::int64_t>(新需求执行域::被认知)}},{需求权重字段,基础值{std::int64_t{0}}},
             {活动状态字段,基础值{static_cast<std::int64_t>(新需求活动状态::活动)}}};
-        for(const auto& [key,value]:需求已知字段(q.已知目标,新需求信息完善阶段::待完善,{}))
+        // R110：出生时即按必需字段是否全部确定维护信息完善阶段。
+        const auto phase=投影已知需求目标(q.已知目标) ? 新需求信息完善阶段::已完善 : 新需求信息完善阶段::待完善;
+        for(const auto& [key,value]:需求已知字段(q.已知目标,phase,{}))
             std::visit([&](const auto& v){d.字段组.push_back({key,v});},value);
         if(来源) {
             d.字段组.push_back({首次接收消息字段,来源->键.接收消息节点});
@@ -6043,7 +6228,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         要求需求物理(commit.状态==基础节点组追加状态::已完成&&commit.新节点组.size()==1);
         const auto D=commit.新节点组.front();const auto read=读取需求治理信息(D);
         要求需求物理(read&&read->需求主体存在节点==q.需求主体存在节点&&read->已知目标==std::optional{q.已知目标}
-            &&read->信息完善阶段==新需求信息完善阶段::待完善&&!read->认知来源&&read->首次接收认知来源==来源);
+            &&read->信息完善阶段==phase&&!read->认知来源&&read->首次接收认知来源==来源);
         const auto 承载=要求目标特征实例承载(D);
         if(承载!=S::已修改&&承载!=S::无变化)return {承载,D,{}};
         return {S::已建立,D,{}};
@@ -6056,12 +6241,16 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
     catch(const std::length_error&){return {新需求操作状态::资源失败,{},{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立待完善被认知需求",L"待完善需求建立发生工程故障");}
 }
-新被认知需求信息更新结果 新_需求类::更新被认知需求信息内部(const 新被认知需求信息更新请求& q) noexcept {
+新被认知需求信息更新结果 新_需求类::更新被认知需求信息内部(const 新被认知需求信息更新请求& q,
+    std::optional<稳定编码> 内容来源) noexcept {
     try {
         std::unique_lock lock(新需求互斥);using S=新需求操作状态;
         const auto old=读取需求治理信息(q.需求节点);if(!old)return {S::需求不存在,{}};
         if(old->执行域!=新需求执行域::被认知)return {S::执行域不适用,{}};
-        if(old->首次接收认知来源)return {S::认知来源不合法,{}};
+        // 首次接收认知的D不接受显式确认来源，但可按补问答案补字段（5170 §2.2）。
+        if(old->首次接收认知来源&&q.认知来源)return {S::认知来源不合法,{}};
+        if(内容来源&&(q.认知来源||!有效(*内容来源)))return {S::认知来源不合法,{}};
+        const auto 目标内容来源=内容来源 ? 内容来源 : old->目标形式内容来源;
         if(q.预期信息.节点!=q.需求节点||*old!=q.预期信息)return {S::前提已变化,{}};
         if(const auto 承载=要求目标特征实例承载(q.需求节点);承载!=S::已修改&&承载!=S::无变化)return {承载,{}};
         基础节点组追加请求 r;
@@ -6069,7 +6258,8 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         const auto status=核验部分需求目标(q.已知目标,存在服务_,特征概念服务_,二次特征概念服务_,r.预期联合节点组);
         if(status!=S::已找到)return {status,{}};
         std::optional<新服务要求确认语义保护> source;
-        auto phase=新需求信息完善阶段::待完善;
+        // R110：信息完善阶段按必需字段是否全部确定，在本次发布中同次维护。
+        auto phase=投影已知需求目标(q.已知目标) ? 新需求信息完善阶段::已完善 : 新需求信息完善阶段::待完善;
         if(q.认知来源){
             const auto full=投影已知需求目标(q.已知目标);
             if(!full||!有效(q.认知来源->理解节点)||!有效(q.认知来源->内容确认节点))return {S::认知来源不合法,{}};
@@ -6106,8 +6296,10 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         std::optional<基础联合节点快照> D;
         std::vector<基础联合节点快照> nodes;for(const auto& x:captured.节点组){if(!x.快照)return {S::前提已变化,{}};nodes.push_back(*x.快照);if(x.查询节点==q.需求节点)D=x.快照;}
         if(!D||!并需求保护(r.预期联合节点组,nodes)||读取需求治理信息(q.需求节点)!=old)return {S::前提已变化,{}};
-        if(old->已知目标==std::optional{q.已知目标}&&old->信息完善阶段==phase&&old->认知来源==q.认知来源)return {S::无变化,*old};
+        if(old->已知目标==std::optional{q.已知目标}&&old->信息完善阶段==phase&&old->认知来源==q.认知来源
+            &&old->目标形式内容来源==目标内容来源)return {S::无变化,*old};
         auto desired=需求已知字段(q.已知目标,phase,q.认知来源);
+        if(目标内容来源)desired.emplace(目标形式内容来源字段,*目标内容来源);
         const bool F承载=是F承载需求(D->结构);
         const auto keys=需求目标字段键();
         std::vector<新特征当前值设置项> settings;
@@ -6127,7 +6319,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             }
         }
         std::set<稳定编码> managed{目标存在字段,目标特征类型字段,目标形式字段,目标值域字段,目标比较关系字段,目标变化方向字段,
-            需求信息完善阶段字段,认知理解字段,认知内容确认字段,认知来源要求字段};
+            需求信息完善阶段字段,认知理解字段,认知内容确认字段,认知来源要求字段,目标形式内容来源字段};
         if(F承载)for(const auto key:keys)managed.erase(key);
         std::set<稳定编码> present;
         for(const auto& f:D->结构.字段组)if(managed.contains(f.字段节点)){
@@ -6173,7 +6365,8 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
         const auto read=读取需求治理信息(q.需求节点);
         if(!read)return {S::前提已变化,{}};
         要求需求物理(read->已知目标==std::optional{q.已知目标}&&read->信息完善阶段==phase
-            &&read->认知来源==q.认知来源&&read->需求主体存在节点==old->需求主体存在节点);
+            &&read->认知来源==q.认知来源&&read->需求主体存在节点==old->需求主体存在节点
+            &&read->目标形式内容来源==目标内容来源);
         return {S::已修改,*read};
     }catch(新需求目标定义核验状态 s){if(s==新需求目标定义核验状态::依赖未就绪)return {新需求操作状态::目标内容依赖未就绪,{}};要求需求物理(s==新需求目标定义核验状态::前提已变化);return {新需求操作状态::前提已变化,{}};}
     catch(const 需求物理读取失败& e){
