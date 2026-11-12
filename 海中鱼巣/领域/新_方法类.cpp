@@ -5069,6 +5069,14 @@ bool 学习配对定义合法(const 新方法信息& 方法信息, const 新方�
 }
 
 namespace {
+// 模拟学习排查：方法owner报告“前提已变化”时记下发生在哪一步（调试切片 SIMULATION_PROGRESS）。
+void 记录方法前提变化诊断(const wchar_t* 入口, const std::wstring& 文本) noexcept {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+    try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"方法前提变化", 入口, 文本); } catch (...) {}
+#else
+    (void)入口; (void)文本;
+#endif
+}
 // 学习基线读过的全部节点身份以只读存在预期进入最终原子提交（不附加旧内容相等要求，裁决①）。
 void 加学习基线存在预期(基础节点组追加请求& 请求, const 新_方法类::执行结构读取结果* 基线) {
     if (!基线) return;
@@ -5120,7 +5128,11 @@ bool 提交前提已变化(基础节点组追加状态 s) {
         try { 今 = 读取方法信息本体(原.节点, 特征概念服务_, *this, 存在概念服务_, false, true); }
         catch (const std::bad_alloc&) { throw; }
         catch (...) { 今.reset(); }
-        if (!今 || !同结构(*今, 原)) return 状态::已变化;
+        if (!今 || !同结构(*今, 原)) {
+            记录方法前提变化诊断(L"学习发布基线", L"原因=方法结构不同；方法=" + std::to_wstring(原.节点.值)
+                + L"；可读=" + std::to_wstring(今.has_value()));
+            return 状态::已变化;
+        }
     }
     if (基线.完整保护组.empty()) return 状态::成立;
     std::vector<稳定编码> 节点组;
@@ -5130,7 +5142,10 @@ bool 提交前提已变化(基础节点组追加状态 s) {
     // 正常物理删除返回“已完成＋空快照”；其它状态或数量不符为工程损坏，不当作漂移。
     if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 节点组.size())
         throw std::logic_error("learning publication baseline node read inconsistent");
-    for (const auto& 项 : 读.节点组) if (!项.快照) return 状态::已变化;
+    for (const auto& 项 : 读.节点组) if (!项.快照) {
+        记录方法前提变化诊断(L"学习发布基线", L"原因=保护节点已删除；节点=" + std::to_wstring(项.查询节点.值));
+        return 状态::已变化;
+    }
     return 状态::成立;
 }
 新方法学习发布结果 新_方法类::确保先天被动配对(
@@ -5300,6 +5315,9 @@ bool 提交前提已变化(基础节点组追加状态 s) {
             回滚(已写字段, 已建节点);
             结果.新配对节点组.clear();
             // 提交时预期不符/节点或引用不存在是并发变化，交调用者重来；资源失败如实；其余为结构问题。
+            if (提交前提已变化(发布.状态))
+                记录方法前提变化诊断(L"学习发布提交", L"方法=" + std::to_wstring(方法节点.值)
+                    + L"；提交状态=" + std::to_wstring(static_cast<int>(发布.状态)));
             结果.状态 = 提交前提已变化(发布.状态) ? 新方法学习发布状态::前提已变化
                 : 发布.状态==基础节点组追加状态::资源失败 ? 新方法学习发布状态::资源失败
                 : 新方法学习发布状态::结构不一致;
@@ -5350,6 +5368,8 @@ bool 提交前提已变化(基础节点组追加状态 s) {
             结果.新配对节点组.clear();
         }
         // 引用的概念定义在本次读取与封存之间发生变化：属并发变化，交调用者按前提已变化重来。
+        记录方法前提变化诊断(L"学习发布封存", L"方法=" + std::to_wstring(方法节点.值)
+            + L"；已发布=" + std::to_wstring(已发布));
         结果.状态 = 已发布 ? 新方法学习发布状态::发布结果未知 : 新方法学习发布状态::前提已变化;
         return 结果;
     } catch (const std::bad_alloc&) {
@@ -6513,24 +6533,53 @@ std::optional<新方法信息> 新_方法类::获取方法(
             if(!n.快照)throw std::runtime_error("method execution protection missing snapshot");
             结果.完整保护组.push_back(*n.快照);
         }
+        // 变化分类（2026-11-08用户裁决，判据见基础层 联合快照容许变化判定）：本闭包读取组之外的节点指向组内节点的
+        // 引用增删（他处召回的候选材料引用、学习记录、状态、概念新成员等）不算定义变化；组内节点本体字段改变、
+        // 原外部关系消失、组内来源的原入向引用被删除才报前提已变化。本读取持方法锁，方法owner自身写入不会插入其间。
+        const std::set<稳定编码> 读取组(请求身份.begin(),请求身份.end());
+        const auto 报变化=[&](const 基础联合节点快照& 原,const 基础联合节点快照* 今,const wchar_t* 阶段)->执行结构读取结果 {
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+            try {
+                std::wostringstream t;
+                t<<L"阶段="<<阶段<<L"；节点="<<原.结构.节点.编码.值;
+                if(今)t<<L"；本体字段数="<<原.结构.字段组.size()<<L"->"<<今->结构.字段组.size()
+                    <<L"；入向字段数="<<原.入向字段组.size()<<L"->"<<今->入向字段组.size()
+                    <<L"；出向关系数="<<原.出向外部关系组.size()<<L"->"<<今->出向外部关系组.size()
+                    <<L"；入向关系数="<<原.入向外部关系组.size()<<L"->"<<今->入向外部关系组.size();
+                else t<<L"；无可容许对照快照";
+                (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"方法执行结构闭包",L"前提已变化",t.str());
+            } catch(...) {}
+#else
+            (void)原;(void)今;(void)阶段;
+#endif
+            return {状态::前提已变化,{},{},{}};
+        };
         for(const auto& a:场景概念保护) {
             const auto b=std::find_if(结果.完整保护组.begin(),结果.完整保护组.end(),[&](const auto& v){return v.结构.节点==a.结构.节点;});
-            if(b==结果.完整保护组.end()||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
-                ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
-                return {状态::前提已变化,{},{},{}};
+            if(b==结果.完整保护组.end())return 报变化(a,nullptr,L"概念证明");
+            if(!联合快照容许变化判定(*b,a,读取组))return 报变化(a,&*b,L"概念证明");
         }
         for(const auto& old:结果.方法组)
-            if(读取方法信息本体(old.节点,特征概念服务_,*this,存在概念服务_,false,true)!=old)
-                return {状态::前提已变化,{},{},{}};
+            if(读取方法信息本体(old.节点,特征概念服务_,*this,存在概念服务_,false,true)!=old) {
+                const auto 方法快照=std::find_if(结果.完整保护组.begin(),结果.完整保护组.end(),
+                    [&](const auto& v){return v.结构.节点.编码==old.节点;});
+                if(方法快照==结果.完整保护组.end())throw std::runtime_error("method execution protection lacks method snapshot");
+                return 报变化(*方法快照,nullptr,L"方法定义重读");
+            }
         const auto 再读=全局基础数据集.查询节点组完整结构(请求身份);
         if(再读.状态!=基础结构操作状态::已完成||再读.节点组.size()!=结果.完整保护组.size())
             throw std::runtime_error("method execution protection recapture failed");
-        for(std::size_t i=0;i<结果.完整保护组.size();++i) {
-            const auto& a=结果.完整保护组[i];const auto& b=再读.节点组[i].快照;
-            if(!b||a.结构.字段组!=b->结构.字段组||a.入向字段组!=b->入向字段组
-                ||a.入向外部关系组!=b->入向外部关系组||a.出向外部关系组!=b->出向外部关系组)
-                return {状态::前提已变化,{},{},{}};
+        std::vector<基础联合节点快照> 较新保护;
+        较新保护.reserve(结果.完整保护组.size());
+        for(const auto& a:结果.完整保护组) {
+            const auto b=std::find_if(再读.节点组.begin(),再读.节点组.end(),
+                [&](const auto& v){return v.查询节点==a.结构.节点.编码;});
+            if(b==再读.节点组.end()||!b->快照)return 报变化(a,nullptr,L"保护重读");
+            if(!联合快照容许变化判定(*b->快照,a,读取组))return 报变化(a,&*b->快照,L"保护重读");
+            较新保护.push_back(*b->快照);
         }
+        // 容许的组外引用增删以后读者为准，交给使用方的保护保持最新。
+        结果.完整保护组=std::move(较新保护);
         return 结果;
     } catch (const 引用内容定义前提变化&) {
         return {状态::前提已变化,{},{},{}};
@@ -8538,6 +8587,7 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
     稳定编码 方法节点,
     const 方法参数场景& 参数场景) const noexcept {
     新方法本能调用结果 结果;
+    bool 已进入函数 = false;
     if (!有效(方法节点) || 参数场景.方法节点() != 方法节点
         || (参数场景.用途() != 新方法参数场景用途::执行
             && 参数场景.用途() != 新方法参数场景用途::模拟
@@ -8591,6 +8641,8 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
         if(!方法->执行分支组.empty()||参数场景.执行分支节点()) {
             const auto 分支读取=读取执行分支必要条件(方法节点,参数场景.执行分支节点());
             if(分支读取.状态!=新方法执行分支读取状态::已读取) {
+                if(分支读取.状态==新方法执行分支读取状态::前提已变化)
+                    记录方法前提变化诊断(L"本能调用",L"阶段=执行分支读取；方法="+std::to_wstring(方法节点.值));
                 结果.状态=分支读取.状态==新方法执行分支读取状态::前提已变化
                     ? 新方法本能调用状态::定义前提已变化
                     : 分支读取.状态==新方法执行分支读取状态::方法不存在
@@ -8598,6 +8650,7 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
                 return 结果;
             }
         }
+        已进入函数 = true;
         结果.本次条件结果对 = 函数.函数(参数场景);
         const auto returned=结果.本次条件结果对->条件.执行分支节点;
         if((returned&&returned!=参数场景.执行分支节点())
@@ -8608,6 +8661,8 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
     } catch (const std::bad_alloc&) {
         结果.状态 = 新方法本能调用状态::资源失败;
     } catch (const 引用内容定义前提变化&) {
+        记录方法前提变化诊断(L"本能调用", std::wstring(L"阶段=") + (已进入函数 ? L"本能函数内" : L"方法读取")
+            + L"；方法=" + std::to_wstring(方法节点.值));
         结果.状态 = 新方法本能调用状态::定义前提已变化;
     } catch (...) {
         结果.状态 = 新方法本能调用状态::内部错误;
