@@ -857,6 +857,27 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 ||projected.需求来源.接收消息节点!=m.消息节点
                 ||projected.需求主体!=speaker)
                 throw std::logic_error("adopted demand projection source identity missing");
+            // R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在接收来源语言场景形成独立的需求信息节点
+            // （说话者、需求主体、目标存在、目标特征类型，话中带出的值或方向，出现时刻）；同一来源消息只一个节点，
+            // 重入时精确重复复用。转换不据它建立或修改需求；下方照常建立D'，并以该节点为D'的需求信息来源。
+            进入步骤("保存需求信息节点");
+            if(!out.S)throw std::logic_error("adopted meaning has no received language scene");
+            新接收场景信息 需求信息;
+            需求信息.种类=新接收场景信息种类::需求信息;需求信息.来源消息=m.消息节点;需求信息.来源场景=*out.S;
+            需求信息.交互场景=m.场景节点;需求信息.说话者=speaker;需求信息.主体存在=projected.需求主体;
+            需求信息.目标存在=projected.目标存在;需求信息.特征类型=projected.目标特征类型;
+            if(projected.方向){需求信息.值种类=新值陈述值种类::变化方向;需求信息.方向=projected.方向;}
+            else if(projected.准确整数){需求信息.值种类=新值陈述值种类::准确整数;需求信息.准确整数=projected.准确整数;需求信息.单位=projected.单位;}
+            else if(projected.区间下界&&projected.区间上界){
+                需求信息.值种类=新值陈述值种类::整数闭区间;需求信息.区间下界=projected.区间下界;需求信息.区间上界=projected.区间上界;需求信息.单位=projected.单位;
+            }
+            需求信息.原文起点=0;需求信息.原文终点=static_cast<std::int64_t>(标量数(m.UTF8正文));需求信息.时刻=m.正式记录时间.纳秒;
+            if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求信息保存"};
+            const auto 需求信息保存=d.语言.建立或取得接收场景信息(需求信息);
+            if(需求信息保存.状态==新接收场景信息保存状态::前提已变化)漂移();
+            if((需求信息保存.状态!=新接收场景信息保存状态::已保存&&需求信息保存.状态!=新接收场景信息保存状态::精确重复)
+                ||!需求信息保存.陈述节点)
+                throw std::logic_error("received demand information conflicts with saved record");
             const 新接收认知来源 source{*out.需求来源,*out.U};
             进入步骤("读取同源被认知需求");
             const auto known=d.需求.查询接收认知来源需求(source,d.语言,d.特征);
@@ -871,7 +892,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 const auto target=映射目标(d,projected,stop);
                 if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求发表"};
                 进入步骤("发表同源被认知需求");
-                const auto created=d.需求.建立或取得接收认知需求({source,target},d.语言,d.特征);
+                const auto created=d.需求.建立或取得接收认知需求({source,target,需求信息保存.陈述节点},d.语言,d.特征);
                 if(created.状态==新需求操作状态::资源失败)资源();if(created.状态==新需求操作状态::前提已变化)漂移();
                 if(created.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                 if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)

@@ -81,11 +81,12 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     if (value->状态==正式内容值状态::不适用) return {R::字段不适用,std::move(m)};
     if (value->状态==正式内容值状态::已知 && value->值) return {R::字段已有值,std::move(m)};
     要求(value->状态==正式内容值状态::当前未知 && !value->值,"formal unknown slot has contradictory payload");
-    // 被问结构（7240 §5.5；顶层裁决 2026-11-12）：目标形式及载荷类字段统一映射为
-    // （主体＝D的目标存在，被问栏＝D的目标特征类型）；其它字段或映射所需D字段未知时无法映射，按工程断言。
+    // 被问结构（7240 §5.5 第1项，R120）：载荷栏（目标形式、值域、比较关系、变化方向）问题
+    // 主体＝D的目标存在、被问栏＝D的目标特征类型；目标栏（目标存在、目标特征类型）问题主体＝D的需求主体、
+    // 被问栏＝“需求”本身（以需求根概念节点标记）。
+    // 被问结构可确定是初始必要条件（5380 §3.6，R120）：所依赖的D栏尚无确定值时入口复核不通过，
+    // 不进入动作、不记录动作，按前提已变化零动作返回；不属工程故障。
     const auto 字段=loc.正式内容路径.front();
-    if (字段==c.需求目标存在类型 || 字段==c.需求目标特征类型)
-        return 未支持("field question slot has no (subject, asked field) mapping");
     const auto 读引用=[&](稳定编码 类型)->std::optional<稳定编码> {
         for (const auto& item:d.信息->直接内容组) if (item.特征类型==类型) {
             if (item.内容.状态!=正式内容值状态::已知 || !item.内容.值) return std::nullopt;
@@ -94,8 +95,10 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
         }
         return std::nullopt;
     };
-    const auto 主体=读引用(c.需求目标存在类型),被问栏=读引用(c.需求目标特征类型);
-    if (!主体 || !被问栏) return 未支持("field question subject mapping requires known target existence and feature type");
+    const bool 目标栏=字段==c.需求目标存在类型 || 字段==c.需求目标特征类型;
+    const auto 主体=目标栏 ? 读引用(c.需求主体类型) : 读引用(c.需求目标存在类型);
+    const auto 被问栏=目标栏 ? std::optional{c.需求根概念} : 读引用(c.需求目标特征类型);
+    if (!主体 || !被问栏) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     m.问题主体=*主体;m.被问栏=*被问栏;
     return {R::已取得,std::move(m)};
 }

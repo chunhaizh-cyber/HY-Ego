@@ -255,7 +255,9 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     if(场景.状态==新来源子场景状态::前提已变化)return 前提已变化();
     要求((场景.状态==新来源子场景状态::已建立||场景.状态==新来源子场景状态::已存在)&&场景.信息.has_value(),"outbound language scene publication failed");
     const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});要求(time.成功(),"field question UTC unavailable");
-    const 新语言问题定义 def{场景.信息->场景节点,来源,m.外设场景,m.交互者,m.定位.信息节点,m.问题主体,m.被问栏,time.证据->UTC纳秒};
+    // R120/R121：被问栏为需求根概念即目标栏问题（答案按需求信息比对），否则载荷栏问题（按值陈述比对）。
+    const 新语言问题定义 def{场景.信息->场景节点,来源,m.外设场景,m.交互者,m.定位.信息节点,m.问题主体,m.被问栏,time.证据->UTC纳秒,
+        m.被问栏==s.配置->需求根概念 ? 新问题被问种类::目标栏 : 新问题被问种类::载荷栏};
     const auto q=s.语言owner.建立或取得出站问题(def);
     switch(q.状态){
     case 新语言问题建立状态::前提已变化:return 前提已变化();
