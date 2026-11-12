@@ -192,9 +192,17 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     bool own=false;
     if (!source) { const auto call=s.方法.建立直接调用身份(scene.方法节点(),scene.全部角色绑定(),m.执行场景,m.外设场景);source=call.节点;own=true; }
     const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});要求(time.成功(),"field question UTC unavailable");
-    const auto action=s.世界.建立动作动态(m.执行场景,{m.自我,scene.方法节点(),*source,m.窗口,m.输出特征,
+    // 内部场景的说话动作作用于交互窗口（窗口副本，现实交互场景中的存在）及其输出队列特征（登记结果组：参数3的输出队列，
+    // 5380 v1.14 §4第1项）；外设窗口只在入列时按外设场景标识对应（三场景分工，7240 §1）。
+    std::optional<稳定编码> 副本输出;
+    if (const auto 副本=s.存在.获取存在(m.窗口副本)) for (const auto f:副本->特征节点组) {
+        const auto F=s.特征.获取特征(f);
+        if (F && s.特征概念.比较单特征概念(F->特征概念节点,F->特征概念节点).特征类型根==std::optional{s.配置->输出队列类型}) { 副本输出=f;break; }
+    }
+    要求(副本输出.has_value(),"field question window copy output queue feature missing");
+    const auto action=s.世界.建立动作动态(m.执行场景,{m.自我,scene.方法节点(),*source,m.窗口副本,*副本输出,
         {新状态时间语义::实例绝对UTC,time.证据->UTC纳秒}});
-    要求(action.成功(),"field question action publication failed");
+    要求(action.成功(),("field question action publication failed: world="+std::to_string(static_cast<int>(action.状态))+" dyn="+(action.动作建立结果 ? std::to_string(static_cast<int>(action.动作建立结果->状态)) : std::string("-"))+" scene="+(action.场景挂接结果 ? std::to_string(static_cast<int>(*action.场景挂接结果)) : std::string("-"))+" 执行场景="+std::to_string(m.执行场景.值)+" 外设场景="+std::to_string(m.外设场景.值)+" 自我="+std::to_string(m.自我.值)+" 窗口="+std::to_string(m.窗口.值)+" 窗口副本="+std::to_string(m.窗口副本.值)).c_str());
     const auto read=s.动态.按来源查询动作(*source);
     要求(read.状态==新动态操作状态::已完成 && read.动作.has_value(),"field question action readback failed");
     const auto a=read.动作->节点;

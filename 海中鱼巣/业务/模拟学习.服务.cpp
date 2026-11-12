@@ -143,13 +143,13 @@ const char* 新学习运行异常::what() const noexcept {
         if (协作停止()) throw 新学习运行异常(方法节点, 原因::停止取消);
         const auto 方法 = 方法_.获取方法(方法节点);
         if (!方法)
-            throw 新学习运行异常(方法节点, 原因::结构不一致);
+            throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 146");
         if (方法->来源方法节点 || 方法->实例根节点
             || 方法->实现方式 != 新方法实现方式::本能
             || 方法->启用状态 != 新方法启用状态::启用)
             throw 新学习运行异常(方法节点, 原因::输入不合法);
         if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
-            throw 新学习运行异常(方法节点, 原因::结构不一致);
+            throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 152");
         for (std::size_t i = 0; i < 方法->参数规格组.size(); ++i) {
             if (!方法->参数规格组[i].有序规格)
                 throw 新学习运行异常(方法节点, 原因::规格未支持,
@@ -2362,11 +2362,11 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     }
                     else if(const auto* v=std::get_if<std::int64_t>(&*before[i]->当前值))c.精确数值域=特征概念I64闭区间{*v,*v};
                     else {
-                        if(!beforeMaterial[i])throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                        if(!beforeMaterial[i])throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2365");
                         if(defs[i]->比较规则==特征概念比较规则::存在集合身份判等
                             ||defs[i]->比较规则==特征概念比较规则::服务任务集合身份判等) {
                             const auto* members=std::get_if<std::vector<std::uint64_t>>(&beforeMaterial[i]->材料);
-                            if(!members)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                            if(!members)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2369");
                             if (!成员读取组.empty() && 成员读取组.front().集合参数序号 == i + 1)
                                 c.特征值域概念节点 = base[i].规格.范围概念节点;
                             else if(const auto formal=集合正式材料(*beforeMaterial[i],defs[i]->比较规则))
@@ -2388,7 +2388,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 if(!defs[i])continue;
                 const auto id=(*bindings)[i].有序引用->信息节点;
                 const auto f=context.参数场景->读取绑定特征(id);
-                if(!f||!f->当前值)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                if(!f||!f->当前值)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2391");
                 if (!成员读取组.empty() && 成员读取组.front().集合参数序号 == i + 1) {
                     const auto* V = std::get_if<稳定编码>(&*f->当前值);
                     const auto material = V ? world->读取模拟特征值材料(*V) : std::nullopt;
@@ -2404,11 +2404,11 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 else if(const auto* v=std::get_if<std::int64_t>(&*f->当前值))r.精确数值域=特征概念I64闭区间{*v,*v};
                 else {
                     const auto material=world->读取模拟特征值材料(std::get<稳定编码>(*f->当前值));
-                    if(!material)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                    if(!material)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2407");
                     if(defs[i]->比较规则==特征概念比较规则::存在集合身份判等
                         ||defs[i]->比较规则==特征概念比较规则::服务任务集合身份判等) {
                         const auto* members=std::get_if<std::vector<std::uint64_t>>(&material->材料);
-                        if(!members)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                        if(!members)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2411");
                         if(const auto formal=集合正式材料(*material,defs[i]->比较规则))
                             r.特征值域概念节点=保存材料域(base[i].规格.范围概念节点,*formal);
                         else for(std::size_t j=0;j<N;++j) if(是普通存在(j)
@@ -2611,7 +2611,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     throw 新学习运行异常(m.节点,新学习运行异常原因::资源不足,"learning publication resource failure");
                 if(published.状态!=新方法学习发布状态::已发布&&published.状态!=新方法学习发布状态::精确重复
                     &&published.状态!=新方法学习发布状态::发布结果未知)
-                    throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致);
+                    throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2614");
                 const auto fresh=方法_.获取方法(m.节点);
                 if(!fresh||!std::any_of(fresh->条件结果组.begin(),fresh->条件结果组.end(),[&](const auto& p) {
                     // 命中次数==0只约束新发布配对；精确重复/发布结果未知按条件、结果、来源、执行分支匹配。

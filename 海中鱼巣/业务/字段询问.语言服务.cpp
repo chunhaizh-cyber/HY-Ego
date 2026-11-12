@@ -61,7 +61,12 @@ namespace 海中鱼巣 {
     case 语言场景基础输出状态::回读多义:return 返回(状态::多义);
     case 语言场景基础输出状态::读取漂移:return 返回(状态::前提已变化);
     case 语言场景基础输出状态::输入拒绝:return 返回(状态::缺指称);
-    default:throw std::logic_error("字段询问统一生成或独立回读未完成");
+    // 5380 §3.6：表达所需语言知识不齐时零动作（后续语言学习子需求），不属工程故障。
+    case 语言场景基础输出状态::结构未支持:
+    case 语言场景基础输出状态::回读含义不一致:return 返回(状态::缺知识);
+    case 语言场景基础输出状态::引用不可读:return 返回(状态::前提已变化);
+    case 语言场景基础输出状态::额度不足:return 返回(状态::范围未支持);
+    default:throw std::logic_error("字段询问统一生成或独立回读未完成：状态="+std::to_string(static_cast<int>(输出.状态)));
     }
 }
 } // namespace 海中鱼巣

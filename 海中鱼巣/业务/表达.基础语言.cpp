@@ -630,6 +630,7 @@ bool 招呼图知识(const 新语言知识定义& 定义) {
     return 图;
 }
 std::size_t 图文字标量数(const std::string& 原文) {
+    if(原文.empty())return 0; // 展开起点处尚未成文，空文本字数为0（严格UTF8校验把空串判为无效）。
     if(!新_语言类::严格UTF8字节串有效(原文))throw std::logic_error("invalid graph expression UTF8");
     return static_cast<std::size_t>(std::count_if(原文.begin(),原文.end(),[](unsigned char 字节){return (字节&0xC0)!=0x80;}));
 }
