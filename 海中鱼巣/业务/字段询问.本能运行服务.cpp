@@ -59,7 +59,8 @@ bool 字段询问本能运行服务::初始化(const 新字段询问登记配置
         要求(!s.已关闭 && s.语言,"field question initialization dependency unavailable");
         if (s.配置) { 要求(*s.配置==c,"field question immutable configuration mismatch");return true; }
         for (const auto id:{c.需求根概念,c.自我范围概念,c.交互者特征类型,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
-            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型}) 要求(有效(id),"field question configuration identity missing");
+            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型,c.需求目标存在类型,c.需求目标特征类型})
+            要求(有效(id),"field question configuration identity missing");
         要求(c.支持字段类型组.size()==6,"field question supported slot count invalid");
         std::set<稳定编码> unique;
         for (const auto id:c.支持字段类型组)
@@ -83,22 +84,53 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
         return s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),q);
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问登记",L"字段询问方法登记错误。"); }
 }
-std::optional<新字段询问回应观察定位> 字段询问本能运行服务::读取回应观察定位(
-    稳定编码 外设场景,稳定编码 副本) const noexcept {
+namespace {
+新字段询问答案来源 映射答案来源(新问题答案来源 v) {
+    switch (v) {
+    case 新问题答案来源::消息转换: return 新字段询问答案来源::消息转换;
+    case 新问题答案来源::自我写入: return 新字段询问答案来源::自我写入;
+    default: throw std::logic_error("question answer source undefined");
+    }
+}
+}
+新字段询问答案读回 字段询问本能运行服务::读取执行问题答案(稳定编码 出站来源) const noexcept {
     try {
         auto& s=*实现_;
-        { std::lock_guard lock(s.锁); if (s.已关闭 || !s.配置) return std::nullopt; }
+        { std::lock_guard lock(s.锁); if (s.已关闭 || !s.配置) return {}; }
         实现::租约 lease(s);
-        // 与读取询问材料同一对应：副本须是该外设场景在现实世界的唯一副本。
-        const auto 现实=s.世界.查找现实交互场景(外设场景,s.配置->外设场景标识类型);
-        要求(现实.状态!=新场景操作状态::资源失败,"field question reply locator reality scene resource failure");
-        if (现实.状态!=新场景操作状态::无变化 || 现实.存在节点!=std::optional{副本}) return std::nullopt;
-        const auto 外设=s.外设.按场景读取交互场景(外设场景);
-        if (!外设) return std::nullopt;
-        const auto& 定位=外设->来源.定位;
-        要求(有效(定位.窗口节点) && 有效(定位.接收数量特征),"field question reply locator incomplete");
-        return 新字段询问回应观察定位{定位.窗口节点,定位.接收数量特征};
-    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问回应观察定位",L"回应观察定位读取工程错误。"); }
+        const auto q=s.语言owner.按出站来源读取问题(出站来源);
+        if (!q) return {};
+        if (q->答案) return {新字段询问答案状态::已答,q->问题节点,映射答案来源(q->答案->来源),false};
+        const auto found=s.语言owner.查找问题答案(q->问题节点);
+        return {新字段询问答案状态::未答,q->问题节点,std::nullopt,!found.答案组.empty()};
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取执行问题答案",L"问题答案读取工程错误。"); }
+}
+新字段询问答案读回 字段询问本能运行服务::取得执行问题答案(稳定编码 出站来源) noexcept {
+    try {
+        auto& s=*实现_;
+        { std::lock_guard lock(s.锁); if (s.已关闭 || !s.配置) return {}; }
+        实现::租约 lease(s);
+        const auto q=s.语言owner.按出站来源读取问题(出站来源);
+        if (!q) return {};
+        if (q->答案) return {新字段询问答案状态::已答,q->问题节点,映射答案来源(q->答案->来源),false};
+        const auto found=s.语言owner.查找问题答案(q->问题节点);
+        if (found.答案组.empty()) return {新字段询问答案状态::未答,q->问题节点,std::nullopt,false};
+        // 7240 §5.5 第4项：按查得来源登记（多条均符合时由父任务判断是否采用，此处登记第一条）。
+        const auto& first=found.答案组.front();
+        const auto reg=s.语言owner.登记问题答案(q->问题节点,first.答案信息,first.来源);
+        switch (reg.状态) {
+        case 新问题答案登记状态::已登记:
+        case 新问题答案登记状态::精确重复:
+        case 新问题答案登记状态::已有其它答案:
+            要求(reg.当前答案.has_value(),"registered question answer missing");
+            return {新字段询问答案状态::已答,q->问题节点,映射答案来源(reg.当前答案->来源),false};
+        case 新问题答案登记状态::前提已变化:
+            // 并发写入使本次登记的读取前提失效：保持未答，由下一次就绪通知或复核重读。
+            return {新字段询问答案状态::未答,q->问题节点,std::nullopt,true};
+        default:
+            throw std::logic_error("question answer found by structure match was rejected");
+        }
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取得执行问题答案",L"问题答案登记工程错误。"); }
 }
 新字段询问材料读回 字段询问本能运行服务::读取询问材料(const 方法参数场景& scene) const {
     auto& s=*实现_;实现::租约 lease(s);
@@ -127,13 +159,24 @@ std::optional<新字段询问回应观察定位> 字段询问本能运行服务:
     };
     auto out=读取通用询问材料(scene,*s.配置,s.需求,对应,当前交互者);
     if (!out.材料) return out;
-    const auto& m=*out.材料;
+    auto& m=*out.材料;
     const auto w=s.外设.读取对话框来源(m.窗口);
     const auto f=s.特征.获取特征(m.输出特征);
     const auto e=s.存在.获取存在(m.窗口);
     if (!w || w->定位.场景节点!=m.外设场景 || w->定位.输出队列特征!=m.输出特征
         || !f || !e || std::count(e->特征节点组.begin(),e->特征节点组.end(),m.输出特征)!=1)
         { 字段询问运行核对行=__LINE__; return {新字段询问材料状态::前提已变化,{}}; }
+    // 条件“自然语言世界中该问题尚无答案”（5380 §3.6，初始必要条件；现有条件项无法表达语言世界事实，
+    // 按运行时复核）：同一被认知需求、主体与被问栏的问题已有答案（已登记或按结构比对可找到）→ 目标已满足，不问。
+    if (out.状态==新字段询问材料状态::已取得) {
+        要求(有效(m.问题主体) && 有效(m.被问栏),"field question asked structure missing");
+        for (const auto& q:s.语言owner.查询同结构问题(m.定位.信息节点,m.问题主体,m.被问栏)) {
+            if (q.答案 || !s.语言owner.查找问题答案(q.问题节点).答案组.empty()) {
+                m.已答问题=q.问题节点;out.状态=新字段询问材料状态::问题已有答案;
+                return out;
+            }
+        }
+    }
     return out;
 }
 新字段询问文字结果 字段询问本能运行服务::生成询问文字(const 新正式字段询问目标& target) const {
@@ -190,6 +233,41 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         "field question archive readback mismatch");
     return 新出站表达留档状态::已留档;
 }
+新字段询问问题建立读回 字段询问本能运行服务::建立出站问题(const 方法参数场景& scene,
+    const 新字段询问材料& m,稳定编码 action) {
+    auto& s=*实现_;实现::租约 lease(s);
+    auto expected=新_本能函数管理类::读取本次执行实例(scene);
+    if(!expected)expected=新_本能函数管理类::读取本次直接调用(scene);
+    if(!expected){std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end())expected=i->second;}
+    const auto a=s.动态.获取动态(action);
+    要求(expected&&a&&a->动作来源节点==expected&&a->主题存在节点==m.自我&&a->动作定义节点==scene.方法节点(),
+        "field question establishment explicit action mismatch");
+    要求(有效(m.问题主体)&&有效(m.被问栏)&&有效(m.交互者)&&有效(m.外设场景),"field question asked structure missing");
+    const auto 来源=*a->动作来源节点;
+    const auto 前提已变化=[&]{
+        std::optional<稳定编码> own;
+        { std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end()){own=i->second;s.自建调用.erase(i);} }
+        if(own)s.方法.收束直接调用身份(*own);
+        return 新字段询问问题建立读回{};
+    };
+    // 问题建在已留档出站具体表达所在的出站来源语言场景（7240 §5.5 第1项）。
+    const auto 场景=s.语言世界.建立或取得出站来源场景(来源);
+    if(场景.状态==新来源子场景状态::前提已变化)return 前提已变化();
+    要求((场景.状态==新来源子场景状态::已建立||场景.状态==新来源子场景状态::已存在)&&场景.信息.has_value(),"outbound language scene publication failed");
+    const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});要求(time.成功(),"field question UTC unavailable");
+    const 新语言问题定义 def{场景.信息->场景节点,来源,m.外设场景,m.交互者,m.定位.信息节点,m.问题主体,m.被问栏,time.证据->UTC纳秒};
+    const auto q=s.语言owner.建立或取得出站问题(def);
+    switch(q.状态){
+    case 新语言问题建立状态::前提已变化:return 前提已变化();
+    case 新语言问题建立状态::已建立:case 新语言问题建立状态::已存在:break;
+    default:throw std::logic_error("outbound question conflicts with archived expression or existing question");
+    }
+    要求(q.问题节点.has_value()&&有效(*q.问题节点),"outbound question node missing");
+    const auto back=s.语言owner.读取问题(*q.问题节点);
+    要求(back&&back->定义.出站来源==来源&&back->定义.被认知需求==def.被认知需求&&back->定义.主体==def.主体
+        &&back->定义.被问栏==def.被问栏,"outbound question readback mismatch");
+    return {新字段询问问题建立状态::已建立,*q.问题节点};
+}
 新字段询问入列读回 字段询问本能运行服务::提交询问输出(const 方法参数场景& scene,
     const 新字段询问材料& m,稳定编码 action,std::string_view text) {
     auto& s=*实现_;实现::租约 lease(s);
@@ -243,12 +321,16 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
             case 新字段询问材料状态::字段已有值:v.原因=新本能字段询问原因::字段已有值;break;
             case 新字段询问材料状态::字段不适用:v.原因=新本能字段询问原因::字段不适用;break;
             case 新字段询问材料状态::前提已变化:v.原因=新本能字段询问原因::前提已变化;break;
+            case 新字段询问材料状态::问题已有答案:v.原因=新本能字段询问原因::问题已有答案;
+                if (read.材料) v.问题节点=read.材料->已答问题;
+                break;
             default:v.原因=新本能字段询问原因::定位未支持;break;
             }
             r.结果.字段询问=std::move(v);
-            // 目标判定（5380 §2.4、§3.6）：D该字段已有值或不适用 → 零动作返回目标已满足，不报“已取得”。
-            // 只在动作前到达（动作后的中断只以前提已变化发布）。
-            if (read.状态==新字段询问材料状态::字段已有值 || read.状态==新字段询问材料状态::字段不适用) {
+            // 目标判定（5380 §2.4、§3.6）：D该字段已有值或不适用、或自然语言世界中该问题已有答案 → 零动作返回
+            // 目标已满足，不报“已取得”。只在动作前到达（动作后的中断只以前提已变化发布）。
+            if (read.状态==新字段询问材料状态::字段已有值 || read.状态==新字段询问材料状态::字段不适用
+                || read.状态==新字段询问材料状态::问题已有答案) {
                 要求(r.结果.动作阶段==新本能函数动作阶段::未进入动作,"field question goal judgment after action");
                 r.结果.状态=新本能函数执行状态::目标已满足;
                 r.结果.结果取得状态=新本能函数结果取得状态::未取得;
@@ -283,7 +365,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         if (!fresh.材料) throw std::logic_error("field question recheck missing");
         const auto& f=*fresh.材料;
         if (f.定位.信息节点!=m.定位.信息节点 || f.定位.正式内容路径!=m.定位.正式内容路径
-            || f.自我!=m.自我 || f.交互者!=m.交互者 || f.窗口!=m.窗口 || f.输出特征!=m.输出特征) {
+            || f.自我!=m.自我 || f.交互者!=m.交互者 || f.窗口!=m.窗口 || f.输出特征!=m.输出特征
+            || f.问题主体!=m.问题主体 || f.被问栏!=m.被问栏) {
             publishRead({新字段询问材料状态::前提已变化,{}});return r;
         }
         if (p->已请求停止()) return r;
@@ -304,15 +387,21 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         case 新出站表达留档状态::模拟不留档:break;
         default:throw std::logic_error("field question archive status undefined");
         }
+        // 7240 §5.5 运行1：语言owner在出站来源语言场景中建立“问题”（被问结构＋答案初无值），问题节点随结果返回。
+        const auto question=p->建立出站问题(场景,f,action);
+        if (question.状态==新字段询问问题建立状态::前提已变化) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
+        if (question.状态!=新字段询问问题建立状态::已建立 || !有效(question.问题节点))
+            throw std::logic_error("field question establishment status undefined");
         const auto receipt=p->提交询问输出(场景,f,action,text.UTF8正文);
         if (!有效(receipt.消息节点)||!有效(receipt.入列状态)||!有效(receipt.入列动态)||receipt.提交序号==0)
             throw std::logic_error("field question output receipt incomplete");
         新本能字段询问返回材料 out;out.原因=新本能字段询问原因::已入列;
         out.正式定位=f.定位;out.已读取字段=f.字段内容;
         out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt.消息节点,action,receipt.入列状态,receipt.入列动态,receipt.提交序号};
+        out.问题节点=question.问题节点;
         r.结果.字段询问=std::move(out);
-        // ASK-READ-SCENE v0.4 §3.2（2026-11-12用户裁决）：问话入列后不结束，等待对方回应。
-        // 本函数的操作（入列）已完成；结果（交互场景中出现对方回应消息）由任务按结果获取方案等待并检测。
+        // ASK-READ-SCENE v0.5 §3.2（5380 §3.6）：问话入列后进入“动作已发出、等待结果”（等待中）。
+        // 结果（问题的“答案”由无值变有值）由任务按出站来源到自然语言世界按结构比对检测并登记。
         r.结果.状态=新本能函数执行状态::异步已受理;
         r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
         r.结果.结果取得状态=新本能函数结果取得状态::待取得;

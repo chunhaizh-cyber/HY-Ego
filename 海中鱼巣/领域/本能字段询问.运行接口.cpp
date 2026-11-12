@@ -13,6 +13,10 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     要求(r.状态==正式信息参数读取状态::已读取 && r.信息 && !r.完整保护组.empty(),"formal field question reader unavailable");return true;
 }
 }
+新字段询问问题建立读回 新本能字段询问运行接口::建立出站问题(
+    const 方法参数场景&,const 新字段询问材料&,稳定编码) {
+    throw std::logic_error("field question runtime does not establish outbound questions");
+}
 新字段询问材料读回 读取通用询问材料(const 方法参数场景& scene,
     const 新字段询问登记配置& c,const 正式信息参数读取接口& reader,const 新字段询问外设窗口对应& 对应外设窗口,
     const std::function<std::optional<稳定编码>(稳定编码)>& 读取当前交互者) {
@@ -21,6 +25,7 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     // 结构类“定位未支持”（5380 §3.6）：真实执行中参数形状、Q引用D与单个受支持字段由补问叶子召回和参数1正式指定保证，
     // 运行依赖由装配保证，不满足即工程错误；模拟学习按采样实参运行、无外设窗口对应，没有这一保证，仍按定位未支持返回（不进入动作）。
     // ASK-READ-SCENE v0.4 §3.1 起询问本能在模拟用途直接按仅条件样例返回，不再调用本读取；模拟分支仅为其它模拟运行接口保留。
+    要求(有效(c.需求目标存在类型)&&有效(c.需求目标特征类型),"field question subject mapping slots missing");
     const auto 未支持=[&](const char* text)->新字段询问材料读回 {
         要求(scene.用途()==新方法参数场景用途::模拟,text);return {R::定位未支持,{}};
     };
@@ -76,6 +81,22 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     if (value->状态==正式内容值状态::不适用) return {R::字段不适用,std::move(m)};
     if (value->状态==正式内容值状态::已知 && value->值) return {R::字段已有值,std::move(m)};
     要求(value->状态==正式内容值状态::当前未知 && !value->值,"formal unknown slot has contradictory payload");
+    // 被问结构（7240 §5.5；顶层裁决 2026-11-12）：目标形式及载荷类字段统一映射为
+    // （主体＝D的目标存在，被问栏＝D的目标特征类型）；其它字段或映射所需D字段未知时无法映射，按工程断言。
+    const auto 字段=loc.正式内容路径.front();
+    if (字段==c.需求目标存在类型 || 字段==c.需求目标特征类型)
+        return 未支持("field question slot has no (subject, asked field) mapping");
+    const auto 读引用=[&](稳定编码 类型)->std::optional<稳定编码> {
+        for (const auto& item:d.信息->直接内容组) if (item.特征类型==类型) {
+            if (item.内容.状态!=正式内容值状态::已知 || !item.内容.值) return std::nullopt;
+            const auto* v=std::get_if<稳定编码>(&*item.内容.值);
+            return v && 有效(*v) ? std::optional{*v} : std::nullopt;
+        }
+        return std::nullopt;
+    };
+    const auto 主体=读引用(c.需求目标存在类型),被问栏=读引用(c.需求目标特征类型);
+    if (!主体 || !被问栏) return 未支持("field question subject mapping requires known target existence and feature type");
+    m.问题主体=*主体;m.被问栏=*被问栏;
     return {R::已取得,std::move(m)};
 }
 } // namespace 海中鱼巣

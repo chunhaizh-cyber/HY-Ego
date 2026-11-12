@@ -1418,12 +1418,15 @@ enum class 新任务治理结果获取状态 : std::uint8_t {
     结构依赖未就绪
 };
 
+enum class 新字段询问答案来源 : std::uint8_t;
 struct 新任务治理结果获取结果 final {
     新任务治理结果获取请求 原请求;
     新任务治理结果获取状态 状态 =
         新任务治理结果获取状态::结构不一致;
     std::optional<新任务操作状态> 执行结束状态;
     std::optional<新任务影响评估结果> 影响评估;
+    // ASK-READ-SCENE v0.5 §3.2：补问等答案执行检测到问题答案时的答案来源（消息转换／自我写入），回报用。
+    std::optional<新字段询问答案来源> 问题答案来源;
 };
 
 enum class 新任务治理结果材料核验状态 : std::uint8_t {

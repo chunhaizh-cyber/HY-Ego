@@ -281,20 +281,18 @@ template<class 端口类型>
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"询问指定需求字段",L"字段询问未知工程异常。");
     }
 }
-std::optional<稳定编码> 新_本能函数集::字段询问外设场景标识类型() noexcept {
+新字段询问答案读回 新_本能函数集::读取字段询问执行问题答案(稳定编码 出站来源) noexcept {
     try {
         const auto p=新_本能函数管理类::租用字段询问端口();
-        const auto c=p ? p->读取登记材料() : std::nullopt;
-        return c ? std::optional{c->外设场景标识类型} : std::nullopt;
-    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问外设场景标识类型",L"字段询问端口读取工程异常。"); }
+        if (!p) throw std::logic_error("field question port unavailable");
+        return p->读取执行问题答案(出站来源);
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取字段询问执行问题答案",L"字段询问端口未装配或读取工程异常。"); }
 }
-std::optional<std::pair<稳定编码,稳定编码>> 新_本能函数集::读取字段询问回应观察定位(
-    稳定编码 外设场景,稳定编码 窗口副本) noexcept {
+新字段询问答案读回 新_本能函数集::取得字段询问执行问题答案(稳定编码 出站来源) noexcept {
     try {
         const auto p=新_本能函数管理类::租用字段询问端口();
-        if (!p) return std::nullopt;
-        const auto r=p->读取回应观察定位(外设场景,窗口副本);
-        return r ? std::optional{std::pair{r->外设窗口,r->接收数量特征}} : std::nullopt;
-    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取字段询问回应观察定位",L"字段询问端口读取工程异常。"); }
+        if (!p) throw std::logic_error("field question port unavailable");
+        return p->取得执行问题答案(出站来源);
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取得字段询问执行问题答案",L"字段询问端口未装配或登记工程异常。"); }
 }
 } // namespace 海中鱼巣
