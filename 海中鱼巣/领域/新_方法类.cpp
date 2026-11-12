@@ -9122,6 +9122,13 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
 std::optional<新特征匹配定义快照> 新_方法类::读取模拟特征范围(稳定编码 C) const noexcept {
     return 特征服务_.捕获特征匹配定义(C);
 }
+bool 新_方法类::是模拟特征概念(稳定编码 C) const noexcept {
+    const auto 判定 = 特征概念服务_.判定特征概念节点(C);
+    if (!判定)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"是模拟特征概念",
+            L"特征概念身份判定未完成，未形成业务判定。");
+    return *判定;
+}
 std::optional<新特征值信息> 新_方法类::读取模拟候选材料(稳定编码 V) const noexcept {
     return 特征值服务_.获取特征值(V);
 }

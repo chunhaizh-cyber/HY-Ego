@@ -135,6 +135,9 @@ public:
     存在概念实例候选读取结果 读取模拟存在原型候选(稳定编码 C) const noexcept;
     新存在概念匹配结果 比较模拟存在匹配材料(const 新存在概念匹配材料&) const noexcept;
     std::optional<新特征匹配定义快照> 读取模拟特征范围(稳定编码 C) const noexcept;
+    // 读取模拟特征范围只接受特征概念；声明可为特征或信息结构的位置（如可能结果）先用本函数分流。
+    // 节点不存在或属其它概念模块为false；类型字段损坏或读取未完成属工程故障，就地终止。
+    bool 是模拟特征概念(稳定编码 C) const noexcept;
     std::optional<新特征值信息> 读取模拟候选材料(稳定编码 V) const noexcept;
     // 单向复制的只读来源；调用者持有值快照，不取得源owner的写入口。
     std::optional<新存在信息> 读取模拟来源存在(稳定编码 E) const;
