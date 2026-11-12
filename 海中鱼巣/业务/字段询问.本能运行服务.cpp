@@ -194,11 +194,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});要求(time.成功(),"field question UTC unavailable");
     // 内部场景的说话动作作用于交互窗口（窗口副本，现实交互场景中的存在）及其输出队列特征（登记结果组：参数3的输出队列，
     // 5380 v1.14 §4第1项）；外设窗口只在入列时按外设场景标识对应（三场景分工，7240 §1）。
-    std::optional<稳定编码> 副本输出;
-    if (const auto 副本=s.存在.获取存在(m.窗口副本)) for (const auto f:副本->特征节点组) {
-        const auto F=s.特征.获取特征(f);
-        if (F && s.特征概念.比较单特征概念(F->特征概念节点,F->特征概念节点).特征类型根==std::optional{s.配置->输出队列类型}) { 副本输出=f;break; }
-    }
+    const auto 副本输出=s.世界.确保交互窗口输出队列特征(m.窗口副本,s.配置->输出队列类型);
     要求(副本输出.has_value(),"field question window copy output queue feature missing");
     const auto action=s.世界.建立动作动态(m.执行场景,{m.自我,scene.方法节点(),*source,m.窗口副本,*副本输出,
         {新状态时间语义::实例绝对UTC,time.证据->UTC纳秒}});
@@ -218,7 +214,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     if(!expected){std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end())expected=i->second;}
     const auto a=s.动态.获取动态(action);
     要求(expected&&a&&a->动作来源节点==expected&&a->主题存在节点==m.自我
-        &&a->动作定义节点==scene.方法节点()&&a->动作目标存在节点==m.窗口&&a->动作目标特征节点==m.输出特征,
+        &&a->动作定义节点==scene.方法节点()&&a->动作目标存在节点==m.窗口副本&&a->动作目标特征节点.has_value(),
         "field question archive explicit action mismatch");
     要求(text.状态==新字段询问文字状态::已生成且唯一回读&&有效(text.所用组织知识节点),"field question archive meaning missing");
     // 使用动作中正式保存的来源，不能用动作节点充当来源。
@@ -291,9 +287,9 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     const auto a=s.动态.获取动态(action);
     要求(expected && a && a->动作来源节点==expected
         && a->主题存在节点==m.自我 && a->动作定义节点==scene.方法节点()
-        && a->动作目标存在节点==m.窗口 && a->动作目标特征节点==m.输出特征,"field question explicit action mismatch");
+        && a->动作目标存在节点==m.窗口副本 && a->动作目标特征节点.has_value(),"field question explicit action mismatch");
     const auto w=s.外设.读取对话框来源(m.窗口);要求(w.has_value(),"field question window disappeared after action");
-    const auto r=s.外设.提交输出({w->定位,std::string(text),action});
+    const auto r=s.外设.提交输出({w->定位,std::string(text),action,m.窗口副本});
     要求(r.状态==新外设输出队列状态::已入列 && r.消息 && r.入列状态 && r.入列动态,"field question queue publication incomplete");
     std::optional<稳定编码> own;
     { std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end()){own=i->second;s.自建调用.erase(i);} }
@@ -415,7 +411,10 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         r.结果.状态=新本能函数执行状态::异步已受理;
         r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
         r.结果.结果取得状态=新本能函数结果取得状态::待取得;
-        r.结果.已形成状态节点组={receipt.入列状态};r.结果.已形成动态节点组={receipt.入列动态};
+        // 外设输出队列新增问话属顺带、不入结果组（5380 §3.6），且入列状态描述外设窗口（外设场景），
+        // 不是本次动作作用对象（内部交互窗口副本）的结果目标，故不作为本次已形成状态记入X；
+        // 入列事实仍随已提交输出回执返回，入列动态只用于依赖唤醒。
+        r.结果.已形成动态节点组={receipt.入列动态};
         r.结果.建议观察特征节点组={f.输出特征};
         return r;
 }

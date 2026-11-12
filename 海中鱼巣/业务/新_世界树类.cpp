@@ -1561,6 +1561,17 @@ std::optional<稳定编码> 新_世界树类::读取自我原场景() const noex
     }
 }
 
+std::optional<稳定编码> 新_世界树类::确保交互窗口输出队列特征(稳定编码 窗口副本, 稳定编码 输出队列类型) noexcept {
+    try {
+        std::lock_guard 锁(新世界树互斥);
+        if (!已初始化_ || !有效(窗口副本) || !有效(输出队列类型)) return std::nullopt;
+        if (const auto 已有 = 查找顶层特征已加锁(窗口副本, 输出队列类型)) return 已有;
+        const auto 添加 = 存在服务_.添加无当前值特征(窗口副本, 输出队列类型);
+        if (添加.状态 != 新存在操作状态::已完成 || !添加.特征节点) return std::nullopt;
+        return 添加.特征节点;
+    } catch (...) { return std::nullopt; }
+}
+
 std::optional<稳定编码> 新_世界树类::查找顶层特征已加锁(稳定编码 持有者, 稳定编码 类型根) const {
     const auto 存在 = 存在服务_.获取存在(持有者);
     if (!存在) return std::nullopt;
