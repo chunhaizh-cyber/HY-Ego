@@ -93,6 +93,18 @@ bool 同义结果(const 新方法结果定义& 左,const 新方法结果定义& 
 稳定编码 虚拟存在启用特征字段{};
 稳定编码 虚拟存在专属概念字段{};
 稳定编码 方法启用特征类型{};
+// METHOD-LEARN-STATE：方法虚拟存在的配对数特征（序号0条件结果配对数、1已知结果配对数）与方法状态治理结构
+// （状态变化定义、学习记录）。独立扩展，不加入既有方法架构必需编码组，也不挂方法组织根。
+std::array<稳定编码, 2> 方法配对数特征类型{};
+std::array<稳定编码, 2> 虚拟存在配对数特征字段{};
+稳定编码 方法状态治理根{}, 方法状态治理根类型{};
+稳定编码 状态变化定义类型{}, 状态变化定义成员字段{}, 定义学习种类字段{}, 定义特征种类字段{}, 定义角色字段{};
+稳定编码 状态变化角色类型{}, 角色所属定义字段{}, 角色规格字段{};
+稳定编码 学习记录类型{}, 学习记录成员字段{}, 记录方法字段{}, 记录虚拟存在字段{}, 记录启用特征字段{},
+    记录学习种类字段{}, 记录特征种类字段{}, 记录特征字段{}, 记录前值字段{}, 记录后值字段{},
+    记录前状态字段{}, 记录时间字段{}, 记录动作定义字段{}, 记录主体字段{}, 记录现实场景字段{},
+    记录来源材料字段{};
+std::map<std::pair<std::int64_t, std::int64_t>, 稳定编码> 方法状态变化定义索引;
 
 稳定编码 方法头作用存在概念字段{};
 稳定编码 方法头特征类型概念字段{};
@@ -4005,7 +4017,7 @@ struct 初始声明补齐候选 final {
     std::vector<方法虚拟存在准备> 虚拟组;
     新特征I64准备结果 旧更新;
     std::optional<稳定编码> 前状态;
-    std::int64_t 前时间 = 0;
+    std::int64_t 前时间 = 0, 动作时间 = 0;
     std::optional<稳定编码> 本次发布方法;
     try {
         auto 请求=原请求;
@@ -4141,6 +4153,7 @@ struct 初始声明补齐候选 final {
             }
             return 封存方法片段(std::move(原子),已建节点,存在概念服务_,特征概念服务_);
         } catch (const std::exception& e) { 工厂异常 = e.what(); throw; } catch (...) { 工厂异常 = "non-standard"; throw; } };
+        动作时间 = 方法当前UTC纳秒();
         const auto 发表 = 内部治理世界_->发布新方法治理场景组({虚拟组.front().信息.引用},
             工厂, 旧更新.准备 ? &*旧更新.准备 : nullptr);
         if (发表.状态 != 新方法治理场景发布工程状态::已发布)
@@ -4154,14 +4167,13 @@ struct 初始声明补齐候选 final {
             const 新方法虚拟存在引用 引用{替代父代->节点, 替代父代->方法虚拟存在节点,
                 替代父代->启用特征节点};
             同步方法专属概念(引用);
-            const auto 后时间 = 方法当前UTC纳秒();
-            if (后时间 <= 前时间) throw std::runtime_error("method UTC not increasing");
-            const auto s = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
-                {新状态时间语义::实例绝对UTC, 后时间});
-            if (s.状态 != 新状态操作状态::已完成 || !s.状态节点)
-                throw std::runtime_error("method replacement after state failed");
-            内部治理世界_->完成方法特征变化(引用, *前状态, *s.状态节点);
+            // METHOD-LEARN-STATE：替代父代的启用修改经方法owner统一入口形成治理动作并交付因果；
+            // 联动发布可被拒绝，故学习记录与动作在联动发布确认后以发布前取得的动作时间形成。
+            形成方法状态变化已加锁(引用, 新方法学习种类::启用修改, 新方法状态特征种类::启用,
+                引用.启用特征节点, 1, 0, *前状态, 动作时间, {}, {方法节点});
         }
+        // 新方法登记时建立配对数特征，初值取实际数量（启动补齐之后登记的方法）。
+        if (有效(方法状态治理根)) 确保方法配对数特征已加锁(方法节点);
         const auto 读回 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
         if (!读回 || 读回->行为 != 请求.行为 ||读回->初始必要条件!=请求.初始必要条件
             ||读回->登记结果组!=请求.登记结果组
@@ -4618,7 +4630,27 @@ std::optional<新方法虚拟存在读回> 新_方法类::读取方法虚拟存�
             || f持有.size() != 1 || f持有.front().所属节点 != *vm
             || ec持有.size() != 1 || ec持有.front().所属节点 != *vm)
             throw std::runtime_error("method virtual feature ownership not unique");
-        return 新方法虚拟存在读回{引用, *ec, 方法启用特征类型, v->特征概念节点, *value};
+        新方法虚拟存在读回 读回{引用, *ec, 方法启用特征类型, v->特征概念节点, *value};
+        // METHOD-LEARN-STATE：配对数特征（旧方法补齐前可缺）。
+        for (std::size_t i = 0; i < 2; ++i) {
+            if (!有效(虚拟存在配对数特征字段[i]) || !有效(方法配对数特征类型[i])) continue;
+            const auto 组 = 全局基础数据集.查询字段(*vm, 虚拟存在配对数特征字段[i]);
+            if (组.empty()) continue;
+            const auto* F = 组.size() == 1 ? std::get_if<稳定编码>(&组.front().内容) : nullptr;
+            const auto 特征 = F ? 特征服务_.获取特征(*F) : std::nullopt;
+            const auto* 数 = 特征 && 特征->当前值 ? std::get_if<std::int64_t>(&*特征->当前值) : nullptr;
+            const auto 持有 = F ? 全局基础数据集.查询目标字段(*F, 虚拟存在配对数特征字段[i])
+                : decltype(全局基础数据集.查询目标字段(*vm, 虚拟存在配对数特征字段[i])){};
+            if (!数 || *数 < 0 || 特征->上级特征节点 || 特征->实例单位
+                || 持有.size() != 1 || 持有.front().所属节点 != *vm)
+                throw std::runtime_error("method pair-count feature ownership/value inconsistent");
+            const auto 类型 = 特征概念服务_.比较单特征概念(特征->特征概念节点, 方法配对数特征类型[i]);
+            if (类型.状态 != 特征概念规则状态::已完成 || 类型.特征类型根 != 方法配对数特征类型[i])
+                throw std::runtime_error("method pair-count feature has wrong type");
+            (i == 0 ? 读回.条件结果配对数 : 读回.已知结果配对数)
+                = 新方法配对数特征读回{*F, 方法配对数特征类型[i], *数};
+        }
+        return 读回;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法虚拟存在", L"方法虚拟存在、启用特征或专属概念损坏，保留现场。");
     }
@@ -4759,6 +4791,9 @@ void 新_方法类::初始化治理场景组织() noexcept {
             } catch (...) { if (!已发布) 清理未绑定方法特征(准备); throw; }
         }
         内部治理世界_->迁移已有方法治理场景(全部);
+        // METHOD-LEARN-STATE：方法状态治理结构（配对数特征类型、状态变化定义、学习记录根）与旧方法配对数特征幂等补齐。
+        确保方法状态治理结构已加锁();
+        for (const auto& 引用 : 全部) 确保方法配对数特征已加锁(引用.方法节点);
         const auto 退役组 = 读取旧网页退役成员(特征概念服务_);
         for (const auto n : 退役组) {
             const auto m = 读取方法信息本体(n, 特征概念服务_, *this, 存在概念服务_, false, true);
@@ -5051,7 +5086,16 @@ bool 提交前提已变化(基础节点组追加状态 s) {
     稳定编码 方法节点,
     const std::vector<新方法条件结果定义>& 新配对定义组,
     const 执行结构读取结果* 学习基线) noexcept {
-    return 追加条件结果内部(方法节点,新配对定义组,新方法知识来源种类::模拟,学习基线);
+    新方法学习发布结果 结果;
+    {
+        std::lock_guard 锁(新方法互斥);
+        学习前确保配对数特征(方法节点);
+        结果 = 追加条件结果内部(方法节点,新配对定义组,新方法知识来源种类::模拟,学习基线);
+        if (结果.状态 == 新方法学习发布状态::已发布)
+            学习后形成方法状态(方法节点, 新方法学习种类::模拟发布, 结果.新配对节点组);
+    }
+    发出方法状态通知();
+    return 结果;
 }
 新_方法类::学习发布基线状态 新_方法类::核对学习发布基线(const 执行结构读取结果& 基线) const {
     using 状态 = 学习发布基线状态;
@@ -5091,7 +5135,16 @@ bool 提交前提已变化(基础节点组追加状态 s) {
 }
 新方法学习发布结果 新_方法类::确保先天被动配对(
     稳定编码 方法节点,const 新方法条件结果定义& 定义) noexcept {
-    return 追加条件结果内部(方法节点,{定义},新方法知识来源种类::先天);
+    std::lock_guard 锁(新方法互斥);
+    const auto 结果 = 追加条件结果内部(方法节点,{定义},新方法知识来源种类::先天);
+    // 先天被动配对属本能登记的初始知识（不是学习）：只按实际数量校准配对数特征，不形成状态或动作。
+    if (结果.状态 == 新方法学习发布状态::已发布) {
+        try { 校准方法配对数特征已加锁(方法节点); }
+        catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确保先天被动配对", L"先天配对已发布但配对数特征校准失败，保留现场。");
+        }
+    }
+    return 结果;
 }
 新方法学习发布结果 新_方法类::追加条件结果内部(
     稳定编码 方法节点,
@@ -5320,6 +5373,27 @@ bool 提交前提已变化(基础节点组追加状态 s) {
 }
 
 新方法学习发布结果 新_方法类::融合模拟条件结果(
+    稳定编码 方法节点, 稳定编码 新配对节点,
+    std::vector<稳定编码>* 被替换配对组) noexcept {
+    新方法学习发布结果 结果;
+    {
+        std::lock_guard 锁(新方法互斥);
+        学习前确保配对数特征(方法节点);
+        std::vector<稳定编码> 被替换;
+        结果 = 融合模拟条件结果内部(方法节点, 新配对节点, &被替换);
+        if (被替换配对组) *被替换配对组 = 被替换;
+        if (结果.状态 == 新方法学习发布状态::已发布) {
+            std::vector<稳定编码> 来源{新配对节点};
+            来源.insert(来源.end(), 结果.新配对节点组.begin(), 结果.新配对节点组.end());
+            来源.insert(来源.end(), 被替换.begin(), 被替换.end());
+            学习后形成方法状态(方法节点, 新方法学习种类::融合, 来源);
+        }
+    }
+    发出方法状态通知();
+    return 结果;
+}
+
+新方法学习发布结果 新_方法类::融合模拟条件结果内部(
     稳定编码 方法节点, 稳定编码 新配对节点,
     std::vector<稳定编码>* 被替换配对组) noexcept {
     新方法学习发布结果 结果;
@@ -5618,6 +5692,14 @@ bool 提交前提已变化(基础节点组追加状态 s) {
 新方法建立结果 新_方法类::确保本能方法登记(
     const std::string& 登记名,
     const 新方法知识建立请求& 原请求) noexcept {
+    const auto 结果 = 确保本能方法登记内部(登记名, 原请求);
+    发出方法状态通知();
+    return 结果;
+}
+
+新方法建立结果 新_方法类::确保本能方法登记内部(
+    const std::string& 登记名,
+    const 新方法知识建立请求& 原请求) noexcept {
     try {
         auto 请求=原请求;
         规范内容关系声明(请求);
@@ -5819,6 +5901,12 @@ bool 提交前提已变化(基础节点组追加状态 s) {
 }
 
 新方法建立结果 新_方法类::退役旧网页本能登记(const std::string& 登记名) noexcept {
+    const auto 结果 = 退役旧网页本能登记内部(登记名);
+    发出方法状态通知();
+    return 结果;
+}
+
+新方法建立结果 新_方法类::退役旧网页本能登记内部(const std::string& 登记名) noexcept {
     // 网页对话三项已删除（5380 v1.10 §3.8，AGENTS §5 旧代码处置），只剩旧两参数获取服务对象的退役。
     if (登记名 != 新本能函数登记名_旧两参数获取服务对象)
         return {新方法操作状态::函数登记不合法, std::nullopt};
@@ -5865,6 +5953,7 @@ bool 提交前提已变化(基础节点组追加状态 s) {
             保护组.push_back(m.节点);
         }
         const auto 片段 = 封存方法片段(std::move(请求), 保护组, 存在概念服务_,特征概念服务_);
+        const auto 动作时间 = 方法当前UTC纳秒();
         零发表 = false;
         const auto 发布 = 特征服务_.提交顶层I64更新(*准备.准备, {片段});
         if (发布.状态 != 基础节点组追加状态::已完成) {
@@ -5882,16 +5971,12 @@ bool 提交前提已变化(基础节点组追加状态 s) {
             throw std::runtime_error("retirement finalization failed");
         特征服务_.结束顶层I64更新(*准备.准备);
         同步方法专属概念(引用);
-        const auto 后时间 = 方法当前UTC纳秒();
-        if (后时间 <= 前时间) throw std::runtime_error("retirement time not increasing");
-        const auto s1 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
-            {新状态时间语义::实例绝对UTC, 后时间});
-        if (s1.状态 != 新状态操作状态::已完成 || !s1.状态节点)
-            throw std::runtime_error("retirement after state unavailable");
-        内部治理世界_->完成方法特征变化(引用, *前状态, *s1.状态节点);
+        (void)前时间;
+        // METHOD-LEARN-STATE：退役的启用修改经方法owner统一入口形成治理动作并交付因果。
+        形成方法状态变化已加锁(引用, 新方法学习种类::启用修改, 新方法状态特征种类::启用,
+            引用.启用特征节点, 1, 0, *前状态, 动作时间, {}, {});
         const auto 读回 = 查询本能登记结构(登记名, 特征概念服务_, *this, 存在概念服务_);
-        if (读回.状态 != 新方法操作状态::登记已退役 || 读回.方法节点 != 末代.节点
-            || !内部治理世界_->读取方法特征变化(引用, *前状态, *s1.状态节点))
+        if (读回.状态 != 新方法操作状态::登记已退役 || 读回.方法节点 != 末代.节点)
             throw std::runtime_error("retirement final readback failed");
         return 读回;
     } catch (const 引用内容定义前提变化&) {
@@ -7318,6 +7403,14 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
 新方法操作状态 新_方法类::修改启用状态(
     稳定编码 方法节点,
     新方法启用状态 新状态) noexcept {
+    const auto 结果 = 修改启用状态内部(方法节点, 新状态);
+    发出方法状态通知();
+    return 结果;
+}
+
+新方法操作状态 新_方法类::修改启用状态内部(
+    稳定编码 方法节点,
+    新方法启用状态 新状态) noexcept {
     新特征I64准备结果 准备;
     std::optional<稳定编码> 前状态;
     bool 已证零发表 = true;
@@ -7353,6 +7446,7 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
         if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备
             || 准备.准备->原当前值() != static_cast<std::int64_t>(方法->启用状态)
             || !准备.准备->核心有变化()) throw std::runtime_error("method enabled update not prepared");
+        const auto 动作时间 = 方法当前UTC纳秒();
         已证零发表 = false;
         const auto commit = 特征服务_.提交顶层I64更新(*准备.准备, {});
         if (commit.状态 != 基础节点组追加状态::已完成) {
@@ -7366,16 +7460,12 @@ bool 新_方法类::是方法节点(稳定编码 节点) const noexcept {
             throw std::runtime_error("method enabled feature finalization failed");
         特征服务_.结束顶层I64更新(*准备.准备);
         同步方法专属概念(引用);
-        const auto 后时间 = 方法当前UTC纳秒();
-        if (后时间 <= 前时间) throw std::runtime_error("method feature UTC not increasing");
-        const auto s1 = 状态服务_.建立状态(引用.虚拟存在节点, 引用.启用特征节点,
-            {新状态时间语义::实例绝对UTC, 后时间});
-        if (s1.状态 != 新状态操作状态::已完成 || !s1.状态节点)
-            throw std::runtime_error("method enabled after state unavailable");
-        内部治理世界_->完成方法特征变化(引用, *前状态, *s1.状态节点);
+        // METHOD-LEARN-STATE：启用修改经方法owner统一入口形成学习记录、治理动作、后状态并交付因果。
+        (void)前时间;
+        形成方法状态变化已加锁(引用, 新方法学习种类::启用修改, 新方法状态特征种类::启用,
+            引用.启用特征节点, static_cast<std::int64_t>(方法->启用状态), 新值, *前状态, 动作时间, {}, {});
         const auto v = 读取方法虚拟存在引用(引用);
-        if (!v || v->当前启用 != 新值
-            || !内部治理世界_->读取方法特征变化(引用, *前状态, *s1.状态节点))
+        if (!v || v->当前启用 != 新值)
             throw std::runtime_error("method enabled update final readback failed");
         return 新方法操作状态::已修改;
     } catch (const 引用内容定义前提变化&) {
@@ -9126,6 +9216,23 @@ namespace 海中鱼巣 {
 // TRIAL-LEARNING-DIRECT：方法owner直接发布尝试配对（无评审授权）。诊断责任：向上送出（发布后读回不符→发布结果未知，由学习侧按原请求收敛并上报）。
 新方法学习发布结果 新_方法类::发布尝试条件结果(const 新尝试补全候选& 候选) noexcept {
     新方法学习发布结果 结果;
+    {
+        std::lock_guard 锁(新方法互斥);
+        学习前确保配对数特征(候选.方法节点);
+        结果 = 发布尝试条件结果内部(候选);
+        if (结果.状态 == 新方法学习发布状态::已发布) {
+            std::vector<稳定编码> 来源 = 结果.新配对节点组;
+            if (结果.已有配对节点) 来源.push_back(*结果.已有配对节点);
+            if (有效(候选.执行实例节点)) 来源.push_back(候选.执行实例节点);
+            学习后形成方法状态(候选.方法节点, 新方法学习种类::尝试补全, 来源);
+        }
+    }
+    发出方法状态通知();
+    return 结果;
+}
+
+新方法学习发布结果 新_方法类::发布尝试条件结果内部(const 新尝试补全候选& 候选) noexcept {
+    新方法学习发布结果 结果;
     const auto 方法节点 = 候选.方法节点;
     if (!有效(方法节点) || !有效(候选.原配对节点)) {
         结果.状态 = 新方法学习发布状态::入口拒绝;
@@ -9296,5 +9403,434 @@ std::optional<稳定编码> 新_方法类::查找尝试配对(稳定编码 方�
         return {R::已完成,G::未知};
     }catch(const std::bad_alloc&){return {R::资源失败,G::未知};}
     catch(...){return {R::内部不一致,G::未知};}
+}
+
+// ---- METHOD-LEARN-STATE：学习改变方法状态（3300、4211 §4.2、5350、5370）----
+namespace {
+std::array<std::int64_t, 2> 计算方法配对数(const 新方法信息& 方法) {
+    std::int64_t 已知 = 0;
+    for (const auto& 配对 : 方法.条件结果组)
+        if (!配对.结果.结果项组.empty() || !配对.结果.参数关系组.empty()
+            || !配对.结果.场景事实限定组.empty()) ++已知;
+    return {static_cast<std::int64_t>(方法.条件结果组.size()), 已知};
+}
+std::size_t 配对数序号(新方法状态特征种类 种类) {
+    if (种类 == 新方法状态特征种类::条件结果配对数) return 0;
+    if (种类 == 新方法状态特征种类::已知结果配对数) return 1;
+    throw std::logic_error("not a pair-count feature kind");
+}
+bool 方法学习种类合法(std::int64_t v) noexcept {
+    return v >= static_cast<std::int64_t>(新方法学习种类::模拟发布)
+        && v <= static_cast<std::int64_t>(新方法学习种类::启用修改);
+}
+bool 方法状态特征种类合法(std::int64_t v) noexcept {
+    return v >= static_cast<std::int64_t>(新方法状态特征种类::启用)
+        && v <= static_cast<std::int64_t>(新方法状态特征种类::已知结果配对数);
+}
+基础联合节点快照 读取方法状态治理根快照() {
+    const auto 读 = 全局基础数据集.查询节点组完整结构({方法状态治理根});
+    if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 1 || !读.节点组.front().快照)
+        throw std::runtime_error("method state governance root snapshot unavailable");
+    return *读.节点组.front().快照;
+}
+}
+
+bool 新_方法类::装配治理执行主体读取(std::function<std::optional<稳定编码>()> 读取) noexcept {
+    std::lock_guard 锁(新方法互斥);
+    if (!读取 || 治理执行主体读取_) return false;
+    治理执行主体读取_ = std::move(读取);
+    return true;
+}
+
+bool 新_方法类::装配方法状态就绪通知(std::function<void(稳定编码)> 通知) noexcept {
+    std::lock_guard 锁(新方法互斥);
+    if (!通知 || 方法状态就绪通知_) return false;
+    方法状态就绪通知_ = std::move(通知);
+    return true;
+}
+
+// 结构与类型根由方法owner登记（与任务因素特征同口径）；已有登记只核验不重建。定义按“学习种类×改变的特征”全量登记。
+void 新_方法类::确保方法状态治理结构已加锁() {
+    std::vector<稳定编码*> 键{&方法状态治理根类型, &状态变化定义类型, &状态变化定义成员字段,
+        &定义学习种类字段, &定义特征种类字段, &定义角色字段, &状态变化角色类型, &角色所属定义字段,
+        &角色规格字段, &学习记录类型, &学习记录成员字段, &记录方法字段, &记录虚拟存在字段,
+        &记录启用特征字段, &记录学习种类字段, &记录特征种类字段, &记录特征字段, &记录前值字段,
+        &记录后值字段, &记录前状态字段, &记录时间字段, &记录动作定义字段, &记录主体字段,
+        &记录现实场景字段, &记录来源材料字段, &虚拟存在配对数特征字段[0], &虚拟存在配对数特征字段[1]};
+    if (!有效(方法状态治理根)) {
+        if (std::any_of(键.begin(), 键.end(), [](auto* p) { return 有效(*p); }))
+            throw std::runtime_error("partial method state governance schema");
+        std::vector<基础组内新节点> 组(键.size() + 1);
+        组.back().字段组.push_back({节点类型字段, 基础组内节点引用{0}});
+        const auto r = 全局基础数据集.原子建立节点组(组);
+        if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 组.size())
+            throw std::runtime_error("method state governance schema publication failed");
+        for (std::size_t i = 0; i < 键.size(); ++i) *键[i] = r.节点组[i];
+        方法状态治理根 = r.节点组.back();
+    }
+    std::set<稳定编码> 唯一键;
+    for (auto* p : 键) {
+        if (!节点仍存在(*p) || !唯一键.insert(*p).second)
+            throw std::runtime_error("method state governance schema key damaged");
+        for (const auto* 旧 : 架构编码组())
+            if (*旧 == *p) throw std::runtime_error("method state governance key collision");
+    }
+    if (读取唯一节点字段(方法状态治理根, 节点类型字段) != 方法状态治理根类型
+        || 方法状态治理根 == 新方法组织根节点
+        || !全局基础数据集.查询目标关系(方法状态治理根, 基础外部关系类型::父子).empty())
+        throw std::runtime_error("method state governance root ownership damaged");
+    特征概念定义 期望;
+    期望.材料类型 = 特征概念材料物理类型::I64标量;
+    期望.值域 = std::vector<特征概念I64闭区间>{{0, (std::numeric_limits<std::int64_t>::max)()}};
+    期望.比较规则 = 特征概念比较规则::I64数值;
+    期望.聚合规则 = 特征概念聚合规则::不自动聚合;
+    for (auto& 类型 : 方法配对数特征类型) {
+        if (!有效(类型)) 类型 = 特征概念服务_.建立或取得特征概念(期望, 特征值服务_);
+        const auto 概念 = 有效(类型) ? 特征概念服务_.获取特征概念(类型) : std::nullopt;
+        if (!概念 || 概念->材料类型 != 期望.材料类型 || 概念->值域 != 期望.值域 || 概念->单位
+            || 概念->比较规则 != 期望.比较规则 || 概念->聚合规则 != 期望.聚合规则)
+            throw std::runtime_error("method pair-count feature type invalid");
+    }
+    if (方法配对数特征类型[0] == 方法配对数特征类型[1]
+        || 方法配对数特征类型[0] == 方法启用特征类型 || 方法配对数特征类型[1] == 方法启用特征类型)
+        throw std::runtime_error("method state feature types share a type root");
+    const auto 读取索引 = [&] {
+        std::map<std::pair<std::int64_t, std::int64_t>, 稳定编码> 索引;
+        for (const auto& 字段 : 全局基础数据集.查询字段(方法状态治理根, 状态变化定义成员字段)) {
+            const auto* n = std::get_if<稳定编码>(&字段.内容);
+            const auto d = n ? 读取方法状态变化定义(*n) : std::nullopt;
+            if (!d || !索引.emplace(std::make_pair(static_cast<std::int64_t>(d->学习种类),
+                    static_cast<std::int64_t>(d->特征种类)), *n).second)
+                throw std::runtime_error("method state change definition damaged or duplicate");
+        }
+        return 索引;
+    };
+    auto 索引 = 读取索引();
+    基础节点组追加请求 请求;
+    for (std::int64_t 种类 = 1; 种类 <= static_cast<std::int64_t>(新方法学习种类::启用修改); ++种类)
+        for (std::int64_t 特征 = 1; 特征 <= static_cast<std::int64_t>(新方法状态特征种类::已知结果配对数); ++特征) {
+            if (索引.contains({种类, 特征})) continue;
+            const auto 规格 = 特征 == static_cast<std::int64_t>(新方法状态特征种类::启用) ? 方法启用特征类型
+                : 方法配对数特征类型[配对数序号(static_cast<新方法状态特征种类>(特征))];
+            const auto 起点 = 请求.新节点组.size();
+            基础组内新节点 定义, 角色;
+            定义.字段组 = {{节点类型字段, 状态变化定义类型}, {定义学习种类字段, 基础值{种类}},
+                {定义特征种类字段, 基础值{特征}}, {定义角色字段, 基础组内节点引用{起点 + 1}}};
+            角色.字段组 = {{节点类型字段, 状态变化角色类型}, {角色所属定义字段, 基础组内节点引用{起点}},
+                {角色规格字段, 规格}};
+            请求.新节点组.push_back(std::move(定义));
+            请求.新节点组.push_back(std::move(角色));
+            请求.追加字段组.push_back({方法状态治理根, 状态变化定义成员字段, 基础组内节点引用{起点}});
+        }
+    if (!请求.新节点组.empty()) {
+        请求.预期联合节点组.push_back(读取方法状态治理根快照());
+        const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+        if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 请求.新节点组.size())
+            throw std::runtime_error("method state change definitions publication failed");
+        索引 = 读取索引();
+    }
+    if (索引.size() != 12) throw std::runtime_error("method state change definitions incomplete");
+    方法状态变化定义索引 = std::move(索引);
+}
+
+std::optional<新方法状态变化定义> 新_方法类::读取方法状态变化定义(稳定编码 n) const noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!有效(状态变化定义类型) || !有效(状态变化定义成员字段) || !有效(n)) return std::nullopt;
+        const auto 归属 = 全局基础数据集.查询目标字段(n, 状态变化定义成员字段);
+        if (归属.empty() && !节点类型为(n, 状态变化定义类型)) return std::nullopt;
+        if (!节点类型为(n, 状态变化定义类型) || 归属.size() != 1 || 归属.front().所属节点 != 方法状态治理根)
+            throw std::runtime_error("method state change definition ownership damaged");
+        const auto 种类 = 读取唯一I64字段(n, 定义学习种类字段);
+        const auto 特征 = 读取唯一I64字段(n, 定义特征种类字段);
+        const auto 角色 = 读取唯一节点字段(n, 定义角色字段);
+        if (!种类 || !特征 || !方法学习种类合法(*种类) || !方法状态特征种类合法(*特征) || !角色
+            || !节点类型为(*角色, 状态变化角色类型) || 读取唯一节点字段(*角色, 角色所属定义字段) != n)
+            throw std::runtime_error("method state change definition fields damaged");
+        const auto 特征种类 = static_cast<新方法状态特征种类>(*特征);
+        const auto 规格 = 特征种类 == 新方法状态特征种类::启用 ? 方法启用特征类型
+            : 方法配对数特征类型[配对数序号(特征种类)];
+        const auto 持有 = 全局基础数据集.查询目标字段(*角色, 定义角色字段);
+        if (!有效(规格) || 读取唯一节点字段(*角色, 角色规格字段) != 规格
+            || 持有.size() != 1 || 持有.front().所属节点 != n)
+            throw std::runtime_error("method state change definition role damaged");
+        return 新方法状态变化定义{n, 规格, *角色, static_cast<新方法学习种类>(*种类), 特征种类};
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法状态变化定义", L"定义结构损坏，保留现场。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法状态变化定义", L"未知工程读取异常。");
+    }
+}
+
+std::optional<新方法学习记录> 新_方法类::读取方法学习记录(稳定编码 n) const noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!有效(学习记录类型) || !有效(学习记录成员字段) || !有效(n)) return std::nullopt;
+        const auto 归属 = 全局基础数据集.查询目标字段(n, 学习记录成员字段);
+        if (归属.empty() && !节点类型为(n, 学习记录类型)) return std::nullopt;
+        if (!节点类型为(n, 学习记录类型) || 归属.size() != 1 || 归属.front().所属节点 != 方法状态治理根)
+            throw std::runtime_error("method learning record ownership damaged");
+        新方法学习记录 r;
+        r.节点 = n;
+        const auto M = 读取唯一节点字段(n, 记录方法字段), Vm = 读取唯一节点字段(n, 记录虚拟存在字段),
+            Fe = 读取唯一节点字段(n, 记录启用特征字段);
+        if (!M || !Vm || !Fe) throw std::runtime_error("method learning record target missing");
+        r.方法引用 = {*M, *Vm, *Fe};
+        const auto 方法 = 读取方法虚拟存在引用(r.方法引用);
+        if (!方法) throw std::runtime_error("method learning record target no longer owned");
+        const auto 种类 = 读取唯一I64字段(n, 记录学习种类字段), 特征种类 = 读取唯一I64字段(n, 记录特征种类字段);
+        if (!种类 || !特征种类 || !方法学习种类合法(*种类) || !方法状态特征种类合法(*特征种类))
+            throw std::runtime_error("method learning record kind damaged");
+        r.学习种类 = static_cast<新方法学习种类>(*种类);
+        r.特征种类 = static_cast<新方法状态特征种类>(*特征种类);
+        const auto F = 读取唯一节点字段(n, 记录特征字段);
+        if (!F) throw std::runtime_error("method learning record feature missing");
+        r.特征节点 = *F;
+        const auto 应有特征 = r.特征种类 == 新方法状态特征种类::启用 ? std::optional<稳定编码>{方法->引用.启用特征节点}
+            : r.特征种类 == 新方法状态特征种类::条件结果配对数
+                ? (方法->条件结果配对数 ? std::optional<稳定编码>{方法->条件结果配对数->特征节点} : std::nullopt)
+                : (方法->已知结果配对数 ? std::optional<稳定编码>{方法->已知结果配对数->特征节点} : std::nullopt);
+        const auto 前值 = 读取唯一I64字段(n, 记录前值字段), 后值 = 读取唯一I64字段(n, 记录后值字段);
+        const bool 启用 = r.特征种类 == 新方法状态特征种类::启用;
+        if (应有特征 != r.特征节点 || !前值 || !后值 || *前值 == *后值
+            || (启用 ? ((*前值 != 0 && *前值 != 1) || (*后值 != 0 && *后值 != 1)) : (*前值 < 0 || *后值 < 0))
+            || (启用 != (r.学习种类 == 新方法学习种类::启用修改)))
+            throw std::runtime_error("method learning record feature/value damaged");
+        r.前值 = *前值; r.后值 = *后值;
+        const auto 前状态 = 读取唯一节点字段(n, 记录前状态字段), 定义 = 读取唯一节点字段(n, 记录动作定义字段),
+            主体 = 读取唯一节点字段(n, 记录主体字段), 场景 = 读取唯一节点字段(n, 记录现实场景字段);
+        const auto 时间 = 读取唯一I64字段(n, 记录时间字段);
+        if (!前状态 || !定义 || !主体 || !场景 || !时间 || *时间 <= 0)
+            throw std::runtime_error("method learning record action fields damaged");
+        r.前状态节点 = *前状态; r.动作定义节点 = *定义; r.执行主体节点 = *主体; r.现实来源场景节点 = *场景;
+        r.动作时间 = {新状态时间语义::实例绝对UTC, *时间};
+        const auto 定义信息 = 读取方法状态变化定义(*定义);
+        if (!定义信息 || 定义信息->学习种类 != r.学习种类 || 定义信息->特征种类 != r.特征种类)
+            throw std::runtime_error("method learning record definition mismatch");
+        const auto 材料 = 全局基础数据集.查询字段(n, 记录来源材料字段);
+        if (材料.size() > 1) throw std::runtime_error("method learning record source materials duplicated");
+        if (!材料.empty()) {
+            const auto* 值 = std::get_if<基础值>(&材料.front().内容);
+            const auto* 编码组 = 值 ? std::get_if<std::vector<std::uint64_t>>(&值->材料) : nullptr;
+            if (!编码组) throw std::runtime_error("method learning record source materials damaged");
+            for (const auto 编码 : *编码组) {
+                if (编码 == 0) throw std::runtime_error("method learning record source material empty");
+                r.来源材料引用组.push_back(稳定编码{编码});
+            }
+        }
+        return r;
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法学习记录", L"学习记录结构损坏，保留现场。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取方法学习记录", L"未知工程读取异常。");
+    }
+}
+
+// 缺哪个配对数特征就建立并挂上Vm，初值取当前实际数量；已有则不动（值由统一入口维护）。
+void 新_方法类::确保方法配对数特征已加锁(稳定编码 方法节点) {
+    if (!有效(方法状态治理根)) throw std::logic_error("method state governance schema not initialized");
+    const auto vm = 读取唯一节点字段(方法节点, 方法虚拟存在字段);
+    if (!vm) throw std::runtime_error("method virtual existence missing for pair-count features");
+    bool 缺 = false;
+    for (std::size_t i = 0; i < 2; ++i) {
+        const auto 已有 = 全局基础数据集.查询字段(*vm, 虚拟存在配对数特征字段[i]);
+        if (已有.size() > 1) throw std::runtime_error("method pair-count feature duplicated");
+        缺 = 缺 || 已有.empty();
+    }
+    if (!缺) return;
+    const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+    if (!方法 || 方法->方法虚拟存在节点 != *vm) throw std::runtime_error("method unreadable for pair-count features");
+    const auto 数 = 计算方法配对数(*方法);
+    基础节点组追加请求 请求;
+    std::vector<稳定编码> 新特征;
+    try {
+        for (std::size_t i = 0; i < 2; ++i) {
+            if (!全局基础数据集.查询字段(*vm, 虚拟存在配对数特征字段[i]).empty()) continue;
+            const auto F = 特征服务_.建立特征(方法配对数特征类型[i]);
+            if (!有效(F)) throw std::runtime_error("method pair-count feature creation failed");
+            新特征.push_back(F);
+            const auto 写入 = 特征服务_.添加特征值(F, 新特征准确值{数[i]});
+            if (写入.状态 != 新特征写入状态::已完成) throw std::runtime_error("method pair-count initial value failed");
+            请求.追加字段组.push_back({*vm, 虚拟存在配对数特征字段[i], F});
+        }
+        const auto 读 = 全局基础数据集.查询节点组完整结构({*vm});
+        if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 1 || !读.节点组.front().快照)
+            throw std::runtime_error("method virtual existence snapshot unavailable");
+        请求.预期联合节点组.push_back(*读.节点组.front().快照);
+        const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+        if (发布.状态 != 基础节点组追加状态::已完成) throw std::runtime_error("method pair-count feature attachment failed");
+    } catch (...) {
+        // 只撤销确认未挂上Vm的候选特征；本函数在方法owner锁内，只有本owner写Vm。
+        for (const auto F : 新特征) {
+            bool 已挂 = false;
+            for (std::size_t i = 0; i < 2; ++i)
+                if (!全局基础数据集.查询目标字段(F, 虚拟存在配对数特征字段[i]).empty()) 已挂 = true;
+            if (!已挂) (void)特征服务_.删除特征(F);
+        }
+        throw;
+    }
+}
+
+// 先天被动配对（本能登记的初始知识）后按实际数量校准；不形成状态、动作或因果。
+void 新_方法类::校准方法配对数特征已加锁(稳定编码 方法节点) {
+    if (!有效(方法状态治理根)) return; // 启动补齐尚未运行：届时按实际数量建立。
+    确保方法配对数特征已加锁(方法节点);
+    const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+    if (!方法) throw std::runtime_error("method unreadable for pair-count calibration");
+    const auto 读回 = 读取方法虚拟存在引用({方法节点, 方法->方法虚拟存在节点, 方法->启用特征节点});
+    if (!读回 || !读回->条件结果配对数 || !读回->已知结果配对数)
+        throw std::runtime_error("method pair-count features missing after ensure");
+    const auto 数 = 计算方法配对数(*方法);
+    for (std::size_t i = 0; i < 2; ++i) {
+        const auto& f = i == 0 ? *读回->条件结果配对数 : *读回->已知结果配对数;
+        if (f.当前值 == 数[i]) continue;
+        const auto 写入 = 特征服务_.添加特征值(f.特征节点, 新特征准确值{数[i]});
+        if (写入.状态 != 新特征写入状态::已完成) throw std::runtime_error("method pair-count calibration failed");
+    }
+}
+
+std::pair<稳定编码, 稳定编码> 新_方法类::读取治理执行主体已加锁() const {
+    if (!治理执行主体读取_) throw std::logic_error("method governance actor reader not assembled");
+    const auto 自我 = 治理执行主体读取_();
+    if (!自我) throw std::runtime_error("method governance actor (self) unavailable");
+    const auto 位置 = 场景服务_.查询所属场景(*自我);
+    if (!存在服务_.获取存在(*自我) || !位置 || !场景服务_.存在属于场景范围(*位置, *自我))
+        throw std::runtime_error("method governance actor has no real source scene");
+    return {*自我, *位置};
+}
+
+稳定编码 新_方法类::发布方法学习记录已加锁(const 新方法虚拟存在引用& 引用, 新方法学习种类 种类,
+    新方法状态特征种类 特征种类, 稳定编码 F, std::int64_t 前值, std::int64_t 后值,
+    稳定编码 前状态, std::int64_t 动作时间, const std::vector<稳定编码>& 来源材料) {
+    const auto 定义 = 方法状态变化定义索引.find({static_cast<std::int64_t>(种类), static_cast<std::int64_t>(特征种类)});
+    if (定义 == 方法状态变化定义索引.end()) throw std::logic_error("method state change definition not registered");
+    const auto [主体, 场景] = 读取治理执行主体已加锁();
+    基础节点组追加请求 请求;
+    基础组内新节点 记录;
+    记录.字段组 = {{节点类型字段, 学习记录类型}, {记录方法字段, 引用.方法节点},
+        {记录虚拟存在字段, 引用.虚拟存在节点}, {记录启用特征字段, 引用.启用特征节点},
+        {记录学习种类字段, 基础值{static_cast<std::int64_t>(种类)}},
+        {记录特征种类字段, 基础值{static_cast<std::int64_t>(特征种类)}}, {记录特征字段, F},
+        {记录前值字段, 基础值{前值}}, {记录后值字段, 基础值{后值}}, {记录前状态字段, 前状态},
+        {记录时间字段, 基础值{动作时间}}, {记录动作定义字段, 定义->second},
+        {记录主体字段, 主体}, {记录现实场景字段, 场景}};
+    if (!来源材料.empty()) {
+        std::vector<std::uint64_t> 编码组;
+        for (const auto n : 来源材料) {
+            if (!有效(n)) throw std::logic_error("method learning record source material invalid");
+            编码组.push_back(n.值);
+        }
+        记录.字段组.push_back({记录来源材料字段, 基础值{std::move(编码组)}});
+    }
+    请求.新节点组.push_back(std::move(记录));
+    请求.追加字段组.push_back({方法状态治理根, 学习记录成员字段, 基础组内节点引用{0}});
+    请求.预期联合节点组.push_back(读取方法状态治理根快照());
+    const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+    if (发布.状态 != 基础节点组追加状态::已完成 || 发布.新节点组.size() != 1)
+        throw std::runtime_error("method learning record publication failed; status="
+            + std::to_string(static_cast<int>(发布.状态)));
+    const auto 读回 = 读取方法学习记录(发布.新节点组.front());
+    if (!读回 || 读回->方法引用 != 引用 || 读回->特征节点 != F || 读回->前值 != 前值
+        || 读回->后值 != 后值 || 读回->前状态节点 != 前状态 || 读回->动作时间.纳秒 != 动作时间)
+        throw std::runtime_error("method learning record readback mismatch");
+    return 发布.新节点组.front();
+}
+
+// 统一入口：学习记录（动作来源）→治理动作（主体自我）→提交特征（提交为空表示调用方已在动作时间后提交）
+// →后状态→完成（挂后状态、原子动态、“导致变化”，交付实际发生）。前状态在动作时间之前取得。
+void 新_方法类::形成方法状态变化已加锁(const 新方法虚拟存在引用& 引用, 新方法学习种类 种类,
+    新方法状态特征种类 特征种类, 稳定编码 F, std::int64_t 前值, std::int64_t 后值,
+    稳定编码 前状态, std::int64_t 动作时间, const std::function<void()>& 提交,
+    const std::vector<稳定编码>& 来源材料) {
+    if (!内部治理世界_ || !治理组织已就绪_ || !有效(方法状态治理根))
+        throw std::logic_error("method state change before governance is ready");
+    if (前值 == 后值) throw std::logic_error("method state change without value change");
+    const auto 记录 = 发布方法学习记录已加锁(引用, 种类, 特征种类, F, 前值, 后值, 前状态, 动作时间, 来源材料);
+    const auto 动作 = 内部治理世界_->建立方法状态变化动作(记录);
+    if (动作.状态 != 新治理动作登记状态::已建立 || !动作.动作节点)
+        throw std::runtime_error("method state change governance action failed");
+    if (提交) 提交();
+    auto 后时间 = 方法当前UTC纳秒();
+    while (后时间 <= 动作时间) { std::this_thread::yield(); 后时间 = 方法当前UTC纳秒(); }
+    const auto 后 = 状态服务_.建立状态(引用.虚拟存在节点, F, {新状态时间语义::实例绝对UTC, 后时间});
+    if (后.状态 != 新状态操作状态::已完成 || !后.状态节点)
+        throw std::runtime_error("method state change after state failed");
+    const auto 完成 = 内部治理世界_->完成方法状态变化(记录, *后.状态节点);
+    const auto 包 = 内部治理世界_->读取方法状态变化(记录);
+    if (!包 || 完成.记录节点 != 记录 || 完成.动作节点 != *动作.动作节点
+        || 包->动作节点 != 完成.动作节点 || 包->后状态节点 != *后.状态节点
+        || 包->变化动态节点 != 完成.变化动态节点)
+        throw std::runtime_error("method state change package readback mismatch");
+    待发方法状态通知_.push_back(引用.虚拟存在节点);
+}
+
+// 学习发布后：配对数或已知结果配对数确实变化时才形成状态；值未变不建动作、不交付因果。
+void 新_方法类::同步方法配对数状态已加锁(稳定编码 方法节点, 新方法学习种类 种类,
+    const std::vector<稳定编码>& 来源材料) {
+    确保方法配对数特征已加锁(方法节点);
+    const auto 方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+    if (!方法) throw std::runtime_error("learned method unreadable");
+    const 新方法虚拟存在引用 引用{方法节点, 方法->方法虚拟存在节点, 方法->启用特征节点};
+    const auto 数 = 计算方法配对数(*方法);
+    for (std::size_t i = 0; i < 2; ++i) {
+        const auto 读回 = 读取方法虚拟存在引用(引用);
+        if (!读回 || !读回->条件结果配对数 || !读回->已知结果配对数)
+            throw std::runtime_error("learned method pair-count features missing");
+        const auto f = i == 0 ? *读回->条件结果配对数 : *读回->已知结果配对数;
+        if (f.当前值 == 数[i]) continue;
+        auto 前时间 = 方法当前UTC纳秒();
+        const auto 前 = 状态服务_.建立状态(引用.虚拟存在节点, f.特征节点, {新状态时间语义::实例绝对UTC, 前时间});
+        if (前.状态 != 新状态操作状态::已完成 || !前.状态节点)
+            throw std::runtime_error("method pair-count before state failed");
+        const auto 动作时间 = 方法当前UTC纳秒();
+        const auto 后值 = 数[i];
+        const auto 提交 = [&, F = f.特征节点] {
+            const auto 写入 = 特征服务_.添加特征值(F, 新特征准确值{后值});
+            if (写入.状态 != 新特征写入状态::已完成 || !写入.当前值已改变)
+                throw std::runtime_error("method pair-count feature commit failed");
+        };
+        形成方法状态变化已加锁(引用, 种类, i == 0 ? 新方法状态特征种类::条件结果配对数
+            : 新方法状态特征种类::已知结果配对数, f.特征节点, f.当前值, 后值, *前.状态节点,
+            动作时间, 提交, 来源材料);
+    }
+}
+
+void 新_方法类::学习前确保配对数特征(稳定编码 方法节点) noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        if (!有效(方法状态治理根) || !有效(方法节点) || !节点类型为(方法节点, 方法节点类型)) return;
+        确保方法配对数特征已加锁(方法节点);
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习前确保配对数特征", L"配对数特征补齐工程故障。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习前确保配对数特征", L"未知工程故障。");
+    }
+}
+
+void 新_方法类::学习后形成方法状态(稳定编码 方法节点, 新方法学习种类 种类,
+    const std::vector<稳定编码>& 来源材料) noexcept {
+    try {
+        std::lock_guard 锁(新方法互斥);
+        同步方法配对数状态已加锁(方法节点, 种类, 来源材料);
+    } catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习后形成方法状态",
+            L"配对已发布后方法状态、治理动作或因果交付工程故障；保留已发生事实，不重做。", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"学习后形成方法状态", L"未知工程故障；保留事实。");
+    }
+}
+
+void 新_方法类::发出方法状态通知() noexcept {
+    std::vector<稳定编码> 组;
+    std::function<void(稳定编码)> 通知;
+    try {
+        std::lock_guard 锁(新方法互斥);
+        组.swap(待发方法状态通知_);
+        通知 = 方法状态就绪通知_;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发出方法状态通知", L"通知队列读取异常。");
+    }
+    if (!通知) return;
+    for (const auto n : 组) 通知(n);
 }
 }

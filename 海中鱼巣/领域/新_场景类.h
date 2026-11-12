@@ -386,6 +386,9 @@ public:
         const 新方法治理对象读取接口&, const 概念_特征类&) noexcept;
     void 回收未消费方法治理场景(const 新方法虚拟存在引用&,
         const 新方法治理对象读取接口&) noexcept;
+    // METHOD-LEARN-STATE：只读核验单个方法治理状态的来源特征、值域与类型根；不一致返回状态，读取失败工程终止。
+    新场景操作状态 核验方法治理状态(const 新方法虚拟存在读回&, const 新状态信息&,
+        const 概念_特征类&) const;
     std::vector<稳定编码> 查询治理参与节点(稳定编码 场景节点) const noexcept;
     新场景操作状态 原子迁移治理状态动态(稳定编码 原场景节点, 稳定编码 目标场景节点,
         const std::vector<稳定编码>& 状态节点组, const std::vector<稳定编码>& 动态节点组,
@@ -541,14 +544,17 @@ public:
 private:
     新指定场景范围读取结果 读取指定场景范围实现(
         稳定编码, std::vector<基础联合节点快照>*) const noexcept;
+    // 治理方法特征：方法治理场景中实际来源特征（启用或配对数特征）；缺省为启用特征。
     新场景操作状态 添加已核验状态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
         std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,
-        新事实追加保护增量* 增量 = nullptr) noexcept;
+        新事实追加保护增量* 增量 = nullptr,
+        std::optional<稳定编码> 治理方法特征 = std::nullopt) noexcept;
     新场景操作状态 添加已核验动态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,
         std::optional<新方法虚拟存在引用> 治理方法 = std::nullopt,
-        新事实追加保护增量* 增量 = nullptr) noexcept;
+        新事实追加保护增量* 增量 = nullptr,
+        std::optional<稳定编码> 治理方法特征 = std::nullopt) noexcept;
     // 根身份由上层世界对象持有；场景类只在该根链内组织场景事实。
     稳定编码& 场景树根节点_;
     新场景树用途 用途_;

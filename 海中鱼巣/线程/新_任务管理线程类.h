@@ -103,9 +103,6 @@ struct 新任务管理快照 final {
     std::optional<稳定编码> 服务值结算任务;
     bool 服务值结算方法已配置 = false;
     bool 服务值结算治理已配置 = false;
-    std::optional<新学习结束通知> 最近方法学习结束;
-    std::optional<新学习运行异常记录> 最近学习运行异常;
-    bool 等待方法实例消费 = false;
     std::uint64_t 等待复核任务数 = 0;
     bool 调度扫描在途 = false;
     std::uint64_t 就绪工作数 = 0;
@@ -163,50 +160,6 @@ struct 新任务筹办反馈定位 final {
     bool 完整() const noexcept;
     friend bool operator==(const 新任务筹办反馈定位&,
         const 新任务筹办反馈定位&) = default;
-};
-
-enum class 新方法学习接收状态 : std::uint8_t {
-    已接收 = 1, 精确重复, 尚未启动, 已停止接收,
-    入口拒绝, 身份冲突, 资源失败, 内部错误
-};
-
-struct 新任务学习复核定位 final {
-    std::uint64_t 复核编号 = 0;
-    std::uint64_t 学习交接编号 = 0;
-    稳定编码 方法节点;
-    稳定编码 任务节点;
-    稳定编码 需求节点;
-    新任务状态 任务状态 = 新任务状态::已建立;
-    std::optional<稳定编码> 候选材料节点;
-    std::optional<稳定编码> 方法实例节点;
-    std::optional<稳定编码> 方法执行组织节点;
-    bool 完整() const noexcept;
-    friend bool operator==(const 新任务学习复核定位&,
-        const 新任务学习复核定位&) = default;
-};
-
-enum class 新自我学习复核状态 : std::uint8_t {
-    允许重新筹办 = 1, 当前已满足, 需求非活动,
-    等待材料, 定位已变化, 需核查
-};
-
-struct 新自我学习复核决议 final {
-    新任务学习复核定位 定位;
-    新自我学习复核状态 状态 = 新自我学习复核状态::需核查;
-    std::optional<新需求当前满足状态> 当前满足状态;
-    std::optional<新需求筹办资格结果> 筹办资格;
-    friend bool operator==(const 新自我学习复核决议&,
-        const 新自我学习复核决议&) = default;
-};
-
-enum class 新自我学习复核接收状态 : std::uint8_t {
-    已接收 = 1, 精确重复, 定位已变化, 身份冲突,
-    已停止接收, 入口拒绝, 资源失败, 内部错误, 筹办材料已变化 = 9
-};
-
-enum class 新任务学习复核反馈接收状态 : std::uint8_t {
-    已接收 = 1, 精确重复, 身份冲突, 邮箱已满, 尚未配置,
-    尚未启动, 已停止接收, 入口拒绝, 资源失败, 内部错误
 };
 
 enum class 新任务筹办反馈接收状态 : std::uint8_t {
@@ -462,10 +415,6 @@ public:
     新任务完成结算确认状态 确认任务贡献治理工作(
         const void* 自我所有者, std::uint64_t 工作编号,
         const 新任务贡献反馈定位&) noexcept;
-    bool 绑定方法学习读取(const 新_方法类&) noexcept;
-    // 交接编号仅作进程内去重；相关任务经self fresh复核后才能重新筹办。
-    新方法学习接收状态 提交方法学习结束(
-        const 新学习结束通知&, std::uint64_t 交接编号) noexcept;
     // 任务服务必须比本对象存活更久；绑定本对象的self必须先回收。
     explicit 新_任务管理线程类(新_任务类& 任务服务) noexcept;
     ~新_任务管理线程类() noexcept;
@@ -496,6 +445,10 @@ public:
     // 只提示重读；装配端口投递，不经自我线程。
     新任务结果状态接收状态 提交问题答案就绪通知(
         稳定编码 问题节点) noexcept;
+    // METHOD-LEARN-STATE（5260、8100）：方法owner形成方法状态后的就绪通知（以方法虚拟存在节点为节点键，
+    // 并唤醒“方法知识”键），只提示重读；装配端口投递，不经自我线程。
+    新任务结果状态接收状态 提交方法状态就绪通知(
+        稳定编码 方法虚拟存在节点) noexcept;
 
 private:
     friend class 新_自我线程类;
@@ -503,8 +456,6 @@ private:
         const 新任务筹办反馈定位&)>;
     using 结果反馈接收函数 = std::function<新任务结果反馈接收状态(
         const 新任务结果反馈定位&)>;
-    using 学习复核接收函数 = std::function<新任务学习复核反馈接收状态(
-        const 新任务学习复核定位&)>;
     using 等待复核接收函数 = std::function<新任务等待复核反馈接收状态(
         const 新任务等待复核定位&)>;
     using 贡献反馈接收函数 = std::function<新任务结果反馈接收状态(
@@ -513,10 +464,6 @@ private:
         std::uint64_t 复核编号) const noexcept;
     新自我等待复核接收状态 提交等待复核决议(
         const 新自我等待复核决议&) noexcept;
-    std::optional<新任务学习复核定位> 读取学习复核定位(
-        std::uint64_t 复核编号) const noexcept;
-    新自我学习复核接收状态 提交学习复核决议(
-        const 新自我学习复核决议&) noexcept;
     bool 使用任务服务(const 新_任务类& 任务服务) const noexcept;
     // 仅收存交接消息；已接收待筹办不代表来源已绑定或服务值已经结算。
     // 由管理循环排空旧筹办、独立读回后串行接纳并触发普通筹办。
@@ -532,7 +479,6 @@ private:
         const void* 所有者,
         筹办反馈接收函数 筹办接收,
         结果反馈接收函数 结果接收,
-        学习复核接收函数 学习接收,
         等待复核接收函数 等待接收,
         贡献反馈接收函数 贡献接收,
         std::function<void()> 最终服务工作唤醒,

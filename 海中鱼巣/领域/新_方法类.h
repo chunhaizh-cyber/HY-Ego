@@ -121,6 +121,13 @@ public:
     void 初始化治理场景组织() noexcept;
     std::optional<新方法虚拟存在读回> 读取方法虚拟存在引用(
         const 新方法虚拟存在引用&) const noexcept override;
+    // METHOD-LEARN-STATE：方法状态变化定义（学习种类×改变的特征）与学习记录的只读核验。
+    std::optional<新方法状态变化定义> 读取方法状态变化定义(稳定编码) const noexcept override;
+    std::optional<新方法学习记录> 读取方法学习记录(稳定编码) const noexcept override;
+    // 治理动作执行主体（自我）的只读提供者；启动装配一次，借用者寿命覆盖全部方法状态变化。
+    bool 装配治理执行主体读取(std::function<std::optional<稳定编码>()>) noexcept;
+    // 方法状态形成后的就绪通知（以方法虚拟存在节点为键），只提示重读；在方法锁外投递。
+    bool 装配方法状态就绪通知(std::function<void(稳定编码)>) noexcept;
 
     // 模拟取样只读取正式概念定义；不创建现实实例或修改固定规格。
     std::optional<存在概念信息> 读取模拟存在范围(稳定编码 C) const noexcept;
@@ -278,6 +285,31 @@ public:
     void 收束直接调用身份(稳定编码 调用);
 
 private:
+    // METHOD-LEARN-STATE：方法owner统一入口（学习发布与启用修改形成方法状态、动态、治理动作并交付因果）。
+    void 确保方法状态治理结构已加锁();
+    void 确保方法配对数特征已加锁(稳定编码 方法节点);
+    void 校准方法配对数特征已加锁(稳定编码 方法节点);
+    std::pair<稳定编码, 稳定编码> 读取治理执行主体已加锁() const;
+    稳定编码 发布方法学习记录已加锁(const 新方法虚拟存在引用&, 新方法学习种类,
+        新方法状态特征种类, 稳定编码 特征, std::int64_t 前值, std::int64_t 后值,
+        稳定编码 前状态, std::int64_t 动作时间, const std::vector<稳定编码>& 来源材料);
+    void 形成方法状态变化已加锁(const 新方法虚拟存在引用&, 新方法学习种类,
+        新方法状态特征种类, 稳定编码 特征, std::int64_t 前值, std::int64_t 后值,
+        稳定编码 前状态, std::int64_t 动作时间, const std::function<void()>& 提交,
+        const std::vector<稳定编码>& 来源材料);
+    void 同步方法配对数状态已加锁(稳定编码 方法节点, 新方法学习种类,
+        const std::vector<稳定编码>& 来源材料);
+    void 学习前确保配对数特征(稳定编码 方法节点) noexcept;
+    void 学习后形成方法状态(稳定编码 方法节点, 新方法学习种类,
+        const std::vector<稳定编码>& 来源材料) noexcept;
+    void 发出方法状态通知() noexcept;
+    新方法学习发布结果 融合模拟条件结果内部(稳定编码 方法节点, 稳定编码 新配对节点,
+        std::vector<稳定编码>* 被替换配对组) noexcept;
+    新方法学习发布结果 发布尝试条件结果内部(const 新尝试补全候选& 候选) noexcept;
+    新方法操作状态 修改启用状态内部(稳定编码 方法节点, 新方法启用状态 新状态) noexcept;
+    新方法建立结果 退役旧网页本能登记内部(const std::string& 登记名) noexcept;
+    新方法建立结果 确保本能方法登记内部(const std::string& 登记名,
+        const 新方法知识建立请求& 请求) noexcept;
     新方法学习发布结果 追加条件结果内部(稳定编码 方法节点,
         const std::vector<新方法条件结果定义>& 新配对定义组,新方法知识来源种类 来源,
         const 执行结构读取结果* 学习基线 = nullptr) noexcept;
@@ -352,6 +384,9 @@ private:
     std::weak_ptr<新本能字段询问运行接口> 退役字段询问运行_;
     新方法治理世界协作接口* 内部治理世界_ = nullptr;
     bool 治理组织已就绪_ = false;
+    std::function<std::optional<稳定编码>()> 治理执行主体读取_;
+    std::function<void(稳定编码)> 方法状态就绪通知_;
+    std::vector<稳定编码> 待发方法状态通知_;
 };
 
 } // namespace 海中鱼巣

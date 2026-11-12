@@ -80,6 +80,8 @@ struct 新因果动作定义 final
     std::optional<稳定编码> 本能方法节点;
     std::optional<新任务虚拟存在引用> 作用对象任务虚拟存在;
     新因果动作触发方式 触发方式 = 新因果动作触发方式::尚未确定;
+    // METHOD-LEARN-STATE（1190 §4.1）：方法状态变化的作用对象为方法虚拟存在；与任务虚拟存在、普通作用对象互斥。
+    std::optional<新方法虚拟存在引用> 作用对象方法虚拟存在;
     friend bool operator==(const 新因果动作定义 &, const 新因果动作定义 &) = default;
 };
 
