@@ -8814,6 +8814,24 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式执行分支",L"方法分支完整读取或投影发生工程故障。");
     }
 }
+新_方法类::必要条件合入状态 新_方法类::合入未涵盖必要条件(const 新方法初始必要条件定义& 必要条件,
+    const std::vector<新方法参数规格>& 参数规格组,新方法条件定义& 条件) const noexcept {
+    try {
+        for(const auto& w:必要条件.条件.条件项组) {
+            新方法初始必要条件定义 单项;单项.条件.关系规则=新方法项关系规则::全部成立;单项.条件.条件项组.push_back(w);
+            if(!条件涵盖必要项(条件,单项,参数规格组,特征概念服务_,存在概念服务_))条件.条件项组.push_back(w);
+        }
+        for(const auto& r:必要条件.条件.参数关系组)
+            if(std::find(条件.参数关系组.begin(),条件.参数关系组.end(),r)==条件.参数关系组.end())条件.参数关系组.push_back(r);
+        for(const auto* 组:{&必要条件.条件.场景事实限定组,&必要条件.场景事实限定组})for(const auto& r:*组)
+            if(std::find(条件.场景事实限定组.begin(),条件.场景事实限定组.end(),r)==条件.场景事实限定组.end())条件.场景事实限定组.push_back(r);
+        return 必要条件合入状态::已合入;
+    } catch (const 引用内容定义前提变化&) {
+        return 必要条件合入状态::前提已变化;
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"合入未涵盖必要条件",L"必要条件涵盖判定发生工程故障。");
+    }
+}
 新方法参数特征声明读取结果 新_方法类::读取存在参数特征声明(
     稳定编码 M,std::optional<稳定编码> B,std::uint32_t position,稳定编码 FT) const noexcept {
     struct 声明读取前提变化 final {};
