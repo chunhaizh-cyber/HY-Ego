@@ -389,6 +389,74 @@ std::int64_t 读I64(const std::string& s){
 }
 // ASK-READ-SCENE v0.4 §3.3 第1、2项：值类构式与招呼只取出“对方说了什么”，保存为场景信息；
 // 来源、场景、说话者和时刻由调用方填写。不是值类构式或招呼时返回空，由原路径处理。
+// R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在语言转换阶段即从唯一图含义取出需求信息——需求主体、
+// 目标存在、目标特征类型，话中带出的值或方向；能确定的记、不能确定的记未知。不依赖被认知需求能否建立、
+// 也不依赖需求主体是否为本次说话者。不是需求陈述或行动请求、或图含义不唯一时返回空。
+// 最小需求句式“Y要X”（需求描述直接带目标存在）：X为专名时目标存在为已绑定存在；X为普通名词时返回其概念，
+// 由调用方在接收来源语言场景中按该概念实例化一个存在作为目标存在（7240 §4.3，用户裁决2026-11-12）。
+struct 提取的需求信息 final {
+    新接收场景信息 信息;
+    bool 目标存在需求=false;
+    std::optional<稳定编码> 待实例化目标概念;
+};
+std::optional<提取的需求信息> 提取需求信息(const 语言基础统一输入结果& parsed,std::uint64_t 全文终点){
+    using U=语言基础统一构式;using P=新语言知识参数角色;using K=新值陈述值种类;using M=新语言知识含义操作;
+    if(!parsed.构式||(*parsed.构式!=U::需求陈述&&*parsed.构式!=U::行动请求))return std::nullopt;
+    const 语言图含义材料* g=nullptr;
+    if(parsed.状态==语言场景基础输入状态::已形成值式图&&parsed.含义&&std::holds_alternative<语言图含义材料>(*parsed.含义))
+        g=&std::get<语言图含义材料>(*parsed.含义);
+    else if(parsed.状态==语言场景基础输入状态::对象待绑定&&parsed.完整候选组.size()==1
+        &&std::holds_alternative<语言图含义材料>(parsed.完整候选组.front()))
+        g=&std::get<语言图含义材料>(parsed.完整候选组.front());
+    if(!g)return std::nullopt;
+    新接收场景信息 out;out.种类=新接收场景信息种类::需求信息;
+    out.原文起点=0;out.原文终点=static_cast<std::int64_t>(全文终点);
+    const auto 已绑定存在=[](const 语言图绑定值& v)->std::optional<稳定编码> {
+        const auto* r=std::get_if<语言图引用值>(&v);
+        return r&&r->类别==新语言知识角色类别::存在&&有效(r->节点) ? std::optional{r->节点} : std::nullopt;
+    };
+    const auto* demand=&找认知图出现(*g,g->根出现编号);
+    if(找认知图定义(*g,*demand).操作==M::行动请求) {
+        const auto* q=std::get_if<语言图子出现引用>(&找认知图参数(*g,*demand,P::目标内容));
+        if(!q)throw std::logic_error("received request expected demand is not a child occurrence");
+        demand=&找认知图出现(*g,q->出现编号);
+    }
+    const auto& demandDef=找认知图定义(*g,*demand);
+    if(demandDef.操作!=M::需求描述)throw std::logic_error("received demand occurrence operation invalid");
+    out.主体存在=已绑定存在(找认知图参数(*g,*demand,P::主体));
+    const auto& root=找认知图出现(*g,g->根出现编号).原文范围;
+    if(root&&root->first<root->second&&root->second<=全文终点){out.原文起点=static_cast<std::int64_t>(root->first);out.原文终点=static_cast<std::int64_t>(root->second);}
+    if(std::any_of(demandDef.参数组.begin(),demandDef.参数组.end(),[](auto p){return p.参数==P::目标存在;})) {
+        提取的需求信息 r{out,true,std::nullopt};
+        const auto& x=找认知图参数(*g,*demand,P::目标存在);
+        r.信息.目标存在=已绑定存在(x);
+        if(const auto* c=std::get_if<语言图引用值>(&x);c&&c->类别==新语言知识角色类别::存在概念&&有效(c->节点))r.待实例化目标概念=c->节点;
+        return r;
+    }
+    const auto* h=std::get_if<语言图子出现引用>(&找认知图参数(*g,*demand,P::目标内容));
+    if(!h)throw std::logic_error("received demand target content is not a child occurrence");
+    const auto& o=找认知图出现(*g,h->出现编号);const auto& def=找认知图定义(*g,o);
+    out.目标存在=已绑定存在(找认知图参数(*g,o,P::主体));
+    if(const auto* ft=std::get_if<语言图引用值>(&找认知图参数(*g,o,P::特征类型));ft&&有效(ft->节点))out.特征类型=ft->节点;
+    switch(def.操作) {
+    case M::特征描述:
+        if(const auto* n=std::get_if<语言图整数值>(&找认知图参数(*g,o,P::特征值))) {
+            out.值种类=K::准确整数;out.准确整数=n->规范十进制;out.单位=n->单位;
+        }
+        break;
+    case M::特征区间描述: {
+        const auto* lo=std::get_if<语言图整数值>(&找认知图参数(*g,o,P::下界));
+        const auto* hi=std::get_if<语言图整数值>(&找认知图参数(*g,o,P::上界));
+        if(lo&&hi&&lo->单位==hi->单位){out.值种类=K::整数闭区间;out.区间下界=lo->规范十进制;out.区间上界=hi->规范十进制;out.单位=lo->单位;}
+        break;
+    }
+    case M::特征方向描述:
+        if(def.方向){out.值种类=K::变化方向;out.方向=def.方向;}
+        break;
+    default:throw std::logic_error("received demand target operation unsupported");
+    }
+    return 提取的需求信息{out,false,std::nullopt};
+}
 std::optional<新接收场景信息> 提取接收场景信息(const 语言基础统一输入结果& parsed,std::uint64_t 全文终点){
     using U=语言基础统一构式;using P=新语言知识参数角色;using K=新值陈述值种类;
     if(!parsed.构式)return std::nullopt;
@@ -857,27 +925,33 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 ||projected.需求来源.接收消息节点!=m.消息节点
                 ||projected.需求主体!=speaker)
                 throw std::logic_error("adopted demand projection source identity missing");
-            // R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在接收来源语言场景形成独立的需求信息节点
-            // （说话者、需求主体、目标存在、目标特征类型，话中带出的值或方向，出现时刻）；同一来源消息只一个节点，
-            // 重入时精确重复复用。转换不据它建立或修改需求；下方照常建立D'，并以该节点为D'的需求信息来源。
-            进入步骤("保存需求信息节点");
+            // R121（7240 §5.4“需求信息节点”）：需求信息节点已在语言转换阶段于接收来源语言场景形成（见下方“未找到”分支）；
+            // 这里只按来源消息引用该节点作为D'的需求信息来源。转换阶段未形成（本改动前已采用的消息）时按采用投影补形成。
+            进入步骤("引用需求信息节点");
             if(!out.S)throw std::logic_error("adopted meaning has no received language scene");
-            新接收场景信息 需求信息;
-            需求信息.种类=新接收场景信息种类::需求信息;需求信息.来源消息=m.消息节点;需求信息.来源场景=*out.S;
-            需求信息.交互场景=m.场景节点;需求信息.说话者=speaker;需求信息.主体存在=projected.需求主体;
-            需求信息.目标存在=projected.目标存在;需求信息.特征类型=projected.目标特征类型;
-            if(projected.方向){需求信息.值种类=新值陈述值种类::变化方向;需求信息.方向=projected.方向;}
-            else if(projected.准确整数){需求信息.值种类=新值陈述值种类::准确整数;需求信息.准确整数=projected.准确整数;需求信息.单位=projected.单位;}
-            else if(projected.区间下界&&projected.区间上界){
-                需求信息.值种类=新值陈述值种类::整数闭区间;需求信息.区间下界=projected.区间下界;需求信息.区间上界=projected.区间上界;需求信息.单位=projected.单位;
+            std::optional<稳定编码> 需求信息节点;
+            if(const auto 已有=d.语言.按来源消息读取接收场景信息(m.消息节点)) {
+                if(已有->内容.种类!=新接收场景信息种类::需求信息)throw std::logic_error("adopted demand source message holds non-demand scene information");
+                需求信息节点=已有->陈述节点;
+            } else {
+                新接收场景信息 需求信息;
+                需求信息.种类=新接收场景信息种类::需求信息;需求信息.来源消息=m.消息节点;需求信息.来源场景=*out.S;
+                需求信息.交互场景=m.场景节点;需求信息.说话者=speaker;需求信息.主体存在=projected.需求主体;
+                需求信息.目标存在=projected.目标存在;需求信息.特征类型=projected.目标特征类型;
+                if(projected.方向){需求信息.值种类=新值陈述值种类::变化方向;需求信息.方向=projected.方向;}
+                else if(projected.准确整数){需求信息.值种类=新值陈述值种类::准确整数;需求信息.准确整数=projected.准确整数;需求信息.单位=projected.单位;}
+                else if(projected.区间下界&&projected.区间上界){
+                    需求信息.值种类=新值陈述值种类::整数闭区间;需求信息.区间下界=projected.区间下界;需求信息.区间上界=projected.区间上界;需求信息.单位=projected.单位;
+                }
+                需求信息.原文起点=0;需求信息.原文终点=static_cast<std::int64_t>(标量数(m.UTF8正文));需求信息.时刻=m.正式记录时间.纳秒;
+                if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求信息保存"};
+                const auto 需求信息保存=d.语言.建立或取得接收场景信息(需求信息);
+                if(需求信息保存.状态==新接收场景信息保存状态::前提已变化)漂移();
+                if((需求信息保存.状态!=新接收场景信息保存状态::已保存&&需求信息保存.状态!=新接收场景信息保存状态::精确重复)
+                    ||!需求信息保存.陈述节点)
+                    throw std::logic_error("received demand information conflicts with saved record");
+                需求信息节点=需求信息保存.陈述节点;
             }
-            需求信息.原文起点=0;需求信息.原文终点=static_cast<std::int64_t>(标量数(m.UTF8正文));需求信息.时刻=m.正式记录时间.纳秒;
-            if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求信息保存"};
-            const auto 需求信息保存=d.语言.建立或取得接收场景信息(需求信息);
-            if(需求信息保存.状态==新接收场景信息保存状态::前提已变化)漂移();
-            if((需求信息保存.状态!=新接收场景信息保存状态::已保存&&需求信息保存.状态!=新接收场景信息保存状态::精确重复)
-                ||!需求信息保存.陈述节点)
-                throw std::logic_error("received demand information conflicts with saved record");
             const 新接收认知来源 source{*out.需求来源,*out.U};
             进入步骤("读取同源被认知需求");
             const auto known=d.需求.查询接收认知来源需求(source,d.语言,d.特征);
@@ -892,7 +966,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 const auto target=映射目标(d,projected,stop);
                 if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求发表"};
                 进入步骤("发表同源被认知需求");
-                const auto created=d.需求.建立或取得接收认知需求({source,target,需求信息保存.陈述节点},d.语言,d.特征);
+                const auto created=d.需求.建立或取得接收认知需求({source,target,需求信息节点},d.语言,d.特征);
                 if(created.状态==新需求操作状态::资源失败)资源();if(created.状态==新需求操作状态::前提已变化)漂移();
                 if(created.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                 if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)
@@ -952,6 +1026,44 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if(parsed.状态==语言场景基础输入状态::读取漂移)漂移();
             if(parsed.状态==语言场景基础输入状态::工程未完成||parsed.状态==语言场景基础输入状态::额度不足)资源();
             if(parsed.状态==语言场景基础输入状态::内部不一致)throw std::logic_error("pure language explanation reported internal inconsistency");
+            // R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在语言转换阶段就在接收来源语言场景形成需求信息节点，
+            // 不依赖下方能否建成被认知需求，也不依赖需求主体是否为本次说话者；同一来源消息只一个节点，已有则不改。
+            const auto 提取=提取需求信息(parsed,标量数(m.UTF8正文));
+            if(提取) {
+                auto 需求信息=std::optional<新接收场景信息>{提取->信息};
+                if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求信息保存"};
+                进入步骤("取得同源语言场景");
+                const auto s=d.语言世界.建立或取得接收来源场景(m.消息节点);
+                if(s.状态==新来源子场景状态::资源失败)资源();if(s.状态==新来源子场景状态::前提已变化)漂移();
+                if(!s.信息)throw std::logic_error("received language source scene missing");out.S=s.信息->场景节点;
+                进入步骤("保存需求信息节点");
+                if(const auto 已有=d.语言.按来源消息读取接收场景信息(m.消息节点)) {
+                    if(已有->内容.种类!=新接收场景信息种类::需求信息)throw std::logic_error("demand source message holds non-demand scene information");
+                } else {
+                    // X为普通名词：在接收来源语言场景中按概念X实例化一个存在，记为需求信息节点的目标存在（7240 §4.3）。
+                    if(提取->待实例化目标概念) {
+                        进入步骤("按概念实例化目标存在");
+                        const auto 实例=d.语言世界.实例化概念(s.信息->场景节点,*提取->待实例化目标概念);
+                        using IS=新自然语言概念实例操作状态;
+                        if(实例.状态==IS::资源失败)资源();
+                        if(实例.状态==IS::场景不存在||实例.状态==IS::概念不存在)漂移();
+                        if(!实例.成功()||!实例.实例||!有效(实例.实例->节点))throw std::logic_error("received demand target concept instantiation failed");
+                        需求信息->目标存在=实例.实例->节点;
+                    }
+                    需求信息->来源消息=m.消息节点;需求信息->来源场景=s.信息->场景节点;需求信息->交互场景=m.场景节点;
+                    需求信息->说话者=speaker;需求信息->时刻=m.正式记录时间.纳秒;
+                    const auto saved=d.语言.建立或取得接收场景信息(*需求信息);
+                    if(saved.状态==新接收场景信息保存状态::前提已变化)漂移();
+                    if((saved.状态!=新接收场景信息保存状态::已保存&&saved.状态!=新接收场景信息保存状态::精确重复)||!saved.陈述节点)
+                        throw std::logic_error("received demand information conflicts with saved record");
+                }
+            }
+            if(提取&&提取->目标存在需求) {
+                // 最小需求句式“Y要X”只形成需求信息节点（等待自我取用，7240 §5.4）；本切片不据它建立被认知需求，
+                // 需求主体非本次说话者时同样到此结束。
+                out.阶段=阶段::已保存场景信息;本次终结=true;
+                out.原因="收到最小需求陈述：已在接收来源场景形成需求信息节点，未建立被认知需求";
+            } else {
             // §3.3 第1–3项：值类构式与招呼保存为场景信息，不建立需求；已经过前置输入治理的消息仍走原路径。
             auto 场景信息=原阶段==实现::前置阶段::无 ? 提取接收场景信息(parsed,标量数(m.UTF8正文)) : std::nullopt;
             if(场景信息) {
@@ -1004,6 +1116,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             out.U=u.信息->节点;out.阶段=阶段::已采用U;
             out.受请求者=roles.受请求者;out.需求来源.reset();
             out.原因=roles.受请求者 ? "已采用明确请求及本句需求内容，尚未建立需求D" : "已采用真实消息的唯一需求含义，尚未建立需求D";
+            }
             }
         } else throw std::logic_error("same-source meaning lookup failed");
     }catch(const 推进中断& e){out.阶段=e.状态;out.原因=std::string(步骤)+"："+e.原因;本次终结=e.状态!=阶段::资源延后&&e.状态!=阶段::前提变化&&e.状态!=阶段::停止未完成;

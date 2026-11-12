@@ -3017,6 +3017,22 @@ void 初始化普通应用结构化子概念(普通应用上下文& 当前, 普�
     if (!found) throw std::logic_error("行动请求受话者指代缺失");
     return *found;
 }
+// 最小需求句式“我要X”：需求主体“我”按作用域说话者指代表达（R120/R121用户裁决2026-11-12）。
+稳定编码 读取需求主体说话者概念(普通应用上下文& 当前) {
+    if (!当前.指代种子) throw std::logic_error("需求主体说话者缺少指代初始化结果");
+    std::optional<稳定编码> found;
+    for (const auto& item:当前.指代种子->项组) {
+        if (!item.定义读回 || !item.定义读回->信息) throw std::logic_error("需求主体说话者指代定义读回未完成");
+        const auto& info=*item.定义读回->信息;
+        if (info.定义.规则!=指代声明规则::作用域说话者) continue;
+        const auto live=当前.世界事实.存在概念服务.获取指代概念(info.节点);
+        if (!live.信息 || live.信息->定义!=info.定义 || found)
+            throw std::logic_error("需求主体说话者指代不唯一或定义已变化");
+        found=info.节点;
+    }
+    if (!found) throw std::logic_error("需求主体说话者指代缺失");
+    return *found;
+}
 std::vector<初始化语言概念名称绑定> 读取字段询问名称绑定(普通应用上下文& 当前) {
     const auto d=当前.世界事实.存在概念服务.读取先天需求任务方法概念();
     if (!d.信息) throw std::logic_error("字段询问正式需求根未就绪");
@@ -3028,7 +3044,8 @@ std::vector<初始化语言概念名称绑定> 读取字段询问名称绑定(�
         {"DEMAND-TARGET-COMPARISON",读取字段询问先天类型(当前,1009)},
         {"DEMAND-TARGET-DIRECTION",读取字段询问先天类型(当前,1010)},
         {"THIRD-PARTY",读取字段询问第三方概念(当前)},
-        {"ADDRESSEE",读取行动请求受话者概念(当前)}};
+        {"ADDRESSEE",读取行动请求受话者概念(当前)},
+        {"SPEAKER",读取需求主体说话者概念(当前)}};
 }
 void 初始化普通应用语言知识(普通应用上下文& 当前, 普通应用装配结果& 结果,
     const std::string& 标准文本, bool 只读) noexcept {

@@ -1830,7 +1830,7 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             std::vector<新问题答案信息> 全部;
             for(const auto& a:接收认知语言读取接口_->查找问题答案(问题->问题节点).答案组) {
                 auto v=接收认知语言读取接口_->读取问题答案信息(a.答案信息);
-                if(!v||!v->需求信息||!v->目标存在)throw std::logic_error("target field answer is not readable demand information");
+                if(!v||!v->需求信息)throw std::logic_error("target field answer is not readable demand information");
                 全部.push_back(std::move(*v));
             }
             const auto 本答案=std::find_if(全部.begin(),全部.end(),[&](const auto& v){return v.信息节点==*out.答案信息;});
@@ -1838,9 +1838,15 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             const auto v=*本答案;
             if(std::any_of(全部.begin(),全部.end(),[&](const auto& x){return x.目标存在!=v.目标存在||x.特征类型!=v.特征类型;}))
                 return 结束(W::答案冲突,L"同一目标栏问题有多条目标不同的需求信息 条数="+std::to_wstring(全部.size()));
-            if((t.目标存在节点&&t.目标存在节点!=v.目标存在)||(t.目标特征类型概念节点&&*t.目标特征类型概念节点!=v.特征类型))
+            // R121：需求信息的目标存在、目标特征类型可为未知；能写的写、未知的不写，已知栏只核一致不改写。
+            const bool 有存在=v.目标存在.has_value(),有FT=有效(v.特征类型);
+            if((t.目标存在节点&&有存在&&t.目标存在节点!=v.目标存在)||(t.目标特征类型概念节点&&有FT&&*t.目标特征类型概念节点!=v.特征类型))
                 return 结束(W::答案不可用,L"需求信息与D已知目标存在或目标特征类型不一致");
-            auto 新目标=t;新目标.目标存在节点=v.目标存在;新目标.目标特征类型概念节点=v.特征类型;
+            auto 新目标=t;
+            if(!t.目标存在节点&&有存在)新目标.目标存在节点=v.目标存在;
+            if(!t.目标特征类型概念节点&&有FT)新目标.目标特征类型概念节点=v.特征类型;
+            if(新目标.目标存在节点==t.目标存在节点&&新目标.目标特征类型概念节点==t.目标特征类型概念节点)
+                return 结束(W::答案不可用,L"需求信息未带D目标栏可写入的目标存在或目标特征类型");
             const auto 写=更新被认知需求信息内部({Dn,*D,新目标,std::nullopt},std::nullopt,*out.答案信息);
             using S=新需求操作状态;
             switch(写.状态) {

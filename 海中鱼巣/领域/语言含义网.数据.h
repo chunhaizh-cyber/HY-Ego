@@ -41,7 +41,8 @@ struct 新匿名表达对象 final {
     friend bool operator==(const 新匿名表达对象&,const 新匿名表达对象&)=default;
 };
 struct 新明确未知 final { friend bool operator==(const 新明确未知&,const 新明确未知&)=default; };
-enum class 新组织绑定角色 : std::uint8_t { 需求D=1, 字段特征类型, 说话者, 受话者, 字段值域概念 };
+// 问题主体：目标栏问题的被问结构主体（D的需求主体，R120）；目标存在范围：待求目标存在的内容范围（存在根概念）。
+enum class 新组织绑定角色 : std::uint8_t { 需求D=1, 字段特征类型, 说话者, 受话者, 字段值域概念, 问题主体, 目标存在范围 };
 struct 新规则角色变量 final {
     新组织绑定角色 角色=新组织绑定角色::需求D;
     friend bool operator==(const 新规则角色变量&,const 新规则角色变量&)=default;
@@ -210,8 +211,12 @@ inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=fals
                 std::set<std::string> 角色;
                 for(const auto& r:x.角色组){要求(角色.insert(r.名称).second);指称(r.指称,询问||q);}
                 const auto 有角色=[&](const char* n){要求(角色.contains(n));};
+                // 最小需求含义“持有者需要目标存在”（R120/R121用户裁决2026-11-12）：需要态度不带内容项、
+                // 直接以“目标存在”角色给出目标，目标特征类型、形式与值均未知。
+                const bool 目标存在需要=x.种类==新内容算子种类::态度&&x.态度种类==新态度种类::需要
+                    &&x.内容引用组.empty()&&角色.contains("目标存在");
                 if(x.种类==新内容算子种类::条件)要求(x.内容引用组.size()==2);
-                else 要求(x.内容引用组.size()==1);
+                else if(!目标存在需要)要求(x.内容引用组.size()==1);
                 if(x.种类==新内容算子种类::引述)有角色("原说话者");
                 if(x.种类==新内容算子种类::态度){
                     要求(x.态度种类.has_value()&&*x.态度种类>=新态度种类::需要&&*x.态度种类<=新态度种类::询问);
@@ -248,7 +253,8 @@ inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=fals
 }
 
 // 首批三个静态签名的取材算子；知识保存签名，不保存代码或字段反射路径。
-enum class 新组织取材算子 : std::uint8_t { 绑定角色=1, 需求字段内容状态, 需求字段值域概念 };
+// 存在根概念：读取存在根概念作为目标栏问题待求目标存在的内容范围。
+enum class 新组织取材算子 : std::uint8_t { 绑定角色=1, 需求字段内容状态, 需求字段值域概念, 存在根概念 };
 struct 新组织取材步骤 final {
     std::int64_t 编号=0; 新组织取材算子 算子=新组织取材算子::绑定角色;
     新组织绑定角色 输出角色=新组织绑定角色::需求D;
@@ -256,7 +262,7 @@ struct 新组织取材步骤 final {
 };
 struct 新表达需求类型 final {
     新表达用途 用途=新表达用途::疑问;
-    // 表达对象的variant索引：0 需求字段，1 招呼（正式表达需求.h）。
+    // 表达对象的variant索引：0 需求字段，1 招呼，2 需求目标栏（正式表达需求.h）。
     std::int64_t 对象种类=0;
     friend bool operator==(const 新表达需求类型&,const 新表达需求类型&)=default;
 };

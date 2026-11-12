@@ -700,7 +700,7 @@ U 图构式(const 语言图含义材料& 图) {
         if(根->子含义组.size()!=1)throw std::logic_error("language question graph child missing");
         const auto 子=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==根->子含义组[0].子含义编号;});
         if(子==图.定义图.节点组.end())throw std::logic_error("language question graph child dangling");
-        if(子->操作==M::需求描述)return U::需求确认;
+        if(子->操作==M::需求描述)return 根->确认范围==新语言知识确认范围::填项内容 ? U::需求目标填项 : U::需求确认;
         if(子->操作==M::概念归类)return U::S09归类确认;
         if(子->操作==M::特征描述&&根->确认范围==新语言知识确认范围::填项内容)return U::S10字段填项;
         throw std::logic_error("language question graph operation unsupported");
@@ -1226,11 +1226,13 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
             :根->操作==M::招呼发起||根->操作==M::招呼维持||根->操作==M::招呼结束 ? 新语言知识表达目的::招呼:新语言知识表达目的::陈述;
         请求.操作=根->操作;请求.作用域=根->作用域;请求.含义图=*图;
         请求.最大知识条目数=q.最大知识条目数;请求.最大名称条目数=q.最大名称候选数;请求.最大输出标量数=q.最大输出标量数;
+        请求.成文说话者=q.说话者;请求.成文受话者=q.受话者;
         const auto 表达=生成基础语言表达(请求,lang,words,names,es,fs,instances,正式读取);
         if(表达.状态!=基础表达状态::已生成){result.状态=图表达输出状态(表达.状态);return result;}
         if(!表达.已用含义图)throw std::logic_error("graph expression success has no meaning material");
         语言图解释请求 回读请求{q.语言节点,表达.文本,{}, {}};
-        for(const auto& 对齐:表达.对齐组)if(对齐.参数&&对齐.名称关系节点) {
+        // 名称成文的对象与“我”“你”指代成文的存在都按原文范围交回读绑定（指代不传概念或含义图）。
+        for(const auto& 对齐:表达.对齐组)if(对齐.参数&&(对齐.名称关系节点||对齐.指代名称关系节点)) {
             for(const auto& 出现:表达.已用含义图->出现组) {
                 if(出现.所用知识节点!=对齐.所属知识节点||出现.结构项路径.size()+1!=对齐.结构项路径.size()
                     ||!std::equal(出现.结构项路径.begin(),出现.结构项路径.end(),对齐.结构项路径.begin()))continue;

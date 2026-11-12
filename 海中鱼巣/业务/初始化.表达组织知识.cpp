@@ -26,7 +26,8 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
     };
     const auto 角色=[&](const std::string& t){
         if(t=="需求D")return 新组织绑定角色::需求D;if(t=="字段特征类型")return 新组织绑定角色::字段特征类型;
-        if(t=="说话者")return 新组织绑定角色::说话者;要求(t=="受话者");return 新组织绑定角色::受话者;
+        if(t=="说话者")return 新组织绑定角色::说话者;if(t=="问题主体")return 新组织绑定角色::问题主体;
+        要求(t=="受话者");return 新组织绑定角色::受话者;
     };
     std::vector<新表达组织知识定义> out;std::optional<新表达组织知识定义> 当前;
     bool 有适用=false,有缺材=false;std::set<std::string> 标题;
@@ -37,10 +38,11 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
         }
         要求(当前.has_value());auto& d=*当前;
         if(t[0]=="适用"){
-            要求(t.size()==3&&!有适用&&(t[2]=="需求字段"||t[2]=="招呼对象"));
-            // 对象种类为正式表达需求的variant序号：0 需求字段，1 招呼（CONV-EXPR-TEXT §3.5）。
-            d.适用类型={用途(t[1]),t[2]=="招呼对象"?1:0};
-            要求((d.适用类型.对象种类==1)==(d.适用类型.用途==新表达用途::招呼));有适用=true;
+            要求(t.size()==3&&!有适用&&(t[2]=="需求字段"||t[2]=="招呼对象"||t[2]=="需求目标栏"));
+            // 对象种类为正式表达需求的variant序号：0 需求字段，1 招呼（CONV-EXPR-TEXT §3.5），2 需求目标栏（R120）。
+            d.适用类型={用途(t[1]),t[2]=="招呼对象"?1:t[2]=="需求目标栏"?2:0};
+            要求((d.适用类型.对象种类==1)==(d.适用类型.用途==新表达用途::招呼));
+            要求(d.适用类型.对象种类!=2||d.适用类型.用途==新表达用途::疑问);有适用=true;
         } else if(t[0]=="条件"){
             要求(t==std::vector<std::string>{"条件","需求字段内容状态","等于","当前未知"});
             要求(d.适用条件组.empty());d.适用条件组.push_back(新组织取材算子::需求字段内容状态);
@@ -48,6 +50,8 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
             要求(t.size()>=4);新组织取材步骤 step;step.编号=编号(t[1]);
             if(t[2]=="绑定角色"){
                 要求(t.size()==4);step.算子=新组织取材算子::绑定角色;step.输出角色=角色(t[3]);
+            } else if(t[2]=="读先天概念"){
+                要求(t.size()==4&&t[3]=="存在根");step.算子=新组织取材算子::存在根概念;step.输出角色=新组织绑定角色::目标存在范围;
             } else {
                 要求(t.size()==6&&t[2]=="读具名字段"&&t[3]=="需求字段值域概念"&&t[4]=="需求D"&&t[5]=="字段特征类型");
                 step.算子=新组织取材算子::需求字段值域概念;step.输出角色=新组织绑定角色::字段值域概念;
@@ -64,6 +68,16 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
             if(t[1]=="顶层"){
                 要求(t.size()==5&&t[3]=="内容"&&d.含义网模板.顶层项组.empty());
                 d.含义网模板.顶层项组.push_back({std::nullopt,用途(t[2]),编号(t[4])});
+            } else if(t[2]=="态度"&&t.size()==7&&t[3]=="需要"){
+                // 目标栏问题被询内容：持有者需要目标存在（目标存在为待求），R120。
+                要求(t[4].starts_with("持有者=取材")&&t[5]=="目标存在=疑问代词实例"&&t[6].starts_with("类型=取材"));
+                const auto 持有=编号(t[4].substr(std::string("持有者=取材").size()));
+                const auto 类型=编号(t[6].substr(std::string("类型=取材").size()));
+                要求(步骤.contains(持有)&&步骤.contains(类型));
+                新内容算子 n;n.种类=新内容算子种类::态度;n.态度种类=新态度种类::需要;
+                n.角色组.push_back({"持有者",新规则角色变量{步骤.at(持有)}});
+                n.角色组.push_back({"目标存在",新表达指称{新疑问代词实例{0,{},0,类型}}});
+                d.含义网模板.内容项组.push_back({编号(t[1]),n,{},{},{}});
             } else if(t[2]=="态度"){
                 要求(t.size()==9&&t[3]=="询问"&&t[6]=="确认范围=填项内容"&&t[7]=="内容");
                 新内容算子 q;q.种类=新内容算子种类::态度;q.态度种类=新态度种类::询问;
@@ -88,9 +102,13 @@ std::vector<新表达组织知识定义> 解码组织知识(const std::string& �
         } else {
             要求(t==std::vector<std::string>{"结束"}&&有适用&&有缺材);
             for(auto& i:d.含义网模板.内容项组){
-                auto* unit=std::get_if<新静态含义单元>(&i.内容);if(!unit)continue;
-                auto& value=std::get<新表达指称>(std::get<新特征值谓项>(unit->谓项).值);
-                auto& q=std::get<新疑问代词实例>(value);std::size_t count=0;
+                新疑问代词实例* 待求=nullptr;
+                if(auto* unit=std::get_if<新静态含义单元>(&i.内容))
+                    待求=&std::get<新疑问代词实例>(std::get<新表达指称>(std::get<新特征值谓项>(unit->谓项).值));
+                else if(auto* op=std::get_if<新内容算子>(&i.内容))
+                    for(auto& r:op->角色组)if(auto* x=std::get_if<新疑问代词实例>(&r.指称))待求=x;
+                if(!待求)continue;
+                auto& q=*待求;std::size_t count=0;
                 for(const auto& parent:d.含义网模板.内容项组){const auto* op=std::get_if<新内容算子>(&parent.内容);
                     if(op&&std::find(op->内容引用组.begin(),op->内容引用组.end(),i.编号)!=op->内容引用组.end()){q.询问内容=parent.编号;++count;}}
                 要求(count==1);

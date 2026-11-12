@@ -50,8 +50,15 @@ namespace {
     using S=新表达结构组织状态;新表达结构组织结果 out;
     const auto 失败=[&](S s){新表达结构组织结果 r;r.状态=s;return r;};
     if(const auto* g=std::get_if<正式表达招呼>(&请求.表达对象))return 组织招呼(请求,*g,语言);
-    const auto* d=std::get_if<正式表达需求字段>(&请求.表达对象);
-    if(!d)return 失败(S::范围未支持);
+    // 载荷栏问题与目标栏问题（R120）共用需求D、字段与范围；目标栏问题另带问题主体（D的需求主体）。
+    std::optional<正式表达需求字段> 字段对象;std::optional<稳定编码> 问题主体;
+    if(const auto* p=std::get_if<正式表达需求字段>(&请求.表达对象))字段对象=*p;
+    else if(const auto* t=std::get_if<正式表达需求目标栏>(&请求.表达对象)){
+        字段对象=正式表达需求字段{t->需求D,t->字段特征类型,t->需求范围概念};
+        if(!有效(t->问题主体))return 失败(S::缺材);问题主体=t->问题主体;
+    }
+    if(!字段对象)return 失败(S::范围未支持);
+    const auto* d=&*字段对象;
     if(!有效(d->需求D)||!有效(d->字段特征类型)||!有效(d->需求范围概念))return 失败(S::缺材);
     const auto 候选=语言.查询适用表达组织知识({请求.表达用途,static_cast<std::int64_t>(请求.表达对象.index())});
     std::map<稳定编码,基础联合节点快照> 保护;
@@ -106,8 +113,17 @@ namespace {
             case 新组织绑定角色::字段特征类型:v={新指称类别::特征类型,d->字段特征类型,d->字段特征类型};break;
             case 新组织绑定角色::说话者:v=请求.说话者;break;
             case 新组织绑定角色::受话者:v=请求.受话者;break;
+            case 新组织绑定角色::问题主体:
+                if(!问题主体)return 失败(S::范围未支持);
+                v={新指称类别::存在,*问题主体,{}};break;
             default:throw std::logic_error("绑定角色算子签名不合法");
             }
+        } else if(t.算子==新组织取材算子::存在根概念){
+            const auto r=存在概念.读取存在根概念保护();
+            if(r.状态==正式概念读取状态::前提已变化)return 失败(S::前提已变化);
+            if(r.状态!=正式概念读取状态::已读取||!r.信息||r.完整保护组.empty())return 失败(S::范围未支持);
+            if(!并保护(r.完整保护组))return 失败(S::前提已变化);
+            v={新指称类别::概念,r.信息->节点,r.信息->节点};
         } else if(t.算子==新组织取材算子::需求字段值域概念){
             const auto s=取需求();if(s!=S::已组织)return 失败(s);
             const auto r=读取正式字段询问范围(*材料,d->字段特征类型,存在概念,特征概念);
