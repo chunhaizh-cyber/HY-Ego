@@ -260,6 +260,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     std::vector<新模拟有序参数输入> base;
     std::vector<std::optional<新特征匹配定义快照>> defs;
     std::set<std::size_t> 需求参数位置;
+    // 方案D（2026-11-12用户裁决）：需求参数范围槽——1需求根、233补问需求、208被认知需求。
+    std::map<std::size_t,std::uint32_t> 需求参数范围槽;
     for(const auto& spec:m.参数规格组) {
         if(!spec.有序规格) 不支持(0,"mixed ordered and role parameters");
         if(spec.有序规格->信息类型==新方法参数信息类型::存在) {
@@ -271,8 +273,13 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 if(roots.状态==正式结构操作状态::前提已变化)throw 模拟输入采集漂移{};
                 if(roots.状态!=正式结构操作状态::已读取||!roots.信息)
                     不支持(spec.有序规格->序号,"formal demand root unavailable");
-                if(spec.有序规格->范围概念节点!=roots.信息->需求)
-                    不支持(spec.有序规格->序号,"only the formal demand root is supported as an information parameter");
+                std::uint32_t 槽=0;
+                if(spec.有序规格->范围概念节点==roots.信息->需求)槽=1;
+                else for(const auto& [x,n]:roots.信息->子类与支持定义)
+                    if((x==233||x==208)&&n==spec.有序规格->范围概念节点)槽=x;
+                if(!槽)
+                    不支持(spec.有序规格->序号,"only the formal demand root, ask demand or recognized demand is supported as an information parameter");
+                需求参数范围槽.emplace(base.size(),槽);
                 需求参数位置.insert(base.size());
             }
         }
@@ -1377,14 +1384,70 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
       }
     }
     // 独立D参数可以选择任何已合法采集/构造的完整D，不从F.current猜选中身份。
+    // 方案D：候选按参数范围的事实归属收窄（与需求owner 需求属于补问需求/需求属于被认知需求 同口径）。
+    const auto 候选属于范围=[&](const 新模拟需求输入& d,std::uint32_t 槽) {
+        if(槽==208)return d.执行域==新需求执行域::被认知;
+        if(槽!=233)return true;
+        if(d.执行域!=新需求执行域::自我执行||d.来源类型!=std::optional{新需求来源类型::任务子目标}
+            ||!d.引用内容定位输入||d.引用内容定位输入->正式内容路径.size()!=1
+            ||!d.引用内容定位输入->引用需求输入||d.引用内容定位输入->引用需求输入>需求图模板.需求组.size())return false;
+        return 需求图模板.需求组.at(d.引用内容定位输入->引用需求输入-1).执行域==新需求执行域::被认知;
+    };
+    bool 下位范围无候选=false;
     for(const auto i:需求参数位置) {
         auto& candidates=需求候选序号[i];
         candidates.clear();
-        for(const auto& d:需求图模板.需求组)candidates.push_back(d.序号);
+        const auto 槽=需求参数范围槽.at(i);
+        for(const auto& d:需求图模板.需求组)if(候选属于范围(d,槽))candidates.push_back(d.序号);
         std::sort(candidates.begin(),candidates.end());
         candidates.erase(std::unique(candidates.begin(),candidates.end()),candidates.end());
+        if(candidates.empty()&&槽!=1){下位范围无候选=true;continue;}
         if(candidates.empty())不支持(static_cast<std::uint32_t>(i+1),需求构造缺口.empty()
             ? "formal demand parameter has no complete source or constructible candidate" : 需求构造缺口);
+    }
+    // 方案D（2026-11-12用户裁决，依“模拟世界执行不了只生成条件节点，结果可为空”）：补问需求/被认知需求参数
+    // 取样为空时不报规格未支持、不建隔离样例世界，直接按方法声明发表仅条件配对——条件＝各存在参数的范围归属
+    // ＋所选分支的有效必要条件（初始、执行分支、初始模拟关系），结果为空；发表（或精确重复）后结束本分支。
+    if(下位范围无候选) {
+        停止();
+        新方法条件结果定义 pair;
+        if(执行分支)pair.来源执行分支节点组.push_back(*执行分支);
+        pair.条件.关系规则=新方法项关系规则::全部成立;
+        for(std::size_t i=0;i<N;++i)if(base[i].规格.信息类型==新方法参数信息类型::存在) {
+            新方法条件项定义 c;c.参数序号=base[i].规格.序号;c.存在概念节点=base[i].规格.范围概念节点;
+            pair.条件.条件项组.push_back(std::move(c));
+        }
+        if(m.初始必要条件
+            &&方法_.合入未涵盖必要条件(*m.初始必要条件,m.参数规格组,pair.条件)==新_方法类::必要条件合入状态::前提已变化)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"declared necessary condition premise changed");
+        const auto 声明闭包=方法_.读取方法执行结构闭包({m.节点});
+        if(声明闭包.状态==新_方法类::执行结构读取状态::前提已变化)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration premise changed");
+        const auto 声明方法=std::find_if(声明闭包.方法组.begin(),声明闭包.方法组.end(),
+            [&](const auto& x){return x.节点==m.节点;});
+        if(声明闭包.状态!=新_方法类::执行结构读取状态::已读取
+            ||声明方法==声明闭包.方法组.end()||声明闭包.完整保护组.empty()
+            ||声明方法->方法头!=m.方法头||声明方法->参数规格组!=m.参数规格组)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"formal result declaration closure unavailable");
+        const auto published=方法_.追加模拟条件结果(m.节点,{pair},&声明闭包);
+        if(published.状态==新方法学习发布状态::前提已变化)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"result declaration baseline changed at publication");
+        if(published.状态==新方法学习发布状态::资源失败)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::资源不足,"learning publication resource failure");
+        if(published.状态!=新方法学习发布状态::已发布&&published.状态!=新方法学习发布状态::精确重复
+            &&published.状态!=新方法学习发布状态::发布结果未知)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"declaration-only condition pair publication rejected");
+        const auto fresh=方法_.获取方法(m.节点);
+        if(!fresh||!std::any_of(fresh->条件结果组.begin(),fresh->条件结果组.end(),[&](const auto& p) {
+            return p.条件==pair.条件&&p.结果==pair.结果&&p.知识来源==新方法知识来源种类::模拟
+                &&(!执行分支||std::find(p.来源执行分支节点组.begin(),p.来源执行分支节点组.end(),*执行分支)!=p.来源执行分支节点组.end());
+        }))throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"published pair not found on readback");
+        if(published.状态==新方法学习发布状态::已发布&&published.新配对节点组.size()==1) {
+            const auto 融合=方法_.融合模拟条件结果(m.节点,published.新配对节点组.front());
+            if(融合.状态==新方法学习发布状态::发布结果未知||融合.状态==新方法学习发布状态::结构不一致)
+                throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"pair value-domain merge publication inconsistent");
+        }
+        return;
     }
     // owner逐项采集不是跨世界原子快照。读回检测采集期间变化；之后只用值副本。
     HY_SIM_PROGRESS(L"需求图构造完成，开始核同来源",需求图模板.需求组.size());
@@ -1674,6 +1737,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     bool 本支有合法样例=false;
     bool 本支有正式结果=false;
     bool 本支有未完成样例=false;
+    bool 仅条件已发表=false;
     while(!cursor.已结束()) {
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         ++观察.样例次数;
@@ -2551,6 +2615,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 }))throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"published pair not found on readback");
                 本组已发表=pair;
                 本组新发布=published.状态==新方法学习发布状态::已发布;
+                // 方案D追加（2026-11-12用户裁决）：仅条件样例首次发表（已发布）或精确重复后，结束本分支剩余组合。
+                if(仅条件样例&&(published.状态==新方法学习发布状态::已发布
+                    ||published.状态==新方法学习发布状态::精确重复))仅条件已发表=true;
                 if(published.状态==新方法学习发布状态::已发布&&published.新配对节点组.size()==1)
                     本组配对节点=published.新配对节点组.front();
                 else if(published.已有配对节点)本组配对节点=*published.已有配对节点;
@@ -2585,6 +2652,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"pair value-domain merge publication inconsistent");
             }
         }
+        if(仅条件已发表)break; // 不再为剩余组合建立/删除隔离样例世界；有结果样例的取样口径不变。
         cursor.推进();
     }
     if(!本支有合法样例)throw 新学习运行异常(m.节点,新学习运行异常原因::输入不合法,"execution branch has no legal simulation sample");

@@ -59,7 +59,7 @@ bool 字段询问本能运行服务::初始化(const 新字段询问登记配置
         要求(!s.已关闭 && s.语言,"field question initialization dependency unavailable");
         if (s.配置) { 要求(*s.配置==c,"field question immutable configuration mismatch");return true; }
         for (const auto id:{c.需求根概念,c.自我范围概念,c.交互者特征类型,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
-            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型,c.需求目标存在类型,c.需求目标特征类型})
+            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型,c.需求目标存在类型,c.需求目标特征类型,c.补问需求概念})
             要求(有效(id),"field question configuration identity missing");
         要求(c.支持字段类型组.size()==6,"field question supported slot count invalid");
         std::set<稳定编码> unique;

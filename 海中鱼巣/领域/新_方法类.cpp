@@ -5769,6 +5769,36 @@ bool 提交前提已变化(基础节点组追加状态 s) {
                     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"迁移获取服务对象参数", L"新方法发表或读回不完整。");
                 return 发布;
             }
+            // 方案D（2026-11-12用户裁决，R119）：有序规格方法只在参数范围上不同（序号、信息类型、必需特征类型、
+            // 所属位置均同，方法头/作用域/实现方式/启用均同）时允许修订参数规格；其它不一致仍按下方工程终止。
+            if (!请求.参数规格组.empty() && 请求.参数规格组.front().有序规格
+                && 方法->参数规格组 != 请求.参数规格组
+                && 方法->参数规格组.size() == 请求.参数规格组.size()
+                && 方法->作用域 == 请求.作用域 && 方法->实现方式 == 请求.实现方式
+                && 方法->启用状态 == 新方法启用状态::启用
+                && std::is_permutation(方法->方法头.作用存在概念组.begin(), 方法->方法头.作用存在概念组.end(),
+                    请求.方法头.作用存在概念组.begin(), 请求.方法头.作用存在概念组.end())
+                && std::is_permutation(方法->方法头.涉及特征类型概念组.begin(), 方法->方法头.涉及特征类型概念组.end(),
+                    请求.方法头.涉及特征类型概念组.begin(), 请求.方法头.涉及特征类型概念组.end())
+                && std::is_permutation(方法->方法头.可能结果概念组.begin(), 方法->方法头.可能结果概念组.end(),
+                    请求.方法头.可能结果概念组.begin(), 请求.方法头.可能结果概念组.end())
+                && [&] {
+                    for (std::size_t i = 0; i < 请求.参数规格组.size(); ++i) {
+                        const auto& 旧 = 方法->参数规格组[i];
+                        const auto& 新 = 请求.参数规格组[i];
+                        if (!旧.有序规格 || !新.有序规格) return false;
+                        auto 仅范围 = *旧.有序规格; 仅范围.范围概念节点 = 新.有序规格->范围概念节点;
+                        auto 旧其它 = 旧; 旧其它.有序规格 = 仅范围;
+                        if (旧其它 != 新) return false;
+                    }
+                    return true;
+                }()) {
+                const auto 修订 = 修订本能参数范围已加锁(*方法, 请求.参数规格组);
+                if (!修订.方法节点) return 修订;
+                锁.unlock();
+                // 修订后按复用口径继续核验初始声明补齐（与下方同一路径）。
+                return 确保本能方法登记内部(登记名, 原请求);
+            }
             if (方法->作用域 != 请求.作用域
                 || 方法->实现方式 != 请求.实现方式
                 || 方法->参数规格组 != 请求.参数规格组
@@ -5815,6 +5845,96 @@ bool 提交前提已变化(基础节点组追加状态 s) {
     } catch (...) {
         return {新方法操作状态::资源失败, std::nullopt};
     }
+}
+
+新方法建立结果 新_方法类::修订本能参数范围已加锁(const 新方法信息& 根方法,
+    const std::vector<新方法参数规格>& 新规格组) {
+  try {
+    // 调用者持有新方法互斥（递归锁）。来源方法族一并修订：族内方法与根共享同一固定规格。
+    const auto 成员组 = 读取多节点字段(新方法组织根节点, 方法成员字段, 特征概念服务_);
+    if (!成员组) throw std::runtime_error("method root unreadable for parameter range revision");
+    std::map<稳定编码, 新方法信息> 全部;
+    for (const auto n : *成员组) {
+        const auto m = 读取方法信息本体(n, 特征概念服务_, *this, 存在概念服务_, false, true);
+        if (!m || !全部.emplace(n, *m).second)
+            throw std::runtime_error("method enumeration incomplete for parameter range revision");
+    }
+    if (!全部.contains(根方法.节点) || 全部.at(根方法.节点) != 根方法) return {新方法操作状态::定义前提已变化, {}};
+    std::set<稳定编码> 族{根方法.节点};
+    for (bool 变化 = true; 变化;) {
+        变化 = false;
+        for (const auto& [n, m] : 全部)
+            if (!族.contains(n) && ((m.来源方法节点 && 族.contains(*m.来源方法节点))
+                || (m.父代方法节点 && 族.contains(*m.父代方法节点)))) { 族.insert(n); 变化 = true; }
+    }
+    for (const auto& 规格 : 新规格组)
+        if (规格.有序规格 && 规格.有序规格->信息类型 == 新方法参数信息类型::存在
+            && !方法存在范围有效(规格.有序规格->范围概念节点, 存在概念服务_))
+            throw std::runtime_error("revised parameter range unreadable");
+    基础节点组追加请求 请求;
+    std::vector<稳定编码> 图;
+    std::map<稳定编码, std::vector<稳定编码>> 删除配对;
+    std::map<稳定编码, std::size_t> 预期配对数;
+    for (const auto n : 族) {
+        const auto& m = 全部.at(n);
+        if (m.参数规格组 != 根方法.参数规格组)
+            throw std::runtime_error("source family method has parameter specs differing from its root");
+        图.push_back(n); 图.push_back(m.方法虚拟存在节点);
+        const auto 参数组 = 读取有序子节点(m.方法虚拟存在节点, 虚拟存在参数规格字段, 特征概念服务_);
+        if (!参数组 || 参数组->size() != 新规格组.size())
+            throw std::runtime_error("method parameter spec nodes unreadable for revision");
+        for (std::size_t i = 0; i < 新规格组.size(); ++i) {
+            if (m.参数规格组[i] == 新规格组[i]) continue;
+            const auto P = (*参数组)[i];
+            if (读取参数规格(P, 特征概念服务_, 存在概念服务_) != std::optional{m.参数规格组[i]})
+                throw std::runtime_error("method parameter spec node differs from projection");
+            const auto 字段 = 全局基础数据集.查询字段(P, 有序参数范围字段);
+            if (字段.size() != 1) throw std::runtime_error("ordered parameter range field not unique");
+            请求.替换字段组.push_back({字段.front().编码, 新规格组[i].有序规格->范围概念节点});
+            图.push_back(P);
+            // 替换写入的新目标与旧目标同按严格联合预期（旧目标经P字段并入）。
+            if (std::find(图.begin(), 图.end(), 新规格组[i].有序规格->范围概念节点) == 图.end())
+                图.push_back(新规格组[i].有序规格->范围概念节点);
+        }
+        // 不相容配对：引用的参数位置或条件值域与新规格对不上（按登记同一口径核验）；相容的保留。
+        auto 新方法 = m; 新方法.参数规格组 = 新规格组;
+        const auto 引用组 = 全局基础数据集.查询字段(n, 方法条件结果字段);
+        for (const auto& 配对 : m.条件结果组) {
+            const 新方法条件结果定义 定义{配对.条件, 配对.结果, 配对.线性关系组, 配对.来源执行分支节点组};
+            if (条件结果角色已声明(新规格组, 定义, 特征概念服务_, 存在概念服务_)
+                && 配对分支来源有效(新方法, 定义, 特征概念服务_, 存在概念服务_)) continue;
+            const auto 引用 = std::find_if(引用组.begin(), 引用组.end(), [&](const auto& f) {
+                const auto* x = std::get_if<稳定编码>(&f.内容);
+                return x && *x == 配对.配对节点;
+            });
+            if (引用 == 引用组.end()) throw std::runtime_error("method pair reference missing for revision");
+            // 复用融合路径：只解除方法对配对的引用；配对节点不物理删除（执行材料可能仍引用）。
+            请求.删除字段关系组.push_back(引用->编码);
+            删除配对[n].push_back(配对.配对节点);
+        }
+        预期配对数[n] = m.条件结果组.size() - 删除配对[n].size();
+    }
+    const auto 封存 = 封存方法片段(std::move(请求), 图, 存在概念服务_, 特征概念服务_);
+    const auto 发布 = 全局基础数据集.原子追加封存片段组({封存});
+    if (发布.状态 == 基础节点组追加状态::预期不符) return {新方法操作状态::定义前提已变化, {}};
+    if (发布.状态 != 基础节点组追加状态::已完成)
+        throw std::runtime_error("method parameter range revision publication failed");
+    for (const auto n : 族) {
+        const auto 读回 = 读取方法信息本体(n, 特征概念服务_, *this, 存在概念服务_, false, true);
+        if (!读回 || 读回->参数规格组 != 新规格组 || 读回->条件结果组.size() != 预期配对数.at(n))
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修订本能参数范围",
+                L"参数范围修订已发布但读回不一致；保留已发布事实。");
+    }
+    // 删除后按实际数经方法状态统一入口同步配对数（值不变不形成状态）；治理结构未建时由启动补齐按实际数建立。
+    if (有效(方法状态治理根))
+        for (const auto n : 族) 同步方法配对数状态已加锁(n, 新方法学习种类::规格修订删除, 删除配对[n]);
+    return {新方法操作状态::已修改, 根方法.节点};
+  } catch (const 引用内容定义前提变化&) {
+    throw;
+  } catch (const std::exception& e) {
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"修订本能参数范围",
+        L"参数范围修订的方法族、规格节点或配对引用读取不完整；保留已有事实。", e.what());
+  }
 }
 
 新方法建立结果 新_方法类::退役旧服务对象需求登记(
@@ -9446,7 +9566,7 @@ std::size_t 配对数序号(新方法状态特征种类 种类) {
 }
 bool 方法学习种类合法(std::int64_t v) noexcept {
     return v >= static_cast<std::int64_t>(新方法学习种类::模拟发布)
-        && v <= static_cast<std::int64_t>(新方法学习种类::启用修改);
+        && v <= static_cast<std::int64_t>(新方法学习种类::规格修订删除);
 }
 bool 方法状态特征种类合法(std::int64_t v) noexcept {
     return v >= static_cast<std::int64_t>(新方法状态特征种类::启用)
@@ -9532,7 +9652,7 @@ void 新_方法类::确保方法状态治理结构已加锁() {
     };
     auto 索引 = 读取索引();
     基础节点组追加请求 请求;
-    for (std::int64_t 种类 = 1; 种类 <= static_cast<std::int64_t>(新方法学习种类::启用修改); ++种类)
+    for (std::int64_t 种类 = 1; 种类 <= static_cast<std::int64_t>(新方法学习种类::规格修订删除); ++种类)
         for (std::int64_t 特征 = 1; 特征 <= static_cast<std::int64_t>(新方法状态特征种类::已知结果配对数); ++特征) {
             if (索引.contains({种类, 特征})) continue;
             const auto 规格 = 特征 == static_cast<std::int64_t>(新方法状态特征种类::启用) ? 方法启用特征类型
@@ -9554,7 +9674,8 @@ void 新_方法类::确保方法状态治理结构已加锁() {
             throw std::runtime_error("method state change definitions publication failed");
         索引 = 读取索引();
     }
-    if (索引.size() != 12) throw std::runtime_error("method state change definitions incomplete");
+    // 5种学习×3种特征（R119追加规格修订删除）。
+    if (索引.size() != 15) throw std::runtime_error("method state change definitions incomplete");
     方法状态变化定义索引 = std::move(索引);
 }
 

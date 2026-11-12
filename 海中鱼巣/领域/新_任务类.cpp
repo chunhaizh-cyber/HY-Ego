@@ -704,45 +704,34 @@ bool 是补问叶子(const 新需求信息& D) {
         &&有效(D.目标.引用内容定位->引用需求节点)&&有效(D.目标.引用内容定位->正式内容路径.front())
         &&D.目标.目标值域概念节点&&D.复合来源.has_value();
 }
-// 补问叶子召回（ASK-READ-SCENE v0.4 §3.1，2026-11-12用户裁决）：接受学得的配对，结果为空也算；
-// 召回只看条件，不按结果比对。配对p的参数n承接补问需求Q本身，当且仅当：n是存在类正式信息参数
-// （范围为信息结构概念），p的条件对n有存在归属项，且对n没有引用内容条件（引用内容条件表示该参数
-// 承载被引用的需求内容，如获取服务对象新需求的需求身份参数，不是补问需求本身）。
-bool 补问需求参数(const std::vector<新方法参数规格>& 规格组,const 新方法条件结果信息& p,
-    std::uint32_t n,const 概念_存在类& 概念) {
+// 补问叶子召回（ASK-READ-SCENE v0.4 §3.1；方案D 2026-11-12用户裁决）：接受学得的配对，结果为空也算；
+// 召回只看条件，不按结果比对。参数n承接补问需求Q本身，当且仅当n是存在类参数且其范围概念等于或归属
+// 先天“补问需求”（替换原“范围为信息结构概念且无引用内容条件”的推断）。参数范围是方法固定声明，
+// 有无配对、配对条件如何均不改变该判定。
+bool 范围归属补问需求(const std::vector<新方法参数规格>& 规格组,std::uint32_t n,const 概念_存在类& 概念) {
     const auto s=std::find_if(规格组.begin(),规格组.end(),[&](const auto& x){return x.有序规格&&x.有序规格->序号==n;});
     if(s==规格组.end()||s->有序规格->信息类型!=新方法参数信息类型::存在)return false;
-    bool 有归属=false;
-    for(const auto& c:p.条件.条件项组)if(c.参数序号==n) {
-        if(c.引用内容条件)return false;
-        if(c.存在概念节点)有归属=true;
-    }
-    if(!有归属)return false;
-    const auto d=概念.读取正式结构概念保护(s->有序规格->范围概念节点);
-    return d.状态==正式结构操作状态::已读取&&d.信息&&std::holds_alternative<信息结构概念定义>(d.信息->定义);
+    // 先天定义固定；保护读取遇并发引用变化时重读（与因果侧先天读取同口径）。
+    auto 补问=概念.读取补问需求概念保护();
+    for(int 重读=0;重读<16&&补问.状态==正式结构操作状态::前提已变化;++重读)补问=概念.读取补问需求概念保护();
+    if(补问.状态==正式结构操作状态::前提已变化)throw std::runtime_error("innate ask demand concept unstable");
+    if(补问.状态!=正式结构操作状态::已读取||!补问.信息)return false; // 未建立：尚无补问需求范围
+    if(s->有序规格->范围概念节点==补问.信息->节点)return true;
+    auto 属于=概念.正式结构概念属于(s->有序规格->范围概念节点,补问.信息->节点);
+    for(int 重读=0;重读<16&&!属于;++重读)属于=概念.正式结构概念属于(s->有序规格->范围概念节点,补问.信息->节点);
+    if(!属于)throw std::runtime_error("parameter range concept ancestry unreadable");
+    return *属于;
+}
+bool 补问需求参数(const std::vector<新方法参数规格>& 规格组,const 新方法条件结果信息&,
+    std::uint32_t n,const 概念_存在类& 概念) {
+    return 范围归属补问需求(规格组,n,概念);
 }
 bool 配对含补问需求参数(const std::vector<新方法参数规格>& 规格组,const 新方法条件结果信息& p,const 概念_存在类& 概念) {
     return std::any_of(规格组.begin(),规格组.end(),[&](const auto& s){
         return s.有序规格&&补问需求参数(规格组,p,s.有序规格->序号,概念);});
 }
-// 补问叶子召回（零配对，2026-11-12用户裁决）：方法尚无任何配对时按登记声明判定——参数n是存在类正式信息参数
-// （范围为信息结构概念），且方法声明的条件（初始必要条件、各执行分支必要条件）对n没有引用内容条件。
-// 召回只看条件，条件来自声明；有配对后按配对判定（补问需求参数）。
-bool 声明补问需求参数(const 新方法信息& M,std::uint32_t n,const 概念_存在类& 概念) {
-    const auto s=std::find_if(M.参数规格组.begin(),M.参数规格组.end(),[&](const auto& x){return x.有序规格&&x.有序规格->序号==n;});
-    if(s==M.参数规格组.end()||s->有序规格->信息类型!=新方法参数信息类型::存在)return false;
-    const auto 引用内容=[&](const 新方法条件定义& C){
-        return std::any_of(C.条件项组.begin(),C.条件项组.end(),[&](const auto& c){return c.参数序号==n&&c.引用内容条件.has_value();});};
-    if(M.初始必要条件&&引用内容(M.初始必要条件->条件))return false;
-    if(std::any_of(M.执行分支组.begin(),M.执行分支组.end(),[&](const auto& b){return 引用内容(b.定义.必要条件);}))return false;
-    const auto d=概念.读取正式结构概念保护(s->有序规格->范围概念节点);
-    return d.状态==正式结构操作状态::已读取&&d.信息&&std::holds_alternative<信息结构概念定义>(d.信息->定义);
-}
-// 参数n是否承接补问需求本身：有配对按配对条件（任一配对），零配对按登记声明。
 bool 方法补问需求参数(const 新方法信息& M,std::uint32_t n,const 概念_存在类& 概念) {
-    if(M.条件结果组.empty())return 声明补问需求参数(M,n,概念);
-    return std::any_of(M.条件结果组.begin(),M.条件结果组.end(),[&](const auto& 对){
-        return 补问需求参数(M.参数规格组,对,n,概念);});
+    return 范围归属补问需求(M.参数规格组,n,概念);
 }
 bool 有补问方法知识(const 新方法信息& M,const 新需求信息& D,const 概念_存在类& 概念) {
     if(!是补问叶子(D)||M.行为!=新方法行为::改变||M.实现方式!=新方法实现方式::本能

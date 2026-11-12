@@ -52,7 +52,7 @@ bool 正式读取成功(const 正式信息参数读取结果& r) {
     const auto q=scene.读取正式信息参数保护(1);
     if (!正式读取成功(q)) { 字段询问材料诊断行=__LINE__; return {R::前提已变化,{}}; }
     if (!q.信息->引用概念语义 || !q.信息->引用概念语义->引用内容定位) return 未支持("question demand has no reference content locator");
-    要求(q.信息->信息节点==scene.查询参数(1)->信息节点 && q.信息->类别概念==c.需求根概念,"formal locator projection identity mismatch");
+    要求(q.信息->信息节点==scene.查询参数(1)->信息节点 && q.信息->类别概念==c.补问需求概念,"formal locator projection identity mismatch");
     const auto loc=*q.信息->引用概念语义->引用内容定位;
     if (loc.正式内容路径.size()!=1 || std::find(c.支持字段类型组.begin(),c.支持字段类型组.end(),loc.正式内容路径.front())==c.支持字段类型组.end()) return 未支持("question demand locator path is not a single supported field");
     const auto d=reader.读取正式信息参数保护(loc.信息节点,c.需求根概念);

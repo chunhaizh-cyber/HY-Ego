@@ -858,7 +858,14 @@ namespace {
             return {S::依赖未就绪,{},{}};
         if(roots.状态!=正式结构操作状态::已读取||!roots.信息)
             throw std::runtime_error("formal simulation demand roots unavailable");
-        if(C!=roots.信息->需求)return {S::范围未支持,{},{}};
+        // 方案D（2026-11-12用户裁决）：范围可为需求根或先天下位概念“补问需求”（槽233）“被认知需求”（槽208），
+        // 归属按与需求owner相同的事实判定（需求属于补问需求/需求属于被认知需求）。
+        const auto 槽节点=[&](std::uint32_t 槽)->std::optional<稳定编码> {
+            for(const auto& [x,n]:roots.信息->子类与支持定义)if(x==槽)return n;
+            return std::nullopt;
+        };
+        const bool 补问范围=槽节点(233)==std::optional{C},被认知范围=槽节点(208)==std::optional{C};
+        if(C!=roots.信息->需求&&!补问范围&&!被认知范围)return {S::范围未支持,{},{}};
         const auto root=s.方法.读取模拟正式结构(C);
         if(root.状态==正式结构操作状态::前提已变化)return {S::前提已变化,{},{}};
         if(root.状态==正式结构操作状态::依赖未就绪||root.状态==正式结构操作状态::未找到)
@@ -913,6 +920,15 @@ namespace {
             if(read.状态!=新模拟需求状态::已完成||!read.信息)
                 throw std::runtime_error("registered formal simulation demand unreadable");
             d=*read.信息;
+            if(被认知范围&&d.执行域!=新需求执行域::被认知)return {S::范围未支持,{},{}};
+            if(补问范围) {
+                const auto& 定位=d.目标.引用内容定位;
+                if(d.执行域!=新需求执行域::自我执行||d.来源类型!=std::optional{新需求来源类型::任务子目标}
+                    ||!定位||定位->正式内容路径.size()!=1)return {S::范围未支持,{},{}};
+                const auto 被引用=s.本地需求.contains(定位->引用需求节点)
+                    ? 读取模拟需求(定位->引用需求节点) : 新模拟需求读回{};
+                if(!被引用.信息||被引用.信息->执行域!=新需求执行域::被认知)return {S::范围未支持,{},{}};
+            }
             // 正式来源只从本地owner重建，沿实际D/U/C/R/L引用去重核验。
             std::set<稳定编码> visited;std::vector<稳定编码> todo{N};
             for(std::size_t i=0;i<todo.size();++i) {
@@ -1230,7 +1246,10 @@ namespace 海中鱼巣 {
             if(formal.信息&&std::holds_alternative<信息结构概念定义>(formal.信息->定义)) {
                 const auto roots=s.方法.读取模拟需求概念组();
                 if(roots.状态==正式结构操作状态::前提已变化)return {新模拟世界状态::定义前提已变化,{}};
-                if(roots.状态!=正式结构操作状态::已读取||!roots.信息||p.规格.范围概念节点!=roots.信息->需求){ 模拟样例拒绝行=__LINE__; return {}; }
+                if(roots.状态!=正式结构操作状态::已读取||!roots.信息){ 模拟样例拒绝行=__LINE__; return {}; }
+                // 方案D：需求参数范围可为需求根或先天下位概念“补问需求”（233）“被认知需求”（208）；实参归属由正式参数读取按事实判定。
+                if(p.规格.范围概念节点!=roots.信息->需求&&std::none_of(roots.信息->子类与支持定义.begin(),roots.信息->子类与支持定义.end(),
+                    [&](const auto& x){return (x.first==233||x.first==208)&&x.second==p.规格.范围概念节点;})){ 模拟样例拒绝行=__LINE__; return {}; }
                 需求参数[i]=true;
                 if(!p.需求参数输入||p.需求参数输入>需求图.需求组.size()
                     ||p.所属存在参数||p.值||p.材料||!p.集合成员参数组.empty()||p.引用存在参数

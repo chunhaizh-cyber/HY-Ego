@@ -4127,6 +4127,33 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
     catch(const std::exception& 错误){正式定义故障(错误.what());}
     catch(...){正式定义故障("content planning definitions read exception");}
 }
+正式结构概念保护结果 概念_存在类::读取补问需求概念保护() const noexcept {
+    try {
+        if(!正式schema就绪())return {正式状态::依赖未就绪,{},{}};
+        std::vector<基础联合节点快照> 保护;
+        const auto ids=读取正式登记(保护);
+        const auto 找到=ids.find(233);
+        if(找到==ids.end()) {
+            if(!正式保护未变(保护))return {正式状态::前提已变化,{},{}};
+            return {正式状态::未找到,{},{}};
+        }
+        auto 读取=读取正式结构概念保护(找到->second);
+        if(读取.状态==正式状态::前提已变化)return {正式状态::前提已变化,{},{}};
+        if(读取.状态!=正式状态::已读取||!读取.信息||读取.信息->节点!=找到->second)
+            正式定义故障("ask demand definition unreadable");
+        const auto 上位=ids.find(232);
+        const auto* 定义=std::get_if<信息结构概念定义>(&读取.信息->定义);
+        if(上位==ids.end()||!定义||定义->上位结构概念组!=std::vector<稳定编码>{上位->second}
+            ||!定义->新增项组.empty()||!定义->收窄组.empty()||!定义->约束概念组.empty())
+            正式定义故障("ask demand definition conflict");
+        并保护(保护,读取.完整保护组);
+        if(!正式保护未变(保护))return {正式状态::前提已变化,{},{}};
+        读取.完整保护组=std::move(保护);
+        return 读取;
+    }catch(正式状态 s){return {s,{},{}};}
+    catch(const std::exception& 错误){正式定义故障(错误.what());}
+    catch(...){正式定义故障("ask demand definition read exception");}
+}
 引用内容筹办概念结果 概念_存在类::建立或取得引用内容筹办概念(
     const 新_特征值类& 材料,std::span<const 正式概念身份读取接口* const> 提供者组) noexcept {
     try {
@@ -4204,8 +4231,11 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
         定义模板 单项{};单项.槽=232;单项.形状=结构类型键;单项.上位={231};单项.项目={{*路径.类型根,402,{}}};
         定义模板 完整{};完整.槽=209;完整.形状=结构类型键;完整.上位={208};完整.约束槽={812};
         (void)发表批({整体,单项,完整});
+        // 方案D：补问需求（槽233）单独成批，既有世界已有209/231/232时幂等追加。
+        定义模板 补问{};补问.槽=233;补问.形状=结构类型键;补问.上位={232};
+        (void)发表批({补问});
         登记保护.clear();ids=读取正式登记(登记保护);
-        核对模板读回({基础,约束,整体,单项,完整},ids,*this);
+        核对模板读回({基础,约束,整体,单项,完整,补问},ids,*this);
         auto 读回 = 读取引用内容筹办概念();
         if(读回.状态 == 正式状态::已读取 && 读回.信息)
             读回.状态 = 有新建 ? 正式状态::已建立 : 正式状态::已复用;
