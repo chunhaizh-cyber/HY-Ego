@@ -1020,6 +1020,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     const auto 转准确=[&](const 新特征准确值& value,const 新特征匹配定义快照& def,
         const 复制失败诊断上下文& diagnostic)->新模拟复制准确值 {
         using K=新模拟复制值种类;
+        if(def.比较规则==特征概念比较规则::概念集合身份判等)不支持(0,"concept reference set sampling is unsupported");
         if(const auto* x=std::get_if<std::int64_t>(&value)) {
             if(def.材料类型!=特征概念材料物理类型::I64标量)throw std::runtime_error("typed copied scalar disagrees with feature type");
             return {K::I64,*x};
@@ -1072,6 +1073,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     };
     const auto 转域=[&](const 特征概念值域& domain,const 新特征匹配定义快照& def,
         const 复制失败诊断上下文& diagnostic)->新模拟复制值域 {
+        if(def.比较规则==特征概念比较规则::概念集合身份判等
+            ||std::holds_alternative<特征概念概念集合值域>(domain))不支持(0,"concept reference set domain sampling is unsupported");
         if(const auto* ids=std::get_if<std::vector<稳定编码>>(&domain)) {
             std::vector<新模拟复制准确值> out;std::size_t 索引=0;
             for(const auto id:*ids){

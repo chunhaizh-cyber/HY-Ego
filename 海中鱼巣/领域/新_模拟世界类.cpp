@@ -264,6 +264,9 @@ struct 模拟结构写入器 final {
                 if(!value.含概念成员组.empty()||!value.全部属于概念组.empty())
                     throw std::invalid_argument("set domain concept members are unsupported in local snapshot");
                 for(const auto x:value.必含需求节点组)写(n,结构引用,x);数(n,结构顺序值,value.至少一个需求);
+            } else if constexpr(std::is_same_v<T,特征概念概念集合值域>) {
+                for(const auto x:value.必含概念节点组)写(n,结构引用,x);
+                数(n,结构顺序值,static_cast<std::int64_t>(value.至少一个概念));
             } else if constexpr(std::is_same_v<T,特征概念存在集合值域>) {
                 if(!value.含概念成员组.empty()||!value.全部属于概念组.empty())
                     throw std::invalid_argument("set domain concept members are unsupported in local snapshot");
@@ -316,6 +319,7 @@ struct 模拟结构写入器 final {
     case 7:return 特征概念需求集合值域{读引用组(n,结构引用),必读数(n,结构顺序值)!=0};
     case 8:return 特征概念存在集合值域{读引用组(n,结构引用),必读数(n,结构顺序值)!=0};
     case 9:return 特征概念信息引用值域{static_cast<信息引用语义>(必读数(n,结构顺序值)),必读引用(n,结构引用)};
+    case 10:return 特征概念概念集合值域{读引用组(n,结构引用),必读数(n,结构顺序值)!=0};
     default:throw std::runtime_error("local domain kind corrupt");
     }
 }

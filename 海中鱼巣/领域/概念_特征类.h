@@ -104,6 +104,12 @@ struct 特征概念信息引用值域 final {
     friend bool operator==(const 特征概念信息引用值域&, const 特征概念信息引用值域&) = default;
 };
 
+struct 特征概念概念集合值域 final {
+    std::vector<稳定编码> 必含概念节点组;
+    bool 至少一个概念 = false;
+    friend bool operator==(const 特征概念概念集合值域&, const 特征概念概念集合值域&) = default;
+};
+
 // I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
@@ -115,7 +121,8 @@ using 特征概念值域 = std::variant<
     特征概念任务集合值域,
     特征概念需求集合值域,
     特征概念存在集合值域,
-    特征概念信息引用值域>;
+    特征概念信息引用值域,
+    特征概念概念集合值域>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -128,7 +135,8 @@ enum class 特征概念比较规则 : std::int64_t {
     存在集合身份判等 = 6,
     消息集合身份判等 = 7,
     需求身份精确 = 8,
-    信息引用身份精确 = 9
+    信息引用身份精确 = 9,
+    概念集合身份判等 = 10
 };
 
 enum class 特征概念聚合规则 : std::int64_t {
@@ -485,6 +493,10 @@ struct 特征分类关系保护结果 final {
 };
 class 概念_特征类 final : public 正式概念身份读取接口 {
 public:
+    稳定编码 概念集合成员保护字段() const noexcept;
+    特征概念规则状态 读取概念集合成员(const 特征概念准确值&, const 新_特征值类&,
+        std::vector<稳定编码>&) const noexcept;
+    特征概念规则状态 确保概念集合材料保护(稳定编码 类型根, 稳定编码 材料, const 新_特征值类&) noexcept;
     特征概念编码操作结果 建立或取得特征类别根概念() noexcept;
     特征类别根读取结果 读取特征类别根概念保护() const noexcept;
     特征分类关系保护结果 读取特征分类关系保护(稳定编码) const noexcept;
