@@ -21,3 +21,5 @@
 简体包修改（2026-11-13）：`词典.简体.tsv` 用 OpenCC（Open Chinese Convert，https://github.com/BYVoid/OpenCC ，ver.1.4.2，提交 `025f371dc76b598d77384fbdab90c937471844d8`，Apache License 2.0）的繁转简词组表 `TSPhrases.txt` 与字表 `TSCharacters.txt` 把词面、释义和例句转为简体，其余内容不变。OpenCC 许可原文随原始目录保留于 `原始/opencc-1.4.2/LICENSE`；转换结果仍是上述词典数据的修改版本，数据许可不因转换改变。
 
 原始数据及大型 TSV 本地保留且不进 Git。重新分发数据必须保留本署名、许可说明和来源清单，不能只复制代码许可证。
+
+完整批次分发同时把 OpenCC 许可原字节复制为批次内的 `OpenCC-LICENSE.txt`；不要求接收者取得被忽略的原始目录才能读取许可。批次构建前按来源清单核对 OpenCC 输入，发布清单保存许可摘要。

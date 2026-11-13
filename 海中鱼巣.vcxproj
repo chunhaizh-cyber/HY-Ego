@@ -396,18 +396,7 @@
     <Copy SourceFiles="$(MSBuildProjectDirectory)\初始化材料\指代定义种子.txt" DestinationFiles="$(OutDir)初始化材料\指代定义种子.txt" SkipUnchangedFiles="true" />
   </Target>
   <Target Name="复制可选词典数据" AfterTargets="Build">
-    <ItemGroup>
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词典.简体.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词典.简体.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\繁简表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\繁简表.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\README.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\README.md')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\LICENSE.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\LICENSE.md')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\ATTRIBUTION.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\ATTRIBUTION.md')" />
-    </ItemGroup>
-    <Copy SourceFiles="@(DictionaryPublishFile)" DestinationFolder="$(OutDir)基础数据\词典" SkipUnchangedFiles="true" Condition="'@(DictionaryPublishFile)'!=''" />
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\工具\词典\发布词典批次.ps1&quot; -SourceDirectory &quot;$(MSBuildProjectDirectory)\基础数据\词典&quot; -DestinationDirectory &quot;$(OutDir)基础数据\词典&quot;" />
   </Target>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
