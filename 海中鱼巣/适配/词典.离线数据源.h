@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include "../领域/词典.数据.h"
+
 namespace 海中鱼巣 {
 
 enum class 词典操作状态 : std::uint8_t {
@@ -19,12 +21,6 @@ enum class 词典操作状态 : std::uint8_t {
     数据错误,
     读取失败,
     资源失败
-};
-
-struct 词典义项材料 final {
-    std::string 记录键, 词头语种, 词面, 义项键, 汉语释义;
-    std::string 例句原文, 例句汉译, 读音;
-    std::string 来源页URL, 来源版本, 许可标识, 署名, 原始来源定位;
 };
 
 struct 词典精确查询请求 final {
@@ -73,6 +69,8 @@ public:
 
     // 读词典释义用辅助表（7250 §3.4第3、6项：词头表、繁简表〔OpenCC〕、词性表）。
     // 仅完整同批包启用；批次损坏使打开失败。无批次的旧包仅保留词义查询。
+    // 返回完整加载时已核验的清单 SHA256 副本；旧散包为空，不重新读取磁盘。
+    std::optional<std::string> 读取可信批次标识() const;
     bool 释义辅助表就绪() const noexcept;
     std::string 释义辅助表诊断() const;
     // 繁简规范化（OpenCC 词组优先、再逐字）：词组繁简等长，标量数不变，原文标量位置即规范化后位置；

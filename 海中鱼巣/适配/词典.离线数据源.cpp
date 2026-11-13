@@ -142,7 +142,7 @@ std::string 读小文件(const std::filesystem::path& 路径, std::size_t 上限
 
 struct 词典批次 final {
     std::filesystem::path 目录;
-    std::string 包标识, 来源摘要;
+    std::string 包标识, 来源摘要, 清单标识;
     std::map<std::string, 批次文件> 文件组;
 };
 
@@ -161,6 +161,7 @@ std::optional<词典批次> 读取批次(const std::filesystem::path& 根) {
     摘要计算 摘要;
     摘要.追加(清单.data(), 清单.size());
     if (摘要.完成() != 标识) throw 批次数据错误("词典清单与批次标识不符");
+    批次.清单标识 = 标识;
     std::vector<std::vector<std::string>> 行组;
     for (std::size_t 起 = 0; 起 < 清单.size();) {
         const auto 终 = 清单.find('\n', 起);
@@ -531,6 +532,7 @@ bool 读辅助表(const std::filesystem::path& 文件, std::string_view 包头�
 
 struct 离线词典数据源::实现 final {
     std::string 包标识;
+    std::optional<std::string> 可信批次标识;
     std::map<词面键, std::vector<词典义项材料>, 词面键比较> 索引;
     释义辅助表 辅助;
 };
@@ -638,6 +640,7 @@ struct 离线词典数据源::实现 final {
         if (批次) {
             候选->辅助 = 载入释义辅助表(*批次);
             if (!候选->辅助.就绪) throw 批次数据错误(候选->辅助.诊断);
+            候选->可信批次标识 = 批次->清单标识;
         } else {
             候选->辅助.诊断 = "须构建同批词典包；散文件仅提供只读查询，不启用释义辅助表";
         }
@@ -712,6 +715,10 @@ struct 离线词典数据源::实现 final {
     } catch (...) {
         return 查询失败<词典前缀查询结果>(词典操作状态::读取失败, 实现_->包标识, "前缀查询发生工程异常");
     }
+}
+
+std::optional<std::string> 离线词典数据源::读取可信批次标识() const {
+    return 实现_->可信批次标识;
 }
 
 bool 离线词典数据源::释义辅助表就绪() const noexcept {

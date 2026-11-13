@@ -2,6 +2,7 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\前置语言输入.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\词典.数据.h" />
     <ClInclude Include="海中鱼巣\适配\词典.离线数据源.h" />
     <ClCompile Include="海中鱼巣\适配\词典.离线数据源.cpp" />
     <ClInclude Include="海中鱼巣\业务\查询.词典候选.h" />
