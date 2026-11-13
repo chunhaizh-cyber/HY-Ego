@@ -5884,6 +5884,8 @@ std::array<稳定编码,static_cast<std::size_t>(组织键::总数)> 组织句�
 void 组织要求(bool ok){if(!ok)throw std::logic_error("表达组织知识或出站含义记录结构不一致");}
 struct 组织读取现场 {
     std::map<稳定编码,基础联合节点快照> 快照;
+    // 词典材料读回只解码本体字段。引用目标只核存在，不复制其入向边表。
+    bool 只读所属字段 = false;
     const 基础联合节点快照& 读(稳定编码 id){
         if(auto i=快照.find(id);i!=快照.end())return i->second;
         const auto r=全局基础数据集.查询节点组完整结构({id});
@@ -5970,8 +5972,19 @@ struct 组织写入现场 {
     }
     bool 保护(组织读取现场& 现场){
         for(auto id:组织句柄)引用组.insert(id);
-        for(auto id:引用组)现场.读(id);
-        请求.预期联合节点组=现场.保护();return true;
+        请求.预期联合节点组.clear();
+        请求.预期联合节点组.reserve(引用组.size());
+        for(const auto id:引用组){
+            const auto 世代=全局基础数据集.查询节点结构世代(id);
+            组织要求(世代.has_value());
+            if(*世代==0){请求.预期联合节点组.push_back(现场.读(id));continue;}
+            基础联合节点快照 快照;
+            快照.结构.节点=基础节点{id};
+            快照.结构世代=*世代;
+            快照.按结构世代核验=true;
+            请求.预期联合节点组.push_back(std::move(快照));
+        }
+        return true;
     }
 };
 template<class T> T 组织读值(组织读取现场&,稳定编码,std::set<稳定编码>&);
@@ -5988,7 +6001,7 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     if constexpr(std::is_enum_v<T>){组织要求(tag==2&&children.empty());v=static_cast<T>(r.整数(id,组织键::值));}
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
     else if constexpr(std::is_same_v<T,std::string>){组织要求(tag==3&&children.empty());v=std::get<std::string>(std::get<基础值>(r.唯一(id,组织键::值)).材料);}
-    else if constexpr(std::is_same_v<T,稳定编码>){组织要求(tag==4&&children.empty());const auto a=r.字段(id,组织键::引用);组织要求(a.size()<=1);if(!a.empty()){v=std::get<稳定编码>(a.front());r.读(v);}}
+    else if constexpr(std::is_same_v<T,稳定编码>){组织要求(tag==4&&children.empty());const auto a=r.字段(id,组织键::引用);组织要求(a.size()<=1);if(!a.empty()){v=std::get<稳定编码>(a.front());if(r.只读所属字段)组织要求(全局基础数据集.查询节点(v).has_value());else r.读(v);}}
     else if constexpr(组织数组<T>::value){组织要求(tag==6);for(auto c:children)v.push_back(组织读值<typename T::value_type>(r,c,path));}
     else if constexpr(组织可选<T>::value){组织要求(tag==7&&children.size()<=1);if(!children.empty())v=组织读值<typename T::value_type>(r,children.front(),path);}
     else if constexpr(组织变体<T>::value){组织要求(tag==8&&children.size()==1);const auto index=r.整数(id,组织键::值);组织要求(index>=0);组织读变体(v,static_cast<std::size_t>(index),r,children.front(),path);}
@@ -6456,7 +6469,7 @@ std::optional<新出站具体表达信息> 新_语言类::建立或取得出站�
     w.引用组.insert(v.来源场景);w.保护(r);
     const auto p=全局基础数据集.原子追加节点组(w.请求);
     组织要求(p.状态==基础节点组追加状态::已完成 && p.新节点组.size()==w.请求.新节点组.size());
-    组织读取现场 back;std::set<稳定编码> path;
+    组织读取现场 back;back.只读所属字段=true;std::set<稳定编码> path;
     const auto copy=组织读值<新词典语言材料>(back,back.引用(p.新节点组[root],组织键::定义),path);
     组织要求(copy==v);return p.新节点组[root];
 }
@@ -6465,11 +6478,12 @@ std::optional<新词典语言材料信息> 新_语言类::读取词典语言材�
     if(!有效(id)||!全局基础数据集.查询节点(id))return std::nullopt;
     const auto tag=全局基础数据集.查询字段(id,组键(组织键::类型));
     if(tag.size()!=1 || tag.front().内容!=基础字段内容{基础值{std::int64_t{106}}})return std::nullopt;
-    组织读取现场 r;std::set<稳定编码> path;
+    组织读取现场 r;r.只读所属字段=true;std::set<稳定编码> path;
     auto v=组织读值<新词典语言材料>(r,r.引用(id,组织键::定义),path);
     组织要求(r.引用(id,组织键::场景)==v.来源场景);
-    const auto members=r.字段(v.来源场景,组织键::词典材料登记);
-    组织要求(std::count(members.begin(),members.end(),基础字段内容{id})==1);
+    const auto 登记=全局基础数据集.查询目标字段(id,组键(组织键::词典材料登记));
+    组织要求(std::count_if(登记.begin(),登记.end(),[&](const auto& 字段){
+        return 字段.所属节点==v.来源场景;})==1);
     return 新词典语言材料信息{id,std::move(v)};
 }
 
