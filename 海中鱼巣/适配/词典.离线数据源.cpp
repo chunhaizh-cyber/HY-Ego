@@ -7,6 +7,8 @@
 #include <map>
 #include <new>
 #include <set>
+#include <unordered_map>
+#include <unordered_set>
 #include <stdexcept>
 #include <string_view>
 #include <system_error>
@@ -167,11 +169,142 @@ bool 原文边界(std::string_view 原文, std::vector<std::size_t>& 边界组) 
     return true;
 }
 
+void 追加标量(std::string& 输出, std::uint32_t 码点) {
+    if (码点 < 0x80) 输出.push_back(static_cast<char>(码点));
+    else if (码点 < 0x800) {
+        输出.push_back(static_cast<char>(0xC0 | (码点 >> 6)));
+        输出.push_back(static_cast<char>(0x80 | (码点 & 0x3F)));
+    } else if (码点 < 0x10000) {
+        输出.push_back(static_cast<char>(0xE0 | (码点 >> 12)));
+        输出.push_back(static_cast<char>(0x80 | ((码点 >> 6) & 0x3F)));
+        输出.push_back(static_cast<char>(0x80 | (码点 & 0x3F)));
+    } else {
+        输出.push_back(static_cast<char>(0xF0 | (码点 >> 18)));
+        输出.push_back(static_cast<char>(0x80 | ((码点 >> 12) & 0x3F)));
+        输出.push_back(static_cast<char>(0x80 | ((码点 >> 6) & 0x3F)));
+        输出.push_back(static_cast<char>(0x80 | (码点 & 0x3F)));
+    }
+}
+
+// 恰好一个合法标量的文本取其码点，否则返回空。
+std::optional<std::uint32_t> 唯一标量(std::string_view 文本) noexcept {
+    std::size_t 位置 = 0;
+    std::uint32_t 码点 = 0;
+    if (!读取标量(文本, 位置, 码点) || 位置 != 文本.size()) return std::nullopt;
+    return 码点;
+}
+
+std::size_t 标量数(std::string_view 文本) noexcept {
+    std::size_t 位置 = 0, 数 = 0;
+    std::uint32_t 码点 = 0;
+    while (位置 < 文本.size() && 读取标量(文本, 位置, 码点)) ++数;
+    return 数;
+}
+
+struct 释义辅助表 final {
+    bool 就绪 = false;
+    std::string 诊断;
+    std::unordered_map<std::uint32_t, std::uint32_t> 繁简;
+    std::unordered_set<std::string> 规范化词头;
+    std::size_t 最长词头标量 = 0;
+    std::string 词性来源摘要;
+    std::unordered_map<std::string, std::string> 词性; // 记录行号 -> 原始词性
+};
+
+bool 按表规范化(const 释义辅助表& 表, std::string_view 文本, std::string& 输出) {
+    输出.clear();
+    输出.reserve(文本.size());
+    std::size_t 位置 = 0;
+    std::uint32_t 码点 = 0;
+    while (位置 < 文本.size()) {
+        if (!读取标量(文本, 位置, 码点)) return false;
+        const auto 映射 = 表.繁简.find(码点);
+        追加标量(输出, 映射 == 表.繁简.end() ? 码点 : 映射->second);
+    }
+    return true;
+}
+
+// 逐行读取辅助表；包头前缀不符、行不合法或读取失败时返回 false 并写诊断。
+template<class 行处理>
+bool 读辅助表(const std::filesystem::path& 文件, std::string_view 包头前缀,
+    std::string& 包头余部, std::string& 诊断, 行处理&& 处理) {
+    std::ifstream 输入(文件, std::ios::binary);
+    if (!输入.is_open()) { 诊断 = "无法打开"; return false; }
+    输入.exceptions(std::ios::badbit);
+    std::string 行;
+    if (!std::getline(输入, 行)) { 诊断 = "缺包头"; return false; }
+    if (!行.empty() && 行.back() == '\r') 行.pop_back();
+    if (行.rfind(包头前缀, 0) != 0) { 诊断 = "包头不符"; return false; }
+    包头余部 = 行.substr(包头前缀.size());
+    std::size_t 行号 = 1;
+    while (std::getline(输入, 行)) {
+        ++行号;
+        if (!行.empty() && 行.back() == '\r') 行.pop_back();
+        if (!字段有效(行, false) || !处理(std::string_view(行))) {
+            诊断 = "第" + std::to_string(行号) + "行不合法";
+            return false;
+        }
+    }
+    if (输入.bad() || !输入.eof()) { 诊断 = "读取未完整结束"; return false; }
+    return true;
+}
+
+// 读释义辅助表（7250 §3.4）：任一缺失或不合法即整体未就绪，不部分启用。
+释义辅助表 载入释义辅助表(const std::filesystem::path& 目录) {
+    释义辅助表 表;
+    std::error_code 错误;
+    const auto 繁简文件 = 目录 / std::filesystem::path(u8"繁简字表.tsv");
+    const auto 词头文件 = 目录 / std::filesystem::path(u8"词头表.tsv");
+    const auto 词性文件 = 目录 / std::filesystem::path(u8"词性表.tsv");
+    for (const auto* 文件 : {&繁简文件, &词头文件, &词性文件}) {
+        if (!std::filesystem::is_regular_file(*文件, 错误) || 错误) {
+            表.诊断 = "释义辅助表未构建（词头表、繁简字表、词性表须由 工具/词典/构建词典辅助表.py 生成）";
+            return 表;
+        }
+    }
+    std::string 余部;
+    std::string 诊断;
+    if (!读辅助表(繁简文件, "HY-EGO-TRAD-SIMP\t1", 余部, 诊断, [&](std::string_view 行) {
+            const auto 制表 = 行.find('\t');
+            if (制表 == std::string_view::npos) return false;
+            const auto 繁 = 唯一标量(行.substr(0, 制表));
+            const auto 简 = 唯一标量(行.substr(制表 + 1));
+            return 繁 && 简 && 表.繁简.emplace(*繁, *简).second;
+        }) || !余部.empty()) {
+        表.诊断 = "繁简字表：" + (诊断.empty() ? std::string("包头不符") : 诊断);
+        表.繁简.clear();
+        return 表;
+    }
+    std::string 规范;
+    if (!读辅助表(词头文件, "HY-EGO-HEADWORDS\t1\tzh", 余部, 诊断, [&](std::string_view 行) {
+            if (行.empty() || 行.find('\t') != std::string_view::npos || !按表规范化(表, 行, 规范))
+                return false;
+            表.最长词头标量 = std::max(表.最长词头标量, 标量数(规范));
+            表.规范化词头.insert(规范);
+            return true;
+        }) || !余部.empty()) {
+        表.诊断 = "词头表：" + (诊断.empty() ? std::string("包头不符") : 诊断);
+        return 表;
+    }
+    if (!读辅助表(词性文件, "HY-EGO-POS\t1\t", 余部, 诊断, [&](std::string_view 行) {
+            const auto 制表 = 行.find('\t');
+            if (制表 == 0 || 制表 == std::string_view::npos || 制表 + 1 == 行.size()) return false;
+            return 表.词性.emplace(std::string(行.substr(0, 制表)), std::string(行.substr(制表 + 1))).second;
+        }) || 余部.empty()) {
+        表.诊断 = "词性表：" + (诊断.empty() ? std::string("缺来源摘要") : 诊断);
+        return 表;
+    }
+    表.词性来源摘要 = std::move(余部);
+    表.就绪 = true;
+    return 表;
+}
+
 } // namespace
 
 struct 离线词典数据源::实现 final {
     std::string 包标识;
     std::map<词面键, std::vector<词典义项材料>, 词面键比较> 索引;
+    释义辅助表 辅助;
 };
 
 离线词典数据源::离线词典数据源(std::shared_ptr<const 实现> 内容)
@@ -266,6 +399,8 @@ struct 离线词典数据源::实现 final {
                 return 查询键{左.记录键, 左.义项键} < 查询键{右.记录键, 右.义项键};
             });
         }
+        // 辅助表只服务读释义；未构建或不合法不令词典打开失败，由读释义按诊断报告。
+        候选->辅助 = 载入释义辅助表(目录);
         词典打开结果 结果;
         结果.包标识 = 包标识;
         结果.数据源 = std::shared_ptr<const 离线词典数据源>(new 离线词典数据源(候选));
@@ -335,6 +470,43 @@ struct 离线词典数据源::实现 final {
     } catch (...) {
         return 查询失败<词典前缀查询结果>(词典操作状态::读取失败, 实现_->包标识, "前缀查询发生工程异常");
     }
+}
+
+bool 离线词典数据源::释义辅助表就绪() const noexcept {
+    return 实现_->辅助.就绪;
+}
+
+std::string 离线词典数据源::释义辅助表诊断() const {
+    return 实现_->辅助.诊断;
+}
+
+std::optional<std::string> 离线词典数据源::繁简规范化(std::string_view 原文) const {
+    std::string 输出;
+    if (!实现_->辅助.就绪 || !按表规范化(实现_->辅助, 原文, 输出)) return std::nullopt;
+    return 输出;
+}
+
+bool 离线词典数据源::是规范化词头(std::string_view 规范化词面) const noexcept {
+    try {
+        const auto& 表 = 实现_->辅助;
+        return 表.就绪 && 表.规范化词头.count(std::string(规范化词面)) != 0;
+    } catch (...) {
+        return false;
+    }
+}
+
+std::size_t 离线词典数据源::最长词头标量数() const noexcept {
+    return 实现_->辅助.就绪 ? 实现_->辅助.最长词头标量 : 0;
+}
+
+std::optional<std::string> 离线词典数据源::读取记录词性(std::string_view 记录键) const {
+    const auto& 表 = 实现_->辅助;
+    const auto 分隔 = 记录键.rfind(':');
+    if (!表.就绪 || 分隔 == std::string_view::npos || 记录键.substr(0, 分隔) != 表.词性来源摘要)
+        return std::nullopt;
+    const auto 位置 = 表.词性.find(std::string(记录键.substr(分隔 + 1)));
+    if (位置 == 表.词性.end()) return std::nullopt;
+    return 位置->second;
 }
 
 } // namespace 海中鱼巣

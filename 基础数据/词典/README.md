@@ -27,11 +27,16 @@
 - `来源清单.json`：版本、HTTP 元数据、SHA256、统计与构建命令。
 - [LICENSE.md](LICENSE.md)、[ATTRIBUTION.md](ATTRIBUTION.md)：源许可、署名、修改及贡献者追溯。
 - `../../工具/词典/构建词典.py`：标准库生产导入工具，输入必须是本地 JSONL 或 gzip；不联网，不是验证脚本。
+- `词头表.tsv`、`繁简字表.tsv`、`词性表.tsv`：读词典释义用辅助表（7250 §3.4），由 `../../工具/词典/构建词典辅助表.py` 从同一原始包生成；本地保留，不提交 Git。词头表收全部中文词头（含无释义页、不含重定向），作释义切分边界依据；繁简字表只用词典自身的简体字形对逐字对齐生成，一繁对多简或曾保持不变的字不转；词性表按记录行号保存原始词性，包头带原始包 SHA256。三表缺任一时词典词义查询照常，读释义报告“辅助表未配置”。
 
 在项目根目录运行：
 
 ```powershell
 python 工具/词典/构建词典.py --input 基础数据/词典/原始/zhwiktionary-20261101.jsonl.gz --output-dir 基础数据/词典 --package-id zhwiktionary-20261101-zh-en-zh-gloss-v1 --source-version "zhwiktionary-dump-20261101;kaikki-extract-20261102;wiktextract-19f9a3006a405fb7bfb40193dca41c7117a009a5"
+```
+
+```powershell
+python 工具/词典/构建词典辅助表.py --input 基础数据/词典/原始/zhwiktionary-20261101.jsonl.gz --output-dir 基础数据/词典
 ```
 
 脚本流式处理 JSONL，先在输出目录完整生成临时文件，校验字符并关闭后以 `os.replace` 原子替换 TSV。构建失败保留既有完整包并清理本次临时文件，不递归清理目录。统计以 JSON 输出；发布新输入后须同步维护来源清单，不将旧元数据冒充新包。相同原始字节及构建参数生成相同 TSV；构建时间只在统计中，不进入 TSV。

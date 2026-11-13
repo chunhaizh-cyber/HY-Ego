@@ -6,6 +6,8 @@
     <ClCompile Include="海中鱼巣\适配\词典.离线数据源.cpp" />
     <ClInclude Include="海中鱼巣\业务\查询.词典候选.h" />
     <ClCompile Include="海中鱼巣\业务\查询.词典候选.cpp" />
+    <ClInclude Include="海中鱼巣\业务\解释.词典释义.h" />
+    <ClCompile Include="海中鱼巣\业务\解释.词典释义.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\字段询问.数据.h" />
@@ -396,6 +398,9 @@
   <Target Name="复制可选词典数据" AfterTargets="Build">
     <ItemGroup>
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv')" />
+      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv')" />
+      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\繁简字表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\繁简字表.tsv')" />
+      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\README.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\README.md')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\LICENSE.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\LICENSE.md')" />

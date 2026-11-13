@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <filesystem>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -68,6 +70,18 @@ public:
     词典精确查询结果 精确查询(const 词典精确查询请求&) const noexcept;
     // 返回指定标量起点的全部前缀候选，不裁决英语词边界或唯一分词。
     词典前缀查询结果 查询词面前缀(const 词典前缀查询请求&) const noexcept;
+
+    // 读词典释义用辅助表（7250 §3.4第3、6项：词头表、繁简字表、词性表）。
+    // 缺失或不合法时只令读释义不可用，不影响词义查询；诊断说明原因。
+    bool 释义辅助表就绪() const noexcept;
+    std::string 释义辅助表诊断() const;
+    // 逐标量繁简规范化：标量数不变，原文标量位置即规范化后位置；原文非法 UTF-8 或辅助表未就绪返回空。
+    std::optional<std::string> 繁简规范化(std::string_view 原文) const;
+    // 规范化后的词面是否为中文词头（读释义切分的边界依据，不登记词条）。
+    bool 是规范化词头(std::string_view 规范化词面) const noexcept;
+    std::size_t 最长词头标量数() const noexcept;
+    // 按词典记录键读取该记录的原始词性；来源包不一致或无记录返回空。
+    std::optional<std::string> 读取记录词性(std::string_view 记录键) const;
 
 private:
     struct 实现;

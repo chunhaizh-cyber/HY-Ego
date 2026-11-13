@@ -8,6 +8,8 @@
     <ClCompile Include="海中鱼巣\适配\词典.离线数据源.cpp"><Filter>源文件</Filter></ClCompile>
     <ClInclude Include="海中鱼巣\业务\查询.词典候选.h"><Filter>业务</Filter></ClInclude>
     <ClCompile Include="海中鱼巣\业务\查询.词典候选.cpp"><Filter>业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\解释.词典释义.h"><Filter>业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\解释.词典释义.cpp"><Filter>业务</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="领域">
