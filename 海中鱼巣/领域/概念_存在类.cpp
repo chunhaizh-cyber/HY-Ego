@@ -10,6 +10,7 @@
 #include <set>
 #include <stdexcept>
 #include <functional>
+#include <thread>
 
 namespace 海中鱼巣 {
 
@@ -2533,7 +2534,7 @@ void 核基础定义(const 基础范围概念定义&d) {
         if(d.整数参数.empty()||!std::is_sorted(d.整数参数.begin(),d.整数参数.end())
             ||std::adjacent_find(d.整数参数.begin(),d.整数参数.end())!=d.整数参数.end()||!d.引用参数.empty()) 正式定义故障("enumeration arguments");
     } else if(d.原语==基础概念原语::具名领域身份) {
-        if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>15||!d.引用参数.empty()) 正式定义故障("named identity arguments");
+        if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>16||!d.引用参数.empty()) 正式定义故障("named identity arguments");
     } else if(!d.整数参数.empty()||d.引用参数.size()!=1) 正式定义故障("unique existence arguments");
 }
 // 解码只读当前owner/L1；跨owner身份复核在调用者持本地锁之前进行。
@@ -3615,6 +3616,62 @@ std::vector<定义模板> 基础模板() {
     catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("confirmed message connection ensure exception");}
 }
 
+正式结构概念保护结果 概念_存在类::读取词条身份范围概念保护() const noexcept {
+    for (;;) {
+        try {
+            if (!正式schema就绪()) return {正式状态::依赖未就绪, {}, {}};
+            std::lock_guard 锁(存在概念图互斥);
+            std::vector<基础联合节点快照> 登记材料;
+            const auto 登记 = 读取正式登记(登记材料);
+            const auto 位置 = 登记.find(516);
+            if (位置 == 登记.end()) return {正式状态::未找到, {}, {}};
+            std::vector<基础联合节点快照> 当前材料;
+            std::set<稳定编码> 已读;
+            auto 信息 = 解码正式定义(位置->second, 当前材料, 已读);
+            const 正式结构定义 定义 = 基础范围概念定义{基础概念原语::具名领域身份, {16}, {}};
+            if (信息.定义 != 定义) return {正式状态::定义冲突, {}, {}};
+            // 返回本次定义材料；不把登记全集附加成跨调用的旧快照门禁。
+            return {正式状态::已读取, std::move(信息), std::move(当前材料)};
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("word identity range read exception"); }
+        std::this_thread::yield();
+    }
+}
+
+正式结构概念结果 概念_存在类::建立或取得词条身份范围概念() noexcept {
+    for (;;) {
+        try {
+            if (!初始化正式schema()) return {正式状态::依赖未就绪, {}};
+            定义模板 定义{};
+            定义.槽 = 516; 定义.形状 = 基础类型键;
+            定义.基础 = {基础概念原语::具名领域身份, {16}, {}};
+            正式状态 发布状态;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                基础节点组追加请求 请求;
+                std::vector<std::pair<std::uint32_t, std::size_t>> 槽;
+                登记映射 登记;
+                const auto 准备 = 准备定义批({定义}, {}, 请求, 槽, 登记);
+                if (准备 == 正式状态::定义冲突) return {准备, {}};
+                发布状态 = 发布先天定义批(请求, 槽);
+            }
+            if (发布状态 != 正式状态::前提已变化) {
+                // 发布成功后只读取当前定义，不重新执行建立动作。
+                auto 当前 = 读取词条身份范围概念保护();
+                if (!当前.信息) return {当前.状态, {}};
+                return {发布状态, std::move(当前.信息)};
+            }
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("word identity range publication exception"); }
+        // 前提变化只发生在零发布阶段；本轮锁和准备对象已释放。
+        std::this_thread::yield();
+    }
+}
+
 namespace {
 std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天信息类型依赖&dep,稳定编码 root={}) {
     using namespace 先天特征类型槽;
@@ -3627,7 +3684,7 @@ std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天�
         for(auto [ft,content]:narrow)t.收窄.push_back({f.at(ft),content});
         out.push_back(std::move(t));
     };
-    structure(1,{},{{需求主体,401},{需求执行域,411},{需求目标存在,401},{需求目标FT,402},{需求目标形式,412},{需求权重,408},{需求活动,413}});
+    structure(1,{},{{需求主体,401},{需求执行域,411},{需求目标存在,405},{需求目标FT,402},{需求目标形式,412},{需求权重,408},{需求活动,413}});
     structure(202,{1},{},{{需求执行域,821}});
     structure(204,{1},{{目标域,403},{目标比较,404}},{{需求目标形式,821}},{801,802});
     structure(205,{1},{{目标方向,414}},{{需求目标形式,822}});
@@ -3678,6 +3735,65 @@ std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天�
     if(有效(root))for(auto&t:out)if(t.槽==1||t.槽==2||t.槽==3)t.普通上位引用组.push_back(root);
     return out;
 }
+正式状态 迁移需求目标信息范围(const 登记映射& FT登记) {
+    for (;;) {
+        try {
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                std::vector<基础联合节点快照> 登记材料;
+                const auto 登记 = 读取正式登记(登记材料);
+                const auto 根 = 登记.find(1);
+                if (根 == 登记.end()) return 正式状态::已复用;
+                if (!登记.contains(401) || !登记.contains(405)
+                    || !FT登记.contains(先天特征类型槽::需求目标存在))
+                    return 正式状态::依赖未就绪;
+                const auto 目标FT = FT登记.at(先天特征类型槽::需求目标存在);
+                const auto 根快照 = 正式快照(根->second);
+                std::optional<稳定编码> 目标项目;
+                for (const auto 项目 : 正式引用组(根快照.结构, 正式键[项目键])) {
+                    const auto 内容 = 正式快照(项目);
+                    if (正式单引用(内容.结构, 正式键[项目FT键]) != 目标FT) continue;
+                    if (目标项目) return 正式状态::定义冲突;
+                    目标项目 = 项目;
+                }
+                if (!目标项目) return 正式状态::定义冲突;
+                // L1一次读取写入宿主与引用端点；不将全部登记、其它D加入发布前提。
+                const auto 当前 = 全局基础数据集.查询节点组完整结构(
+                    {*目标项目, 登记.at(401), 登记.at(405)});
+                if (当前.状态 != 基础结构操作状态::已完成 || 当前.节点组.size() != 3)
+                    正式定义故障("demand target range migration read failed");
+                基础节点组追加请求 请求;
+                std::optional<稳定编码> 原范围, 原字段;
+                for (const auto& 项 : 当前.节点组) {
+                    if (!项.快照) return 正式状态::定义冲突;
+                    请求.预期联合节点组.push_back(*项.快照);
+                    if (项.查询节点 != *目标项目) continue;
+                    if (正式单引用(项.快照->结构, 正式键[项目FT键]) != 目标FT)
+                        return 正式状态::定义冲突;
+                    for (const auto& 字段 : 项.快照->结构.字段组) {
+                        if (字段.字段节点 != 正式键[内容概念键]) continue;
+                        const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                        if (!引用 || 原字段) return 正式状态::定义冲突;
+                        原范围 = *引用; 原字段 = 字段.编码;
+                    }
+                }
+                if (原范围 == 登记.at(405)) return 正式状态::已复用;
+                if (原范围 != 登记.at(401) || !原字段) return 正式状态::定义冲突;
+                请求.删除字段关系组.push_back(*原字段);
+                请求.追加字段组.push_back({*目标项目, 正式键[内容概念键], 登记.at(405)});
+                const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+                if (发布.状态 == 基础节点组追加状态::已完成) return 正式状态::已建立;
+                if (发布.状态 != 基础节点组追加状态::预期不符)
+                    正式定义故障("demand target range migration publication failed");
+            }
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return 状态;
+        }
+        // 零发布才重读；成功直接返回，不做旧模板全集的写后互证。
+        std::this_thread::yield();
+    }
+}
+
 正式状态 迁移三类存在父(const 登记映射&f,const 先天信息类型依赖&dep,稳定编码 root) {
     std::lock_guard lock(存在概念图互斥);
     std::vector<基础联合节点快照>p;核存在根证明(root,p);auto ids=读取正式登记(p);
@@ -3805,6 +3921,10 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
             return {正式状态::依赖未就绪,{}};
         }
         const auto semantic=root.信息->节点;
+        // 先修正目标范围，再让父链迁移按现行三类模板解释既有定义。
+        const auto 目标范围迁移 = 迁移需求目标信息范围(f);
+        if (目标范围迁移 != 正式状态::已建立 && 目标范围迁移 != 正式状态::已复用)
+            return {目标范围迁移, {}};
         const auto classification=迁移三类存在父(f,dep,semantic);
         if(classification!=正式状态::已建立&&classification!=正式状态::已复用)return {classification,{}};
         // 迁移增加父字段及入向引用；旧prepare不能跨发布继续使用，重采完整定义闭包。

@@ -434,6 +434,8 @@ public:
         const 正式结构范围判定器& 结构判定={}) const noexcept;
     正式结构概念结果 建立或取得已确认消息连接概念() noexcept;
     正式结构概念保护结果 读取已确认消息连接概念保护() const noexcept;
+    正式结构概念结果 建立或取得词条身份范围概念() noexcept;
+    正式结构概念保护结果 读取词条身份范围概念保护() const noexcept;
     先天信息概念结果 建立或取得先天需求任务方法概念(const 先天信息类型依赖&,
         const 新_特征值类&, std::span<const 正式概念身份读取接口* const>) noexcept;
     先天信息概念结果 建立或取得自我需求子概念(稳定编码 唯一自我存在,

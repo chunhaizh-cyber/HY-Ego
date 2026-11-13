@@ -885,7 +885,8 @@ std::vector<新先天因果信息> 因果任务筹办服务::读取先天结果�
                     L"阶段=" + std::to_wstring(阶段) + L"；派生行=" + std::to_wstring(派生材料变化行)); } catch (...) {} } } 诊断;
         诊断.结果 = &结果; 诊断.阶段 = 1;
 #endif
-        if (结果.状态 == 新因果筹办读取状态::材料已变化) return 结果;
+        if (结果.状态 == 新因果筹办读取状态::材料已变化
+            || 结果.状态 == 新因果筹办读取状态::能力未支持) return 结果;
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         诊断.阶段 = 2;
 #endif

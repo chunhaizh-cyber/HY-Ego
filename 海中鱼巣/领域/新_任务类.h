@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstddef>
 #include <source_location>
@@ -1058,7 +1058,7 @@ struct 新任务因果筹办依据 final {
     新因果筹办读回 读回;
     friend bool operator==(const 新任务因果筹办依据&, const 新任务因果筹办依据&);
 };
-enum class 新任务因果子需求提议状态 : std::uint8_t { 已形成=1, 无需子需求, 材料已变化, 无路径, 路径待选择, 资源延后=6 };
+enum class 新任务因果子需求提议状态 : std::uint8_t { 已形成=1, 无需子需求, 材料已变化, 无路径, 路径待选择, 资源延后=6, 能力未支持=7 };
 struct 新任务因果子需求提议 final {
     新任务因果子需求提议状态 状态 = 新任务因果子需求提议状态::无路径;
     std::optional<新任务因果筹办依据> 依据;
@@ -1068,6 +1068,7 @@ struct 新任务因果子需求提议 final {
     std::vector<稳定编码> 继续推进任务组;
     std::vector<新因果条件读回> 未满足关系组;
     std::vector<新来源前驱内容模板> 来源前驱前端组;
+    std::vector<新因果能力缺口> 能力缺口组;
     friend bool operator==(const 新任务因果子需求提议&, const 新任务因果子需求提议&) = default;
 };
 // R111（DEP-READY-WAKE v0.3 §5.4第8项）：父任务因子需求不合法挂起期间的筹办排除集。
@@ -1663,6 +1664,7 @@ public:
     std::optional<新服务值治理定义> 读取服务值治理定义(稳定编码) const;
     新任务操作状态 配置自我服务结算(const 新自我服务结算配置&) noexcept;
     bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
+    void 装配词条读取(const 新_词类&) noexcept;
     // 非拥有外层工厂；仅启动前配置，所有使用线程join后由同一所有者卸载。
     bool 配置本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
     bool 卸载本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
@@ -2062,12 +2064,13 @@ private:
     std::optional<新需求信息> 读取本次提议需求(稳定编码,
         const std::shared_ptr<新方法内容核验上下文>&,std::vector<基础联合节点快照>&) const;
     新任务需求准备保护批 读取任务需求准备保护批(稳定编码,
-        const std::shared_ptr<新方法内容核验上下文>& = {}) const;
+        const std::shared_ptr<新方法内容核验上下文>& = {},
+        std::optional<稳定编码> 本次需求D = std::nullopt) const;
     bool 核同任务需求准备保护批(const 新任务需求准备保护批&) const;
     新冲突需求查找结果 查找冲突需求已加锁(稳定编码,
         const std::vector<新任务预计变化阶段>&,const 新任务需求准备保护批&,const 新任务本次场景核验批&) const noexcept;
     新任务执行前目标收束结果 收束执行前已满足目标内部(
-        稳定编码, const 新任务本次场景核验批&) noexcept;
+        稳定编码, const 新任务本次场景核验批&, bool* 需要重读 = nullptr) noexcept;
     新任务复合分解状态 核验已满足内容目标静态来源(
         新任务本次场景核验批&) const;
     新任务复合分解状态 读取普通值目标满足保护(新任务本次场景核验批&) const;
@@ -2118,8 +2121,8 @@ private:
         const 新任务需求准备保护批&) const;
     新结算因果候选可停止结果 读取结算因果候选事实已加锁(稳定编码,
         const 新先天因果信息&,std::stop_token,const 新任务需求准备保护批&) const;
-    新因果筹办请求 构造因果筹办请求(稳定编码,
-        const std::optional<新先天因果信息>&, const std::vector<新因果任务等待边>&, std::stop_token 停止 = {},
+    新因果筹办请求 构造因果筹办请求(稳定编码, 稳定编码 本次需求D,
+        const std::optional<新先天因果信息>&, const std::vector<新因果任务等待边>&, std::stop_token 停止,
         std::vector<基础联合节点快照>* 完整保护输出=nullptr) const;
     std::optional<新因果派生源上下文> 构造因果派生源上下文(const 新需求信息&, std::stop_token 停止 = {},
         std::vector<基础联合节点快照>* 完整保护输出=nullptr,
@@ -2184,7 +2187,8 @@ private:
     // 共同发布非空时其结构与记录在同一原子请求中发布（其预期联合节点组由本入口以合并后的保护覆盖）。
     新任务操作状态 迁移任务状态受保护(稳定编码 任务节点, 新任务状态 后状态,
         const 新任务状态迁移原因& 原因, std::vector<基础联合节点快照> 保护,
-        新任务迁移共同发布* 共同发布 = nullptr) noexcept;
+        新任务迁移共同发布* 共同发布 = nullptr,
+        bool 前置语义已完成 = false, bool* 零迁移发布冲突 = nullptr) noexcept;
     // 初始化：按修订后迁移表逐对登记迁移动作定义（缺则追加），并建立“前→后”到定义的索引。
     void 确保任务状态迁移定义();
     std::optional<稳定编码> 查找任务状态迁移定义已加锁(新任务状态 前, 新任务状态 后) const;
@@ -2270,6 +2274,7 @@ private:
     bool 撤销增加状态引用组(
         const std::vector<稳定编码>& 状态节点组) noexcept;
 
+    const 新_词类* 词条读取_=nullptr; // 启动前装配；线程join前owner持续存活。
     新_需求类& 需求服务_;
     新_方法类& 方法服务_;
     新_特征值类& 特征值服务_;

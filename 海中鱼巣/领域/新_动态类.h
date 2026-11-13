@@ -12,6 +12,7 @@
 namespace 海中鱼巣 {
 
 class 新_存在类;
+class 新_词类;
 
 inline constexpr std::int64_t 新复合动态成员关系角色 = 0x44594E4D;
 inline constexpr std::int64_t 新动作导致变化关系角色 = 0x41435401;
@@ -43,7 +44,14 @@ struct 新动作动态建立请求 final {
 enum class 新动作目标种类 : std::int64_t {
     普通存在 = 1,
     任务虚拟存在 = 2,
-    方法虚拟存在 = 3  // METHOD-LEARN-STATE：方法状态变化治理动作。
+    方法虚拟存在 = 3,  // METHOD-LEARN-STATE：方法状态变化治理动作。
+    词条 = 4
+};
+
+struct 新词条动作动态建立请求 final {
+    稳定编码 执行主体节点, 动作定义节点, 动作来源节点, 目标词条节点;
+    std::optional<稳定编码> 目标特征节点;
+    新状态强时间 动作时间;
 };
 
 struct 新内部治理动作动态建立请求 final {
@@ -112,6 +120,7 @@ struct 新动态信息 final {
     // 引用共享聚合动态概念。
     std::optional<稳定编码> 动态概念节点;
     std::int64_t 被引用次数 = 0;
+    std::optional<稳定编码> 动作目标词条节点;
     friend bool operator==(const 新动态信息&, const 新动态信息&) = default;
 };
 
@@ -178,6 +187,9 @@ public:
     // 组合根启动线程前一次装配；借用者寿命覆盖所有真实动作调用。
     void 设置动作方法定义提供者(const 动作方法定义只读提供者&,
         const 新_特征类&) noexcept;
+
+    void 装配词条读取(const 新_词类&, 稳定编码 词条范围概念) noexcept;
+    新动态建立结果 建立词条动作动态(const 新词条动作动态建立请求&) noexcept;
 
     // 定义级初始化：不建立动作实例，也不产生发生或经验统计。
     动态概念建立结果 确保动作定义概念(const 动作方法投影请求&) noexcept;
@@ -260,7 +272,8 @@ private:
         const 新动作动态建立请求& 请求,
         const std::optional<新任务虚拟存在引用>& 内部目标,
         新事实追加保护增量* 增量 = nullptr,
-        const std::optional<新方法虚拟存在引用>& 方法目标 = std::nullopt) noexcept;
+        const std::optional<新方法虚拟存在引用>& 方法目标 = std::nullopt,
+        std::optional<稳定编码> 词条目标 = std::nullopt) noexcept;
     新动态操作状态 减少组成引用(稳定编码 动态节点) noexcept;
 
     新_状态类& 状态服务_;
@@ -270,6 +283,8 @@ private:
     新_二次特征类* 二次特征服务_ = nullptr;
     const 动作方法定义只读提供者* 动作方法定义提供者_ = nullptr;
     const 新_特征类* 动作特征读取_ = nullptr;
+    const 新_词类* 词条读取_ = nullptr;
+    稳定编码 词条范围概念_{};
 };
 
 } // namespace 海中鱼巣

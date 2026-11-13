@@ -1143,6 +1143,9 @@ namespace 海中鱼巣 {
     const std::vector<新模拟任务治理输入>& 任务组,const std::vector<新模拟场景事实输入>& 场景输入,
     std::optional<稳定编码> 执行分支,const std::optional<新模拟消息方案输入>& 消息输入,
     const 新模拟需求输入图& 需求图,const std::optional<新模拟执行主体输入>& 执行主体输入) {
+    if(std::any_of(输入.begin(),输入.end(),[](const auto& 项) {
+        return 项.规格.信息类型==新方法参数信息类型::词条;
+    }))return {新模拟世界状态::能力未支持,{}};
     // 只允许图内重映射的内容引用；来源世界的实例身份不能穿透进样例。
     for(const auto& 需求:需求图.需求组) {
         if(需求.目标.引用内容定位)return {新模拟世界状态::入口拒绝,{}};

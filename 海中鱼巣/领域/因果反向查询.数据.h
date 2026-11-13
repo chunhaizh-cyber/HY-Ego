@@ -72,7 +72,8 @@ enum class 反向因果覆盖 : std::uint8_t
     未指定起点 = 1,
     完整,
     部分,
-    无已知路径
+    无已知路径,
+    能力未支持 = 5
 };
 enum class 反向因果端类型 : std::uint8_t
 {
@@ -165,6 +166,15 @@ struct 反向因果未绑定角色边界
     friend bool operator==(const 反向因果未绑定角色边界 &,
                            const 反向因果未绑定角色边界 &) = default;
 };
+enum class 反向因果能力缺口种类 : std::uint8_t {
+    词条参与者尚未支持=1
+};
+struct 反向因果能力缺口 final {
+    反向因果能力缺口种类 种类=反向因果能力缺口种类::词条参与者尚未支持;
+    稳定编码 词条节点;
+    std::optional<稳定编码> 起点动作节点;
+    friend bool operator==(const 反向因果能力缺口&,const 反向因果能力缺口&)=default;
+};
 struct 反向因果查询结果
 {
     反向因果覆盖 覆盖 = 反向因果覆盖::无已知路径;
@@ -176,6 +186,7 @@ struct 反向因果查询结果
     std::vector<反向因果未绑定角色边界> 未绑定递归角色边界组;
     std::vector<稳定编码> 已不相容概念因果组;
     bool 材料已变化 = false;
+    std::vector<反向因果能力缺口> 能力缺口组;
     friend bool operator==(const 反向因果查询结果 &, const 反向因果查询结果 &) = default;
 };
 } // namespace 海中鱼巣

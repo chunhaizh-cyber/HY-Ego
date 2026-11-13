@@ -24,6 +24,7 @@ class 新_任务类;
 class 新_世界树类;
 class 概念_存在类;
 class 新_语言类;
+class 新_词类;
 
 // 三个身份都位于全局基础数据集中。需求树根不属于世界树；安全根和
 // 服务根仍是独立需求节点，但它们的目标存在都是唯一自我。
@@ -905,6 +906,7 @@ public:
         稳定编码 需求节点, 稳定编码 预期主体,
         const std::vector<稳定编码>& 正式内容FT组) const noexcept;
     void 装配接收认知语言读取接口(const 新_语言类*) noexcept;
+    void 装配词条读取(const 新_词类&) noexcept;
     新被认知需求资格读取结果 读取被认知需求完整资格保护(稳定编码,稳定编码) const noexcept;
     新需求内容判定结果 判定被认知需求内容保护(稳定编码,稳定编码,稳定编码,
         const std::vector<稳定编码>& 正式内容路径 = {}) const noexcept;
@@ -1169,6 +1171,7 @@ private:
     const 新服务要求确认读取接口* 服务要求确认读取接口_ = nullptr;
     const 新部分服务要求读取接口* 部分服务要求读取接口_ = nullptr;
     const 新_语言类* 接收认知语言读取接口_ = nullptr;
+    const 新_词类* 词条读取_ = nullptr;
     const 新引用内容目标读取接口* 引用内容目标读取接口_ = nullptr;
     const 新需求新增成员读取接口* 新增成员读取_ = nullptr;
     const 特征任务成员读取接口* 服务要求任务读取接口_ = nullptr;

@@ -155,6 +155,9 @@ const char* 新学习运行异常::what() const noexcept {
                 throw 新学习运行异常(方法节点, 原因::规格未支持,
                     "simulation parameter " + std::to_string(i + 1)
                     + ": legacy role specification requires migration to ordered parameters");
+            if(方法->参数规格组[i].有序规格->信息类型==新方法参数信息类型::词条)
+                throw 新学习运行异常(方法节点,原因::规格未支持,
+                    "词条参数的隔离模拟尚未支持");
         }
         // 只有通用模拟流程实际返回，才能交付正常学习结束通知。
         学习有序本能(*方法, 协作停止);
@@ -1896,6 +1899,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
         const auto created=world->建立有序样例(m.节点,input,events,任务治理组,场景输入,执行分支,消息输入,本组合需求图,执行主体);
         HY_SIM_PROGRESS(L"隔离样例建立返回",created.状态);
+        if(created.状态==新模拟世界状态::能力未支持)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::规格未支持,"词条参数的隔离模拟尚未支持");
         if(created.状态==新模拟世界状态::定义前提已变化)
             throw 模拟输入采集漂移{};
         if(created.状态!=新模拟世界状态::已完成)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
@@ -1947,6 +1952,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             return {}; // 每个成员均可通过正式有序参数关系表达。
         };
         auto context=方法_.建立模拟参数场景(m.节点,*bindings,world,{},执行分支);
+        if(context.状态==新方法操作状态::能力未支持)
+            throw 新学习运行异常(m.节点,新学习运行异常原因::规格未支持,"词条参数的隔离模拟尚未支持");
         if(context.状态==新方法操作状态::定义前提已变化)
             throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"simulation parameter scene premise changed");
         if(!context.参数场景)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,

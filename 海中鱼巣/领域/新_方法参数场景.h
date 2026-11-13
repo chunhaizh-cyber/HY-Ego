@@ -12,6 +12,7 @@
 #include "服务要求.材料合同.h"
 #include "服务值结算.本能合同.h"
 #include "模拟需求.数据.h"
+#include "新_词类.h"
 
 namespace 海中鱼巣 {
 
@@ -24,7 +25,15 @@ class 新本能字段询问运行接口;
 
 enum class 新方法参数特征读取状态 : std::uint8_t {
     已读取=1, 参数未绑定, 信息类型不符, 未声明,
-    特征未取得, 特征匹配不唯一, 当前值未取得, 定义前提已变化
+    特征未取得, 特征匹配不唯一, 当前值未取得, 定义前提已变化, 能力未支持
+};
+enum class 新方法词条参数读取状态 : std::uint8_t {
+    已读取=1, 未声明, 参数未绑定, 信息类型不符,
+    参数已失效, 能力未支持, 依赖未就绪, 资源失败
+};
+struct 新方法词条参数读取结果 final {
+    新方法词条参数读取状态 状态=新方法词条参数读取状态::参数未绑定;
+    std::optional<新词条挂接信息> 信息;
 };
 struct 新方法参数特征读取结果 final {
     新方法参数特征读取状态 状态=新方法参数特征读取状态::参数未绑定;
@@ -103,6 +112,7 @@ public:
 
 class 方法参数场景 final {
 public:
+    新方法词条参数读取结果 读取词条参数挂接(std::uint32_t 参数序号) const noexcept;
     正式信息参数读取结果 读取正式信息参数保护(std::uint32_t 参数序号) const noexcept;
     新模拟需求读回 读取模拟需求参数(std::uint32_t 特征参数序号) const;
     新方法参数特征读取结果 读取存在参数特征(std::uint32_t,稳定编码) const noexcept;
@@ -162,13 +172,15 @@ private:
         const 概念_特征类* 特征概念读取 = nullptr,
         std::shared_ptr<新本能需求运行接口> 需求运行 = {},
         const 正式信息参数读取接口* 正式信息读取 = nullptr,
-        std::shared_ptr<新本能字段询问运行接口> 字段询问运行 = {}) noexcept;
+        std::shared_ptr<新本能字段询问运行接口> 字段询问运行 = {},
+        const 新_词类* 词条读取 = nullptr) noexcept;
 
     稳定编码 方法节点_;
     const 正式信息参数读取接口* 正式信息读取_ = nullptr;
     const 新_方法类* 方法读取_ = nullptr;
     const 新_存在类* 存在读取_ = nullptr;
     const 概念_特征类* 特征概念读取_ = nullptr;
+    const 新_词类* 词条读取_ = nullptr;
     std::vector<新方法参数角色绑定> 角色绑定组_;
     const 新_特征类* 特征服务_;
     const 新_特征值类* 特征值服务_;

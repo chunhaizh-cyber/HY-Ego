@@ -107,6 +107,7 @@ public:
     // 只建立独立方法组织根以及本类使用的类型、字段节点。
     bool 初始化() noexcept;
     bool 装配正式信息参数读取接口(const 正式信息参数读取接口*) noexcept;
+    void 装配词条读取(const 新_词类&) noexcept;
     bool 装配字段询问运行接口(std::shared_ptr<新本能字段询问运行接口>) noexcept;
     bool 解除字段询问运行接口(const 新本能字段询问运行接口&) noexcept;
     std::optional<稳定编码> 获取方法启用特征类型() const noexcept;
@@ -385,6 +386,7 @@ private:
         const std::function<新方法实例交付状态(稳定编码)>& 采用 = {}) noexcept;
 
     新_存在类& 存在服务_;
+    const 新_词类* 词条读取_ = nullptr;
     新_场景类& 场景服务_;
     新_特征值类& 特征值服务_;
     新_特征类& 特征服务_;

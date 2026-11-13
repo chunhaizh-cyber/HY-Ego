@@ -5,7 +5,7 @@
 
 #include <utility>
 #include <algorithm>
-#include <map>
+#include <thread>
 #include <stdexcept>
 
 namespace 海中鱼巣 {
@@ -38,6 +38,38 @@ namespace 海中鱼巣 {
 }
 namespace {
 
+struct 参数材料需要重读 {};
+
+std::optional<新词条挂接信息> 读取可选词条挂接(const 方法参数场景& 场景,std::uint32_t 位置) noexcept {
+    auto 当前=场景.读取词条参数挂接(位置);
+    using S=新方法词条参数读取状态;
+    switch(当前.状态) {
+    case S::已读取:
+        if(当前.信息)return std::move(当前.信息);
+        break;
+    case S::参数已失效: case S::未声明: case S::参数未绑定: case S::信息类型不符: case S::能力未支持:
+        return {};
+    case S::依赖未就绪:
+        if(场景.用途()!=新方法参数场景用途::执行)return {};
+        break;
+    case S::资源失败: break;
+    }
+    工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"词条读取资源、执行装配或成功载荷发生工程错误。");
+}
+
+std::optional<稳定编码> 读取当前挂接特征类型(const 概念_特征类& 概念) noexcept {
+    for (;;) {
+        const auto 当前=概念.读取先天特征类型槽(先天特征类型槽::概念名称挂接);
+        if(当前.状态==特征概念规则状态::前提已变化) {
+            std::this_thread::yield();
+            continue;
+        }
+        if(当前.状态==特征概念规则状态::值不存在)return {};
+        if(当前.状态==特征概念规则状态::已完成&&当前.类型根)return 当前.类型根;
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"名称挂接特征类型读取发生工程错误。");
+    }
+}
+
 void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>& 绑定组) noexcept {
     const bool 含有序引用 = std::any_of(绑定组.begin(), 绑定组.end(),
         [](const 新方法参数角色绑定& 绑定) noexcept { return 绑定.有序引用.has_value(); });
@@ -47,7 +79,8 @@ void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>&
         if (!绑定.有序引用 || 绑定.有序引用->序号 != 位置 + 1
             || !有效(绑定.有序引用->信息节点)
             || (绑定.有序引用->信息类型 != 新方法参数信息类型::存在
-                && 绑定.有序引用->信息类型 != 新方法参数信息类型::特征)
+                && 绑定.有序引用->信息类型 != 新方法参数信息类型::特征
+                && 绑定.有序引用->信息类型 != 新方法参数信息类型::词条)
             || 绑定.参数角色节点.值 != 0 || 绑定.实际存在节点 || !绑定.实际特征组.empty()
             || 绑定.任务虚拟存在引用 || 绑定.服务要求分项引用 || 绑定.服务要求确认引用
             || (绑定.世界场景节点 && !有效(*绑定.世界场景节点)))
@@ -72,10 +105,12 @@ void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>&
     const 新_存在类* 存在读取,const 概念_特征类* 特征概念读取,
     std::shared_ptr<新本能需求运行接口> 需求运行,
     const 正式信息参数读取接口* 正式信息读取,
-    std::shared_ptr<新本能字段询问运行接口> 字段询问运行) noexcept
+    std::shared_ptr<新本能字段询问运行接口> 字段询问运行,
+    const 新_词类* 词条读取) noexcept
     : 方法节点_(方法节点),
       正式信息读取_(正式信息读取),
       方法读取_(方法读取),存在读取_(存在读取),特征概念读取_(特征概念读取),
+      词条读取_(词条读取),
       角色绑定组_(std::move(角色绑定组)),
       特征服务_(&特征服务),
       特征值服务_(&特征值服务),
@@ -96,157 +131,151 @@ void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>&
 
 std::optional<稳定编码> 方法参数场景::执行分支节点() const noexcept { return 执行分支节点_; }
 
-正式信息参数读取结果 方法参数场景::读取正式信息参数保护(std::uint32_t 位置) const noexcept {
+新方法词条参数读取结果 方法参数场景::读取词条参数挂接(std::uint32_t 位置) const noexcept {
+    using S = 新方法词条参数读取状态;
     try {
-        const auto* p=查询参数(位置);
-        if(!p||p->信息类型!=新方法参数信息类型::存在||!方法读取_)
-            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"参数未绑定或类型不符。");
-        const auto m=方法读取_->获取方法(方法节点_);
-        // 方法被回收或替换与下方“快照不同”同属并发变化。
-        if(!m)return {正式信息参数读取状态::前提已变化,{},{}};
-        if(位置==0||位置>m->参数规格组.size()||!m->参数规格组[位置-1].有序规格)
-            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"方法固定规格已失效。");
-        const auto& s=*m->参数规格组[位置-1].有序规格;
-        if(s.序号!=位置||s.信息类型!=p->信息类型)
-            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"方法与绑定位置不一致。");
-        const auto definition=方法读取_->读取模拟正式结构(s.范围概念节点);
-        if(definition.状态==正式结构操作状态::前提已变化)
-            return {正式信息参数读取状态::前提已变化,{},{}};
-        if(definition.状态==正式结构操作状态::依赖未就绪)
-            return {正式信息参数读取状态::依赖未就绪,{},{}};
-        if(definition.状态==正式结构操作状态::未找到||definition.状态==正式结构操作状态::输入拒绝)return {};
-        if(definition.状态!=正式结构操作状态::已读取||!definition.信息||definition.完整保护组.empty())
-            throw std::logic_error("formal parameter range definition protection incomplete");
-        if(!std::holds_alternative<信息结构概念定义>(definition.信息->定义))return {};
-        正式信息参数读取结果 result;
-        if(用途_==新方法参数场景用途::模拟) {
-            if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
-                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"模拟owner与参数场景不一致。");
-            result=模拟运行_->读取正式信息参数保护(p->信息节点,s.范围概念节点);
-        } else if(用途_!=新方法参数场景用途::执行||!正式信息读取_) {
-            return {正式信息参数读取状态::依赖未就绪,{},{}};
-        } else result=正式信息读取_->读取正式信息参数保护(p->信息节点,s.范围概念节点);
-        if(result.状态!=正式信息参数读取状态::已读取) {
-            if(result.信息)throw std::logic_error("unsuccessful formal parameter reader returned success projection");
+        if (用途_ == 新方法参数场景用途::登记) return {S::未声明, {}};
+        const auto* 参数 = 查询参数(位置);
+        if (!参数) return {S::参数未绑定, {}};
+        if (参数->信息类型 != 新方法参数信息类型::词条) return {S::信息类型不符, {}};
+        if (用途_ == 新方法参数场景用途::模拟) return {S::能力未支持, {}};
+        if (用途_ != 新方法参数场景用途::执行) return {S::未声明, {}};
+        if (!词条读取_) return {S::依赖未就绪, {}};
+        auto 当前 = 词条读取_->读取词条挂接信息(参数->信息节点);
+        if (当前.状态 == 新词条查询状态::未找到) return {S::参数已失效, {}};
+        if (当前.状态 == 新词条查询状态::资源失败) return {S::资源失败, {}};
+        if (当前.状态 != 新词条查询状态::已找到 || !当前.信息)
+            throw std::logic_error("word parameter read failed");
+        return {S::已读取, std::move(当前.信息)};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取词条参数", L"词条参数当前材料读取发生工程错误。");
+    }
+}
+
+正式信息参数读取结果 方法参数场景::读取正式信息参数保护(std::uint32_t 位置) const noexcept {
+    for (;;) {
+        try {
+            const auto* p=查询参数(位置);
+            if(!p||p->信息类型!=新方法参数信息类型::存在||!方法读取_)
+                throw std::logic_error("formal parameter is not bound or has an incompatible type");
+            const auto m=方法读取_->获取方法(方法节点_);
+            if(!m)return {正式信息参数读取状态::信息不存在,{},{}};
+            if(位置==0||位置>m->参数规格组.size()||!m->参数规格组[位置-1].有序规格)
+                return {正式信息参数读取状态::范围未支持,{},{}};
+            const auto& spec=*m->参数规格组[位置-1].有序规格;
+            if(spec.序号!=位置||spec.信息类型!=p->信息类型)
+                return {正式信息参数读取状态::范围未支持,{},{}};
+            const auto definition=方法读取_->读取模拟正式结构(spec.范围概念节点);
+            if(definition.状态==正式结构操作状态::前提已变化)throw 参数材料需要重读{};
+            if(definition.状态==正式结构操作状态::依赖未就绪)
+                return {正式信息参数读取状态::依赖未就绪,{},{}};
+            if(definition.状态==正式结构操作状态::未找到||definition.状态==正式结构操作状态::输入拒绝)return {};
+            if(definition.状态!=正式结构操作状态::已读取||!definition.信息)
+                throw std::logic_error("formal parameter range definition unavailable");
+            if(!std::holds_alternative<信息结构概念定义>(definition.信息->定义))return {};
+            正式信息参数读取结果 result;
+            if(用途_==新方法参数场景用途::模拟) {
+                if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
+                    throw std::logic_error("formal parameter simulation owner differs");
+                result=模拟运行_->读取正式信息参数保护(p->信息节点,spec.范围概念节点);
+            } else if(用途_!=新方法参数场景用途::执行||!正式信息读取_) {
+                return {正式信息参数读取状态::依赖未就绪,{},{}};
+            } else result=正式信息读取_->读取正式信息参数保护(p->信息节点,spec.范围概念节点);
+            if(result.状态==正式信息参数读取状态::前提已变化)throw 参数材料需要重读{};
+            // reader交付本轮材料；不在上层回扫底座或比较整份旧方法、定义与内容快照。
             return result;
-        }
-        if(!result.信息||result.信息->信息节点!=p->信息节点
-            ||result.信息->类别概念!=s.范围概念节点||result.完整保护组.empty())
-            throw std::logic_error("formal parameter reader returned incomplete success");
-        if(方法读取_->获取方法(方法节点_)!=m)
-            return {正式信息参数读取状态::前提已变化,{},{}};
-        const auto same=[](const auto& a,const auto& b) {
-            return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组
-                &&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组
-                &&a.出向外部关系组==b.出向外部关系组;
-        };
-        std::map<稳定编码,基础联合节点快照> expected;
-        result.完整保护组.insert(result.完整保护组.end(),definition.完整保护组.begin(),definition.完整保护组.end());
-        for(auto& item:result.完整保护组) {
-            const auto id=item.结构.节点.编码;
-            const auto [it,added]=expected.try_emplace(id,std::move(item));
-            if(!added&&!same(it->second,item))return {正式信息参数读取状态::前提已变化,{},{}};
-        }
-        std::vector<稳定编码> ids;for(const auto& [id,item]:expected)ids.push_back(id);
-        const auto current=全局基础数据集.查询节点组完整结构(ids);
-        if(current.状态==基础结构操作状态::资源失败)
+        } catch(const 参数材料需要重读&) {
+        } catch(const std::bad_alloc&) {
             return {正式信息参数读取状态::资源失败,{},{}};
-        // 保护节点被并发删除与“快照不同”同判前提已变化；入口拒绝、内部不一致仍为工程错误。
-        if(current.状态==基础结构操作状态::节点不存在
-            ||(current.状态==基础结构操作状态::已完成&&current.节点组.size()!=ids.size()))
-            return {正式信息参数读取状态::前提已变化,{},{}};
-        if(current.状态!=基础结构操作状态::已完成)
-            throw std::runtime_error("formal parameter protection read unavailable");
-        for(const auto& item:current.节点组)
-            if(!item.快照||!same(expected.at(item.快照->结构.节点.编码),*item.快照))
-                return {正式信息参数读取状态::前提已变化,{},{}};
-        result.完整保护组.clear();for(auto& [id,item]:expected)result.完整保护组.push_back(std::move(item));
-        return result;
-    } catch(const std::bad_alloc&) {
-        return {正式信息参数读取状态::资源失败,{},{}};
-    } catch(...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"正式参数或方法声明读取发生工程错误。");
+        } catch(...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取正式信息参数",L"正式参数或方法声明读取发生工程错误。");
+        }
+        std::this_thread::yield();
     }
 }
 
 新方法参数特征读取结果 方法参数场景::读取存在参数特征(
     std::uint32_t 位置,稳定编码 FT) const noexcept {
     using S=新方法参数特征读取状态;
-    try {
-        if(用途_!=新方法参数场景用途::执行&&用途_!=新方法参数场景用途::模拟)
-            return {S::未声明,{},{}};
-        const auto* p=查询参数(位置);
-        if(!p)return {S::参数未绑定,{},{}};
-        if(p->信息类型!=新方法参数信息类型::存在)return {S::信息类型不符,{},{}};
-        if(!方法读取_||!特征概念读取_)throw std::logic_error("existence feature query definition owners unavailable");
-        const auto 声明=方法读取_->读取存在参数特征声明(方法节点_,执行分支节点_,位置,FT);
-        if(声明.状态!=S::已读取)return {声明.状态,{},{}};
-        if(!声明.特征定义||声明.特征定义->特征类型根!=FT)
-            throw std::logic_error("existence feature declaration projection inconsistent");
-        if(用途_==新方法参数场景用途::模拟) {
-            if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
-                throw std::logic_error("simulation existence feature query owner differs");
-            return 模拟运行_->读取模拟存在参数特征(位置,FT);
-        }
-        if(!存在读取_||!特征服务_||!特征值服务_)
-            throw std::logic_error("existence feature instance owners unavailable");
-        const auto 身份=存在读取_->读取存在身份保护(p->信息节点);
-        if(身份.前提已变化||身份.状态==基础结构操作状态::节点不存在)
-            return {S::定义前提已变化,{},{}};
-        if(身份.状态!=基础结构操作状态::已完成||!身份.信息)
-            throw std::logic_error("bound existence identity unreadable");
-        const auto E=存在读取_->获取存在(p->信息节点);
-        // 身份读到后存在被并发删除：属前提变化，与快照不同同口径。
-        if(!E)return {S::定义前提已变化,{},{}};
-        std::map<稳定编码,新特征匹配实例快照> 全部;
-        std::vector<稳定编码> 命中;
-        for(const auto F:E->特征节点组) {
-            const auto f=特征服务_->捕获特征匹配实例(F);
-            if(!f) {
-                // 比照后轮：存在成员已变化（或存在已删除）即前提已变化；成员未变而特征不可读仍属工程故障。
-                if(存在读取_->获取存在(p->信息节点)!=E)return {S::定义前提已变化,{},{}};
-                throw std::logic_error("existence feature membership or definition unreadable");
+    for (;;) {
+        try {
+            if(用途_!=新方法参数场景用途::执行&&用途_!=新方法参数场景用途::模拟)
+                return {S::未声明,{},{}};
+            const auto* p=查询参数(位置);
+            if(!p)return {S::参数未绑定,{},{}};
+            if(p->信息类型!=新方法参数信息类型::存在 && p->信息类型!=新方法参数信息类型::词条)
+                return {S::信息类型不符,{},{}};
+            if(p->信息类型==新方法参数信息类型::词条 && 用途_==新方法参数场景用途::模拟)
+                return {S::能力未支持,{},{}};
+            if(!方法读取_||!特征概念读取_)throw std::logic_error("existence feature query definition owners unavailable");
+            const auto 声明=方法读取_->读取存在参数特征声明(方法节点_,执行分支节点_,位置,FT);
+            if(声明.状态==S::定义前提已变化)throw 参数材料需要重读{};
+            if(声明.状态!=S::已读取)return {声明.状态,{},{}};
+            if(!声明.特征定义||声明.特征定义->特征类型根!=FT)
+                throw std::logic_error("existence feature declaration projection inconsistent");
+            if(p->信息类型==新方法参数信息类型::词条) {
+                const auto 当前=读取词条参数挂接(位置);
+                using W=新方法词条参数读取状态;
+                if(当前.状态==W::参数已失效)return {S::特征未取得,{},{}};
+                if(当前.状态==W::资源失败)throw std::bad_alloc{};
+                if(当前.状态!=W::已读取||!当前.信息||!特征服务_)
+                    throw std::logic_error("word feature reader unavailable");
+                const auto f=特征服务_->捕获特征匹配实例(当前.信息->概念名称挂接特征);
+                if(!f) {
+                    const auto 最新=读取词条参数挂接(位置);
+                    if(最新.状态==W::参数已失效)return {S::特征未取得,{},{}};
+                    if(最新.状态==W::资源失败)throw std::bad_alloc{};
+                    if(最新.状态!=W::已读取||!最新.信息)
+                        throw std::logic_error("word feature reader unavailable");
+                    if(最新.信息->概念名称挂接特征!=当前.信息->概念名称挂接特征)
+                        throw 参数材料需要重读{};
+                    throw std::logic_error("word references an unavailable name feature");
+                }
+                if(f->定义.特征类型根!=FT)return {S::特征未取得,{},{}};
+                新特征信息 信息;
+                信息.节点=f->特征节点;信息.特征概念节点=f->定义.概念节点;
+                信息.实例单位=f->实例单位;信息.当前值=f->当前值;
+                return {f->当前值 ? S::已读取 : S::当前值未取得,std::move(信息),f->当前完整材料};
             }
-            if(f->特征节点!=F||!全部.emplace(F,*f).second)
-                throw std::logic_error("existence feature membership or definition unreadable");
-            if(f->定义.特征类型根==FT)命中.push_back(F);
-        }
-        新方法参数特征读取结果 out;
-        out.状态=命中.empty() ? S::特征未取得 : S::特征匹配不唯一;
-        if(命中.size()==1) {
-            const auto& f=全部.at(命中.front());
-            新特征信息 投影;
-            投影.节点=f.特征节点;投影.特征概念节点=f.定义.概念节点;
-            投影.实例单位=f.实例单位;投影.当前值=f.当前值;
-            out.特征=std::move(投影);out.当前完整材料=f.当前完整材料;
-            out.状态=f.当前值 ? S::已读取 : S::当前值未取得;
-            if(f.当前值&&f.定义.材料类型==特征概念材料物理类型::存在节点引用) {
-                const auto* ref=std::get_if<稳定编码>(&*f.当前值);
-                if(!ref)throw std::logic_error("existence reference represented as material");
-                const auto target=存在读取_->读取存在身份保护(*ref);
-                if(target.前提已变化||target.状态==基础结构操作状态::节点不存在)
-                    return {S::定义前提已变化,{},{}};
-                if(target.状态!=基础结构操作状态::已完成||!target.信息)
-                    throw std::logic_error("feature target existence identity unreadable");
+            if(用途_==新方法参数场景用途::模拟) {
+                if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
+                    throw std::logic_error("simulation existence feature query owner differs");
+                return 模拟运行_->读取模拟存在参数特征(位置,FT);
             }
-        }
-        for(const auto& [F,前]:全部) {
-            const auto 后=特征服务_->捕获特征匹配实例(F);
-            if(!后) {
-                if(存在读取_->获取存在(p->信息节点)!=E)return {S::定义前提已变化,{},{}};
-                throw std::logic_error("expected attached feature capture unavailable");
+            if(!存在读取_||!特征服务_||!特征值服务_)
+                throw std::logic_error("existence feature instance owners unavailable");
+            const auto E=存在读取_->获取存在(p->信息节点);
+            if(!E)return {S::特征未取得,{},{}};
+            std::vector<新特征匹配实例快照> 命中;
+            for(const auto F:E->特征节点组) {
+                auto f=特征服务_->捕获特征匹配实例(F);
+                if(!f) {
+                    const auto 最新=存在读取_->获取存在(p->信息节点);
+                    if(!最新)return {S::特征未取得,{},{}};
+                    if(std::find(最新->特征节点组.begin(),最新->特征节点组.end(),F)==最新->特征节点组.end())
+                        throw 参数材料需要重读{};
+                    throw std::logic_error("existence references an unavailable feature");
+                }
+                if(f->定义.特征类型根==FT)命中.push_back(std::move(*f));
             }
-            if(*后!=前)
-                return {S::定义前提已变化,{},{}};
+            新方法参数特征读取结果 out;
+            out.状态=命中.empty() ? S::特征未取得 : S::特征匹配不唯一;
+            if(命中.size()==1) {
+                const auto& f=命中.front();
+                新特征信息 投影;
+                投影.节点=f.特征节点;投影.特征概念节点=f.定义.概念节点;
+                投影.实例单位=f.实例单位;投影.当前值=f.当前值;
+                out.特征=std::move(投影);out.当前完整材料=f.当前完整材料;
+                out.状态=f.当前值 ? S::已读取 : S::当前值未取得;
+            }
+            // 当前值及材料来自本轮捕获；不再次逐特征核对，也不要求世界在读取后保持静止。
+            return out;
+        } catch(const 参数材料需要重读&) {
+        } catch(...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取存在参数特征",L"声明或所属特征当前材料发生工程读取错误。");
         }
-        if(存在读取_->获取存在(p->信息节点)!=E)
-            return {S::定义前提已变化,{},{}};
-        const auto 再声明=方法读取_->读取存在参数特征声明(方法节点_,执行分支节点_,位置,FT);
-        if(再声明.状态!=S::已读取||再声明.特征定义!=声明.特征定义)
-            return {S::定义前提已变化,{},{}};
-        return out;
-    } catch(...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取存在参数特征",L"声明或所属特征当前材料发生工程读取错误。");
+        std::this_thread::yield();
     }
 }
 
@@ -455,6 +484,15 @@ std::optional<新特征信息> 方法参数场景::读取绑定特征(
     } else if (!特征服务_) return std::nullopt;
     for (const auto& 角色 : 角色绑定组_) {
         if (角色.有序引用) {
+            if(角色.有序引用->信息类型==新方法参数信息类型::词条) {
+                const auto 当前=读取可选词条挂接(*this,角色.有序引用->序号);
+                if(!当前||当前->概念名称挂接特征!=特征节点)continue;
+                if(!特征概念读取_)
+                    工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"执行场景未装配特征概念读取。");
+                const auto FT=读取当前挂接特征类型(*特征概念读取_);
+                if(!FT)return {};
+                return 读取存在参数特征(角色.有序引用->序号,*FT).特征;
+            }
             if (角色.有序引用->信息类型 != 新方法参数信息类型::特征
                 || 角色.有序引用->信息节点 != 特征节点) continue;
             return 用途_ == 新方法参数场景用途::模拟
@@ -484,6 +522,20 @@ std::optional<新特征值信息> 方法参数场景::读取绑定特征值材�
             return std::nullopt;
     } else if (!特征值服务_) return std::nullopt;
     for (const auto& 角色 : 角色绑定组_) {
+        if(角色.有序引用&&角色.有序引用->信息类型==新方法参数信息类型::词条) {
+            const auto 当前=读取可选词条挂接(*this,角色.有序引用->序号);
+            if(!当前)continue;
+            if(!特征概念读取_)
+                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征值",L"执行场景未装配特征概念读取。");
+            const auto FT=读取当前挂接特征类型(*特征概念读取_);
+            if(!FT)continue;
+            const auto 特征=读取存在参数特征(角色.有序引用->序号,*FT);
+            if(特征.当前完整材料&&特征.特征&&特征.特征->当前值) {
+                const auto* V=std::get_if<稳定编码>(&*特征.特征->当前值);
+                if(V&&*V==特征值节点)return 特征.当前完整材料;
+            }
+            continue;
+        }
         if (角色.有序引用 && 角色.有序引用->信息类型 != 新方法参数信息类型::特征) continue;
         const std::size_t 特征数 = 角色.有序引用 ? 1 : 角色.实际特征组.size();
         for (std::size_t 位置 = 0; 位置 < 特征数; ++位置) {
