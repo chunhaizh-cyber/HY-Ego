@@ -1194,62 +1194,9 @@ std::optional<存在概念信息> 概念_存在类::获取存在概念(
     }
 }
 
-bool 概念_存在类::绑定名称关系(
-    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
-    try {
-        std::lock_guard 锁(存在概念图互斥);
-        if (!结构仍存在() || !是存在概念节点(概念节点)
-            || !节点仍存在(名称关系节点)) {
-            return false;
-        }
-        const auto 字段组 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        std::size_t 命中数 = 0;
-        for (const auto& 字段 : 字段组) {
-            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-            if (!目标) return false;
-            if (*目标 == 名称关系节点) ++命中数;
-        }
-        if (命中数 == 1) return true;
-        if (命中数 != 0) return false;
-        const auto 新字段 = 全局基础数据集.添加字段节点(
-            概念节点, 名称关系字段, 名称关系节点);
-        if (!有效(新字段)) return false;
-        const auto 读回 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        const auto 读回命中 = std::count_if(
-            读回.begin(), 读回.end(), [&](const auto& 字段) {
-                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-                return 目标 && *目标 == 名称关系节点;
-            });
-        if (读回命中 == 1) return true;
-        (void)全局基础数据集.删除字段(新字段);
-        return false;
-    } catch (...) {
-        return false;
-    }
-}
 
-bool 概念_存在类::解除名称关系(
-    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
-    try {
-        std::lock_guard 锁(存在概念图互斥);
-        if (!结构仍存在() || !是存在概念节点(概念节点)) return false;
-        const auto 字段组 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        std::optional<稳定编码> 待删字段;
-        for (const auto& 字段 : 字段组) {
-            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-            if (!目标) return false;
-            if (*目标 != 名称关系节点) continue;
-            if (待删字段) return false;
-            待删字段 = 字段.编码;
-        }
-        return 待删字段 && 全局基础数据集.删除字段(*待删字段);
-    } catch (...) {
-        return false;
-    }
-}
+
+
 
 bool 概念_存在类::是存在概念节点(稳定编码 节点) const noexcept {
     try {
@@ -2287,66 +2234,12 @@ bool 同一联合快照(const 基础联合节点快照& 左,
         && 左.入向字段组 == 右.入向字段组;
 }
 
-基础互引节点操作状态 合并名称预期(
-    const std::vector<基础联合节点快照>& 概念侧,
-    const std::vector<基础联合节点快照>& 名称侧,
-    std::vector<基础联合节点快照>& 输出) {
-    using 状态 = 基础互引节点操作状态;
-    std::map<稳定编码, 基础联合节点快照> 合并;
-    for (const auto* 来源 : {&概念侧, &名称侧}) {
-        for (const auto& 项 : *来源) {
-            const auto 编码 = 项.结构.节点.编码;
-            if (!有效(编码)) return 状态::入口拒绝;
-            const auto [位置, 新增] = 合并.emplace(编码, 项);
-            if (!新增 && !同一联合快照(位置->second, 项))
-                return 状态::预期不符;
-        }
-    }
-    for (auto& [_, 项] : 合并) 输出.push_back(std::move(项));
-    return 状态::已完成;
-}
+
 } // namespace
 
-指代名称联合建立请求结果 指代名称反向参与规格::形成建立请求(
-    const 基础节点建立请求& 名称节点请求,
-    const std::vector<基础联合节点快照>& 名称侧预期) const {
-    using 状态 = 基础互引节点操作状态;
-    指代名称联合建立请求结果 结果;
-    if (!有效(概念节点_) || !有效(名称字段节点_)
-        || !名称节点请求.上级节点 || !有效(*名称节点请求.上级节点))
-        return 结果;
-    基础互引节点建立请求 请求;
-    请求.新节点 = 名称节点请求;
-    请求.反向引用所属节点 = 概念节点_;
-    请求.反向引用字段节点 = 名称字段节点_;
-    结果.状态 = 合并名称预期(预期节点组_, 名称侧预期, 请求.预期节点组);
-    if (结果.状态 == 状态::已完成) 结果.请求 = std::move(请求);
-    return 结果;
-}
 
-指代名称联合删除请求结果 指代名称反向参与规格::形成删除请求(
-    稳定编码 名称节点, 稳定编码 名称上级节点,
-    const std::vector<基础联合节点快照>& 名称侧预期) const {
-    using 状态 = 基础互引节点操作状态;
-    指代名称联合删除请求结果 结果;
-    if (!有效(名称节点) || !有效(名称上级节点)) return 结果;
-    std::optional<稳定编码> 反向身份;
-    for (const auto& 字段 : 反向名称字段组_) {
-        const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-        if (目标 && *目标 == 名称节点) {
-            if (反向身份) return 结果;
-            反向身份 = 字段.编码;
-        }
-    }
-    if (!反向身份) return 结果;
-    基础互引节点删除请求 请求;
-    请求.节点 = 名称节点;
-    请求.上级节点 = 名称上级节点;
-    请求.反向字段关系 = *反向身份;
-    结果.状态 = 合并名称预期(预期节点组_, 名称侧预期, 请求.预期节点组);
-    if (结果.状态 == 状态::已完成) 结果.请求 = std::move(请求);
-    return 结果;
-}
+
+
 
 指代概念保护结果 概念_存在类::读取指代概念保护(稳定编码 概念节点) const {
     using S = 指代概念查询状态;
@@ -2428,110 +2321,7 @@ bool 同一联合快照(const 基础联合节点快照& 左,
     catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
 }
 
-指代名称反向参与结果 概念_存在类::准备指代名称反向参与(
-    稳定编码 概念节点, const 指代概念定义& 预期定义) const {
-    指代名称反向参与结果 结果;
-    auto 规范定义 = 预期定义;
-    if (!有效(概念节点) || !规范化形状(规范定义)) return 结果;
-    const auto 正式 = 获取指代概念(概念节点);
-    if (正式.状态 != 指代概念查询状态::已找到) {
-        结果.状态 = 正式.状态;
-        return 结果;
-    }
-    if (!正式.信息) {
-        结果.状态 = 指代概念查询状态::结构不一致;
-        return 结果;
-    }
-    if (正式.信息->定义 != 规范定义) {
-        结果.状态 = 指代概念查询状态::依赖已变化;
-        return 结果;
-    }
-    指代准备 准备;
-    auto 状态 = 准备指代操作(特征概念服务_, &规范定义, 准备);
-    if (状态 != 指代内部状态::完成) {
-        结果.状态 = 查询状态(状态);
-        return 结果;
-    }
-    std::lock_guard 锁(存在概念图互斥);
-    状态 = 复核基础准备(准备);
-    if (状态 != 指代内部状态::完成) {
-        结果.状态 = 查询状态(状态);
-        return 结果;
-    }
-    const auto 命中 = std::find_if(准备.候选.信息.begin(), 准备.候选.信息.end(),
-        [&](const auto& 项) { return 项.节点 == 概念节点; });
-    if (命中 == 准备.候选.信息.end() || *命中 != *正式.信息) {
-        结果.状态 = 指代概念查询状态::读取漂移;
-        return 结果;
-    }
-    std::set<稳定编码> 身份{概念节点, 名称关系字段};
-    for (const auto& 项 : 准备.候选.结构) 身份.insert(项.节点.编码);
-    for (const auto& 项 : 准备.FT) 身份.insert(项.根);
-    for (const auto 名称 : 命中->名称关系) 身份.insert(名称);
-    const std::vector<稳定编码> 查询身份(身份.begin(), 身份.end());
-    const auto 联合 = 全局基础数据集.查询节点组完整结构(查询身份);
-    if (联合.状态 != 基础结构操作状态::已完成) {
-        结果.状态 = 查询状态(映射基础状态(联合.状态));
-        return 结果;
-    }
-    指代名称反向参与规格 规格;
-    规格.概念节点_ = 概念节点;
-    规格.名称字段节点_ = 名称关系字段;
-    if (联合.节点组.size() != 身份.size()) {
-        结果.状态 = 指代概念查询状态::结构不一致;
-        return 结果;
-    }
-    for (const auto& 前 : 准备.候选.结构) {
-        const auto 位置 = std::find_if(联合.节点组.begin(), 联合.节点组.end(),
-            [&](const auto& 项) { return 项.查询节点 == 前.节点.编码; });
-        if (位置 == 联合.节点组.end() || !位置->快照
-            || 位置->快照->结构.节点 != 前.节点
-            || 位置->快照->结构.字段组 != 前.字段组) {
-            结果.状态 = 指代概念查询状态::读取漂移;
-            return 结果;
-        }
-    }
-    for (const auto& 前 : 准备.FT) {
-        const auto 位置 = std::find_if(联合.节点组.begin(), 联合.节点组.end(),
-            [&](const auto& 项) { return 项.查询节点 == 前.根; });
-        if (位置 == 联合.节点组.end() || !位置->快照
-            || 位置->快照->结构.节点 != 前.基础.节点
-            || 位置->快照->结构.字段组 != 前.基础.字段组
-            || 位置->快照->入向外部关系组 != 前.入向) {
-            结果.状态 = 指代概念查询状态::读取漂移;
-            return 结果;
-        }
-    }
-    for (const auto& 项 : 联合.节点组) {
-        if (!项.快照) {
-            结果.状态 = 指代概念查询状态::结构不一致;
-            return 结果;
-        }
-        if (项.查询节点 == 概念节点) {
-            for (const auto& 字段 : 项.快照->结构.字段组)
-                if (字段.字段节点 == 名称关系字段)
-                    规格.反向名称字段组_.push_back(字段);
-            std::vector<稳定编码> 当前名称;
-            for (const auto& 字段 : 规格.反向名称字段组_) {
-                const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
-                if (!引用 || !有效(*引用)) {
-                    结果.状态 = 指代概念查询状态::结构不一致;
-                    return 结果;
-                }
-                当前名称.push_back(*引用);
-            }
-            std::sort(当前名称.begin(), 当前名称.end());
-            if (当前名称 != 命中->名称关系) {
-                结果.状态 = 指代概念查询状态::读取漂移;
-                return 结果;
-            }
-        }
-        规格.预期节点组_.push_back(*项.快照);
-    }
-    结果.状态 = 指代概念查询状态::已找到;
-    结果.规格 = std::move(规格);
-    return 结果;
-}
+
 
 存在概念上位保护结果 概念_存在类::读取存在概念上位保护(稳定编码 节点) const noexcept {
     try {
@@ -4249,39 +4039,47 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
     catch(const std::exception& 错误){正式定义故障(错误.what());}
     catch(...){正式定义故障("content planning definitions ensure exception");}
 }
-bool 概念_存在类::绑定信息定义名称关系(稳定编码 n,稳定编码 name) noexcept {
-    try {
-        auto prepared=读取正式结构概念保护(n);
-        if(!prepared.信息||!有效(name)||!节点仍存在(name))return false;
-        if(std::find(prepared.信息->名称关系.begin(),prepared.信息->名称关系.end(),name)!=prepared.信息->名称关系.end())return true;
-        auto np=正式快照(name);并保护(prepared.完整保护组,{np});
-        std::lock_guard lock(存在概念图互斥);
-        基础节点组追加请求 request;request.预期联合节点组=std::move(prepared.完整保护组);
-        request.追加字段组.push_back({n,名称关系字段,name});
-        auto r=全局基础数据集.原子追加节点组(request);
-        if(r.状态==基础节点组追加状态::预期不符)return false;
-        if(r.状态!=基础节点组追加状态::已完成)正式定义故障("name backlink publication failed");
-        return true;
-    }catch(正式状态){return false;}
-    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("name bind exception");}
+
+
+
+基础片段封存结果 概念_存在类::封存建立名称参与(
+    const 基础节点组追加请求& 名称请求, std::size_t 名称槽, 稳定编码 概念) const {
+    std::lock_guard 锁(存在概念图互斥);
+    auto 请求 = 名称请求;
+    const auto 读取 = 全局基础数据集.查询节点组完整结构({概念});
+    if (读取.状态 == 基础结构操作状态::资源失败)
+        return {基础节点组追加状态::资源失败, {}};
+    if (读取.状态 == 基础结构操作状态::节点不存在
+        || (读取.状态 == 基础结构操作状态::已完成 && 读取.节点组.size() == 1
+            && !读取.节点组.front().快照)) return {基础节点组追加状态::节点不存在, {}};
+    if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 1)
+        throw std::logic_error("concept name publication host read failed");
+    请求.预期联合节点组.push_back(*读取.节点组.front().快照);
+    请求.追加字段组.push_back({概念, 名称关系字段, 基础组内节点引用{名称槽}});
+    return 全局基础数据集.封存原子追加片段(请求);
 }
-bool 概念_存在类::解除信息定义名称关系(稳定编码 n,稳定编码 name) noexcept {
-    try {
-        auto prepared=读取正式结构概念保护(n);if(!prepared.信息)return false;
-        auto source=std::find_if(prepared.完整保护组.begin(),prepared.完整保护组.end(),[&](const auto&s){return s.结构.节点.编码==n;});
-        if(source==prepared.完整保护组.end())正式定义故障("missing name parent snapshot");
-        std::optional<稳定编码>erase;
-        for(const auto&f:source->结构.字段组)if(f.字段节点==名称关系字段) {
-            auto p=std::get_if<稳定编码>(&f.内容);if(!p)正式定义故障("name backlink value");
-            if(*p==name){if(erase)正式定义故障("duplicate name backlink");erase=f.编码;}
-        }
-        if(!erase)return true;
-        std::lock_guard lock(存在概念图互斥);基础节点组追加请求 request;
-        request.预期联合节点组=std::move(prepared.完整保护组);request.删除字段关系组.push_back(*erase);
-        auto r=全局基础数据集.原子追加节点组(request);
-        if(r.状态==基础节点组追加状态::预期不符)return false;
-        if(r.状态!=基础节点组追加状态::已完成)正式定义故障("name backlink removal failed");return true;
-    }catch(正式状态){return false;}
-    catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("name unbind exception");}
+
+基础片段封存结果 概念_存在类::封存删除名称参与(稳定编码 概念, 稳定编码 名称) const {
+    std::lock_guard 锁(存在概念图互斥);
+    const auto 读取 = 全局基础数据集.查询节点组完整结构({概念, 名称});
+    if (读取.状态 == 基础结构操作状态::资源失败)
+        return {基础节点组追加状态::资源失败, {}};
+    if (读取.状态 == 基础结构操作状态::节点不存在)
+        return {基础节点组追加状态::节点不存在, {}};
+    if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 2)
+        throw std::logic_error("concept name removal host read failed");
+    基础节点组追加请求 请求;
+    for (const auto& 项 : 读取.节点组) {
+        if (!项.快照) return {基础节点组追加状态::节点不存在, {}};
+        请求.预期联合节点组.push_back(*项.快照);
+        if (项.查询节点 != 概念) continue;
+        for (const auto& 字段 : 项.快照->结构.字段组)
+            if (字段.字段节点 == 名称关系字段
+                && std::get<稳定编码>(字段.内容) == 名称)
+                请求.删除字段关系组.push_back(字段.编码);
+    }
+    if (请求.删除字段关系组.size() != 1)
+        throw std::logic_error("concept name removal requires its current backlink");
+    return 全局基础数据集.封存原子追加片段(请求);
 }
 } // namespace 海中鱼巣

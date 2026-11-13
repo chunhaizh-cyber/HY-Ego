@@ -797,6 +797,71 @@ struct 相对坐标项形成结果 final {
       状态服务_(状态服务),
       动态服务_(动态服务) {}
 
+新词条场景参与绑定 新_场景类::取得词条场景参与绑定(稳定编码 根场景) {
+    std::lock_guard 锁(新场景互斥);
+    if (用途_ != 新场景树用途::普通 || 根场景 != 场景树根节点_
+        || !是场景节点(根场景))
+        throw std::logic_error("word scene binding requires the language world's initialized root");
+    新词条场景参与绑定 绑定;
+    绑定.owner_ = this;
+    绑定.场景_ = 根场景;
+    绑定.状态列表键_ = 状态列表字段;
+    绑定.动态列表键_ = 动态列表字段;
+    return 绑定;
+}
+
+新词条状态封存结果 新_场景类::封存词条状态挂接(
+    const 新词条场景参与绑定& 绑定, 新词条状态参与材料 参与) const {
+    // 纯构造：F准备尚持锁，禁止进入场景/状态getter及其运行锁。
+    if (绑定.owner_ != this)
+        throw std::logic_error("word state scene binding belongs to a different owner");
+    新词条状态封存结果 结果;
+    结果.状态槽 = 参与.状态槽_;
+    const auto 读取 = 全局基础数据集.查询节点组完整结构({绑定.场景_});
+    if (读取.状态 == 基础结构操作状态::资源失败) {
+        结果.封存.状态 = 基础节点组追加状态::资源失败;
+        return 结果;
+    }
+    if (读取.状态 == 基础结构操作状态::节点不存在
+        || (读取.状态 == 基础结构操作状态::已完成 && 读取.节点组.size() == 1
+            && !读取.节点组.front().快照)) {
+        结果.封存.状态 = 基础节点组追加状态::节点不存在;
+        return 结果;
+    }
+    if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 1)
+        throw std::logic_error("word state scene host read failed");
+    参与.请求_.预期联合节点组.push_back(*读取.节点组.front().快照);
+    参与.请求_.追加字段组.push_back({绑定.场景_, 绑定.状态列表键_,
+        基础组内节点引用{参与.状态槽_}});
+    结果.封存 = 全局基础数据集.封存原子追加片段(参与.请求_);
+    return 结果;
+}
+
+新词条场景记录读取结果 新_场景类::读取词条场景记录(
+    const 新词条场景参与绑定& 绑定) const {
+    if (绑定.owner_ != this)
+        throw std::logic_error("word record scene binding belongs to a different owner");
+    using S = 新词条场景记录读取状态;
+    try {
+        const auto 读取 = 全局基础数据集.查询完整节点结构(绑定.场景_);
+        if (读取.状态 == 基础结构操作状态::节点不存在) return {S::场景不存在};
+        if (读取.状态 == 基础结构操作状态::资源失败) return {S::资源失败};
+        if (读取.状态 != 基础结构操作状态::已完成 || !读取.结构)
+            throw std::logic_error("word record scene structure read failed");
+        新词条场景记录读取结果 结果{S::已读取, 绑定.场景_};
+        for (const auto& 字段 : 读取.结构->字段组) {
+            if (字段.字段节点 == 绑定.状态列表键_)
+                结果.状态节点组.push_back(std::get<稳定编码>(字段.内容));
+            else if (字段.字段节点 == 绑定.动态列表键_)
+                结果.动态节点组.push_back(std::get<稳定编码>(字段.内容));
+        }
+        std::sort(结果.状态节点组.begin(), 结果.状态节点组.end());
+        std::sort(结果.动态节点组.begin(), 结果.动态节点组.end());
+        return 结果;
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+    catch (const std::length_error&) { return {S::资源失败}; }
+}
+
 bool 新_场景类::初始化() noexcept {
     try {
         std::lock_guard 锁(新场景互斥);

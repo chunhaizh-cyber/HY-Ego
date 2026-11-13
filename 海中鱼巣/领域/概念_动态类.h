@@ -58,6 +58,7 @@ struct 动态概念信息 final {
     std::vector<稳定编码> 下位概念组;
     动态概念定义类别 定义类别 = 动态概念定义类别::变化;
     std::optional<动作概念定义> 动作定义;
+    std::vector<稳定编码> 名称关系;
     friend bool operator==(const 动态概念信息&,
         const 动态概念信息&) = default;
 };
@@ -173,6 +174,10 @@ public:
 
 private:
     friend class 新_动态类;
+    friend class 概念_名称关系类;
+    基础片段封存结果 封存建立名称参与(
+        const 基础节点组追加请求&, std::size_t 名称槽, 稳定编码 概念) const;
+    基础片段封存结果 封存删除名称参与(稳定编码 概念, 稳定编码 名称) const;
     基础结构操作状态 删除实例概念及动态结构(
         稳定编码 实例概念节点, 稳定编码 实际动态节点,
         const std::vector<稳定编码>& 动态私有节点组,

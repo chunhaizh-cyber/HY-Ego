@@ -4291,71 +4291,9 @@ bool 概念_特征类::减少当前实例引用(
     }
 }
 
-bool 概念_特征类::绑定名称关系(
-    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
-    try {
-        std::lock_guard 锁(特征概念树互斥);
-        if (!结构仍存在() || !节点仍存在(名称关系节点)) {
-            return false;
-        }
-        if (!是特征概念节点(概念节点)) {
-            const auto root = 读取类别根内部();
-            if (root.状态 != 正式概念读取状态::已读取
-                || !root.信息 || root.信息->节点 != 概念节点) return false;
-        }
-        const auto 字段组 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        std::size_t 命中数 = 0;
-        for (const auto& 字段 : 字段组) {
-            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-            if (!目标) return false;
-            if (*目标 == 名称关系节点) ++命中数;
-        }
-        if (命中数 == 1) return true;
-        if (命中数 != 0) return false;
-        const auto 新字段 = 全局基础数据集.添加字段节点(
-            概念节点, 名称关系字段, 名称关系节点);
-        if (!有效(新字段)) return false;
-        const auto 读回 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        const auto 读回命中 = std::count_if(
-            读回.begin(), 读回.end(), [&](const auto& 字段) {
-                const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-                return 目标 && *目标 == 名称关系节点;
-            });
-        if (读回命中 == 1) return true;
-        (void)全局基础数据集.删除字段(新字段);
-        return false;
-    } catch (...) {
-        return false;
-    }
-}
 
-bool 概念_特征类::解除名称关系(
-    稳定编码 概念节点, 稳定编码 名称关系节点) noexcept {
-    try {
-        std::lock_guard 锁(特征概念树互斥);
-        if (!结构仍存在()) return false;
-        if (!是特征概念节点(概念节点)) {
-            const auto root = 读取类别根内部();
-            if (root.状态 != 正式概念读取状态::已读取
-                || !root.信息 || root.信息->节点 != 概念节点) return false;
-        }
-        const auto 字段组 = 全局基础数据集.查询字段(
-            概念节点, 名称关系字段);
-        std::optional<稳定编码> 待删字段;
-        for (const auto& 字段 : 字段组) {
-            const auto* 目标 = std::get_if<稳定编码>(&字段.内容);
-            if (!目标) return false;
-            if (*目标 != 名称关系节点) continue;
-            if (待删字段) return false;
-            待删字段 = 字段.编码;
-        }
-        return 待删字段 && 全局基础数据集.删除字段(*待删字段);
-    } catch (...) {
-        return false;
-    }
-}
+
+
 
 特征概念直接子查询结果 概念_特征类::查询直接子特征概念(
     稳定编码 直接父概念, const 特征概念定义& 完整定义) const {
@@ -5685,10 +5623,16 @@ namespace {
 bool 是固定先天槽(std::uint32_t n) noexcept {
     return (n >= 1001 && n <= 1017) || (n >= 1101 && n <= 1107)
         || (n >= 1201 && n <= 1213) || (n >= 1301 && n <= 1304)
-        || (n >= 1311 && n <= 1313) || (n >= 1401 && n <= 1405);
+        || (n >= 1311 && n <= 1313) || (n >= 1401 && n <= 1405)
+        || n == 先天特征类型槽::概念名称挂接;
 }
 bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
     using namespace 先天特征类型槽;
+    if (n == 概念名称挂接)
+        return d.材料类型 == 特征概念材料物理类型::U64数组
+            && d.比较规则 == 特征概念比较规则::概念集合身份判等
+            && d.聚合规则 == 特征概念聚合规则::完整材料精确集合
+            && std::holds_alternative<特征概念全材料值域>(d.值域);
     std::optional<特征概念I64闭区间> expected;
     switch (n) {
     case 需求执行域: case 需求目标形式: case 目标方向: case 需求根角色:
@@ -5795,7 +5739,8 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
         if (definition.状态 != 基础结构操作状态::已完成 || !definition.信息 || definition.信息->类型根 != *found)
             信息引用定义故障(L"先天槽目标不是正式完整FT根。");
         const auto normalized = 规范化定义(转为定义(definition.信息->定义));
-        if (!normalized || normalized->单位 || normalized->聚合规则 != 特征概念聚合规则::不自动聚合
+        if (!normalized || normalized->单位
+            || (number != 先天特征类型槽::概念名称挂接 && normalized->聚合规则 != 特征概念聚合规则::不自动聚合)
             || !固定槽定义相容(number, *normalized))
             信息引用定义故障(L"先天槽正式定义与固定语义不相容。");
         if (!合并正式定义保护(protections, definition.预期节点组)) return {S::前提已变化, {}, {}};
@@ -5813,9 +5758,13 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
         using S = 特征概念规则状态;
         if (!是固定先天槽(input.语义序号)) return {};
         const auto normalized = 规范化定义(input.定义);
-        if (!normalized || normalized->单位 || normalized->聚合规则 != 特征概念聚合规则::不自动聚合
-            || (normalized->材料类型 != 特征概念材料物理类型::I64标量 && normalized->材料类型 != 特征概念材料物理类型::信息节点引用
-                && !(input.语义序号==先天特征类型槽::引用内容需求&&normalized->材料类型==特征概念材料物理类型::需求节点引用))) return {};
+        if (!normalized || normalized->单位) return {};
+        if (input.语义序号 != 先天特征类型槽::概念名称挂接
+            && (normalized->聚合规则 != 特征概念聚合规则::不自动聚合
+                || (normalized->材料类型 != 特征概念材料物理类型::I64标量
+                    && normalized->材料类型 != 特征概念材料物理类型::信息节点引用
+                    && !(input.语义序号 == 先天特征类型槽::引用内容需求
+                        && normalized->材料类型 == 特征概念材料物理类型::需求节点引用)))) return {};
         if (!固定槽定义相容(input.语义序号, *normalized)) return {};
         // 全部外部身份在取得本owner写锁之前采集；span及reader不存入任何字段或成员。
         std::vector<基础联合节点快照> external;
@@ -5869,7 +5818,8 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
         } else if (const auto* r = std::get_if<特征概念信息引用值域>(&normalized->值域)) {
             ft.字段组.push_back({信息引用语义字段, 基础值{static_cast<std::int64_t>(r->语义)}});
             ft.字段组.push_back({信息引用内容概念字段, r->内容概念});
-        } else if(input.语义序号==先天特征类型槽::引用内容需求
+        } else if((input.语义序号==先天特征类型槽::引用内容需求
+                || input.语义序号==先天特征类型槽::概念名称挂接)
             &&std::holds_alternative<特征概念全材料值域>(normalized->值域)) {
             ft.字段组.push_back({全材料值域字段,基础值{std::int64_t{1}}});
         } else return {};
@@ -5894,4 +5844,45 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
     } catch (...) { 信息引用定义故障(L"先天FT槽创建出现工程异常，已发表定义保留。"); }
 }
 
+
+基础片段封存结果 概念_特征类::封存建立名称参与(
+    const 基础节点组追加请求& 名称请求, std::size_t 名称槽, 稳定编码 概念) const {
+    std::lock_guard 锁(特征概念树互斥);
+    auto 请求 = 名称请求;
+    const auto 读取 = 全局基础数据集.查询节点组完整结构({概念});
+    if (读取.状态 == 基础结构操作状态::资源失败)
+        return {基础节点组追加状态::资源失败, {}};
+    if (读取.状态 == 基础结构操作状态::节点不存在
+        || (读取.状态 == 基础结构操作状态::已完成 && 读取.节点组.size() == 1
+            && !读取.节点组.front().快照)) return {基础节点组追加状态::节点不存在, {}};
+    if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 1)
+        throw std::logic_error("concept name publication host read failed");
+    请求.预期联合节点组.push_back(*读取.节点组.front().快照);
+    请求.追加字段组.push_back({概念, 名称关系字段, 基础组内节点引用{名称槽}});
+    return 全局基础数据集.封存原子追加片段(请求);
+}
+
+基础片段封存结果 概念_特征类::封存删除名称参与(稳定编码 概念, 稳定编码 名称) const {
+    std::lock_guard 锁(特征概念树互斥);
+    const auto 读取 = 全局基础数据集.查询节点组完整结构({概念, 名称});
+    if (读取.状态 == 基础结构操作状态::资源失败)
+        return {基础节点组追加状态::资源失败, {}};
+    if (读取.状态 == 基础结构操作状态::节点不存在)
+        return {基础节点组追加状态::节点不存在, {}};
+    if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 2)
+        throw std::logic_error("concept name removal host read failed");
+    基础节点组追加请求 请求;
+    for (const auto& 项 : 读取.节点组) {
+        if (!项.快照) return {基础节点组追加状态::节点不存在, {}};
+        请求.预期联合节点组.push_back(*项.快照);
+        if (项.查询节点 != 概念) continue;
+        for (const auto& 字段 : 项.快照->结构.字段组)
+            if (字段.字段节点 == 名称关系字段
+                && std::get<稳定编码>(字段.内容) == 名称)
+                请求.删除字段关系组.push_back(字段.编码);
+    }
+    if (请求.删除字段关系组.size() != 1)
+        throw std::logic_error("concept name removal requires its current backlink");
+    return 全局基础数据集.封存原子追加片段(请求);
+}
 } // namespace 海中鱼巣

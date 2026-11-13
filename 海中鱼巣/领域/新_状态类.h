@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -11,6 +12,7 @@ namespace 海中鱼巣 {
 class 新_存在类;
 class 新_动态类;
 class 新_任务类;
+class 新_状态类;
 
 struct 新事实字段保护变化 final {
     基础字段关系 修改前;
@@ -66,6 +68,26 @@ struct 新状态建立结果 final {
     std::optional<新状态信息> 状态信息;
 };
 
+class 新词条状态构造绑定 final {
+private:
+    新词条状态构造绑定() = default;
+    std::array<稳定编码, 8> 字段_{};
+    const 新_状态类* owner_ = nullptr;
+    friend class 新_状态类;
+    friend class 新_词类;
+    friend class 新_自然语言世界树类;
+};
+
+// 只有状态和场景owner可修改该未发布材料，词条仅传递它。
+class 新词条状态参与材料 final {
+private:
+    新词条状态参与材料() = default;
+    基础节点组追加请求 请求_;
+    std::size_t 状态槽_ = 0;
+    friend class 新_状态类;
+    friend class 新_场景类;
+};
+
 class 新_状态类 final {
 public:
     explicit 新_状态类(新_特征类& 特征服务) noexcept;
@@ -104,6 +126,15 @@ public:
     新状态操作状态 减少引用(稳定编码 状态节点) noexcept;
 
 private:
+    friend class 新_词类;
+    friend class 新_自然语言世界树类;
+    新词条状态构造绑定 取得词条状态构造绑定() const;
+    新词条状态参与材料 准备词条状态(
+        const 新词条状态构造绑定&, const 新词条特征候选&,
+        const std::variant<稳定编码, 基础组内节点引用>& 词条,
+        const 新状态强时间&, 基础节点组追加请求 词条请求 = {}) const;
+    std::optional<新状态信息> 读取词条前状态(
+        稳定编码 词条, 稳定编码 特征, const 新特征准确值& 旧值) const;
     friend class 新_存在类;
     friend class 新_动态类;
     friend class 新_任务类;

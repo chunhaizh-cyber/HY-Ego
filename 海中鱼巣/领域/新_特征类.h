@@ -180,6 +180,19 @@ struct 新特征当前值组准备结果 final {
     std::optional<新特征当前值组准备> 准备;
 };
 
+// WORD-NAME-F：仅在准备句柄作用域内消费；不是已发布的当前事实。
+class 新词条特征候选 final {
+private:
+    新词条特征候选() = default;
+    const 新特征当前值组准备* 准备_ = nullptr;
+    稳定编码 特征_, 概念_, 类型根_;
+    std::optional<新特征准确值> 当前值_;
+    bool 已改变_ = false;
+    friend class 新_特征类;
+    friend class 新_状态类;
+    friend class 新_词类;
+};
+
 class 新特征引用集合更新准备 final {
 public:
     新特征引用集合更新准备(新特征引用集合更新准备&&) noexcept;
@@ -590,6 +603,11 @@ public:
 
 private:
     struct 普通存在引用完整读取批;
+    friend class 新_词类;
+    friend class 新_状态类;
+    特征概念规则状态 准备词条集合材料(稳定编码 类型根, 稳定编码 材料);
+    新词条特征候选 读取词条当前值候选(
+        const 新特征当前值组准备&, 稳定编码 特征) const;
     std::optional<新特征信息> 获取特征可抛内部(
         稳定编码 特征节点, const 普通存在引用完整读取批* 本次批) const;
     特征概念规则状态 读取信息存在引用定义保护(const 特征概念信息&,

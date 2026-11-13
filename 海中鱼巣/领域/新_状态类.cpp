@@ -6,6 +6,7 @@
 #include <limits>
 #include <mutex>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -212,6 +213,67 @@ bool 新_状态类::初始化() noexcept {
     } catch (...) {
         return false;
     }
+}
+
+新词条状态构造绑定 新_状态类::取得词条状态构造绑定() const {
+    std::lock_guard 锁(新状态互斥);
+    新词条状态构造绑定 绑定;
+    绑定.owner_ = this;
+    绑定.字段_ = {状态节点类型字段, 状态节点类型, 状态被描述存在字段,
+        状态来源实例特征字段, 状态特征类型字段, 状态固定准确值字段,
+        状态强时间字段, 状态被引用次数字段};
+    if (std::any_of(绑定.字段_.begin(), 绑定.字段_.end(),
+        [](稳定编码 n) { return !有效(n); }))
+        throw std::logic_error("word state binding before state initialization");
+    return 绑定;
+}
+
+新词条状态参与材料 新_状态类::准备词条状态(
+    const 新词条状态构造绑定& 绑定, const 新词条特征候选& 候选,
+    const std::variant<稳定编码, 基础组内节点引用>& 词条,
+    const 新状态强时间& 时间, 基础节点组追加请求 词条请求) const {
+    // 此处不取状态锁、不读取F：F准备仍持锁，值只来自本次准备候选。
+    if (绑定.owner_ != this || !候选.准备_ || !候选.已改变_ || !候选.当前值_)
+        throw std::logic_error("word state requires a changed prepared current value");
+    if (时间.语义 != 新状态时间语义::实例绝对UTC || 时间.纳秒 < 0)
+        throw std::logic_error("word state requires actual UTC time");
+    新词条状态参与材料 参与;
+    参与.请求_ = std::move(词条请求);
+    参与.状态槽_ = 参与.请求_.新节点组.size();
+    const auto& k = 绑定.字段_;
+    基础组内新节点 状态;
+    状态.字段组 = {{k[0], k[1]},
+        {k[2], std::visit([](const auto& x) -> 基础组内字段内容 { return x; }, 词条)},
+        {k[3], 候选.特征_}, {k[4], 候选.概念_},
+        {k[6], 编码强时间(时间)}, {k[7], 基础值{std::int64_t{1}}}};
+    状态.字段组.push_back({k[5], std::visit([](const auto& x) -> 基础组内字段内容 {
+        if constexpr (std::is_same_v<std::decay_t<decltype(x)>, 稳定编码>) return x;
+        else return 基础值{x};
+    }, *候选.当前值_)});
+    for (const auto n : {k[1], 候选.特征_, 候选.概念_})
+        参与.请求_.只读预期.节点组.push_back({n});
+    if (const auto* w = std::get_if<稳定编码>(&词条))
+        参与.请求_.只读预期.节点组.push_back({*w});
+    if (const auto* v = std::get_if<稳定编码>(&*候选.当前值_))
+        参与.请求_.只读预期.节点组.push_back({*v});
+    参与.请求_.新节点组.push_back(std::move(状态));
+    return 参与;
+}
+
+std::optional<新状态信息> 新_状态类::读取词条前状态(
+    稳定编码 词条, 稳定编码 特征, const 新特征准确值& 旧值) const {
+    // 在特征准备之前调用；按F反向索引限定读取范围。
+    std::lock_guard 锁(新状态互斥);
+    std::optional<新状态信息> 结果;
+    for (const auto& 引用 : 全局基础数据集.查询目标字段(特征, 状态来源实例特征字段)) {
+        const auto 状态 = 获取状态(引用.所属节点);
+        if (!状态) throw std::logic_error("indexed word state is unreadable");
+        if (状态->被描述存在节点 != 词条 || 状态->来源实例特征节点 != 特征
+            || 状态->固定准确值 != std::optional<新特征准确值>{旧值}
+            || 状态->强时间.语义 != 新状态时间语义::实例绝对UTC) continue;
+        if (!结果 || 状态->强时间.纳秒 > 结果->强时间.纳秒) 结果 = *状态;
+    }
+    return 结果;
 }
 
 新状态建立结果 新_状态类::建立状态(
