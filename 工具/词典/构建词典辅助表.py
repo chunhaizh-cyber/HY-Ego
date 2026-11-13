@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
-"""从本地中文维基词典 JSONL（可 gzip 压缩）生成读词典释义所需的两张辅助表（7250 §3.4第3、6项）。
+"""生成简体词典与读词典释义所需的辅助表（7250 §3.4；2026-11-13 用户裁决：现有词典整体转成简体）。
 
-词头表.tsv：全部中文词头（含无释义页，不含重定向），作读释义时的切分边界依据；
-繁简字表.tsv：由词典自身繁简字形对生成的字级繁简对照表，不引入外部对照表；
-词性表.tsv：每条中文记录的原始词性（按记录行号，与词典.tsv记录键的行号一致），供读释义按词性选用结构。
+输入：
+  --input     本地中文维基词典 raw JSONL（可 gzip 压缩），取词头与词性；
+  --dictionary 已构建的 词典.tsv（HY-EGO-DICTIONARY/1，13列）；
+  --opencc    OpenCC 词典目录（固定 ver.1.4.2：TSPhrases.txt、TSCharacters.txt、LICENSE）。
+输出（同一目录，各自完整写入并关闭后原子替换）：
+  词典.简体.tsv：词典.tsv 按 OpenCC 繁转简规则转换后的同格式包；记录键、源定位不变，可追溯原始行；
+  繁简表.tsv：OpenCC 繁转简词组表与字表，供运行时规范化残留繁体（P 行词组、C 行单字）；
+  词头表.tsv：全部中文词头（含无释义页，不含重定向）转简体后去重，作读释义切分边界依据；
+  词性表.tsv：每条中文记录的原始词性（按记录行号），包头带原始包 SHA256。
 
-繁简：只取标为简体（且非 alternative）的字形，与同一词条的繁体词面逐字对齐，长度不同的跳过；
-占该字全部对齐不足5%的目标视为对齐噪声；其余目标中含原字本身（曾保持不变）或多于一个时，
-视为一繁对多简，保留原字不转、不输出。
-不联网；两张表各自完整写入并关闭后才原子替换；错误向命令行送出。
+繁转简与 OpenCC t2s 一致：自左向右，先取 TSPhrases 最长词组，否则按 TSCharacters 逐字（多值取第一个），
+都不命中保留原字。TSPhrases 每条词组须与其简体等长，使原文与简体逐标量对齐；不等长时构建失败。
+不联网；错误向命令行送出。
 """
 
 import argparse
-from collections import Counter, defaultdict
 import gzip
 import hashlib
 import json
@@ -20,20 +24,6 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-
-
-def 简体字形(记录: dict):
-    """产出 (繁体词面, 简体词面)；标为 Traditional-Chinese 的是繁体异体，不是繁简对。"""
-    词面 = 记录.get("word")
-    if not isinstance(词面, str) or not 词面:
-        return
-    for 形 in 记录.get("forms", []) or []:
-        if not isinstance(形, dict):
-            continue
-        文本, 标签 = 形.get("form"), 形.get("tags") or []
-        if (isinstance(文本, str) and 文本 and 文本 != 词面
-                and "Simplified-Chinese" in 标签 and "alternative" not in 标签):
-            yield 词面, 文本
 
 
 def 计算摘要(路径: Path) -> str:
@@ -51,7 +41,8 @@ def 原子写出(输出目录: Path, 文件名: str, 包头: str, 行组) -> Pat
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", newline="\n", dir=输出目录,
                                          prefix=".辅助表-", suffix=".tmp", delete=False) as 输出:
             临时路径 = Path(输出.name)
-            输出.write(包头 + "\n")
+            if 包头 is not None:
+                输出.write(包头 + "\n")
             for 行 in 行组:
                 输出.write(行 + "\n")
             输出.flush()
@@ -64,13 +55,58 @@ def 原子写出(输出目录: Path, 文件名: str, 包头: str, 行组) -> Pat
     return 输出文件
 
 
-def 构建(输入: Path, 输出目录: Path) -> dict:
-    if not 输入.is_file():
-        raise ValueError(f"输入不是普通文件：{输入}")
-    对应 = defaultdict(Counter)
-    词头 = set()
-    对数 = 跳过 = 0
-    词性组 = []
+def 读OpenCC表(路径: Path) -> dict:
+    表 = {}
+    for 行号, 行 in enumerate(路径.read_text(encoding="utf-8").splitlines(), 1):
+        if not 行 or 行.startswith("#"):
+            continue
+        键, 制表, 值组 = 行.partition("\t")
+        值 = 值组.split(" ")[0] if 制表 else ""
+        if not 键 or not 值:
+            raise ValueError(f"{路径.name} 第{行号}行格式不合法")
+        if 键 in 表:
+            raise ValueError(f"{路径.name} 第{行号}行键重复：{键}")
+        表[键] = 值
+    return 表
+
+
+class 繁转简:
+    def __init__(self, 目录: Path):
+        self.词组 = 读OpenCC表(目录 / "TSPhrases.txt")
+        self.单字 = 读OpenCC表(目录 / "TSCharacters.txt")
+        for 键, 值 in self.词组.items():
+            if len(键) != len(值) or len(键) < 2:
+                raise ValueError(f"TSPhrases 词组与简体不等长或不足两字：{键} -> {值}")
+        for 键, 值 in self.单字.items():
+            if len(键) != 1 or len(值) != 1:
+                raise ValueError(f"TSCharacters 不是单字对单字：{键} -> {值}")
+        self.最长 = max(map(len, self.词组))
+
+    def 转换(self, 文本: str) -> str:
+        输出, 位置 = [], 0
+        while 位置 < len(文本):
+            for 长 in range(min(self.最长, len(文本) - 位置), 1, -1):
+                片 = 文本[位置:位置 + 长]
+                if 片 in self.词组:
+                    输出.append(self.词组[片])
+                    位置 += 长
+                    break
+            else:
+                字 = 文本[位置]
+                输出.append(self.单字.get(字, 字))
+                位置 += 1
+        return "".join(输出)
+
+
+def 构建(输入: Path, 词典: Path, opencc: Path, 输出目录: Path) -> dict:
+    for 路径 in (输入, 词典):
+        if not 路径.is_file():
+            raise ValueError(f"输入不是普通文件：{路径}")
+    for 名 in ("TSPhrases.txt", "TSCharacters.txt", "LICENSE"):
+        if not (opencc / 名).is_file():
+            raise ValueError(f"OpenCC 目录缺 {名}：{opencc}")
+    转 = 繁转简(opencc)
+    词头, 词性组 = set(), []
     打开输入 = gzip.open if 输入.suffix.lower() == ".gz" else open
     with 打开输入(输入, "rt", encoding="utf-8", errors="strict", newline="") as 原始:
         for 行号, 原行 in enumerate(原始, 1):
@@ -86,37 +122,55 @@ def 构建(输入: Path, 输出目录: Path) -> dict:
             词面 = 记录.get("word")
             if ("redirect" not in 记录 and "redirects" not in 记录 and isinstance(词面, str)
                     and 词面 and not any(字 in 词面 for 字 in "\t\r\n")):
-                词头.add(词面)
-            for 繁, 简 in 简体字形(记录):
-                if len(繁) != len(简):
-                    跳过 += 1
-                    continue
-                对数 += 1
-                for 甲, 乙 in zip(繁, 简):
-                    对应[甲][乙] += 1
-    表 = []
-    for 甲, 计数 in 对应.items():
-        总 = sum(计数.values())
-        乙组 = {乙 for 乙, 次 in 计数.items() if 次 * 20 >= 总}
-        if len(乙组) == 1 and 甲 not in 乙组:
-            表.append((甲, next(iter(乙组))))
-    表.sort()
+                词头.add(转.转换(词面))
+
+    # 词典.tsv 逐行转换：zh 行转词面、释义、例句；en 行只转释义与例句汉译。转义符均为 ASCII，不受影响。
+    简体行组, 行数 = [], 0
+    with 词典.open(encoding="utf-8", newline="") as 文件:
+        包头 = 文件.readline().rstrip("\r\n").split("\t")
+        if len(包头) != 4 or 包头[:3] != ["HY-EGO-DICTIONARY", "1", "zh"]:
+            raise ValueError("词典.tsv 包头不符")
+        简体包头 = "\t".join(包头[:3] + [包头[3] + "-s-opencc-1.4.2"])
+        for 行 in 文件:
+            列 = 行.rstrip("\r\n").split("\t")
+            if len(列) != 13:
+                raise ValueError(f"词典.tsv 第{行数 + 2}行不是13列")
+            if 列[1] == "zh":
+                列[2] = 转.转换(列[2])
+                列[5] = 转.转换(列[5])
+            列[4] = 转.转换(列[4])
+            列[6] = 转.转换(列[6])
+            简体行组.append("\t".join(列))
+            行数 += 1
+
     输出目录.mkdir(parents=True, exist_ok=True)
-    繁简文件 = 原子写出(输出目录, "繁简字表.tsv", "HY-EGO-TRAD-SIMP\t1", (f"{甲}\t{乙}" for 甲, 乙 in 表))
+    简体文件 = 原子写出(输出目录, "词典.简体.tsv", 简体包头, 简体行组)
+    繁简文件 = 原子写出(输出目录, "繁简表.tsv", "HY-EGO-TRAD-SIMP\t2\topencc-1.4.2",
+                    [f"P\t{甲}\t{乙}" for 甲, 乙 in sorted(转.词组.items())]
+                    + [f"C\t{甲}\t{乙}" for 甲, 乙 in sorted(转.单字.items())])
+    词头文件 = 原子写出(输出目录, "词头表.tsv", "HY-EGO-HEADWORDS\t2\tzh-s", sorted(词头))
     词性文件 = 原子写出(输出目录, "词性表.tsv", "HY-EGO-POS\t1\t" + 计算摘要(输入), 词性组)
-    词头文件 = 原子写出(输出目录, "词头表.tsv", "HY-EGO-HEADWORDS\t1\tzh", sorted(词头))
-    return {"字形对数": 对数, "长度不同跳过": 跳过, "输出字数": len(表),
-            "一繁多简或保持不变未转": len(对应) - len(表), "词头数": len(词头), "词性记录数": len(词性组), "词性表": str(词性文件.resolve()),
-            "繁简字表": str(繁简文件.resolve()), "词头表": str(词头文件.resolve())}
+    旧表 = 输出目录 / "繁简字表.tsv"  # 第一片由词典字形对自建的字表，已由 OpenCC 繁简表取代
+    旧表.unlink(missing_ok=True)
+    return {"OpenCC": {"版本": "ver.1.4.2", "词组数": len(转.词组), "单字数": len(转.单字),
+                       "TSPhrases.txt": 计算摘要(opencc / "TSPhrases.txt"),
+                       "TSCharacters.txt": 计算摘要(opencc / "TSCharacters.txt"),
+                       "LICENSE": 计算摘要(opencc / "LICENSE")},
+            "简体词典": {"行数": 行数, "SHA256": 计算摘要(简体文件), "路径": str(简体文件.resolve())},
+            "词头数": len(词头), "词性记录数": len(词性组),
+            "繁简表": str(繁简文件.resolve()), "词头表": str(词头文件.resolve()), "词性表": str(词性文件.resolve())}
 
 
 def 主函数() -> int:
+    根 = Path(__file__).resolve().parents[2] / "基础数据" / "词典"
     参数器 = argparse.ArgumentParser(description=__doc__)
     参数器.add_argument("--input", required=True, type=Path, help="本地中文 Wiktionary raw JSONL 或 .gz")
-    参数器.add_argument("--output-dir", type=Path, default=Path(__file__).resolve().parents[2] / "基础数据" / "词典")
+    参数器.add_argument("--dictionary", type=Path, default=根 / "词典.tsv")
+    参数器.add_argument("--opencc", type=Path, default=根 / "原始" / "opencc-1.4.2")
+    参数器.add_argument("--output-dir", type=Path, default=根)
     参数 = 参数器.parse_args()
     try:
-        统计 = 构建(参数.input, 参数.output_dir)
+        统计 = 构建(参数.input, 参数.dictionary, 参数.opencc, 参数.output_dir)
     except (OSError, ValueError, TypeError, UnicodeError, MemoryError) as 错误:
         print(f"词典辅助表构建失败，未发布：{错误}", file=sys.stderr)
         return 1

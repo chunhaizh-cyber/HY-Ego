@@ -204,22 +204,46 @@ std::size_t 标量数(std::string_view 文本) noexcept {
 struct 释义辅助表 final {
     bool 就绪 = false;
     std::string 诊断;
-    std::unordered_map<std::uint32_t, std::uint32_t> 繁简;
+    std::unordered_map<std::uint32_t, std::uint32_t> 繁简;           // OpenCC 单字（多值已取第一个）
+    std::unordered_map<std::string, std::string> 繁简词组;           // OpenCC 词组，繁简等长
+    std::size_t 最长词组标量 = 0;
     std::unordered_set<std::string> 规范化词头;
     std::size_t 最长词头标量 = 0;
     std::string 词性来源摘要;
     std::unordered_map<std::string, std::string> 词性; // 记录行号 -> 原始词性
 };
 
+// 与 OpenCC t2s 一致：自左向右先取最长词组，否则逐字；词组繁简等长，输出与原文逐标量对齐。
 bool 按表规范化(const 释义辅助表& 表, std::string_view 文本, std::string& 输出) {
     输出.clear();
     输出.reserve(文本.size());
-    std::size_t 位置 = 0;
-    std::uint32_t 码点 = 0;
-    while (位置 < 文本.size()) {
+    std::vector<std::size_t> 边界{0};
+    for (std::size_t 位置 = 0; 位置 < 文本.size();) {
+        std::uint32_t 码点 = 0;
         if (!读取标量(文本, 位置, 码点)) return false;
+        边界.push_back(位置);
+    }
+    const auto 总数 = 边界.size() - 1;
+    std::string 片;
+    for (std::size_t 起 = 0; 起 < 总数;) {
+        bool 命中 = false;
+        for (std::size_t 长 = std::min(表.最长词组标量, 总数 - 起); 长 >= 2; --长) {
+            片.assign(文本.substr(边界[起], 边界[起 + 长] - 边界[起]));
+            const auto 词组 = 表.繁简词组.find(片);
+            if (词组 != 表.繁简词组.end()) {
+                输出 += 词组->second;
+                起 += 长;
+                命中 = true;
+                break;
+            }
+        }
+        if (命中) continue;
+        std::size_t 位置 = 边界[起];
+        std::uint32_t 码点 = 0;
+        (void)读取标量(文本, 位置, 码点);
         const auto 映射 = 表.繁简.find(码点);
         追加标量(输出, 映射 == 表.繁简.end() ? 码点 : 映射->second);
+        ++起;
     }
     return true;
 }
@@ -253,30 +277,44 @@ bool 读辅助表(const std::filesystem::path& 文件, std::string_view 包头�
 释义辅助表 载入释义辅助表(const std::filesystem::path& 目录) {
     释义辅助表 表;
     std::error_code 错误;
-    const auto 繁简文件 = 目录 / std::filesystem::path(u8"繁简字表.tsv");
+    const auto 繁简文件 = 目录 / std::filesystem::path(u8"繁简表.tsv");
     const auto 词头文件 = 目录 / std::filesystem::path(u8"词头表.tsv");
     const auto 词性文件 = 目录 / std::filesystem::path(u8"词性表.tsv");
     for (const auto* 文件 : {&繁简文件, &词头文件, &词性文件}) {
         if (!std::filesystem::is_regular_file(*文件, 错误) || 错误) {
-            表.诊断 = "释义辅助表未构建（词头表、繁简字表、词性表须由 工具/词典/构建词典辅助表.py 生成）";
+            表.诊断 = "释义辅助表未构建（词头表、繁简表、词性表须由 工具/词典/构建词典辅助表.py 生成）";
             return 表;
         }
     }
     std::string 余部;
     std::string 诊断;
-    if (!读辅助表(繁简文件, "HY-EGO-TRAD-SIMP\t1", 余部, 诊断, [&](std::string_view 行) {
-            const auto 制表 = 行.find('\t');
+    // 繁简表：P 行为词组（繁简等长、至少两字），C 行为单字；来自 OpenCC，版本在包头。
+    if (!读辅助表(繁简文件, "HY-EGO-TRAD-SIMP\t2\t", 余部, 诊断, [&](std::string_view 行) {
+            if (行.size() < 2 || 行[1] != '\t') return false;
+            const auto 种类 = 行[0];
+            const auto 余 = 行.substr(2);
+            const auto 制表 = 余.find('\t');
             if (制表 == std::string_view::npos) return false;
-            const auto 繁 = 唯一标量(行.substr(0, 制表));
-            const auto 简 = 唯一标量(行.substr(制表 + 1));
-            return 繁 && 简 && 表.繁简.emplace(*繁, *简).second;
-        }) || !余部.empty()) {
-        表.诊断 = "繁简字表：" + (诊断.empty() ? std::string("包头不符") : 诊断);
+            const auto 繁 = 余.substr(0, 制表);
+            const auto 简 = 余.substr(制表 + 1);
+            if (种类 == 'C') {
+                const auto 甲 = 唯一标量(繁);
+                const auto 乙 = 唯一标量(简);
+                return 甲 && 乙 && 表.繁简.emplace(*甲, *乙).second;
+            }
+            const auto 长 = 标量数(繁);
+            if (种类 != 'P' || 长 < 2 || 标量数(简) != 长 || !字段有效(简, true)) return false;
+            表.最长词组标量 = std::max(表.最长词组标量, 长);
+            return 表.繁简词组.emplace(std::string(繁), std::string(简)).second;
+        }) || 余部.empty()) {
+        表.诊断 = "繁简表：" + (诊断.empty() ? std::string("包头缺版本") : 诊断);
         表.繁简.clear();
+        表.繁简词组.clear();
         return 表;
     }
     std::string 规范;
-    if (!读辅助表(词头文件, "HY-EGO-HEADWORDS\t1\tzh", 余部, 诊断, [&](std::string_view 行) {
+    // 词头表在构建时已转简体；载入时仍按繁简表规范化一次，残留繁体与运行时规范化口径一致。
+    if (!读辅助表(词头文件, "HY-EGO-HEADWORDS\t2\tzh-s", 余部, 诊断, [&](std::string_view 行) {
             if (行.empty() || 行.find('\t') != std::string_view::npos || !按表规范化(表, 行, 规范))
                 return false;
             表.最长词头标量 = std::max(表.最长词头标量, 标量数(规范));
@@ -319,8 +357,13 @@ struct 离线词典数据源::实现 final {
         if (目录.empty()) {
             return 打开失败(词典操作状态::输入不合法, {}, 目录, 0, "词典目录为空");
         }
-        文件 = 目录 / std::filesystem::path(u8"词典.tsv");
+        // 优先使用整体转为简体的包（2026-11-13 用户裁决），缺失时退回原始繁体为主的包。
         std::error_code 错误;
+        文件 = 目录 / std::filesystem::path(u8"词典.简体.tsv");
+        if (!std::filesystem::is_regular_file(文件, 错误) || 错误) {
+            错误.clear();
+            文件 = 目录 / std::filesystem::path(u8"词典.tsv");
+        }
         const bool 目录存在 = std::filesystem::exists(目录, 错误);
         if (错误) return 打开失败(词典操作状态::读取失败, {}, 文件, 0, "无法读取目录属性");
         if (!目录存在) return 打开失败(词典操作状态::未配置, {}, 文件, 0, "词典目录不存在");

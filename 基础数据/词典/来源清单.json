@@ -67,10 +67,51 @@
     "核对日期": "2026-11-03",
     "警示": "提取工具的MIT等代码许可不等于词典数据许可；未进行逐页人工版权审计。"
   },
+  "繁转简": {
+    "依据": "2026-11-13 用户裁决：现有词典整体转成简体",
+    "项目": "OpenCC（Open Chinese Convert）",
+    "仓库": "https://github.com/BYVoid/OpenCC",
+    "版本": "ver.1.4.2",
+    "提交": "025f371dc76b598d77384fbdab90c937471844d8",
+    "许可": "Apache-2.0",
+    "下载日期": "2026-11-13",
+    "文件": {
+      "data/dictionary/TSPhrases.txt": {
+        "字节": 8786,
+        "SHA256": "362fa1b9a7d6edd04b462a32e12c9fef3adae822ab1dee9c83561cc37c06cb1f",
+        "条数": 477
+      },
+      "data/dictionary/TSCharacters.txt": {
+        "字节": 104516,
+        "SHA256": "737c21c66f55a419dd6956cb3089476cdefc5a36877452631617696df1e5d925",
+        "条数": 4148
+      },
+      "LICENSE": {
+        "字节": 9165,
+        "SHA256": "b534e465949558eec2597b04f5092b5e161236a68dfbfd04d547592ac3964308"
+      }
+    },
+    "本地目录": "原始/opencc-1.4.2/",
+    "构建工具": "工具/词典/构建词典辅助表.py",
+    "命令": "python 工具/词典/构建词典辅助表.py --input 基础数据/词典/原始/zhwiktionary-20261101.jsonl.gz --dictionary 基础数据/词典/词典.tsv --opencc 基础数据/词典/原始/opencc-1.4.2 --output-dir 基础数据/词典",
+    "输出": {
+      "词典.简体.tsv": {
+        "字节": 316104185,
+        "SHA256": "0c03b2c2feb9f12116ba2e71f77ab514ad02a6b5b15a32ac79875bfb059d4832",
+        "行数": 235611
+      },
+      "辅助表": [
+        "繁简表.tsv",
+        "词头表.tsv",
+        "词性表.tsv"
+      ]
+    },
+    "规则": "与 OpenCC t2s 一致：先最长词组后逐字，单字多值取第一个；词组繁简等长，原文与简体逐标量对齐。"
+  },
   "分发": {
-    "Git保留": ["README.md", ".gitignore", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md", "../../工具/词典/构建词典.py"],
-    "本地忽略": ["原始/", "词典.tsv", ".词典-*.tmp"],
-    "程序构建复制": ["词典.tsv", "README.md", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md"],
+    "Git保留": ["README.md", ".gitignore", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md", "../../工具/词典/构建词典.py", "../../工具/词典/构建词典辅助表.py"],
+    "本地忽略": ["原始/", "词典.tsv", ".词典-*.tmp", "词典.简体.tsv", "繁简表.tsv", "词头表.tsv", "词性表.tsv", ".辅助表-*.tmp"],
+    "程序构建复制": ["词典.tsv", "词典.简体.tsv", "繁简表.tsv", "词头表.tsv", "词性表.tsv", "README.md", "来源清单.json", "LICENSE.md", "ATTRIBUTION.md"],
     "不复制": ["原始/", "临时文件", "工具"]
   }
 }

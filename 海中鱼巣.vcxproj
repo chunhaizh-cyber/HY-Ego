@@ -398,8 +398,9 @@
   <Target Name="复制可选词典数据" AfterTargets="Build">
     <ItemGroup>
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词典.tsv')" />
+      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词典.简体.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词典.简体.tsv')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词头表.tsv')" />
-      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\繁简字表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\繁简字表.tsv')" />
+      <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\繁简表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\繁简表.tsv')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\词性表.tsv')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\README.md" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\README.md')" />
       <DictionaryPublishFile Include="$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json" Condition="Exists('$(MSBuildProjectDirectory)\基础数据\词典\来源清单.json')" />

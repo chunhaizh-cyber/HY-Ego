@@ -18,4 +18,6 @@
 
 海中鱼巣首包修改：保留 `lang_code=zh/en` 且含汉字的非空 `glosses`；同一 sense 的 gloss 按原顺序以换行连接，不跨 sense 合并；词面保持原大小写、繁简和 Unicode 表示；不改写或翻译释义；将指定读音字段与原 tags 编码为 JSON；移除其它原始字段，包括例句、音频与图片。生成记录键、源定位和 13 列 TSV 四转义。本包是上述来源的筛选与格式整理，不是独立撰写的词典。
 
+简体包修改（2026-11-13）：`词典.简体.tsv` 用 OpenCC（Open Chinese Convert，https://github.com/BYVoid/OpenCC ，ver.1.4.2，提交 `025f371dc76b598d77384fbdab90c937471844d8`，Apache License 2.0）的繁转简词组表 `TSPhrases.txt` 与字表 `TSCharacters.txt` 把词面、释义和例句转为简体，其余内容不变。OpenCC 许可原文随原始目录保留于 `原始/opencc-1.4.2/LICENSE`；转换结果仍是上述词典数据的修改版本，数据许可不因转换改变。
+
 原始数据及大型 TSV 本地保留且不进 Git。重新分发数据必须保留本署名、许可说明和来源清单，不能只复制代码许可证。
