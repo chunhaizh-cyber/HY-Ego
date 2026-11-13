@@ -311,7 +311,6 @@ struct 新_任务类::新任务本次场景核验批 final {
         std::optional<新交互连接过程> 过程;
     };
     std::vector<结果场景项> 结果场景组;
-    std::vector<新方法本次场景事实引用> 待记录引用组;
     bool 分支有效=true;
     // 结构依赖未就绪：需求目标核验返回依赖未就绪（读取接口未装配、先天槽值不存在等结构类）。
     // 运行期出现即装配缺陷；入口改走各自的“结构依赖未就绪”工程状态，由消费边界判定，不按等待处理。
@@ -12033,22 +12032,9 @@ void 新_任务类::记录执行本能结果(稳定编码 T,稳定编码 X,const
                 throw std::logic_error("published demand report complete X readback mismatch");
         }
         if(报告.已取得场景事实组.empty())return;
-        // 动作已发生，此处只记录事实：场景批锁外读取、锁内核同，并发改动时有限次重读。
-        std::unique_lock<可停止递归任务互斥> 锁;
-        auto 批=准备本次场景核验批(T,X,nullptr,true);
-        for(int 次=0;;++次){
-            if(次>0)批=准备本次场景核验批(T,X,nullptr,true);
-            批.待记录引用组=报告.已取得场景事实组;
-            读取本次场景核验批(批);
-            锁=std::unique_lock<可停止递归任务互斥>(新任务互斥);
-            if(核同本次场景核验批(批))break;
-            锁.unlock();
-            if(次>=4)throw std::logic_error("记录本次场景报告时定义/执行前提变化");
-        }
-        for(const auto& r:报告.已取得场景事实组){
-            const auto 项=std::find_if(批.结果场景组.begin(),批.结果场景组.end(),[&](const auto& x){return x.限定==r.限定;});
-            if(项==批.结果场景组.end()||项->构成状态!=新交互求值状态::已取得)throw std::logic_error("实际场景报告缺少正式构成能力");
-        }
+        // 记录本能已经取得的事实，只读取当前X及其冻结采用。
+        // 后来的需求、方法或场景变化不撤销本次报告，也不在此重新筹办。
+        std::lock_guard 锁(新任务互斥);
         const auto 执行=获取执行实例(X);
         if(!执行||执行->任务节点!=T||!执行->本能采用)throw std::logic_error("记录本次场景结果缺少正式X采用");
         if(!执行->普通动作节点||报告.动作动态节点!=执行->普通动作节点)
@@ -20329,7 +20315,6 @@ void 新_任务类::读取本次场景核验批(新任务本次场景核验批& 
     步骤 = L"读取本次结果场景事实";
     std::vector<新方法初始场景事实限定> 本次限定组;
     if(批.固定采用)本次限定组=批.固定采用->结果.场景事实限定组;
-    for(const auto& r:批.待记录引用组)if(std::find(本次限定组.begin(),本次限定组.end(),r.限定)==本次限定组.end())本次限定组.push_back(r.限定);
     if(!本次限定组.empty()&&!批.固定采用)throw std::logic_error("场景报告缺少固定采用");
     if(批.固定采用)for(const auto& 限定:本次限定组){
         新任务本次场景核验批::结果场景项 项;项.限定=限定;
