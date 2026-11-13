@@ -785,6 +785,16 @@ struct 新_任务管理线程类::实现 final {
         if (项.键组.empty()) return 依赖登记结果::无依赖键;
         const 依赖等待者 者{任务值, 种类};
         for (const auto& 键 : 项.键组) 依赖等待组[键].insert(者);
+#ifdef HY_EGO_DEBUG_LOG_TASK_SCHEDULING
+        // 临时诊断（依赖唤醒排查）：持manager锁写人读日志，只投影内存键组。
+        try {
+            std::wostringstream 文本;
+            文本 << L"任务=" << 任务值 << L" 种类=" << static_cast<int>(种类) << L" 键=";
+            for (const auto& 键 : 项.键组)
+                文本 << static_cast<int>(键.种类) << L"/" << 键.节点.值 << L"/" << 键.特征类型.值 << L",";
+            (void)调试日志<调试切片::TASK_SCHEDULING>(L"任务管理线程", L"登记依赖等待", 文本.str());
+        } catch (...) {}
+#endif
         依赖等待.insert_or_assign(者, std::move(项));
         return 依赖登记结果::已登记;
     }
@@ -850,6 +860,19 @@ struct 新_任务管理线程类::实现 final {
         for (const auto 需求 : 事实.需求组)
             if (const auto 组 = 依赖等待组.find({新任务依赖键种类::需求, 需求, {}}); 组 != 依赖等待组.end())
                 命中.insert(组->second.begin(), 组->second.end());
+#ifdef HY_EGO_DEBUG_LOG_TASK_SCHEDULING
+        // 临时诊断（依赖唤醒排查）：就绪事实与命中的等待者。
+        try {
+            std::wostringstream 文本;
+            文本 << L"代次=" << 就绪代次 << L" 方法知识=" << 事实.方法知识 << L" 节点=";
+            for (const auto 节点 : 事实.节点组) 文本 << 节点.值 << L",";
+            文本 << L" 需求=";
+            for (const auto 需求 : 事实.需求组) 文本 << 需求.值 << L",";
+            文本 << L" 命中=";
+            for (const auto& 者 : 命中) 文本 << 者.first << L"/" << static_cast<int>(者.second) << L",";
+            (void)调试日志<调试切片::TASK_SCHEDULING>(L"任务管理线程", L"接纳依赖就绪", 文本.str());
+        } catch (...) {}
+#endif
         for (const auto& 者 : 命中) 消费依赖等待已加锁(者);
         if (!命中.empty()) 变化.notify_all();
     }
