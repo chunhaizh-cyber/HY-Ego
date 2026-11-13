@@ -42,7 +42,8 @@ function 读取普通文件([string]$路径) {
 }
 
 function 原子替换([string]$临时, [string]$正式) {
-    if (读取普通文件 $正式) { [IO.File]::Replace($临时, $正式, $null) }
+    # Windows PowerShell会把普通$null绑定为空字符串；无备份路径须传CLR的null字符串。
+    if (读取普通文件 $正式) { [IO.File]::Replace($临时, $正式, [System.Management.Automation.Language.NullString]::Value) }
     else { [IO.File]::Move($临时, $正式) }
 }
 
