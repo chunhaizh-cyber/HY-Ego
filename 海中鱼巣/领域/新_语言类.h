@@ -15,6 +15,7 @@
 namespace 海中鱼巣 {
 
 class 新_词类;
+class 新_自然语言世界树类;
 class 概念_存在类;
 class 新_特征类;
 class 新_存在类;
@@ -743,8 +744,36 @@ struct 新问题答案信息 final {
 };
 
 // 语言节点登记语言身份；词面匹配只组合公开读取，不解释词义或绑定概念。
+// 7250 §3.4：独立的词典消息材料；归类为可选的X/N词条对，不是需求或概念挂接。
+struct 新词典义项来源 final {
+    std::string 包标识, 记录键, 词头语种, 词面, 义项键, 汉语释义;
+    std::string 例句原文, 例句汉译, 读音, 来源页URL, 来源版本, 许可标识, 署名, 原始来源定位;
+    friend bool operator==(const 新词典义项来源&, const 新词典义项来源&) = default;
+};
+struct 新词典归类词条对 final {
+    稳定编码 X, N;
+    friend bool operator==(const 新词典归类词条对&, const 新词典归类词条对&) = default;
+};
+struct 新词典语言材料 final {
+    稳定编码 来源场景, 说话者词典;
+    新词典义项来源 来源义项;
+    std::int64_t 释义行号 = 0;
+    std::string 释义行原文, 边界依据;
+    std::optional<std::int64_t> M起始标量, M结束标量;
+    std::optional<新词典归类词条对> 归类;
+    friend bool operator==(const 新词典语言材料&, const 新词典语言材料&) = default;
+};
+struct 新词典语言材料信息 final {
+    稳定编码 节点;
+    新词典语言材料 内容;
+};
+
 class 新_语言类 final {
 public:
+    // 诊断责任：向上送出；只保存语言材料/主张，原文及M范围与归类同一次发布。
+    稳定编码 保存词典语言材料(const 新词典语言材料&,
+        const 新_自然语言世界树类&, const 新_词类&, const 新_存在类&);
+    std::optional<新词典语言材料信息> 读取词典语言材料(稳定编码) const;
     新语言解释资源保护结果 读取解释资源保护(
         稳定编码 语言, const 新_词类&, const 概念_存在类&) const;
     新语言含义采用结果 建立或取得接收采用含义(

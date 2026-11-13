@@ -2,6 +2,8 @@
 #include "转换.语言场景共同.h"
 
 #include "../领域/新_自然语言世界树类.h"
+#include "../领域/新_存在类.h"
+#include <stdexcept>
 
 #include <algorithm>
 #include <array>
@@ -291,6 +293,82 @@ bool 候选相同(const 语言场景归类候选& 左,
         结果.所用知识节点.reset();
         return 结果;
     }
+}
+
+词典义项语言转换结果 转换词典义项到语言场景(
+    const 词典义项语言消息& 消息, const 离线词典数据源& 源,
+    新_自然语言世界树类& 世界, 新_语言类& 语言,
+    const 新_词类& 词, const 新_存在类& 存在) {
+    词典义项语言转换结果 out;out.来源义项=消息.义项;
+    const auto 解读组=解读词典义项释义(源,消息.义项);
+    const auto& s=消息.义项;
+    const auto 查询=源.精确查询({s.词头语种,s.词面});
+    const auto 来源字段=[](const 词典义项材料& m){return std::tie(m.记录键,m.词头语种,m.词面,m.义项键,m.汉语释义,
+        m.例句原文,m.例句汉译,m.读音,m.来源页URL,m.来源版本,m.许可标识,m.署名,m.原始来源定位);};
+    const bool 来源已核验=查询.状态==词典操作状态::已完成
+        && std::any_of(查询.义项组.begin(),查询.义项组.end(),[&](const auto& m){return 来源字段(m)==来源字段(s);});
+    const 新词典义项来源 来源{查询.包标识,
+        s.记录键,s.词头语种,s.词面,s.义项键,s.汉语释义,s.例句原文,s.例句汉译,s.读音,
+        s.来源页URL,s.来源版本,s.许可标识,s.署名,s.原始来源定位};
+    for(std::size_t i=0;i<解读组.size();++i) {
+        词典释义行转换结果 r;r.解读材料=解读组[i];
+        try {
+            if(!来源已核验 || !存在.是存在节点(消息.说话者词典) || !语言.是语言节点(消息.语言节点)
+                || !有效(消息.规范化合同节点) || 来源.包标识.empty()) {
+                if(查询.状态!=词典操作状态::已完成 && 查询.状态!=词典操作状态::未命中
+                    && 查询.状态!=词典操作状态::输入不合法)r.状态=输入状态::工程未完成;
+                r.诊断="词典说话者、语言未就绪或义项与当前来源不符："+查询.诊断;
+                out.逐行结果.push_back(std::move(r));continue;
+            }
+            if(!out.场景节点) {
+                const auto scene=世界.建立空场景();
+                if(scene.状态!=新自然语言场景操作状态::已建立 || !scene.场景节点) {
+                    r.状态=输入状态::场景建立未完成;
+                    out.逐行结果.push_back(std::move(r));continue;
+                }
+                out.场景节点=scene.场景节点;
+            }
+            新词典语言材料 v{*out.场景节点,消息.说话者词典,来源,static_cast<std::int64_t>(i),
+                r.解读材料.释义原文,"词典词头表",{},{},{}};
+            if(r.解读材料.修饰起始标量) {
+                v.M起始标量=static_cast<std::int64_t>(*r.解读材料.修饰起始标量);
+                v.M结束标量=static_cast<std::int64_t>(*r.解读材料.修饰结束标量);
+            }
+            if(r.解读材料.状态==词典释义解读状态::缺规则)r.状态=输入状态::缺规则;
+            else if(r.解读材料.状态==词典释义解读状态::辅助表未配置)r.状态=输入状态::工程未完成;
+            else if(r.解读材料.状态==词典释义解读状态::输入不合法)r.状态=输入状态::输入拒绝;
+            else {
+                r.状态=输入状态::已形成且读回;
+                const auto 查=[&](const std::string& text)->std::optional<稳定编码> {
+                    const auto q=词.按规范化词面查询(消息.语言节点,消息.规范化合同节点,text);
+                    if(q.状态==新词条查询状态::已找到 && q.信息)return q.信息->节点;
+                    if(q.状态==新词条查询状态::未找到) {
+                        r.未登记词面组.push_back(text);return {};
+                    }
+                    throw std::runtime_error("词条只读查询未完成，不能解释为未知词");
+                };
+                const auto xtext=源.繁简规范化(s.词面);
+                if(!xtext || !r.解读材料.中心词)throw std::logic_error("已解读材料缺X规范化或N");
+                const auto x=查(*xtext);
+                std::optional<稳定编码> n;
+                for(const auto& t:r.解读材料.词段组) {
+                    const auto id=查(t.规范化词面);
+                    if(t.起始标量==r.解读材料.中心词->起始标量
+                        && t.结束标量==r.解读材料.中心词->结束标量)n=id;
+                }
+                if(!r.未登记词面组.empty())r.状态=输入状态::未知词;
+                else if(!x || !n)throw std::logic_error("已解读材料中心词不在词段组");
+                else v.归类=新词典归类词条对{*x,*n};
+            }
+            r.材料节点=语言.保存词典语言材料(v,世界,词,存在);
+            r.读回=语言.读取词典语言材料(*r.材料节点);
+            if(!r.读回 || r.读回->内容!=v)r.状态=输入状态::写后读回未完成;
+        } catch(const std::exception& e) {
+            r.状态=输入状态::工程未完成;r.诊断=e.what();
+        }
+        out.逐行结果.push_back(std::move(r));
+    }
+    return out;
 }
 
 } // namespace 海中鱼巣

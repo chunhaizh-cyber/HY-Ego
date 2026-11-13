@@ -1,4 +1,5 @@
 #include "新_语言类.h"
+#include "新_自然语言世界树类.h"
 #include "新_词类.h"
 #include "概念_存在类.h"
 #include "语言含义图.数据.h"
@@ -5877,7 +5878,7 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
 namespace {
 // CONV-EXPR-STRUCT：仅语言owner使用的结构字段编解码。引用始终是L1引用；
 // 局部编号/顺序是直接值，未把稳定编码藏入文本或整数向量。
-enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,总数 };
+enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,词典材料登记,总数 };
 std::array<稳定编码,static_cast<std::size_t>(组织键::总数)> 组织句柄{};
 稳定编码 组键(组织键 k){return 组织句柄[static_cast<std::size_t>(k)];}
 void 组织要求(bool ok){if(!ok)throw std::logic_error("表达组织知识或出站含义记录结构不一致");}
@@ -5928,6 +5929,11 @@ auto 组织记录字段(新语言含义网& v){(void)v;return std::tie(v.身份,
 auto 组织记录字段(新组织取材步骤& v){(void)v;return std::tie(v.编号,v.算子,v.输出角色);}
 auto 组织记录字段(新表达需求类型& v){(void)v;return std::tie(v.用途,v.对象种类);}
 auto 组织记录字段(新表达组织知识定义& v){(void)v;return std::tie(v.适用类型,v.适用条件组,v.取材步骤组,v.含义网模板,v.缺材处理);}
+auto 组织记录字段(新词典义项来源& v){return std::tie(v.包标识,v.记录键,v.词头语种,v.词面,v.义项键,v.汉语释义,
+    v.例句原文,v.例句汉译,v.读音,v.来源页URL,v.来源版本,v.许可标识,v.署名,v.原始来源定位);}
+auto 组织记录字段(新词典归类词条对& v){return std::tie(v.X,v.N);}
+auto 组织记录字段(新词典语言材料& v){return std::tie(v.来源场景,v.说话者词典,v.来源义项,v.释义行号,
+    v.释义行原文,v.边界依据,v.M起始标量,v.M结束标量,v.归类);}
 auto 组织记录字段(新接收场景信息& v){return std::tie(v.种类,v.来源消息,v.来源场景,v.交互场景,v.说话者,v.主体存在,v.主体概念,v.特征类型,
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.招呼操作,v.目标存在,v.原文起点,v.原文终点,v.时刻);}
 auto 组织记录字段(新自我写入语言信息& v){return std::tie(v.写入来源,v.来源场景,v.自我,v.主体存在,v.特征类型,
@@ -6425,6 +6431,46 @@ std::optional<新出站具体表达信息> 新_语言类::建立或取得出站�
     组织要求(p.状态==基础节点组追加状态::已完成&&p.新节点组.size()==w.请求.新节点组.size());
     组织读取现场 back;const auto out=读出站(back,scene);
     组织要求(out&&out->来源==source&&out->所用组织知识==knowledge&&out->含义网==meaning&&out->候选话语原文==text);return out;
+}
+
+// 词典材料采用语言owner既有编解码；106仅是本实现的物理记录标签。
+稳定编码 新_语言类::保存词典语言材料(const 新词典语言材料& v,
+    const 新_自然语言世界树类& 世界, const 新_词类& 词, const 新_存在类& 存在) {
+    std::int64_t 标量数=0;
+    组织要求(世界.是自然语言场景节点(v.来源场景) && 存在.是存在节点(v.说话者词典)
+        && (!v.归类 || (词.是词条节点(v.归类->X) && 词.是词条节点(v.归类->N)))
+        && (!v.M结束标量 || (知识来源UTF8有效(v.释义行原文,标量数) && *v.M结束标量<=标量数)));
+    初始化表达组织知识结构();
+    组织要求(有效(v.来源场景) && 有效(v.说话者词典)
+        && !v.来源义项.包标识.empty() && !v.来源义项.记录键.empty()
+        && !v.来源义项.义项键.empty() && v.释义行号 >= 0
+        && v.边界依据 == "词典词头表"
+        && v.M起始标量.has_value() == v.M结束标量.has_value()
+        && (!v.M起始标量 || (*v.M起始标量 >= 0 && *v.M起始标量 < *v.M结束标量))
+        && (!v.归类 || (有效(v.归类->X) && 有效(v.归类->N))));
+    std::lock_guard lock(新语言互斥);
+    组织读取现场 r;组织写入现场 w;
+    const auto root=w.节点(106,0), def=w.写(v);
+    w.引用(root,组织键::场景,v.来源场景);w.子(root,组织键::定义,def);
+    w.请求.追加字段组.push_back({v.来源场景,组键(组织键::词典材料登记),基础组内节点引用{root}});
+    w.引用组.insert(v.来源场景);w.保护(r);
+    const auto p=全局基础数据集.原子追加节点组(w.请求);
+    组织要求(p.状态==基础节点组追加状态::已完成 && p.新节点组.size()==w.请求.新节点组.size());
+    组织读取现场 back;std::set<稳定编码> path;
+    const auto copy=组织读值<新词典语言材料>(back,back.引用(p.新节点组[root],组织键::定义),path);
+    组织要求(copy==v);return p.新节点组[root];
+}
+std::optional<新词典语言材料信息> 新_语言类::读取词典语言材料(稳定编码 id) const {
+    std::lock_guard lock(新语言互斥);
+    if(!有效(id)||!全局基础数据集.查询节点(id))return std::nullopt;
+    const auto tag=全局基础数据集.查询字段(id,组键(组织键::类型));
+    if(tag.size()!=1 || tag.front().内容!=基础字段内容{基础值{std::int64_t{106}}})return std::nullopt;
+    组织读取现场 r;std::set<稳定编码> path;
+    auto v=组织读值<新词典语言材料>(r,r.引用(id,组织键::定义),path);
+    组织要求(r.引用(id,组织键::场景)==v.来源场景);
+    const auto members=r.字段(v.来源场景,组织键::词典材料登记);
+    组织要求(std::count(members.begin(),members.end(),基础字段内容{id})==1);
+    return 新词典语言材料信息{id,std::move(v)};
 }
 
 } // namespace 海中鱼巣

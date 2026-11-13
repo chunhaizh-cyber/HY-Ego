@@ -1,4 +1,5 @@
 #pragma once
+#include "解释.词典释义.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -84,5 +85,28 @@ struct 语言场景归类输出结果 final {
     const 语言场景归类输出请求&, const 新_自然语言世界树类&,
     const 新_语言类&, const 新_词类&, const 概念_名称关系类&,
     const 概念_存在类&, const 概念_特征类&);
+
+// 7250词典消息路径：X来自义项，不重新拼成“X是N”服务对象原话。
+struct 词典义项语言消息 final {
+    稳定编码 说话者词典, 语言节点, 规范化合同节点;
+    词典义项材料 义项;
+};
+struct 词典释义行转换结果 final {
+    语言场景归类输入状态 状态=语言场景归类输入状态::输入拒绝;
+    词典释义解读结果 解读材料;
+    std::vector<std::string> 未登记词面组;
+    std::optional<稳定编码> 材料节点;
+    std::optional<新词典语言材料信息> 读回;
+    std::string 诊断;
+};
+struct 词典义项语言转换结果 final {
+    std::optional<稳定编码> 场景节点;
+    词典义项材料 来源义项;
+    std::vector<词典释义行转换结果> 逐行结果;
+};
+// 诊断责任：向上送出。只写语言场景/独立信息；词服务与存在服务均只读。
+词典义项语言转换结果 转换词典义项到语言场景(
+    const 词典义项语言消息&, const 离线词典数据源&,
+    新_自然语言世界树类&, 新_语言类&, const 新_词类&, const 新_存在类&);
 
 } // namespace 海中鱼巣

@@ -1,0 +1,11 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- 只在验证编译命令显式导入时替换入口，使用实际根工程。 -->
+  <ItemGroup>
+    <ClCompile Remove="海中鱼巣\入口.cpp" />
+    <ClCompile Include="$(MSBuildProjectDirectory)\工具\词典\验证.语言场景.cpp" />
+  </ItemGroup>
+  <ItemDefinitionGroup>
+    <ClCompile><MinimalRebuildFromTracking>false</MinimalRebuildFromTracking></ClCompile>
+    <Link><MinimalRebuildFromTracking>false</MinimalRebuildFromTracking></Link>
+  </ItemDefinitionGroup>
+</Project>
