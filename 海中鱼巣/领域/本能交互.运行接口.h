@@ -5,6 +5,7 @@
 #include <vector>
 #include "../核心/基础数据集.h"
 #include "消息交互.数据.h"
+#include "本能词典.数据.h"
 #include "新_方法公共类型.h"
 #include "新_存在类.h"
 #include "新_二次特征类.h"
@@ -41,6 +42,7 @@ struct 新隔离调用证据 final {
     bool 已请求取消=false;
     std::vector<稳定编码> 阶段动作组;
     std::vector<新隔离变化证据> 变化组;
+    std::optional<新本能词典读取回执> 词典读取;
 };
 struct 新隔离连接完成材料 final {
     新交互绑定 绑定;

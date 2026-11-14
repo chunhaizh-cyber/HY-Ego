@@ -98,6 +98,26 @@ struct 新模拟队列提交请求 final {
     std::string UTF8正文;
 };
 
+class 新模拟词典采用准备 final {
+public:
+    ~新模拟词典采用准备();
+    新模拟词典采用准备(新模拟词典采用准备&&) noexcept;
+    新模拟词典采用准备& operator=(新模拟词典采用准备&&) noexcept;
+    新模拟词典采用准备(const 新模拟词典采用准备&)=delete;
+    新模拟词典采用准备& operator=(const 新模拟词典采用准备&)=delete;
+private:
+    struct 实现;
+    explicit 新模拟词典采用准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_模拟世界类;
+};
+struct 新模拟词典采用准备结果 final {
+    新词典材料操作状态 状态=新词典材料操作状态::输入拒绝;
+    std::unique_ptr<新模拟词典采用准备> 准备;
+    std::optional<新本能词典读取回执> 已有回执;
+};
+class 新词典结果参与准备;
+struct 新词典结果参与准备结果;
 class 动作方法定义只读提供者;
 class 概念_动态类;
 class 新_模拟世界类 final : public 新方法模拟运行接口,
@@ -114,6 +134,17 @@ public:
     void 配置词典材料(词典材料类&);
     新词典材料场景读取结果 读取材料所属场景(稳定编码) const noexcept override;
     新词典材料读取结果 读取本地词典材料(稳定编码) const noexcept;
+    新词典执行回执读取结果 读取调用词典回执(稳定编码 N) const noexcept;
+    新模拟词典采用准备结果 准备调用词典采用(稳定编码 N) noexcept;
+    新词典材料提交结果 提交调用词典采用(新模拟词典采用准备&) noexcept;
+    新词典执行回执读取结果 完成调用词典采用(新模拟词典采用准备&) noexcept;
+    void 取消调用词典采用准备(新模拟词典采用准备&) noexcept;
+    新词典结果参与准备结果 准备调用词典材料参与(
+        稳定编码 N,const 新词典执行结果来源&) noexcept;
+    新词典结果参与准备结果 准备调用词典采用参与(
+        稳定编码 N,稳定编码 Q,std::optional<稳定编码> 前状态) noexcept;
+    新词典材料操作状态 记录调用词典未命中(
+        稳定编码 N,const 新词典执行结果来源&) noexcept;
     void 配置需求执行读取(const 新_存在类&,const 概念_存在类&,
         const 概念_特征类&,const 概念_二次特征类&);
     void 设置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
@@ -229,6 +260,8 @@ public:
     std::optional<新特征值信息> 读取模拟特征值材料(稳定编码) const noexcept override;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
+    新词典结果参与准备结果 准备调用词典结果内部(稳定编码,const 新词典执行结果来源*,
+        std::optional<稳定编码>,std::optional<稳定编码>) noexcept;
     bool 复制词典材料初值(const std::vector<新模拟有序参数输入>&,
         const std::vector<新模拟词典材料复制输入>&,const std::vector<std::size_t>&,
         const std::vector<稳定编码>&,稳定编码);

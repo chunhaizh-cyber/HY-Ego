@@ -43,12 +43,15 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     完整实例区间引用,完整聚合引用,标准值引用,历史项引用,历史命中引用,命中次数值,
     需求发布成员,发布需求引用,首次发布动作引用,首次发布记录引用,
     引用内容需求引用,引用内容路径引用,完善阶段值,询问入列成员,
-    词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,字段数 };
+    词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
+    词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
+    词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
+    词典变化阶段,词典无需原因,词典变化动态,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
-    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类 };
+    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 void 合并模拟联合预期(基础节点组追加请求& q) {
@@ -406,6 +409,23 @@ struct 新_模拟世界类::实现 final {
     struct 任务投影 final { 稳定编码 来源; 新任务虚拟存在特征组 本地; };
     std::map<稳定编码,任务投影> 通用任务;
     std::vector<稳定编码> 通用节点,通用字段,通用外部边;
+    // 首次Q由材料owner提交：稳定槽在发表前分配，回调只保存不可变回执。
+    struct 词典回执追踪 final {
+        std::optional<基础片段发布回执> receipt;
+        std::size_t nodeStart=0,fieldCount=0,edgeCount=0;
+    };
+    std::vector<std::shared_ptr<词典回执追踪>> 词典回执组;
+    void 合并词典回执退出(基础节点组追加请求& q) const {
+        for(const auto& slot:词典回执组)if(slot->receipt) {
+            const auto& r=*slot->receipt;
+            q.删除节点组.insert(q.删除节点组.end(),r.新节点组().begin()+slot->nodeStart,r.新节点组().end());
+            q.删除字段关系组.insert(q.删除字段关系组.end(),r.追加字段关系组().end()-slot->fieldCount,r.追加字段关系组().end());
+            q.删除外部关系组.insert(q.删除外部关系组.end(),r.追加外部关系组().end()-slot->edgeCount,r.追加外部关系组().end());
+            for(std::size_t i=slot->nodeStart;i<r.新节点初始字段关系组().size();++i) {
+                const auto& fields=r.新节点初始字段关系组()[i];q.删除字段关系组.insert(q.删除字段关系组.end(),fields.begin(),fields.end());
+            }
+        }
+    }
     std::vector<新模拟输入事件> 通用事件;
     struct 消息事件 final {
         新方法模拟消息输入定义 声明;
@@ -461,6 +481,190 @@ struct 新_模拟世界类::实现 final {
 
     explicit 实现(新_方法类& m) : 方法(m) {}
 };
+namespace {
+void 本地词典要求(bool ok,const char* message) {if(!ok)throw std::logic_error(message);}
+const 基础字段关系* 本地词典字段(const 基础节点结构& n,字段 key) {
+    const 基础字段关系* out=nullptr;
+    for(const auto& f:n.字段组)if(f.字段节点==字段组[key]) {
+        本地词典要求(!out,"duplicate local dictionary receipt field");out=&f;
+    }
+    return out;
+}
+std::optional<稳定编码> 本地词典引用(const 基础节点结构& n,字段 key) {
+    const auto* f=本地词典字段(n,key);if(!f)return {};
+    const auto* v=std::get_if<稳定编码>(&f->内容);
+    本地词典要求(v&&有效(*v),"invalid local dictionary receipt reference");return *v;
+}
+std::optional<std::int64_t> 本地词典整数(const 基础节点结构& n,字段 key) {
+    const auto* f=本地词典字段(n,key);if(!f)return {};
+    const auto* raw=std::get_if<基础值>(&f->内容);
+    const auto* v=raw?std::get_if<std::int64_t>(&raw->材料):nullptr;
+    本地词典要求(v!=nullptr,"invalid local dictionary receipt number");return *v;
+}
+std::uint64_t 本地词典标识(const 基础节点结构& n,字段 key) {
+    const auto* f=本地词典字段(n,key);const auto* raw=f?std::get_if<基础值>(&f->内容):nullptr;
+    const auto* v=raw?std::get_if<std::vector<std::uint64_t>>(&raw->材料):nullptr;
+    本地词典要求(v&&v->size()==1&&v->front()!=0,"invalid local dictionary external identity");return v->front();
+}
+std::optional<基础联合节点快照> 本地词典快照(稳定编码 N) {
+    auto r=全局基础数据集.查询节点组完整结构({N});
+    if(r.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    本地词典要求(r.状态==基础结构操作状态::已完成&&r.节点组.size()==1,"local dictionary snapshot unavailable");
+    return std::move(r.节点组.front().快照);
+}
+新本能词典读取回执 解码本地词典回执(const 基础节点结构& n, 稳定编码 A) {
+    本地词典要求(本地词典整数(n,类型)==词典回执种类 && 本地词典整数(n,词典格式)==1,
+        "dictionary receipt schema invalid");
+    新本能词典读取回执 r;
+    r.动作=A;
+    r.词条=本地词典引用(n,词典词条).value_or(稳定编码{});
+    r.材料特征=本地词典引用(n,词典材料特征).value_or(稳定编码{});
+    r.查询来源={本地词典标识(n,词典外设场景),本地词典标识(n,词典查询记录)};
+    const auto outcome=本地词典整数(n,词典查阅结局), stage=本地词典整数(n,词典采用阶段);
+    const auto fresh=本地词典整数(n,词典新状态标记);
+    本地词典要求(有效(A)&&有效(r.词条)&&有效(r.材料特征)&&outcome&&(*outcome==1||*outcome==2)
+        &&stage&&*stage>=1&&*stage<=3&&fresh&&(*fresh==0||*fresh==1),"dictionary receipt required material missing");
+    r.查阅结局=static_cast<新词典查阅结局>(*outcome);
+    r.采用阶段=static_cast<新词典材料采用阶段>(*stage);
+    r.本次形成新状态=*fresh==1;
+    r.材料Q=本地词典引用(n,词典材料);
+    r.前状态=本地词典引用(n,词典前状态);
+    r.后状态=本地词典引用(n,词典后状态);
+    r.变化动态=本地词典引用(n,词典变化动态);
+    if(const auto v=本地词典整数(n,词典变化阶段)) {
+        本地词典要求(*v>=1&&*v<=3,"dictionary receipt change stage invalid");
+        r.变化阶段=static_cast<新词典变化处理阶段>(*v);
+    }
+    if(const auto v=本地词典整数(n,词典无需原因)) {
+        本地词典要求(*v>=0&&*v<=2,"dictionary receipt no-change reason invalid");
+        r.无需形成原因=static_cast<新词条动态记录原因>(*v);
+    }
+    if(r.查阅结局==新词典查阅结局::正式未命中) {
+        本地词典要求(r.采用阶段==新词典材料采用阶段::未取得&&!r.材料Q&&!r.前状态&&!r.后状态
+            &&!r.本次形成新状态&&!r.变化阶段&&!r.无需形成原因&&!r.变化动态,
+            "dictionary miss contains invented material");
+    } else {
+        本地词典要求(r.材料Q.has_value()&&r.采用阶段!=新词典材料采用阶段::未取得,"dictionary hit missing material");
+        if(r.采用阶段==新词典材料采用阶段::已取得未采用)
+            本地词典要求(!r.前状态&&!r.后状态&&!r.本次形成新状态&&!r.变化阶段&&!r.无需形成原因&&!r.变化动态,
+                "unadopted dictionary material has change evidence");
+        else {
+            本地词典要求(r.变化阶段.has_value()&&r.本次形成新状态==r.后状态.has_value(),"dictionary adoption stage incomplete");
+            if(*r.变化阶段==新词典变化处理阶段::已形成)
+                本地词典要求(r.变化动态.has_value()&&!r.无需形成原因&&r.前状态&&r.后状态,"dictionary change evidence missing");
+            else if(*r.变化阶段==新词典变化处理阶段::无需形成)
+                本地词典要求(!r.变化动态&&r.无需形成原因.has_value(),"dictionary no-change reason missing");
+            else 本地词典要求(!r.变化动态&&!r.无需形成原因&&r.后状态.has_value(),"dictionary pending change incomplete");
+        }
+    }
+    return r;
+}
+struct 本地词典调用读取 final {
+    基础联合节点快照 N;
+    std::optional<基础联合节点快照> 记录;
+    std::optional<新本能词典读取回执> 回执;
+    稳定编码 动作;
+};
+std::optional<本地词典调用读取> 读取本地词典调用(稳定编码 N) {
+    for(;;) {
+        auto n=本地词典快照(N);if(!n)return {};
+        本地词典要求(本地词典整数(n->结构,类型)==调用种类,"dictionary receipt owner is not local call");
+        本地词典调用读取 result{std::move(*n)};
+        result.动作=本地词典引用(result.N.结构,调用主动作引用).value_or(稳定编码{});
+        const auto record=本地词典引用(result.N.结构,词典回执引用);
+        if(!record)return result;
+        result.记录=本地词典快照(*record);
+        if(!result.记录) {
+            const auto current=本地词典快照(N);
+            if(!current||本地词典引用(current->结构,词典回执引用)!=record)continue;
+            throw std::logic_error("local call refers to missing dictionary receipt");
+        }
+        result.回执=解码本地词典回执(result.记录->结构,result.动作);return result;
+    }
+}
+基础组内新节点 构造本地词典首次记录(const 新词典执行结果来源& source,bool hit) {
+    return {{{字段组[类型],基础值{static_cast<std::int64_t>(词典回执种类)}},
+        {字段组[根],模拟世界树根节点},{字段组[词典格式],基础值{std::int64_t{1}}},
+        {字段组[词典词条],source.词条},{字段组[词典材料特征],source.材料特征},
+        {字段组[词典外设场景],基础值{std::vector<std::uint64_t>{source.查询来源.场景}}},
+        {字段组[词典查询记录],基础值{std::vector<std::uint64_t>{source.查询来源.查询记录}}},
+        {字段组[词典查阅结局],基础值{static_cast<std::int64_t>(hit?新词典查阅结局::命中:新词典查阅结局::正式未命中)}},
+        {字段组[词典采用阶段],基础值{static_cast<std::int64_t>(hit?新词典材料采用阶段::已取得未采用:新词典材料采用阶段::未取得)}},
+        {字段组[词典新状态标记],基础值{std::int64_t{0}}}}};
+}
+// 构造面只消费已捕获材料；不读world、不取业务锁。回执只追踪本产品后缀。
+class 本地词典结果准备 final : public 新词典结果参与准备 {
+    const std::thread::id thread_=std::this_thread::get_id();
+    本地词典调用读取 read_;
+    新词典执行结果来源 source_;
+    std::optional<稳定编码> previous_;
+    基础节点组追加请求 base_;
+    稳定编码 scene_,organization_;
+    bool adoption_=false, published_=false, done_=false, cancelled_=false;
+    mutable bool built_=false;
+    mutable std::size_t start_=0,fields_=0,edges_=0;
+    std::optional<基础片段发布回执> receipt_;
+    std::function<void(const 基础片段发布回执&,std::size_t,std::size_t,std::size_t)> track_;
+    void Begin() const {
+        本地词典要求(thread_==std::this_thread::get_id()&&!built_&&!published_&&!cancelled_,"local dictionary preparation reused");built_=true;
+    }
+    基础节点组追加请求 Adopt(bool fresh,std::optional<基础组内字段内容> state) const {
+        本地词典要求(adoption_&&read_.记录&&read_.回执&&read_.回执->材料Q,"local dictionary adoption missing");
+        auto q=base_;const auto R=read_.记录->结构.节点.编码;
+        const auto replace=[&](字段 key,std::int64_t v) {
+            const auto* f=本地词典字段(read_.记录->结构,key);
+            本地词典要求(f!=nullptr,"local receipt adoption field missing");q.替换字段组.push_back({f->编码,基础值{v}});
+        };
+        replace(词典采用阶段,static_cast<std::int64_t>(新词典材料采用阶段::已采用));replace(词典新状态标记,fresh?1:0);
+        if(fresh&&previous_)q.追加字段组.push_back({R,字段组[词典前状态],*previous_});
+        if(state)q.追加字段组.push_back({R,字段组[词典后状态],*state});
+        const bool pending=fresh&&previous_.has_value();
+        q.追加字段组.push_back({R,字段组[词典变化阶段],基础值{static_cast<std::int64_t>(pending?新词典变化处理阶段::待处理:新词典变化处理阶段::无需形成)}});
+        if(!pending)q.追加字段组.push_back({R,字段组[词典无需原因],基础值{static_cast<std::int64_t>(fresh?新词条动态记录原因::无前态:新词条动态记录原因::无值变化)}});
+        fields_=q.追加字段组.size();edges_=q.追加外部关系组.size();return q;
+    }
+public:
+    本地词典结果准备(本地词典调用读取 read,新词典执行结果来源 source,std::optional<稳定编码> previous,
+        稳定编码 scene,稳定编码 organization,bool adoption,基础节点组追加请求 base,decltype(track_) track)
+        :read_(std::move(read)),source_(source),previous_(previous),base_(std::move(base)),scene_(scene),organization_(organization),adoption_(adoption),track_(std::move(track)) {}
+    ~本地词典结果准备() override {
+        if(published_&&!done_)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"隔离词典结果准备析构",L"已发表回执尚未完成记账。");
+    }
+    新材料结果追加构造 构造同组材料引用(const 新同组材料端点& endpoint) const override {
+        Begin();本地词典要求(!adoption_&&endpoint.内部组织==organization_,"local acquisition organization mismatch");
+        auto q=base_;auto record=构造本地词典首次记录(source_,true);
+        std::visit([&](auto value){record.字段组.push_back({字段组[词典材料],value});},endpoint.材料定位);
+        start_=endpoint.后续新节点起点;q.新节点组.push_back(std::move(record));
+        q.追加字段组.push_back({read_.N.结构.节点.编码,字段组[词典回执引用],基础组内节点引用{start_}});
+        q.追加外部关系组.push_back({scene_,基础组内节点引用{start_},基础外部关系类型::父子});
+        fields_=q.追加字段组.size();edges_=q.追加外部关系组.size();return {std::move(q)};
+    }
+    新状态结果追加构造 构造同组状态引用(const 新同组状态端点& endpoint) const override {
+        Begin();本地词典要求(read_.回执&&endpoint.被描述节点==source_.词条&&endpoint.来源特征节点==source_.材料特征
+            &&endpoint.固定准确值==std::optional<新特征准确值>{新特征准确值{*read_.回执->材料Q}},"local adoption state endpoint mismatch");
+        start_=endpoint.后续新节点起点;
+        return {Adopt(true,std::visit([](auto v)->基础组内字段内容{return v;},endpoint.状态定位)),0};
+    }
+    新材料结果追加构造 构造无新状态采用() const override {Begin();return {Adopt(false,{})};}
+    void 登记共同发表回执(const 基础片段发布回执& r) noexcept override {
+        if(thread_!=std::this_thread::get_id()||!built_||published_||cancelled_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"登记隔离词典结果回执",L"发表阶段不合法。");
+        receipt_=r;published_=true;
+        // 采用产品没有新节点，取得产品的节点位于Q组之后。
+        track_(r,adoption_?r.新节点组().size():start_,fields_,edges_);
+    }
+    void 完成共同发表() noexcept override {
+        if(thread_!=std::this_thread::get_id()||!published_||!receipt_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"完成隔离词典结果回执",L"没有本次成功回执。");
+        done_=true;
+    }
+    void 取消未发表准备() noexcept override {
+        if(thread_!=std::this_thread::get_id()||published_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取消隔离词典结果准备",L"不能取消已发表事实。");
+        cancelled_=true;
+    }
+};
+} // namespace
 新_模拟世界类::新_模拟世界类(新_方法类& m) noexcept {
     try { 实现_ = std::make_unique<实现>(m); } catch (...) {}
 }
@@ -516,6 +720,302 @@ void 新_模拟世界类::配置词典材料(词典材料类& owner) {
     }catch(const std::bad_alloc&){return {S::资源失败,{}};}
     catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取隔离词典材料",L"本地材料结构损坏。",e.what());}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取隔离词典材料",L"未知工程异常。");}
+}
+新词典执行回执读取结果 新_模拟世界类::读取调用词典回执(稳定编码 N) const noexcept {
+    using S=新词典材料操作状态;
+    try {
+        if(!实现_)return {S::未装配,{}};
+        auto& s=*实现_;std::lock_guard lock(s.互斥);
+        if(!s.通用||std::find(s.通用节点.begin(),s.通用节点.end(),N)==s.通用节点.end())return {S::未找到,{}};
+        const auto r=读取本地词典调用(N);
+        if(r&&r->回执)return {S::已完成,r->回执};
+        return {S::未找到,{}};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取隔离调用词典回执",L"本地结果结构读取失败。");}
+}
+新词典结果参与准备结果 新_模拟世界类::准备调用词典材料参与(
+    稳定编码 N,const 新词典执行结果来源& source) noexcept {
+    return 准备调用词典结果内部(N,&source,{},{});
+}
+新词典结果参与准备结果 新_模拟世界类::准备调用词典采用参与(
+    稳定编码 N,稳定编码 Q,std::optional<稳定编码> previous) noexcept {
+    return 准备调用词典结果内部(N,nullptr,Q,previous);
+}
+新词典结果参与准备结果 新_模拟世界类::准备调用词典结果内部(
+    稳定编码 N,const 新词典执行结果来源* source,std::optional<稳定编码> Q,std::optional<稳定编码> previous) noexcept {
+    using S=新词典材料操作状态;
+    try {
+        if(!实现_)return {S::未装配,{},{}};
+        if(Q) {
+            const auto local=读取本地词典材料(*Q);
+            if(local.状态==S::资源失败)return {S::资源失败,{},{}};
+            if(!local.信息)return {S::输入拒绝,{},{}};
+        }
+        auto& s=*实现_;std::lock_guard lock(s.互斥);
+        if(!s.通用||s.当前调用!=std::optional{N})return {S::未找到,{},{}};
+        auto read=读取本地词典调用(N);if(!read)return {S::未找到,{},{}};
+        if(read->回执&&(!Q||read->回执->采用阶段==新词典材料采用阶段::已采用
+            ||read->回执->查阅结局==新词典查阅结局::正式未命中))return {S::已复用,{},read->回执};
+        if(!s.样例就绪||!s.记录写回||s.请求取消||!有效(read->动作)
+            ||本地词典整数(read->N.结构,调用窗口状态值)!=0)return {S::条件不具备,{},{}};
+        新词典执行结果来源 actual;
+        if(Q) {
+            if(!read->回执)return {S::条件不具备,{},{}};
+            if(read->回执->材料Q!=Q)return {S::输入拒绝,{},{}};
+            actual={read->回执->词条,read->回执->材料特征,read->回执->查询来源};
+        } else {
+            if(!source||!有效(source->词条)||!有效(source->材料特征)
+                ||!source->查询来源.场景||!source->查询来源.查询记录)return {S::输入拒绝,{},{}};
+            actual=*source;
+        }
+        if(!s.词典材料组织)return {S::条件不具备,{},{}};
+        if(s.通用输入节点.size()<6||s.通用输入节点[0]!=actual.词条||s.通用输入节点[1]!=actual.材料特征
+            ||!s.是本地参数(actual.词条,新方法参数信息类型::词条)
+            ||读引用(actual.材料特征,所属)!=std::optional{actual.词条})return {S::输入拒绝,{},{}};
+        if(previous) {
+            const auto state=读取本地状态(*previous);
+            if(!state||state->被描述存在节点!=actual.词条||state->来源实例特征节点!=actual.材料特征)
+                return {S::输入拒绝,{},{}};
+        }
+        基础节点组追加请求 base;
+        base.预期联合节点组.push_back(read->N);
+        if(read->记录)base.预期联合节点组.push_back(*read->记录);
+        // L1只保护本轮实际记录及必需身份；不证明所有上层内容保持不变。
+        const std::vector<稳定编码> ids{actual.词条,actual.材料特征,s.通用场景};
+        auto identity=全局基础数据集.查询节点组完整结构(ids);
+        if(identity.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        本地词典要求(identity.状态==基础结构操作状态::已完成,"local receipt identity read failed");
+        for(const auto& item:identity.节点组) {
+            if(!item.快照)return {S::条件不具备,{},{}};
+            base.只读预期.节点组.push_back(item.快照->结构.节点);
+        }
+        std::erase_if(s.词典回执组,[](const auto& slot){return !slot->receipt&&slot.use_count()==1;});
+        const auto slot=std::make_shared<实现::词典回执追踪>();
+        s.词典回执组.push_back(slot);
+        const auto track=[&s,slot](const 基础片段发布回执& receipt,std::size_t start,std::size_t fields,std::size_t edges) noexcept {
+            std::lock_guard lock(s.互斥);
+            if(slot->receipt||start>receipt.新节点组().size()||fields>receipt.追加字段关系组().size()
+                ||edges>receipt.追加外部关系组().size())
+                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"登记隔离词典追踪",L"片段回执范围不匹配。");
+            slot->receipt=receipt;slot->nodeStart=start;slot->fieldCount=fields;slot->edgeCount=edges;
+        };
+        auto p=std::make_unique<本地词典结果准备>(std::move(*read),actual,previous,s.通用场景,*s.词典材料组织,Q.has_value(),std::move(base),track);
+        return {S::已完成,std::move(p),{}};
+    }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(const std::length_error&){return {S::资源失败,{},{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备隔离词典结果",L"本地结果参与准备失败。");}
+}
+新词典材料操作状态 新_模拟世界类::记录调用词典未命中(
+    稳定编码 N,const 新词典执行结果来源& source) noexcept {
+    using S=新词典材料操作状态;
+    try {
+        if(!实现_)return S::未装配;
+        if(!有效(source.词条)||!有效(source.材料特征)||!source.查询来源.场景||!source.查询来源.查询记录)return S::输入拒绝;
+        auto& s=*实现_;
+        for(;;) {
+            std::unique_lock lock(s.互斥);
+            if(!s.通用||s.当前调用!=std::optional{N})return S::未找到;
+            const auto read=读取本地词典调用(N);if(!read)return S::未找到;
+            if(read->回执)return S::已复用;
+            if(!s.样例就绪||!s.记录写回||s.请求取消||!有效(read->动作)
+                ||本地词典整数(read->N.结构,调用窗口状态值)!=0)return S::条件不具备;
+            if(s.通用输入节点.size()<6||s.通用输入节点[0]!=source.词条||s.通用输入节点[1]!=source.材料特征
+                ||!s.是本地参数(source.词条,新方法参数信息类型::词条)
+                ||读引用(source.材料特征,所属)!=std::optional{source.词条})return S::输入拒绝;
+            基础节点组追加请求 q;q.新节点组.push_back(构造本地词典首次记录(source,false));
+            q.追加字段组.push_back({N,字段组[词典回执引用],基础组内节点引用{0}});
+            q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{0},基础外部关系类型::父子});
+            补齐隔离追加联合预期(q);q.预期联合节点组.push_back(read->N);s.预留追加(q);
+            const auto published=全局基础数据集.原子追加节点组(q);
+            if(published.状态==基础节点组追加状态::已完成){s.收集追加(published);return S::已完成;}
+            if(published.状态==基础节点组追加状态::资源失败)return S::资源失败;
+            if(published.状态!=基础节点组追加状态::预期不符)throw std::logic_error("local dictionary miss publication rejected");
+            lock.unlock();std::this_thread::yield();
+        }
+    }catch(const std::bad_alloc&){return S::资源失败;}
+    catch(const std::length_error&){return S::资源失败;}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录隔离词典未命中",L"本地未命中记录失败。");}
+}
+struct 新模拟词典采用准备::实现 final {
+    新_模拟世界类* owner=nullptr;
+    const std::thread::id thread=std::this_thread::get_id();
+    基础节点组追加请求 request;
+    std::unique_ptr<新词典结果参与准备> participant;
+    std::optional<基础片段发布回执> receipt;
+    新本能词典读取回执 result;
+    std::optional<std::size_t> stateSlot;
+    std::size_t ownFields=0,ownEdges=0;
+    std::int64_t time=0;
+    bool submitted=false,completed=false,cancelled=false,featureChanged=false;
+    稳定编码 call;
+    ~实现() {
+        if(receipt&&!completed)工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"隔离词典采用准备析构",L"已发表采用尚未完成收尾。");
+    }
+};
+新模拟词典采用准备::新模拟词典采用准备(std::unique_ptr<实现> p) noexcept:实现_(std::move(p)){}
+新模拟词典采用准备::~新模拟词典采用准备()=default;
+新模拟词典采用准备::新模拟词典采用准备(新模拟词典采用准备&&) noexcept=default;
+新模拟词典采用准备& 新模拟词典采用准备::operator=(新模拟词典采用准备&&) noexcept=default;
+新模拟词典采用准备结果 新_模拟世界类::准备调用词典采用(稳定编码 N) noexcept {
+    using S=新词典材料操作状态;
+    try {
+        auto read=读取调用词典回执(N);
+        if(!read.回执)return {read.状态,{},{}};
+        if(read.回执->采用阶段==新词典材料采用阶段::已采用||read.回执->查阅结局==新词典查阅结局::正式未命中)
+            return {S::已复用,{},read.回执};
+        const auto Q=read.回执->材料Q;
+        if(!Q)throw std::logic_error("local unadopted receipt has no Q");
+        const auto material=读取本地词典材料(*Q);
+        if(material.状态==S::资源失败)return {S::资源失败,{},{}};
+        if(!material.信息)throw std::logic_error("held local dictionary material unavailable");
+        const auto F=read.回执->材料特征,W=read.回执->词条;
+        // FT/FC只读准备在进入world锁之前，避免反向嵌套领域锁。
+        const auto feature=读取模拟特征(F);
+        if(!feature)throw std::logic_error("local dictionary feature unavailable");
+        auto p=std::make_unique<新模拟词典采用准备::实现>();p->owner=this;p->call=N;p->result=*read.回执;
+        auto& s=*实现_;std::unique_lock lock(s.互斥);
+        if(!s.样例就绪||!s.记录写回||s.当前调用!=std::optional{N}||s.请求取消)return {S::条件不具备,{},{}};
+        const auto fSnapshot=本地词典快照(F);
+        if(!fSnapshot)throw std::logic_error("local dictionary feature snapshot missing");
+        std::vector<基础联合节点快照> consumed{*fSnapshot};
+        const auto* current=本地词典字段(fSnapshot->结构,当前材料);
+        const auto old=本地词典引用(fSnapshot->结构,当前材料);
+        if(current&&!old)throw std::logic_error("local dictionary current is not Q reference");
+        const bool changed=old!=Q;
+        std::optional<稳定编码> previous;
+        std::int64_t last=-1;
+        if(changed&&old)for(const auto n:s.通用节点) {
+            if(读值(n,类型)!=状态种类||读引用(n,状态特征引用)!=std::optional{F}
+                ||读引用(n,所属)!=std::optional{W}||读引用(n,当前材料)!=old)continue;
+            const auto time=必读数(n,步骤);
+            if(time<0||time>s.模拟步骤)throw std::logic_error("local dictionary previous time invalid");
+            if(time==last&&previous!=std::optional{n})throw std::logic_error("local dictionary previous state ambiguous");
+            if(time>last){previous=n;last=time;}
+        }
+
+        auto& q=p->request;
+        const auto add=[&](节点种类 kind) {
+            const auto n=q.新节点组.size();q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(kind)}},{字段组[根],模拟世界树根节点}}});
+            q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{n},基础外部关系类型::父子});return n;
+        };
+        const auto put=[&](std::size_t n,字段 key,基础组内字段内容 v){q.新节点组[n].字段组.push_back({字段组[key],std::move(v)});};
+        if(changed) {
+            if(current)q.替换字段组.push_back({current->编码,*Q});
+            else q.追加字段组.push_back({F,字段组[当前材料],*Q});
+        }
+        std::map<稳定编码,std::pair<基础字段关系,std::int64_t>> counts;
+        for(const auto& member:fSnapshot->结构.字段组)if(member.字段节点==字段组[历史命中引用]) {
+            const auto* node=std::get_if<稳定编码>(&member.内容);
+            if(!node)throw std::logic_error("local dictionary history member malformed");
+            const auto snapshot=本地词典快照(*node);
+            if(!snapshot)throw std::logic_error("local dictionary history missing");
+            const auto value=本地词典引用(snapshot->结构,结构引用);
+            const auto* count=本地词典字段(snapshot->结构,命中次数值);
+            const auto number=本地词典整数(snapshot->结构,命中次数值);
+            if(!value||!count||!number||*number<0||!counts.emplace(*value,std::pair{*count,*number}).second)
+                throw std::logic_error("local dictionary history corrupt");
+            consumed.push_back(*snapshot);
+        }
+        std::int64_t newCount=1;
+        if(const auto found=counts.find(*Q);found!=counts.end()) {
+            newCount=found->second.second;
+            if(newCount!=(std::numeric_limits<std::int64_t>::max)())++newCount;
+            if(newCount!=found->second.second)q.替换字段组.push_back({found->second.first.编码,基础值{newCount}});
+        } else {
+            const auto h=add(语义快照种类);put(h,结构引用,*Q);put(h,命中次数值,基础值{newCount});
+            q.追加字段组.push_back({F,字段组[历史命中引用],基础组内节点引用{h}});
+        }
+        const auto* standard=本地词典字段(fSnapshot->结构,标准值引用);
+        const auto standardQ=本地词典引用(fSnapshot->结构,标准值引用);
+        if(standard&&!standardQ)throw std::logic_error("local dictionary standard is not Q reference");
+        if(!standard)q.追加字段组.push_back({F,字段组[标准值引用],*Q});
+        else if(standardQ!=Q) {
+            const auto found=counts.find(*standardQ);
+            if(found==counts.end())throw std::logic_error("local dictionary standard absent from history");
+            if(newCount>found->second.second)q.替换字段组.push_back({standard->编码,*Q});
+        }
+        p->time=s.模拟步骤;
+        if(changed) {
+            if(s.模拟步骤==(std::numeric_limits<std::int64_t>::max)())throw std::overflow_error("local dictionary state time exhausted");
+            p->time=s.模拟步骤+1;p->stateSlot=add(状态种类);const auto st=*p->stateSlot;
+            put(st,所属,W);put(st,状态特征引用,F);put(st,特征类型,feature->特征概念节点);put(st,当前材料,*Q);
+            put(st,步骤,基础值{p->time});put(st,时间语义,基础值{static_cast<std::int64_t>(新状态时间语义::抽象相对)});
+        }
+        p->featureChanged=!q.新节点组.empty()||!q.追加字段组.empty()||!q.替换字段组.empty();
+        // 世界部分和回执部分各自只追踪一次，所有引用都由同一个组合提交公开。
+        p->ownFields=q.追加字段组.size();p->ownEdges=q.追加外部关系组.size();
+        // 锁内一次捕获F/历史/前S以及N，放锁后才调用材料owner与N参与提供者。
+        补齐隔离追加联合预期(q);
+        const auto callSnapshot=本地词典快照(N);
+        if(!callSnapshot)throw std::logic_error("local call disappeared during adoption");
+        q.预期联合节点组.push_back(*callSnapshot);
+        q.预期联合节点组.insert(q.预期联合节点组.end(),consumed.begin(),consumed.end());
+        (void)s.准备写回槽(F);
+        lock.unlock();
+        auto participant=准备调用词典采用参与(N,*Q,previous);
+        if(!participant.准备)return {participant.状态,{},participant.已有回执};
+        p->participant=std::move(participant.准备);
+        if(changed) {
+            新同组状态端点 endpoint{基础组内节点引用{*p->stateSlot},W,F,feature->特征概念节点,
+                新特征准确值{*Q},{新状态时间语义::抽象相对,p->time},q.新节点组.size()};
+            auto result=p->participant->构造同组状态引用(endpoint);合并同组结果构造(q,std::move(result.追加请求));
+        } else {auto result=p->participant->构造无新状态采用();合并同组结果构造(q,std::move(result.追加请求));}
+        // 保留参与者捕获的N/记录预期；新的端点快照由L1合并并裁定零发表。
+        auto premise=std::move(q.预期联合节点组);q.预期联合节点组.clear();
+        补齐隔离追加联合预期(q);
+        q.预期联合节点组.insert(q.预期联合节点组.end(),premise.begin(),premise.end());
+        lock.lock();s.预留追加(q);lock.unlock();
+        p->result.采用阶段=新词典材料采用阶段::已采用;p->result.本次形成新状态=changed;
+        p->result.前状态=changed?previous:std::nullopt;
+        p->result.变化阶段=changed&&previous?新词典变化处理阶段::待处理:新词典变化处理阶段::无需形成;
+        if(!changed||!previous)p->result.无需形成原因=changed?新词条动态记录原因::无前态:新词条动态记录原因::无值变化;
+        return {S::已完成,std::unique_ptr<新模拟词典采用准备>(new 新模拟词典采用准备(std::move(p))),{}};
+    }catch(const std::bad_alloc&){return {S::资源失败,{},{}};}
+    catch(const std::length_error&){return {S::资源失败,{},{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备隔离词典采用",L"本地F/S/N采用准备失败。");}
+}
+新词典材料提交结果 新_模拟世界类::提交调用词典采用(新模拟词典采用准备& preparation) noexcept {
+    try {
+        auto& p=*preparation.实现_;
+        本地词典要求(p.owner==this&&p.thread==std::this_thread::get_id()&&!p.submitted&&!p.cancelled,"local dictionary adoption preparation consumed");
+        p.submitted=true;
+        auto& s=*实现_;std::lock_guard lock(s.互斥);
+        if(!s.样例就绪||!s.记录写回||s.请求取消||s.当前调用!=std::optional{p.call})
+            return {基础节点组追加状态::入口拒绝,{}}; // 技术零发表；运行编排按当前停止/资格处理。
+        s.预留追加(p.request);
+        const auto sealed=全局基础数据集.封存原子追加片段(p.request);
+        if(!sealed.片段)return {sealed.状态,{}};
+        const auto published=全局基础数据集.原子追加封存片段组({*sealed.片段});
+        if(published.状态!=基础节点组追加状态::已完成)return {published.状态,{}};
+        if(published.片段回执组.size()!=1)throw std::logic_error("local dictionary adoption receipt missing");
+        p.receipt=published.片段回执组.front();
+        p.participant->登记共同发表回执(*p.receipt);
+        const auto& r=*p.receipt;
+        s.通用节点.insert(s.通用节点.end(),r.新节点组().begin(),r.新节点组().end());
+        for(const auto& f:r.新节点初始字段关系组())s.通用字段.insert(s.通用字段.end(),f.begin(),f.end());
+        s.通用字段.insert(s.通用字段.end(),r.追加字段关系组().begin(),r.追加字段关系组().begin()+p.ownFields);
+        s.通用外部边.insert(s.通用外部边.end(),r.追加外部关系组().begin(),r.追加外部关系组().begin()+p.ownEdges);
+        if(p.stateSlot)p.result.后状态=r.新节点组()[*p.stateSlot];
+        if(p.stateSlot)s.模拟步骤=p.time;
+        if(p.featureChanged)if(auto* slot=s.准备写回槽(p.result.材料特征))*slot=实现::写入来源::方法;
+        return {基础节点组追加状态::已完成,p.receipt};
+    }catch(const std::bad_alloc&){return {基础节点组追加状态::资源失败,{}};}
+    catch(const std::length_error&){return {基础节点组追加状态::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"提交隔离词典采用",L"采用提交异常，保留已发表事实。");}
+}
+新词典执行回执读取结果 新_模拟世界类::完成调用词典采用(新模拟词典采用准备& preparation) noexcept {
+    auto& p=*preparation.实现_;
+    if(p.owner!=this||p.thread!=std::this_thread::get_id()||!p.receipt||p.cancelled)
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"完成隔离词典采用",L"没有本次成功回执。");
+    if(!p.completed){p.participant->完成共同发表();p.completed=true;}
+    return {新词典材料操作状态::已完成,p.result};
+}
+void 新_模拟世界类::取消调用词典采用准备(新模拟词典采用准备& preparation) noexcept {
+    auto& p=*preparation.实现_;
+    if(p.owner!=this||p.thread!=std::this_thread::get_id()||p.receipt)
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取消隔离词典采用",L"不能取消已发表采用。");
+    if(!p.cancelled){p.participant->取消未发表准备();p.cancelled=true;}
 }
 void 新_模拟世界类::配置需求执行读取(const 新_存在类& 源身份,const 概念_存在类& 存在,
     const 概念_特征类& 特征,const 概念_二次特征类& 二次) {
@@ -1225,7 +1725,9 @@ std::vector<新模拟内容读取记录> 新_模拟世界类::读取本次内容
     if(!实现_)return {};std::lock_guard lock(实现_->互斥);return 实现_->内容读取组;
 }
 std::vector<稳定编码> 新_模拟世界类::读取本地实例身份组() const {
-    if(!实现_)return {};std::lock_guard lock(实现_->互斥);return 实现_->通用节点;
+    if(!实现_)return {};std::lock_guard lock(实现_->互斥);
+    基础节点组追加请求 q;q.删除节点组=实现_->通用节点;实现_->合并词典回执退出(q);
+    return std::move(q.删除节点组);
 }
 } // namespace 海中鱼巣
 
@@ -2242,7 +2744,7 @@ namespace 海中鱼巣 {
         if(owner&&*owner!=s.通用场景)if(const auto actual=读引用(*owner,所属))b.世界场景节点=*actual;
         b.有序引用=新方法有序参数引用{static_cast<std::uint32_t>(i+1),输入[i].规格.信息类型,n};
     }
-    if(!延后词典特征.empty()) {
+    if(!延后词典特征.empty()||(词条场景&&s.词典材料)) {
         const auto nodes=s.通用输入节点;
         const auto language=p.新节点组.at(*词条场景);
         lock.unlock();
@@ -2460,6 +2962,7 @@ bool 新_模拟世界类::复制词典材料初值(const std::vector<新模拟�
         s.词典材料来源.resize(材料输入.size());
         for(std::size_t i=0;i<材料输入.size();++i)s.词典材料来源[i].second=材料输入[i].材料.节点;
     }
+    if(材料输入.empty())return true; // 空F的首次查询也需要已登记退出责任的本地O。
     std::vector<新词典内部材料建立请求> requests;
     requests.reserve(材料输入.size());
     struct 初值参与 final : 新隔离材料初值参与接口 {
@@ -3167,6 +3670,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
             基础节点组追加请求 q;
             {std::lock_guard snapshot(s.互斥);
                 q.删除节点组=s.通用节点;q.删除字段关系组=s.通用字段;q.删除外部关系组=s.通用外部边;
+                s.合并词典回执退出(q);
             }
             const auto current=全局基础数据集.查询节点组完整结构(q.删除节点组);
             if(current.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
@@ -3195,7 +3699,10 @@ bool 新_模拟世界类::尝试释放有序样例() {
         }
         lock.lock();s.词典材料组织.reset();s.词典材料来源.clear();
     } else {
-        const auto r=全局基础数据集.原子删除节点结构(s.通用节点,s.通用字段,s.通用外部边);
+        基础节点组追加请求 q;
+        q.删除节点组=s.通用节点;q.删除字段关系组=s.通用字段;q.删除外部关系组=s.通用外部边;
+        s.合并词典回执退出(q);
+        const auto r=全局基础数据集.原子删除节点结构(q.删除节点组,q.删除字段关系组,q.删除外部关系组);
         if(r==基础结构操作状态::引用仍存在)return false;
         if(r==基础结构操作状态::资源失败)throw std::bad_alloc{};
         if(r!=基础结构操作状态::已完成)throw std::runtime_error("simulation temporary node exit failed");
@@ -3208,7 +3715,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     s.当前调用.reset();s.停止检查={};s.请求取消=false;
     s.执行主体来源.reset();s.本地执行主体.reset();s.需求动作许可.reset();
     s.消息定义保护={};
-    s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();s.消息事件组.clear();s.消息序号=0;
+    s.词典回执组.clear();s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();s.消息事件组.clear();s.消息序号=0;
     return true;
 }
 
@@ -4383,6 +4890,8 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
     const auto cancelled=读值(N,调用取消值);
     if(!cancelled||(*cancelled!=0&&*cancelled!=1))throw std::runtime_error("isolation cancellation corrupt");
     新隔离调用证据 r;r.身份={N,s.通用方法,s.通用场景,读引用(N,调用主动作引用)};r.已请求取消=*cancelled!=0;
+    const auto dictionary=读取本地词典调用(N);
+    if(dictionary)r.词典读取=dictionary->回执;
     if(r.身份.主动作){if(!读取本地动作(*r.身份.主动作))throw std::runtime_error("isolation main action evidence corrupt");r.阶段动作组.push_back(*r.身份.主动作);}
     for(const auto& f:全局基础数据集.查询字段(N,字段组[调用阶段成员])) {
         const auto* J=std::get_if<稳定编码>(&f.内容);const auto A=J?读引用(*J,动作引用):std::nullopt;
