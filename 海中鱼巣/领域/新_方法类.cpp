@@ -8467,7 +8467,10 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
     std::shared_ptr<新方法模拟运行接口> 模拟,
     std::optional<新方法任务成员绑定> 任务成员绑定,std::optional<稳定编码> 执行分支) const noexcept {
     新方法参数场景结果 结果;
-    try {
+    const bool 词条调用=std::any_of(绑定.begin(),绑定.end(),[](const auto& b) {
+        return b.有序引用&&b.有序引用->信息类型==新方法参数信息类型::词条;
+    });
+    for (;;) try {
         std::optional<新方法信息> 方法;
         {
             std::lock_guard 锁(新方法互斥);
@@ -8481,15 +8484,10 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
             return 结果;
         }
 
-        if(std::any_of(方法->参数规格组.begin(),方法->参数规格组.end(),[](const auto& 项) {
-            return 项.有序规格&&项.有序规格->信息类型==新方法参数信息类型::词条;
-        })) {
-            结果.状态=新方法操作状态::能力未支持;
-            return 结果;
-        }
-
         if(!方法->执行分支组.empty()||执行分支) {
             const auto 分支读取=读取执行分支必要条件(方法节点,执行分支);
+            if(词条调用&&分支读取.状态==新方法执行分支读取状态::前提已变化)
+                throw 引用内容定义前提变化{};
             if(分支读取.状态!=新方法执行分支读取状态::已读取) {
                 结果.状态=分支读取.状态==新方法执行分支读取状态::前提已变化
                     ? 新方法操作状态::定义前提已变化
@@ -8515,9 +8513,39 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
                     const bool 合法未知需求引用 = 定义
                         && 定义->材料类型==特征概念材料物理类型::需求节点引用
                         && 定义->比较规则==特征概念比较规则::需求身份精确;
-                    if(!f||(!f->当前值&&!合法未知需求引用)||!特征概念为或从属于(f->特征概念节点,spec.范围概念节点,特征概念服务_)) {
+                    bool 合法未知词典材料=false;
+                    if(f&&!f->当前值&&定义&&定义->材料类型==特征概念材料物理类型::信息节点引用
+                        &&定义->比较规则==特征概念比较规则::信息引用身份精确) {
+                        const auto type=特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::词典材料);
+                        if(type.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+                        if(type.状态!=特征概念规则状态::已完成||!type.类型根)
+                            throw std::logic_error("dictionary material feature slot unavailable");
+                        const auto range=存在概念服务_.读取词典材料身份范围概念();
+                        if(range.状态!=正式结构操作状态::已读取||!range.信息)
+                            throw std::logic_error("dictionary material identity range unavailable");
+                        const auto* ref=std::get_if<特征概念信息引用值域>(&定义->值域);
+                        合法未知词典材料=ref
+                            &&ref->语义==信息引用语义::信息对象&&ref->内容概念==range.信息->节点
+                            &&读取线性特征类型根(f->特征概念节点,特征概念服务_)==type.类型根;
+                    }
+                    if(!f||(!f->当前值&&!合法未知需求引用&&!合法未知词典材料)||!特征概念为或从属于(f->特征概念节点,spec.范围概念节点,特征概念服务_)) {
                         结果.状态=新方法操作状态::参数概念不相容;return 结果;
                     }
+                } else if(spec.信息类型==新方法参数信息类型::词条) {
+                    if(!方法持有者范围有效(spec,存在概念服务_)) {
+                        结果.状态=新方法操作状态::参数规格不合法;return 结果;
+                    }
+                    const auto word=模拟->读取模拟词条挂接(b.有序引用->信息节点);
+                    using W=新方法词条参数读取状态;
+                    if(word.状态==W::资源失败)throw std::bad_alloc{};
+                    if(word.状态==W::参数已失效){结果.状态=新方法操作状态::参数引用失效;return 结果;}
+                    if(word.状态!=W::已读取||!word.信息)
+                        throw std::logic_error("simulation word reader unavailable");
+                    for(const auto FT:spec.必需特征类型组)
+                        if(std::none_of(word.信息->特征组.begin(),word.信息->特征组.end(),
+                            [&](const auto& item){return item.特征类型根==FT;})) {
+                            结果.状态=新方法操作状态::参数材料未到;return 结果;
+                        }
                 } else {
                     const auto ordinary=存在概念服务_.读取普通存在概念定义保护(spec.范围概念节点);
                     if(ordinary.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
@@ -8688,7 +8716,14 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
         结果.状态 = 新方法操作状态::已建立;
         return 结果;
     } catch (const 引用内容定义前提变化&) {
+        if(词条调用) { std::this_thread::yield(); continue; }
         结果.状态 = 新方法操作状态::定义前提已变化;
+        结果.参数场景.reset();
+        return 结果;
+    } catch (const std::logic_error& e) {
+        if(词条调用)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立模拟词条参数场景",L"模拟参数依赖或结构不合法。",e.what());
+        结果.状态 = 新方法操作状态::资源失败;
         结果.参数场景.reset();
         return 结果;
     } catch (...) {

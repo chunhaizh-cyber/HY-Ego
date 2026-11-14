@@ -55,6 +55,8 @@ struct 新模拟有序参数输入 final {
     std::uint32_t 所属语言场景输入=0, 引用语言场景输入=0;
     // 参数本体为本次图中的D，不是F.current引用。
     std::uint32_t 需求参数输入=0;
+    // 正式W的不可变键及来源映射；发布localW时不写入来源W引用。
+    std::optional<新词条信息> 复制词条;
 };
 struct 新模拟场景事实输入 final {
     新方法初始场景事实限定 限定;
@@ -171,6 +173,7 @@ public:
     std::vector<新外设消息信息> 读取消息组(稳定编码 n) const override { return 读取模拟消息组(n); }
     新场景事实构成读取结果 读取连接构成() const override;
     新交互写入读回 写入本次连接交互者(const 方法参数场景&,const 新隔离连接完成材料&) override;
+    新方法词条参数读取结果 读取模拟词条挂接(稳定编码) const noexcept override;
     新方法参数特征读取结果 读取模拟存在参数特征(std::uint32_t,稳定编码) const noexcept override;
     std::vector<新本能函数条件角色材料> 读取本次存在参数特征读取组() const;
     std::optional<新方法初始必要条件定义> 读取本次必要条件(const 方法参数场景&) const override;

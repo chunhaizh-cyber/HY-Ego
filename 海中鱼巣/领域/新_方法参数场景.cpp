@@ -133,7 +133,10 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         const auto* 参数 = 查询参数(位置);
         if (!参数) return {S::参数未绑定, {}};
         if (参数->信息类型 != 新方法参数信息类型::词条) return {S::信息类型不符, {}};
-        if (用途_ == 新方法参数场景用途::模拟) return {S::能力未支持, {}};
+        if (用途_ == 新方法参数场景用途::模拟) {
+            if (!模拟运行_) return {S::依赖未就绪,{}};
+            return 模拟运行_->读取模拟词条挂接(参数->信息节点);
+        }
         if (用途_ != 新方法参数场景用途::执行) return {S::未声明, {}};
         if (!词条读取_) return {S::依赖未就绪, {}};
         auto 当前 = 词条读取_->读取词条特征信息(参数->信息节点);
@@ -201,14 +204,19 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
             if(!p)return {S::参数未绑定,{},{}};
             if(p->信息类型!=新方法参数信息类型::存在 && p->信息类型!=新方法参数信息类型::词条)
                 return {S::信息类型不符,{},{}};
-            if(p->信息类型==新方法参数信息类型::词条 && 用途_==新方法参数场景用途::模拟)
-                return {S::能力未支持,{},{}};
             if(!方法读取_||!特征概念读取_)throw std::logic_error("existence feature query definition owners unavailable");
             const auto 声明=方法读取_->读取存在参数特征声明(方法节点_,执行分支节点_,位置,FT);
             if(声明.状态==S::定义前提已变化)throw 参数材料需要重读{};
             if(声明.状态!=S::已读取)return {声明.状态,{},{}};
             if(!声明.特征定义||声明.特征定义->特征类型根!=FT)
                 throw std::logic_error("existence feature declaration projection inconsistent");
+            if(用途_==新方法参数场景用途::模拟) {
+                if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
+                    throw std::logic_error("simulation existence feature query owner differs");
+                auto 当前=模拟运行_->读取模拟存在参数特征(位置,FT);
+                if(当前.状态==S::定义前提已变化)throw 参数材料需要重读{};
+                return 当前;
+            }
             if(p->信息类型==新方法参数信息类型::词条) {
                 const auto 当前=读取词条参数挂接(位置);
                 using W=新方法词条参数读取状态;
@@ -236,11 +244,6 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
                 信息.节点=f->特征节点;信息.特征概念节点=f->定义.概念节点;
                 信息.实例单位=f->实例单位;信息.当前值=f->当前值;
                 return {f->当前值 ? S::已读取 : S::当前值未取得,std::move(信息),f->当前完整材料};
-            }
-            if(用途_==新方法参数场景用途::模拟) {
-                if(!模拟运行_||!模拟运行_->核验模拟参数(方法节点_,角色绑定组_))
-                    throw std::logic_error("simulation existence feature query owner differs");
-                return 模拟运行_->读取模拟存在参数特征(位置,FT);
             }
             if(!存在读取_||!特征服务_||!特征值服务_)
                 throw std::logic_error("existence feature instance owners unavailable");

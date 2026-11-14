@@ -87,6 +87,9 @@ public:
     virtual 新模拟需求关联读回<服务要求确认信息> 读取模拟确认(稳定编码) const = 0;
     virtual 新模拟需求关联读回<新部分服务要求材料> 读取模拟要求(稳定编码) const = 0;
     virtual 新模拟需求关联读回<新模拟语言场景信息> 读取模拟语言场景(稳定编码) const = 0;
+    virtual 新方法词条参数读取结果 读取模拟词条挂接(稳定编码) const noexcept {
+        return {新方法词条参数读取状态::能力未支持,{}};
+    }
     virtual 新方法参数特征读取结果 读取模拟存在参数特征(
         std::uint32_t,稳定编码) const noexcept { return {新方法参数特征读取状态::未声明,{},{}}; }
     virtual 新本能交互运行接口* 获取交互运行接口() noexcept { return nullptr; }
