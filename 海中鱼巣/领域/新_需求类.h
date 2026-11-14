@@ -1019,7 +1019,9 @@ public:
 
 private:
     新需求操作状态 记录词典归类需求来源已核验(
-        稳定编码 需求节点, const 新词典归类需求来源&) noexcept;
+        稳定编码 需求节点, const 新词典归类需求来源&, bool* 已关联 = nullptr) noexcept;
+    新需求建立结果 建立或取得词典归类需求已核验(
+        const 新普通需求建立请求&, const 新词典归类需求来源&) noexcept;
     struct 提议源收集批 final {
         基础只读预期 前提;
         std::set<稳定编码> 需求节点组;
@@ -1156,9 +1158,10 @@ private:
         const 新普通需求建立请求&, bool 允许任务子目标,
         std::optional<稳定编码> 初始服务要求确认,
         std::optional<稳定编码> 初始服务需求取得执行节点 = std::nullopt) noexcept;
-    新需求建立结果 建立或取得引用内容需求内部(const 新普通需求建立请求&,bool,
+    新需求建立结果 建立或取得组合发布需求内部(const 新普通需求建立请求&,bool,
         const std::vector<基础联合节点快照>& 复合采用保护 = {},
-        const 基础只读预期* 源前提 = nullptr) noexcept;
+        const 基础只读预期* 源前提 = nullptr,
+        const 新词典归类需求来源* 词典来源 = nullptr) noexcept;
 
     新_特征值类& 特征值服务_;
     新_存在类& 存在服务_;
