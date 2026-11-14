@@ -2534,7 +2534,7 @@ void 核基础定义(const 基础范围概念定义&d) {
         if(d.整数参数.empty()||!std::is_sorted(d.整数参数.begin(),d.整数参数.end())
             ||std::adjacent_find(d.整数参数.begin(),d.整数参数.end())!=d.整数参数.end()||!d.引用参数.empty()) 正式定义故障("enumeration arguments");
     } else if(d.原语==基础概念原语::具名领域身份) {
-        if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>16||!d.引用参数.empty()) 正式定义故障("named identity arguments");
+        if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>17||!d.引用参数.empty()) 正式定义故障("named identity arguments");
     } else if(!d.整数参数.empty()||d.引用参数.size()!=1) 正式定义故障("unique existence arguments");
 }
 // 解码只读当前owner/L1；跨owner身份复核在调用者持本地锁之前进行。
@@ -3667,6 +3667,62 @@ std::vector<定义模板> 基础模板() {
             if (状态 != 正式状态::前提已变化) return {状态, {}};
         } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
         catch (...) { 正式定义故障("word identity range publication exception"); }
+        // 前提变化只发生在零发布阶段；本轮锁和准备对象已释放。
+        std::this_thread::yield();
+    }
+}
+
+正式结构概念结果 概念_存在类::读取词典材料身份范围概念() const noexcept {
+    for (;;) {
+        try {
+            if (!正式schema就绪()) return {正式状态::依赖未就绪, {}};
+            std::lock_guard 锁(存在概念图互斥);
+            std::vector<基础联合节点快照> 登记材料;
+            const auto 登记 = 读取正式登记(登记材料);
+            const auto 位置 = 登记.find(517);
+            if (位置 == 登记.end()) return {正式状态::未找到, {}};
+            std::vector<基础联合节点快照> 当前材料;
+            std::set<稳定编码> 已读;
+            auto 信息 = 解码正式定义(位置->second, 当前材料, 已读);
+            const 正式结构定义 定义 = 基础范围概念定义{基础概念原语::具名领域身份, {17}, {}};
+            if (信息.定义 != 定义) return {正式状态::定义冲突, {}};
+            // 返回本次定义材料；不把登记全集附加成跨调用的旧快照门禁。
+            return {正式状态::已读取, std::move(信息)};
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("dictionary material identity range read exception"); }
+        std::this_thread::yield();
+    }
+}
+
+正式结构概念结果 概念_存在类::建立或取得词典材料身份范围概念() noexcept {
+    for (;;) {
+        try {
+            if (!初始化正式schema()) return {正式状态::依赖未就绪, {}};
+            定义模板 定义{};
+            定义.槽 = 517; 定义.形状 = 基础类型键;
+            定义.基础 = {基础概念原语::具名领域身份, {17}, {}};
+            正式状态 发布状态;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                基础节点组追加请求 请求;
+                std::vector<std::pair<std::uint32_t, std::size_t>> 槽;
+                登记映射 登记;
+                const auto 准备 = 准备定义批({定义}, {}, 请求, 槽, 登记);
+                if (准备 == 正式状态::定义冲突) return {准备, {}};
+                发布状态 = 发布先天定义批(请求, 槽);
+            }
+            if (发布状态 != 正式状态::前提已变化) {
+                // 发布成功后只读取当前定义，不重新执行建立动作。
+                auto 当前 = 读取词典材料身份范围概念();
+                if (!当前.信息) return {当前.状态, {}};
+                return {发布状态, std::move(当前.信息)};
+            }
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("dictionary material identity range publication exception"); }
         // 前提变化只发生在零发布阶段；本轮锁和准备对象已释放。
         std::this_thread::yield();
     }

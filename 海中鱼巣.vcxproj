@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <ClInclude Include="海中鱼巣\领域\数据操作.执行结果参与.h"></ClInclude>
+    <ClInclude Include="海中鱼巣\领域\数据服务.词典材料类.h"></ClInclude>
+    <ClCompile Include="海中鱼巣\领域\数据服务.词典材料类.cpp"></ClCompile>
+
     <ClInclude Include="海中鱼巣\领域\词条.数据.h" />
     <ClInclude Include="海中鱼巣\领域\引用保持.数据.h" />
     <ClInclude Include="海中鱼巣\领域\本能词典.数据.h" />
