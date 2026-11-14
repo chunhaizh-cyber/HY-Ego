@@ -37,4 +37,19 @@ struct 新词条归类运行处置 final {
     friend bool operator==(const 新词条归类运行处置&, const 新词条归类运行处置&) = default;
 };
 
+struct 新词条归类执行材料 final {
+    稳定编码 动作;
+    新词条归类本能输入 实际输入;
+    std::optional<新本能词条归类回执> 回执;
+    friend bool operator==(const 新词条归类执行材料&, const 新词条归类执行材料&) = default;
+};
+
+enum class 新词条归类执行读取状态 : std::uint8_t {
+    已读取 = 1, 无记录, 执行不存在, 输入拒绝, 未装配, 资源失败
+};
+struct 新词条归类执行读取结果 final {
+    新词条归类执行读取状态 状态 = 新词条归类执行读取状态::无记录;
+    std::optional<新词条归类执行材料> 材料;
+};
+
 } // namespace 海中鱼巣
