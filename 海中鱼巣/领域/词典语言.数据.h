@@ -9,7 +9,7 @@
 
 namespace 海中鱼巣 {
 
-enum class 新词典语言理解状态 : std::uint8_t { 已理解 = 1, 缺规则 };
+enum class 新词典语言理解状态 : std::uint8_t { 已识别结构 = 1, 缺规则 };
 enum class 新词典词段依据 : std::uint8_t { 同批词头表 = 1, 单标量回退 };
 
 struct 新词典语言词段 final {
@@ -33,9 +33,24 @@ struct 新词典归类材料定义 final {
     friend bool operator==(const 新词典归类材料定义&, const 新词典归类材料定义&) = default;
 };
 
+enum class 新词典归类概念状态 : std::uint8_t {
+    未解析 = 1, 缺规则, 中心词未取得, 中心词待归类,
+    多义待解, 已明确, 不适用归类
+};
+
+struct 新词典归类概念解读 final {
+    新词典归类概念状态 状态 = 新词典归类概念状态::未解析;
+    std::optional<稳定编码> 依据词条N;
+    std::vector<稳定编码> 候选概念组;
+    std::optional<稳定编码> 采用概念;
+    friend bool operator==(const 新词典归类概念解读&,
+        const 新词典归类概念解读&) = default;
+};
+
 struct 新词典归类材料信息 final {
     稳定编码 节点;
     新词典归类材料定义 定义;
+    新词典归类概念解读 概念解读;
 };
 
 struct 新词典语言材料组定义 final {

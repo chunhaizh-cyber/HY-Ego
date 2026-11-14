@@ -5,6 +5,8 @@
 #include "../领域/新_需求类.h"
 #include "../领域/新_词类.h"
 #include "../领域/新_特征类.h"
+#include "../领域/新_语言类.h"
+#include "../领域/概念_名称关系类.h"
 #include "../领域/新_自然语言世界树类.h"
 
 #include <algorithm>
@@ -44,6 +46,7 @@ struct 词典语言学习服务::实现 final {
     新_语言类& 语言;
     词典材料类& 材料;
     新_自然语言世界树类& 世界;
+    const 概念_名称关系类& 名称;
     std::filesystem::path 词典根;
     稳定编码 材料类型;
     std::chrono::milliseconds 重试间隔;
@@ -68,6 +71,9 @@ struct 词典语言学习服务::实现 final {
         std::size_t 下一个行 = 0;
         std::vector<稳定编码> 已处理行组;
         bool 已完成 = false;
+        bool 需要概念刷新 = true;
+        std::size_t 概念行游标 = 0;
+        bool 本轮解读变化 = false, 本轮等待概念 = false;
         std::chrono::steady_clock::time_point 可推进时点{};
     };
     std::map<稳定编码, 工作> 工作组;
@@ -81,8 +87,12 @@ struct 词典语言学习服务::实现 final {
         });
         if (已有 == 项.请求者组.end()) {
             项.请求者组.push_back({T, D, W});
-            项.可推进时点 = std::chrono::steady_clock::now();
         }
+        if (!项.需要概念刷新) {
+            项.需要概念刷新 = true;
+            项.概念行游标 = 0;
+        }
+        项.可推进时点 = std::chrono::steady_clock::now();
     }
 
     std::shared_ptr<const 离线词典数据源> 取得源(const 新词典材料信息& Q) {
@@ -146,6 +156,48 @@ struct 词典语言学习服务::实现 final {
         return 准备状态::已就绪;
     }
 
+    新词典归类概念解读 解读当前概念(const 新词典归类材料信息& R) const {
+        新词典归类概念解读 解读;
+        解读.依据词条N = R.定义.词条N;
+        if (R.定义.状态 == 新词典语言理解状态::缺规则) {
+            解读.状态 = 新词典归类概念状态::缺规则;
+        } else if (!R.定义.词条N) {
+            解读.状态 = 新词典归类概念状态::中心词未取得;
+        } else {
+            const auto 候选 = 名称.读取词条当前归类候选(*R.定义.词条N);
+            for (const auto& 项 : 候选) 解读.候选概念组.push_back(项.概念节点);
+            if (候选.empty()) {
+                解读.状态 = 新词典归类概念状态::中心词待归类;
+            } else if (候选.size() > 1) {
+                解读.状态 = 新词典归类概念状态::多义待解;
+            } else if (候选.front().有普通名称) {
+                解读.状态 = 新词典归类概念状态::已明确;
+                解读.采用概念 = 候选.front().概念节点;
+            } else {
+                解读.状态 = 新词典归类概念状态::不适用归类;
+            }
+        }
+        return 解读;
+    }
+
+    std::optional<bool> 刷新一行概念(稳定编码 R, bool& 等待概念, std::stop_token 停止) {
+        auto 当前 = 语言.读取词典归类材料(R);
+        if (!当前) return std::nullopt;
+        const auto 原解读 = 当前->概念解读;
+        for (;;) {
+            if (停止.stop_requested()) return std::nullopt;
+            const auto 解读 = 解读当前概念(*当前);
+            当前 = 语言.更新词典归类概念(R, 解读);
+            if (!当前) return std::nullopt;
+            if (当前->概念解读 == 解读) {
+                等待概念 = 解读.状态 == 新词典归类概念状态::中心词待归类
+                    || 解读.状态 == 新词典归类概念状态::多义待解;
+                return 原解读 != 解读;
+            }
+            std::this_thread::yield();
+        }
+    }
+
     bool 保存下一行(工作& 项) {
         const auto& 行 = 项.行组.at(项.下一个行);
         std::optional<新词条信息> X;
@@ -174,7 +226,7 @@ struct 词典语言学习服务::实现 final {
         定义.释义原文 = 解析.释义原文;
         定义.规范化释义 = 解析.规范化释义;
         定义.状态 = 解析.状态 == 词典释义解读状态::已解读
-            ? 新词典语言理解状态::已理解 : 新词典语言理解状态::缺规则;
+            ? 新词典语言理解状态::已识别结构 : 新词典语言理解状态::缺规则;
         if (解析.结构) 定义.结构编号 = static_cast<std::int64_t>(*解析.结构);
         for (const auto& 词段 : 解析.词段组) {
             定义.词段组.push_back(词典语言词段(词段));
@@ -199,10 +251,10 @@ struct 词典语言学习服务::实现 final {
 };
 
 词典语言学习服务::词典语言学习服务(新_任务类& T, 新_需求类& D, 新_词类& W, 新_特征类& F,
-    新_语言类& L, 词典材料类& Q, 新_自然语言世界树类& 世界,
+    新_语言类& L, 词典材料类& Q, 新_自然语言世界树类& 世界, const 概念_名称关系类& 名称,
     std::filesystem::path 根, std::shared_ptr<const 离线词典数据源> 启动源,
     std::string 包, 稳定编码 材料类型, std::chrono::milliseconds 间隔)
-    : 实现_(std::make_unique<实现>(T, D, W, F, L, Q, 世界, std::move(根), 材料类型, 间隔)) {
+    : 实现_(std::make_unique<实现>(T, D, W, F, L, Q, 世界, 名称, std::move(根), 材料类型, 间隔)) {
     if (启动源) {
         if (const auto 批次 = 启动源->读取可信批次标识())
             实现_->源缓存.emplace(std::pair{*批次, std::move(包)}, std::move(启动源));
@@ -250,9 +302,11 @@ std::optional<std::chrono::steady_clock::time_point> 词典语言学习服务::�
     std::optional<std::chrono::steady_clock::time_point> 结果;
     for (const auto& [Q, 项] : 实现_->工作组) {
         (void)Q;
-        if (项.已完成 && std::all_of(项.请求者组.begin(), 项.请求者组.end(),
-            [](const auto& 人) { return 人.已交付; })) continue;
-        if (!结果 || 项.可推进时点 < *结果) 结果 = 项.可推进时点;
+        const bool 待交付 = 项.已完成 && std::any_of(项.请求者组.begin(), 项.请求者组.end(),
+            [](const auto& 人) { return !人.已交付; });
+        if (项.已完成 && !项.需要概念刷新 && !待交付) continue;
+        const auto 时点 = 待交付 ? (std::min)(项.可推进时点, std::chrono::steady_clock::now()) : 项.可推进时点;
+        if (!结果 || 时点 < *结果) 结果 = 时点;
     }
     return 结果;
 }
@@ -262,7 +316,9 @@ std::optional<新词典语言交付> 词典语言学习服务::推进一次(std:
     const auto 现在 = std::chrono::steady_clock::now();
     for (auto 位置 = 实现_->工作组.begin(); 位置 != 实现_->工作组.end(); ++位置) {
         auto& 项 = 位置->second;
-        if (项.可推进时点 > 现在) continue;
+        const bool 待交付 = 项.已完成 && std::any_of(项.请求者组.begin(), 项.请求者组.end(),
+            [](const auto& 人) { return !人.已交付; });
+        if (项.可推进时点 > 现在 && !待交付) continue;
         if (!项.已完成) {
             const auto 准备 = 实现_->准备工作(项);
             if (准备 == 实现::准备状态::来源已退出) {
@@ -294,6 +350,39 @@ std::optional<新词典语言交付> 词典语言学习服务::推进一次(std:
             项.信息.reset();
             项.行组.clear();
             项.已处理行组.clear();
+        }
+        if (项.需要概念刷新 && 项.可推进时点 <= 现在) {
+            const auto 当前组 = 实现_->语言.读取词典语言材料组(项.Q);
+            if (!当前组) {
+                项.已完成 = false;
+                项.信息.reset();
+                项.来源场景 = {};
+                项.下一个行 = 0;
+                项.概念行游标 = 0;
+                项.本轮解读变化 = false;
+                项.本轮等待概念 = false;
+                项.可推进时点 = 现在 + 实现_->重试间隔;
+                continue;
+            }
+            if (项.概念行游标 < 当前组->行组.size()) {
+                bool 等待概念 = false;
+                const auto 改变 = 实现_->刷新一行概念(当前组->行组[项.概念行游标].节点, 等待概念, 停止);
+                if (!改变) {
+                    项.可推进时点 = 现在 + 实现_->重试间隔;
+                    return std::nullopt;
+                }
+                项.本轮解读变化 = 项.本轮解读变化 || *改变;
+                项.本轮等待概念 = 项.本轮等待概念 || 等待概念;
+                ++项.概念行游标;
+                return std::nullopt;
+            }
+            if (项.本轮解读变化)
+                for (auto& 人 : 项.请求者组) 人.已交付 = false;
+            项.需要概念刷新 = 项.本轮等待概念;
+            项.概念行游标 = 0;
+            项.本轮解读变化 = false;
+            项.本轮等待概念 = false;
+            项.可推进时点 = 现在 + 实现_->重试间隔;
         }
         for (auto& 人 : 项.请求者组) {
             if (人.已交付) continue;

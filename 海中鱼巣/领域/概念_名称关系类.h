@@ -28,6 +28,11 @@ struct 概念名称关系信息 final {
         const 概念名称关系信息&) = default;
 };
 
+struct 新词条当前概念候选 final {
+    稳定编码 概念节点;
+    bool 有普通名称 = false;
+};
+
 enum class 概念名称关系建立状态 : std::uint8_t {
     已建立 = 1,
     已复用 = 2,
@@ -177,6 +182,7 @@ public:
     概念名称候选保护结果 读取词条名称候选保护(
         稳定编码 词条) const noexcept;
     bool 是概念名称关系节点(稳定编码 节点) const noexcept;
+    std::vector<新词条当前概念候选> 读取词条当前归类候选(稳定编码) const;
 
 private:
     friend class 新_自然语言世界树类;

@@ -18,6 +18,7 @@ class 新_语言类;
 class 词典材料类;
 class 新_自然语言世界树类;
 class 离线词典数据源;
+class 概念_名称关系类;
 
 struct 新词典语言交付 final {
     稳定编码 任务, 需求, 词条, 材料Q;
@@ -27,7 +28,7 @@ struct 新词典语言交付 final {
 class 词典语言学习服务 final {
 public:
     词典语言学习服务(新_任务类&, 新_需求类&, 新_词类&, 新_特征类&,
-        新_语言类&, 词典材料类&, 新_自然语言世界树类&,
+        新_语言类&, 词典材料类&, 新_自然语言世界树类&, const 概念_名称关系类&,
         std::filesystem::path 词典根, std::shared_ptr<const 离线词典数据源> 启动源,
         std::string 原包标识, 稳定编码 材料特征类型, std::chrono::milliseconds 重试间隔);
     ~词典语言学习服务();
