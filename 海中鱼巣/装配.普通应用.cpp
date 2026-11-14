@@ -17,6 +17,7 @@
 #include "业务/服务值结算.本能运行服务.h"
 #include "业务/服务对象.本能运行服务.h"
 #include "业务/词典.本能运行服务.h"
+#include "业务/词典.语言学习服务.h"
 #include "适配/词典.离线数据源.h"
 #include "业务/服务需求.本能运行服务.h"
 #include "业务/字段询问.语言服务.h"
@@ -423,6 +424,7 @@ struct 普通应用上下文 final {
     std::string 可信词典原包标识;
     bool 词典来源已读取 = false;
     std::shared_ptr<词典本能运行服务> 词典运行;
+    std::unique_ptr<词典语言学习服务> 词典语言学习;
     词典端口清理 词典清理;
     std::shared_ptr<进入场景本能运行服务> 进入场景运行;
     std::shared_ptr<服务对象新需求本能运行服务> 服务对象新需求运行;
@@ -4148,6 +4150,18 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         if (!当前.任务服务.配置本能词典任务参数工厂(*当前.词典运行))
             throw std::logic_error("dictionary task parameter factory binding failed");
         当前.词典清理.工厂已绑定 = true;
+        if (!当前.词典语言学习) {
+            const auto 重试毫秒 = (std::min)(当前.配置.资源重试间隔毫秒,
+                static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)() / 2));
+            当前.词典语言学习 = std::make_unique<词典语言学习服务>(
+                当前.任务服务, 当前.需求服务, 当前.世界事实.词服务, 当前.世界事实.特征服务,
+                当前.世界事实.语言服务, 当前.词典材料, 当前.自然语言世界树,
+                读取普通应用程序目录() / L"基础数据" / L"词典", 当前.可信词典来源,
+                当前.可信词典原包标识, *词典材料类型.类型根,
+                std::chrono::milliseconds{static_cast<std::int64_t>(重试毫秒)});
+        }
+        if (!当前.自我线程.绑定词典语言学习(*当前.词典语言学习))
+            throw std::logic_error("词典语言学习服务未能绑定自我线程");
         const auto 输出队列类型 = 当前.外设世界树.获取输出队列特征类型();
         const auto 交互者类型 = 通用存在
             ? 确保单引用交互者特征(当前, *结果.自我->自我存在, *通用存在) : std::nullopt;

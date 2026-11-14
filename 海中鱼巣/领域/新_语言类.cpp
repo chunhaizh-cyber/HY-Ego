@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include <string_view>
 #include <tuple>
+#include <thread>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -5877,7 +5878,7 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
 namespace {
 // CONV-EXPR-STRUCT：仅语言owner使用的结构字段编解码。引用始终是L1引用；
 // 局部编号/顺序是直接值，未把稳定编码藏入文本或整数向量。
-enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,总数 };
+enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,词典材料登记,总数 };
 std::array<稳定编码,static_cast<std::size_t>(组织键::总数)> 组织句柄{};
 稳定编码 组键(组织键 k){return 组织句柄[static_cast<std::size_t>(k)];}
 void 组织要求(bool ok){if(!ok)throw std::logic_error("表达组织知识或出站含义记录结构不一致");}
@@ -5933,6 +5934,14 @@ auto 组织记录字段(新接收场景信息& v){return std::tie(v.种类,v.来
 auto 组织记录字段(新自我写入语言信息& v){return std::tie(v.写入来源,v.来源场景,v.自我,v.主体存在,v.特征类型,
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.时刻);}
 auto 组织记录字段(新语言问题定义& v){return std::tie(v.出站来源场景,v.出站来源,v.交互场景,v.交互者,v.被认知需求,v.主体,v.被问栏,v.提问时刻,v.被问种类);}
+auto 组织记录字段(新词典语言词段& v) {
+    return std::tie(v.起始标量, v.结束标量, v.规范化词面, v.依据);
+}
+auto 组织记录字段(新词典归类材料定义& v) {
+    return std::tie(v.材料Q, v.义项I, v.来源场景, v.说话者, v.释义语言, v.词条X,
+        v.原行号, v.原文起始标量, v.原文结束标量, v.释义原文, v.规范化释义,
+        v.状态, v.结构编号, v.词段组, v.中心词, v.修饰起始标量, v.修饰结束标量, v.词条N, v.诊断);
+}
 
 template<class T> struct 组织可选 : std::false_type {};
 template<class T> struct 组织可选<std::optional<T>> : std::true_type {};
@@ -6425,6 +6434,114 @@ std::optional<新出站具体表达信息> 新_语言类::建立或取得出站�
     组织要求(p.状态==基础节点组追加状态::已完成&&p.新节点组.size()==w.请求.新节点组.size());
     组织读取现场 back;const auto out=读出站(back,scene);
     组织要求(out&&out->来源==source&&out->所用组织知识==knowledge&&out->含义网==meaning&&out->候选话语原文==text);return out;
+}
+
+namespace {
+新词典归类材料信息 读取词典语言行(组织读取现场& 读, 稳定编码 行根) {
+    组织要求(读.整数(行根, 组织键::类型) == 106);
+    std::set<稳定编码> 路径;
+    return {行根, 组织读值<新词典归类材料定义>(读, 读.引用(行根, 组织键::定义), 路径)};
+}
+
+std::vector<新词典归类材料信息> 查询词典语言行(组织读取现场& 读, 稳定编码 Q) {
+    std::vector<新词典归类材料信息> 结果;
+    for (const auto& 字段 : 读.字段(组键(组织键::登记根), 组织键::词典材料登记)) {
+        const auto 行根 = std::get<稳定编码>(字段);
+        if (读.引用(行根, 组织键::来源) == Q)
+            结果.push_back(读取词典语言行(读, 行根));
+    }
+    return 结果;
+}
+
+bool 补充词典语言引用身份(组织写入现场& 写) {
+    const auto 结果 = 全局基础数据集.查询节点组完整结构({写.引用组.begin(), 写.引用组.end()});
+    if (结果.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (结果.状态 == 基础结构操作状态::节点不存在) return false;
+    if (结果.状态 != 基础结构操作状态::已完成)
+        throw std::logic_error("词典语言材料的引用身份读取失败");
+    for (const auto& 项 : 结果.节点组) {
+        if (!项.快照) return false;
+        写.请求.只读预期.节点组.push_back(项.快照->结构.节点);
+    }
+    return true;
+}
+
+void 替换词典语言私有定义(组织读取现场& 读, 组织写入现场& 写,
+    稳定编码 行根, std::size_t 新定义) {
+    const auto 旧定义 = 读.引用(行根, 组织键::定义);
+    std::set<稳定编码> 私有节点;
+    std::vector<稳定编码> 待遍历{旧定义};
+    while (!待遍历.empty()) {
+        const auto 节点 = 待遍历.back();
+        待遍历.pop_back();
+        if (!私有节点.insert(节点).second) continue;
+        for (const auto& 子项 : 读.字段(节点, 组织键::子项))
+            待遍历.push_back(std::get<稳定编码>(子项));
+    }
+    std::set<稳定编码> 联合节点{行根};
+    for (const auto 节点 : 私有节点) {
+        联合节点.insert(节点);
+        写.请求.删除节点组.push_back(节点);
+        for (const auto& 字段 : 读.读(节点).结构.字段组) {
+            写.请求.删除字段关系组.push_back(字段.编码);
+            if (const auto* 目标 = std::get_if<稳定编码>(&字段.内容)) 联合节点.insert(*目标);
+        }
+    }
+    for (const auto& 字段 : 读.读(行根).结构.字段组)
+        if (字段.字段节点 == 组键(组织键::定义)) 写.请求.删除字段关系组.push_back(字段.编码);
+    for (const auto 节点 : 联合节点) 写.请求.预期联合节点组.push_back(读.读(节点));
+    写.请求.追加字段组.push_back({行根, 组键(组织键::定义), 基础组内节点引用{新定义}});
+}
+} // namespace
+
+std::optional<新词典归类材料信息> 新_语言类::保存词典归类材料(const 新词典归类材料定义& 定义) {
+    for (;;) {
+        {
+            std::lock_guard 锁(新语言互斥);
+            组织读取现场 读;
+            const auto 全部 = 查询词典语言行(读, 定义.材料Q);
+            const auto 旧 = std::find_if(全部.begin(), 全部.end(), [&](const auto& 项) {
+                return 项.定义.义项I == 定义.义项I
+                    && 项.定义.原文起始标量 == 定义.原文起始标量
+                    && 项.定义.原文结束标量 == 定义.原文结束标量;
+            });
+            if (旧 != 全部.end() && 旧->定义 == 定义) return *旧;
+
+            组织写入现场 写;
+            const auto 新定义 = 写.写(定义);
+            std::optional<std::size_t> 新行根;
+            if (旧 == 全部.end()) {
+                新行根 = 写.节点(106, 0);
+                写.引用(*新行根, 组织键::来源, 定义.材料Q);
+                写.引用(*新行根, 组织键::场景, 定义.来源场景);
+                写.子(*新行根, 组织键::定义, 新定义);
+                const auto 登记根 = 组键(组织键::登记根);
+                写.请求.预期既有节点组.push_back(读.读(登记根).结构);
+                写.请求.追加字段组.push_back({登记根, 组键(组织键::词典材料登记),
+                    基础组内节点引用{*新行根}});
+            } else {
+                替换词典语言私有定义(读, 写, 旧->节点, 新定义);
+            }
+            if (!补充词典语言引用身份(写)) return std::nullopt;
+            const auto 发布 = 全局基础数据集.原子追加节点组(写.请求);
+            if (发布.状态 == 基础节点组追加状态::已完成) {
+                const auto 行根 = 新行根 ? 发布.新节点组.at(*新行根) : 旧->节点;
+                return 新词典归类材料信息{行根, 定义};
+            }
+            if (发布.状态 == 基础节点组追加状态::资源失败) throw std::bad_alloc{};
+            if (发布.状态 != 基础节点组追加状态::预期不符
+                && 发布.状态 != 基础节点组追加状态::节点不存在
+                && 发布.状态 != 基础节点组追加状态::引用不存在)
+                throw std::logic_error("词典语言材料的组合发布失败");
+        }
+        std::this_thread::yield();
+    }
+}
+
+std::vector<新词典归类材料信息> 新_语言类::查询词典归类材料(稳定编码 Q) const {
+    std::lock_guard 锁(新语言互斥);
+    组织读取现场 读;
+    return 查询词典语言行(读, Q);
 }
 
 } // namespace 海中鱼巣

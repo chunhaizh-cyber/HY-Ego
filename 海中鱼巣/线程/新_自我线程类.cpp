@@ -1,5 +1,6 @@
-﻿#include "新_自我线程类.h"
+#include "新_自我线程类.h"
 #include "../业务/接收需求认知.服务.h"
+#include "../业务/词典.语言学习服务.h"
 #include "../业务/新_外设世界树类.h"
 #include "../领域/新_方法类.h"
 #include "../核心/日志系统.h"
@@ -822,6 +823,7 @@ struct 新_自我线程类::实现 final {
     std::unique_ptr<新_自我工作线程类> 自我工作线程;
     模拟学习服务* 学习服务 = nullptr;
     方法问题学习服务* 问题学习服务 = nullptr;
+    词典语言学习服务* 词典语言服务 = nullptr;
     std::unique_ptr<新_学习线程类> 学习线程;
     enum class 学习交接阶段 : std::uint8_t { 等待结果, 待确认学习, 硬失败, 待重学, 待提交 };
     struct 词典学习请求者 final {
@@ -1532,10 +1534,53 @@ struct 新_自我线程类::实现 final {
         return 时点;
     }
 
+    void 发现词典语言材料(稳定编码 T, std::optional<稳定编码> X = std::nullopt) noexcept {
+        if (!词典语言服务 || 停止源.stop_requested()) return;
+        try {
+            if (X) 词典语言服务->接纳执行材料(T, *X);
+            else 词典语言服务->接纳当前任务(T);
+        } catch (const std::exception& 异常) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发现词典语言材料",
+                L"正式词典来源发现发生工程错误。", 异常.what());
+        } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发现词典语言材料",
+                L"正式词典来源发现发生未知工程错误。");
+        }
+    }
+
+    void 推进词典语言材料() noexcept {
+        try {
+            const auto 交付 = 词典语言服务->推进一次(停止源.get_token());
+            if (!交付 || 停止源.stop_requested()) return;
+            const auto 事实 = 世界树服务->获取事实服务引用();
+            bool 有归类主张 = false;
+            for (const auto& 当前 : 事实.语言服务.查询词典归类材料(交付->材料Q)) {
+                if (当前.定义.状态 == 新词典语言理解状态::已理解 && 当前.定义.词条N)
+                    有归类主张 = true;
+            }
+            if (有归类主张 && 任务管理) {
+                const auto 刷新 = 任务管理->请求词典等待依赖刷新(交付->任务);
+                if (刷新.状态 == 新任务管理操作状态::资源失败) throw std::bad_alloc{};
+                if (刷新.状态 != 新任务管理操作状态::已完成 && 刷新.状态 != 新任务管理操作状态::无变化
+                    && !停止源.stop_requested()) throw std::logic_error("词典语言材料等待刷新失败");
+            }
+        } catch (const std::exception& 异常) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"推进词典语言材料",
+                L"正式词典释义转换或交接发生工程错误。", 异常.what());
+        } catch (...) {
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"推进词典语言材料",
+                L"正式词典释义转换或交接发生未知工程错误。");
+        }
+    }
+
     std::optional<std::chrono::steady_clock::time_point> 合并后台推进时点已加锁(
         std::optional<std::chrono::steady_clock::time_point> 时点) const noexcept {
         const auto 待投 = 最近问题投递时点();
         if (待投 && (!时点 || *待投 < *时点)) 时点 = 待投;
+        if (词典语言服务) {
+            const auto 词典时点 = 词典语言服务->下一推进时点();
+            if (词典时点 && (!时点 || *词典时点 < *时点)) 时点 = 词典时点;
+        }
         const auto 扫描时点 = 最近扫描推进时点已加锁();
         if (扫描时点 && (!时点 || *扫描时点 < *时点)) 时点 = 扫描时点;
         for (const auto& [方法, 项] : 在途学习) {
@@ -1895,6 +1940,7 @@ struct 新_自我线程类::实现 final {
     // 这里只给重新筹办资格，不调用方法选择器、不写T/M/X/A，也不签动作许可。
     std::optional<新自我等待复核决议> 复核等待任务(
         const 新任务等待复核定位& 定位) {
+        发现词典语言材料(定位.定位.任务节点);
         新自我等待复核决议 决议{定位, 新自我等待复核状态::需核查, {}};
         const auto 出口 = [&]([[maybe_unused]] int 行) -> const 新自我等待复核决议& {
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
@@ -4196,6 +4242,7 @@ struct 新_自我线程类::实现 final {
 
     // 空结果只表示manager暂时不能接纳裁决；保留原反馈定位后重试。
     std::optional<新自我消息处理结果> 处理筹办反馈(消息项& 项) noexcept {
+        if (项.消息.筹办反馈) 发现词典语言材料(项.消息.筹办反馈->任务节点);
         新自我消息处理结果 结果;
         结果.原消息 = 项.消息;
         if (停止源.stop_requested()) {
@@ -4952,6 +4999,8 @@ struct 新_自我线程类::实现 final {
 
     std::optional<新自我消息处理结果> 处理任务结果反馈(
         消息项& 项) noexcept {
+        if (项.消息.结果反馈)
+            发现词典语言材料(项.消息.结果反馈->任务节点, 项.消息.结果反馈->执行实例节点);
         if (项.贡献前置结果) return 推进最终消费消息(项);
         新自我消息处理结果 结果;
         结果.原消息 = 项.消息;
@@ -5295,6 +5344,15 @@ struct 新_自我线程类::实现 final {
                     if(停止已请求||停止源.stop_requested())break;
                     // 普通认知拍仍继续原治理；前U材料或行动请求入邮箱后优先排干。
                     if(行动请求已入邮箱)continue;
+                }
+                if (词典语言服务) {
+                    const auto 时点 = 词典语言服务->下一推进时点();
+                    if (时点 && *时点 <= std::chrono::steady_clock::now()) {
+                        锁.unlock();
+                        推进词典语言材料();
+                        锁.lock();
+                        if (停止已请求 || 停止源.stop_requested()) break;
+                    }
                 }
                 if (最终服务工作待唤醒.exchange(false)) {
                     const auto 当前 = std::chrono::steady_clock::now();
@@ -6297,6 +6355,18 @@ bool 新_自我线程类::绑定方法问题学习(方法问题学习服务& 服
         return true;
     } catch (...) { return false; }
 }
+bool 新_自我线程类::绑定词典语言学习(词典语言学习服务& 服务) noexcept {
+    if (!实现_) return false;
+    try {
+        std::lock_guard 加入锁(实现_->加入互斥);
+        std::lock_guard 锁(实现_->状态互斥);
+        if (实现_->词典语言服务 == &服务) return true;
+        if (实现_->词典语言服务 || 实现_->工作线程.joinable() || 实现_->线程已完成) return false;
+        实现_->词典语言服务 = &服务;
+        return true;
+    } catch (...) { return false; }
+}
+
 bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcept {
     if (!实现_) return false;
     try {

@@ -272,6 +272,7 @@
     <ClCompile Include="海中鱼巣\业务\服务需求.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\词典.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\业务\词典.语言学习服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象需求.发布服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\动作概念.方法投影服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务要求.结构化.cpp" />
@@ -357,6 +358,8 @@
     <ClInclude Include="海中鱼巣\领域\服务对象.材料合同.h" />
     <ClInclude Include="海中鱼巣\业务\服务对象.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\词典.本能运行服务.h" />
+    <ClInclude Include="海中鱼巣\业务\词典.语言学习服务.h" />
+    <ClInclude Include="海中鱼巣\领域\词典语言.数据.h" />
     <ClInclude Include="海中鱼巣\业务\服务对象需求.发布服务.h" />
     <ClInclude Include="海中鱼巣\业务\服务值结算.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\业务\进入场景.本能运行服务.h" />
