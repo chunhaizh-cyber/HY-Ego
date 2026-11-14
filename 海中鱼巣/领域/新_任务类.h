@@ -24,6 +24,7 @@
 #include "前置语言输入.数据.h"
 #include "词条.数据.h"
 #include "词典.数据.h"
+#include "数据操作.执行结果参与.h"
 
 namespace 海中鱼巣 {
 enum class 新任务词条特征落实状态 : std::uint8_t {
@@ -521,6 +522,7 @@ struct 新任务执行信息 final {
     std::vector<新方法本次场景事实引用> 本次场景事实组;
     // 原函数当次实际报告的六引用；保存不自证当前世界效果，公开正式读取另行核验。
     std::optional<新本能已发布需求结果> 已发布需求;
+    std::optional<新本能词典读取回执> 词典读取;
     friend bool operator==(const 新任务执行信息&,
         const 新任务执行信息&) = default;
 };
@@ -1752,6 +1754,13 @@ public:
 
     // 任务治理组合入口由任务域唯一拥有；世界树不再持有、转发或友元开放。
     bool 初始化治理() noexcept;
+    新词典执行回执读取结果 读取执行词典回执(稳定编码 T, 稳定编码 X) const noexcept;
+    新词典结果参与准备结果 准备执行词典材料参与(
+        稳定编码 T, 稳定编码 X, const 新词典执行结果来源&) noexcept;
+    新词典结果参与准备结果 准备执行词典采用参与(
+        稳定编码 T, 稳定编码 X, 稳定编码 Q, std::optional<稳定编码> 前状态) noexcept;
+    新词典材料操作状态 记录执行词典未命中(
+        稳定编码 T, 稳定编码 X, const 新词典执行结果来源&) noexcept;
     新任务列表结果 查询可查找方法任务() const noexcept;
     新任务列表结果 查询可检查条件任务() const noexcept;
     std::optional<std::vector<新任务治理执行读回结果>>

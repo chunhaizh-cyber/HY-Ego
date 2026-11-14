@@ -1382,12 +1382,12 @@ std::optional<bool> 结果域保证满足需求(
 
 稳定编码 节点类型字段{};
 extern 稳定编码 任务虚拟存在字段;
-extern 稳定编码 执行所属任务字段,执行方法字段,任务执行实例节点类型;
+extern 稳定编码 执行所属任务字段,执行方法字段,任务执行实例节点类型,执行普通动作字段,执行状态字段;
 // 以下结构只由任务 owner 发布。字段引用保留身份，直接值只保存枚举和数值。
 namespace 任务执行组织存储 {
 enum class 类型 : std::size_t {
     根, 作用域, 参数, 参数特征, 集合约束, 配对, 条件项, 结果项,
-    禁止项, 确认, 线性, 步骤, 分支, 执行采用, 执行条件, 执行绑定, 场景事实, 条件分支, 内容位置关系, 数量
+    禁止项, 确认, 线性, 步骤, 分支, 执行采用, 执行条件, 执行绑定, 场景事实, 条件分支, 内容位置关系, 词典回执, 数量
 };
 enum class 字段 : std::size_t {
     组织根, 所属任务, 治理宿主, 根作用域, 作用域成员,
@@ -1420,7 +1420,10 @@ enum class 字段 : std::size_t {
     预计内容需求, 预计内容要求, 预计内容路径, 目标明确无值, 内容认知来源当前有效,
     内容来源确认, 内容来源理解, 内容来源人类, 内容来源目标存在, 内容来源目标FT, 内容来源目标形式,
     内容来源目标域, 内容来源目标比较, 内容来源要求, 内容来源目标引用需求, 内容来源目标内容项, 内容来源目标方向,
-    参数必需特征类型, 参数所属位置, 结果被动需求目标, 结果作用存在, 数量
+    参数必需特征类型, 参数所属位置, 结果被动需求目标, 结果作用存在,
+    词典回执引用, 词典格式, 词典词条, 词典材料特征, 词典外设场景, 词典查询记录,
+    词典查阅结局, 词典采用阶段, 词典新状态标记, 词典材料, 词典前状态, 词典后状态,
+    词典变化阶段, 词典无需原因, 词典变化动态, 数量
 };
 稳定编码 类型节点[static_cast<std::size_t>(类型::数量)]{};
 稳定编码 字段节点[static_cast<std::size_t>(字段::数量)]{};
@@ -3346,6 +3349,239 @@ void 追加执行需求结果(稳定编码 X,const 新本能已发布需求结�
     要求(发布.状态==基础节点组追加状态::已完成,"X demand result protected append failed");
     要求(读取执行需求结果(X)==结果,"X demand result append readback mismatch");
 }
+const 基础字段关系* 词典字段(const 基础节点结构& n, 稳定编码 key) {
+    const 基础字段关系* found = nullptr;
+    for (const auto& f : n.字段组) if (f.字段节点 == key) {
+        要求(!found, "dictionary receipt duplicate field"); found = &f;
+    }
+    return found;
+}
+std::optional<稳定编码> 词典引用(const 基础节点结构& n, 稳定编码 key) {
+    const auto f = 词典字段(n,key);
+    if (!f) return {};
+    const auto v = std::get_if<稳定编码>(&f->内容);
+    要求(v && 有效(*v), "dictionary receipt invalid reference"); return *v;
+}
+std::optional<std::int64_t> 词典整数(const 基础节点结构& n, 字段 key) {
+    const auto f = 词典字段(n,取(key));
+    if (!f) return {};
+    const auto direct = std::get_if<基础值>(&f->内容);
+    const auto v = direct ? std::get_if<std::int64_t>(&direct->材料) : nullptr;
+    要求(v != nullptr, "dictionary receipt integer material invalid"); return *v;
+}
+std::uint64_t 词典标识(const 基础节点结构& n, 字段 key) {
+    const auto f = 词典字段(n,取(key));
+    const auto direct = f ? std::get_if<基础值>(&f->内容) : nullptr;
+    const auto v = direct ? std::get_if<std::vector<std::uint64_t>>(&direct->材料) : nullptr;
+    要求(v && v->size()==1 && v->front()!=0, "dictionary receipt external identity invalid");
+    return v->front();
+}
+std::optional<基础联合节点快照> 词典快照(稳定编码 n) {
+    const auto read = 全局基础数据集.查询节点组完整结构({n});
+    if (read.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (read.状态 == 基础结构操作状态::节点不存在) return {};
+    要求(read.状态 == 基础结构操作状态::已完成 && read.节点组.size()==1,
+        "dictionary execution snapshot unavailable");
+    return read.节点组.front().快照;
+}
+新本能词典读取回执 解码词典回执(const 基础节点结构& n, 稳定编码 A) {
+    要求(词典引用(n,节点类型字段)==取(类型::词典回执) && 词典整数(n,字段::词典格式)==1,
+        "dictionary receipt schema invalid");
+    新本能词典读取回执 r;
+    r.动作=A;
+    r.词条=词典引用(n,取(字段::词典词条)).value_or(稳定编码{});
+    r.材料特征=词典引用(n,取(字段::词典材料特征)).value_or(稳定编码{});
+    r.查询来源={词典标识(n,字段::词典外设场景),词典标识(n,字段::词典查询记录)};
+    const auto outcome=词典整数(n,字段::词典查阅结局), stage=词典整数(n,字段::词典采用阶段);
+    const auto fresh=词典整数(n,字段::词典新状态标记);
+    要求(有效(A)&&有效(r.词条)&&有效(r.材料特征)&&outcome&&(*outcome==1||*outcome==2)
+        &&stage&&*stage>=1&&*stage<=3&&fresh&&(*fresh==0||*fresh==1),"dictionary receipt required material missing");
+    r.查阅结局=static_cast<新词典查阅结局>(*outcome);
+    r.采用阶段=static_cast<新词典材料采用阶段>(*stage);
+    r.本次形成新状态=*fresh==1;
+    r.材料Q=词典引用(n,取(字段::词典材料));
+    r.前状态=词典引用(n,取(字段::词典前状态));
+    r.后状态=词典引用(n,取(字段::词典后状态));
+    r.变化动态=词典引用(n,取(字段::词典变化动态));
+    if(const auto v=词典整数(n,字段::词典变化阶段)) {
+        要求(*v>=1&&*v<=3,"dictionary receipt change stage invalid");
+        r.变化阶段=static_cast<新词典变化处理阶段>(*v);
+    }
+    if(const auto v=词典整数(n,字段::词典无需原因)) {
+        要求(*v>=0&&*v<=2,"dictionary receipt no-change reason invalid");
+        r.无需形成原因=static_cast<新词条动态记录原因>(*v);
+    }
+    if(r.查阅结局==新词典查阅结局::正式未命中) {
+        要求(r.采用阶段==新词典材料采用阶段::未取得&&!r.材料Q&&!r.前状态&&!r.后状态
+            &&!r.本次形成新状态&&!r.变化阶段&&!r.无需形成原因&&!r.变化动态,
+            "dictionary miss contains invented material");
+    } else {
+        要求(r.材料Q.has_value()&&r.采用阶段!=新词典材料采用阶段::未取得,"dictionary hit missing material");
+        if(r.采用阶段==新词典材料采用阶段::已取得未采用)
+            要求(!r.前状态&&!r.后状态&&!r.本次形成新状态&&!r.变化阶段&&!r.无需形成原因&&!r.变化动态,
+                "unadopted dictionary material has change evidence");
+        else {
+            要求(r.变化阶段.has_value()&&r.本次形成新状态==r.后状态.has_value(),"dictionary adoption stage incomplete");
+            if(*r.变化阶段==新词典变化处理阶段::已形成)
+                要求(r.变化动态.has_value()&&!r.无需形成原因&&r.前状态&&r.后状态,"dictionary change evidence missing");
+            else if(*r.变化阶段==新词典变化处理阶段::无需形成)
+                要求(!r.变化动态&&r.无需形成原因.has_value(),"dictionary no-change reason missing");
+            else 要求(!r.变化动态&&!r.无需形成原因&&r.后状态.has_value(),"dictionary pending change incomplete");
+        }
+    }
+    return r;
+}
+struct 词典执行读取 final {
+    基础联合节点快照 X;
+    稳定编码 任务, 动作;
+    std::optional<基础联合节点快照> 记录;
+    std::optional<新本能词典读取回执> 回执;
+};
+std::optional<词典执行读取> 读取词典执行(稳定编码 X) {
+    for (;;) {
+        const auto x=词典快照(X);
+        if(!x) return {};
+        要求(词典引用(x->结构,节点类型字段)==任务执行实例节点类型,"dictionary receipt host is not X");
+        词典执行读取 out{*x};
+        out.任务=词典引用(x->结构,执行所属任务字段).value_or(稳定编码{});
+        out.动作=词典引用(x->结构,执行普通动作字段).value_or(稳定编码{});
+        要求(有效(out.任务),"dictionary X missing task owner");
+        const auto record=词典引用(x->结构,取(字段::词典回执引用));
+        if(!record) return out;
+        out.记录=词典快照(*record);
+        if(!out.记录) {
+            const auto latest=词典快照(X);
+            if(!latest||词典引用(latest->结构,取(字段::词典回执引用))!=record) continue;
+            throw std::logic_error("dictionary X still refers to missing receipt");
+        }
+        out.回执=解码词典回执(out.记录->结构,out.动作);
+        return out;
+    }
+}
+std::optional<新本能词典读取回执> 读取执行词典结果(稳定编码 X) {
+    const auto read=读取词典执行(X);
+    return read ? read->回执 : std::nullopt;
+}
+基础组内新节点 构造词典首次记录(const 新词典执行结果来源& source, bool hit) {
+    return {{{节点类型字段,取(类型::词典回执)},
+        {取(字段::词典格式),基础值{std::int64_t{1}}},
+        {取(字段::词典词条),source.词条},{取(字段::词典材料特征),source.材料特征},
+        {取(字段::词典外设场景),基础值{std::vector<std::uint64_t>{source.查询来源.场景}}},
+        {取(字段::词典查询记录),基础值{std::vector<std::uint64_t>{source.查询来源.查询记录}}},
+        {取(字段::词典查阅结局),基础值{static_cast<std::int64_t>(hit?新词典查阅结局::命中:新词典查阅结局::正式未命中)}},
+        {取(字段::词典采用阶段),基础值{static_cast<std::int64_t>(hit?新词典材料采用阶段::已取得未采用:新词典材料采用阶段::未取得)}},
+        {取(字段::词典新状态标记),基础值{std::int64_t{0}}}}};
+}
+void 捕获词典引用身份(基础节点组追加请求& request, const std::vector<稳定编码>& nodes) {
+    if(nodes.empty()) return;
+    const auto read=全局基础数据集.查询节点组完整结构(nodes);
+    if(read.状态==基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if(read.状态==基础结构操作状态::节点不存在) throw 新词典材料操作状态::未找到;
+    要求(read.状态==基础结构操作状态::已完成,"dictionary receipt reference identities unavailable");
+    for(const auto& item:read.节点组) {
+        if(!item.快照) throw 新词典材料操作状态::未找到;
+        request.只读预期.节点组.push_back(item.快照->结构.节点);
+    }
+}
+bool 词典执行中(const 词典执行读取& read) {
+    const auto f=词典字段(read.X.结构,执行状态字段);
+    const auto direct=f?std::get_if<基础值>(&f->内容):nullptr;
+    const auto state = direct ? std::get_if<std::int64_t>(&direct->材料) : nullptr;
+    要求(state!=nullptr,"dictionary X state missing");
+    return *state==static_cast<std::int64_t>(新任务执行状态::执行中);
+}
+class 词典结果准备 final : public 新词典结果参与准备 {
+    const std::thread::id 线程_=std::this_thread::get_id();
+    词典执行读取 读取_;
+    新词典执行结果来源 来源_;
+    std::optional<稳定编码> 前状态_;
+    基础节点组追加请求 基础_;
+    bool 采用_=false;
+    mutable bool 已构造_=false;
+    mutable std::optional<std::size_t> 新记录槽_;
+    bool 已发表_=false, 已完成_=false, 已取消_=false;
+    std::optional<基础片段发布回执> 回执_;
+    稳定编码 已发表记录_;
+    void 开始构造() const {
+        要求(线程_==std::this_thread::get_id()&&!已构造_&&!已取消_&&!已发表_,"dictionary receipt preparation reused");
+        已构造_=true;
+    }
+    基础节点组追加请求 构造采用(bool newState, std::optional<基础组内字段内容> state={}) const {
+        要求(采用_&&读取_.记录&&读取_.回执&&读取_.回执->材料Q,"dictionary adoption preparation missing");
+        auto request=基础_;
+        const auto& n=读取_.记录->结构;
+        const auto replace=[&](字段 key,std::int64_t v) {
+            const auto f=词典字段(n,取(key)); 要求(f!=nullptr,"dictionary adoption field missing");
+            request.替换字段组.push_back({f->编码,基础值{v}});
+        };
+        replace(字段::词典采用阶段,static_cast<std::int64_t>(新词典材料采用阶段::已采用));
+        replace(字段::词典新状态标记,newState?1:0);
+        if(前状态_) request.追加字段组.push_back({n.节点.编码,取(字段::词典前状态),*前状态_});
+        if(state) request.追加字段组.push_back({n.节点.编码,取(字段::词典后状态),*state});
+        request.追加字段组.push_back({n.节点.编码,取(字段::词典变化阶段),基础值{static_cast<std::int64_t>(
+            newState?新词典变化处理阶段::待处理:新词典变化处理阶段::无需形成)}});
+        if(!newState) request.追加字段组.push_back({n.节点.编码,取(字段::词典无需原因),
+            基础值{static_cast<std::int64_t>(新词条动态记录原因::无值变化)}});
+        return request;
+    }
+public:
+    词典结果准备(词典执行读取 read,新词典执行结果来源 source,
+        std::optional<稳定编码> previous,bool adoption)
+        :读取_(std::move(read)),来源_(source),前状态_(previous),采用_(adoption) {
+        基础_.预期联合节点组.push_back(读取_.X);
+        if(读取_.记录) 基础_.预期联合节点组.push_back(*读取_.记录);
+        std::vector<稳定编码> nodes{取(类型::词典回执),source.词条,source.材料特征};
+        if(previous) nodes.push_back(*previous);
+        捕获词典引用身份(基础_,nodes);
+    }
+    ~词典结果准备() override {
+        if(已发表_&&!已完成_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"词典执行结果准备析构",L"已发表回执尚未完成收尾，不能按未发表取消。");
+    }
+    新材料结果追加构造 构造同组材料引用(const 新同组材料端点& endpoint) const override {
+        开始构造(); 要求(!采用_,"dictionary adoption cannot republish Q holding");
+        auto request=基础_;
+        auto record=构造词典首次记录(来源_,true);
+        std::visit([&](const auto& value){record.字段组.push_back({取(字段::词典材料),value});},endpoint.材料定位);
+        新记录槽_=endpoint.后续新节点起点;
+        request.新节点组.push_back(std::move(record));
+        request.追加字段组.push_back({读取_.X.结构.节点.编码,取(字段::词典回执引用),基础组内节点引用{*新记录槽_}});
+        return {std::move(request)};
+    }
+    新状态结果追加构造 构造同组状态引用(const 新同组状态端点& endpoint) const override {
+        开始构造();
+        要求(读取_.回执&&endpoint.被描述节点==来源_.词条&&endpoint.来源特征节点==来源_.材料特征
+            &&endpoint.固定准确值==std::optional<新特征准确值>{新特征准确值{*读取_.回执->材料Q}},
+            "dictionary adoption endpoint does not describe its W/F/Q");
+        const auto value=std::visit([](const auto& v){return 基础组内字段内容{v};},endpoint.状态定位);
+        return {构造采用(true,value),1};
+    }
+    新材料结果追加构造 构造无新状态采用() const override {
+        开始构造(); return {构造采用(false)};
+    }
+    void 登记共同发表回执(const 基础片段发布回执& receipt) noexcept override {
+        if(线程_!=std::this_thread::get_id()||!已构造_||已发表_||已取消_
+            ||(!采用_&&(!新记录槽_||*新记录槽_>=receipt.新节点组().size())))
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"登记词典执行结果回执",L"共同发表回执与一次准备不相符。");
+        // 回执复制只共享只读结果；无分配，不读取“最近”记录。
+        回执_=receipt;
+        已发表_=true;
+    }
+    void 完成共同发表() noexcept override {
+        if(线程_!=std::this_thread::get_id()||!已发表_||!回执_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"完成词典执行结果发表",L"没有本次正式发表回执。");
+        已发表记录_ = 采用_ ? 读取_.记录->结构.节点.编码 : 回执_->新节点组()[*新记录槽_];
+        if(!有效(已发表记录_))
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"完成词典执行结果发表",L"本次回执未交付记录编码。");
+        已完成_=true;
+    }
+    void 取消未发表准备() noexcept override {
+        if(线程_!=std::this_thread::get_id()||已发表_)
+            工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取消词典执行结果准备",L"不能取消已发表事实或跨线程准备。");
+        已取消_=true;
+    }
+};
+
 void 清理执行场景事实(稳定编码 X) {
     std::vector<稳定编码> 节点组,字段组;(void)读取执行场景事实(X,&节点组,&字段组);
     if(节点组.empty())return;
@@ -5069,6 +5305,7 @@ std::optional<新任务执行信息> 读取执行信息(
     }
     结果.本次场景事实组=任务执行组织存储::读取执行场景事实(执行节点);
     结果.已发布需求=任务执行组织存储::读取执行需求结果(执行节点);
+    结果.词典读取=任务执行组织存储::读取执行词典结果(执行节点);
     if(结果.已发布需求&&(!结果.本能采用||!结果.普通动作节点
         ||结果.已发布需求->本次动作节点!=*结果.普通动作节点))
         throw std::logic_error("X已发布需求与正式动作/采用不一致");
@@ -5937,7 +6174,9 @@ bool 删除未进入动作执行结构(
     稳定编码 执行节点,
     const std::vector<预计阶段物理>& 阶段组,
     新_动态类* 动态服务) noexcept {
-    try{if(任务执行组织存储::读取执行需求结果(执行节点))
+    try{if(任务执行组织存储::读取执行词典结果(执行节点))
+        throw std::logic_error("zero-action X cannot delete a dictionary receipt");
+        if(任务执行组织存储::读取执行需求结果(执行节点))
         throw std::logic_error("zero-action X cannot delete a published demand result");}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"删除未进入动作执行结构",L"已发布需求保护或结构核验失败");}
     if (!全局基础数据集.查询字段(执行节点, 执行返回确认字段).empty()) return false;
@@ -7949,6 +8188,108 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
         std::lock_guard 锁(新任务互斥);
         return 读取执行信息(执行实例节点, 状态服务_, 特征服务_, 特征概念服务_);
     } catch (...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取任务执行实例",L"执行证据结构读取故障");}
+}
+
+新词典执行回执读取结果 新_任务类::读取执行词典回执(稳定编码 T,稳定编码 X) const noexcept {
+    using S=新词典材料操作状态;
+    try {
+        if(!有效(T)||!有效(X)) return {S::输入拒绝,{}};
+        std::lock_guard lock(新任务互斥);
+        if(!任务执行组织存储::已分配()) return {S::未装配,{}};
+        const auto read=任务执行组织存储::读取词典执行(X);
+        if(!read) return {S::未找到,{}};
+        if(read->任务!=T) return {S::输入拒绝,{}};
+        return {read->回执 ? S::已完成 : S::未找到,read->回执};
+    } catch(const std::bad_alloc&) {return {S::资源失败,{}};}
+    catch(const std::length_error&) {return {S::资源失败,{}};}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取执行词典回执",L"本次执行结果结构读取失败。");}
+}
+
+新词典结果参与准备结果 新_任务类::准备执行词典材料参与(
+    稳定编码 T,稳定编码 X,const 新词典执行结果来源& source) noexcept {
+    using S=新词典材料操作状态;
+    using namespace 任务执行组织存储;
+    try {
+        if(!有效(T)||!有效(X)||!有效(source.词条)||!有效(source.材料特征)
+            ||!source.查询来源.场景||!source.查询来源.查询记录) return {S::输入拒绝,{},{}};
+        std::lock_guard lock(新任务互斥);
+        if(!已分配()) return {S::未装配,{},{}};
+        auto read=读取词典执行(X);
+        if(!read) return {S::未找到,{},{}};
+        if(read->任务!=T) return {S::输入拒绝,{},{}};
+        if(read->回执) return {S::已复用,{},read->回执};
+        if(!有效(read->动作)||!词典执行中(*read)) return {S::条件不具备,{},{}};
+        auto p=std::make_unique<词典结果准备>(std::move(*read),source,std::nullopt,false);
+        return {S::已完成,std::move(p),{}};
+    } catch(S state) {return {state,{},{}};}
+    catch(const std::bad_alloc&) {return {S::资源失败,{},{}};}
+    catch(const std::length_error&) {return {S::资源失败,{},{}};}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备执行词典材料引用",L"本次执行结果准备失败。");}
+}
+
+新词典结果参与准备结果 新_任务类::准备执行词典采用参与(
+    稳定编码 T,稳定编码 X,稳定编码 Q,std::optional<稳定编码> previous) noexcept {
+    using S=新词典材料操作状态;
+    using namespace 任务执行组织存储;
+    try {
+        if(!有效(T)||!有效(X)||!有效(Q)||(previous&&!有效(*previous))) return {S::输入拒绝,{},{}};
+        std::lock_guard lock(新任务互斥);
+        if(!已分配()) return {S::未装配,{},{}};
+        auto read=读取词典执行(X);
+        if(!read) return {S::未找到,{},{}};
+        if(read->任务!=T) return {S::输入拒绝,{},{}};
+        if(!read->回执) return {S::条件不具备,{},{}};
+        const auto r=*read->回执;
+        if(r.查阅结局==新词典查阅结局::正式未命中||r.采用阶段==新词典材料采用阶段::已采用)
+            return {S::已复用,{},r};
+        if(r.材料Q!=std::optional{Q}) return {S::输入拒绝,{},{}};
+        if(!词典执行中(*read)) return {S::条件不具备,{},{}};
+        auto p=std::make_unique<词典结果准备>(std::move(*read),
+            新词典执行结果来源{r.词条,r.材料特征,r.查询来源},previous,true);
+        return {S::已完成,std::move(p),{}};
+    } catch(S state) {return {state,{},{}};}
+    catch(const std::bad_alloc&) {return {S::资源失败,{},{}};}
+    catch(const std::length_error&) {return {S::资源失败,{},{}};}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备执行词典采用",L"采用结果准备失败。");}
+}
+
+新词典材料操作状态 新_任务类::记录执行词典未命中(
+    稳定编码 T,稳定编码 X,const 新词典执行结果来源& source) noexcept {
+    using S=新词典材料操作状态;
+    using namespace 任务执行组织存储;
+    try {
+        if(!有效(T)||!有效(X)||!有效(source.词条)||!有效(source.材料特征)
+            ||!source.查询来源.场景||!source.查询来源.查询记录) return S::输入拒绝;
+        for(;;) {
+            基础节点组追加状态 state;
+            {
+                std::lock_guard lock(新任务互斥);
+                if(!已分配()) return S::未装配;
+                const auto read=读取词典执行(X);
+                if(!read) return S::未找到;
+                if(read->任务!=T) return S::输入拒绝;
+                if(read->回执) return S::已复用;
+                if(!有效(read->动作)||!词典执行中(*read)) return S::条件不具备;
+                基础节点组追加请求 request;
+                request.预期既有节点组.push_back(read->X.结构);
+                捕获词典引用身份(request,{source.词条,source.材料特征});
+                request.新节点组.push_back(构造词典首次记录(source,false));
+                request.追加字段组.push_back({X,取(字段::词典回执引用),基础组内节点引用{0}});
+                state=全局基础数据集.原子追加节点组(request).状态;
+            }
+            if(state==基础节点组追加状态::已完成) return S::已完成;
+            if(state==基础节点组追加状态::资源失败) return S::资源失败;
+            if(state==基础节点组追加状态::预期不符||state==基础节点组追加状态::节点不存在
+                ||state==基础节点组追加状态::引用不存在) {
+                // 丢弃本轮构造，读最新X及参数身份；稳定缺失不会复用旧构造无限提交。
+                std::this_thread::yield(); continue;
+            }
+            throw std::logic_error("dictionary miss receipt append failed");
+        }
+    } catch(S state) {return state;}
+    catch(const std::bad_alloc&) {return S::资源失败;}
+    catch(const std::length_error&) {return S::资源失败;}
+    catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录执行词典未命中",L"正式未命中记录发表失败。");}
 }
 
 std::optional<新任务本能采用材料> 新_任务类::读取执行本能采用(稳定编码 X) const noexcept {

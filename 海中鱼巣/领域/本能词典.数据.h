@@ -32,6 +32,15 @@ struct 新本能词典读取回执 final {
     friend bool operator==(const 新本能词典读取回执&, const 新本能词典读取回执&) = default;
 };
 
+struct 新词典执行结果来源 final {
+    稳定编码 词条, 材料特征;
+    新词典外设来源标识 查询来源;
+};
+struct 新词典执行回执读取结果 final {
+    新词典材料操作状态 状态 = 新词典材料操作状态::未找到;
+    std::optional<新本能词典读取回执> 回执;
+};
+
 enum class 新词典运行状态 : std::uint8_t {
     已就绪 = 1, 已推进, 已收束, 条件未具备, 需重新组织,
     已停止, 输入拒绝, 未装配, 资源失败
