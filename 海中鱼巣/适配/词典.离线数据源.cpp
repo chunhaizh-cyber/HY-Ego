@@ -146,17 +146,11 @@ struct 词典批次 final {
     std::map<std::string, 批次文件> 文件组;
 };
 
-std::optional<词典批次> 读取批次(const std::filesystem::path& 根) {
-    const auto 指向 = 根 / std::filesystem::path(u8"当前批次.txt");
-    if (!文件存在(指向)) return std::nullopt;
-    auto 标识 = 读小文件(指向, 65);
-    if (标识.size() != 65 || 标识.back() != '\n' || !是摘要(std::string_view(标识).substr(0, 64)))
-        throw 批次数据错误("当前词典批次指向不合法");
-    标识.pop_back();
+词典批次 读取指定批次(const std::filesystem::path& 根, const std::string& 标识) {
     词典批次 批次;
     批次.目录 = 根 / std::filesystem::path(u8"批次") / 标识;
     const auto 清单路径 = 批次.目录 / std::filesystem::path(u8"批次清单.tsv");
-    if (!文件存在(清单路径)) throw 批次数据错误("当前词典批次清单缺失");
+    if (!文件存在(清单路径)) throw 批次数据错误("词典批次清单缺失");
     const auto 清单 = 读小文件(清单路径, 16384);
     摘要计算 摘要;
     摘要.追加(清单.data(), 清单.size());
@@ -212,6 +206,16 @@ std::optional<词典批次> 读取批次(const std::filesystem::path& 根) {
         }
     }
     return 批次;
+}
+
+std::optional<词典批次> 读取批次(const std::filesystem::path& 根) {
+    const auto 指向 = 根 / std::filesystem::path(u8"当前批次.txt");
+    if (!文件存在(指向)) return std::nullopt;
+    auto 标识 = 读小文件(指向, 65);
+    if (标识.size() != 65 || 标识.back() != '\n' || !是摘要(std::string_view(标识).substr(0, 64)))
+        throw 批次数据错误("当前词典批次指向不合法");
+    标识.pop_back();
+    return 读取指定批次(根, 标识);
 }
 
 using 词面键 = std::pair<std::string, std::string>;
@@ -542,36 +546,74 @@ struct 离线词典数据源::实现 final {
 }
 
 词典打开结果 离线词典数据源::打开(const std::filesystem::path& 目录) noexcept {
+    return 打开内部(目录, std::nullopt);
+}
+
+词典打开结果 离线词典数据源::打开指定批次(const std::filesystem::path& 词典根,
+    std::string_view 可信批次标识) noexcept {
+    return 打开内部(词典根, 可信批次标识);
+}
+
+词典打开结果 离线词典数据源::打开内部(const std::filesystem::path& 目录,
+    std::optional<std::string_view> 指定批次) noexcept {
     std::filesystem::path 文件;
+    std::filesystem::path 指定目录;
     std::string 包标识;
     std::size_t 行号 = 0;
+    const auto 失败 = [&](词典操作状态 状态, std::string_view 来源包,
+        const std::filesystem::path& 路径, std::size_t 行, std::string_view 原因) noexcept {
+        if (!指定目录.empty() && (状态 == 词典操作状态::数据错误
+            || 状态 == 词典操作状态::读取失败 || 状态 == 词典操作状态::未配置)) {
+            std::error_code 错误;
+            const bool 仍存在 = std::filesystem::exists(指定目录, 错误);
+            if (错误) 状态 = 词典操作状态::读取失败;
+            else if (!仍存在) 状态 = 词典操作状态::未配置;
+            else if (状态 == 词典操作状态::未配置) 状态 = 词典操作状态::数据错误;
+        }
+        return 打开失败(状态, 来源包, 路径, 行, 原因);
+    };
     try {
         if (目录.empty()) {
-            return 打开失败(词典操作状态::输入不合法, {}, 目录, 0, "词典目录为空");
+            return 失败(词典操作状态::输入不合法, {}, 目录, 0, "词典目录为空");
+        }
+        if (指定批次 && !是摘要(*指定批次)) {
+            return 失败(词典操作状态::输入不合法, {}, 目录, 0, "指定词典批次标识不合法");
         }
         std::error_code 错误;
         const bool 目录存在 = std::filesystem::exists(目录, 错误);
-        if (错误) return 打开失败(词典操作状态::读取失败, {}, 文件, 0, "无法读取目录属性");
-        if (!目录存在) return 打开失败(词典操作状态::未配置, {}, 文件, 0, "词典目录不存在");
+        if (错误) return 失败(词典操作状态::读取失败, {}, 文件, 0, "无法读取目录属性");
+        if (!目录存在) return 失败(词典操作状态::未配置, {}, 文件, 0, "词典目录不存在");
         const bool 是目录 = std::filesystem::is_directory(目录, 错误);
         if (错误 || !是目录) {
-            return 打开失败(词典操作状态::读取失败, {}, 文件, 0, "指定路径不是可读目录");
+            return 失败(词典操作状态::读取失败, {}, 文件, 0, "指定路径不是可读目录");
         }
-        const auto 批次 = 读取批次(目录);
+        std::optional<词典批次> 批次;
+        if (指定批次) {
+            指定目录 = 目录 / std::filesystem::path(u8"批次") / std::string(*指定批次);
+            const bool 批次存在 = std::filesystem::exists(指定目录, 错误);
+            if (错误) return 失败(词典操作状态::读取失败, {}, 指定目录, 0, "无法读取批次目录属性");
+            if (!批次存在) return 失败(词典操作状态::未配置, {}, 指定目录, 0, "指定词典批次目录不存在");
+            const bool 批次是目录 = std::filesystem::is_directory(指定目录, 错误);
+            if (错误 || !批次是目录)
+                return 失败(词典操作状态::读取失败, {}, 指定目录, 0, "指定批次路径不是可读目录");
+            批次 = 读取指定批次(目录, std::string(*指定批次));
+        } else {
+            批次 = 读取批次(目录);
+        }
         文件 = (批次 ? 批次->目录 : 目录) / std::filesystem::path(u8"词典.简体.tsv");
         if (!批次 && !文件存在(文件)) 文件 = 目录 / std::filesystem::path(u8"词典.tsv");
         const bool 文件存在 = std::filesystem::exists(文件, 错误);
-        if (错误) return 打开失败(词典操作状态::读取失败, {}, 文件, 0, "无法读取文件属性");
-        if (!文件存在) return 打开失败(词典操作状态::未配置, {}, 文件, 0, "词典文件不存在");
+        if (错误) return 失败(词典操作状态::读取失败, {}, 文件, 0, "无法读取文件属性");
+        if (!文件存在) return 失败(词典操作状态::未配置, {}, 文件, 0, "词典文件不存在");
         const bool 普通文件 = std::filesystem::is_regular_file(文件, 错误);
         if (错误 || !普通文件) {
-            return 打开失败(词典操作状态::读取失败, {}, 文件, 0, "词典不是普通可读文件");
+            return 失败(词典操作状态::读取失败, {}, 文件, 0, "词典不是普通可读文件");
         }
         核验输入 输入(文件);
 
         std::string 行;
         if (!std::getline(输入, 行)) {
-            return 打开失败(输入.bad() || !输入.eof() ? 词典操作状态::读取失败 : 词典操作状态::数据错误,
+            return 失败(输入.bad() || !输入.eof() ? 词典操作状态::读取失败 : 词典操作状态::数据错误,
                 {}, 文件, 1, "无法读取包头");
         }
         行号 = 1;
@@ -580,7 +622,7 @@ struct 离线词典数据源::实现 final {
         if (!拆分行(行, 包头)
             || 包头[0] != "HY-EGO-DICTIONARY" || 包头[1] != "1" || 包头[2] != "zh"
             || !身份有效(包头[3])) {
-            return 打开失败(词典操作状态::数据错误, {}, 文件, 行号, "包头格式、版本或包标识不合法");
+            return 失败(词典操作状态::数据错误, {}, 文件, 行号, "包头格式、版本或包标识不合法");
         }
         包标识 = std::move(包头[3]);
         if (批次 && 包标识 != 批次->包标识)
@@ -597,18 +639,18 @@ struct 离线词典数据源::实现 final {
             if (!行.empty() && 行.back() == '\r') 行.pop_back();
             std::array<std::string, 13> 字段组;
             if (!拆分行(行, 字段组)) {
-                return 打开失败(词典操作状态::数据错误, 包标识, 文件, 行号, "必须为13列且仅使用四种合法转义");
+                return 失败(词典操作状态::数据错误, 包标识, 文件, 行号, "必须为13列且仅使用四种合法转义");
             }
             for (std::size_t 序号 = 0; 序号 < 字段组.size(); ++序号) {
                 const bool 必填 = 序号 < 5 || 序号 >= 8;
                 if ((必填 && 字段组[序号].empty()) || !字段有效(字段组[序号], 序号 < 4)) {
-                    return 打开失败(词典操作状态::数据错误, 包标识, 文件, 行号, "必填字段为空或字段编码、字符不合法");
+                    return 失败(词典操作状态::数据错误, 包标识, 文件, 行号, "必填字段为空或字段编码、字符不合法");
                 }
             }
             if (批次 && !字段组[0].starts_with(批次->来源摘要 + ":"))
                 throw 批次数据错误("词典记录来源与批次不符");
             if (!义项唯一键.emplace(字段组[0], 字段组[3]).second) {
-                return 打开失败(词典操作状态::数据错误, 包标识, 文件, 行号, "记录键与义项键重复");
+                return 失败(词典操作状态::数据错误, 包标识, 文件, 行号, "记录键与义项键重复");
             }
             词面键 键{字段组[1], 字段组[2]};
             词典义项材料 材料{
@@ -624,7 +666,7 @@ struct 离线词典数据源::实现 final {
             ++义项数;
         }
         if (输入.bad() || !输入.eof()) {
-            return 打开失败(词典操作状态::读取失败, 包标识, 文件, 行号, "读取词典未完整结束");
+            return 失败(词典操作状态::读取失败, 包标识, 文件, 行号, "读取词典未完整结束");
         }
         if (批次) {
             const auto& 声明 = 批次->文件组.at("词典.简体.tsv");
@@ -652,13 +694,13 @@ struct 离线词典数据源::实现 final {
         结果.状态 = 词典操作状态::已完成;
         return 结果;
     } catch (const 批次数据错误& 错误) {
-        return 打开失败(词典操作状态::数据错误, 包标识, 文件, 行号, 错误.what());
+        return 失败(词典操作状态::数据错误, 包标识, 文件, 行号, 错误.what());
     } catch (const std::bad_alloc&) {
-        return 打开失败(词典操作状态::资源失败, 包标识, 文件, 行号, "词典打开内存分配失败");
+        return 失败(词典操作状态::资源失败, 包标识, 文件, 行号, "词典打开内存分配失败");
     } catch (const std::length_error&) {
-        return 打开失败(词典操作状态::资源失败, 包标识, 文件, 行号, "词典打开容量不可表示");
+        return 失败(词典操作状态::资源失败, 包标识, 文件, 行号, "词典打开容量不可表示");
     } catch (...) {
-        return 打开失败(词典操作状态::读取失败, 包标识, 文件, 行号, "词典打开发生工程异常");
+        return 失败(词典操作状态::读取失败, 包标识, 文件, 行号, "词典打开发生工程异常");
     }
 }
 

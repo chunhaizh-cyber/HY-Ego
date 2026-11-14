@@ -63,6 +63,10 @@ struct 词典打开结果 final {
 class 离线词典数据源 final {
 public:
     static 词典打开结果 打开(const std::filesystem::path& 目录) noexcept;
+    // 读取根目录下指定的可信批次，不读取或修改当前批次指向。
+    // 目录缺失为未配置，目录仍在但内容损坏为数据错误；成功源保持不可变。
+    static 词典打开结果 打开指定批次(const std::filesystem::path& 词典根,
+        std::string_view 可信批次标识) noexcept;
     词典精确查询结果 精确查询(const 词典精确查询请求&) const noexcept;
     // 返回指定标量起点的全部前缀候选，不裁决英语词边界或唯一分词。
     词典前缀查询结果 查询词面前缀(const 词典前缀查询请求&) const noexcept;
@@ -84,6 +88,8 @@ public:
 
 private:
     struct 实现;
+    static 词典打开结果 打开内部(const std::filesystem::path& 目录,
+        std::optional<std::string_view> 指定批次) noexcept;
     explicit 离线词典数据源(std::shared_ptr<const 实现>);
     std::shared_ptr<const 实现> 实现_;
 };
