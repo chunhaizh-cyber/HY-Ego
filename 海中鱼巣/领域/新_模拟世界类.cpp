@@ -46,7 +46,7 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
@@ -1016,6 +1016,104 @@ void 新_模拟世界类::取消调用词典采用准备(新模拟词典采用�
     if(p.owner!=this||p.thread!=std::this_thread::get_id()||p.receipt)
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"取消隔离词典采用",L"不能取消已发表采用。");
     if(!p.cancelled){p.participant->取消未发表准备();p.cancelled=true;}
+}
+新词典执行回执读取结果 新_模拟世界类::续接调用词典变化(稳定编码 N) noexcept {
+    using S=新词典材料操作状态;
+    try {
+        if(!有效(N))return {S::输入拒绝,{}};
+        if(!实现_)return {S::未装配,{}};
+        auto& s=*实现_;
+        for(;;) {
+            std::unique_lock lock(s.互斥);
+            if(!s.通用||std::find(s.通用节点.begin(),s.通用节点.end(),N)==s.通用节点.end())
+                return {S::未找到,{}};
+            const auto read=读取本地词典调用(N);
+            if(!read||!read->回执)return {S::条件不具备,{}};
+            auto result=*read->回执;
+            if(result.查阅结局==新词典查阅结局::正式未命中)return {S::已完成,result};
+            if(result.采用阶段!=新词典材料采用阶段::已采用)return {S::条件不具备,result};
+            if(result.变化阶段!=新词典变化处理阶段::待处理)return {S::已完成,result};
+            // 停止不撤销采用；本次N仍开放时只完成其已发生事实的后继。
+            if(!s.记录写回||s.当前调用!=std::optional{N})return {S::条件不具备,result};
+            本地词典要求(read->记录&&result.后状态&&result.材料Q,
+                "local dictionary pending change has no adopted state");
+            const auto after=读取本地状态(*result.后状态);
+            本地词典要求(after&&after->被描述存在节点==result.词条
+                &&after->来源实例特征节点==result.材料特征
+                &&after->固定准确值==std::optional<新特征准确值>{新特征准确值{*result.材料Q}},
+                "local dictionary after-state differs from adopted W/F/Q");
+            std::optional<新词条动态记录原因> reason;
+            std::optional<稳定编码> delta;
+            if(!result.前状态)reason=新词条动态记录原因::无前态;
+            else {
+                const auto before=读取本地状态(*result.前状态);
+                本地词典要求(before&&before->被描述存在节点==result.词条
+                    &&before->来源实例特征节点==result.材料特征&&before->固定准确值,
+                    "local dictionary before-state differs from W/F");
+                本地词典要求(before->固定准确值!=after->固定准确值,
+                    "local dictionary two-state change contains equal values");
+                if(after->强时间.纳秒<=before->强时间.纳秒)reason=新词条动态记录原因::时间不递增;
+                else for(const auto n:s.通用节点) {
+                    if(读值(n,类型)!=动态种类||读引用(n,所属)!=std::optional{result.词条}
+                        ||读引用(n,前状态引用)!=result.前状态||读引用(n,后状态引用)!=result.后状态)continue;
+                    本地词典要求(!delta,"local dictionary state pair has duplicate changes");
+                    本地词典要求(读取本地变化(n).has_value(),"local dictionary existing change unreadable");
+                    delta=n;
+                }
+            }
+            基础节点组追加请求 q;
+            const auto record=read->记录->结构.节点.编码;
+            const auto* stage=本地词典字段(read->记录->结构,词典变化阶段);
+            本地词典要求(stage!=nullptr,"local dictionary change stage missing");
+            std::optional<std::size_t> deltaSlot;
+            if(reason) {
+                result.变化阶段=新词典变化处理阶段::无需形成;result.无需形成原因=reason;
+                q.追加字段组.push_back({record,字段组[词典无需原因],基础值{static_cast<std::int64_t>(*reason)}});
+            } else {
+                基础组内字段内容 endpoint;
+                if(delta)endpoint=*delta;
+                else {
+                    deltaSlot=q.新节点组.size();endpoint=基础组内节点引用{*deltaSlot};
+                    q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(动态种类)}},
+                        {字段组[根],模拟世界树根节点},{字段组[所属],result.词条},
+                        {字段组[状态特征引用],result.材料特征},{字段组[前状态引用],*result.前状态},
+                        {字段组[后状态引用],*result.后状态},{字段组[来源引用],N}}});
+                    q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{*deltaSlot},基础外部关系类型::父子});
+                }
+                result.变化阶段=新词典变化处理阶段::已形成;
+                q.追加字段组.push_back({record,字段组[词典变化动态],endpoint});
+                const auto action=读取本地动作(result.动作);
+                本地词典要求(action&&action->动作时间&&action->动作目标词条节点==std::optional{result.词条}
+                    &&action->动作目标特征节点==std::optional{result.材料特征},
+                    "local dictionary action differs from W/F");
+                // 读取动作不冒充造成变化；时间不成立时Δ保留为独立事实。
+                if(after->强时间.纳秒<=action->动作时间->纳秒) {
+                    bool linked=false;
+                    for(const auto& item:action->动作结果组)if(delta&&item.结果动态节点==*delta) {
+                        本地词典要求(item.类型==新动作结果关系类型::观察取得,"local dictionary action has causal result");linked=true;
+                    }
+                    if(!linked)q.追加字段组.push_back({result.动作,字段组[动作观察动态引用],endpoint});
+                }
+            }
+            q.替换字段组.push_back({stage->编码,基础值{static_cast<std::int64_t>(*result.变化阶段)}});
+            s.追加进展(q);
+            补齐隔离追加联合预期(q);
+            // 消费过的旧材料只交L1判定；并发变化不在上层抛错，也不重放已发表Δ。
+            q.预期联合节点组.push_back(read->N);q.预期联合节点组.push_back(*read->记录);
+            s.预留追加(q);
+            const auto made=全局基础数据集.原子追加节点组(q);
+            if(made.状态==基础节点组追加状态::预期不符){lock.unlock();std::this_thread::yield();continue;}
+            if(made.状态==基础节点组追加状态::资源失败)return {S::资源失败,{}};
+            本地词典要求(made.状态==基础节点组追加状态::已完成&&made.新节点组.size()==q.新节点组.size(),
+                "local dictionary change publication rejected");
+            s.收集追加(made);
+            if(deltaSlot)delta=made.新节点组[*deltaSlot];
+            result.变化动态=delta;
+            return {S::已完成,result};
+        }
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"续接隔离词典变化",L"本地变化续接失败，保留已发表事实。");}
 }
 void 新_模拟世界类::配置需求执行读取(const 新_存在类& 源身份,const 概念_存在类& 存在,
     const 概念_特征类& 特征,const 概念_二次特征类& 二次) {
@@ -4637,48 +4735,89 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     const auto 主体=scene.查询参数(request.主体位置),目标=scene.查询参数(request.目标存在位置),
         参数=scene.查询参数(request.目标特征位置);
     if(!主体||!目标||!参数||主体->信息类型!=新方法参数信息类型::存在
-        ||目标->信息类型!=新方法参数信息类型::存在||参数->信息类型!=新方法参数信息类型::特征)
+        ||(目标->信息类型!=新方法参数信息类型::存在&&目标->信息类型!=新方法参数信息类型::词条)||参数->信息类型!=新方法参数信息类型::特征)
         throw std::invalid_argument("simulation parameter action positions invalid");
+    const bool word=目标->信息类型==新方法参数信息类型::词条;
+    if(word) {
+        auto& s=*实现_;std::lock_guard lock(s.互斥);
+        if(scene.方法节点()!=s.通用方法||scene.全部角色绑定()!=s.通用绑定)
+            throw std::invalid_argument("local word action sample differs");
+        if(s.当前调用)if(const auto prior=读引用(*s.当前调用,调用主动作引用)) {
+            const auto action=读取本地动作(*prior);
+            if(!action||action->主题存在节点!=主体->信息节点||action->动作来源节点!=s.当前调用
+                ||action->动作目标词条节点!=std::optional{目标->信息节点}
+                ||action->动作目标特征节点!=std::optional{参数->信息节点})
+                throw std::logic_error("local word action fixed parameter conflict");
+            return *prior;
+        }
+        if(!s.样例就绪||s.请求取消)return {};
+    }
     const auto 特征=scene.读取绑定特征(参数->信息节点);
     if(!特征)throw std::invalid_argument("simulation parameter action feature absent");
-    const auto 定位=scene.读取存在参数特征(request.目标存在位置,特征->特征概念节点);
+    auto type=特征->特征概念节点;
+    if(word) {
+        const auto definition=实现_->方法.读取模拟特征范围(type);
+        if(!definition)throw std::logic_error("local word action feature definition absent");
+        type=definition->特征类型根;
+    }
+    const auto 定位=scene.读取存在参数特征(request.目标存在位置,type);
     if(!定位.特征||定位.特征->节点!=特征->节点)
         throw std::invalid_argument("simulation parameter action feature ownership differs");
-    return 建立本地参数动作(scene,{request.目标存在位置,特征->特征概念节点,新隔离动作阶段::主动作},request.主体位置);
+    return 建立本地参数动作(scene,{request.目标存在位置,type,新隔离动作阶段::主动作},request.主体位置);
 }
 稳定编码 新_模拟世界类::建立本地参数动作(const 方法参数场景& scene,
     const 新隔离阶段动作请求& request,std::uint32_t 主体位置) {
     if(!实现_||scene.用途()!=新方法参数场景用途::模拟)throw std::invalid_argument("isolation action scene unavailable");
     auto& s=*实现_;
+    for(;;) {
     const auto N=读取当前调用身份();
-    if(!s.动作定义读取||!s.动作定义发布||!s.动作概念)throw std::runtime_error("isolation action definition provider absent");
     if(request.阶段!=新隔离动作阶段::主动作&&request.阶段!=新隔离动作阶段::输出入列)
         throw std::invalid_argument("isolation action stage invalid");
-    const auto binding=scene.读取存在参数特征(request.目标存在位置,request.目标特征类型);
-    if((binding.状态!=新方法参数特征读取状态::已读取&&binding.状态!=新方法参数特征读取状态::当前值未取得)||!binding.特征)
-        throw std::invalid_argument("isolation action target not formally declared");
     const auto* target=scene.查询参数(request.目标存在位置);const auto* self=scene.查询参数(主体位置);
-    if(!target||!self||target->信息类型!=新方法参数信息类型::存在||self->信息类型!=新方法参数信息类型::存在)
+    if(!target||!self||(target->信息类型!=新方法参数信息类型::存在&&target->信息类型!=新方法参数信息类型::词条)||self->信息类型!=新方法参数信息类型::存在)
         throw std::invalid_argument("isolation action target binding absent");
+    const bool word=target->信息类型==新方法参数信息类型::词条;
     稳定编码 selfConcept{},targetConcept{};
     {
         std::lock_guard lock(s.互斥);
         if(scene.方法节点()!=s.通用方法||scene.全部角色绑定()!=s.通用绑定
-            ||!s.是普通存在参数(target->信息节点)||!s.是普通存在参数(self->信息节点))
+            ||!(word?s.是本地参数(target->信息节点,新方法参数信息类型::词条):s.是普通存在参数(target->信息节点))||!s.是普通存在参数(self->信息节点))
             throw std::invalid_argument("isolation action binding changed");
+        if(word&&request.阶段==新隔离动作阶段::主动作)if(const auto prior=读引用(N.调用节点,调用主动作引用)) {
+            const auto action=读取本地动作(*prior);
+            if(!action||action->主题存在节点!=self->信息节点||action->动作目标词条节点!=std::optional{target->信息节点}
+                ||!action->动作目标特征节点||action->动作来源节点!=std::optional{N.调用节点}
+                ||读引用(*action->动作目标特征节点,所属)!=std::optional{target->信息节点})
+                throw std::logic_error("local word action source conflict");
+            return *prior; // 本次已发生动作不按后来方法定义重建。
+        }
+        if(word&&(!s.样例就绪||s.请求取消))return {};
         selfConcept=s.通用参数.at(self->信息节点).规格.范围概念节点;
         targetConcept=s.通用参数.at(target->信息节点).规格.范围概念节点;
     }
-    const 动作方法投影请求 definitionRequest{N.方法节点,selfConcept,targetConcept,request.目标特征类型,false};
+    if(!s.动作定义读取||!s.动作定义发布||!s.动作概念)throw std::runtime_error("isolation action definition provider absent");
+    const auto binding=scene.读取存在参数特征(request.目标存在位置,request.目标特征类型);
+    if((binding.状态!=新方法参数特征读取状态::已读取&&binding.状态!=新方法参数特征读取状态::当前值未取得)||!binding.特征)
+        throw std::invalid_argument("isolation action target not formally declared");
+    动作方法投影请求 definitionRequest{N.方法节点,selfConcept,targetConcept,request.目标特征类型,false};
+    if(word){definitionRequest.普通目标概念节点.reset();definitionRequest.词条目标范围概念节点=targetConcept;}
     const auto projection=s.动作定义读取->读取动作方法投影(definitionRequest);
     const auto C=s.动作定义发布->确保动作定义概念(definitionRequest);
     if(C.状态!=动态概念操作状态::已建立&&C.状态!=动态概念操作状态::已复用)
         throw std::runtime_error("isolation action concept unavailable");
     if(!C.概念节点)throw std::runtime_error("isolation action concept identity absent");
     const auto protection=s.动作概念->读取动作概念定义保护(*C.概念节点);
+    if(word&&(protection.状态==动作概念定义保护状态::前提已变化
+        ||protection.状态==动作概念定义保护状态::概念不存在
+        ||(protection.信息&&protection.信息->动作定义!=std::optional{projection}))) {
+        std::lock_guard guard(s.互斥);
+        if(!s.样例就绪||s.请求取消)return {};
+        continue;
+    }
     if(protection.状态!=动作概念定义保护状态::已读取||!protection.信息||protection.信息->动作定义!=std::optional{projection})
         throw std::runtime_error("isolation action concept protection unavailable");
-    std::lock_guard lock(s.互斥);
+    std::unique_lock lock(s.互斥);
+    if(word&&(!s.样例就绪||s.请求取消))return {};
     if(s.当前调用!=std::optional{N.调用节点}||!s.记录写回||scene.全部角色绑定()!=s.通用绑定)
         throw std::runtime_error("isolation action call changed during preparation");
     const auto F=binding.特征->节点;
@@ -4686,8 +4825,8 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     if(request.阶段==新隔离动作阶段::主动作) {
         if(const auto A=读引用(N.调用节点,调用主动作引用)) {
             const auto old=读取本地动作(*A);
-            if(!old||old->主题存在节点!=self->信息节点||old->动作目标存在节点!=std::optional{target->信息节点}||old->动作目标特征节点!=std::optional{F}
-                ||old->动态概念节点!=C.概念节点)throw std::runtime_error("isolation main action idempotency conflict");
+            if(!old||old->主题存在节点!=self->信息节点||(word?old->动作目标词条节点:old->动作目标存在节点)!=std::optional{target->信息节点}||old->动作目标特征节点!=std::optional{F}
+                ||(!word&&old->动态概念节点!=C.概念节点))throw std::runtime_error("isolation main action idempotency conflict");
             return *A;
         }
     } else for(const auto& field:全局基础数据集.查询字段(N.调用节点,字段组[调用阶段成员])) {
@@ -4708,7 +4847,7 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     };
     const auto A=node(动作种类);
     const auto put=[&](std::size_t n,字段 key,基础组内字段内容 v){q.新节点组[n].字段组.push_back({字段组[key],std::move(v)});};
-    if(binding.特征->当前值) {
+    if(!word&&binding.特征->当前值) {
         bool captured=false;
         for(const auto n:s.通用节点)if(属于样例(n,状态种类,s.通用场景)&&读引用(n,状态特征引用)==std::optional{F}) {
             const auto state=读取本地状态(n);
@@ -4734,12 +4873,20 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         put(J,动作引用,基础组内节点引用{A});put(A,来源引用,基础组内节点引用{J});
         q.追加字段组.push_back({N.调用节点,字段组[调用阶段成员],基础组内节点引用{J}});
     }
-    s.追加进展(q);补齐隔离追加联合预期(q);s.预留追加(q);
+    s.追加进展(q);
+    if(word) {
+        auto prior=std::move(q.预期联合节点组);q.预期联合节点组.clear();
+        补齐隔离追加联合预期(q);q.预期联合节点组.insert(q.预期联合节点组.end(),prior.begin(),prior.end());
+    } else 补齐隔离追加联合预期(q);
+    s.预留追加(q);
     const auto made=全局基础数据集.原子追加节点组(q);
+    if(word&&made.状态==基础节点组追加状态::预期不符){lock.unlock();std::this_thread::yield();continue;}
+    if(made.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
     if(made.状态!=基础节点组追加状态::已完成||made.新节点组.size()!=q.新节点组.size())throw std::runtime_error("isolation action publication failed");
     s.收集追加(made);s.模拟步骤=time;s.本次已进入动作=true;
-    if(!读取本地动作(made.新节点组[A]))throw std::runtime_error("isolation action readback failed");
+    if(!word&&!读取本地动作(made.新节点组[A]))throw std::runtime_error("isolation action readback failed");
     return made.新节点组[A];
+    }
 }
 新方法隔离执行接口* 新_模拟世界类::获取隔离执行接口() noexcept {
     if(!实现_)return nullptr;
@@ -4861,13 +5008,20 @@ std::optional<新动态信息> 新_模拟世界类::读取本地动作(稳定编
         throw std::runtime_error("isolation formal action shape corrupt");
     新动态信息 result;result.节点=A;result.种类=新动态种类::动作;
     result.主题存在节点=读引用(A,对端引用).value_or(*E);
-    result.动作定义节点=*M;result.动作来源节点=*source;result.动作目标存在节点=*E;
+    result.动作定义节点=*M;result.动作来源节点=*source;
+    if(读值(*E,类型)==词条种类){result.动作目标种类=新动作目标种类::词条;result.动作目标词条节点=*E;}
+    else result.动作目标存在节点=*E;
     result.动作目标特征节点=*F;result.动态概念节点=*C;
     result.动作时间=新状态强时间{新状态时间语义::抽象相对,*time};
     for(const auto& f:全局基础数据集.查询字段(A,字段组[动态引用])) {
         const auto* D=std::get_if<稳定编码>(&f.内容);
         if(!D||读引用(*D,动作引用)!=std::optional{A})throw std::runtime_error("isolation action result reference corrupt");
         result.动作结果组.push_back({新动作结果关系类型::导致变化,*D});
+    }
+    for(const auto& f:全局基础数据集.查询字段(A,字段组[动作观察动态引用])) {
+        const auto* D=std::get_if<稳定编码>(&f.内容);
+        if(!D||!读取本地变化(*D))throw std::logic_error("isolation observed action result corrupt");
+        result.动作结果组.push_back({新动作结果关系类型::观察取得,*D});
     }
     return result;
 }

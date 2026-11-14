@@ -145,6 +145,7 @@ public:
         稳定编码 N,稳定编码 Q,std::optional<稳定编码> 前状态) noexcept;
     新词典材料操作状态 记录调用词典未命中(
         稳定编码 N,const 新词典执行结果来源&) noexcept;
+    新词典执行回执读取结果 续接调用词典变化(稳定编码 N) noexcept;
     void 配置需求执行读取(const 新_存在类&,const 概念_存在类&,
         const 概念_特征类&,const 概念_二次特征类&);
     void 设置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
