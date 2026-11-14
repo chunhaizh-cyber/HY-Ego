@@ -69,7 +69,11 @@ constexpr std::array<std::string_view, 2> 可读词性{"noun", "unknown"};
         return 结果;
     }
     std::string_view 文本 = 释义行;
-    while (!文本.empty() && (文本.front() == ' ' || 文本.front() == '\t')) 文本.remove_prefix(1);
+    std::size_t 原文前导标量 = 0;
+    while (!文本.empty() && (文本.front() == ' ' || 文本.front() == '\t')) {
+        文本.remove_prefix(1);
+        ++原文前导标量;
+    }
     while (!文本.empty() && (文本.back() == ' ' || 文本.back() == '\t' || 文本.back() == '\r')) 文本.remove_suffix(1);
     constexpr std::string_view 句号 = "。";
     if (文本.size() >= 句号.size() && 文本.substr(文本.size() - 句号.size()) == 句号)
@@ -78,17 +82,19 @@ constexpr std::array<std::string_view, 2> 可读词性{"noun", "unknown"};
     const auto 规范 = 数据源.繁简规范化(文本);
     const auto 被释规范 = 数据源.繁简规范化(被释词面);
     if (!规范 || !被释规范) { 结果.诊断 = "释义或被释词面不是合法 UTF-8"; return 结果; }
-    结果.规范化释义 = *规范;
-    const auto 边界 = 标量边界(结果.规范化释义);
+    // 解析正文仍忽略前导空白，保存的规范化文本保留它，使词段与原文共用坐标。
+    结果.规范化释义.assign(释义行.substr(0, 原文前导标量));
+    结果.规范化释义 += *规范;
+    const auto 边界 = 标量边界(*规范);
     if (!边界) { 结果.诊断 = "规范化释义不是合法 UTF-8"; return 结果; }
 
     if (记录词性 && !属于(*记录词性, 可读词性)) return 缺规则(std::move(结果), "词性不适用：" + *记录词性);
     for (const auto 标点 : 结构外标点)
-        if (包含(结果.规范化释义, 标点)) return 缺规则(std::move(结果), "含结构外标点");
+        if (包含(*规范, 标点)) return 缺规则(std::move(结果), "含结构外标点");
     for (const auto 片段 : 字词说明片段)
-        if (包含(结果.规范化释义, 片段)) return 缺规则(std::move(结果), "字词说明");
+        if (包含(*规范, 片段)) return 缺规则(std::move(结果), "字词说明");
     for (const auto 起始 : 另裁起始)
-        if (结果.规范化释义.rfind(起始, 0) == 0) return 缺规则(std::move(结果), "另行裁决句型");
+        if (规范->rfind(起始, 0) == 0) return 缺规则(std::move(结果), "另行裁决句型");
 
     // 以词典词头表正向最长匹配切分；未匹配的单个标量成段且标为非词头。
     const auto& 位 = *边界;
@@ -98,11 +104,12 @@ constexpr std::array<std::string_view, 2> 可读词性{"noun", "unknown"};
         std::size_t 止 = 起 + 1;
         bool 词头 = false;
         for (std::size_t 长 = std::min(最长, 标量总数 - 起); 长 >= 1; --长) {
-            const auto 候选 = std::string_view(结果.规范化释义).substr(位[起], 位[起 + 长] - 位[起]);
+            const auto 候选 = std::string_view(*规范).substr(位[起], 位[起 + 长] - 位[起]);
             if (数据源.是规范化词头(候选)) { 止 = 起 + 长; 词头 = true; break; }
             if (长 == 1) break;
         }
-        结果.词段组.push_back({起, 止, 结果.规范化释义.substr(位[起], 位[止] - 位[起]), 词头});
+        结果.词段组.push_back({起 + 原文前导标量, 止 + 原文前导标量,
+            规范->substr(位[起], 位[止] - 位[起]), 词头});
         起 = 止;
     }
     const auto& 段 = 结果.词段组;
