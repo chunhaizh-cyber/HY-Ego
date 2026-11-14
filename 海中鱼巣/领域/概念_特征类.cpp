@@ -2456,6 +2456,95 @@ struct 新消息集合保持材料::实现 final {
         out.追加字段组.push_back({p->值, p->保护键, m});
     return out;
 }
+新消息集合退出来源::新消息集合退出来源(基础封存追加片段 part,
+    std::vector<稳定编码> fields,std::vector<稳定编码> edges)
+    :片段_(std::move(part)),删除字段_(std::move(fields)),删除关系_(std::move(edges)) {}
+struct 新消息集合保持退出准备::实现 final {
+    const 概念_特征类* owner;
+    const std::thread::id thread=std::this_thread::get_id();
+    新消息集合退出来源 source;
+    std::optional<基础封存追加片段> protection;
+    std::shared_ptr<基础片段组合结果> receipt=std::make_shared<基础片段组合结果>();
+    bool submitted=false;
+    实现(const 概念_特征类* o,新消息集合退出来源&& s):owner(o),source(std::move(s)){}
+};
+新消息集合保持退出准备::新消息集合保持退出准备(std::unique_ptr<实现> p) noexcept:实现_(std::move(p)){}
+新消息集合保持退出准备::~新消息集合保持退出准备()=default;
+新消息集合保持退出准备::新消息集合保持退出准备(新消息集合保持退出准备&&) noexcept=default;
+新消息集合保持退出准备& 新消息集合保持退出准备::operator=(新消息集合保持退出准备&&) noexcept=default;
+新消息集合保持退出准备结果 概念_特征类::准备消息集合保持退出(
+    const std::vector<稳定编码>& materials,const 新_特征值类& values,新消息集合退出来源&& source) const noexcept {
+    using S=基础节点组追加状态;
+    try {
+        if(materials.empty())return {S::入口拒绝,{}};
+        稳定编码 key;
+        {std::lock_guard lock(特征概念树互斥);key=消息集合成员保护键;}
+        if(!有效(key))throw std::logic_error("message retention schema unavailable");
+        const std::set<稳定编码> fields(source.删除字段_.begin(),source.删除字段_.end());
+        const std::set<稳定编码> edges(source.删除关系_.begin(),source.删除关系_.end());
+        const std::set<稳定编码> distinct(materials.begin(),materials.end());
+        基础节点组追加请求 q;
+        for(const auto V:distinct) {
+            if(!有效(V))return {S::入口拒绝,{}};
+            const auto value=values.获取特征值(V);
+            if(!value) {
+                if(!全局基础数据集.查询节点(V))return {S::预期不符,{}};
+                throw std::logic_error("message retention value is unreadable");
+            }
+            const auto* ids=std::get_if<std::vector<std::uint64_t>>(&value->材料);
+            if(value->物理类型!=材料物理类型::U64数组||!ids
+                ||!std::is_sorted(ids->begin(),ids->end())||std::adjacent_find(ids->begin(),ids->end())!=ids->end())
+                throw std::logic_error("message retention value is not canonical message material");
+            const auto batch=全局基础数据集.查询节点组完整结构({V});
+            if(batch.状态==基础结构操作状态::资源失败)return {S::资源失败,{}};
+            if(batch.状态!=基础结构操作状态::已完成||batch.节点组.size()!=1)
+                throw std::logic_error("message retention exit snapshot unavailable");
+            if(!batch.节点组.front().快照)return {S::预期不符,{}};
+            const auto& snapshot=*batch.节点组.front().快照;
+            // 来源的每一项都属于同次必须提交的world片段，不能仅凭caller声明退出。
+            for(const auto& f:snapshot.入向字段组)if(!fields.contains(f.编码))return {S::引用仍存在,{}};
+            for(const auto& e:snapshot.入向外部关系组)if(!edges.contains(e.编码))return {S::引用仍存在,{}};
+            std::set<std::uint64_t> held;
+            for(const auto& f:snapshot.结构.字段组)if(f.字段节点==key) {
+                const auto* M=std::get_if<稳定编码>(&f.内容);
+                if(!M||!有效(*M)||!std::binary_search(ids->begin(),ids->end(),M->值)||!held.insert(M->值).second)
+                    throw std::logic_error("message retention exit protection corrupt");
+                q.删除字段关系组.push_back(f.编码);
+            }
+            if(held.size()!=ids->size())throw std::logic_error("message retention exit lacks complete protection");
+            q.预期联合节点组.push_back(snapshot);
+        }
+        const auto sealed=全局基础数据集.封存原子追加片段(q);
+        if(!sealed.片段)return {sealed.状态,{}};
+        auto p=std::make_unique<新消息集合保持退出准备::实现>(this,std::move(source));
+        p->protection=*sealed.片段;
+        return {S::已完成,std::unique_ptr<新消息集合保持退出准备>(new 新消息集合保持退出准备(std::move(p)))};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备隔离消息集合保持退出",L"当前材料或语义来源结构损坏。");}
+}
+新消息集合保持退出提交结果 概念_特征类::提交消息集合保持联合退出(
+    新消息集合保持退出准备& preparation,const std::vector<基础封存追加片段>& other) noexcept {
+    using S=基础节点组追加状态;
+    try {
+        auto* p=preparation.实现_.get();
+        if(!p||p->owner!=this||p->thread!=std::this_thread::get_id()||p->submitted||!p->protection)
+            throw std::logic_error("message retention exit preparation consumed or foreign");
+        p->submitted=true;
+        std::vector<基础封存追加片段> parts;
+        parts.reserve(other.size()+2);parts.push_back(p->source.片段_);parts.push_back(*p->protection);
+        parts.insert(parts.end(),other.begin(),other.end());
+        // 与普通F/FC类型化采用共用此锁；锁内不回调其它owner。
+        std::lock_guard lock(特征概念树互斥);
+        auto published=全局基础数据集.原子追加封存片段组(parts);
+        if(published.状态!=S::已完成)return {published.状态,{}};
+        p->receipt->片段回执组.swap(published.片段回执组);
+        p->receipt->状态=S::已完成;
+        return {S::已完成,p->receipt};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"提交隔离消息集合保持退出",L"同组退出提交异常，保留正式发表回执。");}
+}
 特征概念规则状态 概念_特征类::读取消息成员身份(
     稳定编码 节点, std::vector<基础联合节点快照>* 保护) const noexcept {
     using S = 特征概念规则状态;

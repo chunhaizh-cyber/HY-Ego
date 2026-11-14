@@ -263,6 +263,7 @@ private:
     bool 已采用 = false;
     friend class 新_外设世界树类;
     friend class 外设词典记录类;
+    friend class 新_模拟世界类;
     friend class 概念_特征类;
     friend class 新_特征类;
 };

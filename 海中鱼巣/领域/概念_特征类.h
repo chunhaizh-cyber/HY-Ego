@@ -16,6 +16,7 @@ namespace 海中鱼巣 {
 class 概念_名称关系类;
 class 概念_特征类;
 class 新消息待发表凭据;
+class 新_模拟世界类;
 
 // I64标量直接保存在特征节点中，其余材料由新_特征值类保存。
 enum class 特征概念材料物理类型 : std::int64_t {
@@ -214,6 +215,41 @@ private:
 struct 新消息集合保持读取结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::optional<新消息集合保持材料> 材料;
+};
+// 来源删除集合与同一封存片段绑定，外部调用方不能自行声明豁免引用。
+class 新消息集合退出来源 final {
+public:
+    新消息集合退出来源(新消息集合退出来源&&) noexcept = default;
+    新消息集合退出来源& operator=(新消息集合退出来源&&) noexcept = default;
+    新消息集合退出来源(const 新消息集合退出来源&)=delete;
+    新消息集合退出来源& operator=(const 新消息集合退出来源&)=delete;
+private:
+    新消息集合退出来源(基础封存追加片段, std::vector<稳定编码>, std::vector<稳定编码>);
+    基础封存追加片段 片段_;
+    std::vector<稳定编码> 删除字段_, 删除关系_;
+    friend class 新_模拟世界类;
+    friend class 概念_特征类;
+};
+class 新消息集合保持退出准备 final {
+public:
+    ~新消息集合保持退出准备();
+    新消息集合保持退出准备(新消息集合保持退出准备&&) noexcept;
+    新消息集合保持退出准备& operator=(新消息集合保持退出准备&&) noexcept;
+    新消息集合保持退出准备(const 新消息集合保持退出准备&)=delete;
+    新消息集合保持退出准备& operator=(const 新消息集合保持退出准备&)=delete;
+private:
+    struct 实现;
+    explicit 新消息集合保持退出准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 概念_特征类;
+};
+struct 新消息集合保持退出准备结果 final {
+    基础节点组追加状态 状态=基础节点组追加状态::入口拒绝;
+    std::unique_ptr<新消息集合保持退出准备> 准备;
+};
+struct 新消息集合保持退出提交结果 final {
+    基础节点组追加状态 状态=基础节点组追加状态::入口拒绝;
+    std::shared_ptr<const 基础片段组合结果> 共同回执;
 };
 enum class 正式概念读取状态 : std::uint8_t { 已读取=1, 非本提供者概念, 依赖未就绪, 前提已变化 };
 struct 正式概念身份保护 final {
@@ -553,6 +589,10 @@ public:
         稳定编码, const 新_特征值类&) const noexcept;
     基础节点组追加请求 构造消息集合成员保持(
         新消息集合保持材料&&, const 新消息待发表凭据&) const;
+    新消息集合保持退出准备结果 准备消息集合保持退出(
+        const std::vector<稳定编码>&, const 新_特征值类&, 新消息集合退出来源&&) const noexcept;
+    新消息集合保持退出提交结果 提交消息集合保持联合退出(
+        新消息集合保持退出准备&, const std::vector<基础封存追加片段>&) noexcept;
     特征概念规则状态 读取消息成员身份(稳定编码,
         std::vector<基础联合节点快照>* 身份保护 = nullptr) const noexcept;
     特征概念规则状态 读取消息集合成员(
