@@ -12,6 +12,120 @@
 
 namespace 海中鱼巣 {
 
+新本能函数本次条件结果对 新_本能函数集::按归类材料挂接词条(const 方法参数场景& 场景) noexcept {
+    新本能函数本次条件结果对 r;
+    try {
+        if (场景.用途() == 新方法参数场景用途::登记) {
+            const auto port = 新_本能函数管理类::租用词条归类登记端口();
+            const auto config = port ? port->读取登记材料() : std::nullopt;
+            if (!config) { r.结果.状态 = 新本能函数执行状态::依赖未装配; return r; }
+            if (!场景.全部角色绑定().empty()) { r.结果.状态 = 新本能函数执行状态::参数不匹配; return r; }
+            const auto& c = *config;
+            const std::array ids{c.词条全域,c.通用存在范围,c.正式概念全域,c.挂接特征类型,
+                c.归类范围.材料范围,c.归类范围.明确材料范围,c.归类范围.目标词条FT,c.归类范围.采用概念FT};
+            if (std::any_of(ids.begin(),ids.end(),[](稳定编码 n) { return !有效(n); }))
+                throw std::logic_error("word classification registration configuration incomplete");
+            std::vector<新方法有序参数规格> specs{
+                {1,新方法参数信息类型::词条,c.词条全域,{c.挂接特征类型},0},
+                {2,新方法参数信息类型::特征,c.挂接特征类型,{},1},
+                {3,新方法参数信息类型::存在,c.归类范围.材料范围,{},0},
+                {4,新方法参数信息类型::存在,c.通用存在范围,{},0}};
+            for (auto& spec : specs) spec = 整理有序参数规格(std::move(spec));
+            新方法知识建立请求 q;
+            q.作用域 = 新方法作用域::普通世界;
+            q.实现方式 = 新方法实现方式::本能;
+            q.行为 = 新方法行为::改变;
+            q.方法头.作用存在概念组 = {c.词条全域};
+            q.方法头.涉及特征类型概念组 = 有序规格涉及特征类型(specs);
+            q.方法头.可能结果概念组 = {c.正式概念全域};
+            q.登记结果组 = {{1,std::nullopt,c.挂接特征类型}};
+            新方法初始必要条件定义 necessary;
+            necessary.条件.关系规则 = 新方法项关系规则::全部成立;
+            for (const auto& spec : specs) {
+                新方法参数规格 parameter;
+                parameter.有序规格 = spec;
+                q.参数规格组.push_back(std::move(parameter));
+                if (spec.信息类型 == 新方法参数信息类型::特征) continue;
+                新方法条件项定义 object;
+                object.参数序号 = spec.序号;
+                object.存在概念节点 = spec.范围概念节点;
+                necessary.条件.条件项组.push_back(std::move(object));
+                for (const auto FT : spec.必需特征类型组) {
+                    新方法条件项定义 feature;
+                    feature.参数序号 = spec.序号;
+                    feature.特征类型概念节点 = FT;
+                    necessary.条件.条件项组.push_back(std::move(feature));
+                }
+            }
+            q.初始必要条件 = std::move(necessary);
+            const 新方法参数关系 target{新方法参数关系种类::内容引用参数,3,1,{c.归类范围.目标词条FT}};
+            q.初始模拟关系组 = {target};
+            新方法执行分支定义 branch;
+            branch.必要条件.关系规则 = 新方法项关系规则::全部成立;
+            新方法条件项定义 material;
+            material.参数序号 = 3;
+            material.引用内容条件 = 新方法引用内容条件{{},c.归类范围.明确材料范围,新方法内容作用点::参数自身};
+            branch.必要条件.条件项组.push_back(std::move(material));
+            branch.必要条件.参数关系组.push_back(target);
+            q.执行分支组.push_back(std::move(branch));
+            const auto registered = port->确保方法登记(q);
+            r.结果.状态 = registered.方法节点 ? 新本能函数执行状态::已按合同返回 : 新本能函数执行状态::参数不匹配;
+            return r;
+        }
+
+        auto* runtime = 场景.获取词条归类运行接口();
+        if (!runtime) throw std::logic_error("word classification runtime was not supplied with parameters");
+        const auto wait = [&](新词条归类运行状态 state,std::vector<稳定编码> dependencies) {
+            if (state != 新词条归类运行状态::条件未具备 && state != 新词条归类运行状态::需重新组织
+                && state != 新词条归类运行状态::已停止)
+                throw std::logic_error("word classification provider returned a state from another stage");
+            r.结果.词条归类处置 = 新词条归类运行处置{state,std::move(dependencies)};
+            r.结果.状态 = state == 新词条归类运行状态::已停止 ? 新本能函数执行状态::工程停止
+                : r.结果.动作动态节点 ? 新本能函数执行状态::异步已受理 : 新本能函数执行状态::条件未具备;
+            if (r.结果.动作动态节点) {
+                r.结果.动作阶段 = 新本能函数动作阶段::部分执行;
+                r.结果.结果取得状态 = 新本能函数结果取得状态::待取得;
+            }
+        };
+        auto action = runtime->开始或取得归类动作(场景);
+        r.条件.执行分支节点 = 场景.执行分支节点();
+        if (action.动作) {
+            if (!action.实际条件 || !action.实际输入)
+                throw std::logic_error("word classification action lacks its actual conditions or input");
+            r.条件 = std::move(*action.实际条件);
+            r.结果.词条归类实际输入 = std::move(action.实际输入);
+            r.结果.动作动态节点 = action.动作;
+            r.结果.动作阶段 = 新本能函数动作阶段::已进入动作;
+        }
+        if (action.状态 != 新词条归类运行状态::已就绪) {
+            wait(action.状态,std::move(action.变化依赖节点组));
+            return r;
+        }
+        if (!r.结果.动作动态节点) throw std::logic_error("ready word classification invocation has no action");
+        auto result = runtime->提交或取得归类结果(场景);
+        if (result.状态 != 新词条归类运行状态::已完成) {
+            if (result.回执) throw std::logic_error("unfinished word classification returned a completed receipt");
+            wait(result.状态,std::move(result.变化依赖节点组));
+            return r;
+        }
+        if (!result.回执 || result.回执->动作 != *r.结果.动作动态节点
+            || result.回执->实际输入 != *r.结果.词条归类实际输入)
+            throw std::logic_error("word classification completion lacks its original action receipt");
+        r.结果.词条归类 = std::move(result.回执);
+        if (r.结果.词条归类->新状态) r.结果.已形成状态节点组.push_back(*r.结果.词条归类->新状态);
+        if (r.结果.词条归类->变化动态) r.结果.已形成动态节点组.push_back(*r.结果.词条归类->变化动态);
+        r.结果.建议观察特征节点组 = {r.结果.词条归类->实际输入.挂接特征};
+        r.结果.状态 = 新本能函数执行状态::已按合同返回;
+        r.结果.动作阶段 = 新本能函数动作阶段::已按函数合同返回;
+        r.结果.结果取得状态 = 新本能函数结果取得状态::已取得;
+        return r;
+    } catch (const std::exception& error) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"按归类材料挂接词条",L"归类登记或调用工程异常，保留已发生事实。",error.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"按归类材料挂接词条",L"归类登记或调用未知工程异常，保留已发生事实。");
+    }
+}
+
 新本能函数本次条件结果对 新_本能函数集::查词典(const 方法参数场景& 场景) noexcept {
     新本能函数本次条件结果对 r;
     try {

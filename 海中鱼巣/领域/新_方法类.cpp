@@ -8112,7 +8112,8 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
     const 新服务要求材料读取接口* 服务要求读取,
     std::optional<新方法任务成员绑定> 任务成员绑定,std::optional<稳定编码> 执行分支,
     std::shared_ptr<新本能需求运行接口> 需求运行,
-    std::shared_ptr<新本能词典运行接口> 词典运行) const noexcept {
+    std::shared_ptr<新本能词典运行接口> 词典运行,
+    std::shared_ptr<新本能词条归类运行接口> 词条归类运行) const noexcept {
     for (;;) {
     新方法参数场景结果 结果;
     try {
@@ -8243,7 +8244,7 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
             }
             结果.参数场景 = std::shared_ptr<const 方法参数场景>(new 方法参数场景(
                 方法节点, std::move(角色绑定组), 特征服务_, 特征值服务_,
-                新方法参数场景用途::执行, 治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行),reader,std::move(字段询问运行),词条读取,std::move(词典运行)));
+                新方法参数场景用途::执行, 治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行),reader,std::move(字段询问运行),词条读取,std::move(词典运行),std::move(词条归类运行)));
             结果.状态 = 新方法操作状态::已建立;
             return 结果;
         }
@@ -8528,7 +8529,7 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
         结果.参数场景 = std::shared_ptr<const 方法参数场景>(
             new 方法参数场景(方法节点, std::move(角色绑定组),
                 特征服务_, 特征值服务_, 新方法参数场景用途::执行,
-                治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行),nullptr,{},nullptr,std::move(词典运行)));
+                治理对象读取, {}, 服务要求读取, {}, 任务成员绑定,执行分支,this,&存在服务_,&特征概念服务_,std::move(需求运行),nullptr,{},nullptr,std::move(词典运行),std::move(词条归类运行)));
         结果.状态 = 新方法操作状态::已建立;
         return 结果;
     } catch (const std::bad_alloc&) {

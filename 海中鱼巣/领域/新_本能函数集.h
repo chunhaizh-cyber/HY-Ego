@@ -10,6 +10,7 @@
 #include "服务要求.材料合同.h"
 #include "服务对象.材料合同.h"
 #include "本能词典.数据.h"
+#include "本能词条归类.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -165,6 +166,9 @@ struct 新本能函数本次结果 final {
     std::optional<新本能词典读取回执> 词典读取;
     std::optional<新本能词典运行处置> 词典运行处置;
     std::optional<新词典本能输入> 词典实际输入;
+    std::optional<新词条归类本能输入> 词条归类实际输入;
+    std::optional<新本能词条归类回执> 词条归类;
+    std::optional<新词条归类运行处置> 词条归类处置;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;
@@ -188,6 +192,7 @@ using 新本能函数 = 新本能函数本次条件结果对 (*)(
 // 本类不持有注册表或方法节点，不以函数入口注册代替方法树中的正式信息。
 class 新_本能函数集 final {
 public:
+    static 新本能函数本次条件结果对 按归类材料挂接词条(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 查词典(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取交互者(
         const 方法参数场景& 场景) noexcept;
