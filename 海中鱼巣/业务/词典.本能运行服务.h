@@ -44,6 +44,7 @@ public:
     新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept override;
 
     bool 支持任务方法(稳定编码) const noexcept override;
+    新词典学习来源读取结果 读取定向学习来源(稳定编码) const noexcept override;
     新词典任务参数场景结果 建立任务参数场景(const 新本能词典任务参数请求&,
         const 新内部治理对象读取接口*, std::optional<新方法任务成员绑定>) override;
     新词典任务参数场景结果 取得任务续接参数场景(稳定编码) override;

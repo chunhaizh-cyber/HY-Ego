@@ -1043,6 +1043,75 @@ bool 词典本能运行服务::支持任务方法(稳定编码 M) const noexcept
     }
 }
 
+新词典学习来源读取结果 词典本能运行服务::读取定向学习来源(稳定编码 M) const noexcept {
+    using S = 新词典运行状态;
+    try {
+        auto& s=*实现_;
+        实现::租约 lease(s);
+        if(!lease.已取得)return {S::已停止,{},{},{}};
+        std::unique_lock lock(s.来源锁);
+        if(s.登记方法!=std::optional{M})return {};
+        if(!s.配置)throw std::logic_error("dictionary learning source configuration missing");
+        for(;;) {
+            {std::lock_guard stateLock(s.生命周期锁);if(s.已关闭)return {S::已停止,{},{},{}};}
+            新词典学习来源读取结果 out;
+            const auto scene=s.世界.读取自我所在场景();
+            if(!scene)return {S::未装配,{},{},{}};
+            out.变化依赖节点组.push_back(*scene);
+            const auto 缺口 = [&](std::uint32_t pos,std::optional<稳定编码> node,
+                std::optional<稳定编码> FT,新词典学习缺口种类 kind) {
+                out.状态=S::条件未具备;
+                out.缺口组.push_back({kind,pos,node,FT,{}});
+                return out;
+            };
+            if(!s.来源 || !s.外设定位)
+                return 缺口(3,{}, {},新词典学习缺口种类::来源不可用);
+            const auto C=s.外设定位->场景节点.值;
+            if(!C || C>static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()))
+                throw std::logic_error("dictionary source location cannot be represented as I64");
+            const auto entry=s.查找入口(*scene,static_cast<std::int64_t>(C),*s.配置);
+            {std::lock_guard stateLock(s.生命周期锁);if(s.已关闭)return {S::已停止,{},{},{}};}
+            if(s.世界.读取自我所在场景()!=scene)continue;
+            if(!entry)return 缺口(3,{}, {},新词典学习缺口种类::来源不可用);
+            out.变化依赖节点组.push_back(entry->存在);
+            out.变化依赖节点组.push_back(entry->定位F);
+            if(!entry->批次F)
+                return 缺口(5,{},s.配置->来源包特征类型,新词典学习缺口种类::参数特征未形成);
+            out.变化依赖节点组.push_back(*entry->批次F);
+            const auto batch=s.特征.获取特征(*entry->批次F);
+            const auto location=s.特征.获取特征(entry->定位F);
+            if(!batch || !location)continue;
+            if(!batch->当前值)
+                return 缺口(5,entry->批次F,s.配置->来源包特征类型,新词典学习缺口种类::参数当前值未取得);
+            if(!location->当前值)
+                return 缺口(6,entry->定位F,s.配置->外设场景标识类型,新词典学习缺口种类::参数当前值未取得);
+            const auto* V=std::get_if<稳定编码>(&*batch->当前值);
+            const auto* number=std::get_if<std::int64_t>(&*location->当前值);
+            if(!V || !number || *number<=0)throw std::logic_error("dictionary learning source value shape invalid");
+            const auto value=s.值.获取特征值(*V);
+            if(!value) {
+                const auto current=s.特征.获取特征(*entry->批次F);
+                if(!current || current->当前值!=batch->当前值)continue;
+                throw std::logic_error("dictionary learning batch refers to missing raw material");
+            }
+            const auto* text=std::get_if<std::string>(&value->材料);
+            if(!text || value->物理类型!=材料物理类型::UTF8字符串)
+                throw std::logic_error("dictionary learning batch is not UTF8 material");
+            if(*text!=s.外设定位->可信批次标识 || static_cast<std::uint64_t>(*number)!=C)
+                return 缺口(3,entry->存在,{},新词典学习缺口种类::来源不可用);
+            out.状态=S::已就绪;
+            out.来源=新词典学习来源{*scene,entry->存在,*entry->批次F,entry->定位F,*text,
+                static_cast<std::uint64_t>(*number)};
+            return out;
+        }
+    } catch(const std::bad_alloc&) {return {S::资源失败,{},{},{}};}
+    catch(const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词典学习来源",L"当前词典来源读取故障。",e.what());
+    } catch(...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词典学习来源",L"当前词典来源读取未知故障。");
+    }
+}
+
 新词典任务参数场景结果 词典本能运行服务::建立任务参数场景(
     const 新本能词典任务参数请求& request, const 新内部治理对象读取接口* governance,
     std::optional<新方法任务成员绑定> member) {

@@ -45,10 +45,23 @@ struct 新词典任务参数场景结果 final {
     std::vector<稳定编码> 变化依赖节点组;
 };
 
+struct 新词典学习来源 final {
+    稳定编码 当前场景, 来源存在, 批次特征, 定位特征;
+    std::string 可信批次标识;
+    std::uint64_t 来源场景标识 = 0;
+};
+struct 新词典学习来源读取结果 final {
+    新词典运行状态 状态 = 新词典运行状态::输入拒绝;
+    std::optional<新词典学习来源> 来源;
+    std::vector<新词典学习缺口> 缺口组;
+    std::vector<稳定编码> 变化依赖节点组;
+};
+
 class 新本能词典任务参数工厂 {
 public:
     virtual ~新本能词典任务参数工厂() = default;
     virtual bool 支持任务方法(稳定编码) const noexcept = 0;
+    virtual 新词典学习来源读取结果 读取定向学习来源(稳定编码) const noexcept = 0;
     virtual 新词典任务参数场景结果 建立任务参数场景(
         const 新本能词典任务参数请求&, const 新内部治理对象读取接口*,
         std::optional<新方法任务成员绑定>) = 0;
