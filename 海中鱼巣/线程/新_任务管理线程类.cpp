@@ -299,7 +299,8 @@ bool 新任务筹办反馈定位::完整() const noexcept {
 
 bool 新任务等待复核定位::完整() const noexcept {
     return 复核编号 && 定位.完整()
-        && 原因 > 新任务等待原因::无 && 原因 < 新任务等待原因::需核查;
+        && ((原因 > 新任务等待原因::无 && 原因 < 新任务等待原因::需核查)
+            || 原因 == 新任务等待原因::词典执行前条件未具备);
 }
 
 bool 新任务结果反馈定位::完整() const noexcept {
@@ -379,6 +380,7 @@ struct 新_任务管理线程类::实现 final {
         新任务工作请求 请求;
         std::shared_future<新任务工作处理结果> 结果;
         std::optional<新任务工作处理结果> 前置已读回;
+        std::uint64_t 派发代次 = 0;
     };
     static_assert(std::is_nothrow_move_constructible_v<新任务工作请求>);
     static_assert(std::is_nothrow_move_constructible_v<工作占用>);
@@ -435,6 +437,7 @@ struct 新_任务管理线程类::实现 final {
             if(占用数>=配置.邮箱容量)return {新任务工作接收状态::邮箱已满,{}};
             // 所有请求内分配及全部在途安装槽均在投池前完成。
             待安装=工作占用{请求,{},{}};
+            待安装.派发代次 = 就绪代次;
             活动工作.reserve(占用数+1);
             if (请求.种类 == 新任务工作种类::查找方法 || 请求.种类 == 新任务工作种类::检查条件) {
                 const auto 原 = 筹办知识基线.find(请求.任务节点.值);
@@ -749,7 +752,21 @@ struct 新_任务管理线程类::实现 final {
     // DEP-READY-WAKE B（设计4.2—4.4）：依赖精确唤醒。等待者登记“缺的是什么”（依赖键），
     // 就绪通知只唤醒依赖有交集的等待；就绪消息只提示重读，不携带结论。每接纳一次就绪通知
     // 就绪代次加一；登记前先读代次再做领域读取，登记时代次已变即复核一次、不登记。
-    enum class 依赖等待种类 : std::uint8_t { 调度 = 1, 结果, 因果 };
+    enum class 依赖等待种类 : std::uint8_t { 调度 = 1, 结果, 因果, 词典续接 };
+    struct 词典续接记录 final {
+        稳定编码 执行实例节点;
+        bool 待推进 = false, 已派发 = false, 在途期间再次唤醒 = false;
+        std::optional<新任务工作请求> 原工作;
+        // 仅记本次在途交接已通知的事实身份，避免同一等待回执反复唤醒自身。
+        std::optional<稳定编码> 已通知动作, 已通知状态, 已通知动态, 已通知采用Q;
+    };
+    std::map<std::uint64_t, 词典续接记录> 词典续接任务;
+    struct 词典执行前等待记录 final {
+        新任务调度定位 定位;
+        std::vector<新任务依赖键> 附加依赖键;
+    };
+    std::map<std::uint64_t, 词典执行前等待记录> 词典执行前等待;
+    std::uint64_t 最近词典续接任务值 = 0;
     using 依赖等待者 = std::pair<std::uint64_t, 依赖等待种类>;
     struct 依赖等待项 final {
         std::vector<新任务依赖键> 键组;
@@ -838,6 +855,13 @@ struct 新_任务管理线程类::实现 final {
             记录->second.复核待触发 = true;
             break;
         }
+        case 依赖等待种类::词典续接: {
+            const auto 记录 = 词典续接任务.find(者.first);
+            if (记录 == 词典续接任务.end() || 项.执行实例节点 != 记录->second.执行实例节点) break;
+            if (记录->second.已派发) 记录->second.在途期间再次唤醒 = true;
+            else 记录->second.待推进 = true;
+            break;
+        }
         }
     }
 
@@ -901,9 +925,15 @@ struct 新_任务管理线程类::实现 final {
     std::vector<新任务依赖键> 调度等待依赖键已加锁(std::uint64_t 任务值,
         const 新任务调度定位& 定位, 新任务等待原因 原因) const {
         std::vector<新任务依赖键> 键组;
+        if (原因 == 新任务等待原因::词典执行前条件未具备) {
+            const auto 等待 = 词典执行前等待.find(任务值);
+            if (等待 != 词典执行前等待.end() && 等待->second.定位 == 定位)
+                键组 = 等待->second.附加依赖键;
+        }
         const auto 材料 = 调度材料.find(任务值);
         if (材料 == 调度材料.end() || 材料->second.定位 != 定位 || !材料->second.需求) return 键组;
-        键组 = 新_任务类::读取需求目标依赖键(*材料->second.需求);
+        const auto 目标键 = 新_任务类::读取需求目标依赖键(*材料->second.需求);
+        键组.insert(键组.end(), 目标键.begin(), 目标键.end());
         if (材料->second.执行) {
             const auto 执行键 = 新_任务类::读取执行结果依赖键(*材料->second.执行);
             键组.insert(键组.end(), 执行键.begin(), 执行键.end());
@@ -923,7 +953,7 @@ struct 新_任务管理线程类::实现 final {
         return 键组;
     }
     bool 结果通知待处理 = false;
-    bool 下次优先结果检测 = false;
+    std::uint8_t 下次派发类别 = 0; // 普通工作、结果检测、词典续接轮转。
     std::uint64_t 最近检测任务值 = 0;
     std::set<std::uint64_t> 待结果反馈任务;
     std::map<std::uint64_t, 新任务贡献反馈定位> 待完成贡献复核;
@@ -1541,6 +1571,78 @@ struct 新_任务管理线程类::实现 final {
         }
     }
 
+    void 登记词典执行前等待已加锁(const 新任务调度定位& 定位,
+        const std::vector<新任务依赖键>& 键组, std::uint64_t 派发代次) {
+        if (键组.empty()) throw std::logic_error("dictionary pre-action wait lacks dependency keys");
+        const auto t = 定位.任务节点.值;
+        词典执行前等待.insert_or_assign(t, 词典执行前等待记录{定位, 键组});
+        依赖等待项 项;
+        项.键组 = 键组; 项.调度定位 = 定位; 项.登记代次 = 派发代次;
+        if (登记依赖等待已加锁(t, 依赖等待种类::调度, std::move(项)) != 依赖登记结果::已登记)
+            等待目标复核.insert(t);
+        调度待触发 = true;
+    }
+
+    void 登记词典续接等待已加锁(const 新任务词典正常处置& 处置, std::uint64_t 派发代次) {
+        if (!处置.续接定位 || 处置.等待依赖键组.empty())
+            throw std::logic_error("dictionary continuation wait lacks identity or dependencies");
+        const auto& 定位 = *处置.续接定位;
+        auto& 记录 = 词典续接任务.at(定位.任务节点.值);
+        if (记录.执行实例节点 != 定位.执行实例节点)
+            throw std::logic_error("dictionary continuation wait belongs to another X");
+        依赖等待项 项;
+        项.键组 = 处置.等待依赖键组; 项.登记代次 = 派发代次; 项.执行实例节点 = 定位.执行实例节点;
+        const auto 登记 = 登记依赖等待已加锁(定位.任务节点.值, 依赖等待种类::词典续接, std::move(项));
+        记录.待推进 = 记录.在途期间再次唤醒 || 登记 != 依赖登记结果::已登记;
+        记录.在途期间再次唤醒 = false;
+    }
+
+    筹办派发状态 尝试派发词典续接() noexcept {
+        try {
+            std::unique_lock 锁(互斥);
+            if (停止 || 已完成) return 筹办派发状态::已停止;
+            if (词典续接任务.empty()) return 筹办派发状态::无可派发任务;
+            auto 位置 = 词典续接任务.upper_bound(最近词典续接任务值);
+            for (std::size_t 剩余 = 词典续接任务.size(); 剩余; --剩余) {
+                if (位置 == 词典续接任务.end()) 位置 = 词典续接任务.begin();
+                const auto 当前 = 位置++;
+                const auto t = 当前->first;
+                auto& 记录 = 当前->second;
+                // 不能用总执行保护过滤自身；词典等待本身就持有该保护。
+                if (!记录.待推进 || 记录.已派发 || 普通工作提交中.contains(t) || 贡献占用任务已加锁(t)
+                    || std::any_of(活动工作.begin(), 活动工作.end(), [&](const auto& w) { return w.请求.任务节点.值 == t; })) continue;
+                if (!记录.原工作) {
+                    if (!下一工作编号 || 下一工作编号 == (std::numeric_limits<std::uint64_t>::max)())
+                        return 筹办派发状态::内部错误;
+                    新任务工作请求 请求;
+                    请求.工作编号 = 下一工作编号++; 请求.种类 = 新任务工作种类::续接词典执行;
+                    请求.任务节点 = 稳定编码{t};
+                    请求.词典续接 = 新任务词典续接定位{请求.任务节点, 记录.执行实例节点};
+                    记录.原工作 = std::move(请求);
+                }
+                const auto 请求 = *记录.原工作;
+                锁.unlock();
+                const auto 接收 = 提交普通工作(请求);
+                锁.lock();
+                if (接收.状态 == 新任务工作接收状态::已接收 || 接收.状态 == 新任务工作接收状态::精确重复) {
+                    const auto 读回 = 词典续接任务.find(t);
+                    if (读回 == 词典续接任务.end() || 读回->second.原工作 != 请求)
+                        return 筹办派发状态::内部错误;
+                    读回->second.已派发 = true; 读回->second.待推进 = false;
+                    最近词典续接任务值 = t;
+                    return 筹办派发状态::已派发;
+                }
+                // 未接收时保留原编号；不重建X，也不在持锁期间重试投池。
+                if (接收.状态 == 新任务工作接收状态::任务已占用) return 筹办派发状态::无可派发任务;
+                if (接收.状态 == 新任务工作接收状态::资源失败 || 接收.状态 == 新任务工作接收状态::邮箱已满)
+                    return 筹办派发状态::资源暂不可用;
+                return 接收.状态 == 新任务工作接收状态::已停止接收 ? 筹办派发状态::已停止 : 筹办派发状态::内部错误;
+            }
+            return 筹办派发状态::无可派发任务;
+        } catch (const std::bad_alloc&) { return 筹办派发状态::资源暂不可用; }
+        catch (...) { return 筹办派发状态::内部错误; }
+    }
+
     // 仅在manager锁内登记已独立读回的当前执行，不做领域读取。
     void 登记结果等待已加锁(稳定编码 任务节点, 稳定编码 执行实例节点) {
         auto [位置, 新建] = 结果等待任务.try_emplace(任务节点.值);
@@ -1631,6 +1733,7 @@ struct 新_任务管理线程类::实现 final {
         return 贡献占用任务已加锁(任务值) || 普通工作提交中.contains(任务值)
             || 阻塞任务.contains(任务值)
             || 结果等待任务.contains(任务值) || 待结果反馈任务.contains(任务值)
+            || 词典续接任务.contains(任务值)
             || std::any_of(活动工作.begin(), 活动工作.end(), [&](const auto& 工作) {
                 return 工作.请求.任务节点.值 == 任务值;
             });
@@ -1782,6 +1885,12 @@ struct 新_任务管理线程类::实现 final {
                     const auto 来源 = 等待来源.find(任务值);
                     if (来源 != 等待来源.end() && 来源->second.任务 == *项.任务)
                         原因 = 来源->second.原因;
+                    const auto 词典等待 = 词典执行前等待.find(任务值);
+                    if (词典等待 != 词典执行前等待.end()) {
+                        if (词典等待->second.定位 == 项.定位)
+                            原因 = 新任务等待原因::词典执行前条件未具备;
+                        else 词典执行前等待.erase(词典等待);
+                    }
                     if (原因 == 新任务等待原因::需核查 || 原因 == 新任务等待原因::未分类
                         || 原因 == 新任务等待原因::无) continue;
                     const auto 上次 = 新上次.find(任务值);
@@ -1793,7 +1902,8 @@ struct 新_任务管理线程类::实现 final {
                     else if (原因 == 新任务等待原因::首次关联待许可
                         || 原因 == 新任务等待原因::需求材料未到
                         || 原因 == 新任务等待原因::执行后等待
-                        || 原因 == 新任务等待原因::同次执行比较材料不足)
+                        || 原因 == 新任务等待原因::同次执行比较材料不足
+                        || 原因 == 新任务等待原因::词典执行前条件未具备)
                         // DEP-READY-WAKE B：已登记依赖等待的任务不再每轮建复核记录，只由依赖就绪
                         // （放入等待目标复核）触发；未登记（首次或登记失效）时照旧复核一次。
                         需复核 = 需复核 || !调度依赖已登记已加锁(任务值, 项.定位);
@@ -2123,6 +2233,9 @@ struct 新_任务管理线程类::实现 final {
                 最近自我筹办裁决.erase(任务值);
                 筹办阻塞任务.erase(任务值);
                 等待来源.erase(任务值);
+                const auto 词典等待 = 词典执行前等待.find(任务值);
+                if (词典等待 != 词典执行前等待.end() && 词典等待->second.定位 == 记录.定位.定位)
+                    词典执行前等待.erase(词典等待);
                 上次等待材料.erase(任务值);
                 等待目标复核.erase(任务值);
                 筹办延后重入.erase(任务值);
@@ -2580,6 +2693,170 @@ struct 新_任务管理线程类::实现 final {
             工程异常终止(L"新_任务管理线程类.cpp", __LINE__,
                 L"处理已完成结果检测", L"结果检测交接、正式读回或确认发生工程错误");
         }
+    }
+
+    bool 收回词典执行工作(const 工作占用& 占用) {
+        const bool 续接 = 占用.请求.种类 == 新任务工作种类::续接词典执行;
+        if (!续接 && 占用.请求.种类 != 新任务工作种类::执行本能动作) return false;
+        const auto 返回 = 占用.结果.get();
+        if (!续接 && (!返回.本能执行 || 返回.本能执行->状态 != 新任务治理本能执行状态::词典正常处置))
+            return false;
+        if (返回.原请求 != 占用.请求) throw std::logic_error("dictionary worker reply identity differs");
+        const bool 取消 = 返回.状态 == 新任务工作处理状态::停止取消;
+        std::optional<新任务词典正常处置> 处置;
+        std::optional<稳定编码> X;
+        if (续接) {
+            if (!占用.请求.词典续接) throw std::logic_error("dictionary continuation request missing");
+            X = 占用.请求.词典续接->执行实例节点;
+            if (!取消) {
+                if (返回.状态 != 新任务工作处理状态::词典推进已返回 || !返回.词典推进
+                    || 返回.词典推进->原定位 != *占用.请求.词典续接
+                    || 返回.词典推进->状态 != 新任务词典推进状态::已返回正常处置 || !返回.词典推进->正常处置)
+                    throw std::logic_error("dictionary continuation reply incomplete");
+                处置 = 返回.词典推进->正常处置;
+            }
+        } else {
+            if (!占用.请求.本能执行请求 || !返回.本能执行->词典处置
+                || 返回.本能执行->原请求 != *占用.请求.本能执行请求)
+                throw std::logic_error("dictionary first execution reply incomplete");
+            处置 = 返回.本能执行->词典处置;
+            if (返回.本能执行->执行开始) X = 返回.本能执行->执行开始->执行实例节点;
+        }
+        const auto T = 占用.请求.任务节点;
+        const auto t = T.值;
+        if (处置 && 处置->续接定位 && (!X || 处置->续接定位->任务节点 != T || 处置->续接定位->执行实例节点 != *X))
+            throw std::logic_error("dictionary disposition belongs to another execution");
+        // 所有领域读取均在manager锁外。原X已离开当前位时不能借结束/评估旧X修改新T。
+        std::optional<新任务治理执行读回结果> 执行;
+        if (X && !取消) {
+            执行 = 任务服务->读回任务执行(T, *X);
+            if (执行->状态 == 新任务治理执行读回状态::资源失败) throw std::bad_alloc{};
+            if (执行->状态 == 新任务治理执行读回状态::结构不一致)
+                throw std::logic_error("dictionary original execution unreadable");
+        }
+        const auto 当前任务 = !续接 && !取消 ? 任务服务->获取任务(T) : std::nullopt;
+        using P = 新词典任务正常处置;
+        const bool 当前X = 执行 && (执行->状态 == 新任务治理执行读回状态::已读回等待观察
+            || 执行->状态 == 新任务治理执行读回状态::已读回等待评估
+            || 执行->状态 == 新任务治理执行读回状态::已读回影响评估);
+        const bool 已结束X = 当前X && 执行->状态 != 新任务治理执行读回状态::已读回等待观察;
+        const bool 后续评估 = !取消 && 当前X && (已结束X || (处置 && 处置->处置 == P::已有动作可以评估));
+        const bool 待续接 = !取消 && 当前X && !后续评估 && 处置
+            && (处置->处置 == P::已有动作需要续接 || 处置->处置 == P::已有动作等待条件);
+        const bool 当前无动作定位 = 处置 && 处置->调度定位 && 当前任务
+            && 处置->调度定位->任务节点 == T && 处置->调度定位->需求节点 == 当前任务->需求节点
+            && 处置->调度定位->任务状态 == 当前任务->当前状态
+            && 处置->调度定位->最近执行实例节点 == 当前任务->最近执行实例节点;
+        std::optional<稳定编码> 动作, 状态, 动态, 采用Q;
+        新任务依赖就绪事实 就绪;
+        if (!取消 && X) {
+            if (执行 && 执行->执行) 动作 = 执行->执行->普通动作节点;
+            if (!续接 && 返回.本能执行->方法调用 && 返回.本能执行->方法调用->本次条件结果对)
+                动作 = 返回.本能执行->方法调用->本次条件结果对->结果.动作动态节点;
+            const auto 正式 = 任务服务->读取执行词典回执(T, *X);
+            if (正式.状态 == 新词典材料操作状态::资源失败) throw std::bad_alloc{};
+            if (正式.状态 != 新词典材料操作状态::已完成 && 正式.状态 != 新词典材料操作状态::未找到)
+                throw std::logic_error("dictionary notification receipt unreadable");
+            if (正式.回执) {
+                const auto& r = *正式.回执;
+                动作 = r.动作;
+                if (r.本次形成新状态) 状态 = r.后状态;
+                动态 = r.变化动态;
+                if (r.采用阶段 == 新词典材料采用阶段::已采用) {
+                    采用Q = r.材料Q;
+                    就绪.节点组 = {r.词条, r.材料特征}; // 同值采用没有新S，仍有真实采用事实。
+                }
+            }
+            {
+                std::lock_guard 锁(互斥);
+                const auto 已通知 = 词典续接任务.find(t);
+                if (已通知 != 词典续接任务.end() && 已通知->second.执行实例节点 == X) {
+                    const auto& r = 已通知->second;
+                    if (动作 == r.已通知动作) 动作.reset();
+                    if (状态 == r.已通知状态) 状态.reset();
+                    if (动态 == r.已通知动态) 动态.reset();
+                    if (采用Q == r.已通知采用Q) { 采用Q.reset(); 就绪.节点组.clear(); }
+                }
+            }
+            std::vector<稳定编码> 状态组, 动态组;
+            if (状态) 状态组.push_back(*状态);
+            if (动作) 动态组.push_back(*动作);
+            if (动态) 动态组.push_back(*动态);
+            const auto 事实 = 任务服务->读取依赖就绪事实(状态组, 动态组);
+            就绪.节点组.insert(就绪.节点组.end(), 事实.节点组.begin(), 事实.节点组.end());
+        }
+        std::unique_lock 锁(互斥);
+        const auto 匹配工作 = [&]() {
+            if (std::none_of(活动工作.begin(), 活动工作.end(), [&](const auto& w) { return w.请求 == 占用.请求; })) return false;
+            const auto it = 词典续接任务.find(t);
+            if (续接) return it != 词典续接任务.end() && it->second.执行实例节点 == X
+                && it->second.原工作 == 占用.请求 && it->second.已派发;
+            return it == 词典续接任务.end() || (it->second.执行实例节点 == X && it->second.原工作 == 占用.请求);
+        };
+        const bool 本次交接 = 匹配工作();
+        if (本次交接) {
+            if (!续接) {
+                const auto 裁决 = 最近自我筹办裁决.find(t);
+                if (裁决 != 最近自我筹办裁决.end() && 裁决->second.执行工作 == 占用.请求) {
+                    const auto 旧 = 最近筹办结果.find(t);
+                    if (旧 != 最近筹办结果.end() && 旧->second.原工作 == 裁决->second.裁决.定位.原工作) {
+                        失效筹办工作.insert_or_assign(t, 旧->second.原工作.工作编号);
+                        if (待派筹办工作 == 旧->second.原工作) 待派筹办工作.reset();
+                        最近筹办结果.erase(旧); 待反馈任务.erase(t); 筹办阻塞任务.erase(t);
+                    }
+                    最近自我筹办裁决.erase(裁决);
+                }
+            }
+            // 先准备接收方保护，再ACK释放本工作；期间无第二个同T工作可开始。
+            if (后续评估) {
+                登记结果等待已加锁(T, *X);
+            } else if (待续接) {
+                if (!处置->续接定位) throw std::logic_error("dictionary continuation disposition lacks locator");
+                auto [it, inserted] = 词典续接任务.try_emplace(t);
+                auto& 记录 = it->second;
+                if (inserted) { 记录.执行实例节点 = *X; 记录.原工作 = 占用.请求; 记录.已派发 = true; }
+                if (处置->处置 == P::已有动作等待条件) 登记词典续接等待已加锁(*处置, 占用.派发代次);
+                else { 撤销依赖等待已加锁(t, 依赖等待种类::词典续接); 记录.待推进 = true; }
+            } else if (!续接 && !取消) {
+                // 作废仍在途的旧W0，避免它覆盖刚恢复的等待事实。
+                for (const auto& w : 活动工作)
+                    if (w.请求.种类 == 新任务工作种类::读取任务调度材料) 零动作失效调度工作.insert(w.请求.工作编号);
+                调度材料.erase(t); 已有完整调度材料 = false; 待派调度工作.reset(); 调度待触发 = true;
+                if (当前无动作定位 && 处置->处置 == P::未动作等待条件)
+                    登记词典执行前等待已加锁(*处置->调度定位, 处置->等待依赖键组, 占用.派发代次);
+                else if (当前无动作定位 && 处置->处置 == P::未动作需要重新组织) {
+                    撤销依赖等待已加锁(t, 依赖等待种类::调度);
+                    词典执行前等待.erase(t);
+                }
+            }
+            if (!就绪.节点组.empty()) 接纳依赖就绪已加锁(就绪);
+            if (待续接) {
+                auto& 已通知 = 词典续接任务.at(t);
+                if (动作) 已通知.已通知动作 = 动作;
+                if (状态) 已通知.已通知状态 = 状态;
+                if (动态) 已通知.已通知动态 = 动态;
+                if (采用Q) 已通知.已通知采用Q = 采用Q;
+            }
+        }
+        锁.unlock();
+        if (工作线程->确认结果已接收(占用.请求.工作编号, T) != 新任务工作操作状态::已完成)
+            throw std::logic_error("dictionary execution acknowledgement failed");
+        锁.lock();
+        // ACK期间可能收到新通知；只改原X和原工作，不清除新执行的记录。
+        const auto it = 词典续接任务.find(t);
+        if (本次交接 && it != 词典续接任务.end() && it->second.执行实例节点 == X && it->second.原工作 == 占用.请求) {
+            if (待续接) {
+                it->second.原工作.reset(); it->second.已派发 = false;
+                it->second.待推进 = it->second.待推进 || it->second.在途期间再次唤醒;
+                it->second.在途期间再次唤醒 = false;
+            } else {
+                撤销依赖等待已加锁(t, 依赖等待种类::词典续接);
+                词典续接任务.erase(it);
+            }
+        }
+        std::erase_if(活动工作, [&](const auto& w) { return w.请求 == 占用.请求; });
+        变化.notify_all();
+        return true;
     }
 
     void 处理已完成执行工作(const 工作占用& 占用) noexcept {
@@ -3040,6 +3317,9 @@ struct 新_任务管理线程类::实现 final {
 
     void 处理已完成工作(const 工作占用& 占用) noexcept {
         [[maybe_unused]] int 读回失败行 = 0;
+        try { if (收回词典执行工作(占用)) return; }
+        catch (const std::bad_alloc&) { 延后工作消费(); return; }
+        catch (...) { 报告工程停止("词典执行工作交接工程错误"); return; }
         if(占用.请求.种类==新任务工作种类::筹办前置语言输入) {
             try {
                 const auto r=占用.结果.get();
@@ -4615,14 +4895,16 @@ struct 新_任务管理线程类::实现 final {
 #endif
                     return 状态;
                 };
-                bool 本次为结果检测 = 下次优先结果检测;
+                auto 本次类别 = 下次派发类别;
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
                 const auto 派发起 = std::chrono::steady_clock::now();
 #endif
-                auto 派发 = 本次为结果检测 ? 尝试派发结果检测() : 普通派发();
-                if (派发 == 筹办派发状态::无可派发任务) {
-                    本次为结果检测 = !本次为结果检测;
-                    派发 = 本次为结果检测 ? 尝试派发结果检测() : 普通派发();
+                auto 派发 = 筹办派发状态::无可派发任务;
+                for (int 次 = 0; 次 != 3; ++次) {
+                    派发 = 本次类别 == 0 ? 普通派发()
+                        : 本次类别 == 1 ? 尝试派发结果检测() : 尝试派发词典续接();
+                    if (派发 != 筹办派发状态::无可派发任务) break;
+                    本次类别 = static_cast<std::uint8_t>((本次类别 + 1) % 3);
                 }
 #ifdef HY_EGO_DEBUG_LOG_PARAM_BINDING
                 {
@@ -4633,7 +4915,7 @@ struct 新_任务管理线程类::实现 final {
 #endif
                 锁.lock();
                 if (派发 == 筹办派发状态::已派发) {
-                    下次优先结果检测 = !本次为结果检测;
+                    下次派发类别 = static_cast<std::uint8_t>((本次类别 + 1) % 3);
                     continue;
                 }
                 if (派发 == 筹办派发状态::内部错误) {
