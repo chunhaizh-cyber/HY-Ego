@@ -920,6 +920,7 @@ struct 新任务方法条件结果核验 final {
     std::optional<新方法任务成员绑定> 任务成员绑定;
     std::vector<新任务虚拟存在引用> 任务成员候选组;
     std::optional<稳定编码> 执行分支节点;
+    std::optional<std::vector<新方法参数角色绑定>> 配对参数绑定组;
     friend bool operator==(const 新任务方法条件结果核验&,
         const 新任务方法条件结果核验&) = default;
 };
@@ -1734,6 +1735,8 @@ public:
     新任务操作状态 配置自我服务结算(const 新自我服务结算配置&) noexcept;
     bool 装配本能动作读取(新_动态类& 动态服务) noexcept;
     void 装配词条读取(const 新_词类&) noexcept;
+    bool 装配正式信息参数读取接口(const 正式信息参数读取接口*,
+        const 新词典归类信息概念组*) noexcept;
     void 装配词条材料写入(新词条材料特征写入接口&) noexcept;
     void 装配词条变化场景写入(新词条变化场景写入接口&) noexcept;
     新任务词条特征落实结果 落实任务词条材料特征(稳定编码 任务节点) noexcept;
@@ -2362,6 +2365,8 @@ private:
     bool 撤销增加状态引用组(
         const std::vector<稳定编码>& 状态节点组) noexcept;
 
+    const 正式信息参数读取接口* 正式信息读取_ = nullptr;
+    std::optional<新词典归类信息概念组> 归类参数范围_;
     const 新_词类* 词条读取_=nullptr; // 启动前装配；线程join前owner持续存活。
     新词条材料特征写入接口* 词条材料写入_ = nullptr;
     新词条变化场景写入接口* 词条变化场景写入_ = nullptr; // 开线程前装配，join前存活。
