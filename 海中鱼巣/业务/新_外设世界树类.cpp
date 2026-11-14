@@ -751,7 +751,7 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     if (封存.状态 != 基础节点组追加状态::已完成 || !封存.片段)
         throw std::runtime_error("peripheral message identity seal failed; status="
             + std::to_string(static_cast<unsigned>(封存.状态)));
-    新消息待发表凭据 凭据{裸节点, 请求.预期联合节点组, *封存.片段};
+    新消息待发表凭据 凭据{{裸节点}, 请求.预期联合节点组, *封存.片段};
     auto 准备 = 服务_.特征服务.准备顶层消息集合更新(特征节点, 集合材料, std::move(凭据));
     if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备)
         throw std::runtime_error("peripheral message feature preparation failed");

@@ -11,17 +11,18 @@
 namespace 海中鱼巣 {
 
 class 新_场景类;
-class 新词条场景参与绑定 final {
+class 新场景状态参与绑定 final {
 private:
-    新词条场景参与绑定() = default;
+    新场景状态参与绑定() = default;
     新_场景类* owner_ = nullptr;
     稳定编码 场景_, 状态列表键_, 动态列表键_;
+    基础联合节点快照 本轮宿主_;
     friend class 新_场景类;
     friend class 新_自然语言世界树类;
     friend class 新_词类;
 };
 
-struct 新词条状态封存结果 final {
+struct 新场景状态封存结果 final {
     基础片段封存结果 封存;
     std::size_t 状态槽 = 0;
 };
@@ -570,11 +571,14 @@ private:
         稳定编码, std::vector<基础联合节点快照>*) const noexcept;
     friend class 新_词类;
     friend class 新_自然语言世界树类;
-    新词条场景参与绑定 取得词条场景参与绑定(稳定编码 根场景);
-    新词条状态封存结果 封存词条状态挂接(
-        const 新词条场景参与绑定&, 新词条状态参与材料) const;
+public:
+    // 每轮写入前取得；F准备期间只消费本轮宿主材料，不再次读取场景。
+    新场景状态参与绑定 取得场景状态参与绑定(稳定编码 场景);
+    新场景状态封存结果 封存场景状态挂接(
+        const 新场景状态参与绑定&, 新特征状态参与材料) const;
+private:
     新词条场景记录读取结果 读取词条场景记录(
-        const 新词条场景参与绑定&) const;
+        const 新场景状态参与绑定&) const;
     // 治理方法特征：方法治理场景中实际来源特征（启用或配对数特征）；缺省为启用特征。
     新场景操作状态 添加已核验状态(稳定编码, 稳定编码, bool 治理,
         std::optional<新任务虚拟存在特征引用> 治理特征 = std::nullopt,

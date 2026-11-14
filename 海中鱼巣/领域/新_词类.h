@@ -127,7 +127,7 @@ private:
     friend class 新_自然语言世界树类;
     std::vector<稳定编码> 读取启动词条组() const;
     void 装配概念挂接(新_特征类&, 新_特征值类&, 新_状态类&, 新_动态类&,
-        稳定编码 类型根, const 新词条场景参与绑定&);
+        稳定编码 类型根, const 新场景状态参与绑定&);
     基础节点组追加状态 补齐词条概念挂接(稳定编码, const std::vector<稳定编码>&);
     bool 已装配概念挂接() const;
     void 准备名称集合材料(const std::vector<稳定编码>&);
@@ -143,8 +143,8 @@ private:
     新_动态类* 动态服务_ = nullptr;
     稳定编码 挂接类型根_;
     稳定编码 词典材料类型根_;
-    std::optional<新词条场景参与绑定> 场景绑定_;
-    std::optional<新词条状态构造绑定> 状态绑定_;
+    std::optional<新场景状态参与绑定> 场景绑定_;
+    std::optional<新特征状态构造绑定> 状态绑定_;
 };
 
 } // namespace 海中鱼巣

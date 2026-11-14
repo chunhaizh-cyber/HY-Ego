@@ -1,4 +1,5 @@
 #include "新_状态类.h"
+#include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -215,49 +216,77 @@ bool 新_状态类::初始化() noexcept {
     }
 }
 
-新词条状态构造绑定 新_状态类::取得词条状态构造绑定() const {
+新特征状态构造绑定 新_状态类::取得特征状态构造绑定() const {
     std::lock_guard 锁(新状态互斥);
-    新词条状态构造绑定 绑定;
+    新特征状态构造绑定 绑定;
     绑定.owner_ = this;
     绑定.字段_ = {状态节点类型字段, 状态节点类型, 状态被描述存在字段,
         状态来源实例特征字段, 状态特征类型字段, 状态固定准确值字段,
         状态强时间字段, 状态被引用次数字段};
     if (std::any_of(绑定.字段_.begin(), 绑定.字段_.end(),
         [](稳定编码 n) { return !有效(n); }))
-        throw std::logic_error("word state binding before state initialization");
+        throw std::logic_error("feature state binding before state initialization");
     return 绑定;
 }
 
-新词条状态参与材料 新_状态类::准备词条状态(
-    const 新词条状态构造绑定& 绑定, const 新词条特征候选& 候选,
-    const std::variant<稳定编码, 基础组内节点引用>& 词条,
-    const 新状态强时间& 时间, 基础节点组追加请求 词条请求) const {
-    // 此处不取状态锁、不读取F：F准备仍持锁，值只来自本次准备候选。
-    if (绑定.owner_ != this || !候选.准备_ || !候选.已改变_ || !候选.当前值_)
-        throw std::logic_error("word state requires a changed prepared current value");
+新特征状态参与材料 新_状态类::准备特征状态(
+    const 新特征状态构造绑定& 绑定, const 新特征当前值候选& 候选,
+    const std::variant<稳定编码, 基础组内节点引用>& 持有者,
+    const 新状态强时间& 时间, 基础节点组追加请求 附加请求) const {
+    // 不取状态锁、不读取F；准备资格由特征owner维护，值只来自本次候选。
+    if (绑定.owner_ != this || !候选.准备_ || !候选.已改变_)
+        throw std::logic_error("state requires a changed prepared current value");
     if (时间.语义 != 新状态时间语义::实例绝对UTC || 时间.纳秒 < 0)
-        throw std::logic_error("word state requires actual UTC time");
-    新词条状态参与材料 参与;
-    参与.请求_ = std::move(词条请求);
+        throw std::logic_error("formal state requires actual UTC time");
+    新特征状态参与材料 参与;
+    参与.owner_ = this;
+    参与.本轮状态_ = {{}, std::get_if<稳定编码>(&持有者) ? std::get<稳定编码>(持有者) : 稳定编码{},
+        候选.特征_, 候选.概念_, 候选.当前值_, 时间, 1};
+    参与.请求_ = std::move(附加请求);
     参与.状态槽_ = 参与.请求_.新节点组.size();
     const auto& k = 绑定.字段_;
     基础组内新节点 状态;
     状态.字段组 = {{k[0], k[1]},
-        {k[2], std::visit([](const auto& x) -> 基础组内字段内容 { return x; }, 词条)},
+        {k[2], std::visit([](const auto& x) -> 基础组内字段内容 { return x; }, 持有者)},
         {k[3], 候选.特征_}, {k[4], 候选.概念_},
         {k[6], 编码强时间(时间)}, {k[7], 基础值{std::int64_t{1}}}};
-    状态.字段组.push_back({k[5], std::visit([](const auto& x) -> 基础组内字段内容 {
+    if (候选.当前值_) 状态.字段组.push_back({k[5], std::visit([](const auto& x) -> 基础组内字段内容 {
         if constexpr (std::is_same_v<std::decay_t<decltype(x)>, 稳定编码>) return x;
         else return 基础值{x};
     }, *候选.当前值_)});
     for (const auto n : {k[1], 候选.特征_, 候选.概念_})
         参与.请求_.只读预期.节点组.push_back({n});
-    if (const auto* w = std::get_if<稳定编码>(&词条))
+    if (const auto* w = std::get_if<稳定编码>(&持有者))
         参与.请求_.只读预期.节点组.push_back({*w});
-    if (const auto* v = std::get_if<稳定编码>(&*候选.当前值_))
+    if (候选.当前值_) if (const auto* v = std::get_if<稳定编码>(&*候选.当前值_))
         参与.请求_.只读预期.节点组.push_back({*v});
     参与.请求_.新节点组.push_back(std::move(状态));
     return 参与;
+}
+
+void 新_状态类::合并结果引用(新特征状态参与材料& 材料,
+    const 新状态结果引用参与接口& 参与者) const {
+    if (材料.owner_ != this || 材料.结果引用已合并_ || !有效(材料.本轮状态_.被描述存在节点))
+        throw std::logic_error("state result composition owner or stage mismatch");
+    材料.结果引用已合并_ = true; // 已消费本轮参与资格；失败后丢弃整份准备。
+    const auto& s = 材料.本轮状态_;
+    // 一次纯构造；不读取F、场景或结果owner，不平移已约定的绝对槽位。
+    auto 构造 = 参与者.构造同组状态引用({基础组内节点引用{材料.状态槽_},
+        s.被描述存在节点, s.来源实例特征节点, s.特征类型概念节点,
+        s.固定准确值, s.强时间, 材料.请求_.新节点组.size()});
+    const auto 增量 = static_cast<std::int64_t>(构造.新增状态保持数);
+    if (增量 > (std::numeric_limits<std::int64_t>::max)() - s.被引用次数)
+        throw std::overflow_error("new state reference count overflow");
+    // 先在私有副本中拼接；资源失败不暴露半成品，更不重放结果构造。
+    auto 请求 = 材料.请求_;
+    合并同组结果构造(请求, std::move(构造.追加请求));
+    auto& 字段 = 请求.新节点组.at(材料.状态槽_).字段组;
+    const auto i = std::find_if(字段.begin(), 字段.end(),
+        [](const auto& f) { return f.字段节点 == 状态被引用次数字段; });
+    if (i == 字段.end()) throw std::logic_error("prepared state reference count missing");
+    i->内容 = 基础值{s.被引用次数 + 增量};
+    材料.请求_ = std::move(请求);
+    材料.本轮状态_.被引用次数 += 增量;
 }
 
 std::optional<新状态信息> 新_状态类::读取词条前状态(

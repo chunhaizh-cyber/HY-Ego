@@ -200,16 +200,17 @@ struct 新特征当前值组准备结果 final {
 };
 
 // WORD-NAME-F：仅在准备句柄作用域内消费；不是已发布的当前事实。
-class 新词条特征候选 final {
+class 新特征当前值候选 final {
 private:
-    新词条特征候选() = default;
-    const 新特征当前值组准备* 准备_ = nullptr;
+    新特征当前值候选() = default;
+    const void* 准备_ = nullptr; // 由特征owner从两种实际准备签发，只作候选来源标识。
     稳定编码 特征_, 概念_, 类型根_;
     std::optional<新特征准确值> 当前值_;
     bool 已改变_ = false;
     friend class 新_特征类;
     friend class 新_状态类;
     friend class 新_词类;
+    friend class 新_模拟世界类;
 };
 
 class 新特征引用集合更新准备 final {
@@ -252,15 +253,16 @@ public:
     新消息待发表凭据(const 新消息待发表凭据&) = delete;
     新消息待发表凭据& operator=(const 新消息待发表凭据&) = delete;
 private:
-    新消息待发表凭据(稳定编码 消息节点, std::vector<基础联合节点快照> 完整前提,
+    新消息待发表凭据(std::vector<稳定编码> 消息节点组, std::vector<基础联合节点快照> 完整前提,
         基础封存追加片段 身份及来源片段)
-        : 消息节点(消息节点), 完整前提(std::move(完整前提)),
+        : 消息节点组(std::move(消息节点组)), 完整前提(std::move(完整前提)),
           身份及来源片段(std::move(身份及来源片段)) {}
-    稳定编码 消息节点;
+    std::vector<稳定编码> 消息节点组;
     std::vector<基础联合节点快照> 完整前提;
     基础封存追加片段 身份及来源片段;
     bool 已采用 = false;
     friend class 新_外设世界树类;
+    friend class 外设词典记录类;
     friend class 新_特征类;
 };
 
@@ -638,8 +640,11 @@ private:
     friend class 新_词类;
     friend class 新_状态类;
     特征概念规则状态 准备词条集合材料(稳定编码 类型根, 稳定编码 材料);
-    新词条特征候选 读取词条当前值候选(
+public:
+    新特征当前值候选 读取准备当前值候选(
         const 新特征当前值组准备&, 稳定编码 特征) const;
+    新特征当前值候选 读取准备当前值候选(const 新特征引用集合更新准备&) const;
+private:
     std::optional<新特征信息> 获取特征可抛内部(
         稳定编码 特征节点, const 普通存在引用完整读取批* 本次批) const;
     特征概念规则状态 读取信息存在引用定义保护(const 特征概念信息&,
