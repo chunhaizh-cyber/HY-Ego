@@ -9,6 +9,7 @@
 #include "新_状态类.h"
 #include "服务要求.材料合同.h"
 #include "服务对象.材料合同.h"
+#include "本能词典.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -160,6 +161,9 @@ struct 新本能函数本次结果 final {
     std::vector<新方法本次场景事实引用> 已取得场景事实组;
     std::optional<新本能已发布需求结果> 已发布需求;
     std::optional<新本能字段询问返回材料> 字段询问;
+    std::optional<新本能词典读取回执> 词典读取;
+    std::optional<新本能词典运行处置> 词典运行处置;
+    std::optional<新词典本能输入> 词典实际输入;
 
     friend bool operator==(const 新本能函数本次结果&,
         const 新本能函数本次结果&) = default;

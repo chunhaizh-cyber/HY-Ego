@@ -1114,22 +1114,22 @@ bool 持有者特征类型允许(新方法参数信息类型 类型,稳定编码
     return 读取当前名称挂接类型(owner).类型根==std::optional{FT};
 }
 
-std::pair<新方法操作状态, std::optional<新词条挂接信息>> 读取方法词条实参(
+std::pair<新方法操作状态, std::optional<新词条特征信息>> 读取方法词条实参(
     const 新_词类* 词条, const 新方法有序参数规格& 规格, 稳定编码 节点,
-    const 概念_存在类& 概念, const 新_特征类& 特征) {
+    const 概念_存在类& 概念, const 新_特征类&) {
     using S = 新方法操作状态;
     if (!词条) return {S::尚未初始化, {}};
     if (!方法持有者范围有效(规格, 概念)) return {S::参数概念不相容, {}};
-    auto 当前 = 词条->读取词条挂接信息(节点);
+    auto 当前 = 词条->读取词条特征信息(节点);
     if (当前.状态 == 新词条查询状态::资源失败) return {S::资源失败, {}};
     if (当前.状态 == 新词条查询状态::未找到) return {S::参数引用失效, {}};
     if (当前.状态 != 新词条查询状态::已找到 || !当前.信息)
         throw std::runtime_error("word parameter owner read failed");
     if (!规格.必需特征类型组.empty()) {
-        const auto f = 特征.捕获特征匹配实例(当前.信息->概念名称挂接特征);
-        if (!f) return {S::参数材料未到, {}};
-        if (规格.必需特征类型组 != std::vector<稳定编码>{f->定义.特征类型根})
-            return {S::参数概念不相容, {}};
+        for (const auto FT : 规格.必需特征类型组)
+            if (std::none_of(当前.信息->特征组.begin(), 当前.信息->特征组.end(),
+                [&](const auto& 项) { return 项.特征类型根 == FT; }))
+                return {S::参数材料未到, {}};
     }
     // 名称集合为空也是合法W参数；是否达到条件/目标由当前F求值负责。
     return {S::已找到, std::move(当前.信息)};
@@ -8086,7 +8086,8 @@ bool 新_方法类::解除字段询问运行接口(const 新本能字段询问�
                         const auto 当前=读取方法词条实参(词条读取,*方法->参数规格组[所属-1].有序规格,
                             所属绑定->信息节点,存在概念服务_,特征服务_);
                         if(当前.first!=新方法操作状态::已找到){结果.状态=当前.first;return 结果;}
-                        if(当前.second->概念名称挂接特征!=节点
+                        if(std::none_of(当前.second->特征组.begin(), 当前.second->特征组.end(),
+                            [&](const auto& 项) { return 项.特征节点 == 节点; })
                             ||(绑定.世界场景节点&&绑定.世界场景节点!=当前.second->所属自然语言场景)) {
                             结果.状态=新方法操作状态::参数概念不相容;return 结果;
                         }
@@ -8934,7 +8935,8 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
             if(当前.first==新方法操作状态::资源失败)throw std::bad_alloc{};
             if(当前.first!=新方法操作状态::已找到)
                 throw std::invalid_argument("direct invocation word parameter unavailable or incompatible");
-            if((词条特征&&当前.second->概念名称挂接特征!=参数[i].信息节点)
+            if((词条特征 && std::none_of(当前.second->特征组.begin(), 当前.second->特征组.end(),
+                [&](const auto& 项) { return 项.特征节点 == 参数[i].信息节点; }))
                 ||(场景绑定.世界场景节点&&场景绑定.世界场景节点!=当前.second->所属自然语言场景))
                 throw std::invalid_argument("direct invocation word feature or language scene differs");
             if(!词条特征)continue;

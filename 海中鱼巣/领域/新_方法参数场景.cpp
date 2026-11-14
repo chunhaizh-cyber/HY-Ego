@@ -40,7 +40,7 @@ namespace {
 
 struct 参数材料需要重读 {};
 
-std::optional<新词条挂接信息> 读取可选词条挂接(const 方法参数场景& 场景,std::uint32_t 位置) noexcept {
+std::optional<新词条特征信息> 读取可选词条挂接(const 方法参数场景& 场景,std::uint32_t 位置) noexcept {
     auto 当前=场景.读取词条参数挂接(位置);
     using S=新方法词条参数读取状态;
     switch(当前.状态) {
@@ -57,18 +57,6 @@ std::optional<新词条挂接信息> 读取可选词条挂接(const 方法参数
     工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"词条读取资源、执行装配或成功载荷发生工程错误。");
 }
 
-std::optional<稳定编码> 读取当前挂接特征类型(const 概念_特征类& 概念) noexcept {
-    for (;;) {
-        const auto 当前=概念.读取先天特征类型槽(先天特征类型槽::概念名称挂接);
-        if(当前.状态==特征概念规则状态::前提已变化) {
-            std::this_thread::yield();
-            continue;
-        }
-        if(当前.状态==特征概念规则状态::值不存在)return {};
-        if(当前.状态==特征概念规则状态::已完成&&当前.类型根)return 当前.类型根;
-        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"名称挂接特征类型读取发生工程错误。");
-    }
-}
 
 void 核验有序参数绑定组(const std::vector<新方法参数角色绑定>& 绑定组) noexcept {
     const bool 含有序引用 = std::any_of(绑定组.begin(), 绑定组.end(),
@@ -141,7 +129,7 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
         if (用途_ == 新方法参数场景用途::模拟) return {S::能力未支持, {}};
         if (用途_ != 新方法参数场景用途::执行) return {S::未声明, {}};
         if (!词条读取_) return {S::依赖未就绪, {}};
-        auto 当前 = 词条读取_->读取词条挂接信息(参数->信息节点);
+        auto 当前 = 词条读取_->读取词条特征信息(参数->信息节点);
         if (当前.状态 == 新词条查询状态::未找到) return {S::参数已失效, {}};
         if (当前.状态 == 新词条查询状态::资源失败) return {S::资源失败, {}};
         if (当前.状态 != 新词条查询状态::已找到 || !当前.信息)
@@ -221,14 +209,18 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
                 if(当前.状态==W::资源失败)throw std::bad_alloc{};
                 if(当前.状态!=W::已读取||!当前.信息||!特征服务_)
                     throw std::logic_error("word feature reader unavailable");
-                const auto f=特征服务_->捕获特征匹配实例(当前.信息->概念名称挂接特征);
+                const auto 成员 = std::find_if(当前.信息->特征组.begin(), 当前.信息->特征组.end(),
+                    [&](const auto& 项) { return 项.特征类型根 == FT; });
+                if (成员 == 当前.信息->特征组.end()) return {S::特征未取得,{},{}};
+                const auto f=特征服务_->捕获特征匹配实例(成员->特征节点);
                 if(!f) {
                     const auto 最新=读取词条参数挂接(位置);
                     if(最新.状态==W::参数已失效)return {S::特征未取得,{},{}};
                     if(最新.状态==W::资源失败)throw std::bad_alloc{};
                     if(最新.状态!=W::已读取||!最新.信息)
                         throw std::logic_error("word feature reader unavailable");
-                    if(最新.信息->概念名称挂接特征!=当前.信息->概念名称挂接特征)
+                    if(std::none_of(最新.信息->特征组.begin(), 最新.信息->特征组.end(),
+                        [&](const auto& 项) { return 项 == *成员; }))
                         throw 参数材料需要重读{};
                     throw std::logic_error("word references an unavailable name feature");
                 }
@@ -486,12 +478,11 @@ std::optional<新特征信息> 方法参数场景::读取绑定特征(
         if (角色.有序引用) {
             if(角色.有序引用->信息类型==新方法参数信息类型::词条) {
                 const auto 当前=读取可选词条挂接(*this,角色.有序引用->序号);
-                if(!当前||当前->概念名称挂接特征!=特征节点)continue;
-                if(!特征概念读取_)
-                    工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征",L"执行场景未装配特征概念读取。");
-                const auto FT=读取当前挂接特征类型(*特征概念读取_);
-                if(!FT)return {};
-                return 读取存在参数特征(角色.有序引用->序号,*FT).特征;
+                if(!当前)continue;
+                const auto 成员 = std::find_if(当前->特征组.begin(), 当前->特征组.end(),
+                    [&](const auto& 项) { return 项.特征节点 == 特征节点; });
+                if (成员 == 当前->特征组.end()) continue;
+                return 读取存在参数特征(角色.有序引用->序号,成员->特征类型根).特征;
             }
             if (角色.有序引用->信息类型 != 新方法参数信息类型::特征
                 || 角色.有序引用->信息节点 != 特征节点) continue;
@@ -525,14 +516,12 @@ std::optional<新特征值信息> 方法参数场景::读取绑定特征值材�
         if(角色.有序引用&&角色.有序引用->信息类型==新方法参数信息类型::词条) {
             const auto 当前=读取可选词条挂接(*this,角色.有序引用->序号);
             if(!当前)continue;
-            if(!特征概念读取_)
-                工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词条绑定特征值",L"执行场景未装配特征概念读取。");
-            const auto FT=读取当前挂接特征类型(*特征概念读取_);
-            if(!FT)continue;
-            const auto 特征=读取存在参数特征(角色.有序引用->序号,*FT);
-            if(特征.当前完整材料&&特征.特征&&特征.特征->当前值) {
-                const auto* V=std::get_if<稳定编码>(&*特征.特征->当前值);
-                if(V&&*V==特征值节点)return 特征.当前完整材料;
+            for (const auto& 成员 : 当前->特征组) {
+                const auto 特征=读取存在参数特征(角色.有序引用->序号,成员.特征类型根);
+                if(特征.当前完整材料&&特征.特征&&特征.特征->当前值) {
+                    const auto* V=std::get_if<稳定编码>(&*特征.特征->当前值);
+                    if(V&&*V==特征值节点)return 特征.当前完整材料;
+                }
             }
             continue;
         }
