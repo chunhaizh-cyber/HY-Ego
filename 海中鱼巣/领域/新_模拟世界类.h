@@ -7,6 +7,7 @@
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
+#include "数据服务.词典材料类.h"
 
 namespace 海中鱼巣 {
 extern 稳定编码 模拟世界树根节点;
@@ -29,7 +30,7 @@ struct 新模拟内容读取记录 final {
         新部分服务要求材料,新模拟语言场景信息,新特征信息> 投影;
     bool 动作前=true;
 };
-enum class 新模拟世界状态 : std::uint8_t { 已完成 = 1, 入口拒绝, 结构不一致, 资源失败, 定义前提已变化, 能力未支持 = 6 };
+enum class 新模拟世界状态 : std::uint8_t { 已完成 = 1, 入口拒绝, 结构不一致, 资源失败, 定义前提已变化, 能力未支持 = 6, 需重新组织输入 = 7 };
 struct 新模拟世界建立结果 final {
     新模拟世界状态 状态 = 新模拟世界状态::入口拒绝;
     std::optional<稳定编码> 场景节点;
@@ -57,6 +58,11 @@ struct 新模拟有序参数输入 final {
     std::uint32_t 需求参数输入=0;
     // 正式W的不可变键及来源映射；发布localW时不写入来源W引用。
     std::optional<新词条信息> 复制词条;
+};
+struct 新模拟词典材料复制输入 final {
+    新词典材料信息 材料;
+    // 可以引用六参数之后的只读来源载体，不增加方法参数。
+    std::uint32_t 来源存在输入=0;
 };
 struct 新模拟场景事实输入 final {
     新方法初始场景事实限定 限定;
@@ -97,7 +103,7 @@ class 概念_动态类;
 class 新_模拟世界类 final : public 新方法模拟运行接口,
     public 新本能交互运行接口, public 新方法隔离执行接口,
     public 新本能需求运行接口, public 正式信息参数读取接口,
-    public 新本能字段询问运行接口 {
+    public 新本能字段询问运行接口, public 新词典材料场景读取接口 {
 public:
     explicit 新_模拟世界类(新_方法类&) noexcept;
     新_模拟世界类(新_方法类&,const 动作方法定义只读提供者&,新_动态类&,const 概念_动态类&) noexcept;
@@ -105,6 +111,9 @@ public:
         const 新方法场景事实构成读取接口&) noexcept;
     ~新_模拟世界类();
     void 配置二次特征计算(const 新_二次特征类&);
+    void 配置词典材料(词典材料类&);
+    新词典材料场景读取结果 读取材料所属场景(稳定编码) const noexcept override;
+    新词典材料读取结果 读取本地词典材料(稳定编码) const noexcept;
     void 配置需求执行读取(const 新_存在类&,const 概念_存在类&,
         const 概念_特征类&,const 概念_二次特征类&);
     void 设置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
@@ -132,7 +141,8 @@ public:
         std::optional<稳定编码> 执行分支 = {},
         const std::optional<新模拟消息方案输入>& 消息输入 = {},
         const 新模拟需求输入图& 需求图 = {},
-        const std::optional<新模拟执行主体输入>& 执行主体输入 = {});
+        const std::optional<新模拟执行主体输入>& 执行主体输入 = {},
+        const std::vector<新模拟词典材料复制输入>& 词典材料输入 = {});
     新模拟需求执行预检结果 预检需求执行(const 方法参数场景&) const;
     新本能需求运行接口* 获取需求运行接口() noexcept override;
     新本能需求材料读回 读取新需求材料(const 方法参数场景&) const override;
@@ -189,6 +199,9 @@ public:
     bool 已请求停止() const noexcept override;
     std::vector<新方法初始场景事实限定> 读取本次场景事实组() const;
     void 释放有序样例();
+    // false仅表示真实闭包外引用仍在；不清除样例和退出责任。
+    bool 尝试释放有序样例();
+    void 停止样例后继发布() noexcept;
     std::optional<稳定编码> 读取模拟存在来源(稳定编码 本地存在) const;
     std::optional<稳定编码> 读取模拟任务来源(稳定编码 本地任务) const;
     std::optional<新任务虚拟存在引用> 查找任务虚拟存在引用(稳定编码) const noexcept override;
@@ -216,6 +229,9 @@ public:
     std::optional<新特征值信息> 读取模拟特征值材料(稳定编码) const noexcept override;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
+    bool 复制词典材料初值(const std::vector<新模拟有序参数输入>&,
+        const std::vector<新模拟词典材料复制输入>&,const std::vector<std::size_t>&,
+        const std::vector<稳定编码>&,稳定编码);
     稳定编码 建立本地参数动作(const 方法参数场景&,
         const 新隔离阶段动作请求&,std::uint32_t 主体位置);
     新本能需求材料读回 读取本地需求材料(const 方法参数场景&) const;

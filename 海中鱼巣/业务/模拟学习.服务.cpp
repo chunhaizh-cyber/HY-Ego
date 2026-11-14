@@ -10,6 +10,7 @@
 #include "../领域/动作概念.只读投影合同.h"
 #include "../领域/概念_动态类.h"
 #include "../核心/容错检查.h"
+#include <cstdlib>
 #include <algorithm>
 #include <array>
 #include <functional>
@@ -77,6 +78,64 @@ struct 模拟学习进度观察 final {
 模拟学习服务::模拟学习服务(新_方法类& 方法, 新_特征类& 特征,概念_特征类& 概念,概念_二次特征类& 二次,
     const 模拟任务需求来源读取接口& 来源) noexcept
     : 方法_(方法), 概念_(概念), 二次概念_(二次),二次计算_(特征,二次),业务来源_(来源) {}
+struct 模拟学习服务::隔离样例责任 final {
+    std::shared_ptr<新_模拟世界类> world;
+    bool 待退出=false, 正在退出=false;
+};
+struct 模拟学习服务::隔离样例收尾 final {
+    模拟学习服务& owner;
+    std::shared_ptr<隔离样例责任> 责任;
+    ~隔离样例收尾() { owner.结束隔离样例(责任); }
+};
+模拟学习服务::~模拟学习服务() {
+    // 普通应用在工作线程最终join后、材料owner销毁前析构本服务。
+    bool failed=false;
+    // 最终join后已无并发学习；不走运行期会弹窗的异常包装。
+    // 每个责任都尝试一次，失败闭包保留到进程退出，不分配临时队列。
+    for(const auto& r:样例责任组_) {
+        try {
+            if(!r->world->尝试释放有序样例())failed=true;
+        } catch(...) { failed=true; }
+    }
+    if(failed) {
+        // 用户2026-11-14裁决：不强删被引用节点，不无限等待或进入弹窗等待。
+        try {(void)记录运行日志(L"模拟学习",L"最终关闭失败",
+            L"工作线程结束后的隔离样例清理未完成；保留引用闭包，不继续析构，进程以失败状态结束并由操作系统回收内存。");}
+        catch(...) {}
+        std::_Exit(EXIT_FAILURE);
+    }
+}
+std::shared_ptr<模拟学习服务::隔离样例责任> 模拟学习服务::登记隔离样例(
+    const std::shared_ptr<新_模拟世界类>& world) {
+    auto r=std::make_shared<隔离样例责任>();r->world=world;
+    std::lock_guard lock(样例责任锁_);样例责任组_.push_back(r);return r;
+}
+bool 模拟学习服务::结束隔离样例(const std::shared_ptr<隔离样例责任>& r) noexcept {
+    // 调用栈退场前先脱离停止回调；即使正式N关闭暂时资源不足，也不悬垂。
+    r->world->停止样例后继发布();
+    {
+        std::lock_guard lock(样例责任锁_);
+        r->待退出=true;
+        if(r->正在退出)return false;
+        r->正在退出=true;
+    }
+    bool done=false;
+    try {done=r->world->尝试释放有序样例();}
+    catch(const std::bad_alloc&) {} // 正式闭包及回执仍由已登记责任保留，下次清理重读。
+    catch(const std::length_error&) {}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"退出隔离样例",L"样例退出结构或依赖异常。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"退出隔离样例",L"未知工程异常。");}
+    std::lock_guard lock(样例责任锁_);r->正在退出=false;
+    if(done)std::erase(样例责任组_,r);
+    return done;
+}
+void 模拟学习服务::清理待退出样例() {
+    std::vector<std::shared_ptr<隔离样例责任>> pending;
+    {std::lock_guard lock(样例责任锁_);
+        for(const auto& r:样例责任组_)if(r->待退出&&!r->正在退出)pending.push_back(r);
+    }
+    for(const auto& r:pending)(void)结束隔离样例(r);
+}
 void 模拟学习服务::配置场景事实构成读取(const 新方法场景事实构成读取接口& 提供者) {
     if (场景构成_&&场景构成_!=&提供者) throw std::logic_error("scene construction provider conflict");
     场景构成_=&提供者;
@@ -125,6 +184,7 @@ const char* 新学习运行异常::what() const noexcept {
 新学习结束通知 模拟学习服务::学习(稳定编码 方法节点, const std::function<bool()>& 停止检查) {
     using 原因 = 新学习运行异常原因;
     try {
+        清理待退出样例();
         struct 学习装配保护 final {
             std::mutex& 锁;
             std::size_t& 活动数;
@@ -163,6 +223,8 @@ const char* 新学习运行异常::what() const noexcept {
         学习有序本能(*方法, 协作停止);
         if (协作停止()) throw 新学习运行异常(方法节点, 原因::停止取消);
         return {方法节点};
+    } catch (新定向学习结束材料& 正常结束) {
+        return {方法节点,std::move(正常结束)};
     } catch (const 新学习运行异常&) {
         throw;
     } catch (const std::bad_alloc&) {
@@ -1825,6 +1887,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 ? std::make_shared<新_模拟世界类>(方法_,*动作定义_,*动态定义_,*动态概念_)
                 : std::make_shared<新_模拟世界类>(方法_);
         world->配置二次特征计算(二次计算_);
+        const auto 样例责任=登记隔离样例(world);
+        隔离样例收尾 样例收尾{*this,样例责任};
         world->设置字段询问语言(字段询问语言_,字段询问配置_);
         std::optional<新模拟消息方案输入> 消息输入;
         if(消息方案) {
@@ -1901,6 +1965,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         HY_SIM_PROGRESS(L"隔离样例建立返回",created.状态);
         if(created.状态==新模拟世界状态::能力未支持)
             throw 新学习运行异常(m.节点,新学习运行异常原因::规格未支持,"词条参数的隔离模拟尚未支持");
+        if(created.状态==新模拟世界状态::需重新组织输入) {
+            新定向学习结束材料 normal;
+            normal.结局=新定向学习结局::需重新组织输入;
+            // 旧Q消失不证明当前F缺材料；请求者必须重读当前输入。
+            throw normal; // guard先接管部分图退出，外层交付正常缺口，不落旧“无合法样例”异常。
+        }
         if(created.状态==新模拟世界状态::定义前提已变化)
             throw 模拟输入采集漂移{};
         if(created.状态!=新模拟世界状态::已完成)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
@@ -2059,12 +2129,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 return d->材料类型==特征概念材料物理类型::需求节点引用
                     &&(f->当前值||!f->历史不同值.empty()||!f->历史值命中信息.empty());
             });
-            if(未覆盖前态){context.参数场景.reset();world->释放有序样例();cursor.推进();continue;}
+            if(未覆盖前态){context.参数场景.reset();(void)结束隔离样例(样例责任);cursor.推进();continue;}
             const auto 预检=world->预检需求执行(*context.参数场景);
             if(预检.状态==新模拟需求执行预检状态::前提已变化)throw 模拟输入采集漂移{};
             if(预检.状态==新模拟需求执行预检状态::依赖未就绪)不支持(0,预检.诊断);
             if(预检.状态==新模拟需求执行预检状态::规格未支持) {
-                本支有未完成样例=true;context.参数场景.reset();world->释放有序样例();cursor.推进();continue;
+                本支有未完成样例=true;context.参数场景.reset();(void)结束隔离样例(样例责任);cursor.推进();continue;
             }
         }
         world->开始记录复制上下文读取(停止检查);
@@ -2644,8 +2714,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
         context.参数场景.reset();
         HY_SIM_PROGRESS(L"即将释放当前隔离样例",0);
-        world->释放有序样例();
-        HY_SIM_PROGRESS(L"隔离样例已释放",0);
+        const bool 样例已退出=结束隔离样例(样例责任);
+        (void)样例已退出;
+        HY_SIM_PROGRESS(L"隔离样例退出已处理",样例已退出 ? 1 : 0);
         if (本组已发表) {
             const auto 释放后=方法_.获取方法(m.节点);
             if(!释放后||!std::any_of(释放后->条件结果组.begin(),释放后->条件结果组.end(),[&](const auto& p) {

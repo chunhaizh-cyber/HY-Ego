@@ -109,10 +109,14 @@ template<class T> struct 新模拟需求来源结果 final {
     std::vector<基础联合节点快照> 完整保护;
 };
 struct 新模拟需求构造依据 final { 稳定编码 人类概念; };
-enum class 新模拟复制值种类 : std::uint8_t { I64=1, 普通材料, 存在引用, 需求引用, 存在集合, 需求集合, 任务集合=7 };
+enum class 新模拟复制值种类 : std::uint8_t { I64=1, 普通材料, 存在引用, 需求引用, 存在集合, 需求集合, 任务集合=7, 词典材料引用=8 };
+struct 新模拟词典材料引用 final {
+    std::uint32_t 材料输入=0; // 完整材料输入组中的1起位置，不是现实Q编码。
+    friend bool operator==(const 新模拟词典材料引用&,const 新模拟词典材料引用&)=default;
+};
 struct 新模拟复制准确值 final {
     新模拟复制值种类 种类;
-    std::variant<std::int64_t,新特征值信息,std::uint32_t,std::vector<std::uint32_t>> 内容;
+    std::variant<std::int64_t,新特征值信息,std::uint32_t,std::vector<std::uint32_t>,新模拟词典材料引用> 内容;
     friend bool operator==(const 新模拟复制准确值&,const 新模拟复制准确值&)=default;
 };
 struct 新模拟复制值命中 final { 新模拟复制准确值 值; std::int64_t 命中次数=0; friend bool operator==(const 新模拟复制值命中&,const 新模拟复制值命中&)=default; };

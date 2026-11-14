@@ -5,8 +5,10 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include "../领域/本能交互.运行接口.h"
 #include "../领域/本能字段询问.运行接口.h"
+#include "../领域/方法学习.数据.h"
 
 namespace 海中鱼巣 {
 class 新_方法类;
@@ -19,8 +21,10 @@ class 动作方法定义只读提供者;
 class 概念_动态类;
 class 新_动态类;
 class 模拟任务需求来源读取接口;
+class 新_模拟世界类;
 struct 新学习结束通知 final {
     稳定编码 方法节点;
+    std::optional<新定向学习结束材料> 定向结束;
 };
 enum class 新学习运行异常原因 : std::uint8_t {
     停止取消=1, 输入不合法, 资源不足, 结构不一致,
@@ -44,6 +48,7 @@ class 模拟学习服务 final {
 public:
     模拟学习服务(新_方法类&, 新_特征类&, 概念_特征类&, 概念_二次特征类&,
         const 模拟任务需求来源读取接口&) noexcept;
+    ~模拟学习服务();
     新学习结束通知 学习(稳定编码 方法节点,
         const std::function<bool()>& 停止检查 = {});
     void 配置场景事实构成读取(const 新方法场景事实构成读取接口&);
@@ -52,6 +57,13 @@ public:
     void 配置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
         std::optional<新字段询问登记配置>);
 private:
+    struct 隔离样例责任;
+    struct 隔离样例收尾;
+    std::shared_ptr<隔离样例责任> 登记隔离样例(const std::shared_ptr<新_模拟世界类>&);
+    bool 结束隔离样例(const std::shared_ptr<隔离样例责任>&) noexcept;
+    void 清理待退出样例();
+    std::mutex 样例责任锁_;
+    std::vector<std::shared_ptr<隔离样例责任>> 样例责任组_;
     void 学习有序本能(const 新方法信息&,const std::function<bool()>&,
         const std::map<std::uint32_t,稳定编码>& 原型选择={},
         std::optional<稳定编码> 执行分支={},bool 已选路径=false,
