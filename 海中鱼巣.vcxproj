@@ -4,6 +4,8 @@
     <ClInclude Include="海中鱼巣\领域\数据操作.执行结果参与.h"></ClInclude>
     <ClInclude Include="海中鱼巣\领域\数据服务.词典材料类.h"></ClInclude>
     <ClCompile Include="海中鱼巣\领域\数据服务.词典材料类.cpp"></ClCompile>
+    <ClInclude Include="海中鱼巣\领域\数据服务.外设词典记录类.h" />
+    <ClCompile Include="海中鱼巣\领域\数据服务.外设词典记录类.cpp" />
 
     <ClInclude Include="海中鱼巣\领域\词条.数据.h" />
     <ClInclude Include="海中鱼巣\领域\引用保持.数据.h" />

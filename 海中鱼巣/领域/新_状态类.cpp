@@ -774,6 +774,7 @@ struct 新状态计数准备::实现 final {
         if (批.状态 == 基础结构操作状态::节点不存在) return {S::状态不存在, {}};
         if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点组.size())
             return {S::结构不一致, {}};
+        std::vector<稳定编码> 删除引用目标;
         for (const auto& item : 批.节点组) {
             if (!item.快照) return {S::状态不存在, {}};
             const auto& n = *item.快照;
@@ -809,9 +810,24 @@ struct 新状态计数准备::实现 final {
                     if (std::find(自有键.begin(), 自有键.end(), f.字段节点) == 自有键.end())
                         return {S::结构不一致, {}};
                     p->请求.删除字段关系组.push_back(f.编码);
+                    if (const auto* ref = std::get_if<稳定编码>(&f.内容);
+                        ref && std::find(节点组.begin(), 节点组.end(), *ref) == 节点组.end()
+                        && std::find(删除引用目标.begin(), 删除引用目标.end(), *ref) == 删除引用目标.end())
+                        删除引用目标.push_back(*ref);
                 }
                 p->请求.删除节点组.push_back(item.查询节点);
             } else p->请求.替换字段组.push_back({计数->编码, 基础值{新计数}});
+        }
+        // L1删除引用字段要求旧目标也在本片段联合宿主中。只补真实目标材料，不递归扩展或修改目标。
+        if (!删除引用目标.empty()) {
+            const auto targets = 全局基础数据集.查询节点组完整结构(删除引用目标);
+            if (targets.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+            if (targets.状态 != 基础结构操作状态::已完成 || targets.节点组.size() != 删除引用目标.size())
+                return {S::结构不一致, {}};
+            for (const auto& target : targets.节点组) {
+                if (!target.快照) return {S::结构不一致, {}};
+                p->请求.预期联合节点组.push_back(*target.快照);
+            }
         }
         return {S::已完成, 新状态计数准备{std::move(p)}};
     } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
