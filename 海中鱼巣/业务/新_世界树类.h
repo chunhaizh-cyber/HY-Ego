@@ -23,6 +23,12 @@
 
 namespace 海中鱼巣 {
 
+class 新自我场景资源接收接口 {
+public:
+    virtual ~新自我场景资源接收接口() = default;
+    virtual void 接收自我场景就绪() noexcept = 0;
+};
+
 enum class 新世界初始化状态 : std::uint8_t {
     已完成 = 1,
     无变化 = 2,
@@ -320,6 +326,7 @@ public:
     // 自我所在场景（6220 §2）：自我线程初始化成功后登记一次；其后自我只经迁移自我改变场景，
     // 本变量随同一次迁移更新。自我原场景是登记时的场景，不随迁移改变。
     新场景操作状态 登记自我(稳定编码 自我节点, 稳定编码 场景节点) noexcept;
+    void 装配自我场景资源接收(std::shared_ptr<新自我场景资源接收接口>);
     std::optional<稳定编码> 读取自我所在场景() const noexcept;
     std::optional<稳定编码> 读取自我原场景() const noexcept;
     新场景操作状态 迁移自我(稳定编码 目标场景节点) noexcept;
@@ -462,6 +469,7 @@ private:
     std::optional<稳定编码> 自我节点_;
     std::optional<稳定编码> 自我所在场景_;
     std::optional<稳定编码> 自我原场景_;
+    std::shared_ptr<新自我场景资源接收接口> 自我场景资源接收_;
     std::optional<稳定编码> 参与自我类型_;
     std::optional<稳定编码> 参与交互者类型_;
     std::optional<稳定编码> 查找顶层特征已加锁(稳定编码 持有者, 稳定编码 类型根) const;

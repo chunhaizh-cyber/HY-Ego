@@ -9,6 +9,7 @@
 #include <cwchar>
 #include <functional>
 #include <limits>
+#include <map>
 #include <mutex>
 #include <new>
 #include <stdexcept>
@@ -22,6 +23,9 @@ namespace {
 std::array<稳定编码, 6> 类型{};
 std::array<稳定编码, 2> 消息类型{};
 稳定编码 输出队列类型{};
+稳定编码 词典批次类型{};
+// 先分配记录再发表C；此映射只保存尚未完成的创建责任，不是场景类别事实。
+std::map<std::string, 稳定编码, std::less<>> 待完成词典场景;
 // 私有消息结构的字段键；消息不是普通存在，不能借用存在身份。
 std::array<稳定编码, 12> 消息字段{};
 稳定编码 消息根{};
@@ -190,8 +194,26 @@ bool 更新完成(新外设事实状态 状态) {
 
 新世界初始化结果 新_外设世界树类::初始化() noexcept {
     try {
-        std::lock_guard 锁(外设互斥);
+        std::unique_lock 锁(外设互斥);
         if (!世界_.已初始化()) return {新世界初始化状态::依赖初始化失败, {}, {}};
+        特征概念定义 批次定义;
+        批次定义.材料类型 = 特征概念材料物理类型::UTF8字符串;
+        批次定义.值域 = 特征概念全材料值域{};
+        批次定义.比较规则 = 特征概念比较规则::完整材料精确;
+        批次定义.聚合规则 = 特征概念聚合规则::不自动聚合;
+        for (;;) {
+            const auto ft = 服务_.特征概念服务.建立或取得先天特征类型槽(
+                {先天特征类型槽::词典来源批次, 批次定义}, 服务_.特征值服务, {});
+            if (ft.状态 == 特征概念规则状态::前提已变化) {
+                锁.unlock(); std::this_thread::yield(); 锁.lock(); continue;
+            }
+            if (ft.状态 == 特征概念规则状态::资源失败)
+                return {新世界初始化状态::资源失败, {}, {}};
+            if ((ft.状态 != 特征概念规则状态::已完成 && ft.状态 != 特征概念规则状态::无变化)
+                || !ft.类型根) throw std::runtime_error("dictionary batch type initialization failed");
+            词典批次类型 = *ft.类型根;
+            break;
+        }
         for (auto& 字段 : 消息字段) {
             if (!有效(字段)) 字段 = 全局基础数据集.新建节点();
             if (!有效(字段)) throw std::runtime_error("peripheral message schema allocation failed");
@@ -291,6 +313,199 @@ std::optional<稳定编码> 新_外设世界树类::获取接收消息特征类�
     if (!有效(消息类型[0]))
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取接收消息类型", L"外设根已初始化但接收消息类型缺失");
     return 消息类型[0];
+}
+
+struct 新_外设世界树类::场景来源身份 final {
+    enum class 类别 { 非本树, 网页, 词典, 正在装配 } 种类 = 类别::非本树;
+    std::optional<新场景信息> 场景;
+    std::optional<稳定编码> 批次F, 接收F;
+};
+
+新_外设世界树类::场景来源身份 新_外设世界树类::读取场景来源身份(稳定编码 C) const {
+    for (;;) {
+        场景来源身份 out;
+        out.场景 = 场景_.获取场景(C);
+        if (!out.场景 || out.场景->父场景节点 != 外设根) return out;
+        bool webpage = false, refresh = false;
+        for (const auto f : out.场景->特征节点组) {
+            const auto type = 服务_.特征服务.读取当前特征类型(f);
+            if (type.状态 == 新特征类型读取状态::特征不存在) {
+                const auto latest = 场景_.获取场景(C);
+                if (latest && std::find(latest->特征节点组.begin(), latest->特征节点组.end(), f)
+                    != latest->特征节点组.end())
+                    throw std::runtime_error("peripheral scene still contains a missing feature");
+                refresh = true; break;
+            }
+            if (type.状态 == 新特征类型读取状态::资源失败) throw std::bad_alloc{};
+            if (type.状态 != 新特征类型读取状态::已读取 || !type.特征类型根)
+                throw std::runtime_error("peripheral scene feature type unavailable");
+            if (*type.特征类型根 == 类型[0] || *type.特征类型根 == 类型[1]) webpage = true;
+            auto save = [&](std::optional<稳定编码>& target) {
+                if (target) throw std::runtime_error("peripheral scene has duplicate source feature types");
+                target = f;
+            };
+            if (*type.特征类型根 == 词典批次类型) save(out.批次F);
+            if (*type.特征类型根 == 消息类型[0]) save(out.接收F);
+        }
+        if (refresh) continue;
+        if (webpage && out.批次F) throw std::runtime_error("peripheral dictionary and web identities overlap");
+        if (webpage) out.种类 = 场景来源身份::类别::网页;
+        else if (out.批次F) out.种类 = 场景来源身份::类别::词典;
+        else if (std::any_of(待完成词典场景.begin(), 待完成词典场景.end(),
+            [&](const auto& item) { return item.second == C; })) out.种类 = 场景来源身份::类别::正在装配;
+        else throw std::runtime_error("peripheral child scene has no source identity");
+        return out;
+    }
+}
+
+新外设词典来源结果 新_外设世界树类::读取词典来源已加锁(稳定编码 C) const {
+    using S = 新外设事实状态;
+    for (;;) {
+        auto source = 读取场景来源身份(C);
+        if (source.种类 == 场景来源身份::类别::正在装配) return {S::未就绪, {}};
+        if (source.种类 != 场景来源身份::类别::词典) return {S::未找到, {}};
+        const auto batch = 服务_.特征服务.获取特征(*source.批次F);
+        if (!batch) continue;
+        if (!batch->当前值) return {S::未就绪, {}};
+        const auto* V = std::get_if<稳定编码>(&*batch->当前值);
+        if (!V) throw std::runtime_error("dictionary batch is not a text material reference");
+        const auto value = 服务_.特征值服务.获取特征值(*V);
+        if (!value) {
+            const auto latest = 服务_.特征服务.获取特征(*source.批次F);
+            if (!latest || latest->当前值 != batch->当前值) continue;
+            throw std::runtime_error("dictionary batch still refers to missing material");
+        }
+        const auto* text = std::get_if<std::string>(&value->材料);
+        if (!text || value->物理类型 != 材料物理类型::UTF8字符串 || text->empty())
+            throw std::runtime_error("dictionary source batch material invalid");
+        if (!source.场景->直接子场景组.empty() || source.场景->直接成员存在组.size() > 1)
+            throw std::runtime_error("dictionary source scene has ambiguous speaker structure");
+        if (!source.接收F || source.场景->直接成员存在组.empty()) return {S::未就绪, {}};
+        const auto speaker = source.场景->直接成员存在组.front();
+        // 唯一成员在本来源场景合同中明确承担词典说话者，不在多个候选中取首个。
+        if (!服务_.存在服务.获取存在(speaker)) {
+            const auto latest = 场景_.获取场景(C);
+            if (!latest || latest->直接成员存在组 != source.场景->直接成员存在组) continue;
+            throw std::runtime_error("dictionary source still contains a missing speaker");
+        }
+        return {S::已完成, 新外设词典来源定位{C, speaker, *source.接收F, *source.批次F, *text}};
+    }
+}
+
+新外设词典来源结果 新_外设世界树类::按场景读取词典来源(稳定编码 C) const noexcept {
+    try {
+        std::lock_guard lock(外设互斥);
+        if (!有效(外设根)) return {新外设事实状态::未初始化, {}};
+        if (!有效(C)) return {新外设事实状态::入口拒绝, {}};
+        return 读取词典来源已加锁(C);
+    } catch (const std::bad_alloc&) { return {新外设事实状态::资源失败, {}}; }
+    catch (const std::length_error&) { return {新外设事实状态::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取词典来源场景", L"来源结构损坏，不伪装未配置或未命中。");
+    }
+}
+
+新外设词典来源结果 新_外设世界树类::建立或取得词典来源场景(std::string_view batch) noexcept {
+    using S = 新外设事实状态;
+    try {
+        if (batch.empty() || !新_语言类::严格UTF8字节串有效(std::string(batch))) return {S::入口拒绝, {}};
+        std::unique_lock lock(外设互斥);
+        if (!有效(外设根) || !有效(词典批次类型)) return {S::未初始化, {}};
+        // map分配在任何C发表之前；后续记录C编码不分配，也不撤销既有事实。
+        auto pending = 待完成词典场景.try_emplace(std::string(batch), 稳定编码{}).first;
+        bool changed = false;
+        const auto reread = [&] {
+            lock.unlock(); std::this_thread::yield(); lock.lock();
+            pending = 待完成词典场景.try_emplace(std::string(batch), 稳定编码{}).first;
+        };
+        for (;;) {
+            const auto root = 场景_.获取场景(外设根);
+            if (!root) throw std::runtime_error("dictionary peripheral root unavailable");
+            std::optional<稳定编码> found;
+            bool refresh = false;
+            for (const auto C : root->直接子场景组) {
+                const auto source = 读取场景来源身份(C);
+                if (source.种类 != 场景来源身份::类别::词典) continue;
+                const auto F = 服务_.特征服务.获取特征(*source.批次F);
+                if (!F) { refresh = true; break; }
+                if (!F->当前值) {
+                    if (pending->second == C) continue;
+                    throw std::runtime_error("dictionary source batch identity was lost");
+                }
+                if (读取文本特征(*source.批次F) != batch) continue;
+                if (found && *found != C) throw std::runtime_error("dictionary batch has multiple source scenes");
+                found = C;
+            }
+            if (refresh) {
+                reread();
+                continue;
+            }
+            if (found) {
+                if (有效(pending->second) && pending->second != *found)
+                    throw std::runtime_error("pending dictionary source conflicts with published batch");
+                pending->second = *found;
+            }
+            if (!有效(pending->second)) {
+                const auto made = 场景_.建立场景(外设根);
+                if (made.场景节点) pending->second = *made.场景节点;
+                if (made.状态 == 新场景操作状态::资源失败) return {S::资源失败, {}};
+                if (made.状态 != 新场景操作状态::已完成 || !有效(pending->second))
+                    throw std::runtime_error("dictionary source scene creation failed");
+                changed = true;
+            }
+            const auto C = pending->second;
+            auto source = 读取场景来源身份(C);
+            if (!source.场景) throw std::runtime_error("pending dictionary source disappeared during assembly");
+            const auto require = [](新场景操作状态 state) {
+                if (state == 新场景操作状态::资源失败) throw std::bad_alloc{};
+                if (state != 新场景操作状态::已完成 && state != 新场景操作状态::无变化)
+                    throw std::runtime_error("dictionary source assembly step failed");
+            };
+            const auto featureAdded = [&](const 新场景特征添加结果& result) {
+                // 场景层的存在建立失败会折叠底层原因；仅零发表的变化可以重读。
+                if (result.存在结果 && !result.存在结果->特征节点 && !result.状态节点) {
+                    const auto state = result.存在结果->状态;
+                    if (state == 新存在操作状态::前提已变化
+                        || state == 新存在操作状态::特征联合更新占用) return false;
+                    if (state == 新存在操作状态::资源失败) throw std::bad_alloc{};
+                }
+                require(result.状态);
+                return true;
+            };
+            if (!source.批次F) {
+                const auto V = 服务_.特征值服务.保存或取得特征值(材料物理类型::UTF8字符串, std::string(batch));
+                if (!有效(V)) throw std::bad_alloc{};
+                if (!featureAdded(场景_.添加场景特征(C, 词典批次类型, V, 当前强时间()))) {
+                    reread(); continue;
+                }
+                changed = true;
+            }
+            source = 读取场景来源身份(C);
+            if (!source.接收F) {
+                if (!featureAdded(场景_.添加场景特征区间值(C, 消息类型[0], 特征概念全材料值域{}))) {
+                    reread(); continue;
+                }
+                changed = true;
+            }
+            source = 读取场景来源身份(C);
+            if (source.场景->直接成员存在组.empty()) {
+                require(场景_.建立区间成员存在(C, {std::nullopt, {}}).状态);
+                changed = true;
+            }
+            auto ready = 读取词典来源已加锁(C);
+            if (ready.状态 != S::已完成 || !ready.定位)
+                throw std::runtime_error("dictionary source assembly did not yield a complete location");
+            待完成词典场景.erase(pending);
+            if (!changed) ready.状态 = S::无变化;
+            return ready;
+        }
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (const std::exception& error) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立词典来源场景", L"来源装配未完成，保留已发表场景及待完成责任。", error.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"建立词典来源场景", L"来源装配工程异常，保留已发表事实。");
+    }
 }
 
 稳定编码 新_外设世界树类::读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const {
@@ -414,6 +629,7 @@ std::optional<新外设对话框定位> 新_外设世界树类::查找正式窗�
     if (!根) throw std::runtime_error("peripheral root unreadable");
     std::optional<新外设对话框定位> 命中;
     for (const auto 节点 : 根->直接子场景组) {
+        if (读取场景来源身份(节点).种类 != 场景来源身份::类别::网页) continue;
         const auto 定位 = 读取窗口定位(节点);
         const auto 场景材料 = 场景_.获取场景(节点);
         if (!场景材料) throw std::runtime_error("peripheral scene disappeared");
@@ -435,6 +651,7 @@ std::optional<新外设对话框来源> 新_外设世界树类::读取对话框�
         if (!根) throw std::runtime_error("peripheral root unreadable");
         std::optional<新外设对话框来源> 命中;
         for (const auto 场景节点 : 根->直接子场景组) {
+            if (读取场景来源身份(场景节点).种类 != 场景来源身份::类别::网页) continue;
             const auto 定位 = 读取窗口定位(场景节点);
             if (定位.窗口节点 != 窗口节点) continue;
             const auto 场景材料 = 场景_.获取场景(场景节点);
@@ -456,8 +673,13 @@ std::vector<稳定编码> 新_外设世界树类::列出交互场景() const noe
         if (!有效(外设根)) return {};
         const auto 根 = 场景_.获取场景(外设根);
         if (!根) throw std::runtime_error("peripheral root unreadable");
-        for (const auto 场景节点 : 根->直接子场景组) (void)读取窗口定位(场景节点);
-        return 根->直接子场景组;
+        std::vector<稳定编码> 结果;
+        for (const auto 场景节点 : 根->直接子场景组) {
+            if (读取场景来源身份(场景节点).种类 != 场景来源身份::类别::网页) continue;
+            (void)读取窗口定位(场景节点);
+            结果.push_back(场景节点);
+        }
+        return 结果;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"列出外设交互场景", L"正式窗口定位结构不完整。");
     }
@@ -473,6 +695,7 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
         if (!根) throw std::runtime_error("peripheral root unreadable");
         if (std::find(根->直接子场景组.begin(), 根->直接子场景组.end(), 场景节点) == 根->直接子场景组.end())
             return std::nullopt;
+        if (读取场景来源身份(场景节点).种类 != 场景来源身份::类别::网页) return std::nullopt;
         const auto 定位 = 读取窗口定位(场景节点);
         const auto 场景材料 = 场景_.获取场景(场景节点);
         if (!场景材料) throw std::runtime_error("peripheral scene unreadable");
