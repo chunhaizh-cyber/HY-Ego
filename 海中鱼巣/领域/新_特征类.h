@@ -646,6 +646,8 @@ public:
         const 新特征当前值组准备&, 稳定编码 特征) const;
     新特征当前值候选 读取准备当前值候选(const 新特征引用集合更新准备&) const;
     std::optional<新特征准确值> 读取准备原当前值(const 新特征引用集合更新准备&) const;
+    std::optional<新特征准确值> 读取准备原当前值(
+        const 新特征当前值组准备&, 稳定编码 特征) const;
 private:
     新特征引用集合保护结果 捕获引用集合更新保护内部(稳定编码, bool 允许未知消息) const noexcept;
     std::optional<新特征信息> 获取特征可抛内部(

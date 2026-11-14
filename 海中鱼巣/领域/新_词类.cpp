@@ -1,4 +1,5 @@
 #include "新_词类.h"
+#include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -412,6 +413,180 @@ bool 读取词保护语言(词保护现场& 现场, 稳定编码 语言,
 }
 
 } // namespace
+
+struct 新词条材料采用准备::实现 final {
+    const 新_词类* owner;
+    std::thread::id 线程 = std::this_thread::get_id();
+    新场景状态参与绑定 场景;
+    新特征状态构造绑定 状态;
+    基础联合节点快照 词条宿主;
+    新词条材料采用投影 投影;
+    std::optional<新特征准确值> 原当前值;
+    bool 已尝试 = false, 已发表 = false, 已结束 = false;
+
+    实现(const 新_词类* o, 新场景状态参与绑定 scene, 新特征状态构造绑定 state,
+        基础联合节点快照 host, 新词条材料采用投影 projection,
+        std::optional<新特征准确值> original)
+        : owner(o), 场景(std::move(scene)), 状态(std::move(state)),
+          词条宿主(std::move(host)), 投影(projection), 原当前值(original) {}
+    void 核对(const 新_词类* o) const {
+        if (owner != o || 线程 != std::this_thread::get_id())
+            throw std::logic_error("word material preparation crossed owner or thread");
+    }
+    ~实现() noexcept {
+        if (已发表 && !已结束)
+            词条挂接故障(L"词典材料采用已发表却尚未收尾，不能按未发表析构");
+    }
+};
+新词条材料采用准备::新词条材料采用准备(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
+新词条材料采用准备::~新词条材料采用准备() = default;
+新词条材料采用准备::新词条材料采用准备(新词条材料采用准备&&) noexcept = default;
+新词条材料采用准备& 新词条材料采用准备::operator=(新词条材料采用准备&&) noexcept = default;
+
+新词条材料采用准备结果 新_词类::准备词典材料采用(稳定编码 W, 稳定编码 F, 稳定编码 Q) noexcept {
+    using S = 新词典材料操作状态;
+    try {
+        if (!有效(W) || !有效(F) || !有效(Q)) return {S::输入拒绝, {}};
+        std::lock_guard lock(新词互斥);
+        if (!场景绑定_ || !状态绑定_ || !特征服务_ || !状态服务_ || !有效(词典材料类型根_))
+            return {S::未装配, {}};
+        // 场景依据必须早于前态读取；往返变化由同组L1宿主检查处理，不在上层核同。
+        auto scene = 场景绑定_->owner_->取得场景状态参与绑定(场景绑定_->场景_);
+        const auto word = 读取特征信息已加锁(W);
+        if (!word) return {S::未找到, {}};
+        if (word->所属自然语言场景 != 场景绑定_->场景_)
+            词条挂接故障(L"词典材料词条所属场景与装配不符");
+        const auto member = std::find_if(word->特征组.begin(), word->特征组.end(),
+            [&](const auto& f) { return f.特征类型根 == 词典材料类型根_ && f.特征节点 == F; });
+        if (member == word->特征组.end()) return {S::输入拒绝, {}};
+        const auto feature = 特征服务_->获取特征(F);
+        if (!feature) return {S::未找到, {}};
+        新词条材料采用投影 projection{W, F, Q, {}, feature->当前值 != std::optional<新特征准确值>{Q}};
+        if (projection.本次形成新状态 && feature->当前值) {
+            const auto before = 状态服务_->读取词条前状态(W, F, *feature->当前值);
+            if (before) projection.前状态 = before->节点;
+        }
+        auto p = std::make_unique<新词条材料采用准备::实现>(this, std::move(scene), *状态绑定_,
+            读取词条写宿主(W), projection, feature->当前值);
+        return {S::已完成, 新词条材料采用准备{std::move(p)}};
+    } catch (基础节点组追加状态 state) {
+        if (state == 基础节点组追加状态::资源失败) return {S::资源失败, {}};
+        if (state == 基础节点组追加状态::节点不存在 || state == 基础节点组追加状态::引用不存在)
+            return {S::未找到, {}};
+        词条挂接故障(L"词典材料采用宿主准备失败");
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (...) { 词条挂接故障(L"词典材料采用准备发生工程错误"); }
+}
+
+新词条材料采用投影 新_词类::读取词典材料采用投影(const 新词条材料采用准备& preparation) const {
+    if (!preparation.实现_) throw std::logic_error("word material preparation missing");
+    const auto& p = *preparation.实现_;
+    p.核对(this);
+    if (p.已尝试 || p.已结束) throw std::logic_error("word material preparation already consumed");
+    return p.投影;
+}
+
+新词条材料采用提交结果 新_词类::提交词典材料采用(
+    新词条材料采用准备& preparation, 新词典结果参与准备& participant) noexcept {
+    using S = 基础节点组追加状态;
+    try {
+        if (!preparation.实现_) return {};
+        auto& p = *preparation.实现_;
+        p.核对(this);
+        if (p.已尝试 || p.已结束) throw std::logic_error("word material preparation submitted twice");
+        p.已尝试 = true;
+        std::optional<新状态计数准备> count;
+        std::optional<新特征当前值组准备> feature;
+        struct 采用收尾 final {
+            新词条材料采用准备::实现& p;
+            新_特征类& features;
+            新_状态类& states;
+            std::optional<新特征当前值组准备>& feature;
+            std::optional<新状态计数准备>& count;
+            ~采用收尾() noexcept {
+                if (p.已结束) return;
+                if (p.已发表) 词条挂接故障(L"词典材料已发表但收尾未完成，保留全部事实");
+                if (feature) features.取消特征当前值组(*feature);
+                if (count) states.取消计数参与(*count);
+                p.已结束 = true;
+            }
+        } finish{p, *特征服务_, *状态服务_, feature, count};
+        const auto& projection = p.投影;
+        if (projection.前状态) {
+            auto prepared = 状态服务_->准备引用计数参与({{*projection.前状态, 1}});
+            if (prepared.状态 == 新状态操作状态::资源失败) return {S::资源失败, {}};
+            if (prepared.状态 == 新状态操作状态::状态不存在) return {S::预期不符, {}};
+            if (prepared.状态 != 新状态操作状态::已完成 || !prepared.准备)
+                throw std::logic_error("word material prior state holding preparation failed");
+            count = std::move(prepared.准备);
+        }
+        auto prepared = 特征服务_->准备特征当前值组({{projection.材料特征, 新特征准确值{projection.材料Q}, true}});
+        if (prepared.状态 != 新特征I64准备状态::已准备) return {词条准备失败(prepared.状态), {}};
+        if (!prepared.准备) throw std::logic_error("word material feature preparation missing");
+        feature = std::move(prepared.准备);
+        if (特征服务_->读取准备原当前值(*feature, projection.材料特征) != p.原当前值)
+            return {S::预期不符, {}};
+        const auto candidate = 特征服务_->读取准备当前值候选(*feature, projection.材料特征);
+        if (candidate.已改变_ != projection.本次形成新状态)
+            throw std::logic_error("word material changed candidate disagrees with its original value");
+
+        std::vector<基础封存追加片段> parts;
+        if (count) parts.push_back(状态服务_->封存计数参与(*count));
+        const auto resultIndex = parts.size();
+        std::optional<std::size_t> stateSlot;
+        基础节点组追加请求 wordHost;
+        wordHost.预期联合节点组.push_back(p.词条宿主);
+        if (candidate.已改变_) {
+            auto state = 状态服务_->准备特征状态(p.状态, candidate, projection.词条, 词条当前UTC(), std::move(wordHost));
+            状态服务_->合并结果引用(state, participant);
+            auto sealed = p.场景.owner_->封存场景状态挂接(p.场景, std::move(state));
+            if (sealed.封存.状态 != S::已完成) return {sealed.封存.状态, {}};
+            if (!sealed.封存.片段) throw std::logic_error("word material state scene seal missing");
+            stateSlot = sealed.状态槽;
+            parts.push_back(*sealed.封存.片段);
+        } else {
+            if (projection.前状态) throw std::logic_error("unchanged adoption cannot hold an unused previous state");
+            auto result = participant.构造无新状态采用();
+            合并同组结果构造(result.追加请求, std::move(wordHost));
+            const auto sealed = 全局基础数据集.封存原子追加片段(result.追加请求);
+            if (sealed.状态 != S::已完成) return {sealed.状态, {}};
+            if (!sealed.片段) throw std::logic_error("word material no-state seal missing");
+            parts.push_back(*sealed.片段);
+        }
+        const auto published = 特征服务_->提交特征当前值组(*feature, parts);
+        if (published.状态 != S::已完成) return {published.状态, {}};
+        p.已发表 = true;
+        if (published.附加片段回执组.size() != parts.size())
+            词条挂接故障(L"词典采用成功却缺少共同发表回执");
+        const auto& resultReceipt = published.附加片段回执组[resultIndex];
+        participant.登记共同发表回执(resultReceipt);
+        if (count) 状态服务_->登记计数发表(*count, published.附加片段回执组.front());
+        (void)特征服务_->完成特征当前值组(*feature);
+        特征服务_->结束特征当前值组(*feature);
+        if (count) 状态服务_->完成计数参与(*count);
+        participant.完成共同发表();
+        std::optional<稳定编码> newState;
+        if (stateSlot) {
+            if (*stateSlot >= resultReceipt.新节点组().size())
+                词条挂接故障(L"词典采用回执缺少本次新状态");
+            newState = resultReceipt.新节点组()[*stateSlot];
+        }
+        p.已结束 = true;
+        return {S::已完成, newState};
+    } catch (S state) { return {state, {}}; }
+    catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (...) { 词条挂接故障(L"词典材料采用提交发生工程错误"); }
+}
+
+void 新_词类::取消词典材料采用准备(新词条材料采用准备& preparation) noexcept {
+    if (!preparation.实现_) return;
+    auto& p = *preparation.实现_;
+    if (p.owner != this || p.线程 != std::this_thread::get_id() || p.已发表)
+        词条挂接故障(L"不能跨owner、跨线程或取消已发表词典采用");
+    p.已结束 = true;
+}
 
 新_词类::新_词类(新_语言类& 语言服务) noexcept
     : 语言服务_(语言服务) {}

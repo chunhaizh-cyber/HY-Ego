@@ -6754,6 +6754,21 @@ std::optional<新特征准确值> 新_特征类::读取准备原当前值(
     return p.原特征组.at(p.目标).当前值;
 }
 
+std::optional<新特征准确值> 新_特征类::读取准备原当前值(
+    const 新特征当前值组准备& 准备, 稳定编码 特征) const {
+    if (!准备.实现_) 特征联合更新故障(L"组原值缺少当前值准备");
+    const auto& p = *准备.实现_;
+    p.核对线程();
+    if (p.owner != this || !p.锁.owns_lock()
+        || p.当前阶段 != 新特征当前值组准备::实现::阶段::未提交)
+        特征联合更新故障(L"组原值必须在本owner的未提交准备内读取");
+    for (const auto& core : p.项组) {
+        const auto& item = *core.实现_;
+        if (item.目标 == 特征) return item.原特征组.at(特征).当前值;
+    }
+    特征联合更新故障(L"组原值不在本次准备中");
+}
+
 新特征I64提交结果 新_特征类::提交特征当前值组(
     新特征当前值组准备& 准备, const std::vector<基础封存追加片段>& 附加片段组) noexcept {
     新特征I64提交结果 out;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -8,11 +9,40 @@
 #include "新_语言类.h"
 #include "新_场景类.h"
 #include "词条.数据.h"
+#include "本能词典.数据.h"
 
 namespace 海中鱼巣 {
 
 extern 稳定编码 词组织根节点;
 extern 稳定编码 严格UTF8字节精确规范化合同节点;
+
+class 新词典结果参与准备;
+class 新词条材料采用准备 final {
+public:
+    ~新词条材料采用准备();
+    新词条材料采用准备(新词条材料采用准备&&) noexcept;
+    新词条材料采用准备& operator=(新词条材料采用准备&&) noexcept;
+    新词条材料采用准备(const 新词条材料采用准备&) = delete;
+    新词条材料采用准备& operator=(const 新词条材料采用准备&) = delete;
+private:
+    struct 实现;
+    explicit 新词条材料采用准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_词类;
+};
+struct 新词条材料采用投影 final {
+    稳定编码 词条, 材料特征, 材料Q;
+    std::optional<稳定编码> 前状态;
+    bool 本次形成新状态 = false;
+};
+struct 新词条材料采用准备结果 final {
+    新词典材料操作状态 状态 = 新词典材料操作状态::输入拒绝;
+    std::optional<新词条材料采用准备> 准备;
+};
+struct 新词条材料采用提交结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::optional<稳定编码> 新状态;
+};
 
 struct 新词条建立请求 final {
     稳定编码 语言节点;
@@ -107,6 +137,11 @@ public:
     新词条特征读取结果 读取词条特征信息(稳定编码 词条节点) const noexcept;
     void 装配词典材料特征类型(稳定编码) noexcept;
     新词条特征取得结果 建立或取得词条特征(稳定编码 词条, 稳定编码 类型) noexcept override;
+    新词条材料采用准备结果 准备词典材料采用(稳定编码 W, 稳定编码 F, 稳定编码 Q) noexcept;
+    新词条材料采用投影 读取词典材料采用投影(const 新词条材料采用准备&) const;
+    新词条材料采用提交结果 提交词典材料采用(
+        新词条材料采用准备&, 新词典结果参与准备&) noexcept;
+    void 取消词典材料采用准备(新词条材料采用准备&) noexcept;
     新词条特征定位结果 按类型读取词条特征(
         稳定编码 词条节点, 稳定编码 特征类型) const noexcept;
     新词条查询结果 按规范化词面查询(
