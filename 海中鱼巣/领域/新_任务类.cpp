@@ -8292,6 +8292,166 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
     catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"记录执行词典未命中",L"正式未命中记录发表失败。");}
 }
 
+新词典执行回执读取结果 新_任务类::续接执行词典变化(稳定编码 T, 稳定编码 X) noexcept {
+    using S = 新词典材料操作状态;
+    using namespace 任务执行组织存储;
+    try {
+        if (!有效(T) || !有效(X)) return {S::输入拒绝, {}};
+        // 调用方的同X占用覆盖整个循环；任务锁只用于取得当轮自有材料。
+        for (;;) {
+            try {
+                std::optional<词典执行读取> read;
+                新_动态类* dynamics = nullptr;
+                const 新_词类* words = nullptr;
+                新词条变化场景写入接口* scenes = nullptr;
+                {
+                    std::lock_guard lock(新任务互斥);
+                    if (!已分配()) return {S::未装配, {}};
+                    read = 读取词典执行(X);
+                    if (!read) return {S::未找到, {}};
+                    if (read->任务 != T) return {S::输入拒绝, {}};
+                    if (!read->回执) return {S::条件不具备, {}};
+                    dynamics = 本能动作读取_; words = 词条读取_; scenes = 词条变化场景写入_;
+                }
+                const auto& r = *read->回执;
+                if (r.查阅结局 == 新词典查阅结局::正式未命中)
+                    return {S::已完成, r};
+                if (r.采用阶段 != 新词典材料采用阶段::已采用)
+                    return {S::条件不具备, r};
+                if (r.变化阶段 != 新词典变化处理阶段::待处理)
+                    return {S::已完成, r};
+                if (!dynamics || !words || !scenes) return {S::未装配, r};
+
+                要求(read->记录 && r.后状态, "dictionary pending change has no held state");
+                const auto after = 状态服务_.获取状态(*r.后状态);
+                要求(after && after->被描述存在节点 == r.词条
+                    && after->来源实例特征节点 == r.材料特征 && after->固定准确值
+                    && *after->固定准确值 == 新特征准确值{*r.材料Q},
+                    "dictionary held after-state is not its adopted W/F/Q");
+                std::optional<新词条动态记录原因> reason;
+                std::optional<稳定编码> delta;
+                if (!r.前状态) reason = 新词条动态记录原因::无前态;
+                else {
+                    const auto before = 状态服务_.获取状态(*r.前状态);
+                    要求(before && before->被描述存在节点 == r.词条
+                        && before->来源实例特征节点 == r.材料特征 && before->固定准确值,
+                        "dictionary held before-state is not its W/F");
+                    要求(before->固定准确值 != after->固定准确值,
+                        "dictionary two-state change cannot contain equal values");
+                    要求(before->强时间.语义 == 新状态时间语义::实例绝对UTC
+                        && after->强时间.语义 == 新状态时间语义::实例绝对UTC,
+                        "dictionary real state time is not absolute");
+                    if (after->强时间.纳秒 <= before->强时间.纳秒)
+                        reason = 新词条动态记录原因::时间不递增;
+                    else {
+                        const std::vector<稳定编码> pair{*r.前状态, *r.后状态};
+                        bool changed = false;
+                        for (const auto id : dynamics->按状态查询动态(*r.后状态)) {
+                            const auto d = dynamics->获取动态(id);
+                            if (!d) {
+                                要求(!全局基础数据集.查询节点(id), "present dictionary change is unreadable");
+                                changed = true; break;
+                            }
+                            if (d->种类 != 新动态种类::原子 || d->主题存在节点 != r.词条
+                                || d->状态节点组 != pair) continue;
+                            要求(!delta, "dictionary state pair has multiple atomic changes");
+                            delta = id;
+                        }
+                        if (changed) { std::this_thread::yield(); continue; }
+                        if (!delta) {
+                            const auto made = dynamics->建立原子动态(r.词条, *r.前状态, *r.后状态);
+                            if (made.状态 == 新动态操作状态::资源失败) return {S::资源失败, r};
+                            要求(made.状态 == 新动态操作状态::已完成 && made.动态节点,
+                                "dictionary change creation failed; preserve adopted facts");
+                            delta = made.动态节点;
+                        }
+                        const auto word = words->读取词条特征信息(r.词条);
+                        if (word.状态 == 新词条查询状态::资源失败) return {S::资源失败, r};
+                        要求(word.状态 == 新词条查询状态::已找到 && word.信息,
+                            "dictionary held word has no language scene");
+                        const auto attached = scenes->挂接已发生词条变化动态(word.信息->所属自然语言场景, *delta);
+                        if (attached == 新场景操作状态::资源失败) return {S::资源失败, r};
+                        if (attached == 新场景操作状态::动态不存在) {
+                            std::this_thread::yield(); continue;
+                        }
+                        要求(attached == 新场景操作状态::已完成 || attached == 新场景操作状态::无变化,
+                            "dictionary change attachment failed; preserve delta");
+                        // 读取动作只能用观察取得关系；时间不成立就保留独立变化，不强造因果。
+                        const auto action = dynamics->获取动态(r.动作);
+                        要求(action && action->种类 == 新动态种类::动作 && action->动作时间
+                            && action->动作目标词条节点 == std::optional{r.词条}
+                            && action->动作目标特征节点 == std::optional{r.材料特征},
+                            "dictionary execution action does not describe W/F");
+                        if (after->强时间.纳秒 <= action->动作时间->纳秒) {
+                            const auto linked = dynamics->关联动作结果(r.动作, *delta, 新动作结果关系类型::观察取得);
+                            if (linked == 新动态操作状态::资源失败) return {S::资源失败, r};
+                            要求(linked == 新动态操作状态::已完成 || linked == 新动态操作状态::无变化,
+                                "dictionary observation relation failed; preserve facts");
+                        }
+                    }
+                }
+
+                基础节点组追加请求 request;
+                request.预期联合节点组 = {read->X, *read->记录};
+                const auto& record = read->记录->结构;
+                const auto stage = 词典字段(record, 取(字段::词典变化阶段));
+                要求(stage != nullptr, "dictionary change stage field missing");
+                request.替换字段组.push_back({stage->编码, 基础值{static_cast<std::int64_t>(
+                    delta ? 新词典变化处理阶段::已形成 : 新词典变化处理阶段::无需形成)}});
+                if (reason) request.追加字段组.push_back({record.节点.编码, 取(字段::词典无需原因),
+                    基础值{static_cast<std::int64_t>(*reason)}});
+                if (delta) {
+                    捕获词典引用身份(request, {*delta});
+                    request.追加字段组.push_back({record.节点.编码, 取(字段::词典变化动态), *delta});
+                }
+                const auto recordPart = 全局基础数据集.封存原子追加片段(request);
+                if (recordPart.状态 != 基础节点组追加状态::已完成) throw recordPart.状态;
+                要求(recordPart.片段.has_value(), "dictionary change receipt seal missing");
+                std::optional<新动态计数准备> count;
+                std::vector<基础封存追加片段> parts;
+                if (delta) {
+                    auto prepared = dynamics->准备引用计数参与({{*delta, 1}});
+                    if (prepared.状态 == 新动态操作状态::资源失败) return {S::资源失败, r};
+                    if (prepared.状态 == 新动态操作状态::动态不存在) {
+                        std::this_thread::yield(); continue;
+                    }
+                    要求(prepared.状态 == 新动态操作状态::已完成 && prepared.准备,
+                        "dictionary change holding preparation failed");
+                    count = std::move(prepared.准备);
+                    parts.push_back(dynamics->封存计数参与(*count));
+                }
+                parts.push_back(*recordPart.片段);
+                const auto done = 全局基础数据集.原子追加封存片段组(parts);
+                if (done.状态 != 基础节点组追加状态::已完成) {
+                    if (count) dynamics->取消计数参与(*count);
+                    throw done.状态;
+                }
+                要求(done.片段回执组.size() == parts.size(), "dictionary change joint receipt missing");
+                if (count) {
+                    dynamics->登记计数发表(*count, done.片段回执组.front());
+                    dynamics->完成计数参与(*count);
+                }
+                // 仅观察已发表回执；不再写正式事实，不拿当前F否定本次结果。
+                return 读取执行词典回执(T, X);
+            } catch (S state) {
+                // 本轮唯一捕获的新引用为Δ；它正常退出后重读并重新定位，不复用旧编码。
+                if (state != S::未找到) throw;
+                std::this_thread::yield();
+            } catch (基础节点组追加状态 state) {
+                if (state == 基础节点组追加状态::资源失败) return {S::资源失败, {}};
+                if (state != 基础节点组追加状态::预期不符 && state != 基础节点组追加状态::节点不存在
+                    && state != 基础节点组追加状态::引用不存在)
+                    throw std::logic_error("dictionary change joint publication rejected");
+                // 本轮准备已销毁、锁已释放。重读实际阶段，不删除或重建已挂接Δ。
+                std::this_thread::yield();
+            }
+        }
+    } catch (S state) { return {state, {}}; }
+    catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"续接执行词典变化", L"词典变化续接失败，保留已发表事实。"); }
+}
+
 std::optional<新任务本能采用材料> 新_任务类::读取执行本能采用(稳定编码 X) const noexcept {
     const auto 执行 = 获取执行实例(X);return 执行 ? 执行->本能采用 : std::nullopt;
 }
@@ -9119,6 +9279,12 @@ void 新_任务类::装配词条材料写入(新词条材料特征写入接口& 
     if (词条材料写入_ && 词条材料写入_ != &写入)
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"装配词条材料写入", L"不能更换已装配的词条owner");
     词条材料写入_ = &写入;
+}
+
+void 新_任务类::装配词条变化场景写入(新词条变化场景写入接口& 写入) noexcept {
+    if (词条变化场景写入_ && 词条变化场景写入_ != &写入)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"装配词条变化场景写入", L"不能更换已装配的语言场景owner");
+    词条变化场景写入_ = &写入;
 }
 
 新任务词条特征落实结果 新_任务类::落实任务词条材料特征(稳定编码 T) noexcept {
