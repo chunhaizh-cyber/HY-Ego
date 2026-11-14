@@ -2236,6 +2236,8 @@ private:
         const 新任务本次场景核验批&) const noexcept;
     新任务治理结果材料核验结果 核验任务结果材料内部(稳定编码,稳定编码,
         const std::vector<稳定编码>&,const 新任务本次场景核验批&) const noexcept;
+    bool 是正式词典方法(稳定编码) const;
+    bool 读取词典结果材料(新任务执行信息&, 新任务治理结果材料核验结果&) const;
     新任务影响评估结果 评估方法执行影响内部(稳定编码,稳定编码,
         const 新任务本次场景核验批&) noexcept;
     void 记录执行本能结果(稳定编码,稳定编码,const 新本能函数本次结果&) noexcept;
