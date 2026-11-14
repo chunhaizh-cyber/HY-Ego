@@ -1,7 +1,8 @@
-﻿#include "新_任务类.h"
+#include "新_任务类.h"
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
+#include "本能词典.运行接口.h"
 #include "任务结算.规则.h"
 #include "新_方法类.h"
 #include "新_场景类.h"
@@ -10744,6 +10745,117 @@ bool 新_任务类::卸载本能需求任务参数工厂(新本能需求任务�
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"卸载本能需求任务参数工厂", L"工厂卸载工程故障。");
     }
+}
+
+bool 新_任务类::配置本能词典任务参数工厂(新本能词典任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能词典任务参数工厂_) return 本能词典任务参数工厂_ == &工厂;
+        本能词典任务参数工厂_ = &工厂;
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"配置词典任务参数工厂", L"工厂配置工程故障。");
+    }
+}
+
+bool 新_任务类::卸载本能词典任务参数工厂(新本能词典任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能词典任务参数工厂_ != &工厂) return false;
+        本能词典任务参数工厂_ = nullptr;
+        return true;
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"卸载词典任务参数工厂", L"工厂卸载工程故障。");
+    }
+}
+
+新词典推进收束读取结果 新_任务类::读取执行词典推进收束(稳定编码 T, 稳定编码 X) const noexcept {
+    using S = 新词典推进收束读取状态;
+    try {
+        const auto x = 获取执行实例(X);
+        if (!x) {
+            if (全局基础数据集.查询节点(X)) throw std::logic_error("dictionary execution exists but cannot be read");
+            return {S::上下文不存在, {}};
+        }
+        if (x->任务节点 != T) throw std::logic_error("dictionary termination read T/X mismatch");
+        新本能词典任务参数工厂* 工厂;
+        { std::lock_guard 锁(新任务互斥); 工厂 = 本能词典任务参数工厂_; }
+        if (!工厂) throw std::logic_error("dictionary task factory not configured");
+        return 工厂->读取任务推进收束(X);
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取词典执行收束", L"原执行归属或运行上下文读取失败。");
+    }
+}
+
+新任务词典推进结果 新_任务类::继续任务词典执行(const 新任务词典续接定位& 定位) noexcept {
+    using S = 新任务词典推进状态;
+    using P = 新词典任务正常处置;
+    using R = 新词典运行状态;
+    新任务词典推进结果 out{定位, S::结构不一致, {}};
+    try {
+        if (!有效(定位.任务节点) || !有效(定位.执行实例节点)) return out;
+        const auto x = 获取执行实例(定位.执行实例节点);
+        if (!x && 全局基础数据集.查询节点(定位.执行实例节点)) return out;
+        if (x && x->任务节点 != 定位.任务节点) return out;
+        新任务词典正常处置 p;
+        p.续接定位 = 定位;
+        const auto 完成 = [&](P disposition) {
+            p.处置 = disposition;
+            out.状态 = S::已返回正常处置;
+            out.正常处置 = std::move(p);
+            return out;
+        };
+        if (!x || x->状态 != 新任务执行状态::执行中) return 完成(P::当前职责已结束);
+        新本能词典任务参数工厂* 工厂;
+        { std::lock_guard 锁(新任务互斥); 工厂 = 本能词典任务参数工厂_; }
+        if (!工厂) { out.状态 = S::依赖未装配; return out; }
+        // 宿主在worker最终join以后才卸载；只取得原X上下文，不能创建替代X或重放本能。
+        const auto prepared = 工厂->取得任务续接参数场景(定位.执行实例节点);
+        if (prepared.状态 != R::已就绪 || !prepared.参数场景) return out;
+        const auto& scene = *prepared.参数场景;
+        if (!x->本能采用 || scene.方法节点() != x->方法节点
+            || scene.全部角色绑定() != x->本能采用->参数绑定组
+            || scene.执行分支节点() != x->本能采用->执行分支节点) return out;
+        auto* runtime = scene.获取词典运行接口();
+        if (!runtime) { out.状态 = S::依赖未装配; return out; }
+        新词典查阅推进结果 progress;
+        auto A = x->普通动作节点;
+        if (A) {
+            // 已绑定直接推进，保证已采用的变化责任先于worker停止处理。
+            progress = runtime->推进本次查阅(scene);
+        } else {
+            const auto action = runtime->开始或取得查阅动作(scene);
+            if (!action.动作 || !action.实际输入 || !action.实际条件) return out;
+            A = action.动作;
+            if (action.状态 == R::已就绪) progress = runtime->推进本次查阅(scene);
+            else {
+                progress.状态 = action.状态;
+                progress.动作 = action.动作;
+                progress.缺口组 = action.缺口组;
+                progress.变化依赖节点组 = action.变化依赖节点组;
+                const auto stopped = 工厂->读取任务推进收束(定位.执行实例节点);
+                if (stopped.状态 == 新词典推进收束读取状态::资源失败) throw std::bad_alloc{};
+                if (stopped.材料) progress.收束原因 = stopped.材料->原因;
+            }
+        }
+        if (progress.动作 != A) return out;
+        p.缺口组 = std::move(progress.缺口组);
+        p.收束原因 = progress.收束原因;
+        if (progress.状态 == R::已停止) p.收束原因 = 新词典推进收束原因::主动停止;
+        if (p.收束原因 || progress.状态 == R::已收束) return 完成(P::已有动作可以评估);
+        if (progress.状态 == R::已推进) return 完成(P::已有动作需要续接);
+        if (progress.状态 != R::条件未具备) return out;
+        p.等待依赖键组 = 读取执行结果依赖键(*x);
+        p.等待依赖键组.push_back({新任务依赖键种类::需求, x->执行服务需求, {}});
+        for (const auto node : progress.变化依赖节点组)
+            if (有效(node)) p.等待依赖键组.push_back({新任务依赖键种类::节点, node, {}});
+        std::sort(p.等待依赖键组.begin(), p.等待依赖键组.end());
+        p.等待依赖键组.erase(std::unique(p.等待依赖键组.begin(), p.等待依赖键组.end()), p.等待依赖键组.end());
+        return 完成(P::已有动作等待条件);
+    } catch (const std::bad_alloc&) { out.状态 = S::资源失败; return out; }
+    catch (const std::length_error&) { out.状态 = S::资源失败; return out; }
+    catch (...) { out.状态 = S::结构不一致; return out; }
 }
 
 std::optional<稳定编码> 新_任务类::获取任务已结算动作定义() const noexcept {

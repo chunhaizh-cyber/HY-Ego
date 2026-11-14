@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstddef>
 #include <source_location>
@@ -24,6 +24,7 @@
 #include "前置语言输入.数据.h"
 #include "词条.数据.h"
 #include "词典.数据.h"
+#include "本能词典.数据.h"
 #include "数据操作.执行结果参与.h"
 
 namespace 海中鱼巣 {
@@ -58,6 +59,7 @@ class 新_任务管理线程类;
 class 新方法场景事实读取接口;
 class 新方法场景事实构成读取接口;
 class 新本能需求任务参数工厂;
+class 新本能词典任务参数工厂;
 struct 新世界I64组合结果;
 struct 新任务最终消费边界 final {
     稳定编码 结算任务节点, 结算需求节点, 服务根需求节点;
@@ -1365,6 +1367,55 @@ struct 新任务治理本能执行请求 final {
         const 新任务治理本能执行请求&) = default;
 };
 
+struct 新任务调度定位 final {
+    稳定编码 任务节点, 需求节点;
+    新任务状态 任务状态 = 新任务状态::已建立;
+    std::optional<稳定编码> 候选材料节点, 方法实例节点;
+    std::optional<稳定编码> 最近执行实例节点, 影响评估节点;
+    std::optional<稳定编码> 方法执行组织节点;
+    bool 完整() const noexcept;
+    friend bool operator==(const 新任务调度定位&,
+        const 新任务调度定位&) = default;
+};
+
+enum class 新任务依赖键种类 : std::uint8_t { 节点 = 1, 方法知识, 前驱, 需求 };
+struct 新任务依赖键 final {
+    新任务依赖键种类 种类 = 新任务依赖键种类::节点;
+    稳定编码 节点;
+    稳定编码 特征类型;
+    friend bool operator==(const 新任务依赖键&, const 新任务依赖键&) = default;
+    friend bool operator<(const 新任务依赖键& 左, const 新任务依赖键& 右) noexcept {
+        if (左.种类 != 右.种类) return 左.种类 < 右.种类;
+        if (左.节点.值 != 右.节点.值) return 左.节点.值 < 右.节点.值;
+        return 左.特征类型.值 < 右.特征类型.值;
+    }
+};
+
+enum class 新词典任务正常处置 : std::uint8_t {
+    未动作等待条件 = 1, 未动作需要重新组织, 未动作目标已满足,
+    当前职责已结束, 已有动作需要续接, 已有动作等待条件, 已有动作可以评估
+};
+struct 新任务词典续接定位 final {
+    稳定编码 任务节点, 执行实例节点;
+    friend bool operator==(const 新任务词典续接定位&, const 新任务词典续接定位&) = default;
+};
+struct 新任务词典正常处置 final {
+    新词典任务正常处置 处置 = 新词典任务正常处置::当前职责已结束;
+    std::optional<新任务调度定位> 调度定位;
+    std::optional<新任务词典续接定位> 续接定位;
+    std::vector<新词典学习缺口> 缺口组;
+    std::vector<新任务依赖键> 等待依赖键组;
+    std::optional<新词典推进收束原因> 收束原因;
+};
+enum class 新任务词典推进状态 : std::uint8_t {
+    已返回正常处置 = 1, 依赖未装配, 资源失败, 结构不一致
+};
+struct 新任务词典推进结果 final {
+    新任务词典续接定位 原定位;
+    新任务词典推进状态 状态 = 新任务词典推进状态::结构不一致;
+    std::optional<新任务词典正常处置> 正常处置;
+};
+
 enum class 新任务治理本能执行状态 : std::uint8_t {
     动作已发出且结果材料已具备 = 1,
     动作已发出等待结果,
@@ -1537,16 +1588,7 @@ struct 新任务问题学习交付结果 final {
 };
 
 // 调度只读材料都是本次current-only值式副本，不是执行许可或持久等待账。
-struct 新任务调度定位 final {
-    稳定编码 任务节点, 需求节点;
-    新任务状态 任务状态 = 新任务状态::已建立;
-    std::optional<稳定编码> 候选材料节点, 方法实例节点;
-    std::optional<稳定编码> 最近执行实例节点, 影响评估节点;
-    std::optional<稳定编码> 方法执行组织节点;
-    bool 完整() const noexcept;
-    friend bool operator==(const 新任务调度定位&,
-        const 新任务调度定位&) = default;
-};
+
 
 enum class 新任务调度项状态 : std::uint8_t {
     普通可筹办 = 1, 业务等待, 旧执行待结果, 后继待决议,
@@ -1599,18 +1641,7 @@ struct 新任务调度材料读取结果 final {
 // 方法知识键：无内容方法（依赖未实现）；前驱键：前驱所在存在节点与特征类型（如自我的交互者），
 // 按存在节点匹配（状态特征类型可能是具体类型或类型根，不在唤醒层换算）。
 // TASK-STATE-CAUSAL 切片4：需求键：需求字段更新（需求owner就绪通知）可能改变其满足材料的需求节点。
-enum class 新任务依赖键种类 : std::uint8_t { 节点 = 1, 方法知识, 前驱, 需求 };
-struct 新任务依赖键 final {
-    新任务依赖键种类 种类 = 新任务依赖键种类::节点;
-    稳定编码 节点;
-    稳定编码 特征类型;
-    friend bool operator==(const 新任务依赖键&, const 新任务依赖键&) = default;
-    friend bool operator<(const 新任务依赖键& 左, const 新任务依赖键& 右) noexcept {
-        if (左.种类 != 右.种类) return 左.种类 < 右.种类;
-        if (左.节点.值 != 右.节点.值) return 左.节点.值 < 右.节点.值;
-        return 左.特征类型.值 < 右.特征类型.值;
-    }
-};
+
 // 一次状态形成换算出的所属存在节点与来源实例特征节点（去重）；只提示重读，不携带结论。
 struct 新任务依赖就绪事实 final {
     std::vector<稳定编码> 节点组;
@@ -1685,6 +1716,10 @@ public:
     // 非拥有外层工厂；仅启动前配置，所有使用线程join后由同一所有者卸载。
     bool 配置本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
     bool 卸载本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
+    bool 配置本能词典任务参数工厂(新本能词典任务参数工厂&) noexcept;
+    bool 卸载本能词典任务参数工厂(新本能词典任务参数工厂&) noexcept;
+    新任务词典推进结果 继续任务词典执行(const 新任务词典续接定位&) noexcept;
+    新词典推进收束读取结果 读取执行词典推进收束(稳定编码 T, 稳定编码 X) const noexcept;
     std::optional<稳定编码> 获取任务已结算动作定义() const noexcept override;
     std::optional<新任务贡献动作定义> 读取任务贡献动作定义(稳定编码) const noexcept override;
     std::optional<新任务贡献动作阶段> 读取任务贡献动作阶段(稳定编码) const noexcept override;
@@ -2323,6 +2358,7 @@ private:
     std::atomic<std::shared_ptr<const 服务值治理读取上下文>> 服务值治理读取上下文_;
     新_动态类* 本能动作读取_ = nullptr;
     新本能需求任务参数工厂* 本能需求任务参数工厂_ = nullptr;
+    新本能词典任务参数工厂* 本能词典任务参数工厂_ = nullptr;
 };
 
 } // namespace 海中鱼巣
