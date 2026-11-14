@@ -8549,13 +8549,17 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
             try {
                 基础节点组追加请求 request;
                 新_动态类* dynamics = nullptr;
+                bool 首次绑定动作 = false;
+                稳定编码 原方法;
+                std::optional<新状态强时间> 原开始时间, 原结束时间;
                 {
                     std::lock_guard lock(新任务互斥);
                     if (!已分配()) return 新任务操作状态::尚未初始化;
                     auto read = 读取归类执行(X);
                     if (!read) return 新任务操作状态::执行实例不存在;
                     if (read->任务 != T) return 新任务操作状态::执行实例不属于任务;
-                    要求(read->动作 == A,"classification input has no matching X action");
+                    要求(!有效(read->动作) || read->动作 == A,"classification input has another X action");
+                    首次绑定动作 = !有效(read->动作);
                     if (read->材料) {
                         要求(read->材料->实际输入 == input,"classification retry changed its historical input");
                         if (!complete) return 新任务操作状态::精确重复;
@@ -8565,6 +8569,24 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                         }
                     } else 确认归类原参数(read->X.结构,input);
                     request.预期联合节点组.push_back(read->X);
+                    if (首次绑定动作) {
+                        原方法 = 词典引用(read->X.结构,执行方法字段).value_or(稳定编码{});
+                        const auto 读取时间 = [&](稳定编码 语义字段,稳定编码 时间字段) -> std::optional<新状态强时间> {
+                            const auto* 语义 = 词典字段(read->X.结构,语义字段);
+                            const auto* 时间 = 词典字段(read->X.结构,时间字段);
+                            if (!语义 && !时间) return {};
+                            const auto* 语义材料 = 语义 ? std::get_if<基础值>(&语义->内容) : nullptr;
+                            const auto* 时间材料 = 时间 ? std::get_if<基础值>(&时间->内容) : nullptr;
+                            const auto* 语义值 = 语义材料 ? std::get_if<std::int64_t>(&语义材料->材料) : nullptr;
+                            const auto* 时间值 = 时间材料 ? std::get_if<std::int64_t>(&时间材料->材料) : nullptr;
+                            要求(语义值 && 时间值,"classification original execution time incomplete");
+                            return 新状态强时间{static_cast<新状态时间语义>(*语义值),*时间值};
+                        };
+                        原开始时间 = 读取时间(执行开始时间语义字段,执行开始时间字段);
+                        原结束时间 = 读取时间(执行结束时间语义字段,执行结束时间字段);
+                        要求(有效(原方法) && 原开始时间,"classification original execution identity missing");
+                        request.追加字段组.push_back({X,执行普通动作字段,A});
+                    }
                     if (!read->记录) {
                         auto node = 构造归类输入记录(input,complete.has_value());
                         if (complete) {
@@ -8582,7 +8604,23 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                             request.追加字段组.push_back({read->记录->结构.节点.编码,field.字段节点,field.内容});
                     }
                     dynamics = 本能动作读取_;
-                    if (complete && complete->变化动态 && !dynamics) return 新任务操作状态::依赖未实现;
+                    if ((首次绑定动作 || (complete && complete->变化动态)) && !dynamics)
+                        return 新任务操作状态::依赖未实现;
+                }
+                // 保存已发生事实，只核原X和A，不以当前任务、词条或主体场景重判历史。
+                if (首次绑定动作) {
+                    const auto action = dynamics->获取动态(A);
+                    要求(action && action->种类 == 新动态种类::动作
+                        && action->动作目标种类 == 新动作目标种类::词条
+                        && action->动作来源节点 == X && action->动作定义节点 == 原方法
+                        && action->主题存在节点 == input.执行主体
+                        && action->动作目标词条节点 == input.词条
+                        && action->动作目标特征节点 == input.挂接特征
+                        && action->动作时间 && action->动作时间->语义 == 原开始时间->语义
+                        && action->动作时间->纳秒 >= 原开始时间->纳秒
+                        && (!原结束时间 || (action->动作时间->语义 == 原结束时间->语义
+                            && action->动作时间->纳秒 <= 原结束时间->纳秒)),
+                        "classification historical action differs from its original execution");
                 }
                 std::set<稳定编码> refs;
                 for (const auto& n : request.新节点组) for (const auto& f : n.字段组)
@@ -8597,12 +8635,15 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                 std::optional<新状态计数准备> stateCount;
                 std::vector<基础封存追加片段> parts;
                 parts.reserve(3);
-                if (complete && complete->变化动态) {
-                    auto count = dynamics->准备引用计数参与({{*complete->变化动态,1}});
+                std::vector<新引用计数变化> 动态持有;
+                if (首次绑定动作) 动态持有.push_back({A,1});
+                if (complete && complete->变化动态) 动态持有.push_back({*complete->变化动态,1});
+                if (!动态持有.empty()) {
+                    auto count = dynamics->准备引用计数参与(动态持有);
                     if (count.状态 == 新动态操作状态::资源失败) return 新任务操作状态::资源失败;
                     if (count.状态 == 新动态操作状态::动态不存在)
-                        throw std::logic_error("classification original receipt delta no longer exists");
-                    要求(count.状态 == 新动态操作状态::已完成 && count.准备,"classification delta holding preparation failed");
+                        throw std::logic_error("classification original action or receipt delta no longer exists");
+                    要求(count.状态 == 新动态操作状态::已完成 && count.准备,"classification dynamic holding preparation failed");
                     dynamicCount = std::move(count.准备);
                     parts.push_back(dynamics->封存计数参与(*dynamicCount));
                 }

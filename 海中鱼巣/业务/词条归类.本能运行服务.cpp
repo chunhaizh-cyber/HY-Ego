@@ -141,7 +141,7 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
     std::vector<稳定编码> 概念组;
     std::optional<新本能词条归类回执> 回执;
     std::optional<概念名称关系组建立结果> 原名称;
-    bool 动作已挂场景 = false, 动作已绑定 = false, 输入已保存 = false, 关联已处理 = false, 回执已保存 = false;
+    bool 动作已挂场景 = false, 输入已保存 = false, 关联已处理 = false, 回执已保存 = false;
     调用(std::shared_ptr<实现> s,新本能词条归类任务参数请求 q) : 宿主(s),请求(std::move(q)) {}
     void 确认场景(const 方法参数场景& scene) const {
         要求归类(&scene == 场景身份 && scene.方法节点() == 请求.方法节点
@@ -162,16 +162,8 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
         动作已挂场景 = true;
         return true;
     }
-    bool 保存输入(实现& s) {
-        if (!A) return true;
-        if (!动作已绑定) {
-            const auto recorded = s.执行.任务.记录本能动作身份(请求.任务节点,请求.执行实例节点,*A,s.执行.动态);
-            if (recorded == 新任务操作状态::资源失败) throw std::bad_alloc{};
-            if (recorded == 新任务操作状态::任务状态不允许) return false;
-            要求归类(recorded == 新任务操作状态::已修改 || recorded == 新任务操作状态::精确重复,
-                "classification action could not be bound to its X");
-            动作已绑定 = true;
-        }
+    void 保存输入(实现& s) {
+        if (!A) return;
         if (!输入已保存) {
             const auto saved = s.执行.任务.记录执行词条归类动作(请求.任务节点,请求.执行实例节点,*A,*输入);
             if (saved == 新任务操作状态::资源失败) throw std::bad_alloc{};
@@ -179,7 +171,6 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
                 "classification original input could not be recorded");
             输入已保存 = true;
         }
-        return true;
     }
     void 保存回执(实现& s) {
         if (!原名称 || 回执已保存) return;
@@ -234,7 +225,7 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
             要求归类(made.状态 == 新动态操作状态::已完成 && A,"classification action could not be established");
         }
         if (!挂接动作(*s)) return 动作结果(S::需重新组织);
-        if (!保存输入(*s)) return 动作结果(S::需重新组织);
+        保存输入(*s);
         return 动作结果(S::已就绪);
     }
     新词条归类提交结果 提交或取得归类结果(const 方法参数场景& scene) override {
@@ -361,7 +352,8 @@ bool 词条归类本能运行服务::关闭() noexcept {
         for (const auto& call : calls) {
             std::lock_guard phase(call->阶段锁);
             try {
-                if (!call->挂接动作(*s) || !call->保存输入(*s)) { complete = false; continue; }
+                if (!call->挂接动作(*s)) { complete = false; continue; }
+                call->保存输入(*s);
                 call->保存回执(*s);
             } catch (const std::bad_alloc&) { complete = false; }
             catch (const std::length_error&) { complete = false; }
