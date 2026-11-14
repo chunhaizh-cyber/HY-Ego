@@ -3971,6 +3971,94 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
     catch (...) { 正式定义故障("current primitive read exception"); }
 }
 
+新词典归类信息概念结果 概念_存在类::读取词典归类信息概念() const noexcept {
+    try {
+        if (!正式schema就绪()) return {正式状态::依赖未就绪,{}};
+        新词典归类信息概念组 组;
+        {
+            std::lock_guard 锁(存在概念图互斥);
+            std::vector<基础联合节点快照> 材料;
+            const auto 登记 = 读取正式登记(材料);
+            if (!登记.contains(234) && !登记.contains(235)) return {};
+            if (!登记.contains(234) || !登记.contains(235)) return {正式状态::定义冲突,{}};
+            组.材料范围 = 登记.at(234);
+            组.明确材料范围 = 登记.at(235);
+        }
+        const auto X = 特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::归类目标词条);
+        const auto C = 特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::归类采用概念);
+        if (X.状态 == 特征概念规则状态::资源失败 || C.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        if (!X.类型根 || !C.类型根) return {正式状态::依赖未就绪,{}};
+        组.目标词条FT = *X.类型根;
+        组.采用概念FT = *C.类型根;
+        return {正式状态::已读取,组};
+    } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+    catch (...) { 正式定义故障("dictionary claim schema read exception"); }
+}
+
+新词典归类信息概念结果 概念_存在类::建立或取得词典归类信息概念(
+    const 新_特征值类& 值服务, std::span<const 正式概念身份读取接口* const> 提供者组) noexcept {
+    for (;;) {
+        try {
+            const auto 已有 = 读取词典归类信息概念();
+            if (已有.信息) return {正式状态::已复用,已有.信息};
+            if (已有.状态 != 正式状态::未找到) return 已有;
+            登记映射 当前登记;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                std::vector<基础联合节点快照> 材料;
+                当前登记 = 读取正式登记(材料);
+            }
+            if (!当前登记.contains(406) || !当前登记.contains(516)) return {正式状态::依赖未就绪,{}};
+            const auto 根 = 读取存在根概念保护();
+            if (根.状态 == 正式概念读取状态::前提已变化) throw 正式状态::前提已变化;
+            if (!根.信息) return {正式状态::依赖未就绪,{}};
+            std::array<稳定编码,2> FT组;
+            const std::array<std::uint32_t,2> 槽组{先天特征类型槽::归类目标词条,先天特征类型槽::归类采用概念};
+            for (std::size_t i = 0; i < FT组.size(); ++i) {
+                特征概念定义 定义;
+                定义.材料类型 = 特征概念材料物理类型::信息节点引用;
+                定义.值域 = 特征概念信息引用值域{
+                    i == 0 ? 信息引用语义::信息对象 : 信息引用语义::概念定义, 当前登记.at(i == 0 ? 516 : 406)};
+                定义.比较规则 = 特征概念比较规则::信息引用身份精确;
+                定义.聚合规则 = 特征概念聚合规则::不自动聚合;
+                const auto 类型 = 特征概念服务_.建立或取得先天特征类型槽({槽组[i],定义},值服务,提供者组);
+                if (类型.状态 == 特征概念规则状态::前提已变化) throw 正式状态::前提已变化;
+                if (类型.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+                if (!类型.类型根) throw std::logic_error("dictionary claim field initialization failed");
+                FT组[i] = *类型.类型根;
+            }
+            定义模板 基础{};
+            基础.槽 = 234; 基础.形状 = 结构类型键;
+            基础.普通上位引用组 = {根.信息->节点};
+            基础.项目 = {{FT组[0],516,{}}};
+            定义模板 明确{};
+            明确.槽 = 235; 明确.形状 = 结构类型键;
+            明确.上位 = {234};
+            明确.项目 = {{FT组[1],406,{}}};
+            正式状态 状态;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                // 只将本独立双槽成批发表，不重新发布原需求/任务/方法递归组。
+                基础节点组追加请求 请求;
+                std::vector<std::pair<std::uint32_t,std::size_t>> 槽;
+                登记映射 登记;
+                状态 = 准备定义批({基础,明确},{},请求,槽,登记);
+                if (状态 == 正式状态::定义冲突) return {状态,{}};
+                状态 = 发布先天定义批(请求,槽);
+            }
+            if (状态 == 正式状态::前提已变化) throw 状态;
+            auto 结果 = 读取词典归类信息概念();
+            if (!结果.信息) throw std::logic_error("published dictionary claim schema unavailable");
+            结果.状态 = 状态;
+            return 结果;
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态,{}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("dictionary claim schema publication exception"); }
+        std::this_thread::yield();
+    }
+}
+
 正式结构概念结果 概念_存在类::建立或取得正式概念单点范围(
     稳定编码 C, std::span<const 正式概念身份读取接口* const> 提供者组) noexcept {
     for (;;) {

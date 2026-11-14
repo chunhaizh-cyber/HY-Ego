@@ -12,11 +12,13 @@
 #include "../核心/基础数据集.h"
 #include "语言分界.数据.h"
 #include "词典语言.数据.h"
+#include "信息内容.数据.h"
 
 namespace 海中鱼巣 {
 
 class 新_词类;
 class 概念_存在类;
+struct 新词典归类信息概念组;
 class 新_特征类;
 class 新_存在类;
 class 概念_特征类;
@@ -750,6 +752,8 @@ public:
     // 正式来源已经退出时返回空，由调用者读取当前请求后继续。
     std::optional<新词典归类材料信息> 保存词典归类材料(const 新词典归类材料定义&);
     std::optional<新词典归类材料信息> 读取词典归类材料(稳定编码 行节点) const;
+    正式信息参数读取结果 读取词典归类参数保护(稳定编码 行节点, 稳定编码 请求范围,
+        const 新词典归类信息概念组&) const noexcept;
     std::optional<新词典归类材料信息> 更新词典归类概念(
         稳定编码 行节点, const 新词典归类概念解读&);
     std::vector<新词典归类材料信息> 查询词典归类材料(稳定编码 材料Q) const;

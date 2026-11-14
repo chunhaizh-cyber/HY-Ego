@@ -5887,6 +5887,7 @@ struct 组织读取现场 {
     const 基础联合节点快照& 读(稳定编码 id){
         if(auto i=快照.find(id);i!=快照.end())return i->second;
         const auto r=全局基础数据集.查询节点组完整结构({id});
+        if(r.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
         组织要求(r.状态==基础结构操作状态::已完成&&r.节点组.size()==1&&r.节点组.front().快照.has_value());
         return 快照.emplace(id,*r.节点组.front().快照).first->second;
     }
@@ -6567,6 +6568,58 @@ std::optional<新词典归类材料信息> 新_语言类::保存词典归类材�
                 throw std::logic_error("词典语言材料的组合发布失败");
         }
         std::this_thread::yield();
+    }
+}
+
+namespace {
+稳定编码 读取词典组织项(组织读取现场& 读, 稳定编码 记录, std::int64_t 序号) {
+    for (const auto& 子项 : 读.字段(记录,组织键::子项)) {
+        const auto 节点 = std::get<稳定编码>(子项);
+        // 只用兄弟节点的直接序号定位，正文及引用对象不进入参数取材。
+        const auto 字段 = 全局基础数据集.查询字段(节点,组键(组织键::序号));
+        组织要求(字段.size() == 1);
+        const auto 当前序号 = std::get<std::int64_t>(std::get<基础值>(字段.front().内容).材料);
+        if (当前序号 == 序号) return 节点;
+    }
+    throw std::logic_error("dictionary claim formal field path missing");
+}
+} // namespace
+
+正式信息参数读取结果 新_语言类::读取词典归类参数保护(
+    稳定编码 R, 稳定编码 请求范围, const 新词典归类信息概念组& 概念组) const noexcept {
+    using S = 正式信息参数读取状态;
+    try {
+        if (请求范围 != 概念组.材料范围) return {S::范围未支持,{},{}};
+        std::lock_guard 锁(新语言互斥);
+        if (!有效(组键(组织键::登记根))) return {S::依赖未就绪,{},{}};
+        if (!是正式词典语言行(R)) return {S::信息不存在,{},{}};
+        组织读取现场 读;
+        组织要求(读.整数(R,组织键::类型) == 106);
+        std::set<稳定编码> 路径;
+        const auto 定义 = 读.引用(R,组织键::定义);
+        const auto X = 组织读值<稳定编码>(读,读取词典组织项(读,定义,5),路径);
+        组织要求(有效(X));
+        正式内容值 采用{正式内容值种类::概念引用,正式内容值状态::当前未知,{}};
+        const auto 解读组 = 读.字段(R,组织键::词典归类解读);
+        if (!解读组.empty()) {
+            组织要求(解读组.size() == 1);
+            const auto 解读 = std::get<稳定编码>(解读组.front());
+            const auto 状态 = 组织读值<新词典归类概念状态>(读,读取词典组织项(读,解读,0),路径);
+            if (状态 == 新词典归类概念状态::已明确) {
+                const auto C = 组织读值<std::optional<稳定编码>>(读,读取词典组织项(读,解读,3),路径);
+                if (C) 采用 = {正式内容值种类::概念引用,正式内容值状态::已知,正式内容准确值{*C}};
+            }
+        }
+        for (const auto 节点 : {概念组.材料范围,概念组.目标词条FT,概念组.采用概念FT}) 读.读(节点);
+        正式信息参数投影 输出{R,概念组.材料范围,{
+            {概念组.目标词条FT,{正式内容值种类::词条引用,正式内容值状态::已知,正式内容准确值{X}}},
+            {概念组.采用概念FT,std::move(采用)}},std::nullopt};
+        return {S::已读取,std::move(输出),读.保护()};
+    } catch (const std::bad_alloc&) { return {S::资源失败,{},{}}; }
+    catch (const std::exception& 错误) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词典归类参数",L"正式归类材料参数读取发生工程错误。",错误.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取词典归类参数",L"正式归类材料参数读取发生未知工程错误。");
     }
 }
 
