@@ -38,11 +38,15 @@ struct 新学习工作快照项 final {
     稳定编码 方法节点;
     std::optional<稳定编码> 任务节点, 执行实例节点;
     std::optional<std::uint64_t> 排队序号;
+    std::optional<新方法学习请求> 学习请求;
+    std::uint64_t 请求者数量 = 0;
+    bool 自我待提交 = false;
 };
 struct 新学习工作快照 final {
     新学习工作快照读取状态 状态 = 新学习工作快照读取状态::内部错误;
     std::optional<新学习线程快照> 线程快照;
     std::vector<新学习工作快照项> 项组;
+    std::uint64_t 自我待提交请求数 = 0;
 };
 
 // 服务覆盖线程寿命；已接收工作保留至接收者确认，相同计算输入共用同一future。
