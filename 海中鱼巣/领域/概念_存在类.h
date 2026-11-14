@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <array>
 #include <exception>
 #include <optional>
@@ -18,6 +19,7 @@
 namespace 海中鱼巣 {
 
 class 概念_名称关系类;
+class 新_词类;
 
 enum class 正式结构操作状态 : std::uint8_t {
     已建立=1, 已复用, 已读取, 未找到, 输入拒绝, 依赖未就绪, 前提已变化, 定义冲突
@@ -37,7 +39,7 @@ struct 成员组织概念定义 final {
 };
 enum class 基础概念原语 : std::uint8_t {
     合法存在=1,合法FT根,合法特征概念,合法比较关系,正式信息身份,正式概念身份,
-    I64闭区间,I64有限枚举,具名领域身份,唯一存在
+    I64闭区间,I64有限枚举,具名领域身份,唯一存在,词条同键=11
 };
 struct 基础范围概念定义 final {
     基础概念原语 原语;
@@ -52,6 +54,19 @@ struct 新基础范围读取结果 final {
     新基础范围读取状态 状态 = 新基础范围读取状态::未找到;
     稳定编码 节点;
     std::optional<基础范围概念定义> 定义;
+};
+
+struct 新词条同键信息 final {
+    稳定编码 概念节点, 正式来源词条, 词条语言, 规范化合同;
+    std::string 原规范化词面;
+};
+enum class 新词条同键操作状态 : std::uint8_t {
+    已建立 = 1, 已复用, 已读取, 已删除, 未找到,
+    仍被引用, 非本原语, 依赖未就绪, 资源失败
+};
+struct 新词条同键结果 final {
+    新词条同键操作状态 状态;
+    std::optional<新词条同键信息> 信息;
 };
 
 enum class 结构约束原语 : std::uint8_t {
@@ -449,6 +464,10 @@ public:
     新基础范围读取结果 读取当前基础范围概念(稳定编码) const noexcept;
     正式结构概念结果 建立或取得词条身份范围概念() noexcept;
     正式结构概念保护结果 读取词条身份范围概念保护() const noexcept;
+    void 装配词条读取(const 新_词类&) noexcept;
+    新词条同键结果 建立或取得词条同键范围(稳定编码 正式来源词条) noexcept;
+    新词条同键结果 读取词条同键范围(稳定编码 范围概念) const noexcept;
+    新词条同键操作状态 删除词条同键范围(稳定编码 范围概念) noexcept;
     先天信息概念结果 建立或取得先天需求任务方法概念(const 先天信息类型依赖&,
         const 新_特征值类&, std::span<const 正式概念身份读取接口* const>) noexcept;
     先天信息概念结果 建立或取得自我需求子概念(稳定编码 唯一自我存在,
@@ -541,6 +560,7 @@ private:
 
 
     概念_特征类& 特征概念服务_;
+    const 新_词类* 词条读取_ = nullptr;
 };
 
 } // namespace 海中鱼巣

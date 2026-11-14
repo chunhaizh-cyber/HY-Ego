@@ -1099,6 +1099,54 @@ bool 追加方法词条范围保护(稳定编码 C, const 概念_存在类& owne
     return true;
 }
 
+// 配对可以收窄到词条同键；方法登记规格仍由原全域入口限定。
+bool 追加方法配对词条范围保护(稳定编码 C, const 概念_存在类& owner,
+    std::vector<基础联合节点快照>& protection) {
+    const auto d = owner.读取当前基础范围概念(C);
+    if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+    if (d.状态 == 新基础范围读取状态::依赖未就绪)
+        throw std::logic_error("word condition concept reader unavailable");
+    if (!d.定义 || d.定义->原语 != 基础概念原语::词条同键)
+        return 追加方法词条范围保护(C, owner, protection);
+    const auto p = owner.读取词条同键范围(C);
+    if (p.状态 == 新词条同键操作状态::资源失败) throw std::bad_alloc{};
+    if (p.状态 == 新词条同键操作状态::未找到) return false;
+    if (p.状态 != 新词条同键操作状态::已读取 || !p.信息)
+        throw std::logic_error("word key condition definition unavailable");
+    // C的正式引用由最终L1发布保障；不把来源W的可变字段或旧整组快照加入门禁。
+    return true;
+}
+
+bool 方法词条范围属于(稳定编码 child, 稳定编码 parent, const 概念_存在类& owner) {
+    // 保留窄读口的资源/依赖状态，不把optional包含口的未知折成否定或结构损坏。
+    const std::array<稳定编码,2> nodes{child,parent};
+    std::array<bool,2> all{};
+    std::array<std::optional<新词条同键信息>,2> keys;
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        const auto d = owner.读取当前基础范围概念(nodes[i]);
+        if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+        if (d.状态 == 新基础范围读取状态::未找到) return false;
+        if (d.状态 == 新基础范围读取状态::依赖未就绪)
+            throw std::logic_error("word condition containment reader unavailable");
+        if (!d.定义) return false;
+        if (d.定义->原语 == 基础概念原语::具名领域身份
+            && d.定义->整数参数 == std::vector<std::int64_t>{16}) all[i] = true;
+        else if (d.定义->原语 == 基础概念原语::词条同键) {
+            const auto key = owner.读取词条同键范围(nodes[i]);
+            if (key.状态 == 新词条同键操作状态::资源失败) throw std::bad_alloc{};
+            if (key.状态 == 新词条同键操作状态::未找到) return false;
+            if (key.状态 != 新词条同键操作状态::已读取 || !key.信息)
+                throw std::logic_error("word condition containment source unavailable");
+            keys[i] = key.信息;
+        } else return false;
+    }
+    if (all[1]) return true;
+    if (all[0]) return false;
+    return keys[0]->词条语言 == keys[1]->词条语言
+        && keys[0]->规范化合同 == keys[1]->规范化合同
+        && keys[0]->原规范化词面 == keys[1]->原规范化词面;
+}
+
 bool 方法持有者范围有效(const 新方法有序参数规格& 规格, const 概念_存在类& owner) {
     if (规格.信息类型 == 新方法参数信息类型::存在) return 方法存在范围有效(规格.范围概念节点, owner);
     if (规格.信息类型 != 新方法参数信息类型::词条) return false;
@@ -1673,7 +1721,8 @@ bool 条件结果角色已声明(
                         if(项.变化方向概念节点&&!项.特征类型概念节点)return false;
                     if(规格.有序规格->信息类型==新方法参数信息类型::词条) {
                         if constexpr(requires{项.存在概念节点;})
-                            if(项.存在概念节点&&项.存在概念节点!=std::optional{规格.有序规格->范围概念节点})return false;
+                            if(项.存在概念节点 && !方法词条范围属于(*项.存在概念节点,
+                                规格.有序规格->范围概念节点, 存在概念服务))return false;
                         if(项.特征类型概念节点&&!持有者特征类型允许(规格.有序规格->信息类型,*项.特征类型概念节点,概念服务))return false;
                     }
                     if(项.特征类型概念节点) {
@@ -2042,6 +2091,10 @@ bool 条件涵盖必要项(const 新方法条件定义& actual,const 新方法�
     const 概念_特征类& features,const 概念_存在类& concepts) {
     if(actual.关系规则!=新方法项关系规则::全部成立)return false;
     const auto isChild=[&](稳定编码 child,稳定编码 parent) {
+        const auto d = concepts.读取当前基础范围概念(child);
+        if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+        if (d.定义 && d.定义->原语 == 基础概念原语::词条同键)
+            return 方法词条范围属于(child, parent, concepts);
         std::set<稳定编码> seen;std::vector<稳定编码> pending{child};
         while(!pending.empty()) {const auto n=pending.back();pending.pop_back();if(n==parent)return true;
             if(!seen.insert(n).second)continue;const auto c=concepts.获取存在概念(n);
@@ -4031,7 +4084,7 @@ struct 初始声明补齐候选 final {
                 const auto p=std::find_if(请求.参数规格组.begin(),请求.参数规格组.end(),[&](const auto& v){
                     return v.有序规格&&v.有序规格->序号==item.参数序号;});
                 if(p!=请求.参数规格组.end()&&p->有序规格->信息类型==新方法参数信息类型::词条) {
-                    if(!追加方法词条范围保护(*item.存在概念节点,存在概念服务_,原子.预期联合节点组))
+                    if(!追加方法配对词条范围保护(*item.存在概念节点,存在概念服务_,原子.预期联合节点组))
                         throw std::runtime_error("final method condition word range unavailable");
                 } else existence(existence,*item.存在概念节点);
             }

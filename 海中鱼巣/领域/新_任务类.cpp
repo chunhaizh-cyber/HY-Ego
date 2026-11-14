@@ -480,6 +480,53 @@ bool 是任务词条范围(const 概念_存在类& 概念,稳定编码 C) {
         return r.信息->节点==C;
     }
 }
+bool 是任务词条条件范围(const 概念_存在类& 概念, 稳定编码 C) {
+    const auto d = 概念.读取当前基础范围概念(C);
+    if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+    if (d.状态 == 新基础范围读取状态::依赖未就绪)
+        throw std::logic_error("word condition range reader unavailable");
+    return d.定义 && (d.定义->原语 == 基础概念原语::词条同键
+        || (d.定义->原语 == 基础概念原语::具名领域身份
+            && d.定义->整数参数 == std::vector<std::int64_t>{16}));
+}
+bool 任务词条符合范围(const 概念_存在类& 概念, const 新_词类* 词,
+    稳定编码 C, 稳定编码 W) {
+    if (!词) throw std::logic_error("word condition actual reader unavailable");
+    正式内容值 actual{正式内容值种类::词条引用, 正式内容值状态::已知, W};
+    const 正式引用身份核验器 reader = [&](基础概念原语 p, const auto& numbers,
+        const auto& refs, const 正式内容值& v) -> 正式内容符合结果 {
+        using S = 正式内容符合状态;
+        if (v.种类 != 正式内容值种类::词条引用 || !v.值) return {S::不符合,{}};
+        const auto word = 词->获取词条(std::get<稳定编码>(*v.值));
+        if (word.状态 == 新词条查询状态::资源失败) return {S::资源失败,{}};
+        if (word.状态 == 新词条查询状态::未找到) return {S::不符合,{}};
+        if (word.状态 != 新词条查询状态::已找到 || !word.信息)
+            throw std::logic_error("word condition actual unreadable");
+        if (p == 基础概念原语::具名领域身份 && numbers == std::vector<std::int64_t>{16})
+            return {S::符合,{}};
+        if (p != 基础概念原语::词条同键) return {S::未支持,{}};
+        if (!numbers.empty() || refs.size() != 1) throw std::logic_error("word key arguments invalid");
+        const auto source = 词->获取词条(refs.front());
+        if (source.状态 == 新词条查询状态::资源失败) return {S::资源失败,{}};
+        if (source.状态 == 新词条查询状态::未找到) return {S::不适用,{}};
+        if (source.状态 != 新词条查询状态::已找到 || !source.信息)
+            throw std::logic_error("word condition source unreadable");
+        const auto& a = *word.信息; const auto& b = *source.信息;
+        const bool same = a.语言节点 == b.语言节点 && a.规范化合同节点 == b.规范化合同节点
+            && a.规范化词面 == b.规范化词面;
+        return {same ? S::符合 : S::不符合,{}};
+    };
+    for (;;) {
+        const auto r = 概念.比较正式内容范围(C, actual, reader);
+        if (r.状态 == 正式内容符合状态::前提已变化) continue;
+        if (r.状态 == 正式内容符合状态::资源失败) throw std::bad_alloc{};
+        if (r.状态 == 正式内容符合状态::未支持) {
+            if (!是任务词条条件范围(概念,C)) return false;
+            throw std::logic_error("word condition evaluator unavailable");
+        }
+        return r.状态 == 正式内容符合状态::符合;
+    }
+}
 std::optional<稳定编码> 参数直接特征(const 新方法参数角色绑定& 绑定) {
     if (绑定.有序引用 && 绑定.有序引用->信息类型 == 新方法参数信息类型::特征)
         return 绑定.有序引用->信息节点;
@@ -2570,7 +2617,7 @@ void 核验概念引用(const 新任务方法执行组织& 组织,
                 const bool 词条位置=项.参数序号&&项.参数序号<=域.参数要求组.size()
                     &&域.参数要求组[项.参数序号-1].规格.有序规格
                     &&域.参数要求组[项.参数序号-1].规格.有序规格->信息类型==新方法参数信息类型::词条;
-                if(词条位置&&项.存在概念节点)要求(是任务词条范围(存在,*项.存在概念节点),"invalid word condition range");
+                if(词条位置&&项.存在概念节点)要求(是任务词条条件范围(存在,*项.存在概念节点),"invalid word condition range");
                 else 存在概念(项.存在概念节点);
                 特征概念(项.特征类型概念节点);
                 特征概念(项.特征值域概念节点); 二次概念(项.二次特征概念节点); 精确域(项);
@@ -22090,7 +22137,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                         const auto 主体 = 条件规格->信息类型 == 新方法参数信息类型::特征
                             ? 条件规格->所属存在位置 : 条件规格->序号;
                         if(c.存在概念节点&&条件规格->信息类型==新方法参数信息类型::词条)
-                            限定(主体,[&](稳定编码){return 是任务词条范围(存在概念服务_,*c.存在概念节点);});
+                            限定(主体,[&](稳定编码 W){return 任务词条符合范围(存在概念服务_,词条读取_,*c.存在概念节点,W);});
                         if (c.存在概念节点 && 条件规格->信息类型 == 新方法参数信息类型::存在)
                             限定(主体, [&](稳定编码 n) { return 核验筹办世界对象概念(存在服务_, 存在概念服务_,
                                 n, *c.存在概念节点) != 新存在概念匹配状态::不符合; });
@@ -22776,7 +22823,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                         const auto 角色绑定 = 查找已知角色绑定(条件项.参数角色节点, 条件项.参数序号);
                         const bool 是虚拟 = 角色绑定.size() == 1 && 角色绑定.front().任务虚拟存在引用.has_value();
                         const auto 匹配 = 对象->信息类型==新方法参数信息类型::词条
-                            ? (是任务词条范围(存在概念服务_,*条件项.存在概念节点) ? 新存在概念匹配状态::匹配 : 新存在概念匹配状态::不符合)
+                            ? (任务词条符合范围(存在概念服务_,词条读取_,*条件项.存在概念节点,对象->节点) ? 新存在概念匹配状态::匹配 : 新存在概念匹配状态::不符合)
                             : 是虚拟
                             ? (存在概念兼容(对象->专属概念, *条件项.存在概念节点)
                                 ? 新存在概念匹配状态::匹配 : 新存在概念匹配状态::不符合)
@@ -24009,7 +24056,7 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
             const auto 词条 = 是词条 ? 读取任务词条(词条读取_, *作用对象) : std::nullopt;
             if (是词条) {
                 if (!词条 || (条件项.存在概念节点
-                    && !是任务词条范围(存在概念服务_, *条件项.存在概念节点))) { 未解析(); continue; }
+                    && !任务词条符合范围(存在概念服务_, 词条读取_, *条件项.存在概念节点, *作用对象))) { 未解析(); continue; }
                 if (!条件项.特征类型概念节点 && !条件项.特征值域概念节点 && !条件项.精确数值域) continue;
             }
             std::vector<稳定编码> 特征节点组;

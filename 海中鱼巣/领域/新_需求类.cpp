@@ -5826,7 +5826,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
             if(!值组.emplace(项.特征类型,项.内容).second)
                 throw std::runtime_error("成功读取的正式内容包含重复特征类型");
         bool 身份依赖未就绪=false;
-        const 正式引用身份核验器 身份=[&](基础概念原语 p,const auto& 数值,const auto&,const 正式内容值& v)->正式内容符合结果 {
+        const 正式引用身份核验器 身份=[&](基础概念原语 p,const auto& 数值,const auto& 引用参数,const 正式内容值& v)->正式内容符合结果 {
             if(v.种类==正式内容值种类::I64数值)return {F::不符合,{}};
             const auto 节点=std::get<稳定编码>(*v.值);
             if(p==基础概念原语::合法存在) {
@@ -5866,6 +5866,25 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
                     return {r.身份 ? F::符合 : F::不符合,r.身份保护};
                 }
                 return {F::未支持,{}};
+            }
+            if (p == 基础概念原语::词条同键) {
+                if (v.种类 != 正式内容值种类::词条引用) return {F::不符合,{}};
+                if (!数值.empty() || 引用参数.size() != 1)
+                    throw std::logic_error("demand word key primitive arguments invalid");
+                if (!词条读取_) { 身份依赖未就绪 = true; return {F::未支持,{}}; }
+                const auto a = 词条读取_->获取词条(节点);
+                const auto b = 词条读取_->获取词条(引用参数.front());
+                if (a.状态 == 新词条查询状态::资源失败 || b.状态 == 新词条查询状态::资源失败)
+                    return {F::资源失败,{}};
+                if (b.状态 == 新词条查询状态::未找到) return {F::不适用,{}};
+                if (a.状态 == 新词条查询状态::未找到) return {F::不符合,{}};
+                if (a.状态 != 新词条查询状态::已找到 || !a.信息
+                    || b.状态 != 新词条查询状态::已找到 || !b.信息)
+                    throw std::logic_error("demand word key identity unreadable");
+                const bool same = a.信息->语言节点 == b.信息->语言节点
+                    && a.信息->规范化合同节点 == b.信息->规范化合同节点
+                    && a.信息->规范化词面 == b.信息->规范化词面;
+                return {same ? F::符合 : F::不符合,{}};
             }
             if(p==基础概念原语::正式信息身份)return {F::符合,内容.完整保护组};
             if(v.种类!=正式内容值种类::概念引用)return {F::不符合,{}};
@@ -9196,7 +9215,7 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
             return *v;
         };
         const 正式引用身份核验器 身份 = [&](基础概念原语 p, const std::vector<std::int64_t>& 数值,
-            const std::vector<稳定编码>&, const 正式内容值& v) -> 正式内容符合结果 {
+            const std::vector<稳定编码>& 引用参数, const 正式内容值& v) -> 正式内容符合结果 {
             if (v.种类 == 正式内容值种类::I64数值 || !v.值) return {F::不符合, {}};
             const auto 节点 = std::get<稳定编码>(*v.值);
             if (p == 基础概念原语::合法存在) {
@@ -9232,6 +9251,25 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
                     return {r.身份 ? F::符合 : F::不符合, r.身份保护};
                 }
                 return {F::未支持, {}};
+            }
+            if (p == 基础概念原语::词条同键) {
+                if (v.种类 != 正式内容值种类::词条引用) return {F::不符合,{}};
+                if (!数值.empty() || 引用参数.size() != 1)
+                    throw std::logic_error("demand word key primitive arguments invalid");
+                if (!词条读取_) { 依赖未就绪 = true; return {F::未支持,{}}; }
+                const auto a = 词条读取_->获取词条(节点);
+                const auto b = 词条读取_->获取词条(引用参数.front());
+                if (a.状态 == 新词条查询状态::资源失败 || b.状态 == 新词条查询状态::资源失败)
+                    return {F::资源失败,{}};
+                if (b.状态 == 新词条查询状态::未找到) return {F::不适用,{}};
+                if (a.状态 == 新词条查询状态::未找到) return {F::不符合,{}};
+                if (a.状态 != 新词条查询状态::已找到 || !a.信息
+                    || b.状态 != 新词条查询状态::已找到 || !b.信息)
+                    throw std::logic_error("demand word key identity unreadable");
+                const bool same = a.信息->语言节点 == b.信息->语言节点
+                    && a.信息->规范化合同节点 == b.信息->规范化合同节点
+                    && a.信息->规范化词面 == b.信息->规范化词面;
+                return {same ? F::符合 : F::不符合,{}};
             }
             if (p == 基础概念原语::正式信息身份) return {F::符合, {}};
             if (v.种类 != 正式内容值种类::概念引用) return {F::不符合, {}};

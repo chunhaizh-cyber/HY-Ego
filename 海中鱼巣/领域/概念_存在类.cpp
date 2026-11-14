@@ -1,4 +1,5 @@
 #include "概念_存在类.h"
+#include "新_词类.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -11,6 +12,7 @@
 #include <stdexcept>
 #include <functional>
 #include <thread>
+#include <tuple>
 
 namespace 海中鱼巣 {
 
@@ -2526,7 +2528,7 @@ bool 是登记存在根(稳定编码 n) {
 }
 void 核基础定义(const 基础范围概念定义&d) {
     const auto p=static_cast<unsigned>(d.原语);
-    if(p<1||p>10) 正式定义故障("unknown primitive");
+    if(p<1||p>11) 正式定义故障("unknown primitive");
     if(p<=6) {if(!d.整数参数.empty()||!d.引用参数.empty()) 正式定义故障("primitive arguments");}
     else if(d.原语==基础概念原语::I64闭区间) {
         if(d.整数参数.size()!=2||d.整数参数[0]>d.整数参数[1]||!d.引用参数.empty()) 正式定义故障("interval arguments");
@@ -2537,6 +2539,96 @@ void 核基础定义(const 基础范围概念定义&d) {
         if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>17||!d.引用参数.empty()) 正式定义故障("named identity arguments");
     } else if(!d.整数参数.empty()||d.引用参数.size()!=1) 正式定义故障("unique existence arguments");
 }
+using 词条三元键 = std::tuple<稳定编码, 稳定编码, std::string>;
+using 词条来源键组 = std::map<稳定编码, 词条三元键>;
+词条三元键 取得词条键(const 新词条信息& W) {
+    return {W.语言节点, W.规范化合同节点, W.规范化词面};
+}
+std::optional<新词条信息> 读取正式词条键材料(const 新_词类* reader, 稳定编码 W) {
+    if (!reader) throw std::logic_error("word range reader not configured");
+    const auto r = reader->获取词条(W);
+    if (r.状态 == 新词条查询状态::资源失败) throw std::bad_alloc{};
+    if (r.状态 == 新词条查询状态::未找到) return {};
+    if (r.状态 != 新词条查询状态::已找到 || !r.信息)
+        throw std::logic_error("word range source is not a formal word");
+    return r.信息;
+}
+bool 是词条全域(const 基础范围概念定义& d) {
+    return d.原语 == 基础概念原语::具名领域身份 && d.整数参数 == std::vector<std::int64_t>{16};
+}
+std::optional<bool> 比较词条范围包含(const 基础范围概念定义& 下,
+    const 基础范围概念定义& 上, const 词条来源键组& 键组) {
+    const bool 同键下 = 下.原语 == 基础概念原语::词条同键;
+    const bool 同键上 = 上.原语 == 基础概念原语::词条同键;
+    if (!同键下 && !同键上) return {};
+    if (同键下 && 是词条全域(上)) return true;
+    if (!同键下 || !同键上) return false;
+    const auto a = 键组.find(下.引用参数.front()), b = 键组.find(上.引用参数.front());
+    if (a == 键组.end() || b == 键组.end()) throw std::logic_error("word range comparison lacks formal keys");
+    return a->second == b->second;
+}
+词条来源键组 读取范围词条键组(const std::vector<基础范围概念定义>& 定义组, const 新_词类* reader) {
+    词条来源键组 keys;
+    for (const auto& d : 定义组) if (d.原语 == 基础概念原语::词条同键) {
+        const auto W = d.引用参数.front();
+        if (keys.contains(W)) continue;
+        const auto word = 读取正式词条键材料(reader,W);
+        if (!word) throw 正式状态::未找到;
+        keys.emplace(W,取得词条键(*word));
+    }
+    return keys;
+}
+// 新同键路径保留资源失败；只返回当次L1快照，不复核旧内容。
+std::optional<基础联合节点快照> 读取同键当前快照(稳定编码 C) {
+    const auto r = 全局基础数据集.查询节点组完整结构({C});
+    if (r.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (r.状态 == 基础结构操作状态::节点不存在) return {};
+    if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 1)
+        throw std::logic_error("word range current snapshot unavailable");
+    return r.节点组.front().快照;
+}
+// 此索引只召回C，复用前还要读取当前定义；完整键来自正式词条owner。
+std::map<词条三元键, 稳定编码> 词条同键索引;
+稳定编码 词条同键索引根{};
+bool 词条同键索引已建立 = false;
+void 读取词条同键索引(const 概念_存在类& owner, const 新_词类* reader) {
+    std::vector<std::pair<稳定编码,稳定编码>> 来源;
+    {
+        std::lock_guard lock(存在概念图互斥);
+        if (词条同键索引根 != 存在概念图根节点) {
+            词条同键索引.clear(); 词条同键索引已建立 = false; 词条同键索引根 = 存在概念图根节点;
+        }
+        if (词条同键索引已建立) return;
+        const auto root = 读取同键当前快照(存在概念图根节点);
+        if (!root) throw std::logic_error("word range root missing");
+        for (const auto& edge : root->出向外部关系组) {
+            if (edge.类型 != 基础外部关系类型::父子 || edge.角色或顺序 != 组织归属关系角色) continue;
+            const auto d = owner.读取当前基础范围概念(edge.目标节点);
+            if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+            if (d.定义 && d.定义->原语 == 基础概念原语::词条同键)
+                来源.emplace_back(edge.目标节点, d.定义->引用参数.front());
+        }
+    }
+    std::map<词条三元键,稳定编码> 当前;
+    for (const auto& [C,W] : 来源) {
+        const auto word = 读取正式词条键材料(reader,W);
+        if (!word) continue; // C和来源已经共同退出时，不将旧召回保留为事实。
+        const auto [it,added] = 当前.emplace(取得词条键(*word),C);
+        if (!added && it->second != C) throw std::logic_error("duplicate word-key range signature");
+    }
+    std::lock_guard lock(存在概念图互斥);
+    if (词条同键索引已建立) return;
+    for (auto& [key,C] : 当前) {
+        const auto d = owner.读取当前基础范围概念(C);
+        if (d.状态 == 新基础范围读取状态::资源失败) throw std::bad_alloc{};
+        if (d.状态 == 新基础范围读取状态::未找到) continue;
+        if (!d.定义 || d.定义->原语 != 基础概念原语::词条同键)
+            throw std::logic_error("word range bootstrap signature changed");
+        词条同键索引.try_emplace(std::move(key),C);
+    }
+    词条同键索引已建立 = true;
+}
+
 // 解码只读当前owner/L1；跨owner身份复核在调用者持本地锁之前进行。
 正式结构概念信息 解码正式定义(稳定编码 n,std::vector<基础联合节点快照>&protect,
     std::set<稳定编码>&visited,bool 展开引用=true,
@@ -2602,7 +2694,9 @@ void 核基础定义(const 基础范围概念定义&d) {
         auto follow=[&](稳定编码 x){auto t=读取(x);并保护(protect,{t});
             if(正式形状(t.结构)&&!visited.count(x)) (void)解码正式定义(x,protect,visited,true,已读组,上下文);};
         std::visit([&](const auto&d){using D=std::decay_t<decltype(d)>;
-            if constexpr(std::is_same_v<D,基础范围概念定义>){for(auto x:d.引用参数)follow(x);}
+            if constexpr(std::is_same_v<D,基础范围概念定义>){
+                if(d.原语!=基础概念原语::词条同键)for(auto x:d.引用参数)follow(x);
+            }
             else if constexpr(std::is_same_v<D,结构约束定义>){for(auto x:d.项目FT组)follow(x);for(auto x:d.引用参数)follow(x);}
             else if constexpr(std::is_same_v<D,成员组织概念定义>)follow(d.成员概念);
             else {for(auto x:d.上位结构概念组){auto p=读取(x);if(正式形状(p.结构))follow(x);else 核存在根证明(x,protect);}for(const auto&i:d.新增项组){follow(i.特征类型);follow(i.内容概念);for(auto x:i.读取路径)follow(x);}
@@ -2621,7 +2715,7 @@ struct 正式结构图有效定义 final {
 };
 using 正式结构图展开结果=std::map<稳定编码,正式结构图有效定义>;
 正式结构图展开结果 核正式结构图(const std::vector<基础联合节点快照>&snapshots,
-    const 正式读取上下文* 上下文=nullptr) {
+    const 正式读取上下文* 上下文=nullptr, const 新_词类* 词条读取=nullptr) {
     std::map<稳定编码,const 基础联合节点快照*> 已读组;
     for(const auto&s:snapshots) {
         if(!有效(s.结构.节点.编码)) 正式定义故障("formal captured endpoint invalid");
@@ -2644,6 +2738,13 @@ using 正式结构图展开结果=std::map<稳定编码,正式结构图有效定
         std::vector<基础联合节点快照>p;std::set<稳定编码>v;
         definitions.emplace(s.结构.节点.编码,解码正式定义(s.结构.节点.编码,p,v,false,&已读组).定义);
     }
+    std::vector<基础范围概念定义> 词条定义;
+    for (const auto& [id,d] : definitions) {
+        (void)id;
+        if (const auto* b = std::get_if<基础范围概念定义>(&d); b && b->原语 == 基础概念原语::词条同键)
+            词条定义.push_back(*b);
+    }
+    const auto 词条键组 = 读取范围词条键组(词条定义,词条读取);
     auto basic=[&](稳定编码 n)->const 基础范围概念定义* {
         auto it=definitions.find(n);return it==definitions.end()?nullptr:std::get_if<基础范围概念定义>(&it->second);};
     std::function<bool(稳定编码,稳定编码,std::set<稳定编码>&)> narrower;
@@ -2651,6 +2752,7 @@ using 正式结构图展开结果=std::map<稳定编码,正式结构图有效定
         if(child==parent)return true;
         auto a=basic(child),b=basic(parent);
         if(a&&b) {
+            if (const auto words = 比较词条范围包含(*a,*b,词条键组)) return *words;
             if(a->原语==基础概念原语::唯一存在&&b->原语==基础概念原语::合法存在)return true;
             if(a->原语==基础概念原语::I64有限枚举&&b->原语==基础概念原语::I64有限枚举)
                 return std::includes(b->整数参数.begin(),b->整数参数.end(),a->整数参数.begin(),a->整数参数.end());
@@ -2763,14 +2865,16 @@ struct 正式结构工作读取结果 final {
 };
 // 单次读取的捕获、核验、跨FT保护及最终联合重核，两个公开投影共用。
 正式结构工作读取结果 读取正式结构工作保护(稳定编码 n,
-    const 概念_特征类& 特征概念服务) {
+    const 概念_特征类& 特征概念服务, const 新_词类* 词条读取) {
     if(!正式schema就绪())return {正式状态::依赖未就绪,{},{},{}};
     if(!有效(n)||!节点仍存在(n))return {};
     正式读取上下文 上下文;
     auto first=上下文.读取(n);if(!正式形状(first.结构))return {};
     std::vector<基础联合节点快照> protect;std::set<稳定编码>visited;
     auto info=解码正式定义(n,protect,visited,true,nullptr,&上下文);
-    auto 有效定义组=核正式结构图(protect,&上下文);
+    auto 有效定义组=核正式结构图(protect,&上下文,词条读取);
+    if (const auto* b = std::get_if<基础范围概念定义>(&info.定义); b && b->原语 == 基础概念原语::词条同键)
+        return {正式状态::已读取,std::move(info),std::move(protect),std::move(有效定义组)};
     // 普通FT完整保护在锁外读取，不能持本owner锁回调。
     std::vector<稳定编码> captured;
     captured.reserve(protect.size());
@@ -2984,7 +3088,7 @@ struct 正式结构工作读取结果 final {
 }
 正式结构概念保护结果 概念_存在类::读取正式结构概念保护(稳定编码 n) const noexcept {
     try {
-        auto r=读取正式结构工作保护(n,特征概念服务_);
+        auto r=读取正式结构工作保护(n,特征概念服务_,词条读取_);
         return {r.状态,std::move(r.信息),std::move(r.完整保护组)};
     }catch(正式状态 s){return {s,{},{}};}
     catch(const std::exception&e){正式定义故障(e.what());}catch(...){正式定义故障("formal protection exception");}
@@ -2993,7 +3097,7 @@ struct 正式结构工作读取结果 final {
     using 状态=正式结构有效内容读取状态;
     try {
         if(!有效(n))return {};
-        auto r=读取正式结构工作保护(n,特征概念服务_);
+        auto r=读取正式结构工作保护(n,特征概念服务_,词条读取_);
         switch(r.状态) {
         case 正式状态::未找到:return {状态::未找到,{},{}};
         case 正式状态::依赖未就绪:return {状态::依赖未就绪,{},{}};
@@ -3015,6 +3119,8 @@ struct 正式结构工作读取结果 final {
         return {状态::已读取,std::move(输出),std::move(r.完整保护组)};
     }catch(正式状态 s) {
         if(s==正式状态::前提已变化)return {状态::前提已变化,{},{}};
+        if(s==正式状态::未找到)return {状态::未找到,{},{}};
+        if(s==正式状态::依赖未就绪)return {状态::依赖未就绪,{},{}};
         正式定义故障("effective structure read unexpected control status");
     }catch(const std::bad_alloc&) {return {状态::资源失败,{},{}};}
     catch(const std::exception&e){正式定义故障(e.what());}
@@ -3023,6 +3129,20 @@ struct 正式结构工作读取结果 final {
 std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,稳定编码 上) const noexcept {
     try {
         if(!有效(下)||!有效(上))return false;
+        const auto lower = 读取当前基础范围概念(下), upper = 读取当前基础范围概念(上);
+        if (lower.状态 == 新基础范围读取状态::资源失败 || upper.状态 == 新基础范围读取状态::资源失败)
+            return std::nullopt;
+        const bool 涉及同键 = (lower.定义 && lower.定义->原语 == 基础概念原语::词条同键)
+            || (upper.定义 && upper.定义->原语 == 基础概念原语::词条同键);
+        if (涉及同键) {
+            if (lower.状态 == 新基础范围读取状态::未找到 || upper.状态 == 新基础范围读取状态::未找到
+                || lower.状态 == 新基础范围读取状态::依赖未就绪 || upper.状态 == 新基础范围读取状态::依赖未就绪)
+                return std::nullopt;
+            if (!lower.定义 || !upper.定义) return false;
+            if (!词条读取_) return std::nullopt;
+            const auto keys = 读取范围词条键组({*lower.定义,*upper.定义},词条读取_);
+            return 比较词条范围包含(*lower.定义,*upper.定义,keys);
+        }
         std::vector<稳定编码> 待查{下};std::set<稳定编码> 已查;
         while(!待查.empty()) {
             const auto n=待查.back();待查.pop_back();
@@ -3046,6 +3166,14 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
         if(值.状态!=正式内容值状态::已知||!值.值)正式定义故障("known typed content lacks value");
         const bool 数值=值.种类==正式内容值种类::I64数值;
         if(数值!=std::holds_alternative<std::int64_t>(*值.值))正式定义故障("typed content physical mismatch");
+        const auto 当前基础 = 读取当前基础范围概念(C);
+        if (当前基础.状态 == 新基础范围读取状态::资源失败) return {S::资源失败,{}};
+        if (当前基础.定义 && 当前基础.定义->原语 == 基础概念原语::词条同键) {
+            if (值.种类 != 正式内容值种类::词条引用) return {S::不符合,{}};
+            if (!身份核验) return {S::未支持,{}};
+            // sourceW仅承载不可变键；不将其可变F纳入旧快照证明。
+            return 身份核验(当前基础.定义->原语, 当前基础.定义->整数参数, 当前基础.定义->引用参数, 值);
+        }
         auto 定义=读取正式结构概念保护(C);
         if(定义.状态==正式状态::前提已变化)return {S::前提已变化,{}};
         if(定义.状态!=正式状态::已读取||!定义.信息)return {S::未支持,{}};
@@ -3328,7 +3456,7 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
                 else info.形状=存在分类概念形状::普通抽象;
                 if(正式schema就绪()&&!正式引用组(s.结构,正式键[上位键]).empty())正式定义故障("ordinary concept has structural parents");
                 for(const auto&r:s.入向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)info.直接上位概念组.push_back(r.源节点);
-            }else if(shape&&*shape==结构类型键){std::set<稳定编码>v;auto def=解码正式定义(x,p,v);核正式结构图(p);
+            }else if(shape&&*shape==结构类型键){std::set<稳定编码>v;auto def=解码正式定义(x,p,v);核正式结构图(p,nullptr,词条读取_);
                 info.形状=存在分类概念形状::信息结构;info.直接上位概念组=std::get<信息结构概念定义>(def.定义).上位结构概念组;
                 for(const auto&r:s.入向外部关系组)if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)正式定义故障("structural concept has ordinary parents");
             }else throw 正式状态::输入拒绝;
@@ -3348,7 +3476,7 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
                 for(const auto&r:child.入向外部关系组)
                     if(r.类型==基础外部关系类型::父子&&r.角色或顺序==概念上下位关系角色)
                         正式定义故障("structural classification child has ordinary parents");
-                std::set<稳定编码>v;(void)解码正式定义(f.所属节点,p,v);核正式结构图(p);info.直接下位概念组.push_back(f.所属节点);}
+                std::set<稳定编码>v;(void)解码正式定义(f.所属节点,p,v);核正式结构图(p,nullptr,词条读取_);info.直接下位概念组.push_back(f.所属节点);}
             for(auto*group:{&info.直接上位概念组,&info.直接下位概念组}){auto unique=*group;排序去重(unique);if(unique.size()!=group->size())正式定义故障("duplicate classification edge");*group=std::move(unique);}
             cache.emplace(x,info);for(auto parent:info.直接上位概念组)visit(parent);active.erase(x);done.insert(x);
         };visit(n);if(!正式保护未变(p))return {正式状态::前提已变化,{},{}};
@@ -3669,6 +3797,130 @@ std::vector<定义模板> 基础模板() {
         catch (...) { 正式定义故障("word identity range publication exception"); }
         // 前提变化只发生在零发布阶段；本轮锁和准备对象已释放。
         std::this_thread::yield();
+    }
+}
+
+void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
+    std::lock_guard lock(存在概念图互斥);
+    if (词条读取_ && 词条读取_ != &reader) 正式定义故障("word range reader cannot be replaced while in use");
+    词条读取_ = &reader;
+}
+
+新词条同键结果 概念_存在类::读取词条同键范围(稳定编码 C) const noexcept {
+    using S = 新词条同键操作状态;
+    try {
+        if (!词条读取_ || !正式schema就绪()) return {S::依赖未就绪,{}};
+        const auto d = 读取当前基础范围概念(C);
+        if (d.状态 == 新基础范围读取状态::资源失败) return {S::资源失败,{}};
+        if (d.状态 == 新基础范围读取状态::未找到) return {S::未找到,{}};
+        if (d.状态 == 新基础范围读取状态::依赖未就绪) return {S::依赖未就绪,{}};
+        if (!d.定义 || d.定义->原语 != 基础概念原语::词条同键) return {S::非本原语,{}};
+        const auto W = d.定义->引用参数.front();
+        const auto word = 读取正式词条键材料(词条读取_,W);
+        if (!word) return {S::未找到,{}};
+        return {S::已读取, 新词条同键信息{C,W,word->语言节点,word->规范化合同节点,word->规范化词面}};
+    } catch (const std::bad_alloc&) { return {S::资源失败,{}}; }
+    catch (const std::exception& e) { 正式定义故障(e.what()); }
+    catch (...) { 正式定义故障("word key range read failure"); }
+}
+
+新词条同键结果 概念_存在类::建立或取得词条同键范围(稳定编码 W) noexcept {
+    using S = 新词条同键操作状态;
+    for (;;) {
+        try {
+            if (!词条读取_ || !正式schema就绪()) return {S::依赖未就绪,{}};
+            const auto word = 读取正式词条键材料(词条读取_,W);
+            if (!word) return {S::未找到,{}};
+            const auto key = 取得词条键(*word);
+            读取词条同键索引(*this,词条读取_);
+            std::optional<稳定编码> 候选;
+            {
+                std::lock_guard lock(存在概念图互斥);
+                if (const auto it = 词条同键索引.find(key); it != 词条同键索引.end()) 候选 = it->second;
+            }
+            if (候选) {
+                const auto current = 读取词条同键范围(*候选);
+                if (current.状态 == S::资源失败 || current.状态 == S::依赖未就绪) return current;
+                if (current.信息) {
+                    const auto& c = *current.信息;
+                    if (词条三元键{c.词条语言,c.规范化合同,c.原规范化词面} != key)
+                        throw std::logic_error("word key range index points to another signature");
+                    return {S::已复用,current.信息};
+                }
+                std::lock_guard lock(存在概念图互斥);
+                const auto it = 词条同键索引.find(key);
+                if (it != 词条同键索引.end() && it->second == *候选) 词条同键索引.erase(it);
+                continue;
+            }
+            新词条同键结果 out{S::已建立,新词条同键信息{{},W,word->语言节点,word->规范化合同节点,word->规范化词面}};
+            基础节点组追加请求 request;
+            基础组内新节点 node;
+            node.字段组 = {{节点类型字段,正式键[基础类型键]},
+                {正式键[原语键],基础值{std::int64_t{11}}},
+                {正式键[整数键],基础值{std::vector<std::int64_t>{}}}, {正式键[引用键],W}};
+            request.新节点组.push_back(std::move(node));
+            request.追加外部关系组.push_back({存在概念图根节点,基础组内节点引用{0},基础外部关系类型::父子,组织归属关系角色});
+            {
+                std::lock_guard lock(存在概念图互斥);
+                if (词条同键索引.contains(key)) continue;
+                // 发布前预留索引项；成功后只登记新身份，不再分配或重放建立。
+                const auto slot = 词条同键索引.emplace(key,稳定编码{}).first;
+                const auto published = 全局基础数据集.原子追加节点组(request);
+                if (published.状态 == 基础节点组追加状态::已完成) {
+                    if (published.新节点组.size() != 1) 正式定义故障("word range publication receipt invalid");
+                    slot->second = published.新节点组.front();
+                    out.信息->概念节点 = slot->second;
+                    return out;
+                }
+                词条同键索引.erase(slot);
+                if (published.状态 == 基础节点组追加状态::资源失败) return {S::资源失败,{}};
+                if (published.状态 != 基础节点组追加状态::预期不符
+                    && published.状态 != 基础节点组追加状态::引用不存在
+                    && published.状态 != 基础节点组追加状态::节点不存在)
+                    正式定义故障("word key range publication failed");
+            }
+            // 零发表后先释放概念锁再读W；缺失稳定schema不能当作正常竞争无限重试。
+            if (!读取正式词条键材料(词条读取_, W)) return {S::未找到,{}};
+            {
+                std::lock_guard lock(存在概念图互斥);
+                for (const auto id : {存在概念图根节点, 节点类型字段, 正式键[基础类型键],
+                    正式键[原语键], 正式键[整数键], 正式键[引用键]})
+                    if (!读取同键当前快照(id)) throw std::logic_error("word range schema endpoint missing");
+            }
+        } catch (const std::bad_alloc&) { return {S::资源失败,{}}; }
+        catch (const std::exception& e) { 正式定义故障(e.what()); }
+        catch (...) { 正式定义故障("word key range creation failure"); }
+    }
+}
+
+新词条同键操作状态 概念_存在类::删除词条同键范围(稳定编码 C) noexcept {
+    using S = 新词条同键操作状态;
+    for (;;) {
+    try {
+        std::lock_guard lock(存在概念图互斥);
+        if (!正式schema就绪()) return S::依赖未就绪;
+        const auto d = 读取当前基础范围概念(C);
+        if (d.状态 == 新基础范围读取状态::资源失败) return S::资源失败;
+        if (d.状态 == 新基础范围读取状态::未找到) return S::未找到;
+        if (!d.定义 || d.定义->原语 != 基础概念原语::词条同键) return S::非本原语;
+        const auto snapshot = 读取同键当前快照(C);
+        if (!snapshot) return S::未找到;
+        std::vector<稳定编码> fields,edges;
+        for (const auto& f : snapshot->结构.字段组) fields.push_back(f.编码);
+        for (const auto& e : snapshot->入向外部关系组)
+            if (e.源节点 == 存在概念图根节点 && e.类型 == 基础外部关系类型::父子
+                && e.角色或顺序 == 组织归属关系角色) edges.push_back(e.编码);
+        const auto state = 全局基础数据集.原子删除节点结构({C},fields,edges);
+        if (state == 基础结构操作状态::引用仍存在) return S::仍被引用;
+        if (state == 基础结构操作状态::资源失败) return S::资源失败;
+        if (state == 基础结构操作状态::节点不存在 || state == 基础结构操作状态::引用不存在) continue;
+        if (state != 基础结构操作状态::已完成) 正式定义故障("word range retirement failed");
+        for (auto it = 词条同键索引.begin(); it != 词条同键索引.end();)
+            if (it->second == C) it = 词条同键索引.erase(it); else ++it;
+        return S::已删除;
+    } catch (const std::bad_alloc&) { return S::资源失败; }
+    catch (const std::exception& e) { 正式定义故障(e.what()); }
+    catch (...) { 正式定义故障("word key range retirement failure"); }
     }
 }
 
@@ -4041,7 +4293,7 @@ void 核I64依赖(const 特征概念信息&i,std::int64_t low,std::int64_t high)
             if(info==上下文.已完成定义组.end()||info->second.节点!=n)
                 正式定义故障("registered definition unreadable");
         }
-        核正式结构图(protect,&上下文);
+        核正式结构图(protect,&上下文,词条读取_);
         // 与单节点读口相同的FT保护规则；共享保护组使重复依赖只读取一次。
         std::vector<稳定编码> captured;
         captured.reserve(protect.size());
