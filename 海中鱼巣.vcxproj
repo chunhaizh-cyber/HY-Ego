@@ -207,6 +207,8 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.算法.h" />
     <ClCompile Include="海中鱼巣\业务\模拟学习.服务.cpp" />
     <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h" />
+    <ClCompile Include="海中鱼巣\业务\词典.知识导出服务.cpp" />
+    <ClInclude Include="海中鱼巣\业务\词典.知识导出服务.h" />
     <ClCompile Include="海中鱼巣\业务\模拟任务需求来源.服务.cpp" />
     <ClInclude Include="海中鱼巣\业务\模拟任务需求来源.服务.h" />
     <ClInclude Include="海中鱼巣\领域\方法问题反馈.数据.h" />

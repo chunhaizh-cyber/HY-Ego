@@ -159,6 +159,12 @@
     <ClInclude Include="海中鱼巣\业务\模拟学习.服务.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\业务\词典.知识导出服务.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClInclude Include="海中鱼巣\业务\词典.知识导出服务.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\业务\模拟任务需求来源.服务.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
