@@ -137,6 +137,10 @@ public:
     ~新_模拟世界类();
     void 配置二次特征计算(const 新_二次特征类&);
     void 配置词典材料(词典材料类&);
+    void 设置词典运行(std::shared_ptr<新本能词典运行接口>);
+    新本能词典运行接口* 获取词典运行接口() noexcept override;
+    std::optional<稳定编码> 读取本地词典材料组织() const noexcept;
+    新状态强时间 读取当前模拟时间() const;
     void 配置词典接收(外设词典记录类&,新_特征值类&,概念_特征类&,稳定编码 接收FT);
     std::optional<新模拟词典接收定位> 读取本地词典接收定位() const noexcept;
     新词典查询发表结果 发表本地词典查询(const 新词典查询事实&) noexcept;

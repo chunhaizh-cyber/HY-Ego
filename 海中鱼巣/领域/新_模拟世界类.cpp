@@ -379,6 +379,7 @@ struct 新_模拟世界类::实现 final {
     bool 请求取消=false;
     bool 通用=false;
     bool 样例就绪=false;
+    std::shared_ptr<新本能词典运行接口> 词典运行;
     词典材料类* 词典材料=nullptr;
     外设词典记录类* 词典记录=nullptr;
     新_特征值类* 词典值=nullptr;
@@ -690,6 +691,25 @@ void 新_模拟世界类::配置二次特征计算(const 新_二次特征类& ca
     if((实现_->二次计算&&实现_->二次计算!=&calculator)||(!实现_->二次计算&&实现_->通用))
         throw std::logic_error("simulation comparison provider already in use");
     实现_->二次计算=&calculator;
+}
+void 新_模拟世界类::设置词典运行(std::shared_ptr<新本能词典运行接口> runtime) {
+    if(!实现_||!runtime)throw std::invalid_argument("local dictionary runtime missing");
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(s.通用||s.词典运行)throw std::logic_error("local dictionary runtime already bound");
+    s.词典运行=std::move(runtime);
+}
+新本能词典运行接口* 新_模拟世界类::获取词典运行接口() noexcept {
+    if(!实现_)return nullptr;std::lock_guard lock(实现_->互斥);return 实现_->词典运行.get();
+}
+std::optional<稳定编码> 新_模拟世界类::读取本地词典材料组织() const noexcept {
+    if(!实现_)return {};std::lock_guard lock(实现_->互斥);return 实现_->词典材料组织;
+}
+
+新状态强时间 新_模拟世界类::读取当前模拟时间() const {
+    if(!实现_)throw std::logic_error("simulation time owner unavailable");
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用||!s.记录写回)throw std::logic_error("simulation time requested outside active call");
+    return {新状态时间语义::抽象相对,s.模拟步骤};
 }
 void 新_模拟世界类::配置词典材料(词典材料类& owner) {
     if(!实现_)throw std::logic_error("simulation world unavailable");
@@ -4162,6 +4182,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     s.执行主体来源.reset();s.本地执行主体.reset();s.需求动作许可.reset();
     s.消息定义保护={};
     s.词典回执组.clear();s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();s.消息事件组.clear();s.消息序号=0;
+    auto runtime=std::move(s.词典运行);lock.unlock();runtime.reset();
     return true;
 }
 

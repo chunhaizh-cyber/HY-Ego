@@ -3,6 +3,7 @@
 #include "查询.词典候选.h"
 #include "../领域/数据服务.外设词典记录类.h"
 #include "../领域/数据服务.词典材料类.h"
+#include "../领域/新_模拟世界类.h"
 #include "../适配/词典.离线数据源.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "../线程/新_任务管理线程类.h"
@@ -42,6 +43,7 @@ struct 词典本能运行服务::实现 final {
     新词典任务执行依赖 执行;
     外设词典记录类 记录{值};
     struct 调用;
+    struct 隔离调用;
     struct 注册项 {
         std::shared_ptr<调用> 上下文;
         std::shared_ptr<const 方法参数场景> 场景;
@@ -317,60 +319,19 @@ bool 接收已收尾(const 新词典查询记录信息& r) {
 }
 }
 
-// 场景和注册项持有调用；调用不回持场景或注册项，避免环及租约释放丢失查询副本。
-struct 词典本能运行服务::实现::调用 final : 新本能词典运行接口 {
-    std::weak_ptr<实现> 宿主;
-    新本能词典任务参数请求 请求;
-    std::optional<新方法任务成员绑定> 成员绑定;
-    稳定编码 T, D, 原目标, 原目标类型;
-    mutable std::mutex 阶段锁;
-    std::optional<新词典本能输入> 实际输入;
-    std::optional<新本能函数本次条件> 实际条件;
-    std::shared_ptr<const 离线词典数据源> 查询源;
-    std::shared_ptr<新词典接收场景提供接口> 接收;
-    std::optional<新外设词典来源定位> 原来源;
-    std::optional<稳定编码> A, 动作场景;
-    bool 已绑定 = false;
-    std::optional<词典精确查询结果> 查询副本;
-    std::optional<新状态强时间> 查询完成时间;
-    std::optional<新词典推进收束原因> 收束;
-
-    调用(const std::shared_ptr<实现>& s, const 新本能词典任务参数请求& q,
-        const 新任务执行信息& x, const 新需求信息& d)
-        : 宿主(s), 请求(q), 成员绑定(x.本能采用->任务成员绑定), T(x.任务节点), D(x.执行服务需求),
-          原目标(d.目标存在节点), 原目标类型(d.目标.目标特征类型概念节点) {}
-
-    void 确认场景(const 方法参数场景& scene) const {
-        词典要求(scene.用途() == 新方法参数场景用途::执行 && scene.方法节点() == 请求.方法节点
-            && scene.全部角色绑定() == 请求.参数绑定组 && scene.执行分支节点() == 请求.执行分支节点,
-            "dictionary invocation scene does not belong to this X");
-    }
-    bool 已请求停止() const noexcept override {
-        if (新_本能函数管理类::本次停止已请求()) return true;
-        const auto s = 宿主.lock();
-        if (!s) return true;
-        std::lock_guard lock(s->生命周期锁);
-        return s->已关闭;
-    }
-    struct 输入快照 {
-        新词典本能输入读取结果 结果;
-        新本能函数本次条件 条件;
-        std::shared_ptr<const 离线词典数据源> 来源;
-        std::shared_ptr<新词典接收场景提供接口> 接收;
-        std::optional<新外设词典来源定位> 外设定位;
-    };
-    输入快照 读取当前输入(实现& s, const 方法参数场景& scene) const {
-        for (;;) {
-            输入快照 out;
-            if (已请求停止()) { out.结果.状态 = 运行状态::已停止; return out; }
-            std::optional<新词典登记配置> cfg;
-            std::string package;
-            {
-                std::lock_guard lock(s.来源锁);
-                cfg = s.配置; out.来源 = s.来源; out.接收 = s.接收提供者;
-                out.外设定位 = s.外设定位; package = s.原包标识;
-            }
-            词典要求(cfg.has_value(), "dictionary registration configuration unavailable");
+namespace {
+struct 词典共同输入 final {
+    新词典本能输入读取结果 结果;
+    新本能函数本次条件 条件;
+};
+词典共同输入 读取词典共同输入(const 方法参数场景& scene,const 新词典登记配置& config,
+    const std::shared_ptr<const 离线词典数据源>& source,const std::optional<新外设词典来源定位>& sourceLocation,
+    const std::string& package,const 新_语言类& language,const std::optional<新词典本能输入>& anchor,
+    const std::function<bool()>& stop) {
+    const auto* cfg=&config;
+    for(;;) {
+        词典共同输入 out;
+        if(stop()){out.结果.状态=运行状态::已停止;return out;}
             std::array<const 新方法有序参数引用*, 6> p{};
             const std::array kinds{新方法参数信息类型::词条, 新方法参数信息类型::特征,
                 新方法参数信息类型::存在, 新方法参数信息类型::存在,
@@ -382,13 +343,12 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
                     "dictionary ordered parameter shape invalid");
                 out.结果.变化依赖节点组.push_back(p[i]->信息节点);
             }
-            if (const auto current = s.世界.读取自我所在场景()) out.结果.变化依赖节点组.push_back(*current);
             const auto 缺口 = [&](新词典学习缺口种类 kind, std::uint32_t position,
                 std::optional<稳定编码> type = {}) {
                 out.结果.状态 = 运行状态::条件未具备;
                 out.结果.缺口组.push_back({kind, position, p[position-1]->信息节点, type, {}});
             };
-            if (!out.来源 || !out.外设定位 || !out.接收) {
+            if (!source || !sourceLocation) {
                 缺口(新词典学习缺口种类::来源不可用, 3); return out;
             }
             const auto word = scene.读取词条参数挂接(1);
@@ -431,16 +391,16 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
                 "dictionary source batch or peripheral location malformed");
             const auto text = std::get_if<std::string>(&batch.当前完整材料->材料);
             词典要求(text && !package.empty(), "dictionary source batch is not UTF8 or package missing");
-            if (A && 实际输入 && (*text != 实际输入->批次摘要
-                || static_cast<std::uint64_t>(*C) != 实际输入->外设场景标识)) {
+            if (anchor && (*text != anchor->批次摘要
+                || static_cast<std::uint64_t>(*C) != anchor->外设场景标识)) {
                 out.结果.状态 = 运行状态::需重新组织; return out;
             }
-            if (*text != out.外设定位->可信批次标识
-                || static_cast<std::uint64_t>(*C) != out.外设定位->场景节点.值) {
+            if (*text != sourceLocation->可信批次标识
+                || static_cast<std::uint64_t>(*C) != sourceLocation->场景节点.值) {
                 // 没有A时是当前缺来源；有A时由推进者按固定输入决定收束。
                 缺口(新词典学习缺口种类::来源不可用, 3); return out;
             }
-            const auto lang = s.执行.语言.获取语言(word.信息->词条.语言节点);
+            const auto lang = language.获取语言(word.信息->词条.语言节点);
             if (lang.状态 == 新语言查询状态::资源失败) throw std::bad_alloc{};
             词典要求(lang.状态 == 新语言查询状态::已找到 && lang.信息,
                 "dictionary word language unavailable");
@@ -448,7 +408,7 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
                 word.信息->词条.规范化词面, word.信息->词条.规范化词面, {}};
             if (lang.信息->登记键 == "zh-CN") {
                 key.源语种 = "zh";
-                const auto normalized = out.来源->繁简规范化(key.原规范化词面);
+                const auto normalized = source->繁简规范化(key.原规范化词面);
                 词典要求(normalized.has_value(), "trusted dictionary normalization unavailable");
                 key.查询词面 = *normalized;
             } else if (lang.信息->登记键 == "en") key.源语种 = "en";
@@ -469,7 +429,77 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
             }
             out.结果.状态 = 运行状态::已就绪;
             return out;
-        }
+    }
+}
+新词典内部材料建立请求 组装词典内部材料(稳定编码 O,const 新词典本能输入& input,
+    稳定编码 language,const 新词典执行结果来源& source,const 新词典查询记录信息& record,
+    const 外设词典记录类& records) {
+    新词典内部材料建立请求 request{O,input.来源存在,language,input.键,input.批次摘要,input.原始包标识,source.查询来源,{}};
+    request.义项组.reserve(record.有序义项消息.size());
+    for(const auto M:record.有序义项消息) {
+        auto item=records.读取义项消息(M);
+        if(item.状态==记录状态::资源失败)throw std::bad_alloc{};
+        词典要求(item.状态==记录状态::已完成&&item.信息,"dictionary R references unreadable sense message");
+        request.义项组.push_back({M.值,std::move(item.信息->材料)});
+    }
+    return request;
+}
+
+} // namespace
+
+// 场景和注册项持有调用；调用不回持场景或注册项，避免环及租约释放丢失查询副本。
+struct 词典本能运行服务::实现::调用 final : 新本能词典运行接口 {
+    std::weak_ptr<实现> 宿主;
+    新本能词典任务参数请求 请求;
+    std::optional<新方法任务成员绑定> 成员绑定;
+    稳定编码 T, D, 原目标, 原目标类型;
+    mutable std::mutex 阶段锁;
+    std::optional<新词典本能输入> 实际输入;
+    std::optional<新本能函数本次条件> 实际条件;
+    std::shared_ptr<const 离线词典数据源> 查询源;
+    std::shared_ptr<新词典接收场景提供接口> 接收;
+    std::optional<新外设词典来源定位> 原来源;
+    std::optional<稳定编码> A, 动作场景;
+    bool 已绑定 = false;
+    std::optional<词典精确查询结果> 查询副本;
+    std::optional<新状态强时间> 查询完成时间;
+    std::optional<新词典推进收束原因> 收束;
+
+    调用(const std::shared_ptr<实现>& s, const 新本能词典任务参数请求& q,
+        const 新任务执行信息& x, const 新需求信息& d)
+        : 宿主(s), 请求(q), 成员绑定(x.本能采用->任务成员绑定), T(x.任务节点), D(x.执行服务需求),
+          原目标(d.目标存在节点), 原目标类型(d.目标.目标特征类型概念节点) {}
+
+    void 确认场景(const 方法参数场景& scene) const {
+        词典要求(scene.用途() == 新方法参数场景用途::执行 && scene.方法节点() == 请求.方法节点
+            && scene.全部角色绑定() == 请求.参数绑定组 && scene.执行分支节点() == 请求.执行分支节点,
+            "dictionary invocation scene does not belong to this X");
+    }
+    bool 已请求停止() const noexcept override {
+        if (新_本能函数管理类::本次停止已请求()) return true;
+        const auto s = 宿主.lock();
+        if (!s) return true;
+        std::lock_guard lock(s->生命周期锁);
+        return s->已关闭;
+    }
+    struct 输入快照 {
+        新词典本能输入读取结果 结果;
+        新本能函数本次条件 条件;
+        std::shared_ptr<const 离线词典数据源> 来源;
+        std::shared_ptr<新词典接收场景提供接口> 接收;
+        std::optional<新外设词典来源定位> 外设定位;
+    };
+    输入快照 读取当前输入(实现& s,const 方法参数场景& scene) const {
+        输入快照 out;std::optional<新词典登记配置> cfg;std::string package;
+        {std::lock_guard lock(s.来源锁);cfg=s.配置;out.来源=s.来源;out.接收=s.接收提供者;
+            out.外设定位=s.外设定位;package=s.原包标识;}
+        词典要求(cfg.has_value(),"dictionary registration configuration unavailable");
+        auto source=out.来源;if(!out.接收)source.reset();
+        auto read=读取词典共同输入(scene,*cfg,source,out.外设定位,package,s.执行.语言,
+            A?实际输入:std::nullopt,[this]{return 已请求停止();});
+        out.结果=std::move(read.结果);out.条件=std::move(read.条件);
+        if(const auto current=s.世界.读取自我所在场景())out.结果.变化依赖节点组.push_back(*current);
+        return out;
     }
     新词典本能输入读取结果 读取查阅输入(const 方法参数场景& scene) const override {
         const auto s = 宿主.lock();
@@ -740,16 +770,7 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
                 新词典结果参与准备& p; bool 完成 = false;
                 ~参与清理() { if (!完成) p.取消未发表准备(); }
             } cleanup{*participant.准备};
-            新词典内部材料建立请求 request{s->执行.材料组织, input.来源存在, s->执行.释义语言,
-                input.键, input.批次摘要, input.原始包标识, source.查询来源, {}};
-            request.义项组.reserve(r.信息->有序义项消息.size());
-            for (const auto M : r.信息->有序义项消息) {
-                auto item = s->记录.读取义项消息(M);
-                if (item.状态 == 记录状态::资源失败) throw std::bad_alloc{};
-                词典要求(item.状态 == 记录状态::已完成 && item.信息,
-                    "dictionary R references unreadable sense message");
-                request.义项组.push_back({M.值, std::move(item.信息->材料)});
-            }
+            auto request=组装词典内部材料(s->执行.材料组织,input,s->执行.释义语言,source,*r.信息,s->记录);
             auto material = s->执行.材料.准备内部材料(request);
             if (material.状态 == 材料状态::资源失败) throw std::bad_alloc{};
             词典要求((material.状态 == 材料状态::已完成 || material.状态 == 材料状态::已复用)
@@ -808,6 +829,207 @@ struct 词典本能运行服务::实现::调用 final : 新本能词典运行接
         // 词条提供者已完成X参与，外层不得二次完成或重复命中。
         return 推进结果(运行状态::已推进, 读取回执(*s));
     }
+}
+
+
+// 与真实调用共用取参/查询/材料组装；仅适配本样例N与各本地owner，不产生T/X/D。
+struct 词典本能运行服务::实现::隔离调用 final : 新本能词典运行接口 {
+    std::shared_ptr<实现> 宿主;
+    std::weak_ptr<新_模拟世界类> 世界;
+    新词典登记配置 配置;
+    std::shared_ptr<const 离线词典数据源> 来源;
+    std::optional<新外设词典来源定位> 原来源;
+    std::string 原包;
+    mutable std::mutex 阶段锁;
+    mutable std::optional<稳定编码> N;
+    std::optional<稳定编码> A;
+    std::optional<新词典本能输入> 实际输入;
+    std::optional<新本能函数本次条件> 实际条件;
+    std::optional<词典精确查询结果> 查询副本;
+    std::optional<新状态强时间> 查询完成时间;
+    隔离调用(std::shared_ptr<实现> s,const std::shared_ptr<新_模拟世界类>& w,
+        新词典登记配置 cfg,std::shared_ptr<const 离线词典数据源> source,
+        新外设词典来源定位 origin,std::string package)
+        :宿主(std::move(s)),世界(w),配置(cfg),来源(std::move(source)),原来源(origin),原包(std::move(package)){}
+    std::shared_ptr<新_模拟世界类> 取得样例(const 方法参数场景& scene) const {
+        auto world=世界.lock();词典要求(world!=nullptr,"local dictionary world expired while executing");
+        词典要求(scene.用途()==新方法参数场景用途::模拟&&scene.获取词典运行接口()==this,
+            "dictionary runtime belongs to another parameter scene");
+        const auto call=world->读取当前调用身份();
+        词典要求(call.方法节点==scene.方法节点()&&(!N||*N==call.调用节点),"local dictionary runtime reused across calls");
+        N=call.调用节点;return world;
+    }
+    bool 已请求停止() const noexcept override {
+        if(新_本能函数管理类::本次停止已请求())return true;
+        {std::lock_guard lock(宿主->生命周期锁);if(宿主->已关闭)return true;}
+        const auto world=世界.lock();return !world||world->已请求停止();
+    }
+    void 恢复已有动作(const 新_模拟世界类& world) {
+        const auto call=world.读取当前调用身份();
+        if(call.主动作) {
+            词典要求(实际输入&&实际条件&&(!A||A==call.主动作),"local dictionary action lost original input");A=call.主动作;
+        } else 词典要求(!A,"local dictionary action binding disappeared");
+    }
+    词典共同输入 读取当前输入(const 方法参数场景& scene) const {
+        return 读取词典共同输入(scene,配置,来源,原来源,原包,宿主->执行.语言,
+            A?实际输入:std::nullopt,[this]{return 已请求停止();});
+    }
+    新词典本能输入读取结果 读取查阅输入(const 方法参数场景& scene) const override {
+        租约 lease(*宿主);if(!lease.已取得)return {运行状态::已停止,{},{},{}};
+        std::lock_guard lock(阶段锁);const auto world=取得样例(scene);
+        const auto call=world->读取当前调用身份();
+        if(call.主动作) {
+            词典要求(实际输入&&实际条件&&(!A||A==call.主动作),"local dictionary action input missing");
+            return {运行状态::已就绪,实际输入,{},{}};
+        }
+        return 读取当前输入(scene).结果;
+    }
+    新词典查阅动作结果 开始或取得查阅动作(const 方法参数场景& scene) override {
+        租约 lease(*宿主);std::lock_guard lock(阶段锁);
+        if(!lease.已取得)return {运行状态::已停止,A,实际条件,实际输入,{},{}};
+        const auto world=取得样例(scene);恢复已有动作(*world);
+        if(A)return {运行状态::已就绪,A,实际条件,实际输入,{},{}};
+        auto read=读取当前输入(scene);
+        if(read.结果.状态!=运行状态::已就绪)
+            return {read.结果.状态,{},{},{},std::move(read.结果.缺口组),std::move(read.结果.变化依赖节点组)};
+        实际输入=std::move(read.结果.输入);实际条件=std::move(read.条件);
+        const auto made=world->建立参数动作(scene,{4,1,2});
+        if(!有效(made)) {
+            恢复已有动作(*world);
+            if(A)return {运行状态::已就绪,A,实际条件,实际输入,{},{}};
+            if(已请求停止())return {运行状态::已停止,{},{},{},{},{}};
+            throw std::logic_error("local dictionary action publication failed");
+        }
+        A=made;
+        return {运行状态::已就绪,A,实际条件,实际输入,{},{}};
+    }
+    新词典查阅推进结果 结果(运行状态 state,std::optional<新本能词典读取回执> r={}) const {
+        return {state,A,std::move(r),{},{},state==运行状态::已停止
+            ?std::optional{新词典推进收束原因::主动停止}:std::nullopt};
+    }
+    新词典查阅推进结果 推进本次查阅(const 方法参数场景& scene) override {
+        租约 lease(*宿主);std::lock_guard lock(阶段锁);
+        if(!lease.已取得)return 结果(运行状态::已停止);
+        const auto world=取得样例(scene);恢复已有动作(*world);
+        词典要求(A&&N&&实际输入&&实际条件,"local dictionary continuation lacks action input");
+        const auto& input=*实际输入;
+        for(;;) {
+            auto read=world->读取调用词典回执(*N);
+            if(read.状态==材料状态::资源失败)throw std::bad_alloc{};
+            词典要求(read.状态==材料状态::已完成||read.状态==材料状态::未找到
+                ||read.状态==材料状态::条件不具备,"local dictionary receipt reader unavailable");
+            if(read.回执&&read.回执->采用阶段==新词典材料采用阶段::已采用) {
+                const auto done=world->续接调用词典变化(*N);
+                if(done.状态==材料状态::资源失败)throw std::bad_alloc{};
+                词典要求(done.状态==材料状态::已完成&&done.回执,"local dictionary adopted change not complete");
+                return 结果(运行状态::已收束,done.回执);
+            }
+            if(read.回执&&read.回执->查阅结局==新词典查阅结局::正式未命中)return 结果(运行状态::已收束,read.回执);
+            if(已请求停止())return 结果(运行状态::已停止,read.回执);
+            if(!read.回执) {
+                const auto local=world->读取本地词典接收定位();
+                词典要求(local.has_value(),"local dictionary receiver not assembled");
+                const 新词典查询定位 origin{local->场景,A->值};
+                auto r=宿主->记录.按调用来源读取查询记录(origin);
+                if(r.状态==记录状态::资源失败)throw std::bad_alloc{};
+                词典要求(r.状态==记录状态::已完成||r.状态==记录状态::未找到,"local dictionary R reader unavailable");
+                if(!r.信息) {
+                    if(!查询副本) {
+                        auto current=读取当前输入(scene);
+                        if(current.结果.状态==运行状态::需重新组织||(current.结果.输入&&current.结果.输入->键!=input.键))
+                            return {运行状态::已收束,A,{},{},{},新词典推进收束原因::输入身份已更换};
+                        if(current.结果.状态!=运行状态::已就绪)
+                            return {current.结果.状态,A,{},std::move(current.结果.缺口组),std::move(current.结果.变化依赖节点组),{}};
+                        auto queried=词典查询服务{来源}.查询词义({input.键.源语种,input.键.查询词面});
+                        if(queried.状态==词典操作状态::资源失败)throw std::bad_alloc{};
+                        词典要求(queried.状态==词典操作状态::已完成||queried.状态==词典操作状态::未命中,
+                            "local dictionary source query failed; not a miss");
+                        // 取得实际当前抽象步骤；不把历史A时间冒充查询完成时间。
+                        const auto completed=world->读取当前模拟时间();
+                        查询副本.emplace(std::move(queried));查询完成时间=completed;
+                    }
+                    if(已请求停止())return 结果(运行状态::已停止);
+                    词典要求(查询完成时间.has_value(),"local dictionary query completion missing");
+                    新词典查询事实 facts{origin,local->说话者,input.键.源语种,input.键.查询词面,input.批次摘要,
+                        input.原始包标识,*查询完成时间,查询副本->状态==词典操作状态::未命中
+                            ?新词典查阅结局::正式未命中:新词典查阅结局::命中,查询副本->义项组};
+                    auto published=world->发表本地词典查询(facts);
+                    if(published.状态==记录状态::资源失败)throw std::bad_alloc{};
+                    if(published.状态==记录状态::未找到&&已请求停止())return 结果(运行状态::已停止);
+                    词典要求((published.状态==记录状态::已完成||published.状态==记录状态::尚需续接
+                        ||published.状态==记录状态::已复用)&&published.信息,"local dictionary R publication failed");
+                    return 结果(运行状态::已推进);
+                }
+                if(!接收已收尾(*r.信息)) {
+                    const auto done=world->续接本地词典查询(r.信息->查询记录);
+                    if(done.状态==记录状态::资源失败)throw std::bad_alloc{};
+                    if(done.状态==记录状态::未找到&&已请求停止())return 结果(运行状态::已停止);
+                    词典要求(done.状态==记录状态::已完成&&done.信息&&接收已收尾(*done.信息),"local dictionary B continuation failed");
+                    return 结果(运行状态::已推进);
+                }
+                const 新词典执行结果来源 source{input.词条,input.材料特征,{origin.外设场景.值,r.信息->查询记录.值}};
+                if(r.信息->结局==新词典查阅结局::正式未命中) {
+                    const auto recorded=world->记录调用词典未命中(*N,source);
+                    if(recorded==材料状态::资源失败)throw std::bad_alloc{};
+                    if(recorded==材料状态::条件不具备&&已请求停止())return 结果(运行状态::已停止);
+                    词典要求(recorded==材料状态::已完成||recorded==材料状态::已复用,"local dictionary miss receipt failed");
+                    continue;
+                }
+                auto participant=world->准备调用词典材料参与(*N,source);
+                if(participant.状态==材料状态::资源失败)throw std::bad_alloc{};
+                if(participant.已有回执)continue;
+                if(participant.状态==材料状态::条件不具备&&已请求停止())return 结果(运行状态::已停止);
+                词典要求(participant.状态==材料状态::已完成&&participant.准备,"local dictionary Q participant missing");
+                struct Participation {新词典结果参与准备& p;bool done=false;~Participation(){if(!done)p.取消未发表准备();}} cleanup{*participant.准备};
+                const auto O=world->读取本地词典材料组织();词典要求(O.has_value(),"local dictionary O missing");
+                auto request=组装词典内部材料(*O,input,宿主->执行.释义语言,source,*r.信息,宿主->记录);
+                auto q=宿主->执行.材料.准备内部材料(request);
+                if(q.状态==材料状态::资源失败)throw std::bad_alloc{};
+                词典要求((q.状态==材料状态::已完成||q.状态==材料状态::已复用)&&q.准备,"local Q preparation failed");
+                struct Material {词典材料类& owner;新词典材料准备& p;bool done=false;~Material(){if(!done)owner.取消内部材料准备(p);}} release{宿主->执行.材料,*q.准备};
+                const auto made=宿主->执行.材料.提交内部材料首次持有(*q.准备,*participant.准备);
+                if(made.状态!=基础节点组追加状态::已完成) {
+                    if(词典零发表变化(made.状态)){std::this_thread::yield();continue;}
+                    if(made.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
+                    throw std::logic_error("local Q first holding rejected");
+                }
+                cleanup.done=true;release.done=true;
+                const auto complete=宿主->执行.材料.完成内部材料发表(*q.准备);participant.准备->完成共同发表();
+                词典要求(complete.材料节点.has_value(),"local Q completion missing identity");
+                return 结果(运行状态::已推进);
+            }
+            auto prepared=world->准备调用词典采用(*N);
+            if(prepared.状态==材料状态::资源失败)throw std::bad_alloc{};
+            if(prepared.已有回执&&prepared.已有回执->采用阶段==新词典材料采用阶段::已采用)continue;
+            if(prepared.状态==材料状态::条件不具备&&已请求停止())return 结果(运行状态::已停止,read.回执);
+            词典要求(prepared.状态==材料状态::已完成&&prepared.准备,"local Q adoption preparation failed");
+            struct Adoption {新_模拟世界类& world;新模拟词典采用准备& p;bool done=false;~Adoption(){if(!done)world.取消调用词典采用准备(p);}} cleanup{*world,*prepared.准备};
+            const auto made=world->提交调用词典采用(*prepared.准备);
+            if(made.状态!=基础节点组追加状态::已完成) {
+                if(词典零发表变化(made.状态)){std::this_thread::yield();continue;}
+                if(made.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
+                if(已请求停止())return 结果(运行状态::已停止,read.回执);
+                throw std::logic_error("local Q adoption rejected");
+            }
+            cleanup.done=true;const auto complete=world->完成调用词典采用(*prepared.准备);
+            词典要求(complete.状态==材料状态::已完成&&complete.回执,"local Q adoption completion failed");
+            return 结果(运行状态::已推进,complete.回执);
+        }
+    }
+};
+新词典运行状态 词典本能运行服务::配置隔离词典运行(
+    const std::shared_ptr<新_模拟世界类>& world,概念_特征类& concepts) {
+    词典要求(world!=nullptr,"dictionary simulation factory has no world");
+    auto s=实现_;实现::租约 lease(*s);if(!lease.已取得)return 运行状态::已停止;
+    std::optional<新词典登记配置> cfg;std::shared_ptr<const 离线词典数据源> source;
+    std::optional<新外设词典来源定位> origin;std::string package;
+    {std::lock_guard lock(s->来源锁);cfg=s->配置;source=s->来源;origin=s->外设定位;package=s->原包标识;}
+    词典要求(cfg.has_value(),"dictionary simulation registration not assembled");
+    if(!source||!origin)return 运行状态::条件未具备;
+    const auto FT=s->外设.获取接收消息特征类型();词典要求(FT.has_value(),"dictionary receive type not assembled");
+    auto runtime=std::make_shared<实现::隔离调用>(s,world,*cfg,std::move(source),*origin,std::move(package));
+    world->配置词典材料(s->执行.材料);world->配置词典接收(s->记录,s->值,concepts,*FT);
+    world->设置词典运行(std::move(runtime));return 运行状态::已就绪;
 }
 
 bool 词典本能运行服务::支持任务方法(稳定编码 M) const noexcept {

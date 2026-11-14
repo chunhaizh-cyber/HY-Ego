@@ -11,6 +11,7 @@ class 新_任务管理线程类;
 class 新_任务类;
 class 新_需求类;
 class 词典材料类;
+class 新_模拟世界类;
 struct 新词典任务执行依赖 final {
     新_任务类& 任务;
     新_需求类& 需求;
@@ -39,6 +40,7 @@ public:
     void 接收自我场景就绪() noexcept override;
     void 关闭() noexcept;
     std::optional<新词典登记配置> 读取登记材料() const noexcept override;
+    新词典运行状态 配置隔离词典运行(const std::shared_ptr<新_模拟世界类>&,概念_特征类&);
     新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept override;
 
     bool 支持任务方法(稳定编码) const noexcept override;
