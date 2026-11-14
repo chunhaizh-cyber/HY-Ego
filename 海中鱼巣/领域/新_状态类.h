@@ -2,10 +2,13 @@
 
 #include <array>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <vector>
 
 #include "新_特征类.h"
+
+#include "引用保持.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -98,6 +101,26 @@ private:
     friend class 新_模拟世界类;
 };
 
+// 同线程一次性共同发表准备；持有原owner锁直到完成或取消。
+class 新_状态类;
+class 新状态计数准备 final {
+public:
+    ~新状态计数准备();
+    新状态计数准备(新状态计数准备&&) noexcept;
+    新状态计数准备& operator=(新状态计数准备&&) noexcept;
+    新状态计数准备(const 新状态计数准备&) = delete;
+    新状态计数准备& operator=(const 新状态计数准备&) = delete;
+private:
+    struct 实现;
+    explicit 新状态计数准备(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 新_状态类;
+};
+struct 新状态计数准备结果 final {
+    新状态操作状态 状态 = 新状态操作状态::入口拒绝;
+    std::optional<新状态计数准备> 准备;
+};
+
 class 新_状态类 final {
 public:
     explicit 新_状态类(新_特征类& 特征服务) noexcept;
@@ -134,6 +157,15 @@ public:
     新状态操作状态 增加引用(稳定编码 状态节点, 新事实追加保护增量&) noexcept;
     新状态操作状态 撤销增加引用(稳定编码 状态节点) noexcept;
     新状态操作状态 减少引用(稳定编码 状态节点) noexcept;
+
+    // 组合锁序：动态→状态→特征；场景读取须在取得任何计数准备之前完成。
+    // 同owner只能有一份活动准备，批内同节点增量先合并；不可重入独立计数写口。
+    // 归零删除由L1检查组合后的剩余引用；仍被引用时调用方保留原记录及清理责任，不能当变化无限重试。
+    新状态计数准备结果 准备引用计数参与(const std::vector<新引用计数变化>&) noexcept;
+    基础封存追加片段 封存计数参与(新状态计数准备&) const;
+    void 登记计数发表(新状态计数准备&, const 基础片段发布回执&) noexcept;
+    void 完成计数参与(新状态计数准备&) noexcept;
+    void 取消计数参与(新状态计数准备&) noexcept;
 
 private:
     friend class 新_词类;

@@ -25,6 +25,13 @@ std::optional<稳定编码> 读取状态特征类型根(
 }
 
 std::recursive_mutex 新动态互斥;
+// 只在该owner互斥内访问；阻止recursive_mutex允许的同线程重复准备/旧写口重入。
+const void* 动态活动计数准备 = nullptr;
+void 核对动态计数写入无准备() noexcept {
+    if (动态活动计数准备)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动态计数写入", L"同线程不能在活动共同准备中再次修改计数");
+}
+
 
 稳定编码 动态节点类型字段{};
 稳定编码 动态节点类型{};
@@ -1953,6 +1960,153 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
     }
 }
 
+
+// 引用计数与引用边须共同发表。原独立写口仍使用同一互斥，准备期间不能穿插其读回/回滚。
+struct 新动态计数准备::实现 final {
+    const 新_动态类* owner = nullptr;
+    std::thread::id 线程 = std::this_thread::get_id();
+    std::unique_lock<std::recursive_mutex> 锁{新动态互斥};
+    基础节点组追加请求 请求;
+    bool 已封存 = false, 已结束 = false;
+    std::optional<基础封存追加片段> 片段;
+    std::optional<基础片段发布回执> 回执;
+
+    实现() {
+        核对动态计数写入无准备();
+        动态活动计数准备 = this;
+    }
+    void 释放锁() noexcept {
+        if (!锁.owns_lock()) return;
+        if (线程 != std::this_thread::get_id() || 动态活动计数准备 != this)
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动态计数参与", L"计数准备释放资格不符");
+        动态活动计数准备 = nullptr;
+        锁.unlock();
+    }
+    void 核对(const 新_动态类* o) const noexcept {
+        if (owner != o || 线程 != std::this_thread::get_id())
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动态计数参与", L"准备跨owner或跨线程使用");
+    }
+    ~实现() noexcept {
+        if (锁.owns_lock() && 线程 != std::this_thread::get_id())
+            工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"动态计数参与", L"持锁准备不能跨线程销毁");
+        // 未发表仅释放准备；已发表从不恢复旧计数或撤销事实。
+        释放锁();
+    }
+};
+新动态计数准备::新动态计数准备(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
+新动态计数准备::~新动态计数准备() = default;
+新动态计数准备::新动态计数准备(新动态计数准备&&) noexcept = default;
+新动态计数准备& 新动态计数准备::operator=(新动态计数准备&&) noexcept = default;
+
+新动态计数准备结果 新_动态类::准备引用计数参与(
+    const std::vector<新引用计数变化>& 输入) noexcept {
+    using S = 新动态操作状态;
+    try {
+        if (输入.empty()) return {S::入口拒绝, {}};
+        std::map<稳定编码, std::int64_t> 合并;
+        const auto 最大 = (std::numeric_limits<std::int64_t>::max)();
+        const auto 最小 = (std::numeric_limits<std::int64_t>::min)();
+        for (const auto& x : 输入) {
+            if (!有效(x.节点)) return {S::入口拒绝, {}};
+            auto& v = 合并[x.节点];
+            if ((x.增量 > 0 && v > 最大 - x.增量)
+                || (x.增量 < 0 && v < 最小 - x.增量)) return {S::引用计数溢出, {}};
+            v += x.增量;
+        }
+        std::vector<稳定编码> 节点组;
+        for (const auto& [n, d] : 合并) if (d != 0) 节点组.push_back(n);
+        if (节点组.empty()) return {S::入口拒绝, {}};
+        auto p = std::make_unique<新动态计数准备::实现>();
+        p->owner = this;
+        if (!有效(动态节点类型) || !有效(动态节点类型字段) || !有效(动态被引用次数字段))
+            return {S::入口拒绝, {}};
+        // 本轮一次L1读取；发布时由L1判断是否仍适用，封存/完成不再核同旧快照。
+        const auto 批 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (批.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+        if (批.状态 == 基础结构操作状态::节点不存在) return {S::动态不存在, {}};
+        if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点组.size())
+            return {S::结构不一致, {}};
+        for (const auto& item : 批.节点组) {
+            if (!item.快照) return {S::动态不存在, {}};
+            const auto& n = *item.快照;
+            const 基础字段关系* 计数 = nullptr;
+            const 基础字段关系* 类型 = nullptr;
+            for (const auto& f : n.结构.字段组) {
+                if (f.字段节点 == 动态被引用次数字段) {
+                    if (计数) return {S::结构不一致, {}};
+                    计数 = &f;
+                }
+                if (f.字段节点 == 动态节点类型字段) {
+                    if (类型) return {S::结构不一致, {}};
+                    类型 = &f;
+                }
+            }
+            if (!类型 || 类型->内容 != 基础字段内容{动态节点类型} || !计数)
+                return {S::结构不一致, {}};
+            const auto* material = std::get_if<基础值>(&计数->内容);
+            const auto* count = material ? std::get_if<std::int64_t>(&material->材料) : nullptr;
+            if (!count || *count < 0) return {S::结构不一致, {}};
+            const auto d = 合并.at(item.查询节点);
+            if ((d > 0 && *count > 最大 - d) || (d < 0 && *count < 最小 - d))
+                return {S::引用计数溢出, {}};
+            const auto 新计数 = *count + d;
+            if (新计数 < 0) return {S::入口拒绝, {}};
+            p->请求.预期联合节点组.push_back(n);
+            // 本叶终结减持时Δ仍由场景保持；归零退出及递归回收不属于本参与入口。
+            if (新计数 == 0) return {S::入口拒绝, {}};
+            p->请求.替换字段组.push_back({计数->编码, 基础值{新计数}});
+        }
+        return {S::已完成, 新动态计数准备{std::move(p)}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"准备动态计数参与", L"引用计数构造发生未解释工程异常");
+    }
+}
+基础封存追加片段 新_动态类::封存计数参与(新动态计数准备& 准备) const {
+    if (!准备.实现_) throw std::logic_error("reference count preparation is absent");
+    auto& p = *准备.实现_;
+    p.核对(this);
+    if (!p.锁.owns_lock() || p.已封存 || p.已结束)
+        throw std::logic_error("reference count preparation is not sealable");
+    p.已封存 = true;
+    const auto 封存 = 全局基础数据集.封存原子追加片段(p.请求);
+    if (封存.状态 != 基础节点组追加状态::已完成) throw 封存.状态;
+    if (!封存.片段) throw std::logic_error("reference count seal has no fragment");
+    p.片段 = *封存.片段;
+    return *p.片段;
+}
+void 新_动态类::登记计数发表(
+    新动态计数准备& 准备, const 基础片段发布回执& 回执) noexcept {
+    if (!准备.实现_)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记动态计数发表", L"计数准备缺失");
+    auto& p = *准备.实现_;
+    p.核对(this);
+    if (!p.锁.owns_lock() || p.已结束 || p.回执 || !p.片段 || !回执.对应片段(*p.片段))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"登记动态计数发表", L"回执不对应本次尚未完成的准备");
+    p.回执 = 回执; // 无分配、无读回；先登记所有参与者，再完成。
+}
+void 新_动态类::完成计数参与(新动态计数准备& 准备) noexcept {
+    if (!准备.实现_) return;
+    auto& p = *准备.实现_;
+    p.核对(this);
+    if (p.已结束) return;
+    if (!p.回执 || !p.锁.owns_lock())
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完成动态计数参与", L"未发表准备不能完成");
+    p.已结束 = true;
+    p.释放锁();
+}
+void 新_动态类::取消计数参与(新动态计数准备& 准备) noexcept {
+    if (!准备.实现_) return;
+    auto& p = *准备.实现_;
+    p.核对(this);
+    if (p.已结束) return;
+    if (p.回执)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取消动态计数参与", L"已发表计数不能取消或回滚");
+    p.已结束 = true;
+    p.释放锁();
+}
+
 新动态操作状态 新_动态类::增加引用(稳定编码 动态节点) noexcept {
     新事实追加保护增量 忽略;
     return 增加引用(动态节点, 忽略);
@@ -1963,6 +2117,7 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
     增量 = {};
     try {
         std::lock_guard 锁(新动态互斥);
+        核对动态计数写入无准备();
         const auto 引用 = 读取唯一I64字段(动态节点, 动态被引用次数字段);
         if (!引用 || 引用->second < 0) return 节点仍存在(动态节点)
             ? 新动态操作状态::结构不一致 : 新动态操作状态::动态不存在;
@@ -1995,6 +2150,7 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
 新动态操作状态 新_动态类::撤销增加引用(稳定编码 动态节点) noexcept {
     try {
         std::lock_guard 锁(新动态互斥);
+        核对动态计数写入无准备();
         const auto 引用 = 读取唯一I64字段(动态节点, 动态被引用次数字段);
         if (!引用 || 引用->second <= 0) return 节点仍存在(动态节点)
             ? 新动态操作状态::结构不一致 : 新动态操作状态::动态不存在;
@@ -2022,6 +2178,7 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
 新动态操作状态 新_动态类::减少引用(稳定编码 动态节点) noexcept {
     try {
         std::lock_guard 锁(新动态互斥);
+        核对动态计数写入无准备();
         const auto 引用 = 读取唯一I64字段(动态节点, 动态被引用次数字段);
         if (!引用) return 节点仍存在(动态节点)
             ? 新动态操作状态::结构不一致 : 新动态操作状态::动态不存在;
@@ -2053,6 +2210,7 @@ std::vector<稳定编码> 新_动态类::按概念查询动态(
 新动态操作状态 新_动态类::删除动态(稳定编码 动态节点) noexcept {
     try {
         std::lock_guard 锁(新动态互斥);
+        核对动态计数写入无准备();
         const auto 信息 = 获取动态(动态节点);
         if (!信息) return 节点仍存在(动态节点)
             ? 新动态操作状态::结构不一致 : 新动态操作状态::动态不存在;
