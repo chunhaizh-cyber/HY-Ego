@@ -22,6 +22,7 @@ class 新本能交互运行接口;
 class 新方法隔离执行接口;
 class 新本能需求运行接口;
 class 新本能字段询问运行接口;
+class 新本能词典运行接口;
 
 enum class 新方法参数特征读取状态 : std::uint8_t {
     已读取=1, 参数未绑定, 信息类型不符, 未声明,
@@ -92,6 +93,7 @@ public:
     virtual 新方法隔离执行接口* 获取隔离执行接口() noexcept { return nullptr; }
     virtual 新本能需求运行接口* 获取需求运行接口() noexcept { return nullptr; }
     virtual 新本能字段询问运行接口* 获取字段询问运行接口() noexcept { return nullptr; }
+    virtual 新本能词典运行接口* 获取词典运行接口() noexcept { return nullptr; }
 
     // 无此能力的模拟owner返回不适用，绝不回退现实owner。
     virtual std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept { return {}; }
@@ -120,6 +122,7 @@ public:
     新本能交互运行接口* 获取交互运行接口() const noexcept;
     新本能需求运行接口* 获取需求运行接口() const noexcept;
     新本能字段询问运行接口* 获取字段询问运行接口() const noexcept;
+    新本能词典运行接口* 获取词典运行接口() const noexcept;
     新方法模拟运行接口* 获取模拟运行接口() const noexcept;
     稳定编码 方法节点() const noexcept;
     新方法参数场景用途 用途() const noexcept;
@@ -173,7 +176,8 @@ private:
         std::shared_ptr<新本能需求运行接口> 需求运行 = {},
         const 正式信息参数读取接口* 正式信息读取 = nullptr,
         std::shared_ptr<新本能字段询问运行接口> 字段询问运行 = {},
-        const 新_词类* 词条读取 = nullptr) noexcept;
+        const 新_词类* 词条读取 = nullptr,
+        std::shared_ptr<新本能词典运行接口> 词典运行 = {}) noexcept;
 
     稳定编码 方法节点_;
     const 正式信息参数读取接口* 正式信息读取_ = nullptr;
@@ -190,6 +194,7 @@ private:
     std::shared_ptr<新方法模拟运行接口> 模拟运行_;
     std::shared_ptr<新本能需求运行接口> 需求运行_;
     std::shared_ptr<新本能字段询问运行接口> 字段询问运行_;
+    std::shared_ptr<新本能词典运行接口> 词典运行_;
     // 非拥有只读owner，必须覆盖整个参数场景寿命；模拟不得借此访问现实材料。
     const 新服务要求材料读取接口* 服务要求读取_;
     std::optional<新任务贡献治理参数> 任务贡献治理参数_;

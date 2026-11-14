@@ -12,6 +12,148 @@
 
 namespace 海中鱼巣 {
 
+新本能函数本次条件结果对 新_本能函数集::查词典(const 方法参数场景& 场景) noexcept {
+    新本能函数本次条件结果对 r;
+    try {
+        if (场景.用途() == 新方法参数场景用途::登记) {
+            const auto port = 新_本能函数管理类::租用词典登记端口();
+            const auto config = port ? port->读取登记材料() : std::nullopt;
+            if (!config) { r.结果.状态 = 新本能函数执行状态::依赖未装配; return r; }
+            if (!场景.全部角色绑定().empty()) {
+                r.结果.状态 = 新本能函数执行状态::参数不匹配; return r;
+            }
+            新方法知识建立请求 q;
+            q.作用域 = 新方法作用域::普通世界;
+            q.实现方式 = 新方法实现方式::本能;
+            q.行为 = 新方法行为::读取;
+            std::vector<新方法有序参数规格> specs{
+                {1, 新方法参数信息类型::词条, config->词条全域, {config->材料特征类型}, 0},
+                {2, 新方法参数信息类型::特征, config->材料特征类型, {}, 1},
+                {3, 新方法参数信息类型::存在, config->通用存在范围,
+                    {config->来源包特征类型, config->外设场景标识类型}, 0},
+                {4, 新方法参数信息类型::存在, config->通用存在范围, {}, 0},
+                {5, 新方法参数信息类型::特征, config->来源包特征类型, {}, 3},
+                {6, 新方法参数信息类型::特征, config->外设场景标识类型, {}, 3}};
+            for (auto& spec : specs) spec = 整理有序参数规格(std::move(spec));
+            q.方法头.作用存在概念组 = {config->词条全域};
+            q.方法头.涉及特征类型概念组 = 有序规格涉及特征类型(specs);
+            q.方法头.可能结果概念组 = {config->词典材料全域};
+            q.登记结果组 = {{1, std::nullopt, config->材料特征类型}};
+            for (const auto& spec : specs) {
+                新方法参数规格 parameter;
+                parameter.有序规格 = spec;
+                q.参数规格组.push_back(std::move(parameter));
+            }
+            新方法初始必要条件定义 necessary;
+            necessary.条件.关系规则 = 新方法项关系规则::全部成立;
+            for (const auto& spec : specs) {
+                if (spec.信息类型 == 新方法参数信息类型::特征) continue;
+                新方法条件项定义 object;
+                object.参数序号 = spec.序号;
+                object.存在概念节点 = spec.范围概念节点;
+                necessary.条件.条件项组.push_back(std::move(object));
+                for (const auto ft : spec.必需特征类型组) {
+                    新方法条件项定义 feature;
+                    feature.参数序号 = spec.序号;
+                    feature.特征类型概念节点 = ft;
+                    necessary.条件.条件项组.push_back(std::move(feature));
+                }
+            }
+            q.初始必要条件 = std::move(necessary);
+            新方法执行分支定义 branch;
+            branch.必要条件.关系规则 = 新方法项关系规则::全部成立;
+            for (const auto ft : {config->来源包特征类型, config->外设场景标识类型}) {
+                新方法条件项定义 item;
+                item.参数序号 = 3;
+                item.特征类型概念节点 = ft;
+                item.特征值域概念节点 = ft;
+                branch.必要条件.条件项组.push_back(std::move(item));
+            }
+            q.执行分支组.push_back(std::move(branch));
+            const auto method = port->确保方法登记(q);
+            r.结果.状态 = method.方法节点 ? 新本能函数执行状态::已按合同返回
+                : 新本能函数执行状态::参数不匹配;
+            return r;
+        }
+
+        auto* runtime = 场景.获取词典运行接口();
+        if (!runtime) throw std::logic_error("dictionary runtime was not supplied with parameters");
+        // 预读不成为历史输入，也不证明尚未发生A。开始口先恢复原A，再决定能否新建。
+        const auto input = runtime->读取查阅输入(场景);
+        switch (input.状态) {
+        case 新词典运行状态::已就绪:
+        case 新词典运行状态::条件未具备:
+        case 新词典运行状态::需重新组织:
+        case 新词典运行状态::已停止: break;
+        default: throw std::logic_error("dictionary input provider returned an engineering failure");
+        }
+        auto action = runtime->开始或取得查阅动作(场景);
+        r.条件.执行分支节点 = 场景.执行分支节点();
+        if (action.动作) {
+            if (!action.实际条件 || !action.实际输入)
+                throw std::logic_error("dictionary action has no actual input or conditions");
+            r.条件 = std::move(*action.实际条件);
+            r.结果.词典实际输入 = std::move(action.实际输入);
+            r.结果.动作动态节点 = action.动作;
+            r.结果.动作阶段 = 新本能函数动作阶段::已进入动作;
+        }
+        const auto stopOrWait = [&](新词典运行状态 state,
+            std::vector<新词典学习缺口> gaps, std::vector<稳定编码> dependencies,
+            std::optional<新词典推进收束原因> reason) {
+            if (state == 新词典运行状态::已停止) reason = 新词典推进收束原因::主动停止;
+            r.结果.词典运行处置 = 新本能词典运行处置{state, std::move(gaps), std::move(dependencies), reason};
+            if (state == 新词典运行状态::已停止) r.结果.状态 = 新本能函数执行状态::工程停止;
+            else if (state == 新词典运行状态::条件未具备 || state == 新词典运行状态::需重新组织)
+                r.结果.状态 = r.结果.动作动态节点 ? 新本能函数执行状态::异步已受理
+                    : 新本能函数执行状态::条件未具备;
+            else throw std::logic_error("dictionary action or continuation returned an engineering failure");
+            if (r.结果.动作动态节点) {
+                r.结果.动作阶段 = 新本能函数动作阶段::部分执行;
+                if (r.结果.结果取得状态 != 新本能函数结果取得状态::已取得)
+                    r.结果.结果取得状态 = 新本能函数结果取得状态::待取得;
+            }
+        };
+        if (action.状态 != 新词典运行状态::已就绪) {
+            stopOrWait(action.状态, std::move(action.缺口组), std::move(action.变化依赖节点组), {});
+            return r;
+        }
+        if (!r.结果.动作动态节点) throw std::logic_error("ready dictionary invocation has no action");
+        for (;;) {
+            // 提供者在阶段边界响应停止；不在此提前丢弃已经发表的查询/采用回执。
+            auto progress = runtime->推进本次查阅(场景);
+            if (progress.回执) {
+                r.结果.词典读取 = std::move(progress.回执);
+                const auto& receipt = *r.结果.词典读取;
+                r.结果.已形成状态节点组.clear();
+                r.结果.已形成动态节点组.clear();
+                if (receipt.本次形成新状态 && receipt.后状态)
+                    r.结果.已形成状态节点组.push_back(*receipt.后状态);
+                if (receipt.变化动态) r.结果.已形成动态节点组.push_back(*receipt.变化动态);
+                r.结果.结果取得状态 = receipt.采用阶段 == 新词典材料采用阶段::已采用
+                    ? 新本能函数结果取得状态::已取得 : 新本能函数结果取得状态::待取得;
+            }
+            if (progress.状态 == 新词典运行状态::已推进) continue;
+            if (progress.状态 == 新词典运行状态::已收束) {
+                if (!r.结果.词典读取 && !progress.收束原因)
+                    throw std::logic_error("dictionary completion has neither receipt nor termination reason");
+                r.结果.词典运行处置 = 新本能词典运行处置{progress.状态,
+                    std::move(progress.缺口组), std::move(progress.变化依赖节点组), progress.收束原因};
+                r.结果.状态 = 新本能函数执行状态::已按合同返回;
+                r.结果.动作阶段 = 新本能函数动作阶段::已按函数合同返回;
+                if (r.结果.结果取得状态 != 新本能函数结果取得状态::已取得)
+                    r.结果.结果取得状态 = 新本能函数结果取得状态::未取得;
+                return r;
+            }
+            stopOrWait(progress.状态, std::move(progress.缺口组), std::move(progress.变化依赖节点组), progress.收束原因);
+            return r;
+        }
+    } catch (const std::exception& error) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查词典", L"词典登记或调用工程异常；保留已发生事实。", error.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查词典", L"词典登记或调用未知工程异常；保留已发生事实。");
+    }
+}
+
 新本能函数本次条件结果对 新_本能函数集::获取服务对象新需求(
     const 方法参数场景& 场景) noexcept {
     新本能函数本次条件结果对 运行;

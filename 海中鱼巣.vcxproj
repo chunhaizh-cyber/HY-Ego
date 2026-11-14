@@ -10,6 +10,7 @@
     <ClInclude Include="海中鱼巣\领域\词条.数据.h" />
     <ClInclude Include="海中鱼巣\领域\引用保持.数据.h" />
     <ClInclude Include="海中鱼巣\领域\本能词典.数据.h" />
+    <ClInclude Include="海中鱼巣\领域\本能词典.运行接口.h" />
     <ClInclude Include="海中鱼巣\领域\前置语言输入.数据.h" />
     <ClInclude Include="海中鱼巣\领域\词典.数据.h" />
     <ClInclude Include="海中鱼巣\适配\词典.离线数据源.h" />

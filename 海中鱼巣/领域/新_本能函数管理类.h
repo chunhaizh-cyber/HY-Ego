@@ -9,8 +9,10 @@
 #include "新_本能函数集.h"
 #include "进入场景.本能合同.h"
 #include "本能字段询问.运行接口.h"
+#include "本能词典.运行接口.h"
 
 namespace 海中鱼巣 {
+inline constexpr std::string_view 新本能函数登记名_查词典 = "builtin.dictionary.lookup.v1";
 inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_获取交互者 =
     "builtin.interactor.acquire.v1";
@@ -95,6 +97,8 @@ public:
         新进入场景本能端口&) noexcept;
     static 新本能函数端口装配状态 装配字段询问端口(std::shared_ptr<新字段询问登记端口>) noexcept;
     static 新本能函数端口装配状态 关闭字段询问端口(新字段询问登记端口&) noexcept;
+    static 新本能函数端口装配状态 装配词典登记端口(std::shared_ptr<新词典登记端口>) noexcept;
+    static 新本能函数端口装配状态 关闭词典登记端口(新词典登记端口&) noexcept;
 
     // 线程池调用期的工程停止能力；不进入业务参数或条件结果知识。
     class 本能停止守卫 final {
@@ -152,6 +156,7 @@ public:
         const 方法参数场景& 参数场景) noexcept;
 
 private:
+    static std::shared_ptr<新词典登记端口> 租用词典登记端口() noexcept;
     static std::shared_ptr<新字段询问登记端口> 租用字段询问端口() noexcept;
     static std::shared_ptr<新服务对象获取本能端口> 租用服务对象获取端口() noexcept;
     static std::shared_ptr<新进入场景本能端口> 租用进入场景端口() noexcept;

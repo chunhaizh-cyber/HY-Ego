@@ -267,7 +267,8 @@ public:
         const 新服务要求材料读取接口* 服务要求读取 = nullptr,
         std::optional<新方法任务成员绑定> 任务成员绑定 = {},
         std::optional<稳定编码> 执行分支 = {},
-        std::shared_ptr<新本能需求运行接口> 需求运行 = {}) const noexcept;
+        std::shared_ptr<新本能需求运行接口> 需求运行 = {},
+        std::shared_ptr<新本能词典运行接口> 词典运行 = {}) const noexcept;
     新方法参数场景结果 建立本能登记参数场景(
         std::vector<新方法参数角色绑定> 角色绑定组) const noexcept;
     // 服务需求两入口的登记专用空容器，不放入任何运行实参。
