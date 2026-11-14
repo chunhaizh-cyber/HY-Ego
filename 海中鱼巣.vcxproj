@@ -14,6 +14,7 @@
     <ClInclude Include="海中鱼巣\领域\本能词典.运行接口.h" />
     <ClInclude Include="海中鱼巣\领域\本能词条归类.数据.h" />
     <ClInclude Include="海中鱼巣\领域\本能词条归类.运行接口.h" />
+    <ClInclude Include="海中鱼巣\业务\词条归类.本能运行服务.h" />
     <ClInclude Include="海中鱼巣\领域\前置语言输入.数据.h" />
     <ClInclude Include="海中鱼巣\领域\词典.数据.h" />
     <ClInclude Include="海中鱼巣\适配\词典.离线数据源.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="海中鱼巣\业务\服务需求.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\词典.本能运行服务.cpp" />
+    <ClCompile Include="海中鱼巣\业务\词条归类.本能运行服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\词典.语言学习服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\信息参数.读取服务.cpp" />
     <ClCompile Include="海中鱼巣\业务\服务对象需求.发布服务.cpp" />

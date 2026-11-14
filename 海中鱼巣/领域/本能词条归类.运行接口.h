@@ -39,4 +39,25 @@ public:
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept = 0;
 };
 
+struct 新本能词条归类任务参数请求 final {
+    稳定编码 方法节点, 任务节点, 执行实例节点;
+    std::vector<新方法参数角色绑定> 参数绑定组;
+    std::optional<稳定编码> 执行分支节点;
+    std::optional<新词典归类需求来源> 来源;
+};
+struct 新词条归类任务参数场景结果 final {
+    新词条归类运行状态 状态 = 新词条归类运行状态::条件未具备;
+    std::shared_ptr<const 方法参数场景> 参数场景;
+    std::vector<稳定编码> 变化依赖节点组;
+};
+class 新本能词条归类任务参数工厂 {
+public:
+    virtual ~新本能词条归类任务参数工厂() = default;
+    virtual bool 支持任务方法(稳定编码) const noexcept = 0;
+    virtual 新词条归类任务参数场景结果 建立任务参数场景(
+        const 新本能词条归类任务参数请求&,const 新内部治理对象读取接口*,
+        std::optional<新方法任务成员绑定>) = 0;
+    virtual 新词条归类任务参数场景结果 取得任务续接参数场景(稳定编码) = 0;
+};
+
 } // namespace 海中鱼巣
