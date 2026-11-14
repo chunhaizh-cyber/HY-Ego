@@ -2529,7 +2529,10 @@ bool 是登记存在根(稳定编码 n) {
 void 核基础定义(const 基础范围概念定义&d) {
     const auto p=static_cast<unsigned>(d.原语);
     if(p<1||p>11) 正式定义故障("unknown primitive");
-    if(p<=6) {if(!d.整数参数.empty()||!d.引用参数.empty()) 正式定义故障("primitive arguments");}
+    if(d.原语==基础概念原语::正式概念身份) {
+        if(!d.整数参数.empty()||d.引用参数.size()>1
+            ||(!d.引用参数.empty()&&!有效(d.引用参数.front()))) 正式定义故障("concept identity arguments");
+    } else if(p<=5) {if(!d.整数参数.empty()||!d.引用参数.empty()) 正式定义故障("primitive arguments");}
     else if(d.原语==基础概念原语::I64闭区间) {
         if(d.整数参数.size()!=2||d.整数参数[0]>d.整数参数[1]||!d.引用参数.empty()) 正式定义故障("interval arguments");
     } else if(d.原语==基础概念原语::I64有限枚举) {
@@ -2539,6 +2542,15 @@ void 核基础定义(const 基础范围概念定义&d) {
         if(d.整数参数.size()!=1||d.整数参数[0]<1||d.整数参数[0]>17||!d.引用参数.empty()) 正式定义故障("named identity arguments");
     } else if(!d.整数参数.empty()||d.引用参数.size()!=1) 正式定义故障("unique existence arguments");
 }
+std::optional<bool> 比较概念身份范围包含(const 基础范围概念定义& 下,
+    const 基础范围概念定义& 上) {
+    const bool 概念下 = 下.原语 == 基础概念原语::正式概念身份;
+    const bool 概念上 = 上.原语 == 基础概念原语::正式概念身份;
+    if (!概念下 && !概念上) return std::nullopt;
+    if (!概念下 || !概念上) return false;
+    return 上.引用参数.empty() || 下.引用参数 == 上.引用参数;
+}
+
 using 词条三元键 = std::tuple<稳定编码, 稳定编码, std::string>;
 using 词条来源键组 = std::map<稳定编码, 词条三元键>;
 词条三元键 取得词条键(const 新词条信息& W) {
@@ -2695,7 +2707,8 @@ void 读取词条同键索引(const 概念_存在类& owner, const 新_词类* r
             if(正式形状(t.结构)&&!visited.count(x)) (void)解码正式定义(x,protect,visited,true,已读组,上下文);};
         std::visit([&](const auto&d){using D=std::decay_t<decltype(d)>;
             if constexpr(std::is_same_v<D,基础范围概念定义>){
-                if(d.原语!=基础概念原语::词条同键)for(auto x:d.引用参数)follow(x);
+                if(d.原语!=基础概念原语::词条同键
+                    &&d.原语!=基础概念原语::正式概念身份)for(auto x:d.引用参数)follow(x);
             }
             else if constexpr(std::is_same_v<D,结构约束定义>){for(auto x:d.项目FT组)follow(x);for(auto x:d.引用参数)follow(x);}
             else if constexpr(std::is_same_v<D,成员组织概念定义>)follow(d.成员概念);
@@ -2752,6 +2765,7 @@ using 正式结构图展开结果=std::map<稳定编码,正式结构图有效定
         if(child==parent)return true;
         auto a=basic(child),b=basic(parent);
         if(a&&b) {
+            if (const auto concepts = 比较概念身份范围包含(*a,*b)) return *concepts;
             if (const auto words = 比较词条范围包含(*a,*b,词条键组)) return *words;
             if(a->原语==基础概念原语::唯一存在&&b->原语==基础概念原语::合法存在)return true;
             if(a->原语==基础概念原语::I64有限枚举&&b->原语==基础概念原语::I64有限枚举)
@@ -2873,7 +2887,7 @@ struct 正式结构工作读取结果 final {
     std::vector<基础联合节点快照> protect;std::set<稳定编码>visited;
     auto info=解码正式定义(n,protect,visited,true,nullptr,&上下文);
     auto 有效定义组=核正式结构图(protect,&上下文,词条读取);
-    if (const auto* b = std::get_if<基础范围概念定义>(&info.定义); b && b->原语 == 基础概念原语::词条同键)
+    if (const auto* b = std::get_if<基础范围概念定义>(&info.定义); b && (b->原语 == 基础概念原语::词条同键 || b->原语 == 基础概念原语::正式概念身份))
         return {正式状态::已读取,std::move(info),std::move(protect),std::move(有效定义组)};
     // 普通FT完整保护在锁外读取，不能持本owner锁回调。
     std::vector<稳定编码> captured;
@@ -3132,6 +3146,8 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
         const auto lower = 读取当前基础范围概念(下), upper = 读取当前基础范围概念(上);
         if (lower.状态 == 新基础范围读取状态::资源失败 || upper.状态 == 新基础范围读取状态::资源失败)
             return std::nullopt;
+        if (lower.定义 && upper.定义)
+            if (const auto concepts = 比较概念身份范围包含(*lower.定义, *upper.定义)) return *concepts;
         const bool 涉及同键 = (lower.定义 && lower.定义->原语 == 基础概念原语::词条同键)
             || (upper.定义 && upper.定义->原语 == 基础概念原语::词条同键);
         if (涉及同键) {
@@ -3168,6 +3184,14 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
         if(数值!=std::holds_alternative<std::int64_t>(*值.值))正式定义故障("typed content physical mismatch");
         const auto 当前基础 = 读取当前基础范围概念(C);
         if (当前基础.状态 == 新基础范围读取状态::资源失败) return {S::资源失败,{}};
+        if (当前基础.定义 && 当前基础.定义->原语 == 基础概念原语::正式概念身份) {
+            if (值.种类 != 正式内容值种类::概念引用) return {S::不符合,{}};
+            const auto& 引用组 = 当前基础.定义->引用参数;
+            if (!引用组.empty())
+                return {std::get<稳定编码>(*值.值) == 引用组.front() ? S::符合 : S::不符合,{}};
+            if (!身份核验) return {S::未支持,{}};
+            return 身份核验(当前基础.定义->原语, {}, {}, 值);
+        }
         if (当前基础.定义 && 当前基础.定义->原语 == 基础概念原语::词条同键) {
             if (值.种类 != 正式内容值种类::词条引用) return {S::不符合,{}};
             if (!身份核验) return {S::未支持,{}};
@@ -3945,6 +3969,90 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
     catch (const std::length_error&) { return {新基础范围读取状态::资源失败, n, {}}; }
     catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
     catch (...) { 正式定义故障("current primitive read exception"); }
+}
+
+正式结构概念结果 概念_存在类::建立或取得正式概念单点范围(
+    稳定编码 C, std::span<const 正式概念身份读取接口* const> 提供者组) noexcept {
+    for (;;) {
+        try {
+            const 基础范围概念定义 定义{基础概念原语::正式概念身份, {}, {C}};
+            if (!正式schema就绪() || 提供者组.empty()) return {正式状态::依赖未就绪,{}};
+            if (!有效(C)) return {正式状态::输入拒绝,{}};
+            const auto 查当前 = [&]() -> std::optional<正式结构概念信息> {
+                for (const auto& 引用 : 全局基础数据集.查询目标字段(C, 正式键[引用键])) {
+                    const auto 当前 = 读取同键当前快照(引用.所属节点);
+                    if (!当前 || 正式形状(当前->结构) != 基础类型键) continue;
+                    const bool 本族 = std::any_of(当前->入向外部关系组.begin(), 当前->入向外部关系组.end(),
+                        [](const auto& 边) {
+                            return 边.源节点 == 存在概念图根节点
+                                && 边.类型 == 基础外部关系类型::父子 && 边.角色或顺序 == 组织归属关系角色;
+                        });
+                    if (!本族 || 正式整数(当前->结构, 正式键[原语键])
+                        != static_cast<std::int64_t>(基础概念原语::正式概念身份)) continue;
+                    std::vector<基础联合节点快照> 材料;
+                    std::set<稳定编码> 已读;
+                    auto 信息 = 解码正式定义(引用.所属节点, 材料, 已读, false);
+                    if (信息.定义 == 正式结构定义{定义}) return 信息;
+                }
+                return std::nullopt;
+            };
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                if (auto 已有 = 查当前()) return {正式状态::已复用,std::move(已有)};
+            }
+            bool 已确认 = false, 待就绪 = false, 需重读 = false;
+            for (const auto* 提供者 : 提供者组) {
+                if (!提供者) continue;
+                const auto 身份 = 提供者->读取正式概念身份保护(C);
+                if (身份.状态 == 正式概念读取状态::前提已变化) { 需重读 = true; break; }
+                if (身份.状态 == 正式概念读取状态::依赖未就绪) { 待就绪 = true; continue; }
+                if (身份.状态 == 正式概念读取状态::已读取) {
+                    if (!身份.身份 || 身份.身份->概念节点 != C)
+                        throw std::logic_error("concept singleton identity receipt incomplete");
+                    已确认 = true;
+                    break;
+                }
+            }
+            if (!需重读) {
+                if (!已确认) return {待就绪 ? 正式状态::依赖未就绪 : 正式状态::输入拒绝,{}};
+                正式结构概念结果 结果{正式状态::已建立,正式结构概念信息{{},定义,{}}};
+                基础节点组追加请求 请求;
+                请求.新节点组.push_back({{{节点类型字段,正式键[基础类型键]},
+                    {正式键[原语键],基础值{static_cast<std::int64_t>(基础概念原语::正式概念身份)}},
+                    {正式键[整数键],基础值{std::vector<std::int64_t>{}}}, {正式键[引用键],C}}});
+                请求.追加外部关系组.push_back({存在概念图根节点,基础组内节点引用{0},
+                    基础外部关系类型::父子,组织归属关系角色});
+                请求.只读预期.节点组.push_back({C});
+                {
+                    std::lock_guard 锁(存在概念图互斥);
+                    if (auto 已有 = 查当前()) return {正式状态::已复用,std::move(已有)};
+                    const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+                    if (发布.状态 == 基础节点组追加状态::已完成) {
+                        if (发布.新节点组.size() != 1) throw std::logic_error("concept singleton publication receipt incomplete");
+                        结果.信息->节点 = 发布.新节点组.front();
+                        return 结果;
+                    }
+                    if (发布.状态 == 基础节点组追加状态::资源失败) throw std::bad_alloc{};
+                    if (发布.状态 != 基础节点组追加状态::预期不符
+                        && 发布.状态 != 基础节点组追加状态::节点不存在
+                        && 发布.状态 != 基础节点组追加状态::引用不存在)
+                        throw std::logic_error("concept singleton publication failed");
+                }
+                if (!读取同键当前快照(C)) return {正式状态::未找到,{}};
+                {
+                    std::lock_guard 锁(存在概念图互斥);
+                    for (const auto 节点 : {存在概念图根节点, 节点类型字段, 正式键[基础类型键],
+                        正式键[原语键], 正式键[整数键], 正式键[引用键]})
+                        if (!读取同键当前快照(节点))
+                            throw std::logic_error("concept singleton schema endpoint missing");
+                }
+            }
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态,{}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("concept singleton range publication exception"); }
+        std::this_thread::yield();
+    }
 }
 
 正式结构概念结果 概念_存在类::读取词典材料身份范围概念() const noexcept {
