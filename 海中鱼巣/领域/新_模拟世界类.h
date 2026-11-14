@@ -8,6 +8,7 @@
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
 #include "数据服务.词典材料类.h"
+#include "数据服务.外设词典记录类.h"
 
 namespace 海中鱼巣 {
 extern 稳定编码 模拟世界树根节点;
@@ -63,6 +64,9 @@ struct 新模拟词典材料复制输入 final {
     新词典材料信息 材料;
     // 可以引用六参数之后的只读来源载体，不增加方法参数。
     std::uint32_t 来源存在输入=0;
+};
+struct 新模拟词典接收定位 final {
+    稳定编码 场景, 说话者, 接收特征;
 };
 struct 新模拟场景事实输入 final {
     新方法初始场景事实限定 限定;
@@ -123,7 +127,8 @@ class 概念_动态类;
 class 新_模拟世界类 final : public 新方法模拟运行接口,
     public 新本能交互运行接口, public 新方法隔离执行接口,
     public 新本能需求运行接口, public 正式信息参数读取接口,
-    public 新本能字段询问运行接口, public 新词典材料场景读取接口 {
+    public 新本能字段询问运行接口, public 新词典材料场景读取接口,
+    public 新词典隔离退出读取接口 {
 public:
     explicit 新_模拟世界类(新_方法类&) noexcept;
     新_模拟世界类(新_方法类&,const 动作方法定义只读提供者&,新_动态类&,const 概念_动态类&) noexcept;
@@ -132,6 +137,11 @@ public:
     ~新_模拟世界类();
     void 配置二次特征计算(const 新_二次特征类&);
     void 配置词典材料(词典材料类&);
+    void 配置词典接收(外设词典记录类&,新_特征值类&,概念_特征类&,稳定编码 接收FT);
+    std::optional<新模拟词典接收定位> 读取本地词典接收定位() const noexcept;
+    新词典查询发表结果 发表本地词典查询(const 新词典查询事实&) noexcept;
+    新词典查询读取结果 续接本地词典查询(稳定编码) noexcept;
+    新词典记录操作状态 读取本样例外设场景(稳定编码) const noexcept override;
     新词典材料场景读取结果 读取材料所属场景(稳定编码) const noexcept override;
     新词典材料读取结果 读取本地词典材料(稳定编码) const noexcept;
     新词典执行回执读取结果 读取调用词典回执(稳定编码 N) const noexcept;
@@ -231,7 +241,7 @@ public:
     bool 已请求停止() const noexcept override;
     std::vector<新方法初始场景事实限定> 读取本次场景事实组() const;
     void 释放有序样例();
-    // false仅表示真实闭包外引用仍在；不清除样例和退出责任。
+    // false表示已有查询仍在途或真实闭包外引用仍在；不清除样例和退出责任。
     bool 尝试释放有序样例();
     void 停止样例后继发布() noexcept;
     std::optional<稳定编码> 读取模拟存在来源(稳定编码 本地存在) const;
@@ -261,6 +271,12 @@ public:
     std::optional<新特征值信息> 读取模拟特征值材料(稳定编码) const noexcept override;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
+    struct 词典接收提供者;
+    struct 词典接收准备;
+    void 建立本地词典接收场景();
+    新词典接收准备结果 准备本地词典接收(稳定编码,const std::vector<稳定编码>&) noexcept;
+    新词典接收提交结果 提交本地词典接收(词典接收准备&,新消息待发表凭据&&,新状态结果引用参与接口&) noexcept;
+    新词典接收提交结果 续接本地词典接收(稳定编码,新词典处理阶段参与接口&) noexcept;
     新词典结果参与准备结果 准备调用词典结果内部(稳定编码,const 新词典执行结果来源*,
         std::optional<稳定编码>,std::optional<稳定编码>) noexcept;
     bool 复制词典材料初值(const std::vector<新模拟有序参数输入>&,
