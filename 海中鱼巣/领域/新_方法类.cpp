@@ -1147,8 +1147,37 @@ bool 方法词条范围属于(稳定编码 child, 稳定编码 parent, const 概
         && keys[0]->原规范化词面 == keys[1]->原规范化词面;
 }
 
+bool 追加结构族保护(稳定编码 范围,稳定编码 族根,const 概念_存在类& owner,
+    std::vector<基础联合节点快照>& 保护) {
+    std::set<稳定编码> 已读;
+    std::vector<稳定编码> 待读{范围};
+    while (!待读.empty()) {
+        const auto 当前 = 待读.back(); 待读.pop_back();
+        if (!已读.insert(当前).second) continue;
+        const auto 定义 = owner.读取正式结构概念保护(当前);
+        if (定义.状态 == 正式结构操作状态::前提已变化) throw 引用内容定义前提变化{};
+        if (定义.状态 == 正式结构操作状态::未找到 || 定义.状态 == 正式结构操作状态::输入拒绝) continue;
+        if (定义.状态 != 正式结构操作状态::已读取 || !定义.信息 || 定义.完整保护组.empty())
+            throw std::runtime_error("formal content family definition unavailable");
+        const auto* 结构 = std::get_if<信息结构概念定义>(&定义.信息->定义);
+        if (!结构) continue;
+        保护.insert(保护.end(),定义.完整保护组.begin(),定义.完整保护组.end());
+        if (当前 == 族根) return true;
+        待读.insert(待读.end(),结构->上位结构概念组.begin(),结构->上位结构概念组.end());
+    }
+    return false;
+}
+
 bool 方法持有者范围有效(const 新方法有序参数规格& 规格, const 概念_存在类& owner) {
-    if (规格.信息类型 == 新方法参数信息类型::存在) return 方法存在范围有效(规格.范围概念节点, owner);
+    if (规格.信息类型 == 新方法参数信息类型::存在) {
+        const auto 归类 = owner.读取词典归类信息概念();
+        if (归类.信息) {
+            std::vector<基础联合节点快照> 保护;
+            if (追加结构族保护(规格.范围概念节点,归类.信息->材料范围,owner,保护))
+                return 规格.范围概念节点 == 归类.信息->材料范围 && 规格.必需特征类型组.empty();
+        }
+        return 方法存在范围有效(规格.范围概念节点, owner);
+    }
     if (规格.信息类型 != 新方法参数信息类型::词条) return false;
     const auto 当前 = owner.读取词条身份范围概念保护();
     return 当前.信息 && 当前.信息->节点 == 规格.范围概念节点;
@@ -1275,6 +1304,16 @@ std::optional<新方法参数信息类型> 读取持久参数类别(
 }
 enum class 引用内容条件校验模式 : std::uint8_t { 持久结构=1, 完整语义 };
 
+std::optional<std::uint32_t> 读取归类内容路径槽(稳定编码 FT,const 概念_特征类& owner) {
+    for (const auto 槽 : {先天特征类型槽::归类目标词条,先天特征类型槽::归类采用概念}) {
+        const auto 当前 = owner.读取当前先天特征类型槽(槽);
+        if (当前.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        if (当前.状态 == 特征概念规则状态::前提已变化) throw 引用内容定义前提变化{};
+        if (当前.类型根 && *当前.类型根 == FT) return 槽;
+    }
+    return std::nullopt;
+}
+
 bool 读取引用内容条件定义保护(const 新方法引用内容条件& 内容,
     const 概念_特征类& 特征概念,const 概念_存在类& 存在概念,
     std::vector<基础联合节点快照>& 保护) {
@@ -1307,6 +1346,18 @@ bool 读取引用内容条件定义保护(const 新方法引用内容条件& 内
         保护.insert(保护.end(),有效内容.完整保护组.begin(),有效内容.完整保护组.end());
     }
     if(!内容.正式内容路径.empty()) {
+        if (const auto 槽 = 读取归类内容路径槽(内容.正式内容路径.front(),特征概念)) {
+            const auto FT = 特征概念.读取先天特征类型槽(*槽);
+            if (FT.状态 == 特征概念规则状态::前提已变化) throw 引用内容定义前提变化{};
+            if (FT.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+            if (!FT.类型根 || FT.完整保护组.empty()) throw std::runtime_error("dictionary content field unavailable");
+            保护.insert(保护.end(),FT.完整保护组.begin(),FT.完整保护组.end());
+            const auto* 基础 = std::get_if<基础范围概念定义>(&定义.信息->定义);
+            if (!基础) return false;
+            if (*槽 == 先天特征类型槽::归类采用概念) return 基础->原语 == 基础概念原语::正式概念身份;
+            return 基础->原语 == 基础概念原语::词条同键
+                || (基础->原语 == 基础概念原语::具名领域身份 && 基础->整数参数 == std::vector<std::int64_t>{16});
+        }
         for(std::uint32_t 槽=先天特征类型槽::需求主体;槽<=先天特征类型槽::内容确认来源;++槽) {
             const auto FT=特征概念.读取先天特征类型槽(槽);
             if(FT.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
@@ -1352,31 +1403,20 @@ bool 读取引用内容条件定义保护(const 新方法引用内容条件& 内
         return false;
     }
     if(!结构)return false;
-    const auto 根=存在概念.读取先天需求任务方法概念();
-    if(根.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
-    if(根.状态==正式结构操作状态::未找到
-        ||根.状态==正式结构操作状态::输入拒绝)return false;
-    if(根.状态!=正式结构操作状态::已读取||!根.信息)
-        throw std::runtime_error("content condition innate demand root read failed");
-    std::set<稳定编码> 已读;std::vector<稳定编码> 待读{内容.要求概念节点};bool 命中=false;
-    while(!待读.empty()) {
-        const auto n=待读.back();待读.pop_back();if(!已读.insert(n).second)continue;
-        const auto r=存在概念.读取正式结构概念保护(n);
-        if(r.状态==正式结构操作状态::前提已变化)throw 引用内容定义前提变化{};
-        if(r.状态!=正式结构操作状态::已读取||!r.信息||r.完整保护组.empty())
-            throw std::runtime_error("content condition declared ancestor read failed");
-        const auto* d=std::get_if<信息结构概念定义>(&r.信息->定义);if(!d)return false;
-        保护.insert(保护.end(),r.完整保护组.begin(),r.完整保护组.end());
-        if(n==根.信息->需求)命中=true;
-        待读.insert(待读.end(),d->上位结构概念组.begin(),d->上位结构概念组.end());
-    }
-    return 命中;
+    const auto 归类 = 存在概念.读取词典归类信息概念();
+    if (归类.信息 && 追加结构族保护(内容.要求概念节点,归类.信息->材料范围,存在概念,保护)) return true;
+    const auto 根 = 存在概念.读取先天需求任务方法概念();
+    if (根.状态 == 正式结构操作状态::前提已变化) throw 引用内容定义前提变化{};
+    if (!根.信息) return false;
+    return 追加结构族保护(内容.要求概念节点,根.信息->需求,存在概念,保护);
 }
 
-bool 正式需求范围有效(稳定编码 范围,const 概念_特征类& f,const 概念_存在类& e) {
-    新方法引用内容条件 c;c.要求概念节点=范围;c.作用点=新方法内容作用点::参数自身;
-    std::vector<基础联合节点快照> p;
-    return 读取引用内容条件定义保护(c,f,e,p);
+bool 正式需求范围有效(稳定编码 范围,const 概念_特征类&,const 概念_存在类& owner) {
+    const auto 根 = owner.读取先天需求任务方法概念();
+    if (根.状态 == 正式结构操作状态::前提已变化) throw 引用内容定义前提变化{};
+    if (!根.信息) return false;
+    std::vector<基础联合节点快照> 保护;
+    return 追加结构族保护(范围,根.信息->需求,owner,保护);
 }
 bool 追加需求主体路径保护(稳定编码 FT,const 概念_特征类& f,const 概念_存在类& e,
     std::vector<基础联合节点快照>& p) {
@@ -1403,6 +1443,31 @@ bool 追加需求主体路径保护(稳定编码 FT,const 概念_特征类& f,co
     p.insert(p.end(),slot.完整保护组.begin(),slot.完整保护组.end());
     p.insert(p.end(),def.预期节点组.begin(),def.预期节点组.end());
     p.insert(p.end(),target.完整保护组.begin(),target.完整保护组.end());
+    return true;
+}
+
+bool 追加内容引用路径保护(稳定编码 FT,const 概念_特征类& f,const 概念_存在类& e,
+    std::vector<基础联合节点快照>& 保护) {
+    const auto 槽 = 读取归类内容路径槽(FT,f);
+    if (!槽) return 追加需求主体路径保护(FT,f,e,保护);
+    if (*槽 != 先天特征类型槽::归类目标词条) return false;
+    const auto 定义 = f.读取特征概念定义保护(FT);
+    if (定义.前提已变化) throw 引用内容定义前提变化{};
+    if (定义.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (!定义.信息) throw std::runtime_error("dictionary target field definition unavailable");
+    const auto& d = 定义.信息->定义;
+    const auto* 域 = std::get_if<特征概念信息引用值域>(&d.值域);
+    if (d.材料类型 != 特征概念材料物理类型::信息节点引用
+        || d.比较规则 != 特征概念比较规则::信息引用身份精确
+        || !域 || 域->语义 != 信息引用语义::信息对象) return false;
+    const auto 范围 = e.读取正式结构概念保护(域->内容概念);
+    if (范围.状态 == 正式结构操作状态::前提已变化) throw 引用内容定义前提变化{};
+    if (!范围.信息) throw std::runtime_error("dictionary target field range unavailable");
+    const auto* 基础 = std::get_if<基础范围概念定义>(&范围.信息->定义);
+    if (!基础 || 基础->原语 != 基础概念原语::具名领域身份
+        || 基础->整数参数 != std::vector<std::int64_t>{16}) return false;
+    保护.insert(保护.end(),定义.预期节点组.begin(),定义.预期节点组.end());
+    保护.insert(保护.end(),范围.完整保护组.begin(),范围.完整保护组.end());
     return true;
 }
 
@@ -1534,11 +1599,18 @@ bool 条件结果角色已声明(
             return 引用声明合法(r);
         case 新方法参数关系种类::内容引用参数: {
             const auto* left=找规格(r.左参数序号);const auto* right=找规格(r.右参数序号);
-            if(!left||!right||*l!=新方法参数信息类型::存在||*v!=新方法参数信息类型::存在
-                ||r.左正式内容路径.size()!=1
-                ||!正式需求范围有效(left->范围概念节点,概念服务,存在概念服务))return false;
+            if(!left||!right||*l!=新方法参数信息类型::存在||r.左正式内容路径.size()!=1)return false;
+            const auto 归类 = 存在概念服务.读取词典归类信息概念();
+            if (归类.信息 && left->范围概念节点 == 归类.信息->材料范围) {
+                if (*v != 新方法参数信息类型::词条 || r.左正式内容路径.front() != 归类.信息->目标词条FT
+                    || !方法持有者范围有效(*left,存在概念服务) || !方法持有者范围有效(*right,存在概念服务)) return false;
+                std::vector<基础联合节点快照> 保护;
+                return 追加内容引用路径保护(r.左正式内容路径.front(),概念服务,存在概念服务,保护);
+            }
+            if (*v != 新方法参数信息类型::存在
+                || !正式需求范围有效(left->范围概念节点,概念服务,存在概念服务)) return false;
             std::vector<基础联合节点快照> proof;
-            if(!追加需求主体路径保护(r.左正式内容路径.front(),概念服务,存在概念服务,proof))return false;
+            if(!追加内容引用路径保护(r.左正式内容路径.front(),概念服务,存在概念服务,proof))return false;
             const auto ft=概念服务.获取特征概念(r.左正式内容路径.front());
             const auto* domain=ft?std::get_if<特征概念信息引用值域>(&ft->值域):nullptr;
             if(!domain||!存在概念服务.是存在概念节点(right->范围概念节点))return false;
@@ -1670,16 +1742,33 @@ bool 条件结果角色已声明(
                     [](稳定编码 FT){return !节点仍存在(FT);}))return false;
             const auto* 参数=找规格(项.参数序号);
             if(项.引用内容条件->作用点==新方法内容作用点::参数自身) {
-                if(!参数||参数->信息类型!=新方法参数信息类型::存在
-                    ||!正式需求范围有效(参数->范围概念节点,概念服务,存在概念服务))return false;
+                if(!参数||参数->信息类型!=新方法参数信息类型::存在)return false;
+                const auto 归类 = 存在概念服务.读取词典归类信息概念();
+                const bool 是归类 = 归类.信息 && 参数->范围概念节点 == 归类.信息->材料范围;
+                const auto& 内容 = *项.引用内容条件;
                 std::vector<基础联合节点快照> proof;
-                return 读取引用内容条件定义保护(*项.引用内容条件,概念服务,存在概念服务,proof);
+                if (是归类) {
+                    if (!方法持有者范围有效(*参数,存在概念服务) || 内容.要求认知来源当前有效) return false;
+                    if (内容.正式内容路径.empty()) {
+                        if (!追加结构族保护(内容.要求概念节点,归类.信息->材料范围,存在概念服务,proof)) return false;
+                    } else if (!读取归类内容路径槽(内容.正式内容路径.front(),概念服务)) return false;
+                } else {
+                    if (!正式需求范围有效(参数->范围概念节点,概念服务,存在概念服务)) return false;
+                    if (内容.正式内容路径.empty()) {
+                        if (!正式需求范围有效(内容.要求概念节点,概念服务,存在概念服务)) return false;
+                    } else if (读取归类内容路径槽(内容.正式内容路径.front(),概念服务)) return false;
+                }
+                return 读取引用内容条件定义保护(内容,概念服务,存在概念服务,proof);
             }
             if(项.引用内容条件->作用点!=新方法内容作用点::特征当前引用)return false;
             if(!参数||参数->信息类型!=新方法参数信息类型::特征)return false;
             const auto FT=概念服务.获取特征概念(参数->范围概念节点);
             if(!FT||FT->材料类型!=特征概念材料物理类型::需求节点引用
                 ||FT->比较规则!=特征概念比较规则::需求身份精确)return false;
+            const auto& 内容 = *项.引用内容条件;
+            if (内容.正式内容路径.empty()) {
+                if (!正式需求范围有效(内容.要求概念节点,概念服务,存在概念服务)) return false;
+            } else if (读取归类内容路径槽(内容.正式内容路径.front(),概念服务)) return false;
             if(定义.条件.关系规则!=新方法项关系规则::全部成立
                 &&定义.条件.关系规则!=新方法项关系规则::单项)return false;
             std::map<std::uint32_t,std::uint32_t> 别名;
@@ -3555,7 +3644,7 @@ std::int64_t 方法当前UTC纳秒() {
     };
     const auto 加主体保护=[&](稳定编码 FT) {
         std::vector<基础联合节点快照> p;
-        if(!追加需求主体路径保护(FT,特征概念,概念,p))throw std::runtime_error("method subject relation path unsupported");
+        if(!追加内容引用路径保护(FT,特征概念,概念,p))throw std::runtime_error("method subject relation path unsupported");
         加正式保护(p);
     };
     const auto 加完整需求保护=[&](稳定编码 C) {
@@ -3869,7 +3958,7 @@ struct 初始声明补齐候选 final {
     const auto 关系保护=[&](const std::vector<新方法参数关系>& rs) {
         for(const auto& r:rs)if(r.种类==新方法参数关系种类::内容引用参数) {
             std::vector<基础联合节点快照> p;
-            if(!追加需求主体路径保护(r.左正式内容路径.front(),特征概念,存在概念,p))return false;
+            if(!追加内容引用路径保护(r.左正式内容路径.front(),特征概念,存在概念,p))return false;
             加保护(p);
         }
         return true;
@@ -4069,7 +4158,7 @@ struct 初始声明补齐候选 final {
     const auto condition=[&](const 新方法条件定义& c) {
         for(const auto& r:c.参数关系组)if(r.种类==新方法参数关系种类::内容引用参数) {
             std::vector<基础联合节点快照> p;
-            if(!追加需求主体路径保护(r.左正式内容路径.front(),特征概念服务_,存在概念服务_,p))
+            if(!追加内容引用路径保护(r.左正式内容路径.front(),特征概念服务_,存在概念服务_,p))
                 throw std::runtime_error("final method subject relation unsupported");
             原子.预期联合节点组.insert(原子.预期联合节点组.end(),p.begin(),p.end());
         }
@@ -6653,7 +6742,7 @@ std::optional<新方法信息> 新_方法类::获取方法(
                     ||f.字段节点==结果引用内容要求字段||f.字段节点==结果引用内容项字段)保护身份.insert(*引用);
                 if(f.字段节点==内容关系路径字段) {
                     std::vector<基础联合节点快照> p;
-                    if(!追加需求主体路径保护(*引用,特征概念服务_,存在概念服务_,p))
+                    if(!追加内容引用路径保护(*引用,特征概念服务_,存在概念服务_,p))
                         throw std::runtime_error("method execution subject relation path unsupported");
                     addProof(p);
                 }
