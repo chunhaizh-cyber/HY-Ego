@@ -38,4 +38,15 @@ struct 新词典归类材料信息 final {
     新词典归类材料定义 定义;
 };
 
+struct 新词典语言材料组定义 final {
+    稳定编码 来源场景;
+    std::vector<稳定编码> 已处理行组;
+    friend bool operator==(const 新词典语言材料组定义&, const 新词典语言材料组定义&) = default;
+};
+
+struct 新词典语言材料组信息 final {
+    稳定编码 节点, 材料Q, 来源场景;
+    std::vector<新词典归类材料信息> 行组;
+};
+
 } // namespace 海中鱼巣

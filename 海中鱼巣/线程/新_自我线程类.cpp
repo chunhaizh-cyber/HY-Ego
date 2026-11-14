@@ -1553,8 +1553,10 @@ struct 新_自我线程类::实现 final {
             const auto 交付 = 词典语言服务->推进一次(停止源.get_token());
             if (!交付 || 停止源.stop_requested()) return;
             const auto 事实 = 世界树服务->获取事实服务引用();
+            const auto 材料组 = 事实.语言服务.读取词典语言材料组(交付->材料Q);
+            if (!材料组) return;
             bool 有归类主张 = false;
-            for (const auto& 当前 : 事实.语言服务.查询词典归类材料(交付->材料Q)) {
+            for (const auto& 当前 : 材料组->行组) {
                 if (当前.定义.状态 == 新词典语言理解状态::已理解 && 当前.定义.词条N)
                     有归类主张 = true;
             }

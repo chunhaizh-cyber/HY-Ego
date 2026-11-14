@@ -66,6 +66,7 @@ struct 词典语言学习服务::实现 final {
         稳定编码 来源场景;
         std::vector<原文行> 行组;
         std::size_t 下一个行 = 0;
+        std::vector<稳定编码> 已处理行组;
         bool 已完成 = false;
         std::chrono::steady_clock::time_point 可推进时点{};
     };
@@ -121,6 +122,10 @@ struct 词典语言学习服务::实现 final {
     enum class 准备状态 { 已就绪, 等待材料, 来源已退出 };
     准备状态 准备工作(工作& 项) {
         if (!项.信息) {
+            if (语言.读取词典语言材料组(项.Q)) {
+                项.已完成 = true;
+                return 准备状态::已就绪;
+            }
             const auto Q = 材料.读取材料(项.Q);
             if (Q.状态 == 新词典材料操作状态::资源失败) throw std::bad_alloc{};
             if (Q.状态 == 新词典材料操作状态::未找到) return 准备状态::来源已退出;
@@ -187,6 +192,7 @@ struct 词典语言学习服务::实现 final {
         定义.诊断 = 解析.诊断;
         const auto 保存 = 语言.保存词典归类材料(定义);
         if (!保存) return false;
+        项.已处理行组.push_back(保存->节点);
         ++项.下一个行;
         return true;
     }
@@ -273,9 +279,21 @@ std::optional<新词典语言交付> 词典语言学习服务::推进一次(std:
                 if (!实现_->保存下一行(项)) 项.可推进时点 = 现在 + 实现_->重试间隔;
                 return std::nullopt;
             }
-            项.已完成 = true;
+            if (!项.已完成) {
+                if (!实现_->语言.发表词典语言材料组(项.Q, 项.来源场景, 项.已处理行组)) {
+                    项.信息.reset();
+                    项.来源场景 = {};
+                    项.行组.clear();
+                    项.下一个行 = 0;
+                    项.已处理行组.clear();
+                    项.可推进时点 = 现在 + 实现_->重试间隔;
+                    return std::nullopt;
+                }
+                项.已完成 = true;
+            }
             项.信息.reset();
             项.行组.clear();
+            项.已处理行组.clear();
         }
         for (auto& 人 : 项.请求者组) {
             if (人.已交付) continue;
