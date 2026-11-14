@@ -184,6 +184,7 @@ struct 新自我等待复核决议 final {
     新自我等待复核状态 状态 = 新自我等待复核状态::需核查;
     std::optional<新需求当前满足状态> 当前满足状态;
     std::optional<新需求筹办资格结果> 筹办资格;
+    std::vector<新任务依赖键> 附加等待依赖键组;
     friend bool operator==(const 新自我等待复核决议&,
         const 新自我等待复核决议&) = default;
 };
@@ -343,6 +344,7 @@ struct 新自我筹办裁决 final {
         friend bool operator==(const 因果采用回执&, const 因果采用回执&) = default;
     };
     std::optional<因果采用回执> 因果回执;
+    std::vector<新任务依赖键> 附加等待依赖键组;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };
@@ -467,6 +469,7 @@ private:
         std::uint64_t 复核编号) const noexcept;
     新自我等待复核接收状态 提交等待复核决议(
         const 新自我等待复核决议&) noexcept;
+    新任务管理操作结果 请求词典等待依赖刷新(稳定编码 任务节点) noexcept;
     bool 使用任务服务(const 新_任务类& 任务服务) const noexcept;
     // 仅收存交接消息；已接收待筹办不代表来源已绑定或服务值已经结算。
     // 由管理循环排空旧筹办、独立读回后串行接纳并触发普通筹办。
