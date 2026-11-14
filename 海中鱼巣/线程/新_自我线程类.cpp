@@ -824,6 +824,8 @@ struct 新_自我线程类::实现 final {
     模拟学习服务* 学习服务 = nullptr;
     方法问题学习服务* 问题学习服务 = nullptr;
     词典语言学习服务* 词典语言服务 = nullptr;
+    std::optional<新词典语言交付> 待关联词典交付;
+    std::optional<std::chrono::steady_clock::time_point> 词典交付重试时点;
     std::unique_ptr<新_学习线程类> 学习线程;
     enum class 学习交接阶段 : std::uint8_t { 等待结果, 待确认学习, 硬失败, 待重学, 待提交 };
     struct 词典学习请求者 final {
@@ -1548,24 +1550,93 @@ struct 新_自我线程类::实现 final {
         }
     }
 
+    std::optional<稳定编码> 定位词典归类需求(
+        const 新词典语言交付& 交付, 稳定编码 挂接类型) const {
+        auto D = 交付.需求;
+        auto T = 交付.任务;
+        std::set<稳定编码> 已读;
+        while (有效(D) && 有效(T)) {
+            if (!已读.insert(D).second) throw std::logic_error("dictionary demand ancestry contains a cycle");
+            const auto 需求 = 需求服务->获取需求(D);
+            if (!需求) return {};
+            const auto 服务 = 任务服务->读取任务服务需求集(T);
+            if (服务.状态 == 新任务服务需求集状态::资源失败) throw std::bad_alloc{};
+            if (服务.状态 != 新任务服务需求集状态::已读取) {
+                if (!任务服务->获取任务(T)) return {};
+                throw std::logic_error("dictionary source task service set is unavailable");
+            }
+            if (std::find(服务.服务需求组.begin(), 服务.服务需求组.end(), D) == 服务.服务需求组.end()) return {};
+            if (需求->目标存在节点 == 交付.词条
+                && 需求->目标.目标特征类型概念节点 == 挂接类型) return D;
+            if (!需求->父需求节点 || !需求->来源承接节点) return {};
+            D = *需求->父需求节点;
+            T = *需求->来源承接节点;
+        }
+        return {};
+    }
+
+    void 关联词典归类来源(const 新词典语言交付& 交付,
+        const 新词典语言材料组信息& 材料组) {
+        const auto 事实 = 世界树服务->获取事实服务引用();
+        const auto 类型 = 事实.特征概念服务.读取当前先天特征类型槽(先天特征类型槽::概念名称挂接);
+        if (类型.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        if (类型.状态 != 特征概念规则状态::已完成 || !类型.类型根)
+            throw std::logic_error("dictionary classification feature type is unavailable");
+        const auto D = 定位词典归类需求(交付, *类型.类型根);
+        if (!D) return;
+        for (const auto& 行 : 材料组.行组) {
+            const auto& 定义 = 行.定义;
+            if (定义.状态 != 新词典语言理解状态::已理解
+                || 定义.词条X != 交付.词条 || !定义.词条N) continue;
+            const 新词典归类需求来源 来源{新词典归类需求来源用途::词条挂接,
+                交付.材料Q, 材料组.节点, 行.节点, 交付.词条, *定义.词条N};
+            const auto 记录 = 需求服务->记录词典归类需求来源已核验(*D, 来源);
+            if (记录 == 新需求操作状态::资源失败) throw std::bad_alloc{};
+            if (记录 == 新需求操作状态::需求不存在) return;
+            if (记录 != 新需求操作状态::已修改 && 记录 != 新需求操作状态::无变化)
+                throw std::logic_error("dictionary classification source association failed");
+        }
+    }
+
+    std::optional<std::chrono::steady_clock::time_point> 下一词典语言推进时点() const noexcept {
+        if (待关联词典交付)
+            return 词典交付重试时点.value_or(std::chrono::steady_clock::now());
+        return 词典语言服务->下一推进时点();
+    }
+
     void 推进词典语言材料() noexcept {
         try {
-            const auto 交付 = 词典语言服务->推进一次(停止源.get_token());
-            if (!交付 || 停止源.stop_requested()) return;
+            if (!待关联词典交付) 待关联词典交付 = 词典语言服务->推进一次(停止源.get_token());
+            if (!待关联词典交付 || 停止源.stop_requested()) return;
+            const auto& 交付 = *待关联词典交付;
             const auto 事实 = 世界树服务->获取事实服务引用();
-            const auto 材料组 = 事实.语言服务.读取词典语言材料组(交付->材料Q);
-            if (!材料组) return;
+            const auto 材料组 = 事实.语言服务.读取词典语言材料组(交付.材料Q);
+            if (!材料组) {
+                待关联词典交付.reset();
+                词典交付重试时点.reset();
+                return;
+            }
+            关联词典归类来源(交付, *材料组);
             bool 有归类主张 = false;
             for (const auto& 当前 : 材料组->行组) {
                 if (当前.定义.状态 == 新词典语言理解状态::已理解 && 当前.定义.词条N)
                     有归类主张 = true;
             }
             if (有归类主张 && 任务管理) {
-                const auto 刷新 = 任务管理->请求词典等待依赖刷新(交付->任务);
+                const auto 刷新 = 任务管理->请求词典等待依赖刷新(交付.任务);
                 if (刷新.状态 == 新任务管理操作状态::资源失败) throw std::bad_alloc{};
                 if (刷新.状态 != 新任务管理操作状态::已完成 && 刷新.状态 != 新任务管理操作状态::无变化
                     && !停止源.stop_requested()) throw std::logic_error("词典语言材料等待刷新失败");
             }
+            待关联词典交付.reset();
+            词典交付重试时点.reset();
+        } catch (const std::bad_alloc&) {
+            if (!待关联词典交付 || !消息配置)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"推进词典语言材料",
+                    L"取得正式交付前资源失败。");
+            // 已交付定位保留，重试时重新读原Q；已发表来源按值复用。
+            词典交付重试时点 = std::chrono::steady_clock::now()
+                + 有界等待时长(消息配置->资源重试间隔毫秒);
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"推进词典语言材料",
                 L"正式词典释义转换或交接发生工程错误。", 异常.what());
@@ -1580,7 +1651,7 @@ struct 新_自我线程类::实现 final {
         const auto 待投 = 最近问题投递时点();
         if (待投 && (!时点 || *待投 < *时点)) 时点 = 待投;
         if (词典语言服务) {
-            const auto 词典时点 = 词典语言服务->下一推进时点();
+            const auto 词典时点 = 下一词典语言推进时点();
             if (词典时点 && (!时点 || *词典时点 < *时点)) 时点 = 词典时点;
         }
         const auto 扫描时点 = 最近扫描推进时点已加锁();
@@ -5348,7 +5419,7 @@ struct 新_自我线程类::实现 final {
                     if(行动请求已入邮箱)continue;
                 }
                 if (词典语言服务) {
-                    const auto 时点 = 词典语言服务->下一推进时点();
+                    const auto 时点 = 下一词典语言推进时点();
                     if (时点 && *时点 <= std::chrono::steady_clock::now()) {
                         锁.unlock();
                         推进词典语言材料();

@@ -16,6 +16,7 @@
 #include "新_特征类.h"
 #include "概念_二次特征类.h"
 #include "接收认知来源.数据.h"
+#include "词典语言.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -530,6 +531,11 @@ struct 新接收认知需求读取结果 final {
     std::vector<基础联合节点快照> 完整保护;
 };
 
+struct 新词典归类需求来源读取结果 final {
+    新需求操作状态 状态 = 新需求操作状态::尚未初始化;
+    std::vector<新词典归类需求来源> 来源组;
+};
+
 struct 新被认知需求建立请求 final {
     稳定编码 需求主体存在节点;
     稳定编码 目标存在节点;
@@ -1006,10 +1012,14 @@ public:
         稳定编码 需求节点,
         新需求活动状态 新状态) noexcept;
     bool 是需求节点(稳定编码 节点) const noexcept;
+    新词典归类需求来源读取结果 读取词典归类需求来源组(
+        稳定编码 需求节点) const noexcept;
     // 初始化后schema冻结；不取需求锁。新格式经F公开口取得完整保护，使用共享领域锁。
     特征概念规则状态 校验集合成员需求身份(稳定编码 需求节点) const noexcept;
 
 private:
+    新需求操作状态 记录词典归类需求来源已核验(
+        稳定编码 需求节点, const 新词典归类需求来源&) noexcept;
     struct 提议源收集批 final {
         基础只读预期 前提;
         std::set<稳定编码> 需求节点组;

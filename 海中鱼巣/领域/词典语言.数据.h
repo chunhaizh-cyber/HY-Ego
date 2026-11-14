@@ -49,4 +49,16 @@ struct 新词典语言材料组信息 final {
     std::vector<新词典归类材料信息> 行组;
 };
 
+enum class 新词典归类需求来源用途 : std::int64_t {
+    词条挂接 = 1,
+    中心词归类 = 2
+};
+
+struct 新词典归类需求来源 final {
+    新词典归类需求来源用途 用途 = 新词典归类需求来源用途::词条挂接;
+    稳定编码 材料Q, 材料组, 行节点, 词条W, 词条N;
+    friend bool operator==(const 新词典归类需求来源&,
+        const 新词典归类需求来源&) = default;
+};
+
 } // namespace 海中鱼巣
