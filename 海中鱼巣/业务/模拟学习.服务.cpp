@@ -1,5 +1,8 @@
 #include "模拟学习.服务.h"
 #include "模拟学习.算法.h"
+#include "词典.本能运行服务.h"
+#include "词典.知识导出服务.h"
+#include "../领域/新_词类.h"
 #include "模拟任务需求来源.服务.h"
 #include "../领域/新_模拟世界类.h"
 #include "../领域/新_方法类.h"
@@ -181,7 +184,20 @@ const char* 新学习运行异常::what() const noexcept {
     }
 }
 
-新学习结束通知 模拟学习服务::学习(稳定编码 方法节点, const std::function<bool()>& 停止检查) {
+void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行服务> 运行,
+    const 新_词类& 词条, const 词典材料类& 材料,
+    const 新_特征值类& 值, 概念_存在类& 概念) {
+    if (!运行) throw std::invalid_argument("dictionary learning runtime missing");
+    std::lock_guard lock(字段询问装配锁_);
+    if (活动学习数_) throw std::logic_error("dictionary learning dependencies in use");
+    if (词典运行_ && (词典运行_ != 运行 || 词典词条_ != &词条
+        || 词典材料_ != &材料 || 词典值_ != &值 || 词典概念_ != &概念))
+        throw std::logic_error("dictionary learning dependency conflict");
+    词典运行_=std::move(运行);词典词条_=&词条;词典材料_=&材料;词典值_=&值;词典概念_=&概念;
+}
+
+新学习结束通知 模拟学习服务::学习(const 新方法学习请求& 请求, const std::function<bool()>& 停止检查) {
+    const auto 方法节点=请求.方法节点;
     using 原因 = 新学习运行异常原因;
     try {
         清理待退出样例();
@@ -202,6 +218,10 @@ const char* 新学习运行异常::what() const noexcept {
         };
         if (协作停止()) throw 新学习运行异常(方法节点, 原因::停止取消);
         const auto 方法 = 方法_.获取方法(方法节点);
+        if (请求.定向输入 && (!方法 || 方法->来源方法节点 || 方法->实例根节点
+            || 方法->实现方式 != 新方法实现方式::本能
+            || 方法->启用状态 != 新方法启用状态::启用))
+            return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
         if (!方法)
             throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 146");
         if (方法->来源方法节点 || 方法->实例根节点
@@ -210,6 +230,17 @@ const char* 新学习运行异常::what() const noexcept {
             throw 新学习运行异常(方法节点, 原因::输入不合法);
         if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
             throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 152");
+        if (请求.定向输入) {
+            if (*方法->本能函数登记名 != "builtin.dictionary.lookup.v1")
+                throw 新学习运行异常(方法节点, 原因::输入不合法,"directed dictionary input on another intrinsic");
+            return {方法节点,学习词典本能(*方法,*请求.定向输入,协作停止)};
+        }
+        if (*方法->本能函数登记名 == "builtin.dictionary.lookup.v1") {
+            新定向学习结束材料 normal;
+            normal.结局=新定向学习结局::条件未具备;
+            normal.缺口组.push_back({新词典学习缺口种类::参数未定位,1,{},{},{}});
+            return {方法节点,std::move(normal)};
+        }
         for (std::size_t i = 0; i < 方法->参数规格组.size(); ++i) {
             if (!方法->参数规格组[i].有序规格)
                 throw 新学习运行异常(方法节点, 原因::规格未支持,
@@ -238,6 +269,314 @@ const char* 新学习运行异常::what() const noexcept {
 } // namespace 海中鱼巣
 
 namespace 海中鱼巣 {
+
+新定向学习结束材料 模拟学习服务::学习词典本能(const 新方法信息& 原方法,
+    const 新词典定向学习输入& 请求, const std::function<bool()>& 停止检查) {
+    if (!词典运行_ || !词典词条_ || !词典材料_ || !词典值_ || !词典概念_
+        || !来源身份_ || !动作定义_ || !动态定义_ || !动态概念_)
+        throw std::logic_error("directed dictionary learning dependencies unavailable");
+    const auto 停止 = [&] {
+        if (停止检查 && 停止检查())
+            throw 新学习运行异常(原方法.节点,新学习运行异常原因::停止取消);
+    };
+    const auto 正常缺口 = [&](新词典学习缺口种类 kind, std::uint32_t position,
+        std::optional<稳定编码> type = {}) -> 新定向学习结束材料 {
+        新定向学习结束材料 r;
+        r.结局=新定向学习结局::条件未具备;
+        const auto id=position && position<=请求.参数组.size()
+            ? std::optional{请求.参数组[position-1].信息节点} : std::nullopt;
+        r.缺口组.push_back({kind,position,id,type,{}});
+        if(id)r.正式变化依赖节点组.push_back(*id);
+        return r;
+    };
+    const auto 重组 = [] { return 新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}; };
+    const std::array kinds{新方法参数信息类型::词条,新方法参数信息类型::特征,
+        新方法参数信息类型::存在,新方法参数信息类型::存在,
+        新方法参数信息类型::特征,新方法参数信息类型::特征};
+    if(请求.参数组.size()!=kinds.size())throw std::invalid_argument("dictionary directed input requires six parameters");
+    for(std::size_t i=0;i<kinds.size();++i)
+        if(请求.参数组[i].序号!=i+1 || 请求.参数组[i].信息类型!=kinds[i]
+            || !有效(请求.参数组[i].信息节点))
+            throw std::invalid_argument("dictionary directed parameter shape invalid");
+
+    // 只有样例尚未执行时才从正式来源重新采集。执行后的知识发布复用同一关闭N。
+    for(;;) {
+        停止();
+        const auto method=方法_.获取方法(原方法.节点);
+        if(!method || method->启用状态!=新方法启用状态::启用
+            || method->本能函数登记名!=原方法.本能函数登记名
+            || method->参数规格组.size()!=kinds.size())return 重组();
+        for(std::size_t i=0;i<kinds.size();++i)
+            if(!method->参数规格组[i].有序规格
+                || method->参数规格组[i].有序规格->信息类型!=kinds[i])return 重组();
+        if(method->执行分支组.size()!=1)
+            throw std::logic_error("dictionary intrinsic requires its single declared execution branch");
+        const auto 分支=method->执行分支组.front().节点;
+        const auto 声明=方法_.读取执行分支必要条件(method->节点,分支);
+        if(声明.状态==新方法执行分支读取状态::前提已变化)continue;
+        if(声明.状态!=新方法执行分支读取状态::已读取)return 重组();
+        const auto 拒绝后需要重组 = [&] {
+            const auto current=方法_.获取方法(method->节点);
+            if(!current || current->启用状态!=新方法启用状态::启用
+                || current->参数规格组!=method->参数规格组
+                || current->本能函数登记名!=method->本能函数登记名)return true;
+            // 拒绝后读取最新准入条件，决定后续工作。历史执行材料始终保持原含义。
+            for(;;) {
+                const auto now=方法_.读取执行分支必要条件(method->节点,分支);
+                if(now.状态==新方法执行分支读取状态::前提已变化){停止();continue;}
+                if(now.状态!=新方法执行分支读取状态::已读取)return true;
+                return now.有效必要条件!=声明.有效必要条件;
+            }
+        };
+        const auto cfg=词典运行_->读取登记材料();
+        if(!cfg)throw std::logic_error("dictionary learning registration dependencies unavailable");
+        const auto W=请求.参数组[0].信息节点;
+        const auto word=词典词条_->读取词条特征信息(W);
+        if(word.状态==新词条查询状态::资源失败)throw std::bad_alloc{};
+        if(word.状态==新词条查询状态::未找到)
+            return 正常缺口(新词典学习缺口种类::参数未定位,1);
+        if(!word.信息)throw std::logic_error("dictionary directed word owner unavailable");
+        const auto& w=word.信息->词条;
+        if(w.语言节点!=请求.词条语言 || w.规范化合同节点!=请求.规范化合同
+            || w.规范化词面!=请求.原规范化词面)return 重组();
+        const auto wf=std::find_if(word.信息->特征组.begin(),word.信息->特征组.end(),
+            [&](const auto& f){return f.特征类型根==cfg->材料特征类型;});
+        if(wf==word.信息->特征组.end())return 正常缺口(新词典学习缺口种类::参数特征未形成,2,cfg->材料特征类型);
+        if(wf->特征节点!=请求.参数组[1].信息节点)return 重组();
+
+        std::vector<新模拟有序参数输入> input(kinds.size());
+        for(std::size_t i=0;i<input.size();++i)input[i].规格=*method->参数规格组[i].有序规格;
+        input[0].复制词条=w;
+        std::map<稳定编码,std::uint32_t> 存在位置,特征位置,材料位置;
+        std::vector<新模拟词典材料复制输入> 材料组;
+        std::map<稳定编码,新存在信息> 存在材料;
+        std::function<std::uint32_t(稳定编码)> 取得来源位置;
+        std::function<新模拟复制准确值(const 新特征准确值&,bool)> 复制值;
+        const auto 完整特征 = [&](稳定编码 F) {
+            const auto f=方法_.读取模拟来源完整特征(F);
+            if(!f)throw 重组();
+            if(f->上级特征节点)throw std::logic_error("dictionary input feature is not top-level");
+            return *f;
+        };
+        复制值 = [&](const 新特征准确值& value,bool Q引用) -> 新模拟复制准确值 {
+            if(const auto* n=std::get_if<std::int64_t>(&value)) {
+                if(Q引用)throw std::logic_error("dictionary material feature contains scalar");
+                return {新模拟复制值种类::I64,*n};
+            }
+            const auto id=std::get<稳定编码>(value);
+            if(!Q引用) {
+                const auto v=方法_.读取模拟候选材料(id);
+                if(!v)throw std::logic_error("dictionary copied raw material unavailable");
+                return {新模拟复制值种类::普通材料,*v};
+            }
+            if(const auto it=材料位置.find(id);it!=材料位置.end())
+                return {新模拟复制值种类::词典材料引用,新模拟词典材料引用{it->second}};
+            const auto q=词典材料_->读取材料(id);
+            if(q.状态==新词典材料操作状态::资源失败)throw std::bad_alloc{};
+            if(q.状态==新词典材料操作状态::未找到)throw 重组();
+            if(!q.信息)throw std::logic_error("dictionary copied Q owner unavailable");
+            const auto source=取得来源位置(q.信息->内部词典来源);
+            const auto index=static_cast<std::uint32_t>(材料组.size()+1);
+            材料组.push_back({*q.信息,source});材料位置.emplace(id,index);
+            return {新模拟复制值种类::词典材料引用,新模拟词典材料引用{index}};
+        };
+        const auto 复制F = [&](稳定编码 F,std::size_t index,std::uint32_t owner,bool Q引用) {
+            const auto f=完整特征(F);
+            新模拟完整特征复制输入 copy;copy.实例单位=f.实例单位;
+            if(f.当前值)copy.当前值=复制值(*f.当前值,Q引用);
+            if(f.标准值)copy.标准值=复制值(*f.标准值,Q引用);
+            for(const auto& v:f.历史不同值)copy.历史不同值.push_back(复制值(v,Q引用));
+            for(const auto& hit:f.历史值命中信息)
+                copy.历史值命中信息.push_back({复制值(hit.值,Q引用),hit.命中次数});
+            const auto 复制域 = [&](const 特征概念值域& domain) -> 新模拟复制值域 {
+                if(const auto* refs=std::get_if<std::vector<稳定编码>>(&domain)) {
+                    std::vector<新模拟复制准确值> values;
+                    for(const auto id:*refs)values.push_back(复制值(新特征准确值{id},Q引用));
+                    return {std::move(values)};
+                }
+                return {domain};
+            };
+            if(f.实例区间值)copy.实例区间=复制域(*f.实例区间值);
+            if(f.实例历史聚合值域)copy.历史聚合=复制域(*f.实例历史聚合值域);
+            auto& p=input.at(index);p.所属存在参数=owner;p.复制上下文=true;
+            p.初值方式=f.当前值 ? 新模拟特征初值方式::复制准确 : 新模拟特征初值方式::复制未知;
+            p.完整复制特征=std::move(copy);
+            特征位置.emplace(F,static_cast<std::uint32_t>(index+1));
+            return f;
+        };
+        const auto 读取来源 = [&](稳定编码 E,std::uint32_t 参数位置) {
+            const auto e=方法_.读取模拟来源存在(E);
+            if(!e) {
+                if(参数位置)throw 正常缺口(新词典学习缺口种类::来源不可用,参数位置);
+                throw 重组();
+            }
+            return *e;
+        };
+        const auto 来源类型 = [&](const 新存在信息& e,稳定编码 FT) -> std::optional<稳定编码> {
+            for(const auto F:e.特征节点组) {
+                const auto f=方法_.读取模拟来源完整特征(F);
+                if(!f)throw 重组();
+                const auto d=方法_.读取模拟特征范围(f->特征概念节点);
+                if(!d)throw std::logic_error("dictionary source feature definition unavailable");
+                if(d->特征类型根==FT)return F;
+            }
+            return {};
+        };
+        for(const auto pos:{3u,4u}) {
+            const auto E=请求.参数组[pos-1].信息节点;
+            const auto e=读取来源(E,pos);
+            存在材料.emplace(E,e);
+            input[pos-1].来源存在=E;input[pos-1].构造存在概念=e.专属存在概念节点;
+            const auto [it,added]=存在位置.emplace(E,pos);
+            if(!added)input[pos-1].同一参数=it->second;
+        }
+        取得来源位置 = [&](稳定编码 E) -> std::uint32_t {
+            const auto e=读取来源(E,0);
+            std::uint32_t pos=0;
+            if(const auto it=存在位置.find(E);it!=存在位置.end())pos=it->second;
+            else {
+                pos=static_cast<std::uint32_t>(input.size()+1);
+                新模拟有序参数输入 p;
+                p.规格={0,新方法参数信息类型::存在,cfg->通用存在范围,{},0};
+                p.来源存在=E;p.构造存在概念=e.专属存在概念节点;
+                input.push_back(std::move(p));存在位置.emplace(E,pos);
+            }
+            for(const auto FT:{cfg->来源包特征类型,cfg->外设场景标识类型}) {
+                const auto F=来源类型(e,FT);
+                if(!F)throw 重组();
+                if(特征位置.contains(*F))continue;
+                新模拟有序参数输入 feature;feature.规格={0,新方法参数信息类型::特征,FT,{},pos};
+                const auto index=input.size();input.push_back(std::move(feature));
+                (void)复制F(*F,index,pos,false);
+            }
+            return pos;
+        };
+        const auto& source=存在材料.at(请求.参数组[2].信息节点);
+        const auto batchF=来源类型(source,cfg->来源包特征类型);
+        const auto locationF=来源类型(source,cfg->外设场景标识类型);
+        if(!batchF)return 正常缺口(新词典学习缺口种类::参数特征未形成,5,cfg->来源包特征类型);
+        if(!locationF)return 正常缺口(新词典学习缺口种类::参数特征未形成,6,cfg->外设场景标识类型);
+        if(*batchF!=请求.参数组[4].信息节点 || *locationF!=请求.参数组[5].信息节点)return 重组();
+        const auto batch=复制F(*batchF,4,3,false);
+        const auto location=复制F(*locationF,5,3,false);
+        if(!batch.当前值)return 正常缺口(新词典学习缺口种类::参数当前值未取得,5,cfg->来源包特征类型);
+        if(!location.当前值)return 正常缺口(新词典学习缺口种类::参数当前值未取得,6,cfg->外设场景标识类型);
+        const auto* batchV=std::get_if<稳定编码>(&*batch.当前值);
+        const auto* number=std::get_if<std::int64_t>(&*location.当前值);
+        const auto batchValue=batchV ? 方法_.读取模拟候选材料(*batchV) : std::nullopt;
+        const auto* text=batchValue ? std::get_if<std::string>(&batchValue->材料) : nullptr;
+        if(!text || !number || *number<=0)throw std::logic_error("dictionary source input physical shape invalid");
+        if(*text!=请求.可信批次标识 || static_cast<std::uint64_t>(*number)!=请求.来源场景标识)return 重组();
+        (void)复制F(请求.参数组[1].信息节点,1,1,true);
+
+        const auto actorE=请求.参数组[3].信息节点;
+        const auto actor=来源身份_->读取存在身份保护(actorE);
+        if(actor.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(actor.前提已变化)continue;
+        if(!actor.信息)return 正常缺口(新词典学习缺口种类::参数未定位,4);
+        const auto actorConcept=词典概念_->读取普通存在概念定义保护(actor.信息->专属存在概念节点);
+        if(actorConcept.状态==正式概念读取状态::前提已变化)continue;
+        if(!actorConcept.信息)throw std::logic_error("dictionary actor dedicated concept unavailable");
+        新模拟执行主体输入 actorInput{actorE,actor.信息->专属存在概念节点,actor.预期节点组};
+        actorInput.来源身份保护.insert(actorInput.来源身份保护.end(),
+            actorConcept.完整保护组.begin(),actorConcept.完整保护组.end());
+        actorInput.同源存在输入=input[3].同一参数 ? input[3].同一参数 : 4;
+
+        auto world=std::make_shared<新_模拟世界类>(方法_,*动作定义_,*动态定义_,*动态概念_);
+        const auto responsibility=登记隔离样例(world);
+        隔离样例收尾 cleanup{*this,responsibility};
+        world->配置二次特征计算(二次计算_);
+        world->配置需求执行读取(*来源身份_,*词典概念_,概念_,二次概念_);
+        const auto configured=词典运行_->配置隔离词典运行(world,概念_);
+        if(configured==新词典运行状态::已停止)
+            throw 新学习运行异常(method->节点,新学习运行异常原因::停止取消);
+        if(configured==新词典运行状态::条件未具备)
+            return 正常缺口(新词典学习缺口种类::来源不可用,3);
+        if(configured!=新词典运行状态::已就绪)
+            throw std::logic_error("dictionary isolated runtime configuration failed");
+        const auto created=world->建立有序样例(method->节点,input,{}, {},{},分支,{}, {},actorInput,材料组);
+        if(created.状态==新模拟世界状态::定义前提已变化)continue;
+        if(created.状态==新模拟世界状态::需重新组织输入)return 重组();
+        if(created.状态==新模拟世界状态::资源失败)throw std::bad_alloc{};
+        if(created.状态!=新模拟世界状态::已完成) {
+            if(拒绝后需要重组())return 重组();
+            throw std::logic_error("directed dictionary isolated sample rejected at " + std::to_string(模拟样例拒绝行));
+        }
+        const auto bindings=world->读取参数绑定();
+        if(!bindings)throw std::logic_error("directed dictionary local bindings unavailable");
+        auto scene=方法_.建立模拟参数场景(method->节点,*bindings,world,{},分支);
+        if(scene.状态==新方法操作状态::定义前提已变化)continue;
+        if(scene.状态==新方法操作状态::资源失败)throw std::bad_alloc{};
+        if(scene.状态==新方法操作状态::方法不存在)return 重组();
+        if(!scene.参数场景) {
+            if(拒绝后需要重组())return 重组();
+            throw std::logic_error("directed dictionary parameter scene unavailable");
+        }
+        world->开始记录复制上下文读取(停止检查);
+        const auto call=方法_.调用本能函数(method->节点,*scene.参数场景);
+        (void)world->结束记录复制上下文读取();
+        const auto evidence=world->读取已关闭调用证据();
+        停止();
+        if(call.状态==新方法本能调用状态::资源失败)throw std::bad_alloc{};
+        if(call.状态==新方法本能调用状态::定义前提已变化 && evidence && !evidence->身份.主动作)continue;
+        if(evidence && !evidence->身份.主动作
+            && (call.状态==新方法本能调用状态::方法不存在 || call.状态==新方法本能调用状态::方法停用))
+            return 重组();
+        if(call.状态!=新方法本能调用状态::已调用 || !call.本次条件结果对 || !evidence) {
+            if(evidence && !evidence->身份.主动作 && 拒绝后需要重组())return 重组();
+            throw std::logic_error("directed dictionary intrinsic invocation incomplete");
+        }
+        const auto& actual=*call.本次条件结果对;
+        if(actual.结果.词典运行处置) {
+            const auto& disposition=*actual.结果.词典运行处置;
+            if(disposition.状态==新词典运行状态::已停止
+                || disposition.收束原因==新词典推进收束原因::主动停止)
+                throw 新学习运行异常(method->节点,新学习运行异常原因::停止取消);
+            if(disposition.收束原因==新词典推进收束原因::输入身份已更换)return 重组();
+            if(disposition.状态==新词典运行状态::需重新组织)return 重组();
+            if(disposition.状态==新词典运行状态::条件未具备) {
+                新定向学习结束材料 normal;normal.结局=新定向学习结局::条件未具备;
+                for(auto gap:disposition.缺口组) {
+                    if(!gap.参数序号 || gap.参数序号>请求.参数组.size())
+                        throw std::logic_error("dictionary local gap lacks formal parameter mapping");
+                    gap.信息节点=请求.参数组[gap.参数序号-1].信息节点;
+                    normal.正式变化依赖节点组.push_back(*gap.信息节点);
+                    normal.缺口组.push_back(std::move(gap));
+                }
+                return normal;
+            }
+        }
+        if(!evidence->词典读取)throw std::logic_error("closed dictionary invocation receipt missing");
+        const auto& receipt=*evidence->词典读取;
+        if(receipt.查阅结局==新词典查阅结局::正式未命中)
+            return {新定向学习结局::正式未命中,{},{}};
+        if(!actual.结果.词典实际输入)throw std::logic_error("dictionary invocation actual input missing");
+        for(;;) {
+            停止();
+            const auto current=方法_.获取方法(method->节点);
+            if(!current || current->启用状态!=新方法启用状态::启用
+                || current->参数规格组!=method->参数规格组
+                || current->本能函数登记名!=method->本能函数登记名)return 重组();
+            const auto currentBranch=方法_.读取执行分支必要条件(method->节点,分支);
+            if(currentBranch.状态==新方法执行分支读取状态::前提已变化)continue;
+            if(currentBranch.状态!=新方法执行分支读取状态::已读取)return 重组();
+            const auto derived=导出词典条件结果(声明.有效必要条件.条件,actual.条件,
+                *actual.结果.词典实际输入,W,receipt,*词典概念_,概念_,*词典值_);
+            if(derived.状态==新词典知识导出状态::正式来源已退出)return 重组();
+            if(!derived.定义)throw std::logic_error("dictionary knowledge exporter omitted definition");
+            const auto published=方法_.追加模拟条件结果(method->节点,{*derived.定义});
+            if(published.状态==新方法学习发布状态::前提已变化)continue;
+            if(published.状态==新方法学习发布状态::方法不可用)return 重组();
+            if(published.状态==新方法学习发布状态::资源失败)throw std::bad_alloc{};
+            if(published.状态==新方法学习发布状态::已发布 || published.状态==新方法学习发布状态::精确重复)
+                return {新定向学习结局::已完成学习,{},{}};
+            if(published.状态==新方法学习发布状态::发布结果未知)
+                throw 新学习运行异常(method->节点,新学习运行异常原因::发布结果未知);
+            if(published.状态==新方法学习发布状态::条件结果不合法 && 拒绝后需要重组())return 重组();
+            throw std::logic_error("dictionary condition-result publication rejected");
+        }
+    }
+}
 
 void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,const std::function<bool()>& 停止检查,
     const std::map<std::uint32_t,稳定编码>& 原型选择,std::optional<稳定编码> 执行分支,bool 已选路径,

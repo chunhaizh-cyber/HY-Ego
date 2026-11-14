@@ -22,6 +22,9 @@ class 概念_动态类;
 class 新_动态类;
 class 模拟任务需求来源读取接口;
 class 新_模拟世界类;
+class 词典本能运行服务;
+class 新_词类;
+class 词典材料类;
 struct 新学习结束通知 final {
     稳定编码 方法节点;
     std::optional<新定向学习结束材料> 定向结束;
@@ -49,19 +52,23 @@ public:
     模拟学习服务(新_方法类&, 新_特征类&, 概念_特征类&, 概念_二次特征类&,
         const 模拟任务需求来源读取接口&) noexcept;
     ~模拟学习服务();
-    新学习结束通知 学习(稳定编码 方法节点,
+    新学习结束通知 学习(const 新方法学习请求&,
         const std::function<bool()>& 停止检查 = {});
     void 配置场景事实构成读取(const 新方法场景事实构成读取接口&);
     void 配置隔离动作定义(const 动作方法定义只读提供者&,新_动态类&,const 概念_动态类&);
     void 配置需求执行来源(稳定编码 自我存在,const 新_存在类&,const 概念_存在类&);
     void 配置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
         std::optional<新字段询问登记配置>);
+    void 配置词典学习(std::shared_ptr<词典本能运行服务>, const 新_词类&,
+        const 词典材料类&, const 新_特征值类&, 概念_存在类&);
 private:
     struct 隔离样例责任;
     struct 隔离样例收尾;
     std::shared_ptr<隔离样例责任> 登记隔离样例(const std::shared_ptr<新_模拟世界类>&);
     bool 结束隔离样例(const std::shared_ptr<隔离样例责任>&) noexcept;
     void 清理待退出样例();
+    新定向学习结束材料 学习词典本能(const 新方法信息&, const 新词典定向学习输入&,
+        const std::function<bool()>&);
     std::mutex 样例责任锁_;
     std::vector<std::shared_ptr<隔离样例责任>> 样例责任组_;
     void 学习有序本能(const 新方法信息&,const std::function<bool()>&,
@@ -84,5 +91,10 @@ private:
     std::size_t 活动学习数_=0;
     std::shared_ptr<const 新字段询问语言接口> 字段询问语言_;
     std::optional<新字段询问登记配置> 字段询问配置_;
+    std::shared_ptr<词典本能运行服务> 词典运行_;
+    const 新_词类* 词典词条_=nullptr;
+    const 词典材料类* 词典材料_=nullptr;
+    const 新_特征值类* 词典值_=nullptr;
+    概念_存在类* 词典概念_=nullptr;
 };
 } // namespace 海中鱼巣
