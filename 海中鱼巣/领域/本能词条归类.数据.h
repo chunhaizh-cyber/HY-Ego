@@ -37,10 +37,15 @@ struct 新词条归类运行处置 final {
     friend bool operator==(const 新词条归类运行处置&, const 新词条归类运行处置&) = default;
 };
 
+enum class 新词条归类未提交原因 : std::uint8_t {
+    主动停止 = 1, 输入身份已退出, 原任务职责已移走
+};
+
 struct 新词条归类执行材料 final {
     稳定编码 动作;
     新词条归类本能输入 实际输入;
     std::optional<新本能词条归类回执> 回执;
+    std::optional<新词条归类未提交原因> 未提交收束;
     friend bool operator==(const 新词条归类执行材料&, const 新词条归类执行材料&) = default;
 };
 

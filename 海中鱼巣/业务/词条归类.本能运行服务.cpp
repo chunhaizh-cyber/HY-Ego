@@ -141,6 +141,10 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
     std::vector<稳定编码> 概念组;
     std::optional<新本能词条归类回执> 回执;
     std::optional<概念名称关系组建立结果> 原名称;
+    enum class 名称提交阶段 { 未进入, 结果未确认, 明确未发表, 已取得原回执 };
+    名称提交阶段 名称阶段 = 名称提交阶段::未进入;
+    std::optional<新词条归类未提交原因> 未提交原因;
+    bool 收束已保存 = false;
     bool 动作已挂场景 = false, 输入已保存 = false, 关联已处理 = false, 回执已保存 = false;
     调用(std::shared_ptr<实现> s,新本能词条归类任务参数请求 q) : 宿主(s),请求(std::move(q)) {}
     void 确认场景(const 方法参数场景& scene) const {
@@ -172,6 +176,24 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
             输入已保存 = true;
         }
     }
+    bool 确定未提交() const noexcept {
+        return 名称阶段 == 名称提交阶段::未进入 || 名称阶段 == 名称提交阶段::明确未发表;
+    }
+    S 收束状态() const {
+        return 未提交原因 == 新词条归类未提交原因::主动停止 ? S::已停止 : S::需重新组织;
+    }
+    void 保存未提交收束(实现& s,新词条归类未提交原因 reason) {
+        要求归类(A && 输入 && 输入已保存 && !原名称 && 确定未提交(),
+            "classification closure lacks certain unsubmitted action input");
+        if (!未提交原因) 未提交原因 = reason;
+        if (收束已保存) return;
+        const auto saved = s.执行.任务.记录执行词条归类未提交(
+            请求.任务节点,请求.执行实例节点,*A,*输入,*未提交原因);
+        if (saved == 新任务操作状态::资源失败) throw std::bad_alloc{};
+        要求归类(saved == 新任务操作状态::已修改 || saved == 新任务操作状态::精确重复,
+            "classification original unsubmitted closure could not be recorded");
+        收束已保存 = true;
+    }
     void 保存回执(实现& s) {
         if (!原名称 || 回执已保存) return;
         if (!关联已处理) {
@@ -195,7 +217,8 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
         租约 lease(*s); std::lock_guard lock(阶段锁); 确认场景(scene);
         if (!lease.已取得) return 动作结果(S::已停止);
         if (原名称) { 保存回执(*s); return 动作结果(S::已就绪); }
-        if (s->停止()) return 动作结果(S::已停止);
+        if (未提交原因) { 保存未提交收束(*s,*未提交原因); return 动作结果(收束状态()); }
+        if (!A && s->停止()) return 动作结果(S::已停止);
         while (!A) {
             const auto existing = s->执行.任务.读取执行词条归类(请求.任务节点,请求.执行实例节点);
             if (existing.状态 == 新词条归类执行读取状态::资源失败) throw std::bad_alloc{};
@@ -226,6 +249,10 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
         }
         if (!挂接动作(*s)) return 动作结果(S::需重新组织);
         保存输入(*s);
+        if (s->停止()) {
+            保存未提交收束(*s,新词条归类未提交原因::主动停止);
+            return 动作结果(收束状态());
+        }
         return 动作结果(S::已就绪);
     }
     新词条归类提交结果 提交或取得归类结果(const 方法参数场景& scene) override {
@@ -235,23 +262,59 @@ struct 词条归类本能运行服务::实现::调用 final : 新本能词条归
         if (!lease.已取得) return {S::已停止,{},{}};
         要求归类(A && 输入 && 条件 && 输入已保存,"classification commit before action input was recorded");
         if (原名称) { 保存回执(*s); return {S::已完成,回执,{}}; }
-        if (!lease.已取得 || s->停止()) return {S::已停止,{},{}};
+        if (未提交原因) { 保存未提交收束(*s,*未提交原因); return {收束状态(),{},{}}; }
+        要求归类(确定未提交(),"classification name publication outcome is not yet known");
         for (;;) {
+            if (s->停止()) {
+                保存未提交收束(*s,新词条归类未提交原因::主动停止);
+                return {收束状态(),{},{}};
+            }
+            const auto current = s->执行.任务.读回任务执行(请求.任务节点,请求.执行实例节点);
+            if (current.状态 == 新任务治理执行读回状态::资源失败) throw std::bad_alloc{};
+            if (current.状态 == 新任务治理执行读回状态::执行不在当前位
+                || current.状态 == 新任务治理执行读回状态::已读回等待评估
+                || current.状态 == 新任务治理执行读回状态::已读回影响评估) {
+                保存未提交收束(*s,新词条归类未提交原因::原任务职责已移走);
+                return {收束状态(),{},{}};
+            }
+            要求归类(current.状态 == 新任务治理执行读回状态::已读回等待观察,
+                "classification execution responsibility could not be read");
             const auto word = scene.读取词条参数挂接(1);
             if (word.状态 == 新方法词条参数读取状态::资源失败) throw std::bad_alloc{};
-            if (word.状态 == 新方法词条参数读取状态::参数已失效) return {S::需重新组织,{}, {输入->词条}};
+            if (word.状态 == 新方法词条参数读取状态::参数已失效) {
+                保存未提交收束(*s,新词条归类未提交原因::输入身份已退出);
+                return {收束状态(),{}, {输入->词条}};
+            }
             要求归类(word.状态 == 新方法词条参数读取状态::已读取 && word.信息,"classification target word unavailable");
             if (std::none_of(word.信息->特征组.begin(),word.信息->特征组.end(),
-                [&](const auto& f) { return f.特征节点 == 输入->挂接特征 && f.特征类型根 == s->配置.挂接特征类型; }))
-                return {S::需重新组织,{}, {输入->词条,输入->挂接特征}};
-            if (s->停止()) return {S::已停止,{},{}};
+                [&](const auto& f) { return f.特征节点 == 输入->挂接特征 && f.特征类型根 == s->配置.挂接特征类型; })) {
+                保存未提交收束(*s,新词条归类未提交原因::输入身份已退出);
+                return {收束状态(),{}, {输入->词条,输入->挂接特征}};
+            }
+            if (s->停止()) {
+                保存未提交收束(*s,新词条归类未提交原因::主动停止);
+                return {收束状态(),{},{}};
+            }
+            名称阶段 = 名称提交阶段::结果未确认;
             auto published = s->执行.名称.建立或取得名称关系组(输入->词条,概念组);
-            if (published.状态 == 概念名称关系建立状态::资源失败) throw std::bad_alloc{};
-            if (published.状态 == 概念名称关系建立状态::依赖已变化) { std::this_thread::yield(); continue; }
+            if (published.状态 == 概念名称关系建立状态::资源失败) {
+                名称阶段 = 名称提交阶段::明确未发表;
+                throw std::bad_alloc{};
+            }
+            if (published.状态 == 概念名称关系建立状态::依赖已变化) {
+                名称阶段 = 名称提交阶段::明确未发表;
+                std::this_thread::yield(); continue;
+            }
+            if (published.状态 == 概念名称关系建立状态::依赖不存在) {
+                名称阶段 = 名称提交阶段::明确未发表;
+                // 只证明本次名称挂接未发表，依赖状态不足以证明原输入身份退出。
+                return {S::条件未具备,{}, {输入->词条,输入->挂接特征,输入->采用概念}};
+            }
             要求归类(published.状态 == 概念名称关系建立状态::已建立 || published.状态 == 概念名称关系建立状态::已复用,
                 "classification name publication failed");
             static_assert(std::is_nothrow_move_constructible_v<概念名称关系组建立结果>);
             原名称.emplace(std::move(published));
+            名称阶段 = 名称提交阶段::已取得原回执;
             要求归类(原名称->名称关系组.size() == 1,"classification name receipt has wrong cardinality");
             回执->名称关系组.push_back(原名称->名称关系组.front().节点);
             回执->新状态 = 原名称->新状态; 回执->变化动态 = 原名称->变化动态;
@@ -354,7 +417,11 @@ bool 词条归类本能运行服务::关闭() noexcept {
             try {
                 if (!call->挂接动作(*s)) { complete = false; continue; }
                 call->保存输入(*s);
-                call->保存回执(*s);
+                if (call->原名称) call->保存回执(*s);
+                else if (call->A) {
+                    if (!call->确定未提交()) { complete = false; continue; }
+                    call->保存未提交收束(*s,新词条归类未提交原因::主动停止);
+                }
             } catch (const std::bad_alloc&) { complete = false; }
             catch (const std::length_error&) { complete = false; }
         }

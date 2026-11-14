@@ -1823,6 +1823,8 @@ public:
         const 新词条归类本能输入&) noexcept;
     新任务操作状态 记录执行词条归类回执(稳定编码 T, 稳定编码 X,
         const 新本能词条归类回执&) noexcept;
+    新任务操作状态 记录执行词条归类未提交(稳定编码 T, 稳定编码 X, 稳定编码 A,
+        const 新词条归类本能输入&, 新词条归类未提交原因) noexcept;
     新词典执行回执读取结果 读取执行词典回执(稳定编码 T, 稳定编码 X) const noexcept;
     新词典结果参与准备结果 准备执行词典材料参与(
         稳定编码 T, 稳定编码 X, const 新词典执行结果来源&) noexcept;
@@ -2273,7 +2275,8 @@ private:
     新任务影响评估结果 评估方法执行影响内部(稳定编码,稳定编码,
         const 新任务本次场景核验批&) noexcept;
     新任务操作状态 记录执行词条归类材料内部(稳定编码 T, 稳定编码 X, 稳定编码 A,
-        const 新词条归类本能输入&, const 新本能词条归类回执*) noexcept;
+        const 新词条归类本能输入&, const 新本能词条归类回执*,
+        std::optional<新词条归类未提交原因>) noexcept;
     void 记录执行本能结果(稳定编码,稳定编码,const 新本能函数本次结果&) noexcept;
     新任务执行组织结果 实施任务方法执行组织(
         稳定编码 任务节点, const std::vector<稳定编码>& 来源方法节点组, bool 允许增补) noexcept;

@@ -1568,7 +1568,7 @@ enum class 字段 : std::size_t {
     词典变化阶段, 词典无需原因, 词典变化动态,
     归类记录引用, 归类格式, 归类词条, 归类挂接特征, 归类材料, 归类主体, 归类概念, 归类前概念,
     归类来源用途, 归类来源Q, 归类来源组, 归类来源行, 归类来源W, 归类来源N,
-    归类完成, 归类名称, 归类状态, 归类动态, 归类名称新增, 归类动态原因, 数量
+    归类完成, 归类名称, 归类状态, 归类动态, 归类名称新增, 归类动态原因, 归类未提交原因, 数量
 };
 稳定编码 类型节点[static_cast<std::size_t>(类型::数量)]{};
 稳定编码 字段节点[static_cast<std::size_t>(字段::数量)]{};
@@ -3646,6 +3646,11 @@ struct 归类执行读取 final {
     }
     const auto complete = 词典整数(n,字段::归类完成);
     要求(complete && (*complete == 0 || *complete == 1),"classification execution stage missing");
+    if (const auto reason = 词典整数(n,字段::归类未提交原因)) {
+        要求(*reason >= 1 && *reason <= 3 && *complete == 0,
+            "classification closure conflicts with its successful receipt");
+        out.未提交收束 = static_cast<新词条归类未提交原因>(*reason);
+    }
     if (*complete == 0) return out;
     新本能词条归类回执 receipt;
     receipt.动作 = A; receipt.实际输入 = input;
@@ -8523,18 +8528,26 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
 }
 新任务操作状态 新_任务类::记录执行词条归类动作(稳定编码 T,稳定编码 X,稳定编码 A,
     const 新词条归类本能输入& input) noexcept {
-    return 记录执行词条归类材料内部(T,X,A,input,nullptr);
+    return 记录执行词条归类材料内部(T,X,A,input,nullptr,{});
 }
 新任务操作状态 新_任务类::记录执行词条归类回执(稳定编码 T,稳定编码 X,
     const 新本能词条归类回执& receipt) noexcept {
-    return 记录执行词条归类材料内部(T,X,receipt.动作,receipt.实际输入,&receipt);
+    return 记录执行词条归类材料内部(T,X,receipt.动作,receipt.实际输入,&receipt,{});
+}
+新任务操作状态 新_任务类::记录执行词条归类未提交(稳定编码 T,稳定编码 X,稳定编码 A,
+    const 新词条归类本能输入& input,新词条归类未提交原因 reason) noexcept {
+    return 记录执行词条归类材料内部(T,X,A,input,nullptr,reason);
 }
 新任务操作状态 新_任务类::记录执行词条归类材料内部(稳定编码 T,稳定编码 X,稳定编码 A,
-    const 新词条归类本能输入& original,const 新本能词条归类回执* receipt) noexcept {
+    const 新词条归类本能输入& original,const 新本能词条归类回执* receipt,
+    std::optional<新词条归类未提交原因> closure) noexcept {
     using namespace 任务执行组织存储;
     bool 已发表 = false;
     try {
         if (!有效(T) || !有效(X) || !有效(A)) return 新任务操作状态::入口拒绝;
+        要求(!receipt || !closure,"classification cannot both succeed and stop before submission");
+        if (closure) 要求(*closure >= 新词条归类未提交原因::主动停止
+            && *closure <= 新词条归类未提交原因::原任务职责已移走,"classification closure reason invalid");
         auto input = original;
         规范集合(input.动作前概念组);
         std::optional<新本能词条归类回执> complete;
@@ -8562,9 +8575,14 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                     首次绑定动作 = !有效(read->动作);
                     if (read->材料) {
                         要求(read->材料->实际输入 == input,"classification retry changed its historical input");
-                        if (!complete) return 新任务操作状态::精确重复;
+                        if (!complete && !closure) return 新任务操作状态::精确重复;
+                        if (read->材料->未提交收束) {
+                            要求(!complete && read->材料->未提交收束 == closure,
+                                "classification retry changed its original unsubmitted closure");
+                            return 新任务操作状态::精确重复;
+                        }
                         if (read->材料->回执) {
-                            要求(read->材料->回执 == complete,"classification retry changed its original receipt");
+                            要求(!closure && read->材料->回执 == complete,"classification retry changed its original receipt");
                             return 新任务操作状态::精确重复;
                         }
                     } else 确认归类原参数(read->X.结构,input);
@@ -8589,6 +8607,8 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                     }
                     if (!read->记录) {
                         auto node = 构造归类输入记录(input,complete.has_value());
+                        if (closure) node.字段组.push_back({取(字段::归类未提交原因),
+                            基础值{static_cast<std::int64_t>(*closure)}});
                         if (complete) {
                             auto fields = 构造归类回执字段(*complete);
                             node.字段组.insert(node.字段组.end(),fields.begin(),fields.end());
@@ -8597,11 +8617,16 @@ std::optional<新任务执行信息> 新_任务类::获取执行实例(
                         request.追加字段组.push_back({X,取(字段::归类记录引用),基础组内节点引用{0}});
                     } else {
                         request.预期联合节点组.push_back(*read->记录);
-                        const auto* stage = 词典字段(read->记录->结构,取(字段::归类完成));
-                        要求(stage != nullptr,"classification execution stage field missing");
-                        request.替换字段组.push_back({stage->编码,基础值{std::int64_t{1}}});
-                        for (const auto& field : 构造归类回执字段(*complete))
-                            request.追加字段组.push_back({read->记录->结构.节点.编码,field.字段节点,field.内容});
+                        if (closure) {
+                            request.追加字段组.push_back({read->记录->结构.节点.编码,取(字段::归类未提交原因),
+                                基础值{static_cast<std::int64_t>(*closure)}});
+                        } else {
+                            const auto* stage = 词典字段(read->记录->结构,取(字段::归类完成));
+                            要求(stage != nullptr,"classification execution stage field missing");
+                            request.替换字段组.push_back({stage->编码,基础值{std::int64_t{1}}});
+                            for (const auto& field : 构造归类回执字段(*complete))
+                                request.追加字段组.push_back({read->记录->结构.节点.编码,field.字段节点,field.内容});
+                        }
                     }
                     dynamics = 本能动作读取_;
                     if ((首次绑定动作 || (complete && complete->变化动态)) && !dynamics)
