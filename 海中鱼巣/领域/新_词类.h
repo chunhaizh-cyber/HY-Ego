@@ -95,7 +95,7 @@ struct 新词条保护结果 final {
 
 // 词条只登记语言、规范化合同和规范化词面。它不分词、不规范化输入，
 // 也不建立词义、概念或名称关系。
-class 新_词类 final {
+class 新_词类 final : public 新词条材料特征写入接口 {
 public:
     explicit 新_词类(新_语言类& 语言服务) noexcept;
 
@@ -105,6 +105,8 @@ public:
         const 新词条建立请求& 请求) noexcept;
     新词条查询结果 获取词条(稳定编码 词条节点) const noexcept;
     新词条特征读取结果 读取词条特征信息(稳定编码 词条节点) const noexcept;
+    void 装配词典材料特征类型(稳定编码) noexcept;
+    新词条特征取得结果 建立或取得词条特征(稳定编码 词条, 稳定编码 类型) noexcept override;
     新词条特征定位结果 按类型读取词条特征(
         稳定编码 词条节点, 稳定编码 特征类型) const noexcept;
     新词条查询结果 按规范化词面查询(
@@ -140,6 +142,7 @@ private:
     新_状态类* 状态服务_ = nullptr;
     新_动态类* 动态服务_ = nullptr;
     稳定编码 挂接类型根_;
+    稳定编码 词典材料类型根_;
     std::optional<新词条场景参与绑定> 场景绑定_;
     std::optional<新词条状态构造绑定> 状态绑定_;
 };

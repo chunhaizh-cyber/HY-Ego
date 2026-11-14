@@ -10,6 +10,31 @@
 
 namespace 海中鱼巣 {
 
+// 信息对象身份只描述本次读取的正式范围；不附带旧结构保护。
+enum class 新信息引用范围形状 : std::uint8_t { 正式信息身份 = 1, 词典材料身份 };
+struct 新信息引用范围投影 final {
+    稳定编码 内容概念;
+    新信息引用范围形状 形状{};
+    friend bool operator==(const 新信息引用范围投影&, const 新信息引用范围投影&) = default;
+};
+struct 新信息对象身份投影 final {
+    稳定编码 信息节点;
+    新信息引用范围投影 身份范围;
+    friend bool operator==(const 新信息对象身份投影&, const 新信息对象身份投影&) = default;
+};
+enum class 新信息对象身份读取状态 : std::uint8_t {
+    已读取 = 1, 信息不存在, 依赖未就绪, 资源失败, 身份不相容
+};
+struct 新信息对象身份读取结果 final {
+    新信息对象身份读取状态 状态 = 新信息对象身份读取状态::信息不存在;
+    std::optional<新信息对象身份投影> 身份;
+};
+class 新信息对象身份读取接口 {
+public:
+    virtual ~新信息对象身份读取接口() = default;
+    virtual 新信息对象身份读取结果 读取信息对象身份(稳定编码) const noexcept = 0;
+};
+
 // 当次只读内容的共同表达；不建立特征实例，不授予被引用对象的写权。
 enum class 正式内容值种类 : std::uint8_t {
     I64数值=1, 存在引用, 概念引用, 需求引用, 语言理解引用, 内容确认引用,

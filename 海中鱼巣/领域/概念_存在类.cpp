@@ -3672,6 +3672,29 @@ std::vector<定义模板> 基础模板() {
     }
 }
 
+新基础范围读取结果 概念_存在类::读取当前基础范围概念(稳定编码 n) const noexcept {
+    try {
+        std::lock_guard 锁(存在概念图互斥);
+        if (!正式schema就绪()) return {新基础范围读取状态::依赖未就绪, n, {}};
+        if (!有效(n)) return {新基础范围读取状态::未找到, n, {}};
+        const auto 读 = 全局基础数据集.查询节点组完整结构({n});
+        if (读.状态 == 基础结构操作状态::资源失败) return {新基础范围读取状态::资源失败, n, {}};
+        if (读.状态 == 基础结构操作状态::节点不存在) return {新基础范围读取状态::未找到, n, {}};
+        if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 1)
+            正式定义故障("current primitive read unavailable");
+        if (!读.节点组[0].快照) return {新基础范围读取状态::未找到, n, {}};
+        const auto& 当前 = *读.节点组[0].快照;
+        if (正式形状(当前.结构) != std::optional{基础类型键}) return {新基础范围读取状态::范围未支持, n, {}};
+        基础范围概念定义 定义{static_cast<基础概念原语>(正式整数(当前.结构, 正式键[原语键])),
+            正式整数组(当前.结构, 正式键[整数键]), 正式引用组(当前.结构, 正式键[引用键])};
+        核基础定义(定义);
+        return {新基础范围读取状态::已读取, n, std::move(定义)};
+    } catch (const std::bad_alloc&) { return {新基础范围读取状态::资源失败, n, {}}; }
+    catch (const std::length_error&) { return {新基础范围读取状态::资源失败, n, {}}; }
+    catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+    catch (...) { 正式定义故障("current primitive read exception"); }
+}
+
 正式结构概念结果 概念_存在类::读取词典材料身份范围概念() const noexcept {
     for (;;) {
         try {

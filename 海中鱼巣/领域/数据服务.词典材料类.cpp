@@ -1192,7 +1192,8 @@ void 词典材料类::取消内部材料准备(新词典材料准备& 准备) no
     catch (const std::length_error&) { return {材料状态::资源失败, {}}; }
     catch (...) { 材料故障(L"按来源读取词典材料异常"); }
 }
-新词典材料身份读取结果 词典材料类::读取引用身份(稳定编码 Q) const noexcept {
+namespace {
+新词典材料身份读取结果 读取当前材料引用身份(稳定编码 Q) noexcept {
     try {
         std::lock_guard 锁(材料互斥);
         if (!有效(技术根)) return {材料状态::未装配, {}};
@@ -1200,8 +1201,8 @@ void 词典材料类::取消内部材料准备(新词典材料准备& 准备) no
         const auto& 当前 = 全组.at(Q);
         const auto type = std::find_if(当前.结构.字段组.begin(), 当前.结构.字段组.end(),
             [](const auto& f) { return f.字段节点 == 材料类型字段; });
-        if (type == 当前.结构.字段组.end()) return {材料状态::未找到, {}};
-        if (读取材料类型({当前.结构}) != 材料类型) return {材料状态::未找到, {}};
+        if (type == 当前.结构.字段组.end()) return {材料状态::输入拒绝, {}};
+        if (读取材料类型({当前.结构}) != 材料类型) return {材料状态::输入拒绝, {}};
         const auto 父组 = 读取组织材料边(当前, false);
         if (父组.size() != 1 || 父组[0].角色或顺序 != 0) 材料故障(L"材料身份所属组织损坏");
         (void)解码组织(全组.at(父组[0].源节点));
@@ -1210,6 +1211,41 @@ void 词典材料类::取消内部材料准备(新词典材料准备& 准备) no
     catch (const std::bad_alloc&) { return {材料状态::资源失败, {}}; }
     catch (const std::length_error&) { return {材料状态::资源失败, {}}; }
     catch (...) { 材料故障(L"读取词典材料身份异常"); }
+}
+
+新信息对象身份读取结果 读取当前信息对象身份(稳定编码 节点) noexcept {
+    using S = 新信息对象身份读取状态;
+    const auto 当前 = 读取当前材料引用身份(节点);
+    switch (当前.状态) {
+    case 材料状态::已完成:
+        if (!当前.信息) 材料故障(L"Q身份读取成功但没有信息");
+        return {S::已读取, 新信息对象身份投影{当前.信息->节点,
+            {当前.信息->正式材料范围, 新信息引用范围形状::词典材料身份}}};
+    case 材料状态::未找到: return {S::信息不存在, {}};
+    case 材料状态::输入拒绝: return {S::身份不相容, {}};
+    case 材料状态::未装配: return {S::依赖未就绪, {}};
+    case 材料状态::资源失败: return {S::资源失败, {}};
+    default: 材料故障(L"Q身份读取返回未解释状态");
+    }
+}
+
+class 稳定词典材料身份读取 final : public 新信息对象身份读取接口 {
+public:
+    新信息对象身份读取结果 读取信息对象身份(稳定编码 n) const noexcept override {
+        return 读取当前信息对象身份(n);
+    }
+};
+} // namespace
+
+新词典材料身份读取结果 词典材料类::读取引用身份(稳定编码 Q) const noexcept {
+    return 读取当前材料引用身份(Q);
+}
+新信息对象身份读取结果 词典材料类::读取信息对象身份(稳定编码 n) const noexcept {
+    return 读取当前信息对象身份(n);
+}
+const 新信息对象身份读取接口& 词典材料类::取得稳定身份读取接口() noexcept {
+    static const 稳定词典材料身份读取 reader;
+    return reader;
 }
 
 新词典材料退出准备结果 词典材料类::准备材料闭包退出(稳定编码 Q) noexcept {

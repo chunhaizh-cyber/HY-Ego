@@ -11,6 +11,7 @@
 #include "../核心/基础数据集.h"
 #include "新_特征值类.h"
 #include "概念_特征类.h"
+#include "信息内容.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -50,6 +51,7 @@ struct 新特征匹配定义快照 final {
     std::optional<稳定编码> 单位;
     特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
     特征概念值域 值域;
+    std::optional<新信息引用范围投影> 信息对象范围;
     friend bool operator==(const 新特征匹配定义快照&,
         const 新特征匹配定义快照&) = default;
 };
@@ -63,6 +65,7 @@ struct 新特征匹配实例快照 final {
     // 非存在引用的编码准确值携带不可变完整材料；I64和存在引用不携带。
     std::optional<新特征值信息> 当前完整材料;
     std::optional<特征概念值域> 实例区间值;
+    std::optional<新信息对象身份投影> 当前信息对象身份;
     friend bool operator==(const 新特征匹配实例快照&,
         const 新特征匹配实例快照&) = default;
 };
@@ -90,6 +93,12 @@ struct 新特征值添加结果 final {
     std::optional<稳定编码> 接收子特征节点;
     std::optional<特征概念聚合结果> 聚合结果;
 };
+class 新空特征持有参与接口 {
+public:
+    virtual ~新空特征持有参与接口() = default;
+    virtual 基础节点组追加请求 构造空特征持有(基础组内节点引用 特征端点) const = 0;
+};
+
 struct 新特征建立结果 final {
     新特征写入状态 状态 = 新特征写入状态::入口拒绝;
     std::optional<稳定编码> 特征节点;
@@ -166,6 +175,8 @@ struct 新特征完整读取结果 final {
 struct 新特征当前值设置项 final {
     稳定编码 特征节点;
     std::optional<新特征准确值> 新当前值;
+    // 新一次真实Q采用即使同值也计命中；重复回执由调用owner在入此口前收束。
+    bool 计入本次实际采用 = false;
 };
 struct 新特征当前值组完成结果 final {
     std::vector<std::pair<稳定编码,新特征值添加结果>> 项结果组;
@@ -442,6 +453,7 @@ public:
     void 结束顶层概念引用更新(新特征概念引用更新准备&) noexcept;
     void 取消顶层概念引用更新(新特征概念引用更新准备&) noexcept;
     void 装配存在成员身份读取接口(const 特征存在成员读取接口&) noexcept;
+    void 装配信息对象身份读取接口(const 新信息对象身份读取接口*) noexcept;
     新特征存在引用准备结果 准备顶层存在引用更新(稳定编码 特征节点, 稳定编码 存在节点) noexcept;
     新特征I64提交结果 提交顶层存在引用更新(新特征存在引用更新准备&,
         const std::vector<基础封存追加片段>&) noexcept;
@@ -486,6 +498,8 @@ public:
     稳定编码 建立特征(
         稳定编码 特征概念节点,
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
+    新特征建立结果 建立并挂接空信息引用特征(
+        稳定编码 特征概念, const 新空特征持有参与接口&) noexcept;
     新特征建立结果 建立特征强类型(
         稳定编码 特征概念节点,
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
@@ -614,6 +628,10 @@ public:
 
 private:
     struct 普通存在引用完整读取批;
+    std::optional<新信息引用范围投影> 读取信息对象范围投影(const 特征概念信息&) const;
+    新特征信息 读取信息对象引用实例(稳定编码, const 特征概念信息&) const;
+    新特征完整读取结果 读取信息对象引用当前结构(稳定编码, const 特征概念信息&) const;
+    const 新信息对象身份读取接口* 信息对象身份读取接口_ = nullptr;
     friend class 新_词类;
     friend class 新_状态类;
     特征概念规则状态 准备词条集合材料(稳定编码 类型根, 稳定编码 材料);
@@ -637,7 +655,7 @@ private:
         新消息待发表凭据* 待发表消息 = nullptr, bool 单存在引用 = false,
         bool 单需求引用 = false,
         const std::vector<基础联合节点快照>* 附加完整预期 = nullptr,
-        bool 单概念引用 = false) noexcept;
+        bool 单概念引用 = false, bool 单信息对象引用 = false) noexcept;
     const 特征需求成员读取接口* 需求引用读取接口_ = nullptr;
     const 特征存在成员读取接口* 存在成员身份读取接口_ = nullptr;
     新特征值添加结果 完成添加值归组(

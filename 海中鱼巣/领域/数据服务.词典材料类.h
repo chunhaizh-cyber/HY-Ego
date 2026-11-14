@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "词典.数据.h"
+#include "信息内容.数据.h"
 
 namespace 海中鱼巣 {
 
@@ -138,7 +139,7 @@ struct 新隔离词典材料组完成结果 final {
 };
 class 新隔离材料初值参与接口;
 
-class 词典材料类 final {
+class 词典材料类 final : public 新信息对象身份读取接口 {
 public:
     词典材料类(新_特征值类&, 概念_存在类&);
     ~词典材料类();
@@ -157,6 +158,8 @@ public:
     新词典材料读取结果 按外设来源读取材料(
         稳定编码, const 新词典外设来源标识&) const noexcept;
     新词典材料身份读取结果 读取引用身份(稳定编码) const noexcept;
+    新信息对象身份读取结果 读取信息对象身份(稳定编码) const noexcept override;
+    static const 新信息对象身份读取接口& 取得稳定身份读取接口() noexcept;
     新词典材料操作状态 释放材料闭包(稳定编码) noexcept;
     新词典材料退出准备结果 准备材料闭包退出(稳定编码) noexcept;
     新词典材料退出准备结果 准备隔离材料组织退出(
