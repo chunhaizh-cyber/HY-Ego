@@ -1,4 +1,5 @@
 #include "概念_特征类.h"
+#include "新_特征类.h"
 #include "../核心/容错检查.h"
 #include <algorithm>
 #include <functional>
@@ -2368,6 +2369,92 @@ void 概念_特征类::装配消息成员读取接口(const 特征消息成员�
 }
 稳定编码 概念_特征类::消息集合成员保护字段() const noexcept {
     return 消息集合成员保护键;
+}
+
+struct 新消息集合保持材料::实现 final {
+    const 概念_特征类* owner = nullptr;
+    std::thread::id 线程 = std::this_thread::get_id();
+    稳定编码 值, 保护键;
+    std::vector<稳定编码> 成员;
+    std::set<稳定编码> 既有保持;
+    基础联合节点快照 宿主;
+    std::vector<基础节点> 成员身份;
+};
+新消息集合保持材料::新消息集合保持材料(std::unique_ptr<实现> p) noexcept : 实现_(std::move(p)) {}
+新消息集合保持材料::~新消息集合保持材料() = default;
+新消息集合保持材料::新消息集合保持材料(新消息集合保持材料&&) noexcept = default;
+新消息集合保持材料& 新消息集合保持材料::operator=(新消息集合保持材料&&) noexcept = default;
+
+新消息集合保持读取结果 概念_特征类::读取消息集合保持材料(
+    稳定编码 value, const 新_特征值类& values) const noexcept {
+    using S = 特征概念规则状态;
+    try {
+        if (!有效(value)) return {S::入口拒绝, {}};
+        auto p = std::make_unique<新消息集合保持材料::实现>();
+        p->owner = this; p->值 = value;
+        {
+            std::lock_guard lock(特征概念树互斥);
+            if (!有效(消息集合成员保护键)) return {S::读取接口未装配, {}};
+            p->保护键 = 消息集合成员保护键;
+        }
+        // V的物理材料只经值owner读取；本owner仅解析自己的保持字段。
+        const auto v = values.获取特征值(value);
+        if (!v) return {S::值不存在, {}};
+        const auto* ids = std::get_if<std::vector<std::uint64_t>>(&v->材料);
+        if (v->物理类型 != 材料物理类型::U64数组 || !ids
+            || !std::is_sorted(ids->begin(), ids->end())
+            || std::adjacent_find(ids->begin(), ids->end()) != ids->end()) return {S::材料类型不相容, {}};
+        p->成员.reserve(ids->size());
+        std::set<稳定编码> nodes{value};
+        for (const auto id : *ids) {
+            if (!有效(稳定编码{id}) || id == value.值) return {S::材料类型不相容, {}};
+            p->成员.push_back(稳定编码{id}); nodes.insert(稳定编码{id});
+        }
+        const auto batch = 全局基础数据集.查询节点组完整结构({nodes.begin(), nodes.end()});
+        if (batch.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+        if (batch.状态 != 基础结构操作状态::已完成 || batch.节点组.size() != nodes.size())
+            return {S::内部不一致, {}};
+        for (const auto& n : batch.节点组) {
+            if (!n.快照) return {S::值不存在, {}};
+            if (n.查询节点 == value) p->宿主 = *n.快照;
+            else p->成员身份.push_back(n.快照->结构.节点);
+        }
+        for (const auto& f : p->宿主.结构.字段组) if (f.字段节点 == p->保护键) {
+            const auto* m = std::get_if<稳定编码>(&f.内容);
+            if (!m || !std::binary_search(p->成员.begin(), p->成员.end(), *m)
+                || !p->既有保持.insert(*m).second) return {S::内部不一致, {}};
+        }
+        return {S::已完成, 新消息集合保持材料{std::move(p)}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}}; }
+    catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取消息集合保持材料", L"保持材料读取发生工程异常");
+    }
+}
+基础节点组追加请求 概念_特征类::构造消息集合成员保持(
+    新消息集合保持材料&& material, const 新消息待发表凭据& pending) const {
+    if (!material.实现_ || material.实现_->owner != this
+        || material.实现_->线程 != std::this_thread::get_id() || pending.已采用
+        || pending.消息节点组.empty()) throw std::logic_error("message retention preparation or credential is not usable");
+    // 移走一次资格；后续分配失败亦不能再次构造，零发表由记录owner重签本轮材料。
+    auto p = std::move(material.实现_);
+    std::set<稳定编码> batch;
+    for (const auto m : pending.消息节点组) {
+        if (!有效(m) || !batch.insert(m).second
+            || !std::binary_search(p->成员.begin(), p->成员.end(), m))
+            throw std::logic_error("pending message batch is not contained in the collection");
+        const auto i = std::find_if(pending.完整前提.begin(), pending.完整前提.end(),
+            [&](const auto& n) { return n.结构.节点.编码 == m; });
+        if (i == pending.完整前提.end() || !i->结构.字段组.empty() || !i->入向字段组.empty()
+            || !i->入向外部关系组.empty() || !i->出向外部关系组.empty() || p->既有保持.contains(m))
+            throw std::logic_error("pending message has no private empty identity");
+    }
+    基础节点组追加请求 out;
+    out.预期联合节点组.push_back(std::move(p->宿主));
+    out.只读预期.节点组 = std::move(p->成员身份);
+    for (const auto m : p->成员) if (!p->既有保持.contains(m))
+        out.追加字段组.push_back({p->值, p->保护键, m});
+    return out;
 }
 特征概念规则状态 概念_特征类::读取消息成员身份(
     稳定编码 节点, std::vector<基础联合节点快照>* 保护) const noexcept {

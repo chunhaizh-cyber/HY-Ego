@@ -14,6 +14,8 @@
 namespace 海中鱼巣 {
 
 class 概念_名称关系类;
+class 概念_特征类;
+class 新消息待发表凭据;
 
 // I64标量直接保存在特征节点中，其余材料由新_特征值类保存。
 enum class 特征概念材料物理类型 : std::int64_t {
@@ -194,6 +196,24 @@ enum class 特征概念规则状态 : std::uint8_t {
     前提已变化 = 10,
     // R102：集合成员概念归属无法确定（不等于不满足）。
     成员归属未知 = 11
+};
+// F准备之前取得，同线程一次纯构造，不持跨调用锁。
+class 新消息集合保持材料 final {
+public:
+    ~新消息集合保持材料();
+    新消息集合保持材料(新消息集合保持材料&&) noexcept;
+    新消息集合保持材料& operator=(新消息集合保持材料&&) noexcept;
+    新消息集合保持材料(const 新消息集合保持材料&) = delete;
+    新消息集合保持材料& operator=(const 新消息集合保持材料&) = delete;
+private:
+    struct 实现;
+    explicit 新消息集合保持材料(std::unique_ptr<实现>) noexcept;
+    std::unique_ptr<实现> 实现_;
+    friend class 概念_特征类;
+};
+struct 新消息集合保持读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<新消息集合保持材料> 材料;
 };
 enum class 正式概念读取状态 : std::uint8_t { 已读取=1, 非本提供者概念, 依赖未就绪, 前提已变化 };
 struct 正式概念身份保护 final {
@@ -529,6 +549,10 @@ public:
     void 装配存在成员读取接口(const 特征存在成员读取接口*) noexcept;
     void 装配消息成员读取接口(const 特征消息成员读取接口*) noexcept;
     稳定编码 消息集合成员保护字段() const noexcept;
+    新消息集合保持读取结果 读取消息集合保持材料(
+        稳定编码, const 新_特征值类&) const noexcept;
+    基础节点组追加请求 构造消息集合成员保持(
+        新消息集合保持材料&&, const 新消息待发表凭据&) const;
     特征概念规则状态 读取消息成员身份(稳定编码,
         std::vector<基础联合节点快照>* 身份保护 = nullptr) const noexcept;
     特征概念规则状态 读取消息集合成员(

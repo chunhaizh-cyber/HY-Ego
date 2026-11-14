@@ -263,6 +263,7 @@ private:
     bool 已采用 = false;
     friend class 新_外设世界树类;
     friend class 外设词典记录类;
+    friend class 概念_特征类;
     friend class 新_特征类;
 };
 
@@ -644,7 +645,9 @@ public:
     新特征当前值候选 读取准备当前值候选(
         const 新特征当前值组准备&, 稳定编码 特征) const;
     新特征当前值候选 读取准备当前值候选(const 新特征引用集合更新准备&) const;
+    std::optional<新特征准确值> 读取准备原当前值(const 新特征引用集合更新准备&) const;
 private:
+    新特征引用集合保护结果 捕获引用集合更新保护内部(稳定编码, bool 允许未知消息) const noexcept;
     std::optional<新特征信息> 获取特征可抛内部(
         稳定编码 特征节点, const 普通存在引用完整读取批* 本次批) const;
     特征概念规则状态 读取信息存在引用定义保护(const 特征概念信息&,

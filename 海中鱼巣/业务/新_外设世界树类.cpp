@@ -1,6 +1,7 @@
 #include "新_外设世界树类.h"
 #include "../核心/容错检查.h"
 #include "../领域/世界挂接.全局根.h"
+#include "../领域/数据服务.外设词典记录类.h"
 
 #include <array>
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include <stdexcept>
 #include <set>
 #include <tuple>
+#include <thread>
 
 namespace 海中鱼巣 {
 namespace {
@@ -111,6 +113,8 @@ class 外设消息身份读取器 final : public 特征消息成员读取接口 
 public:
     特征消息成员读取结果 读取消息集合成员身份(稳定编码 节点) const noexcept override {
         try {
+            const auto dictionary = 外设词典记录类::取得稳定消息身份读取接口().读取消息集合成员身份(节点);
+            if (dictionary.状态 != 特征概念规则状态::入口拒绝) return dictionary;
             std::vector<基础联合节点快照> 保护;
             const auto 消息 = 读取正式消息(节点, &保护);
             if (!消息) return {特征概念规则状态::入口拒绝, {}, {}};
@@ -197,6 +201,10 @@ bool 更新完成(新外设事实状态 状态) {
         if (消息值服务 && 消息值服务 != &服务_.特征值服务)
             throw std::runtime_error("peripheral message value owner changed");
         消息值服务 = &服务_.特征值服务;
+        外设词典记录类 词典记录(服务_.特征值服务);
+        const auto 词典初始化 = 词典记录.初始化();
+        if (词典初始化 != 新词典记录操作状态::已完成 && 词典初始化 != 新词典记录操作状态::已复用)
+            throw std::runtime_error("dictionary message schema initialization failed");
         服务_.特征概念服务.装配消息成员读取接口(&消息读取器);
         const bool 已有 = 有效(外设根);
         if (!场景_.初始化()) throw std::runtime_error("peripheral scene initialization failed");
@@ -275,6 +283,14 @@ std::optional<稳定编码> 新_外设世界树类::获取输出队列特征类�
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设输出队列特征类型", L"已初始化的正式输出队列定义不完整。");
     }
+}
+
+std::optional<稳定编码> 新_外设世界树类::获取接收消息特征类型() const noexcept {
+    std::lock_guard lock(外设互斥);
+    if (!有效(外设根)) return std::nullopt;
+    if (!有效(消息类型[0]))
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取接收消息类型", L"外设根已初始化但接收消息类型缺失");
+    return 消息类型[0];
 }
 
 稳定编码 新_外设世界树类::读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const {
@@ -1459,5 +1475,315 @@ std::vector<新外设消息信息> 新_外设世界树类::读取输出队列成
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取外设输出队列",
             L"有序队列材料损坏，不返回部分或伪空队列。");
     }
+}
+namespace {
+using 词典记录状态 = 新词典记录操作状态;
+using 词典提交状态 = 基础节点组追加状态;
+[[noreturn]] void 词典接收故障(const wchar_t* why) noexcept {
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"词典场景接收", why);
+}
+词典提交状态 词典特征准备结局(新特征I64准备状态 s) {
+    switch (s) {
+    case 新特征I64准备状态::资源失败: return 词典提交状态::资源失败;
+    case 新特征I64准备状态::预期已变化:
+    case 新特征I64准备状态::特征不存在: return 词典提交状态::预期不符;
+    case 新特征I64准备状态::联合更新占用:
+        std::this_thread::yield(); return 词典提交状态::预期不符;
+    default: 词典接收故障(L"接收消息F准备遇到非正常变化故障");
+    }
+}
+
+class 真实词典接收准备 final : public 新词典接收参与准备 {
+public:
+    真实词典接收准备(新世界事实服务引用 s, 新_场景类& scene, 稳定编码 C,
+        新词典接收准备投影 v, std::optional<新特征准确值> old,
+        新特征状态构造绑定 stateBinding, 新场景状态参与绑定 sceneBinding,
+        新消息集合保持材料 retention)
+        : 服务(s), 场景(scene), 场景节点(C), 投影(v), 原当前值(std::move(old)),
+          状态绑定(std::move(stateBinding)), 场景绑定(std::move(sceneBinding)), 保持(std::move(retention)) {}
+    ~真实词典接收准备() override { 取消未发表准备(); }
+    新词典接收准备投影 读取接收投影() const override { return 投影; }
+    新词典接收提交结果 提交接收(新消息待发表凭据&& pending,
+        新状态结果引用参与接口& participant) noexcept override {
+        try {
+            if (已使用 || 已结束) 词典接收故障(L"同一词典接收准备不得重复提交");
+            已使用 = true;
+            // 凭据必须尚未被F消费；保持请求与新S同一片段，不单独发表。
+            auto extra = 服务.特征概念服务.构造消息集合成员保持(std::move(保持), pending);
+            if (投影.前状态) {
+                auto count = 服务.状态服务.准备引用计数参与({{*投影.前状态, 1}});
+                if (count.状态 == 新状态操作状态::状态不存在) return {词典提交状态::预期不符, {}, {}};
+                if (count.状态 == 新状态操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+                if (count.状态 != 新状态操作状态::已完成 || !count.准备)
+                    词典接收故障(L"接收前态保持准备不合法");
+                前态保持 = std::move(count.准备);
+            }
+            auto f = 服务.特征服务.准备顶层消息集合更新(投影.接收特征, 投影.新消息集合值, std::move(pending));
+            if (f.状态 != 新特征I64准备状态::已准备) return {词典特征准备结局(f.状态), {}, {}};
+            if (!f.准备) 词典接收故障(L"接收F准备成功但缺少句柄");
+            特征准备 = std::move(f.准备);
+            if (服务.特征服务.读取准备原当前值(*特征准备) != 原当前值)
+                return {词典提交状态::预期不符, {}, {}};
+            const auto candidate = 服务.特征服务.读取准备当前值候选(*特征准备);
+            auto state = 服务.状态服务.准备特征状态(状态绑定, candidate, 场景节点, 投影.本轮状态时间, std::move(extra));
+            服务.状态服务.合并结果引用(state, participant);
+            const auto sealed = 场景.封存场景状态挂接(场景绑定, std::move(state));
+            if (sealed.封存.状态 != 词典提交状态::已完成) return {sealed.封存.状态, {}, {}};
+            if (!sealed.封存.片段) 词典接收故障(L"接收状态共同封存缺片段");
+            std::vector<基础封存追加片段> fragments{*sealed.封存.片段};
+            if (前态保持) fragments.push_back(服务.状态服务.封存计数参与(*前态保持));
+            auto published = 服务.特征服务.提交顶层引用集合更新(*特征准备, fragments);
+            if (published.状态 != 词典提交状态::已完成) return {published.状态, {}, {}};
+            if (published.附加片段回执组.size() != fragments.size()) 词典接收故障(L"词典接收缺共同回执");
+            const auto& receipt = published.附加片段回执组.front();
+            if (!receipt.对应片段(fragments.front()) || sealed.状态槽 >= receipt.新节点组().size())
+                词典接收故障(L"词典接收回执未覆盖确切S/B片段");
+            const auto newState = receipt.新节点组()[sealed.状态槽];
+            // F已登记自身及R/M必需片段成功；此处先无抛登记B及前S，再做任何收尾。
+            participant.登记共同发表回执(receipt);
+            if (前态保持) 服务.状态服务.登记计数发表(*前态保持, published.附加片段回执组[1]);
+            已发表 = true;
+            const auto completed = 服务.特征服务.完成顶层引用集合更新(*特征准备);
+            if (completed.状态 != 新特征写入状态::已完成 || !completed.当前值已改变)
+                词典接收故障(L"已发表词典接收F收尾失败，保留事实");
+            服务.特征服务.结束顶层引用集合更新(*特征准备);
+            if (前态保持) 服务.状态服务.完成计数参与(*前态保持);
+            已结束 = true;
+            // 所有owner准备已结束，才投递实际状态变化。
+            投递外设事实变化({newState});
+            return {词典提交状态::已完成, std::move(published.附加片段回执组), newState};
+        } catch (词典提交状态 s) { return {s, {}, {}}; }
+        catch (const std::bad_alloc&) {
+            if (已发表) 词典接收故障(L"词典接收已发表后的资源故障，保留事实");
+            return {词典提交状态::资源失败, {}, {}};
+        } catch (const std::length_error&) {
+            if (已发表) 词典接收故障(L"词典接收已发表后的容量故障，保留事实");
+            return {词典提交状态::资源失败, {}, {}};
+        } catch (...) { 词典接收故障(L"词典接收共同发表工程异常"); }
+    }
+    void 取消未发表准备() noexcept override {
+        if (已结束 || 已发表) return;
+        if (特征准备) 服务.特征服务.取消顶层引用集合更新(*特征准备);
+        if (前态保持) 服务.状态服务.取消计数参与(*前态保持);
+        已结束 = true;
+    }
+private:
+    新世界事实服务引用 服务;
+    新_场景类& 场景;
+    稳定编码 场景节点;
+    新词典接收准备投影 投影;
+    std::optional<新特征准确值> 原当前值;
+    新特征状态构造绑定 状态绑定;
+    新场景状态参与绑定 场景绑定;
+    新消息集合保持材料 保持;
+    std::optional<新状态计数准备> 前态保持;
+    std::optional<新特征引用集合更新准备> 特征准备;
+    bool 已使用 = false, 已发表 = false, 已结束 = false;
+};
+
+class 真实词典接收提供者 final : public 新词典接收场景提供接口 {
+public:
+    真实词典接收提供者(新世界事实服务引用 s, 新_场景类& scene, 稳定编码 ft)
+        : 服务(s), 场景(scene), 接收FT(ft) {}
+    新词典接收准备结果 准备接收(稳定编码 C, const std::vector<稳定编码>& messages) noexcept override {
+        using S = 词典记录状态;
+        try {
+            if (!有效(C) || messages.empty()) return {S::输入拒绝, {}};
+            std::set<稳定编码> batch;
+            for (const auto m : messages) if (!有效(m) || !batch.insert(m).second) return {S::输入拒绝, {}};
+            for (;;) {
+                // 先捕获C依据，再读取C中的F/状态；其后任何组织变化均由L1零发表处理。
+                const auto sceneBinding = 场景.取得场景状态参与绑定(C);
+                const auto currentScene = 场景.获取场景(C);
+                if (!currentScene) return {S::未找到, {}};
+                std::optional<稳定编码> F;
+                bool refresh = false;
+                for (const auto f : currentScene->特征节点组) {
+                    const auto type = 服务.特征服务.读取当前特征类型(f);
+                    if (type.状态 == 新特征类型读取状态::特征不存在) { refresh = true; break; }
+                    if (type.状态 == 新特征类型读取状态::资源失败) return {S::资源失败, {}};
+                    if (type.状态 != 新特征类型读取状态::已读取 || !type.特征类型根) return {S::未装配, {}};
+                    if (*type.特征类型根 == 接收FT) {
+                        if (F) 词典接收故障(L"词典场景存在重复接收消息F");
+                        F = f;
+                    }
+                }
+                if (refresh) continue;
+                if (!F) return {S::未装配, {}};
+                const auto feature = 服务.特征服务.获取特征(*F);
+                if (!feature) continue;
+                std::vector<std::uint64_t> members;
+                if (feature->当前值) {
+                    const auto* V = std::get_if<稳定编码>(&*feature->当前值);
+                    if (!V) 词典接收故障(L"接收消息当前值不是集合材料");
+                    const auto value = 服务.特征值服务.获取特征值(*V);
+                    if (!value) {
+                        const auto latest = 服务.特征服务.获取特征(*F);
+                        if (!latest || latest->当前值 != feature->当前值) continue;
+                        词典接收故障(L"当前接收F仍引用不存在的集合材料");
+                    }
+                    const auto* ids = std::get_if<std::vector<std::uint64_t>>(&value->材料);
+                    if (!ids || value->物理类型 != 材料物理类型::U64数组)
+                        词典接收故障(L"接收消息集合物理类型不合法");
+                    members = *ids;
+                }
+                for (const auto m : messages) members.push_back(m.值);
+                std::sort(members.begin(), members.end());
+                members.erase(std::unique(members.begin(), members.end()), members.end());
+                const auto V = 服务.特征值服务.保存或取得特征值(材料物理类型::U64数组, members);
+                if (!有效(V)) return {S::资源失败, {}};
+                auto retention = 服务.特征概念服务.读取消息集合保持材料(V, 服务.特征值服务);
+                if (retention.状态 == 特征概念规则状态::值不存在) {
+                    const auto latest = 服务.特征服务.获取特征(*F);
+                    if (!latest || latest->当前值 != feature->当前值) continue;
+                    词典接收故障(L"最新集合仍包含不存在的接收消息或私有身份");
+                }
+                if (retention.状态 == 特征概念规则状态::资源失败) return {S::资源失败, {}};
+                if (retention.状态 == 特征概念规则状态::读取接口未装配) return {S::未装配, {}};
+                if (retention.状态 != 特征概念规则状态::已完成 || !retention.材料)
+                    词典接收故障(L"接收集合保持材料不合法");
+                std::optional<新状态信息> before;
+                for (const auto id : currentScene->状态节点组) {
+                    const auto state = 服务.状态服务.获取状态(id);
+                    if (!state) { refresh = true; break; }
+                    if (state->被描述存在节点 != C || state->来源实例特征节点 != *F
+                        || state->固定准确值 != feature->当前值) continue;
+                    if (state->强时间.语义 != 新状态时间语义::实例绝对UTC)
+                        词典接收故障(L"真实词典场景含非绝对时间接收状态");
+                    if (!before || state->强时间.纳秒 > before->强时间.纳秒) before = state;
+                    else if (state->强时间.纳秒 == before->强时间.纳秒 && state->节点 != before->节点)
+                        词典接收故障(L"接收F最新前态时间无法唯一确定");
+                }
+                if (refresh) continue;
+                新词典接收准备投影 projection{*F, V, before ? std::optional<稳定编码>{before->节点} : std::nullopt, 当前强时间()};
+                const auto stateBinding = 服务.状态服务.取得特征状态构造绑定();
+                return {S::已完成, std::make_unique<真实词典接收准备>(服务, 场景, C, projection,
+                    feature->当前值, stateBinding, sceneBinding, std::move(*retention.材料))};
+            }
+        } catch (词典提交状态 s) {
+            if (s == 词典提交状态::节点不存在) return {S::未找到, {}};
+            if (s == 词典提交状态::资源失败) return {S::资源失败, {}};
+            词典接收故障(L"接收场景准备技术结局无法解释");
+        } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+        catch (const std::length_error&) { return {S::资源失败, {}}; }
+        catch (...) { 词典接收故障(L"准备词典场景接收发生工程异常"); }
+    }
+
+    新词典接收提交结果 续接变化(稳定编码 C, 新词典处理阶段参与接口& participant) noexcept override {
+        try {
+            const auto info = participant.读取本轮处理材料();
+            if (info.阶段 == 新词典接收处理阶段::接收已发表) {
+                if (!info.后状态) 词典接收故障(L"已接收B没有后状态");
+                const auto after = 服务.状态服务.获取状态(*info.后状态);
+                if (!after || after->被描述存在节点 != C) 词典接收故障(L"B保持的后态缺失或主体不符");
+                if (!info.前状态) return 收束(participant, info, 新词典接收处理阶段::无需动态, 新词条动态记录原因::无前态);
+                const auto before = 服务.状态服务.获取状态(*info.前状态);
+                if (!before || before->被描述存在节点 != C || before->来源实例特征节点 != after->来源实例特征节点)
+                    词典接收故障(L"B保持的前后状态不属于同一接收F");
+                if (before->固定准确值 == after->固定准确值)
+                    return 收束(participant, info, 新词典接收处理阶段::无需动态, 新词条动态记录原因::无值变化);
+                if (before->强时间.语义 != 新状态时间语义::实例绝对UTC || after->强时间.语义 != 新状态时间语义::实例绝对UTC)
+                    词典接收故障(L"真实接收两态时间语义不符");
+                if (after->强时间.纳秒 <= before->强时间.纳秒)
+                    return 收束(participant, info, 新词典接收处理阶段::无需动态, 新词条动态记录原因::时间不递增);
+                const std::vector<稳定编码> states{*info.前状态, *info.后状态};
+                std::optional<稳定编码> D;
+                for (const auto id : 服务.动态服务.按状态查询动态(*info.后状态)) {
+                    const auto dynamic = 服务.动态服务.获取动态(id);
+                    if (!dynamic) return {词典提交状态::预期不符, {}, {}};
+                    if (dynamic->种类 != 新动态种类::原子 || dynamic->主题存在节点 != C || dynamic->状态节点组 != states) continue;
+                    if (D) 词典接收故障(L"同一词典接收状态对存在多个原子动态");
+                    D = id;
+                }
+                if (!D) {
+                    const auto made = 服务.动态服务.建立原子动态(C, *info.前状态, *info.后状态);
+                    if (made.状态 == 新动态操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+                    if (made.状态 != 新动态操作状态::已完成 || !made.动态节点)
+                        词典接收故障(L"词典接收两态动态建立失败，保留B");
+                    D = made.动态节点;
+                }
+                auto count = 服务.动态服务.准备引用计数参与({{*D, 1}});
+                if (count.状态 == 新动态操作状态::动态不存在) return {词典提交状态::预期不符, {}, {}};
+                if (count.状态 == 新动态操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+                if (count.状态 != 新动态操作状态::已完成 || !count.准备) 词典接收故障(L"B动态保持准备失败");
+                const auto dPart = 服务.动态服务.封存计数参与(*count.准备);
+                const auto bPart = participant.构造动态已建立(*D);
+                auto done = 全局基础数据集.原子追加封存片段组({dPart, bPart});
+                if (done.状态 != 词典提交状态::已完成) {
+                    服务.动态服务.取消计数参与(*count.准备);
+                    return {done.状态, {}, {}};
+                }
+                if (done.片段回执组.size() != 2) 词典接收故障(L"动态阶段缺共同回执");
+                participant.登记共同发表回执(done.片段回执组[1]);
+                服务.动态服务.登记计数发表(*count.准备, done.片段回执组[0]);
+                服务.动态服务.完成计数参与(*count.准备);
+                return {词典提交状态::已完成, std::move(done.片段回执组), {}};
+            }
+            if (info.阶段 != 新词典接收处理阶段::动态已建立 || !info.动态)
+                词典接收故障(L"词典变化续接收到非在途阶段");
+            // 已挂场景的Δ保留，零发表再次到来只复用同Δ，不回滚或另造。
+            const auto attached = 场景.添加动态(C, *info.动态);
+            if (attached == 新场景操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+            if (attached != 新场景操作状态::已完成 && attached != 新场景操作状态::无变化)
+                词典接收故障(L"接收动态场景挂接失败，保留B及动态");
+            return 收束(participant, info, 新词典接收处理阶段::场景已挂接, {});
+        } catch (词典提交状态 s) { return {s, {}, {}}; }
+        catch (词典记录状态 s) {
+            if (s == 词典记录状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+            词典接收故障(L"接收阶段参与者返回非法技术状态");
+        } catch (const std::bad_alloc&) { return {词典提交状态::资源失败, {}, {}}; }
+        catch (const std::length_error&) { return {词典提交状态::资源失败, {}, {}}; }
+        catch (...) { 词典接收故障(L"词典变化续接工程异常，保留已发表事实"); }
+    }
+private:
+    新词典接收提交结果 收束(新词典处理阶段参与接口& participant,
+        const 新词典接收处理信息& info, 新词典接收处理阶段 stage,
+        std::optional<新词条动态记录原因> reason) {
+        std::optional<新动态计数准备> dynamicCount;
+        if (info.动态) {
+            auto count = 服务.动态服务.准备引用计数参与({{*info.动态, -1}});
+            if (count.状态 == 新动态操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+            if (count.状态 != 新动态操作状态::已完成 || !count.准备) 词典接收故障(L"收束动态保持准备失败");
+            dynamicCount = std::move(count.准备);
+        }
+        std::vector<新引用计数变化> states;
+        if (info.前状态) states.push_back({*info.前状态, -1});
+        if (info.后状态) states.push_back({*info.后状态, -1});
+        std::optional<新状态计数准备> stateCount;
+        if (!states.empty()) {
+            auto count = 服务.状态服务.准备引用计数参与(states);
+            if (count.状态 == 新状态操作状态::资源失败) return {词典提交状态::资源失败, {}, {}};
+            if (count.状态 != 新状态操作状态::已完成 || !count.准备) 词典接收故障(L"收束状态保持准备失败");
+            stateCount = std::move(count.准备);
+        }
+        std::vector<基础封存追加片段> parts;
+        if (dynamicCount) parts.push_back(服务.动态服务.封存计数参与(*dynamicCount));
+        if (stateCount) parts.push_back(服务.状态服务.封存计数参与(*stateCount));
+        parts.push_back(participant.构造处理收束(stage, reason));
+        auto done = 全局基础数据集.原子追加封存片段组(parts);
+        if (done.状态 != 词典提交状态::已完成) {
+            if (stateCount) 服务.状态服务.取消计数参与(*stateCount);
+            if (dynamicCount) 服务.动态服务.取消计数参与(*dynamicCount);
+            return {done.状态, {}, {}};
+        }
+        if (done.片段回执组.size() != parts.size()) 词典接收故障(L"收束缺共同回执");
+        participant.登记共同发表回执(done.片段回执组.back());
+        std::size_t i = 0;
+        if (dynamicCount) 服务.动态服务.登记计数发表(*dynamicCount, done.片段回执组[i++]);
+        if (stateCount) 服务.状态服务.登记计数发表(*stateCount, done.片段回执组[i]);
+        if (stateCount) 服务.状态服务.完成计数参与(*stateCount);
+        if (dynamicCount) 服务.动态服务.完成计数参与(*dynamicCount);
+        return {词典提交状态::已完成, std::move(done.片段回执组), {}};
+    }
+    新世界事实服务引用 服务;
+    新_场景类& 场景;
+    稳定编码 接收FT;
+};
+} // namespace
+
+std::shared_ptr<新词典接收场景提供接口> 新_外设世界树类::创建词典接收场景提供者() {
+    const auto type = 获取接收消息特征类型();
+    if (!type) throw std::logic_error("dictionary receiver requires initialized peripheral world");
+    return std::make_shared<真实词典接收提供者>(服务_, 场景_, *type);
 }
 } // namespace 海中鱼巣
