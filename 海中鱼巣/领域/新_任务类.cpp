@@ -8774,6 +8774,130 @@ void 新_任务类::装配词条读取(const 新_词类& 词) noexcept {
     词条读取_=&词;
 }
 
+void 新_任务类::装配词条材料写入(新词条材料特征写入接口& 写入) noexcept {
+    if (词条材料写入_ && 词条材料写入_ != &写入)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"装配词条材料写入", L"不能更换已装配的词条owner");
+    词条材料写入_ = &写入;
+}
+
+新任务词条特征落实结果 新_任务类::落实任务词条材料特征(稳定编码 T) noexcept {
+    using S = 新任务词条特征落实状态;
+    try {
+        if (新_本能函数管理类::本次停止已请求()) return {S::已停止, {}, {}};
+        std::optional<新任务信息> 任务;
+        {
+            std::lock_guard 锁(新任务互斥);
+            if (!治理已初始化_) return {S::未装配, {}, {}};
+            // 只在本次定位时持任务锁；任何词条写入都在锁外。
+            任务 = 读取任务信息(T, 特征服务_);
+        }
+        if (!任务 || 任务->当前状态 != 新任务状态::待检查条件)
+            return {S::任务已退出, {}, {}}; // 已离开本次检查阶段，不改任务状态。
+        const auto 需求 = 需求服务_.获取需求(任务->需求节点);
+        if (!需求 || 需求->活动状态 == 新需求活动状态::已满足
+            || 需求->活动状态 == 新需求活动状态::失活) return {S::任务已退出, {}, {}};
+        const auto 槽 = 特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::词典材料);
+        if (槽.状态 == 特征概念规则状态::资源失败) return {S::资源失败, {}, {}};
+        if (槽.状态 == 特征概念规则状态::读取接口未装配
+            || 槽.状态 == 特征概念规则状态::值不存在) return {S::未装配, {}, {}};
+        if (槽.状态 != 特征概念规则状态::已完成 || !槽.类型根)
+            throw std::logic_error("dictionary feature slot unreadable");
+        const auto FT = *槽.类型根;
+        const auto 缺定位 = [&](std::uint32_t 位置) {
+            新任务词条特征落实结果 r{S::条件未具备, {}, {}};
+            r.缺口组.push_back({新词典学习缺口种类::参数未定位, 位置, {}, FT, {}});
+            return r;
+        };
+        // 直接材料目标由D给定W，无须等到知识配对或有序参数绑定形成。
+        if (需求->目标.目标特征类型概念节点 != FT) {
+            const auto 组织读 = 读取任务方法执行组织(T);
+            if (!组织读.组织) return {S::不涉及, {}, {}};
+            const auto& 组织 = *组织读.组织;
+            if (组织.根方法作用域节点组.size() != 1) return {S::不涉及, {}, {}};
+            const auto 域 = std::find_if(组织.方法作用域组.begin(), 组织.方法作用域组.end(),
+                [&](const auto& x) { return x.节点 == 组织.根方法作用域节点组.front(); });
+            if (域 == 组织.方法作用域组.end())
+                throw std::logic_error("task execution root scope missing");
+            const auto 规格于 = [&](std::uint32_t 位置) -> const 新方法有序参数规格* {
+                for (const auto& x : 域->参数要求组)
+                    if (x.规格.有序规格 && x.规格.有序规格->序号 == 位置) return &*x.规格.有序规格;
+                return nullptr;
+            };
+            const auto 主体位置 = [&](std::uint32_t 位置) {
+                const auto* p = 规格于(位置);
+                return p && p->信息类型 == 新方法参数信息类型::特征 ? p->所属存在位置 : 位置;
+            };
+            std::set<std::uint32_t> 材料位置;
+            for (const auto& x : 域->参数要求组) {
+                if (!x.规格.有序规格) continue;
+                const auto& p = *x.规格.有序规格;
+                if (p.信息类型 == 新方法参数信息类型::词条
+                    && std::find(p.必需特征类型组.begin(), p.必需特征类型组.end(), FT) != p.必需特征类型组.end())
+                    材料位置.insert(p.序号);
+                if (p.信息类型 == 新方法参数信息类型::特征
+                    && 取得特征概念类型根(特征概念服务_, p.范围概念节点) == std::optional{FT})
+                    材料位置.insert(p.所属存在位置);
+            }
+            // 只有唯一分支的共同条件可直接落实；未选互斥条件不产生空F。
+            if (域->来源执行分支组.size() == 1) {
+                const auto& 条件 = 域->来源执行分支组.front().定义.必要条件;
+                if (条件.关系规则 == 新方法项关系规则::单项 || 条件.关系规则 == 新方法项关系规则::全部成立) {
+                    for (const auto& c : 条件.条件项组)
+                        if (!c.任务成员变量序号 && c.特征类型概念节点 == std::optional{FT})
+                            材料位置.insert(主体位置(c.参数序号));
+                }
+            }
+            std::erase_if(材料位置, [&](std::uint32_t 位置) {
+                const auto* p = 规格于(位置);
+                return !p || p->信息类型 != 新方法参数信息类型::词条;
+            });
+            if (材料位置.empty()) return {S::不涉及, {}, {}};
+            // 只沿当前组织中实际目标结果的作用位置绑定D.W，不借用最近X的旧绑定。
+            std::set<std::uint32_t> 目标位置;
+            const auto 当前方法 = 方法服务_.获取方法(域->来源方法节点);
+            if (!当前方法 || 当前方法->启用状态 != 新方法启用状态::启用) return 缺定位(*材料位置.begin());
+            for (const auto& 对 : 当前方法->条件结果组) {
+                // 组织保留历史要求；只消费仍有效且已交付的当前配对，不复核旧配对内容。
+                if (std::none_of(域->配对要求组.begin(), 域->配对要求组.end(),
+                    [&](const auto& 要求) { return 要求.来源配对节点 == 对.配对节点; })) continue;
+                for (const auto& r : 对.结果.结果项组) {
+                    if (r.任务成员变量序号 || r.结果作用存在 || r.引用内容结果) continue;
+                    const auto* p = 规格于(r.参数序号);
+                    if (!p) continue;
+                    const auto 类型 = r.特征类型概念节点
+                        ? 取得特征概念类型根(特征概念服务_, *r.特征类型概念节点)
+                        : p->信息类型 == 新方法参数信息类型::特征
+                            ? 取得特征概念类型根(特征概念服务_, p->范围概念节点) : std::nullopt;
+                    if (类型 == std::optional{需求->目标.目标特征类型概念节点})
+                        目标位置.insert(主体位置(r.参数序号));
+                }
+            }
+            if (目标位置.size() != 1 || 材料位置.size() != 1
+                || *目标位置.begin() != *材料位置.begin()) return 缺定位(*材料位置.begin());
+        }
+        if (!词条读取_ || !词条材料写入_) return {S::未装配, {}, {}};
+        if (!读取任务词条(词条读取_, 需求->目标存在节点)) return 缺定位(0);
+        if (新_本能函数管理类::本次停止已请求()) return {S::已停止, {}, {}};
+        const auto 写入 = 词条材料写入_->建立或取得词条特征(需求->目标存在节点, FT);
+        switch (写入.状态) {
+        case 新词条特征取得状态::已建立: return {S::已建立, 写入.特征, {}};
+        case 新词条特征取得状态::已复用: return {S::已复用, 写入.特征, {}};
+        case 新词条特征取得状态::词条不存在: return 缺定位(0);
+        case 新词条特征取得状态::场景未装配: return {S::未装配, {}, {}};
+        case 新词条特征取得状态::资源失败: return {S::资源失败, {}, {}};
+        case 新词条特征取得状态::类型未支持:
+            throw std::logic_error("registered dictionary feature rejected by word owner");
+        }
+        throw std::logic_error("unknown word feature result");
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+    catch (const std::exception& e) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"落实任务词条材料特征", L"任务词条材料落实工程故障", e.what());
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"落实任务词条材料特征", L"未知工程故障");
+    }
+}
+
 void 新_任务类::装配前置语言输入读取接口(const 新前置语言输入读取接口* p) noexcept {
     try {std::lock_guard 锁(新任务互斥);
         if(前置语言读取_&&p&&前置语言读取_!=p)throw std::logic_error("preunderstanding reader owner replacement");

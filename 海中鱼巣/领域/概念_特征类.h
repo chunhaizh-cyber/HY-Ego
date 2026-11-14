@@ -505,6 +505,8 @@ public:
     先天特征类型槽结果 建立或取得先天特征类型槽(const 先天特征类型槽请求&, const 新_特征值类&,
         std::span<const 正式概念身份读取接口* const>) noexcept;
     先天特征类型槽结果 读取先天特征类型槽(std::uint32_t 语义序号) const noexcept;
+    // 当前定位不展开FT定义，不收集或复核旧保护全集。
+    先天特征类型槽结果 读取当前先天特征类型槽(std::uint32_t 语义序号) const noexcept;
     特征概念编码操作结果 建立或取得特征概念强类型(
         const 特征概念定义&, const 新_特征值类&,
         std::optional<稳定编码> = std::nullopt) noexcept;

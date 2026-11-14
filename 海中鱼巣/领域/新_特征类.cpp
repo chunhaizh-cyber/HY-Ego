@@ -3536,6 +3536,44 @@ bool 新_特征类::初始化() noexcept {
     }
 }
 
+新特征匹配定义快照 新_特征类::形成特征匹配定义投影(
+    const 特征概念信息& 定义, 稳定编码 类型根) const {
+    新特征匹配定义快照 r{定义.节点, 类型根, 定义.材料类型, 定义.单位, 定义.比较规则, 定义.值域};
+    if (是信息存在引用形状(定义)) r.信息对象范围 = 读取信息对象范围投影(定义);
+    return r;
+}
+新特征匹配实例快照 新_特征类::形成特征匹配实例投影(
+    const 新特征信息& f, const 新特征匹配定义快照& d) const {
+    // 只投影调用者本次已经读取的F；不再次读取F，也不反驳旧值。
+    新特征匹配实例快照 r{f.节点, f.上级特征节点, d, f.实例单位, f.当前值, {}, f.实例区间值};
+    if (!f.当前值 || d.材料类型 == 特征概念材料物理类型::I64标量) return r;
+    const auto* n = std::get_if<稳定编码>(&*f.当前值);
+    if (!n) throw std::runtime_error("feature projection reference is not a node");
+    if (d.材料类型 == 特征概念材料物理类型::信息节点引用) {
+        if (!d.信息对象范围) return r;
+        const bool Q范围 = d.信息对象范围->形状 == 新信息引用范围形状::词典材料身份;
+        if (!信息对象身份读取接口_) {
+            if (Q范围) throw std::runtime_error("information identity reader not installed");
+            return r;
+        }
+        const auto 身份 = 信息对象身份读取接口_->读取信息对象身份(*n);
+        if (身份.状态 == 新信息对象身份读取状态::资源失败) throw std::bad_alloc{};
+        if (身份.状态 == 新信息对象身份读取状态::依赖未就绪)
+            throw std::runtime_error("information identity schema not ready");
+        if (Q范围 && 身份.状态 == 新信息对象身份读取状态::身份不相容)
+            throw std::runtime_error("dictionary feature references a non-Q node");
+        if (身份.状态 == 新信息对象身份读取状态::已读取) {
+            if (!身份.身份 || 身份.身份->信息节点 != *n)
+                throw std::runtime_error("information identity projection unavailable");
+            r.当前信息对象身份 = 身份.身份;
+        }
+    } else if (d.材料类型 != 特征概念材料物理类型::存在节点引用
+        && d.材料类型 != 特征概念材料物理类型::需求节点引用) {
+        r.当前完整材料 = 特征值服务_.获取特征值(*n);
+    }
+    return r;
+}
+
 std::optional<新特征匹配定义快照> 新_特征类::捕获特征匹配定义(
     稳定编码 特征概念节点) const noexcept {
     try {
@@ -3551,10 +3589,7 @@ std::optional<新特征匹配定义快照> 新_特征类::捕获特征匹配定�
         if (!根 || 根->材料类型 != 定义->材料类型 || 根->单位 != 定义->单位
             || 根->比较规则 != 定义->比较规则)
             throw std::runtime_error("feature concept capture root semantics inconsistent");
-        新特征匹配定义快照 结果{特征概念节点, *定位.特征类型根,
-            定义->材料类型, 定义->单位, 定义->比较规则, 定义->值域};
-        if (是信息存在引用形状(*定义)) 结果.信息对象范围 = 读取信息对象范围投影(*定义);
-        return 结果;
+        return 形成特征匹配定义投影(*定义, *定位.特征类型根);
     } catch (const std::exception& 异常) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"捕获特征匹配定义",
             L"特征定义捕获损坏，未形成业务判定。", 异常.what());
@@ -3583,30 +3618,11 @@ std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实�
                 const auto 信息定义 = 特征概念服务_.获取特征概念(*概念);
                 if (!信息定义) 特征联合更新故障(L"空信息引用实例的模板已失效");
                 if (定义->信息对象范围) {
-                    const bool 专属Q = 定义->信息对象范围->形状 == 新信息引用范围形状::词典材料身份;
                     const auto 实例 = 读取信息对象引用实例(特征节点, *信息定义);
-                    结果.特征节点 = 特征节点; 结果.定义 = *定义; 结果.当前值 = 实例.当前值;
-                    if (!结果.当前值) return 结果;
-                    if (专属Q && !信息对象身份读取接口_)
-                        throw std::runtime_error("information identity reader not installed");
-                    if (信息对象身份读取接口_) {
-                        const auto* Q = std::get_if<稳定编码>(&*结果.当前值);
-                        if (!Q) 特征联合更新故障(L"信息对象当前值形状损坏");
-                        const auto 身份 = 信息对象身份读取接口_->读取信息对象身份(*Q);
-                        if (身份.状态 == 新信息对象身份读取状态::资源失败) throw std::bad_alloc{};
-                        if (身份.状态 == 新信息对象身份读取状态::依赖未就绪)
-                            throw std::runtime_error("information identity schema not ready");
-                        if (专属Q && 身份.状态 == 新信息对象身份读取状态::身份不相容)
-                            特征联合更新故障(L"Q范围特征的当前值不是Q");
-                        if (身份.状态 == 新信息对象身份读取状态::已读取) {
-                            if (!身份.身份 || 身份.身份->信息节点 != *Q)
-                                特征联合更新故障(L"信息对象reader成功但没有对应身份");
-                            结果.当前信息对象身份 = 身份.身份;
-                            return 结果;
-                        }
-                    }
-                    if (专属Q) return 结果;
-                    // 正式信息根也容纳E；明确不是Q时继续原存在读取，不以Q替代E。
+                    结果 = 形成特征匹配实例投影(实例, *定义);
+                    if (!结果.当前值 || 结果.当前信息对象身份
+                        || 定义->信息对象范围->形状 == 新信息引用范围形状::词典材料身份) return 结果;
+                    // 正式信息根也容纳E；明确不是Q时继续原存在读取。
                 }
                 std::vector<基础联合节点快照> 信息定义保护;
                 bool 信息存在 = false;

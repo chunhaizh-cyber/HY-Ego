@@ -707,12 +707,16 @@ bool 服务要求分项匹配(新方法参数对象种类 种类, 新服务要�
     }
 }
 
-先天特征类型槽结果 读取当前名称挂接类型(const 概念_特征类& owner) {
-    for (;;) {
-        auto 当前=owner.读取先天特征类型槽(先天特征类型槽::概念名称挂接);
-        if(当前.状态!=特征概念规则状态::前提已变化)return 当前;
-        std::this_thread::yield();
+bool 词条参数特征类型允许(稳定编码 FT, const 概念_特征类& owner) {
+    for (const auto 槽 : {先天特征类型槽::概念名称挂接, 先天特征类型槽::词典材料}) {
+        const auto 当前 = owner.读取当前先天特征类型槽(槽);
+        if (当前.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+        if (当前.状态 == 特征概念规则状态::值不存在) continue;
+        if (当前.状态 != 特征概念规则状态::已完成 || !当前.类型根)
+            throw std::logic_error("word parameter feature slot unavailable");
+        if (*当前.类型根 == FT) return true;
     }
+    return false;
 }
 
 bool 是特征持有参数(新方法参数信息类型 类型) noexcept {
@@ -748,8 +752,8 @@ bool 参数规格有效(const std::vector<新方法参数规格>& 规格组,
                 for (const auto 类型 : 项.必需特征类型组)
                     if (!节点仍存在(类型) || !概念服务.获取特征概念(类型)) return false;
                 if (项.信息类型 == 新方法参数信息类型::词条 && !项.必需特征类型组.empty()) {
-                    const auto 挂接 = 读取当前名称挂接类型(概念服务);
-                    if (!挂接.类型根 || 项.必需特征类型组 != std::vector<稳定编码>{*挂接.类型根}) return false;
+                    for (const auto FT : 项.必需特征类型组)
+                        if (!词条参数特征类型允许(FT, 概念服务)) return false;
                 }
             } else {
                 if (!项.必需特征类型组.empty() || 项.所属存在位置 == 0
@@ -1111,7 +1115,7 @@ bool 追加方法持有者概念保护(稳定编码 C,const 概念_存在类& ow
 bool 持有者特征类型允许(新方法参数信息类型 类型,稳定编码 FT,const 概念_特征类& owner) {
     if(类型==新方法参数信息类型::存在)return true;
     if(类型!=新方法参数信息类型::词条)return false;
-    return 读取当前名称挂接类型(owner).类型根==std::optional{FT};
+    return 词条参数特征类型允许(FT, owner);
 }
 
 std::pair<新方法操作状态, std::optional<新词条特征信息>> 读取方法词条实参(
@@ -9171,8 +9175,7 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
             bool authorized=false;
             if(参数.信息类型==新方法参数信息类型::词条) {
                 if(!方法持有者范围有效(参数,存在概念服务_))return out;
-                const auto 挂接=读取当前名称挂接类型(特征概念服务_);
-                if(挂接.类型根!=std::optional{FT})return out;
+                if (!词条参数特征类型允许(FT, 特征概念服务_)) return out;
             } else {
                 const auto existence=存在概念服务_.读取普通存在概念定义保护(参数.范围概念节点);
                 if(existence.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};

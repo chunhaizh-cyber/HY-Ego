@@ -5675,6 +5675,44 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
     } catch (...) { 信息引用定义故障(L"正式材料概念身份读取工程异常。"); }
 }
 
+先天特征类型槽结果 概念_特征类::读取当前先天特征类型槽(std::uint32_t number) const noexcept {
+    using S = 特征概念规则状态;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (!是固定先天槽(number)) return {};
+        if (!结构已初始化()) return {S::读取接口未装配, {}, {}};
+        const auto 登记组 = 全局基础数据集.查询字段(特征概念树, 先天类型槽字段);
+        for (const auto& 登记 : 登记组) {
+            const auto* n = std::get_if<稳定编码>(&登记.内容);
+            if (!n) 信息引用定义故障(L"当前先天槽登记不是引用。");
+            const auto 读 = 全局基础数据集.查询节点组完整结构({*n});
+            if (读.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}};
+            if (读.状态 != 基础结构操作状态::已完成 || 读.节点组.size() != 1 || !读.节点组[0].快照)
+                信息引用定义故障(L"当前先天槽记录不可读。");
+            const auto& 字段组 = 读.节点组[0].快照->结构.字段组;
+            std::optional<std::int64_t> 序号;
+            std::optional<稳定编码> 类型根;
+            for (const auto& f : 字段组) {
+                if (f.字段节点 == 先天类型槽序号字段) {
+                    const auto* v = std::get_if<基础值>(&f.内容);
+                    const auto* i = v ? std::get_if<std::int64_t>(&v->材料) : nullptr;
+                    if (!i) 信息引用定义故障(L"当前先天槽序号不能解码。");
+                    序号 = *i;
+                } else if (f.字段节点 == 先天类型槽根字段) {
+                    const auto* r = std::get_if<稳定编码>(&f.内容);
+                    if (!r) 信息引用定义故障(L"当前先天槽类型不能解码。");
+                    类型根 = *r;
+                }
+            }
+            if (!序号 || !类型根) 信息引用定义故障(L"当前先天槽缺少定位字段。");
+            if (*序号 == static_cast<std::int64_t>(number)) return {S::已完成, 类型根, {}};
+        }
+        return {S::值不存在, {}, {}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+    catch (...) { 信息引用定义故障(L"当前先天槽定位读取异常。"); }
+}
+
 先天特征类型槽结果 概念_特征类::读取先天特征类型槽(std::uint32_t number) const noexcept {
     try {
         std::lock_guard 锁(特征概念树互斥);
