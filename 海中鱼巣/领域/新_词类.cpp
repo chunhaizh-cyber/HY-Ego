@@ -734,6 +734,56 @@ std::optional<新词条特征信息> 新_词类::读取特征信息已加锁(稳
     return std::move(当前.信息);
 }
 
+新词条快照解码结果 新_词类::解码词条快照(const 基础联合节点快照& 快照) const {
+    using 状态=新词条快照解码状态;
+    std::lock_guard 锁(新词互斥);
+    for(const auto key:{词组织根节点,节点类型字段,词条节点类型,所属语言字段,规范化合同字段,
+        严格UTF8字节精确规范化合同节点,规范化词面字段,创建来源字段,词条特征成员字段,所属自然语言场景字段})
+        if(!有效(key))return {状态::未初始化,{}};
+    const auto W=快照.结构.节点.编码;
+    if(!有效(W))return {状态::结构不可解码,{}};
+    std::optional<稳定编码> 类型,语言,合同,来源,场景;
+    std::optional<std::string> 词面;
+    std::vector<稳定编码> 特征组;
+    for(const auto& 字段:快照.结构.字段组) {
+        std::optional<稳定编码>* 目标=nullptr;
+        if(字段.字段节点==节点类型字段)目标=&类型;
+        else if(字段.字段节点==所属语言字段)目标=&语言;
+        else if(字段.字段节点==规范化合同字段)目标=&合同;
+        else if(字段.字段节点==创建来源字段)目标=&来源;
+        else if(字段.字段节点==所属自然语言场景字段)目标=&场景;
+        if(目标) {
+            const auto* ref=std::get_if<稳定编码>(&字段.内容);
+            if(*目标 || !ref || !有效(*ref))return {状态::结构不可解码,{}};
+            *目标=*ref;
+        } else if(字段.字段节点==词条特征成员字段) {
+            const auto* ref=std::get_if<稳定编码>(&字段.内容);
+            if(!ref || !有效(*ref) || std::find(特征组.begin(),特征组.end(),*ref)!=特征组.end())
+                return {状态::结构不可解码,{}};
+            特征组.push_back(*ref);
+        } else if(字段.字段节点==规范化词面字段) {
+            const auto* value=std::get_if<基础值>(&字段.内容);
+            const auto* text=value ? std::get_if<std::string>(&value->材料) : nullptr;
+            if(词面 || !text)return {状态::结构不可解码,{}};
+            词面=*text;
+        }
+    }
+    if(!类型)return {状态::结构不可解码,{}};
+    if(*类型!=词条节点类型)return {状态::非本类节点,{}};
+    if(!语言 || !合同 || !词面 || *合同!=严格UTF8字节精确规范化合同节点
+        || !新_语言类::严格UTF8字节串有效(*词面))return {状态::结构不可解码,{}};
+    std::size_t 父边=0;
+    for(const auto& edge:快照.入向外部关系组)if(edge.类型==基础外部关系类型::父子) {
+        if(edge.源节点!=词组织根节点 || edge.目标节点!=W || edge.角色或顺序!=0)
+            return {状态::结构不可解码,{}};
+        ++父边;
+    }
+    if(父边!=1 || 场景.has_value()!=!特征组.empty())return {状态::结构不可解码,{}};
+    新词条快照信息 out{{W,*语言,*合同,std::move(*词面),来源},{}};
+    if(场景)out.挂接=新词条快照挂接{*场景,std::move(特征组)};
+    return {状态::已解码,std::move(out)};
+}
+
 新词条特征读取结果 新_词类::读取词条特征信息(稳定编码 词条) const noexcept {
     try {
         if (!有效(词条)) return {新词条查询状态::输入不合法, {}};

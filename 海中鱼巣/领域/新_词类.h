@@ -103,6 +103,19 @@ struct 新词条特征读取结果 final {
     新词条查询状态 状态 = 新词条查询状态::未找到;
     std::optional<新词条特征信息> 信息;
 };
+enum class 新词条快照解码状态 : std::uint8_t { 已解码 = 1, 未初始化, 非本类节点, 结构不可解码 };
+struct 新词条快照挂接 final {
+    稳定编码 场景;
+    std::vector<稳定编码> 特征节点组;
+};
+struct 新词条快照信息 final {
+    新词条信息 词条;
+    std::optional<新词条快照挂接> 挂接;
+};
+struct 新词条快照解码结果 final {
+    新词条快照解码状态 状态=新词条快照解码状态::未初始化;
+    std::optional<新词条快照信息> 信息;
+};
 struct 新词条特征定位结果 final {
     新词条查询状态 状态 = 新词条查询状态::未找到;
     std::optional<新词条特征定位> 特征;
@@ -135,6 +148,7 @@ public:
         const 新词条建立请求& 请求) noexcept;
     新词条查询结果 获取词条(稳定编码 词条节点) const noexcept;
     新词条特征读取结果 读取词条特征信息(稳定编码 词条节点) const noexcept;
+    新词条快照解码结果 解码词条快照(const 基础联合节点快照&) const;
     void 装配词典材料特征类型(稳定编码) noexcept;
     新词条特征取得结果 建立或取得词条特征(稳定编码 词条, 稳定编码 类型) noexcept override;
     新词条材料采用准备结果 准备词典材料采用(稳定编码 W, 稳定编码 F, 稳定编码 Q) noexcept;

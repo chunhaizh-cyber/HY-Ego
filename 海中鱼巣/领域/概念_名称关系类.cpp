@@ -1153,6 +1153,68 @@ bool 概念_名称关系类::初始化() noexcept {
     }
 }
 
+新名称快照发现结果 概念_名称关系类::从词条快照发现名称(const 基础联合节点快照& 快照) const {
+    using 状态=新名称快照解码状态;
+    std::lock_guard 锁(概念名称关系互斥);
+    if(!有效(目标词条字段))return {状态::未初始化,{}};
+    const auto W=快照.结构.节点.编码;
+    if(!有效(W))return {状态::结构不可解码,{}};
+    std::vector<稳定编码> 名称;
+    for(const auto& field:快照.入向字段组)if(field.字段节点==目标词条字段) {
+        const auto* ref=std::get_if<稳定编码>(&field.内容);
+        if(!ref || *ref!=W || !有效(field.所属节点))return {状态::结构不可解码,{}};
+        名称.push_back(field.所属节点);
+    }
+    std::sort(名称.begin(),名称.end());
+    名称.erase(std::unique(名称.begin(),名称.end()),名称.end());
+    return {状态::已解码,std::move(名称)};
+}
+
+新名称快照解码结果 概念_名称关系类::解码名称快照(const 基础联合节点快照& 快照) const {
+    using 状态=新名称快照解码状态;
+    std::lock_guard 锁(概念名称关系互斥);
+    for(const auto key:{概念名称关系根节点,节点类型字段,名称关系节点类型,被命名概念字段,目标词条字段})
+        if(!有效(key))return {状态::未初始化,{}};
+    const auto 有指代键=std::count_if(指代名称键.begin(),指代名称键.end(),[](稳定编码 key){return 有效(key);});
+    if(有指代键!=0 && 有指代键!=3)return {状态::未初始化,{}};
+    const auto N=快照.结构.节点.编码;
+    if(!有效(N))return {状态::结构不可解码,{}};
+    std::optional<稳定编码> 类型,C,W,语言,来源;
+    std::optional<std::int64_t> 角色;
+    for(const auto& field:快照.结构.字段组) {
+        std::optional<稳定编码>* target=nullptr;
+        if(field.字段节点==节点类型字段)target=&类型;
+        else if(field.字段节点==被命名概念字段)target=&C;
+        else if(field.字段节点==目标词条字段)target=&W;
+        else if(field.字段节点==指代名称键[语言键])target=&语言;
+        else if(field.字段节点==指代名称键[来源键])target=&来源;
+        if(target) {
+            const auto* ref=std::get_if<稳定编码>(&field.内容);
+            if(*target || !ref || !有效(*ref))return {状态::结构不可解码,{}};
+            *target=*ref;
+        } else if(field.字段节点==指代名称键[角色键]) {
+            const auto* value=std::get_if<基础值>(&field.内容);
+            const auto* number=value ? std::get_if<std::int64_t>(&value->材料) : nullptr;
+            if(角色 || !number || *number<1 || *number>3)return {状态::结构不可解码,{}};
+            角色=*number;
+        }
+    }
+    if(!类型)return {状态::结构不可解码,{}};
+    if(*类型!=名称关系节点类型)return {状态::非本类节点,{}};
+    if(!C || !W || 角色.has_value()!=语言.has_value() || 角色.has_value()!=来源.has_value())
+        return {状态::结构不可解码,{}};
+    std::size_t 父边=0;
+    for(const auto& edge:快照.入向外部关系组)if(edge.类型==基础外部关系类型::父子) {
+        if(edge.源节点!=概念名称关系根节点 || edge.目标节点!=N || edge.角色或顺序!=0)
+            return {状态::结构不可解码,{}};
+        ++父边;
+    }
+    if(父边!=1)return {状态::结构不可解码,{}};
+    std::optional<指代名称角色> typedRole;
+    if(角色)typedRole=static_cast<指代名称角色>(*角色);
+    return {状态::已解码,新名称快照原始信息{N,*C,*W,typedRole,语言,来源}};
+}
+
 std::vector<稳定编码> 概念_名称关系类::读取词条当前概念组(稳定编码 W) const {
     std::lock_guard 锁(概念名称关系互斥);
     return 当前概念集合(读取当前词条名称(W));
