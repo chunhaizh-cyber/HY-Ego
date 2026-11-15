@@ -242,6 +242,43 @@ bool 新_存在类::装配存在集合成员保护字段(稳定编码 字段) no
     存在集合保护字段_ = 字段;
     return true;
 }
+新主体身份批次结果 新_存在类::解码主体存在身份批次(
+    稳定编码 E,std::span<const 基础联合节点读取项> 批次) const {
+    using S=新主体身份批次状态;
+    if(!结构已初始化() || !有效(存在清理中字段) || !有效(存在清理中标记节点))return {S::未初始化};
+    if(!有效(E))return {S::不存在或非本类};
+    const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& x){return x.查询节点==E;});
+    if(it==批次.end())return {S::需补快照,{},{},{},{E}};
+    if(!it->快照)return {S::不存在或非本类};
+    const auto& snap=*it->快照;
+    if(snap.结构.节点.编码!=E)return {S::结构不可解码};
+    std::vector<基础字段关系> type,concepts,cleanup;
+    for(const auto& f:snap.结构.字段组) {
+        if(f.字段节点==节点类型字段)type.push_back(f);
+        if(f.字段节点==专属存在概念字段)concepts.push_back(f);
+        if(f.字段节点==存在清理中字段)cleanup.push_back(f);
+    }
+    if(!cleanup.empty()) {
+        if(cleanup.size()!=1)return {S::结构不可解码};
+        const auto mark=std::get_if<稳定编码>(&cleanup.front().内容);
+        return {mark && *mark==存在清理中标记节点 ? S::清理中 : S::结构不可解码};
+    }
+    if(type.empty())return {S::不存在或非本类};
+    if(type.size()!=1)return {S::结构不可解码};
+    const auto t=std::get_if<稳定编码>(&type.front().内容);
+    if(!t || !有效(*t))return {S::结构不可解码};
+    if(*t!=存在节点类型)return {S::不存在或非本类};
+    if(concepts.size()!=1)return {S::结构不可解码};
+    const auto C=std::get_if<稳定编码>(&concepts.front().内容);
+    if(!C || !有效(*C) || *C==E)return {S::结构不可解码};
+    基础只读预期 p;
+    for(const auto n:{E,节点类型字段,专属存在概念字段,存在清理中字段})p.节点组.push_back({n});
+    p.字段集合组.push_back({E,节点类型字段,{},std::move(type)});
+    p.字段集合组.push_back({E,专属存在概念字段,{},std::move(concepts)});
+    p.字段集合组.push_back({E,存在清理中字段,{},std::move(cleanup)});
+    return {S::已解码,E,*C,std::move(p),{}};
+}
+
 特征存在成员读取结果 新_存在类::读取存在集合成员身份(稳定编码 n) const noexcept {
     using S = 特征概念规则状态;
     try {

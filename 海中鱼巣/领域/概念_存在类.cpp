@@ -343,6 +343,32 @@ std::optional<稳定编码> 共同上位特征概念(
 
 } // namespace
 
+新主体身份批次结果 概念_存在类::解码专属存在概念身份批次(
+    稳定编码 C,稳定编码 E,std::span<const 基础联合节点读取项> 批次) const {
+    using S=新主体身份批次状态;
+    if(!结构已初始化())return {S::未初始化};
+    if(!有效(C) || !有效(E) || C==E)return {S::结构不可解码};
+    const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& x){return x.查询节点==C;});
+    if(it==批次.end())return {S::需补快照,{},{},{},{C}};
+    if(!it->快照)return {S::不存在或非本类};
+    const auto& snap=*it->快照;
+    if(snap.结构.节点.编码!=C)return {S::结构不可解码};
+    std::vector<基础字段关系> type,owner;
+    for(const auto& f:snap.结构.字段组) {
+        if(f.字段节点==节点类型字段)type.push_back(f);
+        if(f.字段节点==对应存在字段)owner.push_back(f);
+    }
+    if(type.size()!=1 || owner.size()!=1)return {S::结构不可解码};
+    const auto t=std::get_if<稳定编码>(&type.front().内容);
+    const auto e=std::get_if<稳定编码>(&owner.front().内容);
+    if(!t || !e || *t!=专属存在概念节点类型 || *e!=E)return {S::结构不可解码};
+    基础只读预期 p;
+    for(const auto n:{C,E,节点类型字段,对应存在字段})p.节点组.push_back({n});
+    p.字段集合组.push_back({C,节点类型字段,{},std::move(type)});
+    p.字段集合组.push_back({C,对应存在字段,{},std::move(owner)});
+    return {S::已解码,E,C,std::move(p),{}};
+}
+
 专属存在概念身份保护结果 概念_存在类::读取专属存在概念身份保护(
     稳定编码 ec, 稳定编码 e, const 基础联合节点快照& 首读) const noexcept {
     using S = 专属存在概念身份读取状态;
