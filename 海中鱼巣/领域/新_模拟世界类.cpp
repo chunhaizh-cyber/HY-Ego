@@ -80,6 +80,7 @@ void 补齐模拟追加联合预期(基础节点组追加请求& q) {
     std::sort(节点.begin(),节点.end());
     节点.erase(std::unique(节点.begin(),节点.end()),节点.end());
     auto r = 全局基础数据集.查询节点组完整结构(节点);
+    if (r.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
     if (r.状态 != 基础结构操作状态::已完成 || r.节点组.size() != 节点.size())
         throw std::runtime_error("simulation joint snapshot read failed");
     for (auto& x : r.节点组) {
@@ -375,6 +376,7 @@ struct 新_模拟世界类::实现 final {
     std::shared_ptr<const 新字段询问语言接口> 字段询问语言;
     std::optional<新字段询问登记配置> 字段询问配置;
     std::optional<新模拟执行主体输入> 执行主体来源;
+    std::optional<新模拟归类主体输入> 归类主体来源;
     std::optional<稳定编码> 本地执行主体;
     mutable std::optional<稳定编码> 需求动作许可;
     std::optional<稳定编码> 当前调用;
@@ -2250,7 +2252,12 @@ namespace 海中鱼巣 {
     const std::vector<新模拟任务治理输入>& 任务组,const std::vector<新模拟场景事实输入>& 场景输入,
     std::optional<稳定编码> 执行分支,const std::optional<新模拟消息方案输入>& 消息输入,
     const 新模拟需求输入图& 需求图,const std::optional<新模拟执行主体输入>& 执行主体输入,
-    const std::vector<新模拟词典材料复制输入>& 词典材料输入) {
+    const std::vector<新模拟词典材料复制输入>& 词典材料输入,
+    const std::optional<新模拟归类主体输入>& 归类主体输入) {
+    if(执行主体输入 && 归类主体输入)return {新模拟世界状态::入口拒绝,{}};
+    if(归类主体输入 && (!有效(归类主体输入->来源存在) || !有效(归类主体输入->专属概念)
+        || 归类主体输入->同源存在输入!=4 || 归类主体输入->身份预期.字段集合组.empty()))
+        return {新模拟世界状态::入口拒绝,{}};
     // 只允许图内重映射的内容引用；来源世界的实例身份不能穿透进样例。
     for(const auto& 需求:需求图.需求组) {
         if(需求.目标.引用内容定位)return {新模拟世界状态::入口拒绝,{}};
@@ -2815,6 +2822,12 @@ namespace 海中鱼巣 {
     q.预期联合节点组.insert(q.预期联合节点组.end(),需求图.正式定义保护.begin(),需求图.正式定义保护.end());
     if(执行主体输入)q.预期联合节点组.insert(q.预期联合节点组.end(),执行主体输入->来源身份保护.begin(),执行主体输入->来源身份保护.end());
     q.只读预期=需求图.存在范围语义保护;
+    if(归类主体输入) {
+        const auto& expected=归类主体输入->身份预期;
+        q.只读预期.节点组.insert(q.只读预期.节点组.end(),expected.节点组.begin(),expected.节点组.end());
+        q.只读预期.字段集合组.insert(q.只读预期.字段集合组.end(),expected.字段集合组.begin(),expected.字段集合组.end());
+        q.只读预期.外部关系集合组.insert(q.只读预期.外部关系集合组.end(),expected.外部关系集合组.begin(),expected.外部关系集合组.end());
+    }
     // 语义合法性由需求/概念owner在采集时核验；这里要求这些共享引用确实进入同次原子前提。
     const auto 需正式保护=[&](稳定编码 C) {
         if(!有效(C)||std::none_of(需求图.正式定义保护.begin(),需求图.正式定义保护.end(),[&](const auto& x){return x.结构.节点.编码==C;}))
@@ -2889,6 +2902,12 @@ namespace 海中鱼巣 {
         const auto 位置=static_cast<std::size_t>(执行主体输入->同源存在输入-1);
         if(位置>=输入.size()||!是普通存在(位置)||输入[位置].来源存在!=std::optional{执行主体输入->来源存在}
             ||构造范围[位置]!=执行主体输入->专属概念){ 模拟样例拒绝行=__LINE__; return {}; }
+    }
+    if(归类主体输入) {
+        const auto 位置=static_cast<std::size_t>(归类主体输入->同源存在输入-1);
+        if(位置>=输入.size() || !是普通存在(位置) || !E节点.contains(代表.at(位置))
+            || 输入[位置].来源存在!=std::optional{归类主体输入->来源存在}
+            || 构造范围[位置]!=归类主体输入->专属概念){ 模拟样例拒绝行=__LINE__; return {}; }
     }
     std::map<std::size_t,std::size_t> 独立成员场景;
     if(!显式场景成员.empty())for(const auto position:E位置)
@@ -3320,21 +3339,31 @@ namespace 海中鱼巣 {
             throw std::runtime_error("simulation concept source read failed");
         return std::any_of(read.节点组.begin(),read.节点组.end(),[](const auto& item){return !item.快照;});
     };
+    const auto 归类主体已退出=[&]() {
+        if(!归类主体输入)return false;
+        const auto read=全局基础数据集.查询节点组完整结构(
+            {归类主体输入->来源存在,归类主体输入->专属概念});
+        if(read.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(read.状态!=基础结构操作状态::已完成)throw std::runtime_error("classification actor source read failed");
+        return std::any_of(read.节点组.begin(),read.节点组.end(),[](const auto& x){return !x.快照;});
+    };
     try { 补齐模拟追加联合预期(q); }
     catch(const 模拟联合预期变化&) { return {新模拟世界状态::定义前提已变化,{}}; }
     catch(const std::runtime_error&) {
-        if(概念来源已退出())return {新模拟世界状态::需重新组织输入,{}};
+        if(概念来源已退出() || 归类主体已退出())return {新模拟世界状态::需重新组织输入,{}};
         throw;
     }
     auto p=全局基础数据集.原子追加节点组(q);
     if(p.状态==基础节点组追加状态::预期不符)return {新模拟世界状态::定义前提已变化,{}};
     if((p.状态==基础节点组追加状态::节点不存在 || p.状态==基础节点组追加状态::引用不存在)
-        &&概念来源已退出())return {新模拟世界状态::需重新组织输入,{}};
+        &&(概念来源已退出() || 归类主体已退出()))return {新模拟世界状态::需重新组织输入,{}};
     if(p.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("generic simulation graph publication failed, status="+std::to_string(static_cast<int>(p.状态)));
     p.新节点组=std::move(图身份);主场景准备.保留=true;图身份准备.保留=true;
     s.通用=true;s.通用方法=M;s.收集追加(p);s.通用场景=p.新节点组[场景];
     s.执行主体来源=执行主体输入;
+    s.归类主体来源=归类主体输入;
+    if(归类主体输入)s.本地执行主体=E节点.at(代表.at(归类主体输入->同源存在输入-1));
     if(执行主体输入)s.本地执行主体=独立执行主体 ? p.新节点组[*独立执行主体]
         :E节点.at(代表.at(执行主体输入->同源存在输入-1));
     const auto registerGraph=[&](auto& map,const auto& nodes,const auto& inputs,const auto& source) {
@@ -4417,7 +4446,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     s.交互事实.clear();s.本次场景读取.clear();
     s.记录写回=false;s.写回窗口已关闭=false;s.最后写入来源组.clear();
     s.当前调用.reset();s.停止检查={};s.请求取消=false;
-    s.执行主体来源.reset();s.本地执行主体.reset();s.需求动作许可.reset();
+    s.执行主体来源.reset();s.归类主体来源.reset();s.本地执行主体.reset();s.需求动作许可.reset();
     s.消息定义保护={};
     s.词典回执组.clear();s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();s.消息事件组.clear();s.消息序号=0;
     auto runtime=std::move(s.词典运行);lock.unlock();runtime.reset();

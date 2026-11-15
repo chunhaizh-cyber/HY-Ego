@@ -18,6 +18,11 @@ struct 新模拟执行主体输入 final {
     std::vector<基础联合节点快照> 来源身份保护;
     std::uint32_t 同源存在输入=0;
 };
+struct 新模拟归类主体输入 final {
+    稳定编码 来源存在, 专属概念;
+    std::uint32_t 同源存在输入=0;
+    基础只读预期 身份预期;
+};
 enum class 新模拟需求执行预检状态 : std::uint8_t { 已就绪=1, 规格未支持, 依赖未就绪, 前提已变化 };
 struct 新模拟需求执行预检结果 final {
     新模拟需求执行预检状态 状态=新模拟需求执行预检状态::依赖未就绪;
@@ -206,7 +211,8 @@ public:
         const std::optional<新模拟消息方案输入>& 消息输入 = {},
         const 新模拟需求输入图& 需求图 = {},
         const std::optional<新模拟执行主体输入>& 执行主体输入 = {},
-        const std::vector<新模拟词典材料复制输入>& 词典材料输入 = {});
+        const std::vector<新模拟词典材料复制输入>& 词典材料输入 = {},
+        const std::optional<新模拟归类主体输入>& 归类主体输入 = {});
     新模拟需求执行预检结果 预检需求执行(const 方法参数场景&) const;
     新本能需求运行接口* 获取需求运行接口() noexcept override;
     新本能需求材料读回 读取新需求材料(const 方法参数场景&) const override;
