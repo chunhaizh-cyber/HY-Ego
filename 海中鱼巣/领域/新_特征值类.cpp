@@ -377,6 +377,11 @@ public:
         }
     }
 
+    新特征值快照解码结果 解码特征值快照(const 基础节点结构& 结构) const {
+        std::scoped_lock 锁(互斥_);
+        return 解码特征值快照已加锁(结构);
+    }
+
     std::vector<稳定编码> 查询特征值(
         材料物理类型 类型, const 新特征值材料& 材料) const noexcept {
         try {
@@ -427,34 +432,47 @@ private:
         return 值 && *值 == 材料;
     }
 
-    std::optional<新特征值信息> 获取特征值已加锁(稳定编码 节点) const {
-        if (!有效(节点) || !是指定类型节点(节点, 特征值类型节点_)) {
-            return std::nullopt;
+    新特征值快照解码结果 解码特征值快照已加锁(const 基础节点结构& 结构) const {
+        using 状态=新特征值快照解码状态;
+        if (!已初始化_) return {状态::未初始化,{}};
+        const 基础字段关系* 类型字段=nullptr;
+        const 基础字段关系* 物理字段=nullptr;
+        const 基础字段关系* 材料字段=nullptr;
+        for (const auto& 字段 : 结构.字段组) {
+            const 基础字段关系** 目标=nullptr;
+            if (字段.字段节点==节点类型字段_) 目标=&类型字段;
+            else if (字段.字段节点==材料物理类型字段_) 目标=&物理字段;
+            else if (字段.字段节点==原始材料字段_) 目标=&材料字段;
+            if (目标) {
+                if (*目标) return {状态::结构不可解码,{}};
+                *目标=&字段;
+            }
         }
-
-        const auto 类型字段 = 读取唯一值字段(数据集_, 节点, 材料物理类型字段_);
-        auto 材料字段 = 读取唯一值字段(数据集_, 节点, 原始材料字段_);
-        if (!类型字段 || !材料字段) return std::nullopt;
-        const auto* 类型值 = std::get_if<std::int64_t>(&类型字段->材料);
-        if (!类型值) return std::nullopt;
-
-        const auto 类型 = static_cast<材料物理类型>(*类型值);
-        if (!是已知物理类型(类型)) return std::nullopt;
-
+        if (!有效(结构.节点.编码) || !类型字段) return {状态::结构不可解码,{}};
+        const auto* 节点类型=std::get_if<稳定编码>(&类型字段->内容);
+        if (!节点类型) return {状态::结构不可解码,{}};
+        if (*节点类型!=特征值类型节点_) return {状态::非本类节点,{}};
+        const auto* 物理值=物理字段 ? std::get_if<基础值>(&物理字段->内容) : nullptr;
+        const auto* 原始值=材料字段 ? std::get_if<基础值>(&材料字段->内容) : nullptr;
+        const auto* 类型值=物理值 ? std::get_if<std::int64_t>(&物理值->材料) : nullptr;
+        if (!类型值 || !原始值) return {状态::结构不可解码,{}};
+        const auto 类型=static_cast<材料物理类型>(*类型值);
+        if (!是已知物理类型(类型)) return {状态::结构不可解码,{}};
         新特征值材料 材料;
-        if (auto* U64值 =
-            std::get_if<std::vector<std::uint64_t>>(&材料字段->材料)) {
-            材料 = std::move(*U64值);
-        } else if (auto* I64值 =
-            std::get_if<std::vector<std::int64_t>>(&材料字段->材料)) {
-            材料 = std::move(*I64值);
-        } else if (auto* 字符串值 = std::get_if<std::string>(&材料字段->材料)) {
-            材料 = std::move(*字符串值);
-        } else {
-            return std::nullopt;
-        }
-        if (!材料形态匹配(类型, 材料)) return std::nullopt;
-        return 新特征值信息{节点, 类型, std::move(材料)};
+        if (const auto* U64值=std::get_if<std::vector<std::uint64_t>>(&原始值->材料)) 材料=*U64值;
+        else if (const auto* I64值=std::get_if<std::vector<std::int64_t>>(&原始值->材料)) 材料=*I64值;
+        else if (const auto* 字符串值=std::get_if<std::string>(&原始值->材料)) 材料=*字符串值;
+        else return {状态::结构不可解码,{}};
+        if (!材料形态匹配(类型,材料)) return {状态::结构不可解码,{}};
+        return {状态::已解码,新特征值信息{结构.节点.编码,类型,std::move(材料)}};
+    }
+
+    std::optional<新特征值信息> 获取特征值已加锁(稳定编码 节点) const {
+        if (!已初始化_ || !有效(节点)) return std::nullopt;
+        const auto 读取=数据集_.查询完整节点结构(节点);
+        if (读取.状态==基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (读取.状态!=基础结构操作状态::已完成 || !读取.结构) return std::nullopt;
+        return 解码特征值快照已加锁(*读取.结构).信息;
     }
 
     稳定编码 建立压缩节点(
@@ -674,6 +692,10 @@ bool 新_特征值类::初始化() noexcept {
 std::optional<新特征值信息> 新_特征值类::获取特征值(
     稳定编码 节点) const noexcept {
     return 实现_->获取特征值(节点);
+}
+
+新特征值快照解码结果 新_特征值类::解码特征值快照(const 基础节点结构& 结构) const {
+    return 实现_->解码特征值快照(结构);
 }
 
 std::vector<稳定编码> 新_特征值类::查询特征值(
