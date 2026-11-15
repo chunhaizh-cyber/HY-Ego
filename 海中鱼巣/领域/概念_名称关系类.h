@@ -119,6 +119,24 @@ struct 新词条归类前态读取结果 final {
     新词条归类前态读取状态 状态=新词条归类前态读取状态::需重新组织;
     std::optional<新词条归类前态> 信息;
 };
+enum class 新词条归类前态批次状态 : std::uint8_t {
+    已读取 = 1, 需重新组织, 依赖未就绪, 能力未支持, 结构不可解码, 需补快照
+};
+struct 新词条归类前态批次结果 final {
+    新词条归类前态批次状态 状态=新词条归类前态批次状态::需重新组织;
+    std::optional<新词条归类前态> 信息;
+    std::vector<稳定编码> 需补节点组;
+};
+struct 新词条归类联合来源 final {
+    新词条归类前态 前态;
+    稳定编码 归类材料;
+    正式信息参数投影 材料内容;
+    std::optional<稳定编码> 采用概念;
+};
+struct 新词条归类联合来源结果 final {
+    新词条归类前态读取状态 状态=新词条归类前态读取状态::需重新组织;
+    std::optional<新词条归类联合来源> 信息;
+};
 struct 指代名称来源定位 final {
     std::int64_t 起始标量 = 0, 结束标量 = 0;
     friend bool operator==(const 指代名称来源定位&,
@@ -214,6 +232,12 @@ public:
         稳定编码 词条节点) const noexcept;
     概念名称候选保护结果 读取词条名称候选保护(
         稳定编码 词条) const noexcept;
+    新词条归类前态批次结果 解码词条归类前态批次(
+        稳定编码,稳定编码,const 新_特征类&,const 新_特征值类&,
+        std::span<const 基础联合节点读取项>) const;
+    新词条归类联合来源结果 读取词条归类联合来源(
+        稳定编码,稳定编码,稳定编码,const 新词典归类信息概念组&,
+        const 新_特征类&,const 新_特征值类&,const std::function<bool()>& 停止 = {}) const;
     新词条归类前态读取结果 读取词条归类前态(
         稳定编码 词条,稳定编码 特征,const 新_特征类&,const 新_特征值类&,
         const std::function<bool()>& 停止 = {}) const;

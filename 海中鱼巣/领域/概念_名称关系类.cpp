@@ -1153,10 +1153,178 @@ bool 概念_名称关系类::初始化() noexcept {
     }
 }
 
+新词条归类前态批次结果 概念_名称关系类::解码词条归类前态批次(
+    稳定编码 W,稳定编码 F,const 新_特征类& 特征,const 新_特征值类& 值,
+    std::span<const 基础联合节点读取项> 批次) const {
+    using 状态=新词条归类前态批次状态;
+    if(!有效(W) || !有效(F))return {状态::需重新组织,{}};
+    const auto find=[&](稳定编码 id)->const 基础联合节点读取项* {
+        const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& item){return item.查询节点==id;});
+        return it==批次.end() ? nullptr : &*it;
+    };
+    const auto wordItem=find(W);
+    if(!wordItem)return {状态::需补快照,{}, {W}};
+    if(!wordItem->快照)return {状态::需重新组织,{}};
+    const auto word=词服务_.解码词条快照(*wordItem->快照);
+    if(word.状态==新词条快照解码状态::未初始化)return {状态::依赖未就绪,{}};
+    if(word.状态==新词条快照解码状态::非本类节点)return {状态::需重新组织,{}};
+    if(word.状态!=新词条快照解码状态::已解码 || !word.信息)
+        return {状态::结构不可解码,{}};
+    if(!word.信息->挂接 || std::find(word.信息->挂接->特征节点组.begin(),
+        word.信息->挂接->特征节点组.end(),F)==word.信息->挂接->特征节点组.end())
+        return {状态::需重新组织,{}};
+    const auto names=从词条快照发现名称(*wordItem->快照);
+    if(names.状态==新名称快照解码状态::未初始化)return {状态::依赖未就绪,{}};
+    if(names.状态!=新名称快照解码状态::已解码)return {状态::结构不可解码,{}};
+    std::set<稳定编码> 缺少,共享概念,普通概念,材料节点;
+    std::vector<新名称快照原始信息> 名称组;
+    for(const auto N:names.名称节点组) {
+        const auto item=find(N);
+        if(!item){缺少.insert(N);continue;}
+        if(!item->快照)return {状态::结构不可解码,{}};
+        auto decoded=解码名称快照(*item->快照);
+        if(decoded.状态==新名称快照解码状态::未初始化)return {状态::依赖未就绪,{}};
+        if(decoded.状态!=新名称快照解码状态::已解码 || !decoded.信息 || decoded.信息->词条!=W)
+            return {状态::结构不可解码,{}};
+        共享概念.insert(decoded.信息->概念);
+        if(!decoded.信息->角色)普通概念.insert(decoded.信息->概念);
+        名称组.push_back(std::move(*decoded.信息));
+    }
+    auto feature=特征.解码顶层概念集合特征快照(F,批次);
+    if(feature.状态==新概念集合特征快照状态::未初始化)return {状态::依赖未就绪,{}};
+    if(feature.状态==新概念集合特征快照状态::能力未支持)return {状态::能力未支持,{}};
+    if(feature.状态==新概念集合特征快照状态::信息不存在
+        || feature.状态==新概念集合特征快照状态::非本类节点)return {状态::需重新组织,{}};
+    if(feature.状态==新概念集合特征快照状态::需补快照)
+        缺少.insert(feature.需补节点组.begin(),feature.需补节点组.end());
+    else if(feature.状态!=新概念集合特征快照状态::已解码 || !feature.信息)
+        return {状态::结构不可解码,{}};
+    新名称挂接概念批次结果 conceptResult;
+    if(feature.信息) {
+        conceptResult=特征概念服务_.解码名称挂接概念批次(feature.信息->特征概念节点,批次);
+        if(conceptResult.状态==新名称挂接概念批次状态::未初始化
+            || conceptResult.状态==新名称挂接概念批次状态::槽未建立)return {状态::依赖未就绪,{}};
+        if(conceptResult.状态==新名称挂接概念批次状态::不相容)return {状态::需重新组织,{}};
+        if(conceptResult.状态==新名称挂接概念批次状态::能力未支持)return {状态::能力未支持,{}};
+        if(conceptResult.状态==新名称挂接概念批次状态::需补快照)
+            缺少.insert(conceptResult.需补节点组.begin(),conceptResult.需补节点组.end());
+        else if(conceptResult.状态!=新名称挂接概念批次状态::已解码
+            || !conceptResult.定义 || !conceptResult.类型根)return {状态::结构不可解码,{}};
+    }
+    if(!缺少.empty())return {状态::需补快照,{}, {缺少.begin(),缺少.end()}};
+    if(!feature.信息 || !conceptResult.定义 || !conceptResult.类型根)
+        return {状态::结构不可解码,{}};
+    材料节点.insert(feature.材料节点组.begin(),feature.材料节点组.end());
+    if(const auto* finite=std::get_if<std::vector<稳定编码>>(&conceptResult.定义->值域))
+        材料节点.insert(finite->begin(),finite->end());
+    if(const auto* domain=std::get_if<特征概念概念集合值域>(&conceptResult.定义->值域))
+        共享概念.insert(domain->必含概念节点组.begin(),domain->必含概念节点组.end());
+    std::vector<新特征值信息> 材料组;
+    材料组.reserve(材料节点.size());
+    for(const auto V:材料节点) {
+        const auto item=find(V);
+        if(!item){缺少.insert(V);continue;}
+        if(!item->快照)return {状态::结构不可解码,{}};
+        auto decoded=值.解码特征值快照(item->快照->结构);
+        if(decoded.状态==新特征值快照解码状态::未初始化)return {状态::依赖未就绪,{}};
+        if(decoded.状态!=新特征值快照解码状态::已解码 || !decoded.信息
+            || decoded.信息->物理类型!=材料物理类型::U64数组)
+            return {状态::结构不可解码,{}};
+        const auto* members=std::get_if<std::vector<std::uint64_t>>(&decoded.信息->材料);
+        if(!members)return {状态::结构不可解码,{}};
+        for(const auto raw:*members) {
+            const 稳定编码 C{raw};if(!有效(C))return {状态::结构不可解码,{}};
+            共享概念.insert(C);
+        }
+        材料组.push_back(std::move(*decoded.信息));
+    }
+    for(const auto C:共享概念) {
+        const auto item=find(C);
+        if(!item)缺少.insert(C);
+        else if(!item->快照)return {状态::需重新组织,{}};
+    }
+    if(!缺少.empty())return {状态::需补快照,{}, {缺少.begin(),缺少.end()}};
+    新词条归类前态 out{word.信息->词条,word.信息->挂接->场景,std::move(*feature.信息),
+        *conceptResult.类型根,std::move(*conceptResult.定义),std::move(材料组),std::move(名称组),
+        {普通概念.begin(),普通概念.end()},{共享概念.begin(),共享概念.end()}};
+    return {状态::已读取,std::move(out)};
+}
+
+新词条归类联合来源结果 概念_名称关系类::读取词条归类联合来源(
+    稳定编码 W,稳定编码 F,稳定编码 R,const 新词典归类信息概念组& 概念组,
+    const 新_特征类& 特征,const 新_特征值类& 值,const std::function<bool()>& 停止) const {
+    using 状态=新词条归类前态读取状态;
+    using 前态状态=新词条归类前态批次状态;
+    using 材料状态=新词典归类参数批次状态;
+    try {
+        if(!有效(W) || !有效(F) || !有效(R))return {状态::需重新组织,{}};
+        std::set<稳定编码> 请求{W,F,R};
+        for(;;) {
+            if(停止 && 停止())return {状态::已停止,{}};
+            const auto batch=全局基础数据集.查询节点组完整结构({请求.begin(),请求.end()});
+            if(batch.状态==基础结构操作状态::资源失败)return {状态::资源失败,{}};
+            if(batch.状态!=基础结构操作状态::已完成 || batch.节点组.size()!=请求.size())
+                return {状态::结构不可解码,{}};
+            auto 前态=解码词条归类前态批次(W,F,特征,值,batch.节点组);
+            auto 材料=词服务_.取得语言服务().解码词典归类参数批次(R,概念组,batch.节点组);
+            switch(前态.状态) {
+            case 前态状态::需重新组织:return {状态::需重新组织,{}};
+            case 前态状态::依赖未就绪:return {状态::依赖未就绪,{}};
+            case 前态状态::能力未支持:return {状态::能力未支持,{}};
+            case 前态状态::结构不可解码:return {状态::结构不可解码,{}};
+            default:break;
+            }
+            switch(材料.状态) {
+            case 材料状态::信息不存在:return {状态::需重新组织,{}};
+            case 材料状态::未初始化:return {状态::依赖未就绪,{}};
+            case 材料状态::结构不可解码:return {状态::结构不可解码,{}};
+            default:break;
+            }
+            if(前态.状态==前态状态::需补快照 || 材料.状态==材料状态::需补快照) {
+                const auto before=请求.size();
+                请求.insert(前态.需补节点组.begin(),前态.需补节点组.end());
+                请求.insert(材料.需补节点组.begin(),材料.需补节点组.end());
+                if(请求.size()==before)throw std::logic_error("classification joint source dependency did not advance");
+                std::this_thread::yield();continue;
+            }
+            if(前态.状态!=前态状态::已读取 || !前态.信息
+                || 材料.状态!=材料状态::已解码 || !材料.信息)
+                return {状态::结构不可解码,{}};
+            const auto& 内容=材料.信息->直接内容组;
+            const auto find=[&](稳定编码 ft) { return std::find_if(内容.begin(),内容.end(),
+                [&](const auto& item){return item.特征类型==ft;}); };
+            const auto target=find(概念组.目标词条FT), adopted=find(概念组.采用概念FT);
+            if(target==内容.end() || adopted==内容.end()
+                || target->内容.种类!=正式内容值种类::词条引用
+                || target->内容.状态!=正式内容值状态::已知 || !target->内容.值
+                || adopted->内容.种类!=正式内容值种类::概念引用)
+                return {状态::结构不可解码,{}};
+            const auto word=std::get_if<稳定编码>(&*target->内容.值);
+            if(!word)return {状态::结构不可解码,{}};
+            if(*word!=W)return {状态::需重新组织,{}};
+            std::optional<稳定编码> C;
+            if(adopted->内容.状态==正式内容值状态::已知) {
+                if(!adopted->内容.值)return {状态::结构不可解码,{}};
+                const auto conceptValue=std::get_if<稳定编码>(&*adopted->内容.值);
+                if(!conceptValue || !有效(*conceptValue))return {状态::结构不可解码,{}};
+                C=*conceptValue;
+                auto& 共享=前态.信息->共享概念组;
+                共享.push_back(*C);std::sort(共享.begin(),共享.end());
+                共享.erase(std::unique(共享.begin(),共享.end()),共享.end());
+            } else if(adopted->内容.状态!=正式内容值状态::当前未知 || adopted->内容.值) {
+                return {状态::结构不可解码,{}};
+            }
+            return {状态::已读取,新词条归类联合来源{std::move(*前态.信息),R,std::move(*材料.信息),C}};
+        }
+    } catch(const std::bad_alloc&) {return {状态::资源失败,{}};}
+    catch(const std::length_error&) {return {状态::资源失败,{}};}
+}
+
 新词条归类前态读取结果 概念_名称关系类::读取词条归类前态(
     稳定编码 W,稳定编码 F,const 新_特征类& 特征,const 新_特征值类& 值,
     const std::function<bool()>& 停止) const {
     using 状态=新词条归类前态读取状态;
+    using 批状态=新词条归类前态批次状态;
     try {
         if(!有效(W) || !有效(F))return {状态::需重新组织,{}};
         std::set<稳定编码> 请求{W,F};
@@ -1166,102 +1334,19 @@ bool 概念_名称关系类::初始化() noexcept {
             if(batch.状态==基础结构操作状态::资源失败)return {状态::资源失败,{}};
             if(batch.状态!=基础结构操作状态::已完成 || batch.节点组.size()!=请求.size())
                 return {状态::结构不可解码,{}};
-            const auto find=[&](稳定编码 id)->const 基础联合节点读取项* {
-                const auto it=std::lower_bound(batch.节点组.begin(),batch.节点组.end(),id,
-                    [](const auto& item,稳定编码 key){return item.查询节点<key;});
-                return it!=batch.节点组.end() && it->查询节点==id ? &*it : nullptr;
-            };
-            const auto wordItem=find(W);
-            if(!wordItem || !wordItem->快照)return {状态::需重新组织,{}};
-            const auto word=词服务_.解码词条快照(*wordItem->快照);
-            if(word.状态==新词条快照解码状态::未初始化)return {状态::依赖未就绪,{}};
-            if(word.状态==新词条快照解码状态::非本类节点)return {状态::需重新组织,{}};
-            if(word.状态!=新词条快照解码状态::已解码 || !word.信息)
-                return {状态::结构不可解码,{}};
-            if(!word.信息->挂接 || std::find(word.信息->挂接->特征节点组.begin(),
-                word.信息->挂接->特征节点组.end(),F)==word.信息->挂接->特征节点组.end())
-                return {状态::需重新组织,{}};
-            const auto names=从词条快照发现名称(*wordItem->快照);
-            if(names.状态==新名称快照解码状态::未初始化)return {状态::依赖未就绪,{}};
-            if(names.状态!=新名称快照解码状态::已解码)return {状态::结构不可解码,{}};
-            std::set<稳定编码> 缺少,共享概念,普通概念,材料节点;
-            std::vector<新名称快照原始信息> 名称组;
-            for(const auto N:names.名称节点组) {
-                const auto item=find(N);
-                if(!item){缺少.insert(N);continue;}
-                if(!item->快照)return {状态::结构不可解码,{}};
-                auto decoded=解码名称快照(*item->快照);
-                if(decoded.状态==新名称快照解码状态::未初始化)return {状态::依赖未就绪,{}};
-                if(decoded.状态!=新名称快照解码状态::已解码 || !decoded.信息 || decoded.信息->词条!=W)
-                    return {状态::结构不可解码,{}};
-                共享概念.insert(decoded.信息->概念);
-                if(!decoded.信息->角色)普通概念.insert(decoded.信息->概念);
-                名称组.push_back(std::move(*decoded.信息));
-            }
-            auto feature=特征.解码顶层概念集合特征快照(F,batch.节点组);
-            if(feature.状态==新概念集合特征快照状态::未初始化)return {状态::依赖未就绪,{}};
-            if(feature.状态==新概念集合特征快照状态::能力未支持)return {状态::能力未支持,{}};
-            if(feature.状态==新概念集合特征快照状态::需补快照)
-                缺少.insert(feature.需补节点组.begin(),feature.需补节点组.end());
-            else if(feature.状态!=新概念集合特征快照状态::已解码 || !feature.信息)
-                return {状态::结构不可解码,{}};
-            新名称挂接概念批次结果 conceptResult;
-            if(feature.信息) {
-                conceptResult=特征概念服务_.解码名称挂接概念批次(feature.信息->特征概念节点,batch.节点组);
-                if(conceptResult.状态==新名称挂接概念批次状态::未初始化
-                    || conceptResult.状态==新名称挂接概念批次状态::槽未建立)return {状态::依赖未就绪,{}};
-                if(conceptResult.状态==新名称挂接概念批次状态::不相容)return {状态::需重新组织,{}};
-                if(conceptResult.状态==新名称挂接概念批次状态::能力未支持)return {状态::能力未支持,{}};
-                if(conceptResult.状态==新名称挂接概念批次状态::需补快照)
-                    缺少.insert(conceptResult.需补节点组.begin(),conceptResult.需补节点组.end());
-                else if(conceptResult.状态!=新名称挂接概念批次状态::已解码
-                    || !conceptResult.定义 || !conceptResult.类型根)return {状态::结构不可解码,{}};
-            }
-            if(!缺少.empty()) {
-                const auto before=请求.size();请求.insert(缺少.begin(),缺少.end());
+            auto decoded=解码词条归类前态批次(W,F,特征,值,batch.节点组);
+            switch(decoded.状态) {
+            case 批状态::已读取:return {状态::已读取,std::move(decoded.信息)};
+            case 批状态::需重新组织:return {状态::需重新组织,{}};
+            case 批状态::依赖未就绪:return {状态::依赖未就绪,{}};
+            case 批状态::能力未支持:return {状态::能力未支持,{}};
+            case 批状态::结构不可解码:return {状态::结构不可解码,{}};
+            case 批状态::需补快照: {
+                const auto before=请求.size();请求.insert(decoded.需补节点组.begin(),decoded.需补节点组.end());
                 if(请求.size()==before)throw std::logic_error("classification source dependency did not advance");
-                std::this_thread::yield();continue;
+                std::this_thread::yield();break;
             }
-            if(!feature.信息 || !conceptResult.定义 || !conceptResult.类型根)
-                return {状态::结构不可解码,{}};
-            材料节点.insert(feature.材料节点组.begin(),feature.材料节点组.end());
-            if(const auto* finite=std::get_if<std::vector<稳定编码>>(&conceptResult.定义->值域))
-                材料节点.insert(finite->begin(),finite->end());
-            if(const auto* domain=std::get_if<特征概念概念集合值域>(&conceptResult.定义->值域))
-                共享概念.insert(domain->必含概念节点组.begin(),domain->必含概念节点组.end());
-            std::vector<新特征值信息> 材料组;
-            材料组.reserve(材料节点.size());
-            for(const auto V:材料节点) {
-                const auto item=find(V);
-                if(!item){缺少.insert(V);continue;}
-                if(!item->快照)return {状态::结构不可解码,{}};
-                auto decoded=值.解码特征值快照(item->快照->结构);
-                if(decoded.状态==新特征值快照解码状态::未初始化)return {状态::依赖未就绪,{}};
-                if(decoded.状态!=新特征值快照解码状态::已解码 || !decoded.信息
-                    || decoded.信息->物理类型!=材料物理类型::U64数组)
-                    return {状态::结构不可解码,{}};
-                const auto* members=std::get_if<std::vector<std::uint64_t>>(&decoded.信息->材料);
-                if(!members)return {状态::结构不可解码,{}};
-                for(const auto raw:*members) {
-                    const 稳定编码 C{raw};if(!有效(C))return {状态::结构不可解码,{}};
-                    共享概念.insert(C);
-                }
-                材料组.push_back(std::move(*decoded.信息));
             }
-            for(const auto C:共享概念) {
-                const auto item=find(C);
-                if(!item)缺少.insert(C);
-                else if(!item->快照)return {状态::结构不可解码,{}};
-            }
-            if(!缺少.empty()) {
-                const auto before=请求.size();请求.insert(缺少.begin(),缺少.end());
-                if(请求.size()==before)throw std::logic_error("classification source material dependency did not advance");
-                std::this_thread::yield();continue;
-            }
-            新词条归类前态 out{word.信息->词条,word.信息->挂接->场景,std::move(*feature.信息),
-                *conceptResult.类型根,std::move(*conceptResult.定义),std::move(材料组),std::move(名称组),
-                {普通概念.begin(),普通概念.end()},{共享概念.begin(),共享概念.end()}};
-            return {状态::已读取,std::move(out)};
         }
     } catch(const std::bad_alloc&) {return {状态::资源失败,{}};}
     catch(const std::length_error&) {return {状态::资源失败,{}};}
