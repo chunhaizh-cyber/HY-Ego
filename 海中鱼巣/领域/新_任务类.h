@@ -61,6 +61,7 @@ class 新方法场景事实读取接口;
 class 新方法场景事实构成读取接口;
 class 新本能需求任务参数工厂;
 class 新本能词典任务参数工厂;
+class 新本能词条归类任务参数工厂;
 struct 新世界I64组合结果;
 struct 新任务最终消费边界 final {
     稳定编码 结算任务节点, 结算需求节点, 服务根需求节点;
@@ -1414,29 +1415,33 @@ struct 新词典学习发现结果 final {
     std::optional<新词典学习发现> 发现;
 };
 
-enum class 新词典任务正常处置 : std::uint8_t {
+enum class 新本能续接来源 : std::uint8_t { 词典 = 1, 词条归类 = 2 };
+
+enum class 新本能任务正常处置 : std::uint8_t {
     未动作等待条件 = 1, 未动作需要重新组织, 未动作目标已满足,
     当前职责已结束, 已有动作需要续接, 已有动作等待条件, 已有动作可以评估
 };
-struct 新任务词典续接定位 final {
+struct 新任务本能续接定位 final {
     稳定编码 任务节点, 执行实例节点;
-    friend bool operator==(const 新任务词典续接定位&, const 新任务词典续接定位&) = default;
+    新本能续接来源 来源 = 新本能续接来源::词典;
+    friend bool operator==(const 新任务本能续接定位&, const 新任务本能续接定位&) = default;
 };
-struct 新任务词典正常处置 final {
-    新词典任务正常处置 处置 = 新词典任务正常处置::当前职责已结束;
+struct 新任务本能正常处置 final {
+    新本能任务正常处置 处置 = 新本能任务正常处置::当前职责已结束;
     std::optional<新任务调度定位> 调度定位;
-    std::optional<新任务词典续接定位> 续接定位;
+    std::optional<新任务本能续接定位> 续接定位;
     std::vector<新词典学习缺口> 缺口组;
     std::vector<新任务依赖键> 等待依赖键组;
-    std::optional<新词典推进收束原因> 收束原因;
+    std::optional<新词典推进收束原因> 收束原因; // 仅词典提供者的附属材料。
+    新本能续接来源 来源 = 新本能续接来源::词典;
 };
-enum class 新任务词典推进状态 : std::uint8_t {
+enum class 新任务本能推进状态 : std::uint8_t {
     已返回正常处置 = 1, 依赖未装配, 资源失败, 结构不一致
 };
-struct 新任务词典推进结果 final {
-    新任务词典续接定位 原定位;
-    新任务词典推进状态 状态 = 新任务词典推进状态::结构不一致;
-    std::optional<新任务词典正常处置> 正常处置;
+struct 新任务本能推进结果 final {
+    新任务本能续接定位 原定位;
+    新任务本能推进状态 状态 = 新任务本能推进状态::结构不一致;
+    std::optional<新任务本能正常处置> 正常处置;
 };
 
 enum class 新任务治理本能执行状态 : std::uint8_t {
@@ -1457,7 +1462,7 @@ enum class 新任务治理本能执行状态 : std::uint8_t {
     零动作已回筹办, 未执行目标已满足, 仅材料治理,
     // 运行期结构依赖未就绪（装配缺陷）：独立工程状态，不属业务结果；由消费边界判定。
     结构依赖未就绪,
-    词典正常处置
+    本能正常处置
 };
 
 struct 新任务零动作恢复信息 final {
@@ -1483,7 +1488,7 @@ struct 新任务治理本能执行结果 final {
     std::optional<新任务操作状态> 未进入动作撤销状态;
     std::optional<新任务零动作恢复信息> 零动作恢复;
     std::optional<新任务执行前目标收束结果> 执行前目标收束;
-    std::optional<新任务词典正常处置> 词典处置;
+    std::optional<新任务本能正常处置> 本能处置;
 };
 
 struct 新任务治理结果获取请求 final {
@@ -1744,9 +1749,11 @@ public:
     // 非拥有外层工厂；仅启动前配置，所有使用线程join后由同一所有者卸载。
     bool 配置本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
     bool 卸载本能需求任务参数工厂(新本能需求任务参数工厂&) noexcept;
+    bool 配置本能词条归类任务参数工厂(新本能词条归类任务参数工厂&) noexcept;
+    bool 卸载本能词条归类任务参数工厂(新本能词条归类任务参数工厂&) noexcept;
     bool 配置本能词典任务参数工厂(新本能词典任务参数工厂&) noexcept;
     bool 卸载本能词典任务参数工厂(新本能词典任务参数工厂&) noexcept;
-    新任务词典推进结果 继续任务词典执行(const 新任务词典续接定位&) noexcept;
+    新任务本能推进结果 继续任务本能执行(const 新任务本能续接定位&) noexcept;
     新词典推进收束读取结果 读取执行词典推进收束(稳定编码 T, 稳定编码 X) const noexcept;
     std::optional<稳定编码> 获取任务已结算动作定义() const noexcept override;
     std::optional<新任务贡献动作定义> 读取任务贡献动作定义(稳定编码) const noexcept override;
@@ -2403,6 +2410,7 @@ private:
     新_动态类* 本能动作读取_ = nullptr;
     新本能需求任务参数工厂* 本能需求任务参数工厂_ = nullptr;
     新本能词典任务参数工厂* 本能词典任务参数工厂_ = nullptr;
+    新本能词条归类任务参数工厂* 本能词条归类任务参数工厂_ = nullptr;
 };
 
 } // namespace 海中鱼巣

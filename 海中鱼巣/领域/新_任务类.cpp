@@ -3,6 +3,7 @@
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
 #include "本能词典.运行接口.h"
+#include "本能词条归类.运行接口.h"
 #include "任务结算.规则.h"
 #include "新_方法类.h"
 #include "新_场景类.h"
@@ -11293,6 +11294,23 @@ bool 新_任务类::卸载本能需求任务参数工厂(新本能需求任务�
     }
 }
 
+bool 新_任务类::配置本能词条归类任务参数工厂(新本能词条归类任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能词条归类任务参数工厂_) return 本能词条归类任务参数工厂_ == &工厂;
+        本能词条归类任务参数工厂_ = &工厂;
+        return true;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"配置归类任务参数工厂",L"工厂配置工程故障。"); }
+}
+bool 新_任务类::卸载本能词条归类任务参数工厂(新本能词条归类任务参数工厂& 工厂) noexcept {
+    try {
+        std::lock_guard 锁(新任务互斥);
+        if (本能词条归类任务参数工厂_ != &工厂) return false;
+        本能词条归类任务参数工厂_ = nullptr;
+        return true;
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"卸载归类任务参数工厂",L"工厂卸载工程故障。"); }
+}
+
 bool 新_任务类::配置本能词典任务参数工厂(新本能词典任务参数工厂& 工厂) noexcept {
     try {
         std::lock_guard 锁(新任务互斥);
@@ -11334,18 +11352,20 @@ bool 新_任务类::卸载本能词典任务参数工厂(新本能词典任务�
     }
 }
 
-新任务词典推进结果 新_任务类::继续任务词典执行(const 新任务词典续接定位& 定位) noexcept {
-    using S = 新任务词典推进状态;
-    using P = 新词典任务正常处置;
+新任务本能推进结果 新_任务类::继续任务本能执行(const 新任务本能续接定位& 定位) noexcept {
+    using S = 新任务本能推进状态;
+    using P = 新本能任务正常处置;
     using R = 新词典运行状态;
-    新任务词典推进结果 out{定位, S::结构不一致, {}};
+    新任务本能推进结果 out{定位, S::结构不一致, {}};
     try {
-        if (!有效(定位.任务节点) || !有效(定位.执行实例节点)) return out;
+        if (!有效(定位.任务节点) || !有效(定位.执行实例节点)
+            || (定位.来源 != 新本能续接来源::词典 && 定位.来源 != 新本能续接来源::词条归类)) return out;
         const auto x = 获取执行实例(定位.执行实例节点);
         if (!x && 全局基础数据集.查询节点(定位.执行实例节点)) return out;
         if (x && x->任务节点 != 定位.任务节点) return out;
-        新任务词典正常处置 p;
+        新任务本能正常处置 p;
         p.续接定位 = 定位;
+        p.来源 = 定位.来源;
         const auto 完成 = [&](P disposition) {
             p.处置 = disposition;
             out.状态 = S::已返回正常处置;
@@ -11353,6 +11373,48 @@ bool 新_任务类::卸载本能词典任务参数工厂(新本能词典任务�
             return out;
         };
         if (!x || x->状态 != 新任务执行状态::执行中) return 完成(P::当前职责已结束);
+        if (定位.来源 == 新本能续接来源::词条归类) {
+            if (x->词条归类 && (x->词条归类->回执 || x->词条归类->未提交收束))
+                return 完成(P::已有动作可以评估);
+            新本能词条归类任务参数工厂* 工厂;
+            { std::lock_guard lock(新任务互斥); 工厂 = 本能词条归类任务参数工厂_; }
+            if (!工厂) { out.状态 = S::依赖未装配; return out; }
+            p.等待依赖键组 = 读取执行结果依赖键(*x);
+            p.等待依赖键组.push_back({新任务依赖键种类::需求,x->执行服务需求,{}});
+            p.等待依赖键组.push_back({新任务依赖键种类::节点,x->节点,{}});
+            const auto 追加依赖 = [&](const auto& nodes) {
+                for (const auto n : nodes) if (有效(n))
+                    p.等待依赖键组.push_back({新任务依赖键种类::节点,n,{}});
+                去重依赖键(p.等待依赖键组);
+            };
+            const auto prepared = 工厂->取得任务续接参数场景(定位.执行实例节点);
+            if (prepared.状态 == 新词条归类运行状态::已停止) return 完成(P::已有动作等待条件);
+            if (prepared.状态 != 新词条归类运行状态::已就绪 || !prepared.参数场景) return out;
+            const auto& scene = *prepared.参数场景;
+            if (!x->本能采用 || scene.方法节点() != x->方法节点
+                || scene.全部角色绑定() != x->本能采用->参数绑定组
+                || scene.执行分支节点() != x->本能采用->执行分支节点) return out;
+            auto* runtime = scene.获取词条归类运行接口();
+            if (!runtime) { out.状态 = S::依赖未装配; return out; }
+            const auto action = runtime->开始或取得归类动作(scene);
+            追加依赖(action.变化依赖节点组);
+            if (!action.动作 || !action.实际输入 || !action.实际条件
+                || (x->普通动作节点 && x->普通动作节点 != action.动作)) return out;
+            auto state = action.状态;
+            if (state == 新词条归类运行状态::已就绪) {
+                const auto progress = runtime->提交或取得归类结果(scene);
+                state = progress.状态;
+                追加依赖(progress.变化依赖节点组);
+            }
+            const auto fresh = 读取执行词条归类(定位.任务节点,定位.执行实例节点);
+            if (fresh.状态 == 新词条归类执行读取状态::资源失败) throw std::bad_alloc{};
+            if (fresh.状态 != 新词条归类执行读取状态::已读取
+                && fresh.状态 != 新词条归类执行读取状态::无记录) return out;
+            if (fresh.材料 && (fresh.材料->回执 || fresh.材料->未提交收束))
+                return 完成(P::已有动作可以评估);
+            return 完成(state == 新词条归类运行状态::条件未具备 || state == 新词条归类运行状态::已停止
+                ? P::已有动作等待条件 : P::已有动作需要续接);
+        }
         新本能词典任务参数工厂* 工厂;
         { std::lock_guard 锁(新任务互斥); 工厂 = 本能词典任务参数工厂_; }
         if (!工厂) { out.状态 = S::依赖未装配; return out; }
@@ -14666,6 +14728,15 @@ bool 新_任务类::读取归类结果材料(const 新任务执行信息& X,
                 && 执行->词条归类->动作 == r.动作;
             归因验证 = 原操作 && 必需回执命中数量 == 必需变化数量
                 ? 新任务影响验证状态::已验证通过 : 新任务影响验证状态::未验证;
+        } else if (场景批.归类正式结果 && 执行->词条归类 && 执行->词条归类->回执
+            && 执行->词条归类->回执->新状态) {
+            const auto& r = *执行->词条归类->回执;
+            const bool 同次来源 = 执行->普通动作节点 == std::optional{r.动作}
+                && 执行->词条归类->动作 == r.动作
+                && 必需命中状态.size() == 必需变化数量
+                && std::all_of(必需命中状态.begin(),必需命中状态.end(),
+                    [&](稳定编码 S) { return r.新状态 == S; });
+            归因验证 = 同次来源 ? 新任务影响验证状态::已验证通过 : 新任务影响验证状态::未验证;
         } else if (场景批.词典读取结果) {
             // 仅证明正式读取输出属于本次A；没有S时也不捏造变化归因。
             const bool 来源正确 = 执行->词典读取 && 执行->普通动作节点 == std::optional{执行->词典读取->动作};
@@ -27950,24 +28021,24 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
 
     std::shared_ptr<const 方法参数场景> 参数场景;
     std::optional<新任务信息> 开始前任务;
-    struct 词典零动作处置信号 {
-        新词典运行状态 状态 = 新词典运行状态::需重新组织;
+    using P = 新本能任务正常处置;
+    struct 本能零动作处置信号 {
+        P 处置 = P::未动作需要重新组织;
     };
     新本能词典任务参数工厂* 词典工厂 = nullptr;
-    新_动态类* 词典动作读取 = nullptr;
-    const auto 处理词典处置 = [&](const 新本能词典运行处置& runtime,
+    新本能词条归类任务参数工厂* 归类工厂 = nullptr;
+    新_动态类* 本能动作读取 = nullptr;
+    新本能续接来源 本次来源 = 新本能续接来源::词典;
+    const auto 处理本能处置 = [&](新任务本能正常处置 p,
         std::optional<稳定编码> returnedAction = {}) {
-        using P = 新词典任务正常处置;
-        using R = 新词典运行状态;
-        if (!开始前任务) throw std::logic_error("dictionary disposition lacks original task position");
-        新任务词典正常处置 p;
-        p.缺口组 = runtime.缺口组;
-        p.收束原因 = runtime.收束原因;
-        if (runtime.状态 == R::已停止) p.收束原因 = 新词典推进收束原因::主动停止;
+        if (!开始前任务) throw std::logic_error("instinct disposition lacks original task position");
+        p.来源 = 本次来源;
+        const auto 前置处置 = p.处置;
+        bool 停止本次 = 前置处置 == P::当前职责已结束;
         const auto finish = [&](P state) {
             p.处置 = state;
-            结果.词典处置 = std::move(p);
-            结果.状态 = 新任务治理本能执行状态::词典正常处置;
+            结果.本能处置 = std::move(p);
+            结果.状态 = 新任务治理本能执行状态::本能正常处置;
         };
         const auto X = 结果.执行开始 ? 结果.执行开始->执行实例节点 : std::nullopt;
         std::optional<新任务执行信息> x;
@@ -27979,24 +28050,30 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             }
             if (x->任务节点 != 请求.任务节点) throw std::logic_error("dictionary X belongs to another task");
             if (x->状态 != 新任务执行状态::执行中) { finish(P::当前职责已结束); return; }
-            if (!词典动作读取) throw std::logic_error("dictionary action reader not configured");
+            if (!本能动作读取) throw std::logic_error("dictionary action reader not configured");
             // 不能只检查X字段：A可能已经发生、尚未绑定到X。
-            const auto source = 词典动作读取->按来源查询动作(*X);
+            const auto source = 本能动作读取->按来源查询动作(*X);
             if (source.状态 == 新动态操作状态::资源失败) throw std::bad_alloc{};
             if (source.状态 != 新动态操作状态::已完成) throw std::logic_error("dictionary action source read failed");
             const auto A = source.动作 ? std::optional{source.动作->节点} : std::nullopt;
             if ((returnedAction && returnedAction != A) || (x->普通动作节点 && x->普通动作节点 != A))
                 throw std::logic_error("dictionary actual action identity differs");
-            // 无A也可能已经因需求失活或身份改变收束；撤空X前保存原上下文原因。
-            const auto end = 词典工厂->读取任务推进收束(*X);
-            if (end.状态 == 新词典推进收束读取状态::资源失败) throw std::bad_alloc{};
-            if (end.状态 == 新词典推进收束读取状态::上下文不存在 && A)
-                throw std::logic_error("dictionary actual action lost original context");
-            if (end.材料) p.收束原因 = end.材料->原因;
+            if (本次来源 == 新本能续接来源::词典) {
+                const auto end = 词典工厂->读取任务推进收束(*X);
+                if (end.状态 == 新词典推进收束读取状态::资源失败) throw std::bad_alloc{};
+                if (end.状态 == 新词典推进收束读取状态::上下文不存在 && A)
+                    throw std::logic_error("dictionary actual action lost original context");
+                if (end.材料) p.收束原因 = end.材料->原因;
+            }
             if (A) {
-                p.续接定位 = 新任务词典续接定位{请求.任务节点, *X};
-                if (p.收束原因 || runtime.状态 == R::已收束) { finish(P::已有动作可以评估); return; }
-                if (runtime.状态 != R::条件未具备) { finish(P::已有动作需要续接); return; }
+                p.续接定位 = 新任务本能续接定位{请求.任务节点, *X, 本次来源};
+                const bool 归类终态 = 本次来源 == 新本能续接来源::词条归类 && x->词条归类
+                    && (x->词条归类->回执 || x->词条归类->未提交收束);
+                if (归类终态 || (本次来源 == 新本能续接来源::词典
+                    && (p.收束原因 || 前置处置 == P::已有动作可以评估))) {
+                    finish(P::已有动作可以评估); return;
+                }
+                if (前置处置 != P::未动作等待条件) { finish(P::已有动作需要续接); return; }
             }
         } else if (returnedAction) throw std::logic_error("dictionary action without X");
         // 等待键只提示将来重读；有序W/F和来源身份不漏到旧普通存在投影之外。
@@ -28004,8 +28081,6 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             if (b.有序引用) p.等待依赖键组.push_back({新任务依赖键种类::节点, b.有序引用->信息节点, {}});
             if (b.世界场景节点) p.等待依赖键组.push_back({新任务依赖键种类::节点, *b.世界场景节点, {}});
         }
-        for (const auto node : runtime.变化依赖节点组)
-            if (有效(node)) p.等待依赖键组.push_back({新任务依赖键种类::节点, node, {}});
         p.等待依赖键组.push_back({新任务依赖键种类::需求, x ? x->执行服务需求 : 开始前任务->需求节点, {}});
         if (const auto method = 方法服务_.获取方法(请求.方法节点))
             p.等待依赖键组.push_back({新任务依赖键种类::节点, method->方法虚拟存在节点, {}});
@@ -28041,7 +28116,10 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             结果.零动作恢复 = 新任务零动作恢复信息{X, 开始前任务->最近方法节点, 开始前任务->最近执行实例节点};
         }
         for (;;) {
-            if (新_本能函数管理类::本次停止已请求()) p.收束原因 = 新词典推进收束原因::主动停止;
+            if (新_本能函数管理类::本次停止已请求()) {
+                停止本次 = true;
+                if (本次来源 == 新本能续接来源::词典) p.收束原因 = 新词典推进收束原因::主动停止;
+            }
             const auto current = 获取任务(请求.任务节点);
             if (!current) {
                 if (全局基础数据集.查询节点(请求.任务节点)) throw std::logic_error("dictionary current T unreadable");
@@ -28050,7 +28128,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             if (current->最近执行实例节点 != 开始前任务->最近执行实例节点
                 || current->最近方法节点 != 开始前任务->最近方法节点) { finish(P::当前职责已结束); return; }
             if (current->当前状态 == 新任务状态::未执行但目标已满足) { finish(P::未动作目标已满足); return; }
-            if (p.收束原因 == 新词典推进收束原因::主动停止
+            if (停止本次 || p.收束原因 == 新词典推进收束原因::主动停止
                 || p.收束原因 == 新词典推进收束原因::需求不再活动) { finish(P::当前职责已结束); return; }
             if (current->当前状态 != 新任务状态::待查找方法 && current->当前状态 != 新任务状态::待检查条件
                 && current->当前状态 != 新任务状态::待执行 && current->当前状态 != 新任务状态::等待条件) {
@@ -28061,7 +28139,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             if (!demand && 全局基础数据集.查询节点(D))
                 throw std::logic_error("dictionary current demand unreadable");
             if (!demand || demand->活动状态 == 新需求活动状态::失活) {
-                p.收束原因 = 新词典推进收束原因::需求不再活动;
+                if (本次来源 == 新本能续接来源::词典) p.收束原因 = 新词典推进收束原因::需求不再活动;
                 finish(P::当前职责已结束); return;
             }
             const auto target = 复核并收束执行前已满足目标(请求.任务节点);
@@ -28078,7 +28156,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
                 // 当前任务已有自己的后继处理，不能把这些条件变成永久重试。
                 finish(P::当前职责已结束); return;
             }
-            const auto wanted = runtime.状态 == R::条件未具备 ? 新任务状态::等待条件 : 新任务状态::待查找方法;
+            const auto wanted = 前置处置 == P::未动作等待条件 ? 新任务状态::等待条件 : 新任务状态::待查找方法;
             if (current->当前状态 != wanted) {
                 bool conflict = false;
                 const auto moved = 迁移任务状态受保护(请求.任务节点, wanted,
@@ -28112,14 +28190,51 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             return;
         }
     };
+    const auto 处理词典处置 = [&](const 新本能词典运行处置& runtime,
+        std::optional<稳定编码> A = {}) {
+        新任务本能正常处置 p;
+        p.缺口组 = runtime.缺口组; p.收束原因 = runtime.收束原因;
+        switch (runtime.状态) {
+        case 新词典运行状态::条件未具备: p.处置 = P::未动作等待条件; break;
+        case 新词典运行状态::已停止:
+            p.处置 = P::当前职责已结束; p.收束原因 = 新词典推进收束原因::主动停止; break;
+        case 新词典运行状态::已收束: p.处置 = P::已有动作可以评估; break;
+        case 新词典运行状态::已推进: p.处置 = P::已有动作需要续接; break;
+        default: p.处置 = P::未动作需要重新组织; break;
+        }
+        for (const auto n : runtime.变化依赖节点组)
+            if (有效(n)) p.等待依赖键组.push_back({新任务依赖键种类::节点,n,{}});
+        处理本能处置(std::move(p),A);
+    };
+    const auto 处理归类处置 = [&](新词条归类运行状态 状态,const std::vector<稳定编码>& 依赖,
+        std::optional<稳定编码> A = {}) {
+        新任务本能正常处置 p;
+        switch (状态) {
+        case 新词条归类运行状态::条件未具备: p.处置 = P::未动作等待条件; break;
+        case 新词条归类运行状态::已停止: p.处置 = P::当前职责已结束; break;
+        case 新词条归类运行状态::已完成: p.处置 = P::已有动作可以评估; break;
+        default: p.处置 = P::未动作需要重新组织; break;
+        }
+        for (const auto n : 依赖)
+            if (有效(n)) p.等待依赖键组.push_back({新任务依赖键种类::节点,n,{}});
+        处理本能处置(std::move(p),A);
+    };
     try {
         结果.原请求 = 请求;
-        { std::lock_guard 锁(新任务互斥); 词典工厂 = 本能词典任务参数工厂_; 词典动作读取 = 本能动作读取_; }
+        {
+            std::lock_guard 锁(新任务互斥);
+            词典工厂 = 本能词典任务参数工厂_; 归类工厂 = 本能词条归类任务参数工厂_;
+            本能动作读取 = 本能动作读取_;
+        }
         const bool 是词典任务 = 词典工厂 && 词典工厂->支持任务方法(请求.方法节点);
+        const bool 是归类任务 = 归类工厂 && 归类工厂->支持任务方法(请求.方法节点);
+        if (是词典任务 && 是归类任务) throw std::logic_error("multiple instinct factories claim the same method");
+        const bool 是续接任务 = 是词典任务 || 是归类任务;
+        if (是归类任务) 本次来源 = 新本能续接来源::词条归类;
         const auto 恢复零动作 = [&](int 出口行 = 0,
-            新词典运行状态 词典状态 = 新词典运行状态::需重新组织) {
-            // 旧入口可能持任务锁；先展开局部锁，再处理词典当前事实及空X。
-            if (是词典任务) throw 词典零动作处置信号{词典状态};
+            P 处置 = P::未动作需要重新组织) {
+            // 旧入口可能持任务锁；先展开局部锁，再处理本能当前事实及空X。
+            if (是续接任务) throw 本能零动作处置信号{处置};
             海中鱼巣参数绑定要点(L"零动作出口 任务=" << 请求.任务节点.值 << L" 行=" << 出口行);
             std::lock_guard 锁(新任务互斥);
             if (!开始前任务) throw std::logic_error("零动作恢复缺少开始前定位");
@@ -28175,7 +28290,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
                 开始前任务->最近方法节点, 开始前任务->最近执行实例节点};
             结果.状态 = 新任务治理本能执行状态::零动作已回筹办;
         };
-        // 许可与场景批在锁外读取、锁内核同。词典路径的正常变化重读没有次数上限；
+        // 许可与场景批在锁外读取、锁内核同。词典和归类路径的正常变化重读没有次数上限；
         // 其它方法保留原有限重读策略，实际缺材料与停止另行交接。
         std::optional<因果执行许可> 因果许可;
         auto 场景批=准备本次场景核验批(请求.任务节点,{},&*请求.本能采用);
@@ -28190,11 +28305,11 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
                 std::lock_guard 预锁(新任务互斥);
                 一致 = 核同本次场景核验批(场景批) && 核对因果执行许可(请求.任务节点, *因果许可);
             }
-            if (一致 || (!是词典任务 && 次 >= 4) || (是词典任务 && !因果许可)) break;
-            if (是词典任务 && 新_本能函数管理类::本次停止已请求()) {
+            if (一致 || (!是续接任务 && 次 >= 4) || (是续接任务 && !因果许可)) break;
+            if (是续接任务 && 新_本能函数管理类::本次停止已请求()) {
                 开始前任务 = 获取任务(请求.任务节点);
                 if (!开始前任务) { 结果.状态 = 新任务治理本能执行状态::任务状态已变化; return 结果; }
-                throw 词典零动作处置信号{};
+                throw 本能零动作处置信号{};
             }
             std::this_thread::yield();
         }
@@ -28204,7 +28319,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             开始前任务 = 获取任务(请求.任务节点);
             if (!开始前任务) { 结果.状态 = 新任务治理本能执行状态::任务状态已变化; return 结果; }
             恢复零动作(__LINE__, 场景批.业务材料未形成
-                ? 新词典运行状态::条件未具备 : 新词典运行状态::需重新组织); return 结果;
+                ? P::未动作等待条件 : P::未动作需要重新组织); return 结果;
         }
         {
             std::unique_lock 锁(新任务互斥);
@@ -28293,7 +28408,7 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
                 || 场景结果.状态 == 新方法操作状态::参数概念不相容
                 || 场景结果.状态 == 新方法操作状态::定义前提已变化) {
                 恢复零动作(__LINE__, 场景结果.状态 == 新方法操作状态::参数材料未到
-                    ? 新词典运行状态::条件未具备 : 新词典运行状态::需重新组织);
+                    ? P::未动作等待条件 : P::未动作需要重新组织);
                 return 结果;
             }
             if (场景结果.状态 != 新方法操作状态::已建立
@@ -28377,6 +28492,41 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             }
             if (!made.参数场景 || !made.参数场景->获取词典运行接口())
                 throw std::logic_error("dictionary task factory did not supply runtime");
+            参数场景 = made.参数场景;
+        }
+
+        if (是归类任务) {
+            const auto X = 获取执行实例(*结果.执行开始->执行实例节点);
+            if (!X) { 处理归类处置(新词条归类运行状态::需重新组织,{}); return 结果; }
+            if (X->任务节点 != 请求.任务节点) throw std::logic_error("classification factory original X belongs to another task");
+            const auto 参数 = [&](std::uint32_t pos) -> 稳定编码 {
+                for (const auto& v : 请求.参数绑定组)
+                    if (v.有序引用 && v.有序引用->序号 == pos) return v.有序引用->信息节点;
+                throw std::logic_error("classification factory ordered parameter missing");
+            };
+            const auto R = 参数(3), W = 参数(1);
+            const auto origins = 需求服务_.读取词典归类需求来源组(X->执行服务需求);
+            if (origins.状态 == 新需求操作状态::资源失败) throw std::bad_alloc{};
+            if (origins.状态 == 新需求操作状态::需求不存在) {
+                处理归类处置(新词条归类运行状态::需重新组织,{X->执行服务需求}); return 结果;
+            }
+            if (origins.状态 != 新需求操作状态::已找到)
+                throw std::logic_error("classification factory demand sources unavailable");
+            std::vector<新词典归类需求来源> matches;
+            for (const auto& v : origins.来源组) {
+                const auto target = v.用途 == 新词典归类需求来源用途::词条挂接 ? v.词条W : v.词条N;
+                if (v.行节点 == R && target == W
+                    && std::find(matches.begin(),matches.end(),v) == matches.end()) matches.push_back(v);
+            }
+            std::optional<新词典归类需求来源> origin;
+            if (matches.size() == 1) origin = matches.front();
+            const auto made = 归类工厂->建立任务参数场景({请求.方法节点,请求.任务节点,X->节点,
+                请求.参数绑定组,请求.本能采用->执行分支节点,origin},this,请求.本能采用->任务成员绑定);
+            if (made.状态 != 新词条归类运行状态::已就绪) {
+                处理归类处置(made.状态,made.变化依赖节点组); return 结果;
+            }
+            if (!made.参数场景 || !made.参数场景->获取词条归类运行接口())
+                throw std::logic_error("classification factory did not supply its runtime");
             参数场景 = made.参数场景;
         }
 
@@ -28486,6 +28636,14 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             处理词典处置(*函数结果.词典运行处置, 函数结果.动作动态节点);
             return 结果;
         }
+        if (是归类任务) {
+            if (函数结果.词条归类) 处理归类处置(新词条归类运行状态::已完成,{},函数结果.动作动态节点);
+            else {
+                if (!函数结果.词条归类处置) throw std::logic_error("classification invocation lacks disposition");
+                处理归类处置(函数结果.词条归类处置->状态,函数结果.词条归类处置->变化依赖节点组,函数结果.动作动态节点);
+            }
+            return 结果;
+        }
         if (函数结果.动作动态节点) {
             // 动作后条件可能变化；未知结果仍关联真实动作，不补造采用确认。
             const auto 记录 = 本能动作读取_
@@ -28577,9 +28735,10 @@ bool 新_任务类::核同方法条件准备静态批已加锁(const 方法条�
             ? 新任务治理本能执行状态::动作已发出且结果材料已具备
             : 新任务治理本能执行状态::动作已发出等待结果;
         return 结果;
-    } catch (const 词典零动作处置信号& signal) {
+    } catch (const 本能零动作处置信号& signal) {
         try {
-            处理词典处置({signal.状态, {}, {}, {}});
+            新任务本能正常处置 p; p.处置 = signal.处置;
+            处理本能处置(std::move(p));
             return 结果;
         } catch (const std::bad_alloc&) {
             if (!结果.执行开始 || !结果.执行开始->执行实例节点) {
