@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <functional>
 #include <optional>
 #include <variant>
 #include <vector>
@@ -9,6 +10,7 @@
 #include "../核心/基础数据集.h"
 #include "概念_存在类.h"
 #include "新_词类.h"
+#include "新_特征类.h"
 
 namespace 海中鱼巣 {
 
@@ -99,6 +101,23 @@ struct 新名称快照解码结果 final {
 struct 新名称快照发现结果 final {
     新名称快照解码状态 状态=新名称快照解码状态::未初始化;
     std::vector<稳定编码> 名称节点组;
+};
+enum class 新词条归类前态读取状态 : std::uint8_t {
+    已读取 = 1, 需重新组织, 依赖未就绪, 能力未支持, 结构不可解码, 资源失败, 已停止
+};
+struct 新词条归类前态 final {
+    新词条信息 词条;
+    稳定编码 语言场景;
+    新特征信息 特征;
+    稳定编码 类型根;
+    特征概念定义 定义;
+    std::vector<新特征值信息> 材料组;
+    std::vector<新名称快照原始信息> 名称组;
+    std::vector<稳定编码> 普通名称概念组,共享概念组;
+};
+struct 新词条归类前态读取结果 final {
+    新词条归类前态读取状态 状态=新词条归类前态读取状态::需重新组织;
+    std::optional<新词条归类前态> 信息;
 };
 struct 指代名称来源定位 final {
     std::int64_t 起始标量 = 0, 结束标量 = 0;
@@ -195,6 +214,9 @@ public:
         稳定编码 词条节点) const noexcept;
     概念名称候选保护结果 读取词条名称候选保护(
         稳定编码 词条) const noexcept;
+    新词条归类前态读取结果 读取词条归类前态(
+        稳定编码 词条,稳定编码 特征,const 新_特征类&,const 新_特征值类&,
+        const std::function<bool()>& 停止 = {}) const;
     新名称快照发现结果 从词条快照发现名称(const 基础联合节点快照&) const;
     新名称快照解码结果 解码名称快照(const 基础联合节点快照&) const;
     bool 是概念名称关系节点(稳定编码 节点) const noexcept;
