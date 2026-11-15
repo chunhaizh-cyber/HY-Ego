@@ -14,6 +14,7 @@
 
 namespace 海中鱼巣 {
 
+class 新_存在类;
 class 新_词类;
 class 概念_特征类;
 class 概念_存在类;
@@ -127,11 +128,16 @@ struct 新词条归类前态批次结果 final {
     std::optional<新词条归类前态> 信息;
     std::vector<稳定编码> 需补节点组;
 };
+struct 新词条归类主体来源 final {
+    稳定编码 存在节点,专属概念节点;
+    基础只读预期 身份预期;
+};
 struct 新词条归类联合来源 final {
     新词条归类前态 前态;
     稳定编码 归类材料;
     正式信息参数投影 材料内容;
     std::optional<稳定编码> 采用概念;
+    std::optional<新词条归类主体来源> 主体;
 };
 struct 新词条归类联合来源结果 final {
     新词条归类前态读取状态 状态=新词条归类前态读取状态::需重新组织;
@@ -237,7 +243,8 @@ public:
         std::span<const 基础联合节点读取项>) const;
     新词条归类联合来源结果 读取词条归类联合来源(
         稳定编码,稳定编码,稳定编码,const 新词典归类信息概念组&,
-        const 新_特征类&,const 新_特征值类&,const std::function<bool()>& 停止 = {}) const;
+        const 新_特征类&,const 新_特征值类&,const std::function<bool()>& 停止 = {},
+        std::optional<稳定编码> 主体 = {},const 新_存在类* 存在 = nullptr) const;
     新词条归类前态读取结果 读取词条归类前态(
         稳定编码 词条,稳定编码 特征,const 新_特征类&,const 新_特征值类&,
         const std::function<bool()>& 停止 = {}) const;

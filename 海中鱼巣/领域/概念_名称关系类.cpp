@@ -1,6 +1,7 @@
 #include "概念_名称关系类.h"
 
 #include "新_词类.h"
+#include "新_存在类.h"
 #include "概念_存在类.h"
 #include "概念_特征类.h"
 #include "概念_动态类.h"
@@ -1252,13 +1253,16 @@ bool 概念_名称关系类::初始化() noexcept {
 
 新词条归类联合来源结果 概念_名称关系类::读取词条归类联合来源(
     稳定编码 W,稳定编码 F,稳定编码 R,const 新词典归类信息概念组& 概念组,
-    const 新_特征类& 特征,const 新_特征值类& 值,const std::function<bool()>& 停止) const {
+    const 新_特征类& 特征,const 新_特征值类& 值,const std::function<bool()>& 停止,
+    std::optional<稳定编码> 主体,const 新_存在类* 存在) const {
     using 状态=新词条归类前态读取状态;
     using 前态状态=新词条归类前态批次状态;
     using 材料状态=新词典归类参数批次状态;
     try {
-        if(!有效(W) || !有效(F) || !有效(R))return {状态::需重新组织,{}};
+        if(主体.has_value() != (存在!=nullptr))throw std::invalid_argument("classification actor source incomplete");
+        if(!有效(W) || !有效(F) || !有效(R) || (主体 && !有效(*主体)))return {状态::需重新组织,{}};
         std::set<稳定编码> 请求{W,F,R};
+        if(主体)请求.insert(*主体);
         for(;;) {
             if(停止 && 停止())return {状态::已停止,{}};
             const auto batch=全局基础数据集.查询节点组完整结构({请求.begin(),请求.end()});
@@ -1280,10 +1284,30 @@ bool 概念_名称关系类::初始化() noexcept {
             case 材料状态::结构不可解码:return {状态::结构不可解码,{}};
             default:break;
             }
-            if(前态.状态==前态状态::需补快照 || 材料.状态==材料状态::需补快照) {
+            std::optional<新主体身份批次结果> actor,actorConcept;
+            if(主体) {
+                using AS=新主体身份批次状态;
+                actor=存在->解码主体存在身份批次(*主体,batch.节点组);
+                if(actor->状态==AS::未初始化)return {状态::依赖未就绪,{}};
+                if(actor->状态==AS::不存在或非本类 || actor->状态==AS::清理中)
+                    return {状态::需重新组织,{}};
+                if(actor->状态==AS::结构不可解码)return {状态::结构不可解码,{}};
+                if(actor->状态==AS::已解码) {
+                    if(!actor->专属概念节点)return {状态::结构不可解码,{}};
+                    actorConcept=存在概念服务_.解码专属存在概念身份批次(*actor->专属概念节点,*主体,batch.节点组);
+                    if(actorConcept->状态==AS::未初始化)return {状态::依赖未就绪,{}};
+                    if(actorConcept->状态==AS::不存在或非本类 || actorConcept->状态==AS::清理中
+                        || actorConcept->状态==AS::结构不可解码)return {状态::结构不可解码,{}};
+                }
+            }
+            if(前态.状态==前态状态::需补快照 || 材料.状态==材料状态::需补快照
+                || (actor && actor->状态==新主体身份批次状态::需补快照)
+                || (actorConcept && actorConcept->状态==新主体身份批次状态::需补快照)) {
                 const auto before=请求.size();
                 请求.insert(前态.需补节点组.begin(),前态.需补节点组.end());
                 请求.insert(材料.需补节点组.begin(),材料.需补节点组.end());
+                if(actor)请求.insert(actor->需补节点组.begin(),actor->需补节点组.end());
+                if(actorConcept)请求.insert(actorConcept->需补节点组.begin(),actorConcept->需补节点组.end());
                 if(请求.size()==before)throw std::logic_error("classification joint source dependency did not advance");
                 std::this_thread::yield();continue;
             }
@@ -1314,7 +1338,18 @@ bool 概念_名称关系类::初始化() noexcept {
             } else if(adopted->内容.状态!=正式内容值状态::当前未知 || adopted->内容.值) {
                 return {状态::结构不可解码,{}};
             }
-            return {状态::已读取,新词条归类联合来源{std::move(*前态.信息),R,std::move(*材料.信息),C}};
+            std::optional<新词条归类主体来源> actorOutput;
+            if(主体) {
+                using AS=新主体身份批次状态;
+                if(!actor || !actorConcept || actor->状态!=AS::已解码 || actorConcept->状态!=AS::已解码
+                    || !actor->专属概念节点)return {状态::结构不可解码,{}};
+                auto precondition=std::move(actor->窄预期);
+                auto& extra=actorConcept->窄预期;
+                precondition.节点组.insert(precondition.节点组.end(),extra.节点组.begin(),extra.节点组.end());
+                precondition.字段集合组.insert(precondition.字段集合组.end(),extra.字段集合组.begin(),extra.字段集合组.end());
+                actorOutput=新词条归类主体来源{*主体,*actor->专属概念节点,std::move(precondition)};
+            }
+            return {状态::已读取,新词条归类联合来源{std::move(*前态.信息),R,std::move(*材料.信息),C,std::move(actorOutput)}};
         }
     } catch(const std::bad_alloc&) {return {状态::资源失败,{}};}
     catch(const std::length_error&) {return {状态::资源失败,{}};}
