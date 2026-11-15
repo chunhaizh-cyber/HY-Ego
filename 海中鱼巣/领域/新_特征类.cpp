@@ -3964,6 +3964,122 @@ std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实�
     }
 }
 
+新概念集合特征快照结果 新_特征类::解码顶层概念集合特征快照(
+    稳定编码 F,std::span<const 基础联合节点读取项> 批次) const {
+    using 状态=新概念集合特征快照状态;
+    std::lock_guard 锁(新特征互斥);
+    if(!结构已初始化())return {状态::未初始化};
+    if(!有效(F))return {状态::信息不存在};
+    std::set<稳定编码> 缺少,材料;
+    const auto find=[&](稳定编码 id)->const 基础联合节点读取项* {
+        const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& item){return item.查询节点==id;});
+        return it==批次.end() ? nullptr : &*it;
+    };
+    const auto first=find(F);
+    if(!first)return {状态::需补快照,{}, {F},{}};
+    if(!first->快照)return {状态::信息不存在};
+    const auto& snapshot=*first->快照;
+    if(snapshot.结构.节点.编码!=F)return {状态::结构不可解码};
+    for(const auto& edge:snapshot.入向外部关系组)
+        if(edge.类型==基础外部关系类型::父子)return {状态::能力未支持};
+    const auto unique=[](const 基础节点结构& node,稳定编码 key,bool& bad)->const 基础字段关系* {
+        const 基础字段关系* result=nullptr;
+        for(const auto& field:node.字段组)if(field.字段节点==key) {
+            if(result){bad=true;return nullptr;}result=&field;
+        }
+        return result;
+    };
+    const auto ref=[](const 基础字段关系* field)->std::optional<稳定编码> {
+        if(!field)return {};
+        const auto* value=std::get_if<稳定编码>(&field->内容);
+        return value&&有效(*value) ? std::optional{*value} : std::nullopt;
+    };
+    bool bad=false;
+    const auto type=ref(unique(snapshot.结构,节点类型字段,bad));
+    if(bad || !type)return {状态::结构不可解码};
+    if(*type!=特征节点类型)return {状态::非本类节点};
+    const auto conceptId=ref(unique(snapshot.结构,特征概念字段,bad));
+    if(bad || !conceptId)return {状态::结构不可解码};
+    新特征信息 out;out.节点=F;out.特征概念节点=*conceptId;
+    const auto readOptionalRef=[&](稳定编码 key,std::optional<稳定编码>& dest) {
+        const auto field=unique(snapshot.结构,key,bad);
+        if(field){dest=ref(field);if(!dest)bad=true;}
+    };
+    const auto readValue=[&](稳定编码 key,std::optional<新特征准确值>& dest) {
+        const auto field=unique(snapshot.结构,key,bad);
+        if(field){const auto v=ref(field);if(!v)bad=true;else {dest=新特征准确值{*v};材料.insert(*v);}}
+    };
+    std::optional<稳定编码> 区间,聚合;
+    readOptionalRef(实例单位字段,out.实例单位);
+    readOptionalRef(实例区间值字段,区间);
+    readOptionalRef(实例历史聚合值域字段,聚合);
+    readValue(当前值字段,out.当前值);readValue(标准值字段,out.标准值);
+    if(bad)return {状态::结构不可解码};
+    std::vector<稳定编码> 命中节点,旧历史;
+    for(const auto& field:snapshot.结构.字段组) {
+        if(field.字段节点!=历史值命中记录字段 && field.字段节点!=历史值字段)continue;
+        const auto value=ref(&field);if(!value)return {状态::结构不可解码};
+        if(field.字段节点==历史值命中记录字段)命中节点.push_back(*value);
+        else {旧历史.push_back(*value);材料.insert(*value);}
+    }
+    for(const auto H:命中节点) {
+        const auto item=find(H);
+        if(!item){缺少.insert(H);continue;}
+        if(!item->快照 || item->快照->结构.节点.编码!=H)return {状态::结构不可解码};
+        const auto& node=item->快照->结构;
+        const auto kind=ref(unique(node,节点类型字段,bad));
+        const auto owner=ref(unique(node,历史值记录所属特征字段,bad));
+        const auto value=ref(unique(node,历史值记录准确值字段,bad));
+        const auto countField=unique(node,历史值记录命中次数字段,bad);
+        const auto* raw=countField ? std::get_if<基础值>(&countField->内容) : nullptr;
+        const auto* count=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+        if(bad || kind!=历史值命中记录节点类型 || owner!=F || !value || !count || *count<=0)
+            return {状态::结构不可解码};
+        out.历史不同值.push_back(*value);out.历史值命中信息.push_back({*value,*count});材料.insert(*value);
+    }
+    for(const auto V:旧历史){out.历史不同值.push_back(V);out.历史值命中信息.push_back({V,1});}
+    const auto domain=[&](const std::optional<稳定编码>& id,std::optional<特征概念值域>& target)->状态 {
+        if(!id)return 状态::已解码;
+        const auto item=find(*id);
+        if(!item){缺少.insert(*id);return 状态::需补快照;}
+        if(!item->快照 || item->快照->结构.节点.编码!=*id)return 状态::结构不可解码;
+        const auto& node=item->快照->结构;
+        const auto kind=ref(unique(node,节点类型字段,bad));
+        if(bad || kind!=值域节点类型)return 状态::结构不可解码;
+        const 基础字段关系* all=nullptr;
+        std::vector<稳定编码> values;
+        for(const auto& field:node.字段组) {
+            if(field.字段节点==I64值域字段 || field.字段节点==结构化分量字段)return 状态::能力未支持;
+            if(field.字段节点==全材料值域字段){if(all)return 状态::结构不可解码;all=&field;}
+            else if(field.字段节点==非I64值域字段){const auto v=ref(&field);if(!v)return 状态::结构不可解码;values.push_back(*v);}
+        }
+        if(all) {
+            const auto* raw=std::get_if<基础值>(&all->内容);
+            const auto* mark=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+            if(!values.empty() || !mark || *mark!=1)return 状态::结构不可解码;
+            target=特征概念全材料值域{};
+        } else {
+            if(values.empty())return 状态::结构不可解码;
+            std::sort(values.begin(),values.end());
+            if(std::adjacent_find(values.begin(),values.end())!=values.end())return 状态::结构不可解码;
+            材料.insert(values.begin(),values.end());target=std::move(values);
+        }
+        return 状态::已解码;
+    };
+    const auto left=domain(区间,out.实例区间值),right=domain(聚合,out.实例历史聚合值域);
+    if(left==状态::结构不可解码 || right==状态::结构不可解码)return {状态::结构不可解码};
+    if(left==状态::能力未支持 || right==状态::能力未支持)return {状态::能力未支持};
+    for(const auto V:材料) {
+        const auto item=find(V);
+        if(!item)缺少.insert(V);
+        else if(!item->快照 || item->快照->结构.节点.编码!=V)return {状态::结构不可解码};
+    }
+    if(!缺少.empty())return {状态::需补快照,{}, {缺少.begin(),缺少.end()}, {材料.begin(),材料.end()}};
+    std::sort(out.历史不同值.begin(),out.历史不同值.end());
+    std::sort(out.历史值命中信息.begin(),out.历史值命中信息.end(),[](const auto& a,const auto& b){return a.值<b.值;});
+    return {状态::已解码,std::move(out),{}, {材料.begin(),材料.end()}};
+}
+
 std::optional<新特征信息> 新_特征类::获取特征(
     稳定编码 特征节点) const noexcept {
     try {

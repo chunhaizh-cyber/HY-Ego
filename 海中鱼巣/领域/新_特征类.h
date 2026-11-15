@@ -43,6 +43,16 @@ struct 新特征信息 final {
     friend bool operator==(const 新特征信息&, const 新特征信息&) = default;
 };
 
+enum class 新概念集合特征快照状态 : std::uint8_t {
+    已解码 = 1, 未初始化, 信息不存在, 非本类节点, 结构不可解码, 需补快照, 能力未支持
+};
+struct 新概念集合特征快照结果 final {
+    新概念集合特征快照状态 状态=新概念集合特征快照状态::未初始化;
+    std::optional<新特征信息> 信息;
+    std::vector<稳定编码> 需补节点组;
+    std::vector<稳定编码> 材料节点组;
+};
+
 // 本次匹配采用的值式定义，不携带名称、统计或可变概念树引用视图。
 struct 新特征匹配定义快照 final {
     稳定编码 概念节点;
@@ -517,6 +527,8 @@ public:
         稳定编码 特征概念节点,
         const 特征概念值域& 区间值) noexcept;
 
+    新概念集合特征快照结果 解码顶层概念集合特征快照(
+        稳定编码, std::span<const 基础联合节点读取项>) const;
     std::optional<新特征信息> 获取特征(
         稳定编码 特征节点) const noexcept;
 
