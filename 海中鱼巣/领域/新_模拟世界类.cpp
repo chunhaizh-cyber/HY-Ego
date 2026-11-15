@@ -46,7 +46,7 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,集合概念引用,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
@@ -54,13 +54,16 @@ enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, �
     语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
+struct 模拟联合预期变化 final : std::runtime_error {
+    模拟联合预期变化() : std::runtime_error("simulation input definition premise changed") {}
+};
 void 合并模拟联合预期(基础节点组追加请求& q) {
     std::map<稳定编码,基础联合节点快照> merged;
     for(const auto& p:q.预期联合节点组) {
         const auto [it,added]=merged.emplace(p.结构.节点.编码,p);
         if(!added&&(it->second.结构.字段组!=p.结构.字段组||it->second.入向字段组!=p.入向字段组
             ||it->second.入向外部关系组!=p.入向外部关系组||it->second.出向外部关系组!=p.出向外部关系组))
-            throw std::runtime_error("simulation input definition premise changed");
+            throw 模拟联合预期变化{};
     }
     q.预期联合节点组.clear();for(auto& [n,p]:merged)q.预期联合节点组.push_back(std::move(p));
 }
@@ -3096,16 +3099,37 @@ namespace 海中鱼巣 {
     std::map<std::size_t,材料物理类型> material;
     std::map<稳定编码,std::size_t> 复制材料索引;
     std::map<std::pair<新模拟复制值种类,std::vector<std::uint32_t>>,std::size_t> 复制集合索引;
-    const auto 复制准确=[&](const 新模拟复制准确值& value)->基础组内字段内容 {
+    std::set<std::pair<std::size_t,稳定编码>> 已保持概念;
+    const auto 保持集合概念=[&](std::size_t materialIndex,const 新特征值材料& value) {
+        const auto* members=std::get_if<std::vector<std::uint64_t>>(&value);
+        if(!members)throw std::invalid_argument("simulation concept collection material is not U64 array");
+        for(const auto id:*members) {
+            const 稳定编码 conceptId{id};
+            if(!有效(conceptId))throw std::invalid_argument("simulation concept collection contains invalid identity");
+            if(已保持概念.emplace(materialIndex,conceptId).second)
+                q.新节点组[materialIndex].字段组.push_back({字段组[集合概念引用],conceptId});
+        }
+    };
+    const auto 复制准确=[&](const 新模拟复制准确值& value,bool conceptSet)->基础组内字段内容 {
         using K=新模拟复制值种类;
+        if(conceptSet && value.种类!=K::普通材料)
+            throw std::invalid_argument("simulation concept collection requires copied material");
         switch(value.种类) {
         case K::I64:return 基础值{std::get<std::int64_t>(value.内容)};
         case K::存在引用:return E引用(std::get<std::uint32_t>(value.内容));
         case K::需求引用:return 图引用(D节点,std::get<std::uint32_t>(value.内容));
         case K::普通材料: {
             const auto& v=std::get<新特征值信息>(value.内容);
-            if(有效(v.节点))if(const auto it=复制材料索引.find(v.节点);it!=复制材料索引.end())return 基础组内节点引用{it->second};
+            if(conceptSet && v.物理类型!=材料物理类型::U64数组)
+                throw std::invalid_argument("simulation concept collection physical type differs");
+            if(有效(v.节点))if(const auto it=复制材料索引.find(v.节点);it!=复制材料索引.end()) {
+                if(conceptSet && material.at(it->second)!=材料物理类型::U64数组)
+                    throw std::invalid_argument("simulation cached concept collection physical type differs");
+                if(conceptSet)保持集合概念(it->second,v.材料);
+                return 基础组内节点引用{it->second};
+            }
             const auto x=新节点(材料种类);std::visit([&](const auto& raw){q.新节点组[x].字段组.push_back({字段组[数值],基础值{raw}});},v.材料);
+            if(conceptSet)保持集合概念(x,v.材料);
             q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{x},基础外部关系类型::父子});
             material.emplace(x,v.物理类型);if(有效(v.节点))复制材料索引.emplace(v.节点,x);return 基础组内节点引用{x};
         }
@@ -3135,7 +3159,7 @@ namespace 海中鱼巣 {
             q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{x},基础外部关系类型::父子});return 基础组内节点引用{x};
         }}throw std::invalid_argument("unknown typed copied value");
     };
-    const auto 复制域=[&](const 新模拟复制值域& v) {
+    const auto 复制域=[&](const 新模拟复制值域& v,bool conceptSet) {
         if(const auto* domain=std::get_if<特征概念值域>(&v.内容)) {
             if(std::holds_alternative<std::vector<稳定编码>>(*domain))throw std::invalid_argument("copied finite domain must be typed and remapped");
             if(const auto* x=std::get_if<特征概念存在集合值域>(domain);x&&!x->必含存在节点组.empty())throw std::invalid_argument("copied existence domain contains source identities");
@@ -3143,7 +3167,7 @@ namespace 海中鱼巣 {
             return writer.域(*domain);
         }
         const auto n=writer.节点(3);
-        for(const auto& value:std::get<std::vector<新模拟复制准确值>>(v.内容))writer.写(n,结构引用,复制准确(value));
+        for(const auto& value:std::get<std::vector<新模拟复制准确值>>(v.内容))writer.写(n,结构引用,复制准确(value,conceptSet));
         return n;
     };
     for(std::size_t i=0;i<输入.size();++i) {
@@ -3163,22 +3187,25 @@ namespace 海中鱼巣 {
         } else q.新节点组[index[i]].字段组.push_back({字段组[所属],基础组内节点引用{场景}});
         if(p.初值方式==新模拟特征初值方式::概念构造未知)continue;
         if(p.初值方式!=新模拟特征初值方式::常规输入) {
+            const auto definition=s.方法.读取模拟特征范围(p.规格.范围概念节点);
+            if(!definition)throw std::runtime_error("simulation copied feature definition unavailable");
+            const bool conceptSet=definition->比较规则==特征概念比较规则::概念集合身份判等;
             if(!p.完整复制特征||p.值||p.材料||p.引用存在参数||p.引用需求输入
                 ||!p.集合成员参数组.empty()||!p.来源任务成员组.empty())throw std::invalid_argument("copied feature input has conflicting authorities");
             const auto& f=*p.完整复制特征;
             if((p.初值方式==新模拟特征初值方式::复制准确)!=f.当前值.has_value())throw std::invalid_argument("copied feature current mode mismatch");
             if(f.实例单位)writer.写(index[i],结构单位引用,*f.实例单位);
-            if(f.实例区间)writer.子(index[i],完整实例区间引用,复制域(*f.实例区间));
-            if(f.历史聚合)writer.子(index[i],完整聚合引用,复制域(*f.历史聚合));
+            if(f.实例区间)writer.子(index[i],完整实例区间引用,复制域(*f.实例区间,conceptSet));
+            if(f.历史聚合)writer.子(index[i],完整聚合引用,复制域(*f.历史聚合,conceptSet));
             if(f.当前值) {
-                const auto v=复制准确(*f.当前值);const auto scalar=std::holds_alternative<基础值>(v);
+                const auto v=复制准确(*f.当前值,conceptSet);const auto scalar=std::holds_alternative<基础值>(v);
                 writer.写(index[i],scalar ? 数值 : 当前材料,v);
             }
-            if(f.标准值)writer.写(index[i],标准值引用,复制准确(*f.标准值));
-            for(const auto& h:f.历史不同值)writer.写(index[i],历史项引用,复制准确(h));
+            if(f.标准值)writer.写(index[i],标准值引用,复制准确(*f.标准值,conceptSet));
+            for(const auto& h:f.历史不同值)writer.写(index[i],历史项引用,复制准确(h,conceptSet));
             for(const auto& h:f.历史值命中信息) {
                 if(h.命中次数<0)throw std::invalid_argument("negative copied feature hit count");
-                const auto hit=writer.节点();writer.写(hit,结构引用,复制准确(h.值));writer.数(hit,命中次数值,h.命中次数);writer.子(index[i],历史命中引用,hit);
+                const auto hit=writer.节点();writer.写(hit,结构引用,复制准确(h.值,conceptSet));writer.数(hit,命中次数值,h.命中次数);writer.子(index[i],历史命中引用,hit);
             }continue;
         }
         if(p.完整复制特征)throw std::invalid_argument("copied feature structure without a copied mode");
@@ -3235,6 +3262,7 @@ namespace 海中鱼巣 {
             q.新节点组[index[i]].字段组.push_back({字段组[当前材料],基础组内节点引用{v}});
             q.新节点组[v].字段组.push_back({字段组[所属],基础组内节点引用{index[i]}});
             std::visit([&](const auto& value){q.新节点组[v].字段组.push_back({字段组[数值],基础值{value}});},*材料);
+            if(定义->比较规则==特征概念比较规则::概念集合身份判等)保持集合概念(v,*材料);
             材料物理类型 物理类型;
             switch(定义->材料类型) {
             case 特征概念材料物理类型::U64数组:物理类型=材料物理类型::U64数组;break;
@@ -3282,9 +3310,26 @@ namespace 海中鱼巣 {
     }
     q.新节点组.clear();
     s.通用字段.reserve(s.通用字段.size()+q.追加字段组.size());
-    补齐模拟追加联合预期(q);
+    const auto 概念来源已退出=[&]() {
+        std::set<稳定编码> concepts;
+        for(const auto& [material,C]:已保持概念)concepts.insert(C);
+        if(concepts.empty())return false;
+        const auto read=全局基础数据集.查询节点组完整结构({concepts.begin(),concepts.end()});
+        if(read.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(read.状态!=基础结构操作状态::已完成 || read.节点组.size()!=concepts.size())
+            throw std::runtime_error("simulation concept source read failed");
+        return std::any_of(read.节点组.begin(),read.节点组.end(),[](const auto& item){return !item.快照;});
+    };
+    try { 补齐模拟追加联合预期(q); }
+    catch(const 模拟联合预期变化&) { return {新模拟世界状态::定义前提已变化,{}}; }
+    catch(const std::runtime_error&) {
+        if(概念来源已退出())return {新模拟世界状态::需重新组织输入,{}};
+        throw;
+    }
     auto p=全局基础数据集.原子追加节点组(q);
     if(p.状态==基础节点组追加状态::预期不符)return {新模拟世界状态::定义前提已变化,{}};
+    if((p.状态==基础节点组追加状态::节点不存在 || p.状态==基础节点组追加状态::引用不存在)
+        &&概念来源已退出())return {新模拟世界状态::需重新组织输入,{}};
     if(p.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("generic simulation graph publication failed, status="+std::to_string(static_cast<int>(p.状态)));
     p.新节点组=std::move(图身份);主场景准备.保留=true;图身份准备.保留=true;
