@@ -46,7 +46,7 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,集合概念引用,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,集合概念引用,全部名称前态已知,全部名称概念成员,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
@@ -1596,6 +1596,19 @@ std::optional<std::vector<新模拟普通名称信息>> 新_模拟世界类::读
     }
     return out;
 }
+std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟全部名称概念(稳定编码 W) const {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || !s.是本地参数(W,新方法参数信息类型::词条))return {};
+    const auto ready=读值(W,全部名称前态已知);
+    if(!ready)return {};
+    if(*ready!=1)throw std::runtime_error("local all-name readiness corrupt");
+    auto concepts=读引用组(W,全部名称概念成员);
+    std::sort(concepts.begin(),concepts.end());
+    if(std::adjacent_find(concepts.begin(),concepts.end())!=concepts.end())
+        throw std::runtime_error("duplicate local all-name concept");
+    return concepts;
+}
 新方法参数特征读取结果 新_模拟世界类::读取模拟存在参数特征(
     std::uint32_t 位置,稳定编码 FT) const noexcept {
     using S=新方法参数特征读取状态;
@@ -2427,7 +2440,7 @@ namespace 海中鱼巣 {
         const auto a=查代表(i),b=查代表(j);代表[(std::max)(a,b)]=(std::min)(a,b);
     }
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
-    std::map<std::size_t,std::vector<稳定编码>> 普通名称前态;
+    std::map<std::size_t,std::vector<稳定编码>> 普通名称前态,全部名称前态;
     for(std::size_t i=0;i<输入.size();++i)if(归类参数[i]) {
         const auto& r=*输入[i].复制归类材料;
         if(!r.普通名称概念组)continue;
@@ -2439,6 +2452,22 @@ namespace 海中鱼巣 {
         const auto word=代表.at(r.目标词条参数-1);
         const auto [it,added]=普通名称前态.emplace(word,names);
         if(!added && it->second!=names)return {新模拟世界状态::需重新组织输入,{}};
+    }
+    for(std::size_t i=0;i<输入.size();++i)if(归类参数[i]) {
+        const auto& r=*输入[i].复制归类材料;
+        if(!r.全部名称概念组)continue;
+        auto names=*r.全部名称概念组;
+        if(std::any_of(names.begin(),names.end(),[](稳定编码 C){return !有效(C);}))
+            return {新模拟世界状态::入口拒绝,{}};
+        std::sort(names.begin(),names.end());names.erase(std::unique(names.begin(),names.end()),names.end());
+        const auto word=代表.at(r.目标词条参数-1);
+        const auto [it,added]=全部名称前态.emplace(word,names);
+        if(!added && it->second!=names)return {新模拟世界状态::需重新组织输入,{}};
+    }
+    for(const auto& [word,names]:普通名称前态) {
+        const auto all=全部名称前态.find(word);
+        if(all!=全部名称前态.end() && !std::includes(all->second.begin(),all->second.end(),names.begin(),names.end()))
+            return {新模拟世界状态::需重新组织输入,{}};
     }
     const auto 引用代表 = [&](const 新模拟有序参数输入& p) -> std::optional<std::size_t> {
         if(!p.引用存在参数){ 模拟样例拒绝行=__LINE__; return {}; }
@@ -2702,6 +2731,9 @@ namespace 海中鱼巣 {
             canonical(归类a->普通名称概念组);canonical(归类b->普通名称概念组);
             if(!归类a->普通名称概念组)归类a->普通名称概念组=归类b->普通名称概念组;
             if(!归类b->普通名称概念组)归类b->普通名称概念组=归类a->普通名称概念组;
+            canonical(归类a->全部名称概念组);canonical(归类b->全部名称概念组);
+            if(!归类a->全部名称概念组)归类a->全部名称概念组=归类b->全部名称概念组;
+            if(!归类b->全部名称概念组)归类b->全部名称概念组=归类a->全部名称概念组;
             归类a->目标词条参数=static_cast<std::uint32_t>(代表.at(归类a->目标词条参数-1)+1);
             归类b->目标词条参数=static_cast<std::uint32_t>(代表.at(归类b->目标词条参数-1)+1);
         }
@@ -3033,6 +3065,11 @@ namespace 海中鱼巣 {
             q.新节点组[index[word]].字段组.push_back({字段组[普通名称成员],基础组内节点引用{name}});
             q.追加外部关系组.push_back({基础组内节点引用{*词条场景},基础组内节点引用{name},基础外部关系类型::父子});
         }
+    }
+    for(const auto& [word,names]:全部名称前态) {
+        auto& fields=q.新节点组[index[word]].字段组;
+        fields.push_back({字段组[全部名称前态已知],基础值{std::int64_t{1}}});
+        for(const auto C:names)fields.push_back({字段组[全部名称概念成员],C});
     }
     模拟结构写入器 writer{q,场景};
     const auto 图引用=[&](const auto& nodes,std::uint32_t pos)->稳定编码 {
