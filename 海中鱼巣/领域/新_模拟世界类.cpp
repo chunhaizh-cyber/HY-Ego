@@ -46,12 +46,12 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
-    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类 };
+    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 void 合并模拟联合预期(基础节点组追加请求& q) {
@@ -1572,6 +1572,25 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征(稳定编
     catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取模拟词条",L"本地词条结构读取失败。",e.what());}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取模拟词条",L"未知工程异常。");}
 }
+std::optional<std::vector<新模拟普通名称信息>> 新_模拟世界类::读取模拟普通名称(稳定编码 W) const {
+    if(!实现_)return {};
+    auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || !s.是本地参数(W,新方法参数信息类型::词条))return {};
+    if(!读值(W,普通名称前态已知))return {};
+    if(读值(W,普通名称前态已知)!=1)throw std::runtime_error("local ordinary name readiness corrupt");
+    const auto scene=必读引用(W,所属);
+    std::vector<新模拟普通名称信息> out;
+    std::set<稳定编码> concepts;
+    for(const auto N:读引用组(W,普通名称成员)) {
+        if(!属于样例(N,模拟普通名称种类,scene)
+            ||读引用(N,归类目标词条引用)!=std::optional{W})
+            throw std::runtime_error("local ordinary name identity corrupt");
+        const auto C=必读引用(N,归类采用概念引用);
+        if(!concepts.insert(C).second)throw std::runtime_error("duplicate local ordinary name");
+        out.push_back({C,N});
+    }
+    return out;
+}
 新方法参数特征读取结果 新_模拟世界类::读取模拟存在参数特征(
     std::uint32_t 位置,稳定编码 FT) const noexcept {
     using S=新方法参数特征读取状态;
@@ -2398,6 +2417,19 @@ namespace 海中鱼巣 {
         const auto a=查代表(i),b=查代表(j);代表[(std::max)(a,b)]=(std::min)(a,b);
     }
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
+    std::map<std::size_t,std::vector<稳定编码>> 普通名称前态;
+    for(std::size_t i=0;i<输入.size();++i)if(归类参数[i]) {
+        const auto& r=*输入[i].复制归类材料;
+        if(!r.普通名称概念组)continue;
+        auto names=*r.普通名称概念组;
+        if(std::any_of(names.begin(),names.end(),[](稳定编码 C){return !有效(C);}))
+            return {新模拟世界状态::入口拒绝,{}};
+        std::sort(names.begin(),names.end());
+        names.erase(std::unique(names.begin(),names.end()),names.end());
+        const auto word=代表.at(r.目标词条参数-1);
+        const auto [it,added]=普通名称前态.emplace(word,names);
+        if(!added && it->second!=names)return {新模拟世界状态::需重新组织输入,{}};
+    }
     const auto 引用代表 = [&](const 新模拟有序参数输入& p) -> std::optional<std::size_t> {
         if(!p.引用存在参数){ 模拟样例拒绝行=__LINE__; return {}; }
         const auto pos=static_cast<std::size_t>(p.引用存在参数-1);
@@ -2652,6 +2684,14 @@ namespace 海中鱼巣 {
         const auto& a=输入[i];const auto& b=输入[代表[i]];
         auto 归类a=a.复制归类材料,归类b=b.复制归类材料;
         if(归类a&&归类b) {
+            const auto canonical=[](auto& names) {
+                if(!names)return;
+                std::sort(names->begin(),names->end());
+                names->erase(std::unique(names->begin(),names->end()),names->end());
+            };
+            canonical(归类a->普通名称概念组);canonical(归类b->普通名称概念组);
+            if(!归类a->普通名称概念组)归类a->普通名称概念组=归类b->普通名称概念组;
+            if(!归类b->普通名称概念组)归类b->普通名称概念组=归类a->普通名称概念组;
             归类a->目标词条参数=static_cast<std::uint32_t>(代表.at(归类a->目标词条参数-1)+1);
             归类b->目标词条参数=static_cast<std::uint32_t>(代表.at(归类b->目标词条参数-1)+1);
         }
@@ -2960,6 +3000,17 @@ namespace 海中鱼巣 {
         fields.push_back({字段组[归类目标词条引用],字段引用(r.目标词条参数-1)});
         if(r.采用概念)fields.push_back({字段组[归类采用概念引用],*r.采用概念});
         q.追加外部关系组.push_back({基础组内节点引用{*词条场景},基础组内节点引用{index[i]},基础外部关系类型::父子});
+    }
+    for(const auto& [word,names]:普通名称前态) {
+        auto& fields=q.新节点组[index[word]].字段组;
+        fields.push_back({字段组[普通名称前态已知],基础值{std::int64_t{1}}});
+        for(const auto C:names) {
+            const auto name=新节点(模拟普通名称种类);
+            q.新节点组[name].字段组.push_back({字段组[归类目标词条引用],基础组内节点引用{index[word]}});
+            q.新节点组[name].字段组.push_back({字段组[归类采用概念引用],C});
+            q.新节点组[index[word]].字段组.push_back({字段组[普通名称成员],基础组内节点引用{name}});
+            q.追加外部关系组.push_back({基础组内节点引用{*词条场景},基础组内节点引用{name},基础外部关系类型::父子});
+        }
     }
     模拟结构写入器 writer{q,场景};
     const auto 图引用=[&](const auto& nodes,std::uint32_t pos)->稳定编码 {

@@ -41,12 +41,17 @@ struct 新模拟归类材料复制输入 final {
     std::optional<稳定编码> 采用概念;
     新词典归类信息概念组 范围;
     std::uint32_t 目标词条参数 = 0;
+    // 未提供与已知无普通名称分别表达。
+    std::optional<std::vector<稳定编码>> 普通名称概念组;
     friend bool operator==(const 新模拟归类材料复制输入& a,const 新模拟归类材料复制输入& b) {
         return a.来源材料 == b.来源材料 && a.来源词条 == b.来源词条 && a.采用概念 == b.采用概念
             && a.目标词条参数 == b.目标词条参数 && a.范围.材料范围 == b.范围.材料范围
             && a.范围.明确材料范围 == b.范围.明确材料范围 && a.范围.目标词条FT == b.范围.目标词条FT
-            && a.范围.采用概念FT == b.范围.采用概念FT;
+            && a.范围.采用概念FT == b.范围.采用概念FT && a.普通名称概念组 == b.普通名称概念组;
     }
+};
+struct 新模拟普通名称信息 final {
+    稳定编码 概念节点,名称节点;
 };
 struct 新模拟有序参数输入 final {
     新方法有序参数规格 规格;
@@ -243,6 +248,7 @@ public:
     新场景事实构成读取结果 读取连接构成() const override;
     新交互写入读回 写入本次连接交互者(const 方法参数场景&,const 新隔离连接完成材料&) override;
     新方法词条参数读取结果 读取模拟词条挂接(稳定编码) const noexcept override;
+    std::optional<std::vector<新模拟普通名称信息>> 读取模拟普通名称(稳定编码) const;
     新方法参数特征读取结果 读取模拟存在参数特征(std::uint32_t,稳定编码) const noexcept override;
     std::vector<新本能函数条件角色材料> 读取本次存在参数特征读取组() const;
     std::optional<新方法初始必要条件定义> 读取本次必要条件(const 方法参数场景&) const override;
