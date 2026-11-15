@@ -6585,6 +6585,116 @@ namespace {
 }
 } // namespace
 
+新词典归类参数批次结果 新_语言类::解码词典归类参数批次(
+    稳定编码 R,const 新词典归类信息概念组& 概念组,
+    std::span<const 基础联合节点读取项> 批次) const {
+    using 状态=新词典归类参数批次状态;
+    struct 待补 final { std::vector<稳定编码> 节点; };
+    struct 不可解码 final {};
+    std::lock_guard 锁(新语言互斥);
+    for(const auto key:{组键(组织键::登记根),组键(组织键::类型),组键(组织键::序号),组键(组织键::值),
+        组键(组织键::引用),组键(组织键::子项),组键(组织键::定义),组键(组织键::词典材料登记),
+        组键(组织键::词典归类解读),概念组.材料范围,概念组.目标词条FT,概念组.采用概念FT})
+        if(!有效(key))return {状态::未初始化};
+    if(!有效(R))return {状态::信息不存在};
+    const auto find=[&](稳定编码 id)->const 基础联合节点读取项* {
+        const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& item){return item.查询节点==id;});
+        return it==批次.end() ? nullptr : &*it;
+    };
+    const auto root=find(R);
+    if(!root)return {状态::需补快照,{}, {R}};
+    if(!root->快照)return {状态::信息不存在};
+    if(root->快照->结构.节点.编码!=R)return {状态::结构不可解码};
+    const auto registered=std::any_of(root->快照->入向字段组.begin(),root->快照->入向字段组.end(),[&](const auto& field) {
+        const auto* ref=std::get_if<稳定编码>(&field.内容);
+        return field.所属节点==组键(组织键::登记根) && field.字段节点==组键(组织键::词典材料登记)
+            && ref && *ref==R;
+    });
+    if(!registered)return {状态::信息不存在};
+    try {
+        const auto read=[&](稳定编码 id)->const 基础联合节点快照& {
+            const auto item=find(id);
+            if(!item)throw 待补{{id}};
+            if(!item->快照 || item->快照->结构.节点.编码!=id)throw 不可解码{};
+            return *item->快照;
+        };
+        const auto fields=[](const 基础联合节点快照& snapshot,组织键 key) {
+            std::vector<const 基础字段关系*> out;
+            for(const auto& field:snapshot.结构.字段组)if(field.字段节点==组键(key))out.push_back(&field);
+            return out;
+        };
+        const auto single=[&](const 基础联合节点快照& snapshot,组织键 key)->const 基础字段关系& {
+            const auto list=fields(snapshot,key);if(list.size()!=1)throw 不可解码{};return *list.front();
+        };
+        const auto number=[&](const 基础联合节点快照& snapshot,组织键 key) {
+            const auto* raw=std::get_if<基础值>(&single(snapshot,key).内容);
+            const auto* value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+            if(!value)throw 不可解码{};return *value;
+        };
+        const auto reference=[&](const 基础字段关系& field) {
+            const auto* value=std::get_if<稳定编码>(&field.内容);
+            if(!value || !有效(*value))throw 不可解码{};return *value;
+        };
+        const auto recordItem=[&](稳定编码 id,std::int64_t wanted) {
+            const auto& record=read(id);
+            if(number(record,组织键::类型)!=5)throw 不可解码{};
+            std::set<稳定编码> missing;
+            std::optional<稳定编码> found;
+            for(const auto* field:fields(record,组织键::子项)) {
+                const auto child=reference(*field);
+                const auto item=find(child);
+                if(!item){missing.insert(child);continue;}
+                if(!item->快照 || item->快照->结构.节点.编码!=child)throw 不可解码{};
+                if(number(*item->快照,组织键::序号)==wanted) {
+                    if(found)throw 不可解码{};found=child;
+                }
+            }
+            if(!missing.empty())throw 待补{{missing.begin(),missing.end()}};
+            if(!found)throw 不可解码{};return *found;
+        };
+        const auto directRef=[&](稳定编码 id) {
+            const auto& node=read(id);
+            if(number(node,组织键::类型)!=4 || !fields(node,组织键::子项).empty())throw 不可解码{};
+            return reference(single(node,组织键::引用));
+        };
+        if(number(*root->快照,组织键::类型)!=106)return {状态::信息不存在};
+        const auto definition=reference(single(*root->快照,组织键::定义));
+        const auto W=directRef(recordItem(definition,5));
+        std::optional<稳定编码> C;
+        const auto interpretations=fields(*root->快照,组织键::词典归类解读);
+        if(interpretations.size()>1)throw 不可解码{};
+        if(!interpretations.empty()) {
+            const auto interpretation=reference(*interpretations.front());
+            const auto statusId=recordItem(interpretation,0);
+            const auto& statusNode=read(statusId);
+            if(number(statusNode,组织键::类型)!=2 || !fields(statusNode,组织键::子项).empty())throw 不可解码{};
+            const auto v=number(statusNode,组织键::值);
+            if(v<1 || v>7)throw 不可解码{};
+            if(v==static_cast<std::int64_t>(新词典归类概念状态::已明确)) {
+                const auto optionalId=recordItem(interpretation,3);
+                const auto& optionalNode=read(optionalId);
+                if(number(optionalNode,组织键::类型)!=7)throw 不可解码{};
+                const auto children=fields(optionalNode,组织键::子项);
+                if(children.size()>1)throw 不可解码{};
+                if(!children.empty()) {
+                    const auto child=reference(*children.front());
+                    if(number(read(child),组织键::序号)!=0)throw 不可解码{};
+                    C=directRef(child);
+                }
+            }
+        }
+        (void)read(W);if(C)(void)read(*C);
+        for(const auto id:{概念组.材料范围,概念组.目标词条FT,概念组.采用概念FT})(void)read(id);
+        正式内容值 adopted{正式内容值种类::概念引用,正式内容值状态::当前未知,{}};
+        if(C)adopted={正式内容值种类::概念引用,正式内容值状态::已知,正式内容准确值{*C}};
+        正式信息参数投影 out{R,概念组.材料范围,{
+            {概念组.目标词条FT,{正式内容值种类::词条引用,正式内容值状态::已知,正式内容准确值{W}}},
+            {概念组.采用概念FT,std::move(adopted)}},std::nullopt};
+        return {状态::已解码,std::move(out),{}};
+    } catch(const 待补& missing) {return {状态::需补快照,{},missing.节点};}
+    catch(const 不可解码&) {return {状态::结构不可解码,{},{}};}
+}
+
 正式信息参数读取结果 新_语言类::读取词典归类参数保护(
     稳定编码 R, 稳定编码 请求范围, const 新词典归类信息概念组& 概念组) const noexcept {
     using S = 正式信息参数读取状态;

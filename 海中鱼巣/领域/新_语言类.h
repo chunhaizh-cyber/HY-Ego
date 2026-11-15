@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 #include <variant>
@@ -15,6 +16,15 @@
 #include "信息内容.数据.h"
 
 namespace 海中鱼巣 {
+
+enum class 新词典归类参数批次状态 : std::uint8_t {
+    已解码 = 1, 未初始化, 信息不存在, 结构不可解码, 需补快照
+};
+struct 新词典归类参数批次结果 final {
+    新词典归类参数批次状态 状态=新词典归类参数批次状态::未初始化;
+    std::optional<正式信息参数投影> 信息;
+    std::vector<稳定编码> 需补节点组;
+};
 
 class 新_词类;
 class 概念_存在类;
@@ -752,6 +762,8 @@ public:
     // 正式来源已经退出时返回空，由调用者读取当前请求后继续。
     std::optional<新词典归类材料信息> 保存词典归类材料(const 新词典归类材料定义&);
     std::optional<新词典归类材料信息> 读取词典归类材料(稳定编码 行节点) const;
+    新词典归类参数批次结果 解码词典归类参数批次(
+        稳定编码, const 新词典归类信息概念组&, std::span<const 基础联合节点读取项>) const;
     正式信息参数读取结果 读取词典归类参数保护(稳定编码 行节点, 稳定编码 请求范围,
         const 新词典归类信息概念组&) const noexcept;
     std::optional<新词典归类材料信息> 更新词典归类概念(
