@@ -46,12 +46,12 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
-    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类 };
+    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 void 合并模拟联合预期(基础节点组追加请求& q) {
@@ -402,11 +402,11 @@ struct 新_模拟世界类::实现 final {
     bool 是普通存在参数(稳定编码 n) const {
         const auto it=通用参数.find(n);
         return it!=通用参数.end()&&it->second.规格.信息类型==新方法参数信息类型::存在
-            &&!it->second.需求参数输入&&!本地需求.contains(n);
+            &&!it->second.需求参数输入&&!it->second.复制归类材料&&!本地需求.contains(n);
     }
     std::map<稳定编码,材料物理类型> 通用材料;
     // 仅身份/来源索引；业务内容始终从L1字段完整重建。
-    std::map<稳定编码,std::optional<稳定编码>> 本地需求,本地理解,本地确认,本地要求,本地语言场景;
+    std::map<稳定编码,std::optional<稳定编码>> 本地需求,本地理解,本地确认,本地要求,本地语言场景,本地归类材料;
     std::map<稳定编码,std::vector<std::uint32_t>> 内容参数位置;
     mutable std::vector<新模拟内容读取记录> 内容读取组;
     template<class T> void 记录内容(std::uint8_t kind,稳定编码 n,const T& value,bool copied) {
@@ -1857,11 +1857,88 @@ namespace {
     if(d.外部要求节点&&!s.本地要求.contains(*d.外部要求节点))throw std::runtime_error("local demand external requirement outside sample");
     s.记录内容(1,n,d,it->second.has_value());return {新模拟需求状态::已完成,std::move(d)};
 }
+正式信息参数读取结果 新_模拟世界类::读取本地归类材料(稳定编码 N,稳定编码 C) const {
+    using S=正式信息参数读取状态;
+    auto& s=*实现_;
+    std::lock_guard lock(s.互斥);
+    const auto local=s.本地归类材料.find(N);
+    const auto parameter=s.通用参数.find(N);
+    if(!s.通用 || local==s.本地归类材料.end())return {S::信息不存在,{},{}};
+    if(parameter==s.通用参数.end() || !parameter->second.复制归类材料)
+        throw std::runtime_error("local classification parameter configuration missing");
+    const auto& config=*parameter->second.复制归类材料;
+    if(C!=config.范围.材料范围 && C!=config.范围.明确材料范围)return {S::范围未支持,{},{}};
+    const auto field=[](const 基础联合节点快照& snapshot,字段 key)->std::optional<稳定编码> {
+        std::optional<稳定编码> value;
+        for(const auto& item:snapshot.结构.字段组)if(item.字段节点==字段组[key]) {
+            const auto* ref=std::get_if<稳定编码>(&item.内容);
+            if(value || !ref || !有效(*ref))throw std::runtime_error("local classification reference malformed");
+            value=*ref;
+        }
+        return value;
+    };
+    for(;;) {
+        auto first=全局基础数据集.查询节点组完整结构({N});
+        if(first.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+        if(first.状态!=基础结构操作状态::已完成 || first.节点组.size()!=1 || !first.节点组.front().快照)
+            throw std::runtime_error("local classification material missing");
+        const auto& initial=*first.节点组.front().快照;
+        const auto word=field(initial,归类目标词条引用);
+        const auto adopted=field(initial,归类采用概念引用);
+        if(!word)throw std::runtime_error("local classification target word missing");
+        std::set<稳定编码> ids{N,*word,config.范围.材料范围,config.范围.目标词条FT,config.范围.采用概念FT};
+        if(adopted)ids.insert(*adopted);
+        if(C==config.范围.明确材料范围)ids.insert(C);
+        auto read=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
+        if(read.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+        const bool endpointMissing=read.状态==基础结构操作状态::节点不存在
+            || read.状态==基础结构操作状态::引用不存在
+            || (read.状态==基础结构操作状态::已完成 && std::any_of(read.节点组.begin(),read.节点组.end(),
+                [](const auto& item){return !item.快照;}));
+        if(endpointMissing) {
+            auto retry=全局基础数据集.查询节点组完整结构({N});
+            if(retry.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
+            if(retry.状态!=基础结构操作状态::已完成 || retry.节点组.size()!=1 || !retry.节点组.front().快照)
+                throw std::runtime_error("local classification material missing");
+            if(field(*retry.节点组.front().快照,归类目标词条引用)!=word
+                || field(*retry.节点组.front().快照,归类采用概念引用)!=adopted)continue;
+            throw std::runtime_error("local classification referenced endpoint missing");
+        }
+        if(read.状态!=基础结构操作状态::已完成 || read.节点组.size()!=ids.size())
+            throw std::runtime_error("local classification protection unavailable");
+        std::vector<基础联合节点快照> protection;
+        protection.reserve(read.节点组.size());
+        const 基础联合节点快照* current=nullptr;
+        for(auto& item:read.节点组) {
+            if(!item.快照)throw std::runtime_error("local classification endpoint missing");
+            protection.push_back(std::move(*item.快照));
+            if(item.查询节点==N)current=&protection.back();
+        }
+        if(!current)throw std::runtime_error("local classification material snapshot missing");
+        if(field(*current,归类目标词条引用)!=word || field(*current,归类采用概念引用)!=adopted)continue;
+        if(field(*current,内容概念引用)!=std::optional{config.范围.材料范围}
+            || !s.是本地参数(*word,新方法参数信息类型::词条))
+            throw std::runtime_error("local classification material identity damaged");
+        if(C==config.范围.明确材料范围 && !adopted)return {S::范围未支持,{},{}};
+        正式内容值 selected{正式内容值种类::概念引用,正式内容值状态::当前未知,{}};
+        if(adopted)selected={正式内容值种类::概念引用,正式内容值状态::已知,正式内容准确值{*adopted}};
+        正式信息参数投影 out{N,config.范围.材料范围,{
+            {config.范围.目标词条FT,{正式内容值种类::词条引用,正式内容值状态::已知,正式内容准确值{*word}}},
+            {config.范围.采用概念FT,std::move(selected)}},std::nullopt};
+        s.记录内容(7,N,out,local->second.has_value());
+        return {S::已读取,std::move(out),std::move(protection)};
+    }
+}
 正式信息参数读取结果 新_模拟世界类::读取正式信息参数保护(稳定编码 N,稳定编码 C) const noexcept {
     using S=正式信息参数读取状态;
     try {
         if(!实现_)return {S::信息不存在,{},{}};
         auto& s=*实现_;
+        {
+            std::lock_guard lock(s.互斥);
+            if(!s.通用)return {S::信息不存在,{},{}};
+            if(s.本地归类材料.contains(N))return 读取本地归类材料(N,C);
+        }
         const auto roots=s.方法.读取模拟需求概念组();
         if(roots.状态==正式结构操作状态::前提已变化)return {S::前提已变化,{},{}};
         if(roots.状态==正式结构操作状态::依赖未就绪||roots.状态==正式结构操作状态::未找到)
@@ -2250,7 +2327,7 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<m->参数规格组.size();++i)
         if(!m->参数规格组[i].有序规格||*m->参数规格组[i].有序规格!=输入[i].规格
             ||输入[i].规格.序号!=i+1) { 模拟样例拒绝行=__LINE__; return {}; }
-    std::vector<bool> 需求参数(输入.size(),false);
+    std::vector<bool> 需求参数(输入.size(),false),归类参数(输入.size(),false);
     for(std::size_t i=0;i<输入.size();++i) {
         const auto& p=输入[i];
         if(p.规格.信息类型==新方法参数信息类型::词条) {
@@ -2270,6 +2347,26 @@ namespace 海中鱼巣 {
                 ||!p.来源任务成员组.empty()||!p.历史引用存在参数组.empty()
                 ||p.初值方式!=新模拟特征初值方式::常规输入) { 模拟样例拒绝行=__LINE__; return {}; }
         } else if(p.复制词条) { 模拟样例拒绝行=__LINE__; return {}; }
+        if(p.复制归类材料) {
+            const auto& r=*p.复制归类材料;
+            if(p.规格.信息类型!=新方法参数信息类型::存在 || !有效(r.来源材料) || !有效(r.来源词条)
+                || !有效(r.范围.材料范围) || !有效(r.范围.明确材料范围)
+                || !有效(r.范围.目标词条FT) || !有效(r.范围.采用概念FT)
+                || (r.采用概念 && !有效(*r.采用概念))
+                || (p.规格.范围概念节点!=r.范围.材料范围 && p.规格.范围概念节点!=r.范围.明确材料范围)
+                || (p.规格.范围概念节点==r.范围.明确材料范围 && !r.采用概念)
+                || !r.目标词条参数 || r.目标词条参数>输入.size()
+                || !输入[r.目标词条参数-1].复制词条
+                || 输入[r.目标词条参数-1].规格.信息类型!=新方法参数信息类型::词条
+                || 输入[r.目标词条参数-1].复制词条->节点!=r.来源词条
+                || p.需求参数输入 || p.所属存在参数 || p.值 || p.材料 || !p.集合成员参数组.empty()
+                || p.引用存在参数 || p.来源存在 || p.复制上下文 || !p.来源任务成员组.empty()
+                || p.构造存在概念 || !p.历史引用存在参数组.empty() || p.引用需求输入
+                || p.初值方式!=新模拟特征初值方式::常规输入 || p.完整复制特征
+                || p.所属语言场景输入 || p.引用语言场景输入) { 模拟样例拒绝行=__LINE__; return {}; }
+            归类参数[i]=true;
+            continue;
+        }
         if(p.规格.信息类型==新方法参数信息类型::存在) {
             const auto formal=s.方法.读取模拟正式结构(p.规格.范围概念节点);
             if(formal.状态==正式结构操作状态::前提已变化)return {新模拟世界状态::定义前提已变化,{}};
@@ -2291,13 +2388,13 @@ namespace 海中鱼巣 {
         }
         if(!需求参数[i]&&p.需求参数输入){ 模拟样例拒绝行=__LINE__; return {}; }
     }
-    const auto 是普通存在=[&](std::size_t i){return 输入[i].规格.信息类型==新方法参数信息类型::存在&&!需求参数[i];};
+    const auto 是普通存在=[&](std::size_t i){return 输入[i].规格.信息类型==新方法参数信息类型::存在&&!需求参数[i]&&!归类参数[i];};
     std::vector<std::size_t> 代表(输入.size());
     for(std::size_t i=0;i<代表.size();++i)代表[i]=i;
     const auto 查代表=[&](std::size_t i) { while(代表[i]!=i)i=代表[i];return i; };
     for(std::size_t i=0;i<输入.size();++i) if(输入[i].同一参数) {
         const auto j=static_cast<std::size_t>(输入[i].同一参数-1);
-        if(j>=输入.size()||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]) { 模拟样例拒绝行=__LINE__; return {}; }
+        if(j>=输入.size()||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]||归类参数[i]!=归类参数[j]) { 模拟样例拒绝行=__LINE__; return {}; }
         const auto a=查代表(i),b=查代表(j);代表[(std::max)(a,b)]=(std::min)(a,b);
     }
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
@@ -2325,7 +2422,7 @@ namespace 海中鱼巣 {
     };
     std::vector<稳定编码> 构造范围(输入.size());
     for(std::size_t i=0;i<输入.size();++i) {
-        if(需求参数[i])continue;
+        if(需求参数[i]||归类参数[i])continue;
         if(输入[i].规格.信息类型!=新方法参数信息类型::存在) {
             if(输入[i].构造存在概念){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
@@ -2362,11 +2459,18 @@ namespace 海中鱼巣 {
         const auto& 必要=*m->初始必要条件;
         if(必要.条件.关系规则!=新方法项关系规则::全部成立){ 模拟样例拒绝行=__LINE__; return {}; }
         for(auto 条件:必要.条件.条件项组) {
-            if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()&&需求参数[条件.参数序号-1]) {
+            if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()&&(需求参数[条件.参数序号-1]||归类参数[条件.参数序号-1])) {
+                const auto position=条件.参数序号-1;
                 新方法条件项定义 expected;expected.参数序号=条件.参数序号;
-                expected.存在概念节点=输入[条件.参数序号-1].规格.范围概念节点;
-                if(条件!=expected){ 模拟样例拒绝行=__LINE__; return {}; }
-                continue;
+                expected.存在概念节点=输入[position].规格.范围概念节点;
+                if(条件==expected)continue;
+                if(归类参数[position]) {
+                    const auto& material=*输入[position].复制归类材料;
+                    expected.存在概念节点.reset();
+                    expected.引用内容条件=新方法引用内容条件{{},material.范围.明确材料范围,新方法内容作用点::参数自身};
+                    if(条件==expected && material.采用概念)continue;
+                }
+                { 模拟样例拒绝行=__LINE__; return {}; }
             }
             if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()
                 &&(输入[条件.参数序号-1].规格.信息类型==新方法参数信息类型::存在
@@ -2460,6 +2564,13 @@ namespace 海中鱼巣 {
         const auto 左=代表[关系.左参数序号-1],右=代表[关系.右参数序号-1];
         if(关系.种类!=新方法参数关系种类::内容引用参数&&!关系.左正式内容路径.empty()){ 模拟样例拒绝行=__LINE__; return {}; }
         if(关系.种类==新方法参数关系种类::内容引用参数) {
+            if(归类参数[左]) {
+                const auto& r=*输入[左].复制归类材料;
+                if(输入[右].规格.信息类型!=新方法参数信息类型::词条
+                    || 关系.左正式内容路径!=std::vector<稳定编码>{r.范围.目标词条FT}
+                    || 代表[r.目标词条参数-1]!=右) { 模拟样例拒绝行=__LINE__; return {}; }
+                continue;
+            }
             if(!需求参数[左]||!是普通存在(右)||关系.左正式内容路径.size()!=1||!s.特征概念){ 模拟样例拒绝行=__LINE__; return {}; }
             const auto 主体FT=s.特征概念->读取先天特征类型槽(先天特征类型槽::需求主体);
             if(主体FT.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
@@ -2470,7 +2581,7 @@ namespace 海中鱼巣 {
                 ||代表[D->主体存在输入-1]!=右){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
         }
-        if((需求参数[左]||需求参数[右])&&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同
+        if((需求参数[左]||需求参数[右]||归类参数[左]||归类参数[右])&&关系.种类!=新方法参数关系种类::同一&&关系.种类!=新方法参数关系种类::不同
             &&!(关系.种类==新方法参数关系种类::特征引用存在&&需求参数[右])){ 模拟样例拒绝行=__LINE__; return {}; }
         if(关系.种类==新方法参数关系种类::同一&&左!=右){ 模拟样例拒绝行=__LINE__; return {}; }
         if(关系.种类==新方法参数关系种类::不同&&左==右){ 模拟样例拒绝行=__LINE__; return {}; }
@@ -2539,8 +2650,13 @@ namespace 海中鱼巣 {
     }
     for(std::size_t i=0;i<输入.size();++i) if(代表[i]!=i) {
         const auto& a=输入[i];const auto& b=输入[代表[i]];
+        auto 归类a=a.复制归类材料,归类b=b.复制归类材料;
+        if(归类a&&归类b) {
+            归类a->目标词条参数=static_cast<std::uint32_t>(代表.at(归类a->目标词条参数-1)+1);
+            归类b->目标词条参数=static_cast<std::uint32_t>(代表.at(归类b->目标词条参数-1)+1);
+        }
         if(a.值!=b.值||a.材料!=b.材料||a.来源任务成员组!=b.来源任务成员组
-            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征||a.复制词条!=b.复制词条){ 模拟样例拒绝行=__LINE__; return {}; }
+            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征||a.复制词条!=b.复制词条||归类a!=归类b){ 模拟样例拒绝行=__LINE__; return {}; }
         if(引用代表(a)!=引用代表(b)){ 模拟样例拒绝行=__LINE__; return {}; }
         if(a.规格.信息类型==新方法参数信息类型::特征) {
             if(a.所属存在参数&&b.所属存在参数
@@ -2778,6 +2894,7 @@ namespace 海中鱼巣 {
         i=代表.at(i);
         if(场景参数&&i==*场景参数)return 场景预留;
         if(需求参数[i])return D节点.at(输入[i].需求参数输入-1);
+        if(归类参数[i])return 基础组内节点引用{index.at(i)};
         if(输入[i].规格.信息类型==新方法参数信息类型::存在)return E节点.at(i);
         return 基础组内节点引用{index.at(i)};
     };
@@ -2791,6 +2908,7 @@ namespace 海中鱼巣 {
     }
     for(std::size_t i=0;i<输入.size();++i) if(代表[i]==i) {
         const auto& p=输入[i];
+        if(归类参数[i]) { index[i]=新节点(归类材料种类); continue; }
         if(需求参数[i])continue; // D由需求图prepare统一发表，不再分配或写成普通E。
         if(场景参数&&i==*场景参数)continue;
         if(p.规格.信息类型==新方法参数信息类型::存在) {
@@ -2834,6 +2952,15 @@ namespace 海中鱼巣 {
         q.追加外部关系组.push_back({基础组内节点引用{所在场景},引用(i),基础外部关系类型::父子});
     }
     for(std::size_t i=0;i<输入.size();++i)if(代表[i]!=i)index[i]=index[代表[i]];
+    for(std::size_t i=0;i<输入.size();++i) if(归类参数[i] && 代表[i]==i) {
+        const auto& r=*输入[i].复制归类材料;
+        auto& fields=q.新节点组[index[i]].字段组;
+        fields.push_back({字段组[所属],基础组内节点引用{*词条场景}});
+        fields.push_back({字段组[内容概念引用],r.范围.材料范围});
+        fields.push_back({字段组[归类目标词条引用],字段引用(r.目标词条参数-1)});
+        if(r.采用概念)fields.push_back({字段组[归类采用概念引用],*r.采用概念});
+        q.追加外部关系组.push_back({基础组内节点引用{*词条场景},基础组内节点引用{index[i]},基础外部关系类型::父子});
+    }
     模拟结构写入器 writer{q,场景};
     const auto 图引用=[&](const auto& nodes,std::uint32_t pos)->稳定编码 {
         if(!pos||pos>nodes.size())throw std::invalid_argument("local typed graph index out of range");return nodes[pos-1];
@@ -3140,7 +3267,7 @@ namespace 海中鱼巣 {
     }
     for(std::size_t i=0;i<输入.size();++i) {
         const auto n=输入[i].规格.信息类型==新方法参数信息类型::存在
-            ? (需求参数[i] ? D节点.at(输入[i].需求参数输入-1)
+            ? (归类参数[i] ? p.新节点组[index[i]] : 需求参数[i] ? D节点.at(输入[i].需求参数输入-1)
                 :场景参数&&代表[i]==*场景参数 ? s.通用场景 : E节点.at(代表[i])) : p.新节点组[index[i]];
         auto 本地参数=输入[i];
         if(是普通存在(i)) {
@@ -3148,12 +3275,13 @@ namespace 海中鱼巣 {
             if(!本地参数.引用语言场景输入&&读引用(n,特征类型)!=std::optional<稳定编码>{构造范围[i]})
                 throw std::runtime_error("模拟存在落图的有效构造范围读回不一致");
         }
+        if(归类参数[i])s.本地归类材料.emplace(n,输入[i].复制归类材料->来源材料);
         s.通用参数.emplace(n,std::move(本地参数));
         s.通用输入节点[i]=n;
         if(i>=s.通用绑定.size())continue;
         auto& b=s.通用绑定[i];b.世界场景节点=s.通用场景;
         if(延后词典初值[代表[i]])b.世界场景节点=p.新节点组.at(*词条场景);
-        auto owner = 是普通存在(i)||输入[i].规格.信息类型==新方法参数信息类型::词条
+        auto owner = 是普通存在(i)||归类参数[i]||输入[i].规格.信息类型==新方法参数信息类型::词条
             ? std::optional<稳定编码>{n} : 读引用(n,所属);
         if(owner&&*owner!=s.通用场景)if(const auto actual=读引用(*owner,所属))b.世界场景节点=*actual;
         b.有序引用=新方法有序参数引用{static_cast<std::uint32_t>(i+1),输入[i].规格.信息类型,n};
@@ -3306,6 +3434,9 @@ namespace 海中鱼巣 {
     std::vector<std::pair<稳定编码,稳定编码>> 直接需求;
     for(std::size_t i=0;i<m->参数规格组.size();++i)if(需求参数[i])
         直接需求.push_back({s.通用绑定[i].有序引用->信息节点,输入[i].规格.范围概念节点});
+    std::vector<std::pair<稳定编码,稳定编码>> 直接归类材料;
+    for(std::size_t i=0;i<m->参数规格组.size();++i)if(归类参数[i])
+        直接归类材料.push_back({s.通用绑定[i].有序引用->信息节点,输入[i].规格.范围概念节点});
     lock.unlock();
     for(const auto& [D,C]:直接需求) {
         const auto read=读取正式信息参数保护(D,C);
@@ -3313,6 +3444,17 @@ namespace 海中鱼巣 {
         if(read.状态==正式信息参数读取状态::资源失败)return {新模拟世界状态::资源失败,{}};
         if(read.状态!=正式信息参数读取状态::已读取||!read.信息||read.信息->直接内容组.size()!=15)
             throw std::runtime_error("local formal demand parameter publication readback failed");
+    }
+    for(const auto& [R,C]:直接归类材料) {
+        const auto read=读取正式信息参数保护(R,C);
+        if(read.状态==正式信息参数读取状态::信息不存在 || read.状态==正式信息参数读取状态::前提已变化)
+            return {新模拟世界状态::定义前提已变化,{}};
+        if(read.状态==正式信息参数读取状态::资源失败)return {新模拟世界状态::资源失败,{}};
+        if(read.状态!=正式信息参数读取状态::已读取 || !read.信息 || read.信息->直接内容组.size()!=2) {
+            std::lock_guard check(s.互斥);
+            if(!s.通用 || s.通用场景!=完成场景)return {新模拟世界状态::定义前提已变化,{}};
+            throw std::runtime_error("local classification material publication readback failed");
+        }
     }
     const auto 核任务值=[&](const 新模拟复制准确值& 原值,const std::optional<新特征准确值>& 实际) {
         if(原值.种类!=新模拟复制值种类::任务集合)return;
@@ -4174,7 +4316,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     }
     s.词典接收定位.reset();s.词典查询责任.clear();s.词典接收值组.clear();
     s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用输入节点.clear();s.通用参数.clear();s.通用材料.clear();s.通用任务.clear();s.任务成员读取组.clear();
-    s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();
+    s.本地归类材料.clear();s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();
     s.记录复制读取=false;s.已读取复制上下文=false;s.本次已进入动作=false;s.本次存在特征读取.clear();
     s.交互事实.clear();s.本次场景读取.clear();
     s.记录写回=false;s.写回窗口已关闭=false;s.最后写入来源组.clear();

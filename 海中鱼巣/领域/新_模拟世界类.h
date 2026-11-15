@@ -28,13 +28,25 @@ struct 新模拟内容读取记录 final {
     稳定编码 节点;
     std::vector<std::uint32_t> 参数位置组;
     std::variant<新模拟需求信息,服务要求理解信息,服务要求确认信息,
-        新部分服务要求材料,新模拟语言场景信息,新特征信息> 投影;
+        新部分服务要求材料,新模拟语言场景信息,新特征信息,正式信息参数投影> 投影;
     bool 动作前=true;
 };
 enum class 新模拟世界状态 : std::uint8_t { 已完成 = 1, 入口拒绝, 结构不一致, 资源失败, 定义前提已变化, 能力未支持 = 6, 需重新组织输入 = 7 };
 struct 新模拟世界建立结果 final {
     新模拟世界状态 状态 = 新模拟世界状态::入口拒绝;
     std::optional<稳定编码> 场景节点;
+};
+struct 新模拟归类材料复制输入 final {
+    稳定编码 来源材料, 来源词条;
+    std::optional<稳定编码> 采用概念;
+    新词典归类信息概念组 范围;
+    std::uint32_t 目标词条参数 = 0;
+    friend bool operator==(const 新模拟归类材料复制输入& a,const 新模拟归类材料复制输入& b) {
+        return a.来源材料 == b.来源材料 && a.来源词条 == b.来源词条 && a.采用概念 == b.采用概念
+            && a.目标词条参数 == b.目标词条参数 && a.范围.材料范围 == b.范围.材料范围
+            && a.范围.明确材料范围 == b.范围.明确材料范围 && a.范围.目标词条FT == b.范围.目标词条FT
+            && a.范围.采用概念FT == b.范围.采用概念FT;
+    }
 };
 struct 新模拟有序参数输入 final {
     新方法有序参数规格 规格;
@@ -59,6 +71,7 @@ struct 新模拟有序参数输入 final {
     std::uint32_t 需求参数输入=0;
     // 正式W的不可变键及来源映射；发布localW时不写入来源W引用。
     std::optional<新词条信息> 复制词条;
+    std::optional<新模拟归类材料复制输入> 复制归类材料;
 };
 struct 新模拟词典材料复制输入 final {
     新词典材料信息 材料;
@@ -275,6 +288,7 @@ public:
     std::optional<新特征值信息> 读取模拟特征值材料(稳定编码) const noexcept override;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
+    正式信息参数读取结果 读取本地归类材料(稳定编码,稳定编码) const;
     struct 词典接收提供者;
     struct 词典接收准备;
     void 建立本地词典接收场景();
