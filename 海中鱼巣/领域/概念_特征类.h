@@ -158,6 +158,17 @@ struct 特征概念定义 final {
     friend bool operator==(const 特征概念定义&, const 特征概念定义&) = default;
 };
 
+enum class 新名称挂接概念批次状态 : std::uint8_t {
+    已解码 = 1, 未初始化, 信息不存在, 槽未建立, 不相容, 结构不可解码, 需补快照, 能力未支持
+};
+struct 新名称挂接概念批次结果 final {
+    新名称挂接概念批次状态 状态=新名称挂接概念批次状态::未初始化;
+    std::optional<稳定编码> 类型根;
+    std::optional<特征概念定义> 定义;
+    std::vector<稳定编码> 需补节点组;
+    std::vector<稳定编码> 域依赖组;
+};
+
 struct 特征概念信息 final {
     稳定编码 节点;
     特征概念材料物理类型 材料类型 = 特征概念材料物理类型::I64标量;
@@ -564,6 +575,8 @@ public:
     先天特征类型槽结果 读取先天特征类型槽(std::uint32_t 语义序号) const noexcept;
     // 当前定位不展开FT定义，不收集或复核旧保护全集。
     先天特征类型槽结果 读取当前先天特征类型槽(std::uint32_t 语义序号) const noexcept;
+    新名称挂接概念批次结果 解码名称挂接概念批次(
+        稳定编码, std::span<const 基础联合节点读取项>) const;
     特征概念编码操作结果 建立或取得特征概念强类型(
         const 特征概念定义&, const 新_特征值类&,
         std::optional<稳定编码> = std::nullopt) noexcept;

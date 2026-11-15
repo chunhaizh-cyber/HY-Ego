@@ -5858,6 +5858,141 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
     } catch (...) { 信息引用定义故障(L"正式材料概念身份读取工程异常。"); }
 }
 
+新名称挂接概念批次结果 概念_特征类::解码名称挂接概念批次(
+    稳定编码 概念,std::span<const 基础联合节点读取项> 批次) const {
+    using 状态=新名称挂接概念批次状态;
+    std::lock_guard 锁(特征概念树互斥);
+    if(!结构已初始化())return {状态::未初始化};
+    if(!有效(概念))return {状态::信息不存在};
+    std::set<稳定编码> 缺少,依赖;
+    const auto find=[&](稳定编码 id)->const 基础联合节点读取项* {
+        const auto it=std::find_if(批次.begin(),批次.end(),[&](const auto& item){return item.查询节点==id;});
+        return it==批次.end() ? nullptr : &*it;
+    };
+    const auto root=find(特征概念树);
+    if(!root)return {状态::需补快照,{},{},{特征概念树},{}};
+    if(!root->快照 || root->快照->结构.节点.编码!=特征概念树)return {状态::信息不存在};
+    bool bad=false;
+    const auto single=[&](const 基础节点结构& node,稳定编码 key)->const 基础字段关系* {
+        const 基础字段关系* result=nullptr;
+        for(const auto& field:node.字段组)if(field.字段节点==key) {
+            if(result){bad=true;return nullptr;}result=&field;
+        }
+        return result;
+    };
+    const auto ref=[](const 基础字段关系* field)->std::optional<稳定编码> {
+        if(!field)return {};
+        const auto* value=std::get_if<稳定编码>(&field->内容);
+        return value&&有效(*value) ? std::optional{*value} : std::nullopt;
+    };
+    const auto number=[](const 基础字段关系* field)->std::optional<std::int64_t> {
+        const auto* raw=field ? std::get_if<基础值>(&field->内容) : nullptr;
+        const auto* value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+        return value ? std::optional{*value} : std::nullopt;
+    };
+    std::optional<稳定编码> 槽根;
+    for(const auto& field:root->快照->结构.字段组)if(field.字段节点==先天类型槽字段) {
+        const auto id=ref(&field);if(!id)return {状态::结构不可解码};
+        const auto item=find(*id);
+        if(!item){缺少.insert(*id);continue;}
+        if(!item->快照 || item->快照->结构.节点.编码!=*id)return {状态::结构不可解码};
+        const auto& node=item->快照->结构;
+        const auto type=ref(single(node,节点类型字段));
+        const auto ordinal=number(single(node,先天类型槽序号字段));
+        const auto target=ref(single(node,先天类型槽根字段));
+        if(bad || type!=先天类型槽记录类型 || !ordinal || *ordinal<0 || !target)
+            return {状态::结构不可解码};
+        if(*ordinal==static_cast<std::int64_t>(先天特征类型槽::概念名称挂接)) {
+            if(槽根)return {状态::结构不可解码};
+            槽根=*target;
+        }
+    }
+    if(!缺少.empty())return {状态::需补快照,{},{},{缺少.begin(),缺少.end()},{}};
+    if(!槽根)return {状态::槽未建立};
+    std::set<稳定编码> visited;
+    auto current=概念;
+    const 基础联合节点快照* leaf=nullptr;
+    稳定编码 类型根{};
+    while(current!=特征概念树) {
+        if(!visited.insert(current).second)return {状态::结构不可解码};
+        const auto item=find(current);
+        if(!item)return {状态::需补快照,{},{},{current},{}};
+        if(!item->快照)return current==概念 ? 新名称挂接概念批次结果{状态::信息不存在}
+            : 新名称挂接概念批次结果{状态::结构不可解码};
+        if(item->快照->结构.节点.编码!=current)return {状态::结构不可解码};
+        const auto type=ref(single(item->快照->结构,节点类型字段));
+        if(bad || type!=特征概念节点类型)return {状态::结构不可解码};
+        if(!leaf)leaf=&*item->快照;
+        std::optional<稳定编码> parent;
+        for(const auto& edge:item->快照->入向外部关系组)if(edge.类型==基础外部关系类型::父子) {
+            if(parent || !有效(edge.源节点) || edge.目标节点!=current)return {状态::结构不可解码};
+            parent=edge.源节点;
+        }
+        if(!parent)return {状态::结构不可解码};
+        类型根=current;current=*parent;
+    }
+    if(!leaf || !有效(类型根))return {状态::结构不可解码};
+    if(类型根!=*槽根)return {状态::不相容};
+    const auto& node=leaf->结构;
+    const auto material=number(single(node,材料类型字段));
+    const auto compare=number(single(node,比较规则字段));
+    const auto aggregate=number(single(node,聚合规则字段));
+    if(bad || !material || !compare || !aggregate)return {状态::结构不可解码};
+    if(*material!=static_cast<std::int64_t>(特征概念材料物理类型::U64数组)
+        || *compare!=static_cast<std::int64_t>(特征概念比较规则::概念集合身份判等)
+        || *aggregate!=static_cast<std::int64_t>(特征概念聚合规则::完整材料精确集合))return {状态::能力未支持};
+    特征概念定义 definition;
+    definition.材料类型=特征概念材料物理类型::U64数组;
+    definition.比较规则=特征概念比较规则::概念集合身份判等;
+    definition.聚合规则=特征概念聚合规则::完整材料精确集合;
+    const auto unitField=single(node,单位字段);
+    if(unitField){definition.单位=ref(unitField);if(!definition.单位)bad=true;}
+    const auto all=single(node,全材料值域字段);
+    const auto group=single(node,概念集合值域字段);
+    const auto atLeast=single(node,至少一个概念字段);
+    std::vector<稳定编码> finite,required;
+    bool other=false;
+    for(const auto& field:node.字段组) {
+        if(field.字段节点==非I64值域字段 || field.字段节点==必含概念字段) {
+            const auto v=ref(&field);if(!v)return {状态::结构不可解码};
+            (field.字段节点==非I64值域字段 ? finite : required).push_back(*v);
+        } else if(field.字段节点==I64值域字段 || field.字段节点==结构化分量字段
+            || field.字段节点==存在引用值域字段 || field.字段节点==任务集合值域字段
+            || field.字段节点==需求集合值域字段 || field.字段节点==存在集合值域字段
+            || field.字段节点==信息引用内容概念字段)other=true;
+    }
+    if(bad)return {状态::结构不可解码};
+    const int representations=static_cast<int>(all!=nullptr)+static_cast<int>(!finite.empty())
+        +static_cast<int>(group!=nullptr)+static_cast<int>(other);
+    if(representations!=1 || (!group && (atLeast || !required.empty())))return {状态::结构不可解码};
+    if(other)return {状态::能力未支持};
+    const auto uniqueRefs=[](std::vector<稳定编码>& values) {
+        std::sort(values.begin(),values.end());
+        return std::adjacent_find(values.begin(),values.end())==values.end();
+    };
+    if(all) {
+        if(number(all)!=std::optional<std::int64_t>{1})return {状态::结构不可解码};
+        definition.值域=特征概念全材料值域{};
+    } else if(group) {
+        const auto mark=number(group),minimum=number(atLeast);
+        if(mark!=std::optional<std::int64_t>{1} || !minimum || (*minimum!=0 && *minimum!=1)
+            || !uniqueRefs(required))return {状态::结构不可解码};
+        依赖.insert(required.begin(),required.end());
+        definition.值域=特征概念概念集合值域{std::move(required),*minimum==1};
+    } else {
+        if(!uniqueRefs(finite))return {状态::结构不可解码};
+        依赖.insert(finite.begin(),finite.end());definition.值域=std::move(finite);
+    }
+    if(definition.单位)依赖.insert(*definition.单位);
+    for(const auto id:依赖) {
+        const auto item=find(id);
+        if(!item)缺少.insert(id);
+        else if(!item->快照 || item->快照->结构.节点.编码!=id)return {状态::结构不可解码};
+    }
+    if(!缺少.empty())return {状态::需补快照,{},{},{缺少.begin(),缺少.end()},{依赖.begin(),依赖.end()}};
+    return {状态::已解码,类型根,std::move(definition),{}, {依赖.begin(),依赖.end()}};
+}
+
 先天特征类型槽结果 概念_特征类::读取当前先天特征类型槽(std::uint32_t number) const noexcept {
     using S = 特征概念规则状态;
     try {
