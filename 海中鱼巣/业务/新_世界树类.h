@@ -297,6 +297,8 @@ public:
 
     // 按依赖顺序初始化全部新版结构，并建立或读回唯一世界树根场景。
     新世界初始化结果 初始化() noexcept;
+    // 在中文语言节点已经存在后，给五项基础动态概念补同义名称。不创建语言节点。
+    bool 确保动态基础概念名称(稳定编码 中文语言节点) noexcept;
     bool 已初始化() const noexcept;
     std::optional<稳定编码> 获取世界树根场景() const noexcept;
     新世界事实服务引用 获取事实服务引用() noexcept;

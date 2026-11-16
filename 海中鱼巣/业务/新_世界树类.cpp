@@ -1288,6 +1288,16 @@ bool 新世界动作发布结果::成功() const noexcept {
     }
 }
 
+bool 新_世界树类::确保动态基础概念名称(稳定编码 中文语言节点) noexcept {
+    try {
+        std::lock_guard 锁(新世界树互斥);
+        return 动态概念服务_.确保基础概念名称(
+            中文语言节点, 词服务_, 名称关系服务_);
+    } catch (...) {
+        return false;
+    }
+}
+
 bool 新_世界树类::已初始化() const noexcept {
     try {
         std::lock_guard 锁(新世界树互斥);
