@@ -5,13 +5,19 @@
 - 目标编号：`GOAL-INSTINCT-RUNTIME`
 - 名称：构建本能系统基于世界事实、实例特征和现实锚点持续运行的基础架构
 - 类型：集成能力目标
-- 记录版本：v0.26
+- 记录版本：v0.27
 - 创建时间：2026-09-21
-- 更新时间：2026-10-30
-- 当前状态：候选；经`GOAL-SELF-GOVERNANCE-CLOSURE`推进`GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR`，本上位集成目标未完成
+- 更新时间：2026-11-22
+- 当前状态：候选，长期集成目标。
 - 直接上位目标：无
 - 直接下位目标：`GOAL-IF-R-FOUNDATION`（已完成）、`GOAL-INSTINCT-ROOT-PHYSICAL-CONTRACT`（已完成）、`GOAL-INSTINCT-ROOT-DEMAND-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-IFR-ACTUAL-F-PROVIDER-DESIGN`（完成）、`GOAL-SYSTEM-ROOT-I64-ACTUAL-F-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-REDESIGN`（完成）、`GOAL-INSTINCT-ROOT-RUNTIME-ANCHOR-PROVIDER-IMPLEMENTATION`（完成）、`GOAL-SELF-GOVERNANCE-CLOSURE`（候选，当前路线）
 - 目标账所有者：交互智能体
+
+## 2026-11-22 推进位置
+
+顺位 8。主线事实基线 `f819567221432008b945f7006f0f035fb636265f`，目标账事务 `TARGET-20261122-PRIORITY-01`。
+
+普通入口已有获取服务对象任务 T33032 绑定实参、执行、记动作并完成的记录。先复用这项能力，再从一次和同进程两次独立服务的实际结果核对本能、任务、方法的协同及持续运行缺口。[获取服务对象的实际执行](https://github.com/chunhaizh-cyber/HY-Ego/blob/2f945ad1aa6cfe260a852cd6e899dd6d2c9af7d6/%E9%AA%8C%E8%AF%81%E8%AE%B0%E5%BD%95/20261119_NL-BIDIRECTIONAL-ACCEPTANCE_%E8%BF%90%E8%A1%8C%E9%AA%8C%E8%AF%81%E8%AE%B0%E5%BD%95.md#L605) · [上位路线中的内部治理](GOAL-SELF-GOVERNANCE-CLOSURE.md)
 
 ## 1.1 目标问题与优先级
 
@@ -69,7 +75,7 @@
 - 阻断来源/解除条件：未记录新的上位硬阻断；局部计划或WIP不等于整体完成。第4—6节旧依赖不再形成现行门禁。
 - 自动复核触发：当前叶/上位闭环证据更新或用户改变路线；上位目标只在第3节证据满足后终态处置。
 
-## 8. 当前路线刷新（2026-10-30）
+## 8. 历史路线刷新（2026-10-30）
 
 - 状态事实截止`73576a6bfdc154154ac1f3897c8f6189d94e4830`；事务`TARGET-20261030-01`。本目标直接下位仍为自我内部治理闭环；用户确认的新主推进是其下的[服务主线全流程验证与修复](GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR.md)。不把新目标重挂到本节点，旧连接叶及既有其它目标均保留未完成。
 - 最新依据为[10月30日完整验证未通过](../../验证记录/20261030_MAINLINE-FULL-REAL-RUN_完整流程验证.md)，其HEAD+联合WIP性质不升级为正式发布/恢复/连续运行验收。
