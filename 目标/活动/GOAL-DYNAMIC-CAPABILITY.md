@@ -5,13 +5,19 @@
 - 目标编号：`GOAL-DYNAMIC-CAPABILITY`
 - 名称：按动态相关规范实现动态与动态概念完整能力
 - 类型：集成能力目标
-- 记录版本：v0.5
+- 记录版本：v0.6
 - 创建时间：2026-09-21
-- 更新时间：2026-10-28
-- 当前状态：候选；动态路线因用户切换当前优先级而暂停直接推进
+- 更新时间：2026-11-22
+- 当前状态：候选，完整能力后续独立验收。
 - 直接上位目标：无
 - 直接下位目标：`GOAL-DYNAMIC-CAPABILITY-DESIGN`（已完成）；`GOAL-SECONDARY-RELATION-CONCEPT-STRUCTURE-P1-IMPLEMENTATION`（已完成）；后续代码、验证和验收目标按总方案逐步建立
 - 目标账所有者：交互智能体
+
+## 2026-11-22 推进位置
+
+顺位 9。主线事实基线 `f819567221432008b945f7006f0f035fb636265f`，目标账事务 `TARGET-20261122-PRIORITY-01`。
+
+七组网页第 4 组读回同一水温特征的 20℃、30℃ 两个状态及实际时序，该轮未验证额外的显式动态节点。主线先核对父任务动作、实际变化和结算所需的明确来源关联。复合动态、概念分类、引用生命周期、消费者接线和恢复保留整体目标。[第 4 组记录](https://github.com/chunhaizh-cyber/HY-Ego/blob/2f945ad1aa6cfe260a852cd6e899dd6d2c9af7d6/%E9%AA%8C%E8%AF%81%E8%AE%B0%E5%BD%95/20261119_NL-BIDIRECTIONAL-ACCEPTANCE_%E8%BF%90%E8%A1%8C%E9%AA%8C%E8%AF%81%E8%AE%B0%E5%BD%95.md#L733) · [服务主线](GOAL-SERVICE-MAINLINE-END-TO-END-REPAIR.md)
 
 ## 1.1 目标问题与优先级
 
