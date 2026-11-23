@@ -203,3 +203,13 @@ Debug 产物 SHA-256 为 3B063DD7403E37893809586CD6E1E6961CE2A58EFAA63A295C37F4B
 Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误、0 警告。249 项工程和初始化输入构建前后一致，与发布树中暂存 blob 逐项核同。输入清单 SHA-256 为 724471C6EA4801AC353A7D39277AC208C7FE384A5A985BCB21FAE0BF892CEE18。Release 可执行文件 SHA-256 为 FC28DBCC57E75E082BB5B13489B471A8D2A3B76640C7DD009C93B574AE1A77C8。[双配置构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-received-candidate-20261123-221430/final-result.json) · [构建输入与源码 blob](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-received-candidate-20261123-221430/staged-build-inputs.json)
 
 发布构建以普通网页入口提交「测试杯甲是一个杯子。它的颜色是白色。」。22:29:14，入站 M29790 的业务控制状态读回「已按原文来源采用分词候选，等待前置材料交接」，交互者为 960。22:29:31 进入「前置输入治理等待」。22:30:19 的最后一份控制和消息快照仍处于等待，网页只有用户原话，U 和 D 为空。22:30:22 正常关闭，退出码 0，PID 39060 已回收。第 6 组本句、正式分界问题、明确回答、同一 D 补全及承接都未发生。候选采用由普通入口成功回执驱动的控制状态证明，本轮未另行调用 owner 进行独立材料读回。[构建和运行身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/process.json) · [候选采用](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/control-222914625.json) · [末次消息](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/messages-223019165.json) · [退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/exit.json)
+
+## 56C12 正式网页明确回复关联
+
+八文件源码随 `a9d1734600445f9492ba24e5fbdf01f5be4c84e2` 发布。网页发送完成时保存 S 到正式输出 O 的引用，页面只在该回调成功后显示可回复消息。接收沿原 M 的 L1 发布事务保存用户所选 O，外设在接收前复核定位和同 O 的 S，并在发布后从正式消息结构读回关联。原普通消息可缺这些字段。只读复核发现非法回复字段名会被当成普通未知字段，已按 HTTP 字段名校验修复。
+
+首轮 Debug/x64 344.10 秒、Release/x64 375.55 秒。复核修复后在同一正式工程重新编译，双配置分别为 10.63 秒、44.70 秒，均为 0 错误、0 警告。249 项工程和初始化输入构建前后相同，并与发布暂存树逐项核同。输入清单 SHA-256 为 471C6348554414F564194E1C7C3D3C78FA6EBD19DB48B18029D1D7411A07E13B。正式 Release SHA-256 为 A5AF24A2E247DB4776301E99F540EA3A19D2783AFF3AB87A17BF1E06CCCC7A88。[实际编译](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c12-web-reply-20261123-224015/final-result.json) · [构建输入和发布 blob](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c12-web-reply-20261123-224015/staged-build-inputs.json)
+
+正式 Release 由普通入口及实际 Edge 页面运行。操作员供稿两条同正文消息，页面展示的正式 O 分别为 29597 和 29756，两条发送回执均为完整写出。页面点选第二条、取消、再点选并提交，读回 `replyTo=29756`，成功后清除选择。同 O 同正文第二次实际接收形成另一个页面序号。跨页及未显示目标返回 422；零、溢出、非法数值、合并重复值、非法字段名返回 400；已拒绝正文未出现在相应页面，普通输入正常接收且没有回复字段。正常关闭 HTTP 200，应用与本次验证浏览器均退出 0，应用 PID 10272 已回收。[真实页面选择与验证结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c12-published-transport-20261123-224944/browser-result.json) · [实际发送回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c12-published-transport-20261123-224944/complete-write-receipts.json) · [关闭结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c12-published-transport-20261123-224944/exit.json)
+
+本轮数据来自操作员供稿，仅证明正式网页的明确回复传输。公开页面记录为传输投影，未从外部另行取得 S/M 正式节点和引用的独立快照。未发生自主分界发问、原文恢复或第 6 组需求写回。
