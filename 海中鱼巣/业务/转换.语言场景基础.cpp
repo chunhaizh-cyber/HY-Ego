@@ -918,6 +918,7 @@ I 图输入状态(基础语言输入状态 状态) {
     switch(状态) {
     case 状态类::已形成唯一含义:return I::已形成值式图;
     case 状态类::主体待绑定:return I::对象待绑定;
+    case 状态类::静态角色待取材:return I::缺名称;
 #define 图状态直映(名称) case 状态类::名称:return I::名称
     图状态直映(概念多义待解);图状态直映(多规则待解);图状态直映(未知词);图状态直映(缺名称);
     图状态直映(缺规则);图状态直映(角色不相容);图状态直映(结构未支持);图状态直映(输入拒绝);
@@ -961,7 +962,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释前");
 #endif
-    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文},lang,words,names,es,fs,instances);
+    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口},lang,words,names,es,fs,instances);
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
 #endif
@@ -975,6 +976,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
         result.已取得场景节点.reset();result.已取得对象绑定组.clear();
     };
     if(技术未完成(图状态)){清含义(图状态);return result;}
+    if (result.完整候选组.empty()) result.静态角色缺口组 = 图解释.静态角色缺口组;
     if(!图解释.完整候选组.empty()&&图解释.状态!=基础语言输入状态::已形成唯一含义
         &&图解释.状态!=基础语言输入状态::主体待绑定&&图解释.状态!=基础语言输入状态::概念多义待解
         &&图解释.状态!=基础语言输入状态::多规则待解)throw std::logic_error("failed graph interpretation retained candidates");
@@ -1073,7 +1075,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     try {
         auto r=只读解释单句基础语言实现(q,lang,words,names,es,fs,instances,
             q.读取模式==语言解释读取模式::本次正式有限集完整读取 ? &依据:nullptr);
-        if(依据.失败!=读取状态::已完成){r.状态=输入映射(依据.失败);r.完整候选组.clear();r.含义.reset();r.图角色原文定位组.clear();return r;}
+        if(依据.失败!=读取状态::已完成){r.状态=输入映射(依据.失败);r.完整候选组.clear();r.含义.reset();r.图角色原文定位组.clear();r.静态角色缺口组.clear();return r;}
         if(!技术未完成(r.状态)) {
             if(q.读取模式==语言解释读取模式::本次正式有限集完整读取)r.对象绑定保护=std::move(依据.完整保护);
             r.特征概念依据组=std::move(依据.特征概念依据组);

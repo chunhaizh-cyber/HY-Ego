@@ -4189,6 +4189,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             std::map<std::int64_t,稳定编码> 所用知识;
             std::map<std::int64_t,std::pair<std::size_t,std::size_t>> 节点范围;
             std::map<std::int64_t,std::vector<std::int64_t>> 节点路径;
+            std::vector<语言图静态角色缺口> 静态角色缺口组;
         };
         const auto 片段=[&](std::size_t 起,std::size_t 末){return 请求.固定原文.substr(原文->字节边界[起],原文->字节边界[末]-原文->字节边界[起]);};
         std::map<稳定编码,普通名称候选读回> 名称保护;std::map<稳定编码,新词条信息> 词保护;
@@ -4326,13 +4327,50 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             return 候选;
         };
         std::set<std::tuple<稳定编码,std::size_t,std::size_t>> 活动;
-        const auto 解析=[&](auto&& 自身,稳定编码 知识编号,std::size_t 起,std::size_t 末,std::vector<std::int64_t> 路径)->std::vector<图短语结果> {
+        const auto 解析=[&](auto&& 自身,稳定编码 知识编号,std::size_t 起,std::size_t 末,std::vector<std::int64_t> 路径, bool 允许角色不足)->std::vector<图短语结果> {
             std::vector<图短语结果> 成果;if(!知识表.contains(知识编号)||起>=末||!活动.emplace(知识编号,起,末).second)return 成果;
             struct 离域清理 final {decltype(活动)& 集合;std::tuple<稳定编码,std::size_t,std::size_t> 键;~离域清理(){集合.erase(键);}} 离域{活动,{知识编号,起,末}};
             const auto& 知识=*知识表.at(知识编号);const auto 图=解释知识图(知识.定义);
             std::map<std::int64_t,const 新语言图含义节点*> 节点表;for(const auto& 节点:图.节点组)节点表.emplace(节点.局部编号,&节点);
             if(!节点表.contains(图.根含义编号))return 成果;
             const auto& 项组=知识.定义.结构.有序项组;
+            if (允许角色不足) {
+                // 本分支只处理由固定项隔开的单节点角色，角色连续或重复的规则沿完整解释。
+                std::set<std::int64_t> 已见角色;
+                bool 上项是角色 = false;
+                bool 有固定项 = false;
+                for (const auto& 项 : 项组) {
+                    if (const auto* 固定 = std::get_if<新语言知识固定词项>(&项.载荷)) {
+                        const auto 读取 = 依据 ? 依据->读词(固定->词条节点) : 词.获取词条(固定->词条节点);
+                        if (读取.状态 == 新词条查询状态::资源失败) throw 状态类::资源失败;
+                        if (读取.状态 == 新词条查询状态::结构不一致) throw 状态类::内部不一致;
+                        if (读取.状态 != 新词条查询状态::已找到 || !读取.信息) throw 状态类::引用不可读;
+                        词保护.emplace(固定->词条节点, *读取.信息);
+                        上项是角色 = false;
+                        有固定项 = true;
+                        continue;
+                    }
+                    const auto* 角色 = std::get_if<新语言知识图角色表达项>(&项.载荷);
+                    if (!角色 || 上项是角色 || !已见角色.insert(角色->角色.角色编号).second) return 成果;
+                    上项是角色 = true;
+                }
+                if (!有固定项) return 成果;
+            }
+            const auto 可保留角色不足 = [&](const 图短语结果& 匹配项) {
+                if (匹配项.静态角色缺口组.empty()) return false;
+                const auto& 根 = *节点表.at(图.根含义编号);
+                if (根.特征值分支 != 新语言知识特征值分支::概念条件) return true;
+                const auto 取 = [&](新语言知识参数角色 参数) -> const 语言图引用值* {
+                    const auto 项 = std::find_if(根.参数组.begin(), 根.参数组.end(),
+                        [参数](const auto& 绑定) { return 绑定.参数 == 参数; });
+                    if (项 == 根.参数组.end()) return nullptr;
+                    const auto 值 = 匹配项.值组.find({根.局部编号, 项->规则角色});
+                    return 值 == 匹配项.值组.end() ? nullptr : std::get_if<语言图引用值>(&值->second);
+                };
+                const auto* 类型 = 取(新语言知识参数角色::特征类型);
+                const auto* 值域 = 取(新语言知识参数角色::特征值);
+                return !类型 || !值域 || 比较同根(类型->节点, 值域->节点, true);
+            };
             const auto 下一固定词可能匹配=[&](std::size_t 项位置,std::size_t 端) {
                 if(项位置+1>=项组.size())return true;
                 const auto* 固定=std::get_if<新语言知识固定词项>(&项组[项位置+1].载荷);
@@ -4346,7 +4384,19 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 return 片段(端,端+词面->码点.size())==已读->second.规范化词面;
             };
             const auto 匹配=[&](auto&& 步进,std::size_t 项位置,std::size_t 游标,图短语结果 当前)->void {
-                if(项位置==项组.size()){if(游标==末){当前.所用知识[图.根含义编号]=知识编号;当前.节点范围[图.根含义编号]={起,末};当前.节点路径[图.根含义编号]=路径;成果.push_back(std::move(当前));}return;}
+                if (允许角色不足 && 成果.size() >= 2) return;
+                if (项位置 == 项组.size()) {
+                    if (游标 != 末 || (允许角色不足 && !可保留角色不足(当前))) return;
+                    if (允许角色不足 && std::any_of(成果.begin(), 成果.end(), [&](const auto& 已取) {
+                        return 已取.静态角色缺口组 == 当前.静态角色缺口组
+                            && 已取.角色范围 == 当前.角色范围 && 已取.值组 == 当前.值组;
+                    })) return;
+                    当前.所用知识[图.根含义编号] = 知识编号;
+                    当前.节点范围[图.根含义编号] = {起, 末};
+                    当前.节点路径[图.根含义编号] = 路径;
+                    成果.push_back(std::move(当前));
+                    return;
+                }
                 const auto& 项=项组[项位置];auto 项路径=路径;项路径.push_back(项.局部编号);
                 if(const auto* 固定=std::get_if<新语言知识固定词项>(&项.载荷)) {
                     const auto 读取=依据 ? 依据->读词(固定->词条节点):词.获取词条(固定->词条节点);if(读取.状态==新词条查询状态::资源失败)throw 状态类::资源失败;
@@ -4468,6 +4518,22 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                         }else 候选=名称候选(*定义,游标,端,
                             (角色&&角色->方式==新语言知识表达方式::明确对象描述)
                             ||(旧角色&&旧角色->方式==新语言知识表达方式::明确对象描述));
+                        if (允许角色不足 && 候选.empty() && 角色
+                            && (角色->方式 == 新语言知识表达方式::名称表达
+                                || 角色->方式 == 新语言知识表达方式::明确对象描述)) {
+                            const auto 词面 = 词查询保护.find(片段(游标, 端));
+                            const auto& 参数组 = 节点表.at(引用.含义编号)->参数组;
+                            const auto 参数 = std::find_if(参数组.begin(), 参数组.end(),
+                                [&](const auto& p) { return p.规则角色 == 引用.角色编号; });
+                            if (词面 != 词查询保护.end() && 参数 != 参数组.end()) {
+                                auto 下一 = 当前;
+                                下一.角色范围[{引用.含义编号, 引用.角色编号}] = {游标, 端};
+                                下一.静态角色缺口组.push_back({知识编号, 引用, 参数->参数, 定义->种类,
+                                    定义->必要约束组.front().允许类别组.front(), 游标, 端,
+                                    词面->second ? std::optional{词面->second->节点} : std::nullopt});
+                                步进(步进, 项位置 + 1, 端, std::move(下一));
+                            }
+                        }
                         for(const auto& 值:候选) {
                         auto 下一=当前;const auto [位置,新增]=下一.值组.emplace(角色键{引用.含义编号,引用.角色编号},值);
                         if(新增||位置->second==值){下一.角色范围[{引用.含义编号,引用.角色编号}]={游标,端};步进(步进,项位置+1,端,std::move(下一));}
@@ -4478,7 +4544,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                         // 子槽必须是非空严格子片段，不能以同一整句重新进入父规则。
                         if(游标==起&&端==末)continue;
                         if(!下一固定词可能匹配(项位置,端))continue;
-                        for(auto 子知识:子项->允许子知识组)for(const auto& 子:自身(自身,子知识,游标,端,项路径)) {
+                        for(auto 子知识:子项->允许子知识组)for(const auto& 子:自身(自身,子知识,游标,端,项路径,false)) {
                             auto 下一=当前;bool 相容=true;
                             for(const auto& 映射:子项->映射组) {
                                 const 角色键 源{映射.来源.含义编号,映射.来源.角色编号},目标{映射.目标.含义编号,映射.目标.角色编号};
@@ -4499,6 +4565,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         std::map<std::string,std::vector<语言图角色原文定位>> 候选定位;
         std::vector<std::pair<语言图含义材料,std::vector<语言图角色原文定位>>> 请求候选定位;
         bool 定位冲突=false;
+        std::optional<图短语结果> 唯一静态角色不足;
+        bool 静态角色不足多义 = false;
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
         观察.记录(L"全部根解析与装配前", -1, 根知识.size());
 #endif
@@ -4506,7 +4574,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
             观察.记录(L"单根解析与装配前", -1, 结果.完整候选组.size(), 身份);
 #endif
-        for(auto& 已解析:解析(解析,身份,0,长度,{})) {
+        for(auto& 已解析:解析(解析,身份,0,长度,{},false)) {
             const auto& 知识=*知识表.at(身份);语言图含义材料 材料{请求.语言节点,解释知识图(知识.定义),0,{},请求.固定原文,请求.未核验来源语言记录节点,{}};
             std::map<std::int64_t,const 新语言图含义节点*> 定义表;for(const auto& 节点:材料.定义图.节点组)定义表.emplace(节点.局部编号,&节点);
             bool 合法=true;std::int64_t 次号=0;
@@ -4631,6 +4699,20 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             观察.记录(L"单根解析与装配后", -1, 结果.完整候选组.size(), 身份);
 #endif
         }
+        if (结果.完整候选组.empty() && 请求.读取静态角色缺口
+            && 请求.对象绑定组.empty() && 请求.正式信息绑定组.empty()) {
+            for (const auto 身份 : 根知识) {
+                if (!解释静态陈述图知识(知识表.at(身份)->定义)) continue;
+                auto 不足组 = 解析(解析, 身份, 0, 长度, {}, true);
+                if (不足组.empty()) continue;
+                if (不足组.size() > 1 || 唯一静态角色不足) {
+                    静态角色不足多义 = true;
+                    唯一静态角色不足.reset();
+                    break;
+                }
+                唯一静态角色不足 = std::move(不足组.front());
+            }
+        }
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
         观察.记录(L"全部根解析与装配后", -1, 结果.完整候选组.size());
         观察.记录(L"末次结构采用读取前");
@@ -4751,7 +4833,19 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             }else if(已有语义.insert(解释图语义键(图)).second)去重候选.push_back(std::move(图));
         }
         结果.完整候选组=std::move(去重候选);
-        if(结果.完整候选组.empty()){结果.状态=请求.对象绑定组.empty() ? 状态类::缺规则 : 状态类::输入拒绝;结果.未覆盖范围组.push_back({0,长度});return 结果;}
+        if (结果.完整候选组.empty()) {
+            if (唯一静态角色不足) {
+                结果.状态 = 状态类::静态角色待取材;
+                结果.静态角色缺口组 = std::move(唯一静态角色不足->静态角色缺口组);
+                for (const auto& 缺口 : 结果.静态角色缺口组)
+                    结果.未覆盖范围组.push_back({缺口.起始标量, 缺口.结束标量});
+            } else {
+                结果.状态 = 静态角色不足多义 ? 状态类::多规则待解
+                    : 请求.对象绑定组.empty() ? 状态类::缺规则 : 状态类::输入拒绝;
+                结果.未覆盖范围组.push_back({0, 长度});
+            }
+            return 结果;
+        }
         bool 待绑=false;for(const auto& 图:结果.完整候选组)for(const auto& 出现:图.出现组) {
             const auto 定义=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==出现.定义含义编号;});
             for(const auto& 角色:出现.角色组)if(const auto* 引用=std::get_if<语言图引用值>(&角色.值);引用&&引用->类别==新语言知识角色类别::存在概念) {
@@ -4784,7 +4878,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         r.状态=依据.失败==采集状态::读取漂移 ? 基础语言输入状态::读取漂移:
             依据.失败==采集状态::工程未完成 ? 基础语言输入状态::资源失败:
             依据.失败==采集状态::内部不一致 ? 基础语言输入状态::内部不一致:基础语言输入状态::引用不可读;
-        r.完整候选组.clear();r.图角色原文定位组.clear();r.对象绑定保护.clear();return r;
+        r.完整候选组.clear();r.图角色原文定位组.clear();r.对象绑定保护.clear();r.静态角色缺口组.clear();return r;
     }
     if(r.状态!=基础语言输入状态::资源失败&&r.状态!=基础语言输入状态::工程未完成
         &&r.状态!=基础语言输入状态::内部不一致&&r.状态!=基础语言输入状态::读取漂移) {

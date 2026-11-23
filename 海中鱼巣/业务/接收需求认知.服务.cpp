@@ -44,6 +44,16 @@ void 记录接收解释调用(std::uint64_t 序号, 稳定编码 消息,
                 << L"；图解释状态=" << (结果->图解释状态 ? static_cast<int>(*结果->图解释状态) : -1)
                 << L"；完整候选数=" << 结果->完整候选组.size()
                 << L"；受阻节点数=" << 结果->受阻节点组.size();
+            const auto 偏移 = 句段 ? 句段->起始标量 : 0;
+            for (const auto& 缺口 : 结果->静态角色缺口组) {
+                文本 << L"；角色缺口=" << 缺口.知识节点.值
+                    << L"," << static_cast<int>(缺口.参数)
+                    << L"," << static_cast<int>(缺口.种类)
+                    << L"," << static_cast<int>(缺口.类别)
+                    << L"," << 偏移 + 缺口.起始标量
+                    << L"," << 偏移 + 缺口.结束标量
+                    << L"," << (缺口.词条 ? 缺口.词条->值 : 0);
+            }
         }
         (void)调试日志<调试切片::RECEIVED_DEMAND_PARSE>(L"接收需求认知", L"只读解释单句基础语言", 文本.str());
     } catch (...) {} // 仅人读观察，日志分配或写入失败不改变原返回和重试。
@@ -59,6 +69,17 @@ void 追加句段缺口(const 语言基础统一输入结果& 解释, 解释原�
     std::vector<新前置语言缺口>& 缺口组) {
     using I = 语言场景基础输入状态;
     using K = 新前置语言缺口种类;
+    if (!解释.静态角色缺口组.empty()) {
+        for (const auto& 角色缺口 : 解释.静态角色缺口组) {
+            const auto 种类 = 角色缺口.种类 == 新语言知识角色种类::领域对象引用 ? K::对象未唯一绑定
+                : 角色缺口.词条 ? K::名称材料不足 : K::角色原文待确认;
+            std::vector<稳定编码> 来源{角色缺口.知识节点};
+            if (角色缺口.词条) 来源.push_back(*角色缺口.词条);
+            缺口组.push_back({种类, 句段.起始标量 + 角色缺口.起始标量,
+                句段.起始标量 + 角色缺口.结束标量, std::move(来源)});
+        }
+        return;
+    }
     K 种类 = K::语言规则不足;
     switch (解释.状态) {
     case I::已形成且读回:
@@ -726,15 +747,16 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
     接收专名读取器 names(d,p.现实根场景,stop);
     语言基础统一输入请求 q{p.语言节点,pre.信息->固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
     q.交互上下文=语言图交互上下文{p.来源.接收消息节点,p.来源人类节点,p.自我存在节点,p.现实根场景};
+    q.读取静态角色缺口 = true;
     const auto 解释当前句 = [&](const 解释原文范围* 句段 = nullptr) {
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
         const auto 解释诊断号 = 接收解释诊断序号.fetch_add(1, std::memory_order_relaxed) + 1;
         const auto 解释诊断开始 = std::chrono::steady_clock::now();
-        if (句段) 记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, nullptr, 句段);
+        记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, nullptr, 句段);
 #endif
         auto 结果 = 只读解释单句基础语言(q, d.语言, d.词, d.名称, d.存在概念, d.特征概念, d.存在);
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
-        if (句段) 记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, &结果, 句段);
+        记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, &结果, 句段);
 #else
         (void)句段;
 #endif
@@ -765,7 +787,10 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
         const auto roles=读取认知图角色(std::get<语言图含义材料>(*parsed.含义));
         out.可重入原认知=roles.主体==p.来源人类节点&&(!roles.受请求者||roles.受请求者==std::optional{p.自我存在节点});
     }
-    if(!out.可重入原认知) {
+    if (!out.可重入原认知 && (!parsed.静态角色缺口组.empty()
+        || parsed.图解释状态 == 基础语言输入状态::多规则待解)) {
+        追加句段缺口(parsed, {0, 标量数(q.固定原文)}, out.缺口组);
+    } else if (!out.可重入原认知) {
         const auto matched=d.语言.按已登记词条最长匹配(p.语言节点,pre.信息->固定UTF8原文,d.词);
         if(matched.状态==新语言查询状态::资源失败)资源();
         if(matched.状态!=新语言查询状态::已找到)throw std::logic_error("input lexical material unreadable");
