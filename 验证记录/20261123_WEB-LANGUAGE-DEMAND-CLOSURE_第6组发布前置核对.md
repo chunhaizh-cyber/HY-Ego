@@ -89,3 +89,13 @@ Debug产物SHA-256为1390E32ED3A17748B5C6594C9ED8E114A915B7A7C0480418973D6A5C534
 最终 Debug/x64 用时 388.02 秒、Release/x64 用时 474.27 秒，均为0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 28E9A32E1C81DB72D4CD9EB45B6CD0E0113F5C61DBB7E4C143DB5E7E93208425，四文件差异SHA-256为 7AC35610B946612C5ED25588B72F11D3301728653CC8064EE7DDE4B029D66320。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Release/56B2-source.patch)
 
 Debug产物SHA-256为 D1D0D8897B2F771F757DD6C080F0BDE8267212CB0D41853F5D50D29C24729FE4，Release产物SHA-256为 67F8D3606111B2449D2C3F897BC53AF4D820DA7807D887AD876CD12F0BE69631。本轮程序及测试未运行。固定原文与多路径属于紧邻后继，建立范围的正式入站调用和实际分界取材仍待接线。原第6组及后续正式验收继续按原判据取证。
+
+## 56C1 固定原文与词面多路径
+
+第56B2已发布为977e95004。按计划v2.106及统一设计第10.83节，从主工作区 0e40360b6ca7f190f939eb0de380edd0f7299092 实施三文件。由R定位固定正文V，再由值所属服务取得UTF8原文，按绝对标量区间读回精确原字节。新旧入口共用词面树，旧入口保留最长匹配；新入口枚举全路径并合并连续未知片段。保存时统一把原文完整未知路径置首，正式取材可细化未知范围；词条准入保持已确认区间。
+
+独立复核发现词表变化时的旧网页非成功处理。现首次发现词条消失时重读词表，第二次只排除已消失项，继续采用实际读取的词面并保留未知片段。此前两套构建主动终止，以下证据来自修正后的最终编译。复核确认语言锁边界、固定V及UTF8范围、原最长匹配和新路径回退、正式证明细化与准入边界。
+
+最终 Debug/x64 用时 437.59 秒、Release/x64 用时 447.92 秒，均为0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 D8E5203DDB9AEEA3FCDEF720D8958E76954E48AC963E6C250351E8EA16BDC680，三文件差异SHA-256为 4F608DEDC365ADED37DF07057583825472C3BFF5609B9D54EE8E87C78C8958F1。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Release/56C1-source.patch)
+
+Debug产物SHA-256为 88C35721C2C4F38012DE842A42A13C2F1844D10266BCE6F53707E22D16FF1204，Release产物SHA-256为 72A2B9A632E38287198AC091FACAEF9ED6F7FA27AE0A2C16F2B031F00A67956B。程序未运行。正式R的入站生产、已确认分界的实际取材、任务方法与网页接线继续推进，原第6组及P0–P6待正式验收。

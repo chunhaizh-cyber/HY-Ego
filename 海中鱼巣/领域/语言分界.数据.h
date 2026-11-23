@@ -68,6 +68,12 @@ struct 新语言范围特征信息 final {
 };
 
 
+struct 新语言范围原文信息 final {
+    新语言材料范围信息 范围;
+    稳定编码 固定正文材料;
+    std::string 根UTF8原文, 范围UTF8原文;
+};
+
 struct 新语言分界词段 final {
     std::uint64_t 起始标量 = 0, 结束标量 = 0;
     std::optional<稳定编码> 词条;

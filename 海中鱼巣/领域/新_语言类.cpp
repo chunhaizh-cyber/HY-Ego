@@ -3,6 +3,7 @@
 #include "概念_存在类.h"
 #include "语言含义图.数据.h"
 #include "新_特征类.h"
+#include "新_特征值类.h"
 #include "新_存在类.h"
 #include "新_场景类.h"
 #include "数据操作.执行结果参与.h"
@@ -1180,6 +1181,65 @@ bool 新_语言类::是语言节点(稳定编码 节点) const noexcept {
     return 结果.状态 == 新语言查询状态::已找到;
 }
 
+namespace {
+新语言查询状态 读取本次词面匹配树(稳定编码 语言节点, const 新_词类& 词服务,
+    std::vector<本次词面匹配节点>& 匹配树) {
+    using S = 新语言查询状态;
+    using W = 新词条查询状态;
+    for (int 尝试 = 0; 尝试 < 2; ++尝试) {
+        const auto 词组 = 词服务.查询语言词条(语言节点);
+        switch (词组.状态) {
+        case W::已找到:
+            if (词组.词条节点组.empty()) return S::结构不一致;
+            break;
+        case W::未找到:
+            if (!词组.词条节点组.empty()) return S::结构不一致;
+            break;
+        case W::输入不合法: return S::输入不合法;
+        case W::资源失败: return S::资源失败;
+        default: return S::结构不一致;
+        }
+
+        std::vector<本次词面匹配节点> 当前树(1);
+        std::set<稳定编码> 已读词条;
+        bool 需重读词表 = false;
+        for (const auto W编号 : 词组.词条节点组) {
+            if (!有效(W编号) || !已读词条.insert(W编号).second) return S::结构不一致;
+            const auto 词 = 词服务.获取词条(W编号);
+            if (词.状态 == W::未找到) {
+                if (尝试 != 0) continue;
+                需重读词表 = true;
+                break;
+            }
+            if (词.状态 == W::资源失败) return S::资源失败;
+            if (词.状态 != W::已找到 || !词.信息 || 词.信息->语言节点 != 语言节点)
+                return S::结构不一致;
+
+            std::size_t 树位置 = 0;
+            std::size_t 字节位置 = 0;
+            while (字节位置 < 词.信息->规范化词面.size()) {
+                const auto 码点 = 读取已校验码点(词.信息->规范化词面, 字节位置);
+                const auto 已有 = 当前树[树位置].后继.find(码点);
+                if (已有 != 当前树[树位置].后继.end()) {
+                    树位置 = 已有->second;
+                } else {
+                    const auto 新位置 = 当前树.size();
+                    当前树[树位置].后继.emplace(码点, 新位置);
+                    当前树.emplace_back();
+                    树位置 = 新位置;
+                }
+            }
+            if (当前树[树位置].词条节点) return S::结构不一致;
+            当前树[树位置].词条节点 = W编号;
+        }
+        if (需重读词表) continue;
+        匹配树 = std::move(当前树);
+        return S::已找到;
+    }
+    return S::未找到;
+}
+} // namespace
+
 新语言词条匹配结果 新_语言类::按已登记词条最长匹配(
     稳定编码 语言节点, const std::string& 文本,
     const 新_词类& 词服务) const noexcept {
@@ -1195,51 +1255,9 @@ bool 新_语言类::是语言节点(稳定编码 节点) const noexcept {
         }
         if (文本.empty()) return {新语言查询状态::已找到, {}};
 
-        const auto 词组 = 词服务.查询语言词条(语言节点);
-        switch (词组.状态) {
-        case 新词条查询状态::已找到:
-            if (词组.词条节点组.empty()) return {新语言查询状态::结构不一致, {}};
-            break;
-        case 新词条查询状态::未找到:
-            if (!词组.词条节点组.empty()) return {新语言查询状态::结构不一致, {}};
-            break;
-        case 新词条查询状态::输入不合法:
-            return {新语言查询状态::输入不合法, {}};
-        case 新词条查询状态::资源失败:
-            return {新语言查询状态::资源失败, {}};
-        default:
-            return {新语言查询状态::结构不一致, {}};
-        }
-
-        std::vector<本次词面匹配节点> 匹配树(1);
-        std::set<稳定编码> 已读词条;
-        for (const auto 词条 : 词组.词条节点组) {
-            if (!有效(词条) || !已读词条.insert(词条).second) {
-                return {新语言查询状态::结构不一致, {}};
-            }
-            const auto 词 = 词服务.获取词条(词条);
-            if (词.状态 == 新词条查询状态::资源失败) return {新语言查询状态::资源失败, {}};
-            if (词.状态 != 新词条查询状态::已找到 || !词.信息
-                || 词.信息->语言节点 != 语言节点) {
-                return {新语言查询状态::结构不一致, {}};
-            }
-            std::size_t 树位置 = 0;
-            std::size_t 字节位置 = 0;
-            while (字节位置 < 词.信息->规范化词面.size()) {
-                const auto 码点 = 读取已校验码点(词.信息->规范化词面, 字节位置);
-                const auto 已有 = 匹配树[树位置].后继.find(码点);
-                if (已有 != 匹配树[树位置].后继.end()) {
-                    树位置 = 已有->second;
-                } else {
-                    const auto 新位置 = 匹配树.size();
-                    匹配树[树位置].后继.emplace(码点, 新位置);
-                    匹配树.emplace_back(); // 扩容后不使用旧引用或迭代器。
-                    树位置 = 新位置;
-                }
-            }
-            if (匹配树[树位置].词条节点) return {新语言查询状态::结构不一致, {}};
-            匹配树[树位置].词条节点 = 词条;
-        }
+        std::vector<本次词面匹配节点> 匹配树;
+        const auto 词面状态 = 读取本次词面匹配树(语言节点, 词服务, 匹配树);
+        if (词面状态 != 新语言查询状态::已找到) return {词面状态, {}};
 
         std::vector<std::uint32_t> 码点组;
         std::vector<std::size_t> 字节边界{0};
@@ -7288,6 +7306,28 @@ bool 分界词段完整(const std::vector<新语言分界词段>& 词段, const 
     return !词段.empty() && 当前位置 == 范围.结束标量;
 }
 
+新语言分界候选路径 构造未知原文路径(const 新语言材料范围请求& 范围) {
+    return {{{范围.起始标量, 范围.结束标量, {}}}, {}};
+}
+
+bool 分界证明细化候选(const std::vector<新语言分界词段>& 候选,
+    const std::vector<新语言分界词段>& 证明) {
+    std::size_t 下一段 = 0;
+    for (const auto& 原段 : 候选) {
+        if (下一段 == 证明.size()) return false;
+        if (原段.词条) {
+            if (原段 != 证明[下一段++]) return false;
+            continue;
+        }
+        auto 终点 = 原段.起始标量;
+        while (下一段 < 证明.size() && 证明[下一段].起始标量 == 终点
+            && 证明[下一段].结束标量 <= 原段.结束标量)
+            终点 = 证明[下一段++].结束标量;
+        if (终点 != 原段.结束标量) return false;
+    }
+    return 下一段 == 证明.size();
+}
+
 bool 分界各段相符(const std::vector<新语言分界词段>& 原词段,
     const std::vector<新语言分界词段>& 新词段) {
     return std::equal(原词段.begin(), 原词段.end(), 新词段.begin(), 新词段.end(),
@@ -7480,7 +7520,7 @@ private:
     return 调用分界材料入口(L"保存分界候选", [&](auto& 结果) {
         const auto 范围 = 取得分界范围(*this, R);
         if (输入.路径组.empty()) throw 分界输入拒绝{};
-        新语言分界候选定义 定义;
+        新语言分界候选定义 定义{{构造未知原文路径(范围.范围.定位)}};
         for (const auto& 路径 : 输入.路径组) {
             if (!分界词段完整(路径.词段组, 范围.范围.定位)
                 || !std::all_of(路径.规则应用记录组.begin(), 路径.规则应用记录组.end(),
@@ -7513,7 +7553,7 @@ private:
         const auto& 路径组 = std::get<新语言分界候选定义>(原材料.定义).路径组;
         if (!分界词段完整(证明, 范围.范围.定位) || !分界来源完整(取材.信息->来源)
             || std::none_of(路径组.begin(), 路径组.end(), [&](const auto& 路径) {
-                return 分界各段相符(路径.词段组, 证明);
+                return 分界证明细化候选(路径.词段组, 证明);
             }))
             throw 分界输入拒绝{};
         std::lock_guard 锁(新语言互斥);
@@ -7640,6 +7680,121 @@ private:
             return;
         }
         throw 分界状态::材料未就绪;
+    });
+}
+
+新语言分界调用结果<新语言范围原文信息> 新_语言类::读取材料范围原文(
+    稳定编码 R, const 新_特征值类& 值服务) const {
+    return 调用分界材料入口<新语言范围原文信息>(L"读取材料范围原文", [&](auto& 结果) {
+        const auto 读快照 = [](稳定编码 节点) -> std::optional<基础联合节点快照> {
+            auto 批 = 全局基础数据集.查询节点组完整结构({节点});
+            if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+            if (批.状态 == 基础结构操作状态::节点不存在) return {};
+            if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 1)
+                throw std::logic_error("boundary fixed source read failed");
+            return std::move(批.节点组.front().快照);
+        };
+
+        for (int 尝试 = 0; 尝试 < 2; ++尝试) {
+            auto 范围读 = 读取材料范围(R);
+            if (范围读.状态 != 分界状态::已完成) {
+                if (尝试 > 0 && 范围读.状态 == 分界状态::未找到) break;
+                throw 范围读.状态;
+            }
+            if (!范围读.信息) throw std::logic_error("boundary text range missing on success");
+            auto& 范围 = *范围读.信息;
+            const auto 来源快照 = 读快照(范围.定位.前置来源节点);
+            if (!来源快照) continue;
+            const auto 来源 = 解析分界来源(来源快照->结构);
+            const auto 正文快照 = 读快照(来源.正文材料);
+            if (!正文快照) continue;
+            auto 正文 = 值服务.解码特征值快照(正文快照->结构);
+            if (正文.状态 == 新特征值快照解码状态::未初始化) throw 分界状态::未初始化;
+            if (正文.状态 != 新特征值快照解码状态::已解码 || !正文.信息
+                || 正文.信息->物理类型 != 材料物理类型::UTF8字符串)
+                throw std::logic_error("fixed boundary text material is not UTF8 text");
+            auto 文本 = std::get<std::string>(std::move(正文.信息->材料));
+
+            // 前置来源发表时已严格核验 UTF8，V 的正文保持不变。
+            std::size_t 字节位置 = 0;
+            std::size_t 起始字节 = 0;
+            for (std::uint64_t 位置 = 0; 位置 < 范围.定位.结束标量; ++位置) {
+                if (位置 == 范围.定位.起始标量) 起始字节 = 字节位置;
+                if (字节位置 >= 文本.size())
+                    throw std::logic_error("fixed boundary text does not cover its range");
+                (void)读取已校验码点(文本, 字节位置);
+            }
+            auto 区间文本 = 文本.substr(起始字节, 字节位置 - 起始字节);
+            结果.信息 = 新语言范围原文信息{std::move(范围), 来源.正文材料,
+                std::move(文本), std::move(区间文本)};
+            结果.状态 = 分界状态::已完成;
+            return;
+        }
+        throw 分界状态::材料未就绪;
+    });
+}
+
+新语言分界调用结果<新语言分界候选定义> 新_语言类::生成分词候选(
+    稳定编码 R, const 新_特征值类& 值服务, const 新_词类& 词服务) const {
+    return 调用分界材料入口<新语言分界候选定义>(L"生成分词候选", [&](auto& 结果) {
+        const auto 原文读 = 读取材料范围原文(R, 值服务);
+        if (原文读.状态 != 分界状态::已完成) throw 原文读.状态;
+        if (!原文读.信息) throw std::logic_error("boundary candidate text missing on success");
+        const auto& 定位 = 原文读.信息->范围.定位;
+        std::vector<本次词面匹配节点> 匹配树;
+        switch (读取本次词面匹配树(定位.语言节点, 词服务, 匹配树)) {
+        case 新语言查询状态::已找到: break;
+        case 新语言查询状态::未找到: throw 分界状态::材料未就绪;
+        case 新语言查询状态::资源失败: throw std::bad_alloc{};
+        case 新语言查询状态::输入不合法: throw 分界输入拒绝{};
+        default: throw std::logic_error("current lexical trie read failed");
+        }
+        const auto& 文本 = 原文读.信息->范围UTF8原文;
+        std::vector<std::uint32_t> 码点组;
+        for (std::size_t 字节位置 = 0; 字节位置 < 文本.size();)
+            码点组.push_back(读取已校验码点(文本, 字节位置));
+
+        struct 匹配边 final { std::size_t 结束; std::optional<稳定编码> 词条; };
+        std::vector<std::vector<匹配边>> 后继组(码点组.size());
+        for (std::size_t 起点 = 0; 起点 < 码点组.size(); ++起点) {
+            std::size_t 树位置 = 0;
+            for (auto i = 起点; i < 码点组.size(); ++i) {
+                const auto 后继 = 匹配树[树位置].后继.find(码点组[i]);
+                if (后继 == 匹配树[树位置].后继.end()) break;
+                树位置 = 后继->second;
+                if (匹配树[树位置].词条节点)
+                    后继组[起点].push_back({i + 1, 匹配树[树位置].词条节点});
+            }
+            if (后继组[起点].empty()) 后继组[起点].push_back({起点 + 1, {}});
+        }
+
+        新语言分界候选定义 定义{{构造未知原文路径(定位)}};
+        struct 路径帧 final { std::size_t 起点, 下条边; };
+        std::vector<路径帧> 路径栈{{0, 0}};
+        std::vector<新语言分界词段> 当前词段;
+        while (!路径栈.empty()) {
+            auto& 帧 = 路径栈.back();
+            if (帧.起点 == 码点组.size()) {
+                新语言分界候选路径 路径;
+                for (const auto& 段 : 当前词段) {
+                    if (!段.词条 && !路径.词段组.empty() && !路径.词段组.back().词条)
+                        路径.词段组.back().结束标量 = 段.结束标量;
+                    else
+                        路径.词段组.push_back(段);
+                }
+                if (路径 != 定义.路径组.front()) 定义.路径组.push_back(std::move(路径));
+            } else if (帧.下条边 < 后继组[帧.起点].size()) {
+                const auto 起点 = 帧.起点;
+                const auto& 边 = 后继组[起点][帧.下条边++];
+                当前词段.push_back({定位.起始标量 + 起点, 定位.起始标量 + 边.结束, 边.词条});
+                路径栈.push_back({边.结束, 0});
+                continue;
+            }
+            路径栈.pop_back();
+            if (!当前词段.empty()) 当前词段.pop_back();
+        }
+        结果.信息 = std::move(定义);
+        结果.状态 = 分界状态::已完成;
     });
 }
 
