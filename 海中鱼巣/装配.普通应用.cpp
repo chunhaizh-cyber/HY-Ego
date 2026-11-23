@@ -1460,9 +1460,9 @@ public:
             return "{\"stage\":\"未处理\",\"reason\":\"尚无接收认知观察\",\"message\":null,\"speaker\":null,\"scene\":null,\"meaning\":null,\"demand\":null}";
         }
         auto item=*last;
-        static constexpr std::array<const char*,17> names{"未处理","已采用U","已建立D","已读回","非支持输入",
+        static constexpr std::array<const char*,19> names{"未处理","已采用U","已建立D","已读回","非支持输入",
             "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求",
-            "前置输入待治理","前置输入治理等待","已回答写回","已保存场景信息"};
+            "前置输入待治理","前置输入治理等待","已回答写回","已保存场景信息","已采用分界答复","分界答复不适用"};
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
@@ -1520,13 +1520,48 @@ public:
                 +",\"end\":"+字符串(std::to_string(item.需求来源->原文终点))
                 +",\"path\":"+路径+"]}";
         }
+        std::string 分界答复="null";
+        if(有效(item.M)&&item.分界答复) {
+            const auto& 证据=*item.分界答复;
+            const auto 回答=当前_.世界事实.语言服务.读取原文分界回答(证据.问题);
+            检查停止();
+            const auto 采用=当前_.世界事实.语言服务.读取分界依据采用(证据.范围,证据.依据);
+            if(回答&&回答->回复==item.M&&采用.信息) {
+                const auto& 回执=*采用.信息;
+                const auto F=当前_.世界事实.特征服务.获取特征(回执.特征);
+                const auto* 当前值=F&&F->当前值 ? std::get_if<稳定编码>(&*F->当前值) : nullptr;
+                const auto S=回执.新状态 ? 当前_.世界事实.状态服务.获取状态(*回执.新状态) : std::nullopt;
+                const auto* 固定值=S&&S->固定准确值 ? std::get_if<稳定编码>(&*S->固定准确值) : nullptr;
+                std::string 分段="[";
+                for (const auto& 段 : 回答->词段组) {
+                    检查停止();
+                    if (分段.size()!=1) 分段+=',';
+                    分段+="{\"start\":"+控制计数(段.起始标量)+",\"end\":"+控制计数(段.结束标量)
+                        +",\"separator\":"+控制布尔(段.用途==新语言分界段用途::分隔)
+                        +",\"word\":"+控制编码(段.词条)+"}";
+                }
+                分段+=']';
+                分界答复="{\"question\":"+控制编码(回答->问题)+",\"range\":"+控制编码(回答->范围)
+                    +",\"answer\":"+控制编码(回答->节点)+",\"alignment\":"+控制编码(回答->对齐)
+                    +",\"output\":"+控制编码(回答->输出)+",\"sent\":"+控制编码(回答->实际发送)
+                    +",\"basis\":"+控制编码(回执.实际依据)+",\"feature\":"+控制编码(回执.特征)
+                    +",\"currentBasis\":"+控制编码(当前值 ? std::optional{*当前值} : std::nullopt)
+                    +",\"state\":"+控制编码(S ? 回执.新状态 : std::nullopt)
+                    +",\"stateFeature\":"+控制编码(S ? std::optional{S->来源实例特征节点} : std::nullopt)
+                    +",\"stateBasis\":"+控制编码(固定值 ? std::optional{*固定值} : std::nullopt)
+                    +",\"segments\":"+控制计数(回答->词段组.size())+",\"segmentRanges\":"+分段
+                    +",\"separators\":"+控制计数(std::count_if(回答->词段组.begin(),回答->词段组.end(),
+                        [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
+            }
+        }
         检查停止();
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
             +",\"speaker\":"+控制编码(item.H)+",\"scene\":"+控制编码(item.S)
             +",\"meaning\":"+控制编码(item.U)+",\"demand\":"+控制编码(item.D)
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
-            +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())+"}";
+            +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
+            +",\"boundaryReply\":"+分界答复+"}";
         检查停止();
         return JSON;
     }
@@ -4357,7 +4392,15 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             if (!当前.接收认知.装配被动分界询问({&当前.世界树, 当前.字段询问语言,
                     当前.正式信息读取.get(), *当前.外设场景标识类型, 分界配置.参数结构范围,
                     分界配置.特征类型组[0], 分界配置.特征类型组[1], 分界配置.特征类型组[2],
-                    询问配置.第三方指代概念, 询问配置.第三方别名关系}))
+                    询问配置.第三方指代概念, 询问配置.第三方别名关系,
+                    {&当前.自我线程,[](新_自我线程类& 自我,稳定编码 S) {
+                        using 状态=新自我消息接收状态;
+                        switch(自我.提交事实变化(S).状态) {
+                        case 状态::已接收: case 状态::精确重复:return true;
+                        case 状态::邮箱已满: case 状态::资源失败: case 状态::已停止接收:return false;
+                        default:throw std::logic_error("正式分界依据状态未被自我接纳");
+                        }
+                    }}}))
                 throw std::logic_error("分界询问生产入口装配失败");
             if (!当前.字段询问运行) 当前.字段询问运行=std::make_shared<字段询问本能运行服务>(当前.世界树,当前.外设世界树,
                 当前.方法服务,当前.需求服务,当前.世界事实.存在服务,当前.世界事实.特征服务,

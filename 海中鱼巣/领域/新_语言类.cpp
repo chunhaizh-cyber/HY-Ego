@@ -6362,7 +6362,12 @@ auto 组织记录字段(新词典语言材料组定义& v) {
     return std::tie(v.来源场景, v.已处理行组);
 }
 
-auto 组织记录字段(新语言分界词段& v) { return std::tie(v.起始标量, v.结束标量, v.词条); }
+auto 组织记录字段(新语言分界词段& v) { return std::tie(v.起始标量, v.结束标量, v.词条, v.用途); }
+struct 分界回答定义 final { 稳定编码 问题, 回复, 说话者, 输出, 实际发送; };
+struct 分界对齐定义 final { 稳定编码 范围; std::vector<新语言分界词段> 词段组; };
+constexpr std::int64_t 分界回答组织类型 = 108, 分界对齐组织类型 = 109;
+auto 组织记录字段(分界回答定义& v) { return std::tie(v.问题,v.回复,v.说话者,v.输出,v.实际发送); }
+auto 组织记录字段(分界对齐定义& v) { return std::tie(v.范围,v.词段组); }
 auto 组织记录字段(新语言分界候选路径& v) { return std::tie(v.词段组, v.规则应用记录组); }
 auto 组织记录字段(新语言分界候选定义& v) { return std::tie(v.路径组); }
 auto 组织记录字段(新语言规则分界来源& v) { return std::tie(v.正式匹配记录); }
@@ -6441,6 +6446,8 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
             组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新组织取材算子::正式字段值域概念));
         else if constexpr(std::is_same_v<T,新问题被问种类>)
             组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新问题被问种类::原文分界));
+        else if constexpr(std::is_same_v<T,新语言分界段用途>)
+            组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新语言分界段用途::分隔));
         v=static_cast<T>(原值);
     }
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
@@ -6459,7 +6466,7 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else {
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
-        if constexpr(std::is_same_v<T,新语言问题定义>)
+        if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
         else 组织要求(children.size()==字段数);
         std::size_t i=0;
@@ -6681,7 +6688,10 @@ std::vector<新语言问题信息> 读全部问题(组织读取现场& r){
         if(!a.empty()){
             const auto kind=static_cast<新问题答案来源>(r.整数(id,组织键::答案来源));
             const auto info=std::get<稳定编码>(a.front());
-            组织要求((kind==新问题答案来源::消息转换&&场景信息.contains(info))||(kind==新问题答案来源::自我写入&&自我写入.contains(info)));
+            if(q.定义.被问种类==新问题被问种类::原文分界)
+                组织要求(kind==新问题答案来源::原文分界回答&&r.整数(info,组织键::类型)==分界回答组织类型);
+            else
+                组织要求((kind==新问题答案来源::消息转换&&场景信息.contains(info))||(kind==新问题答案来源::自我写入&&自我写入.contains(info)));
             q.答案=新问题答案引用{info,kind};
         }
         组织要求(std::none_of(out.begin(),out.end(),[&](const auto& x){return x.定义.出站来源==q.定义.出站来源;}));
@@ -7391,9 +7401,135 @@ bool 分界词段完整(const std::vector<新语言分界词段>& 词段, const 
     for (const auto& 项 : 词段) {
         if (项.起始标量 != 当前位置 || 项.结束标量 <= 项.起始标量
             || 项.结束标量 > 范围.结束标量 || (项.词条 && !有效(*项.词条))) return false;
+        if (项.用途 != 新语言分界段用途::词面
+            && (项.用途 != 新语言分界段用途::分隔 || 项.词条)) return false;
         当前位置 = 项.结束标量;
     }
     return !词段.empty() && 当前位置 == 范围.结束标量;
+}
+
+class 分界回答字面读取 final {
+public:
+    explicit 分界回答字面读取(const std::string& 文本) : 文本_(文本) {}
+
+    std::vector<新语言分界词段> 对齐(const 新语言范围原文信息& 原文) {
+        std::vector<新语言分界词段> 词段组;
+        std::size_t 原文字节 = 0;
+        auto 标量 = 原文.范围.定位.起始标量;
+        要求('[');
+        do {
+            auto 用途 = 新语言分界段用途::词面;
+            if (取得('{')) {
+                if (读字符串() != "分隔") throw 分界输入拒绝{};
+                要求(':');
+                用途 = 新语言分界段用途::分隔;
+            }
+            const auto 字面 = 读字符串();
+            if (用途 == 新语言分界段用途::分隔) 要求('}');
+            if (字面.empty() || !新_语言类::严格UTF8字节串有效(字面)
+                || 原文.范围UTF8原文.compare(原文字节, 字面.size(), 字面) != 0)
+                throw 分界输入拒绝{};
+            const auto 起点 = 标量;
+            for (std::size_t i=0; i<字面.size(); ++标量) (void)读取已校验码点(字面,i);
+            词段组.push_back({起点,标量,{},用途});
+            原文字节 += 字面.size();
+        } while (取得(','));
+        要求(']');
+        跳过空白();
+        if (位置_ != 文本_.size() || 原文字节 != 原文.范围UTF8原文.size()
+            || !分界词段完整(词段组,原文.范围.定位)) throw 分界输入拒绝{};
+        return 词段组;
+    }
+
+private:
+    void 跳过空白() {
+        while (位置_<文本_.size() && std::string_view(" \t\r\n").find(文本_[位置_])!=std::string_view::npos) ++位置_;
+    }
+    bool 取得(char 字符) {
+        跳过空白();
+        if (位置_==文本_.size() || 文本_[位置_]!=字符) return false;
+        ++位置_;
+        return true;
+    }
+    void 要求(char 字符) { if (!取得(字符)) throw 分界输入拒绝{}; }
+
+    std::uint32_t 读转义码元() {
+        if (文本_.size()-位置_<4) throw 分界输入拒绝{};
+        std::uint32_t 码元=0;
+        for (int i=0;i<4;++i) {
+            constexpr std::string_view 字母表="0123456789abcdef";
+            const auto c=文本_[位置_++];
+            const auto digit=字母表.find(c>='A'&&c<='F' ? static_cast<char>(c-'A'+'a') : c);
+            if (digit==std::string_view::npos) throw 分界输入拒绝{};
+            码元=(码元<<4)|static_cast<std::uint32_t>(digit);
+        }
+        return 码元;
+    }
+    void 追加转义码点(std::string& 字面) {
+        auto 码点=读转义码元();
+        if (码点>=0xD800 && 码点<=0xDBFF) {
+            if (std::string_view(文本_).substr(位置_,2)!="\\u") throw 分界输入拒绝{};
+            位置_+=2;
+            const auto 低位=读转义码元();
+            if (低位<0xDC00 || 低位>0xDFFF) throw 分界输入拒绝{};
+            码点=0x10000+((码点-0xD800)<<10)+(低位-0xDC00);
+        } else if (码点>=0xDC00 && 码点<=0xDFFF) throw 分界输入拒绝{};
+        if (码点<0x80) {
+            字面.push_back(static_cast<char>(码点));
+            return;
+        }
+        const int 后续字节数=码点<0x800 ? 1 : 码点<0x10000 ? 2 : 3;
+        constexpr std::array<std::uint32_t,4> 首字节标识{0,0xC0,0xE0,0xF0};
+        字面.push_back(static_cast<char>(首字节标识[后续字节数]|(码点>>(后续字节数*6))));
+        for (int i=后续字节数-1;i>=0;--i) 字面.push_back(static_cast<char>(0x80|((码点>>(i*6))&0x3F)));
+    }
+    std::string 读字符串() {
+        要求('"');
+        std::string 字面;
+        while (位置_<文本_.size()) {
+            const auto c=static_cast<unsigned char>(文本_[位置_++]);
+            if (c=='"') return 字面;
+            if (c<0x20) throw 分界输入拒绝{};
+            if (c!='\\') {
+                字面.push_back(static_cast<char>(c));
+                continue;
+            }
+            if (位置_==文本_.size()) throw 分界输入拒绝{};
+            const auto 转义=文本_[位置_++];
+            switch (转义) {
+            case '"': case '\\': case '/': 字面.push_back(转义); break;
+            case 'b': 字面.push_back('\b'); break;
+            case 'f': 字面.push_back('\f'); break;
+            case 'n': 字面.push_back('\n'); break;
+            case 'r': 字面.push_back('\r'); break;
+            case 't': 字面.push_back('\t'); break;
+            case 'u': 追加转义码点(字面); break;
+            default: throw 分界输入拒绝{};
+            }
+        }
+        throw 分界输入拒绝{};
+    }
+
+    const std::string& 文本_;
+    std::size_t 位置_=0;
+};
+
+std::optional<新语言分界回答信息> 读分界首答(组织读取现场& 读,const 新语言问题信息& 问题) {
+    const auto& 定位=问题.定义.分界目标;
+    if (!定位 || !问题.答案) return {};
+    const auto A=问题.答案->答案信息;
+    组织要求(问题.答案->来源==新问题答案来源::原文分界回答
+        &&读.整数(A,组织键::类型)==分界回答组织类型);
+    const auto I=读.引用(A,组织键::子项);
+    组织要求(读.整数(I,组织键::类型)==分界对齐组织类型);
+    std::set<稳定编码> 访问路径;
+    const auto 答复=组织读值<分界回答定义>(读,读.引用(A,组织键::定义),访问路径);
+    auto 对齐=组织读值<分界对齐定义>(读,读.引用(I,组织键::定义),访问路径);
+    组织要求(答复.问题==问题.问题节点 && 答复.说话者==问题.定义.交互者
+        &&对齐.范围==定位->范围 && 有效(答复.回复) && 有效(答复.输出)
+        &&有效(答复.实际发送) && !对齐.词段组.empty());
+    return 新语言分界回答信息{A,I,答复.问题,对齐.范围,答复.回复,答复.说话者,
+        答复.输出,答复.实际发送,std::move(对齐.词段组)};
 }
 
 新语言分界候选路径 构造未知原文路径(const 新语言材料范围请求& 范围) {
@@ -7405,7 +7541,7 @@ bool 分界证明细化候选(const std::vector<新语言分界词段>& 候选,
     std::size_t 下一段 = 0;
     for (const auto& 原段 : 候选) {
         if (下一段 == 证明.size()) return false;
-        if (原段.词条) {
+        if (原段.词条 || 原段.用途 == 新语言分界段用途::分隔) {
             if (原段 != 证明[下一段++]) return false;
             continue;
         }
@@ -7423,7 +7559,7 @@ bool 分界各段相符(const std::vector<新语言分界词段>& 原词段,
     return std::equal(原词段.begin(), 原词段.end(), 新词段.begin(), 新词段.end(),
         [](const auto& 原段, const auto& 新段) {
             return 原段.起始标量 == 新段.起始标量 && 原段.结束标量 == 新段.结束标量
-                && (!原段.词条 || 原段.词条 == 新段.词条);
+                && 原段.用途 == 新段.用途 && (!原段.词条 || 原段.词条 == 新段.词条);
         });
 }
 
@@ -7762,6 +7898,96 @@ auto 新_语言类::提交分界材料采用(
     });
 }
 
+新语言分界调用结果<新语言分界回答信息> 新_语言类::接纳原文分界回答(
+    const 新语言分界回复事实& 事实, const 新_特征值类& 值服务) {
+    return 调用分界材料入口<新语言分界回答信息>(L"接纳原文分界回答", [&](auto& 结果) {
+        const auto& M=事实.回复;
+        const auto& O=事实.输出;
+        const auto& Send=事实.实际发送;
+        using 方向=新外设消息方向;
+        if (M.来源.方向!=方向::接收 || O.来源.方向!=方向::输出
+            || Send.来源.方向!=方向::发送 || M.回应消息节点!=O.消息节点
+            || Send.对应输出消息节点!=O.消息节点 || !O.关联问题)
+            throw 分界输入拒绝{};
+        auto 发送键=O.来源;
+        发送键.方向=方向::发送;
+        if (Send.来源!=发送键 || Send.UTF8正文!=O.UTF8正文) throw 分界输入拒绝{};
+
+        const auto Q=*O.关联问题;
+        const auto 问题=读取问题(Q);
+        if (!问题) throw 分界状态::前提已变化;
+        if (问题->定义.被问种类!=新问题被问种类::原文分界 || !问题->定义.分界目标)
+            throw 分界输入拒绝{};
+        const auto& 目标=*问题->定义.分界目标;
+        const auto 同一对话框=[&](const 新外设消息信息& 消息) {
+            return 消息.场景节点==目标.外设场景 && 消息.窗口节点==目标.外设窗口
+                &&消息.来源.公开宿主会话==目标.公开会话 && 消息.来源.对话框标识==目标.对话框;
+        };
+        if (!同一对话框(M) || !同一对话框(O) || !同一对话框(Send)
+            || 问题->定义.交互者!=事实.说话者 || M.正式记录时间.纳秒<=问题->定义.提问时刻
+            || M.正式记录时间.纳秒<=Send.正式记录时间.纳秒)
+            throw 分界输入拒绝{};
+        const auto R=目标.范围;
+        const auto 原文=读取材料范围原文(R,值服务);
+        if (原文.状态!=分界状态::已完成) throw 原文.状态;
+        组织要求(原文.信息.has_value());
+        const auto 词段组=分界回答字面读取(M.UTF8正文).对齐(*原文.信息);
+
+        std::lock_guard 锁(新语言互斥);
+        组织读取现场 读;
+        const auto 问题组=读全部问题(读);
+        const auto 当前=std::find_if(问题组.begin(),问题组.end(),[&](const auto& x){return x.问题节点==Q;});
+        if (当前==问题组.end() || 当前->定义!=问题->定义) throw 分界状态::前提已变化;
+        if (const auto 已有=读分界首答(读,*当前)) {
+            if (已有->回复!=M.消息节点) throw 分界输入拒绝{};
+            组织要求(已有->输出==O.消息节点 && 已有->实际发送==Send.消息节点 && 已有->词段组==词段组);
+            结果.信息=已有;
+            结果.状态=分界状态::已完成;
+            return;
+        }
+
+        组织写入现场 写;
+        const auto A=写.节点(分界回答组织类型,0), I=写.节点(分界对齐组织类型,0);
+        const auto 回答体=写.写(分界回答定义{Q,M.消息节点,事实.说话者,O.消息节点,Send.消息节点});
+        const auto 对齐体=写.写(分界对齐定义{R,词段组});
+        写.子(A,组织键::定义,回答体);
+        写.子(A,组织键::子项,I);
+        写.子(I,组织键::定义,对齐体);
+        写.请求.追加字段组.push_back({Q,组键(组织键::答案),基础组内节点引用{A}});
+        写.请求.追加字段组.push_back({Q,组键(组织键::答案来源),
+            基础值{static_cast<std::int64_t>(新问题答案来源::原文分界回答)}});
+        写.请求.预期既有节点组.push_back(读.读(Q).结构);
+        for (const auto 节点 : {M.消息节点,O.消息节点,Send.消息节点}) {
+            const auto 快照=std::find_if(事实.正式消息保护.begin(),事实.正式消息保护.end(),
+                [&](const auto& 项){return 项.结构.节点.编码==节点;});
+            组织要求(快照!=事实.正式消息保护.end());
+            写.请求.预期既有节点组.push_back(快照->结构);
+        }
+        for (const auto 引用 : 写.引用组) 写.请求.只读预期.节点组.push_back({引用});
+        const auto 发布=全局基础数据集.原子追加节点组(写.请求);
+        if (发布.状态==追加状态::资源失败) throw std::bad_alloc{};
+        if (分界追加需要重读(发布.状态)) throw 分界状态::前提已变化;
+        组织要求(发布.状态==追加状态::已完成 && 发布.新节点组.size()==写.请求.新节点组.size());
+        结果.本次已发表身份=发布.新节点组.at(A);
+        组织读取现场 读回;
+        auto 已回答=*当前;
+        已回答.答案=新问题答案引用{std::get<稳定编码>(读回.唯一(Q,组织键::答案)),
+            static_cast<新问题答案来源>(读回.整数(Q,组织键::答案来源))};
+        组织要求(已回答.答案->答案信息==*结果.本次已发表身份);
+        结果.信息=读分界首答(读回,已回答);
+        组织要求(结果.信息.has_value());
+        结果.状态=分界状态::已完成;
+    });
+}
+
+std::optional<新语言分界回答信息> 新_语言类::读取原文分界回答(稳定编码 Q) const {
+    std::lock_guard 锁(新语言互斥);
+    组织读取现场 读;
+    for (const auto& 问题 : 读全部问题(读))
+        if (问题.问题节点==Q) return 读分界首答(读,问题);
+    return {};
+}
+
 新语言分界调用结果<新语言分界材料信息> 新_语言类::形成分界依据(
     稳定编码 R, 稳定编码 候选, const 新语言正式分界取材接口& 端口) {
     return 调用分界材料入口(L"形成分界依据", [&](auto& 结果) {
@@ -7808,7 +8034,10 @@ auto 新_语言类::提交分界材料采用(
         const auto 证明 = 取得有效分界词段已加锁(R, 定义.有效结果);
         if (!分界各段相符(证明, 定义.词段组)
             || !std::all_of(定义.词段组.begin(), 定义.词段组.end(),
-                [](const auto& 词段) { return 词段.词条 && 有效(*词段.词条); }))
+                [](const auto& 词段) {
+                    return 词段.用途 == 新语言分界段用途::分隔
+                        ? !词段.词条 : 词段.词条 && 有效(*词段.词条);
+                }))
             throw 分界输入拒绝{};
         保存分界材料已加锁(R, 定义, 结果);
     });
@@ -8002,7 +8231,8 @@ auto 新_语言类::提交分界材料采用(
                 ++标量位置;
             }
             新语言词条准入词段材料 项{词段, {}};
-            if (!词段.词条) 项.未登记原文词面 = 文本.substr(起始字节, 字节位置 - 起始字节);
+            if (词段.用途 == 新语言分界段用途::词面 && !词段.词条)
+                项.未登记原文词面 = 文本.substr(起始字节, 字节位置 - 起始字节);
             材料.词段材料组.push_back(std::move(项));
         }
         结果.信息 = std::move(材料);

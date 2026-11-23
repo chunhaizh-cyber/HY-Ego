@@ -75,10 +75,21 @@ struct 新语言范围原文信息 final {
     std::string 根UTF8原文, 范围UTF8原文;
 };
 
+enum class 新语言分界段用途 : std::uint8_t { 词面 = 1, 分隔 };
 struct 新语言分界词段 final {
     std::uint64_t 起始标量 = 0, 结束标量 = 0;
     std::optional<稳定编码> 词条;
+    新语言分界段用途 用途 = 新语言分界段用途::词面;
     friend bool operator==(const 新语言分界词段&, const 新语言分界词段&) = default;
+};
+struct 新语言分界回复事实 final {
+    新外设消息信息 回复, 输出, 实际发送;
+    稳定编码 说话者;
+    std::vector<基础联合节点快照> 正式消息保护;
+};
+struct 新语言分界回答信息 final {
+    稳定编码 节点, 对齐, 问题, 范围, 回复, 说话者, 输出, 实际发送;
+    std::vector<新语言分界词段> 词段组;
 };
 struct 新语言分界候选路径 final {
     std::vector<新语言分界词段> 词段组;

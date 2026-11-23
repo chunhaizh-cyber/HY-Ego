@@ -14,13 +14,19 @@ class 概念_存在类; class 概念_特征类; class 概念_二次特征类;
 class 新_存在类; class 新_特征值类; class 新_特征类;
 class 新_场景类; class 新_需求类;
 struct 新任务前置语言输入结果;
-class 字段询问语言服务; class 新_世界树类; class 正式信息参数读取接口;
+class 字段询问语言服务; class 新_世界树类; class 正式信息参数读取接口; class 新_自我线程类;
+struct 接收分界依据状态投递 final {
+    新_自我线程类* 自我{};
+    bool (*提交)(新_自我线程类&,稳定编码){};
+    friend bool operator==(const 接收分界依据状态投递&,const 接收分界依据状态投递&)=default;
+};
 struct 接收分界询问配置 final {
     const 新_世界树类* 世界;
     std::shared_ptr<const 字段询问语言服务> 表达;
     const 正式信息参数读取接口* 取材;
     稳定编码 外设场景标识类型, 材料范围概念, 候选类型, 依据类型, 有效分界类型;
     稳定编码 第三方指代概念, 第三方别名关系;
+    接收分界依据状态投递 依据状态投递;
     friend bool operator==(const 接收分界询问配置&,const 接收分界询问配置&)=default;
 };
 struct 接收需求认知会话语境 final {
@@ -40,10 +46,13 @@ enum class 接收需求认知阶段 : std::uint8_t {
     // 已退役（ASK-READ-SCENE v0.4 §3.3 第5项不做问答匹配写回）；保留编号，不再产生。
     已回答写回,
     // ASK-READ-SCENE v0.4 §3.3：值类构式或招呼已在接收来源场景中保存为场景信息；不建立需求，消息到此结束。
-    已保存场景信息
+    已保存场景信息, 已采用分界答复, 分界答复不适用
 };
 enum class 接收行动请求交接确认状态 : std::uint8_t {
     已确认=1,精确重复,来源冲突,输入拒绝,资源失败
+};
+struct 接收分界答复证据 final {
+    稳定编码 问题, 范围, 依据;
 };
 struct 接收需求认知观察 final {
     稳定编码 M;
@@ -55,6 +64,7 @@ struct 接收需求认知观察 final {
     std::optional<新行动请求承接来源> 待交接请求{};
     std::optional<新前置语言输入定位> 待交接前置输入{};
     std::optional<新前置语言输入材料> 前置输入等待材料{};
+    std::optional<接收分界答复证据> 分界答复{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。

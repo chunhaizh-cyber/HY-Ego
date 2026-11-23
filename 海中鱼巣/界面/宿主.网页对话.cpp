@@ -536,7 +536,7 @@ std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消
                     + "\",\"start\":\"" + std::to_string(引文->起始标量) + "\",\"end\":\""
                     + std::to_string(引文->结束标量) + "\",\"sourceText\":\"" + JSON转义(引文->固定原文)
                     + "\",\"rangeText\":\"" + JSON转义(引文->范围原文)
-                    + "\",\"answerFormat\":\"json-string-array\"}";
+                    + "\",\"answerFormat\":\"json-segment-array\"}";
             }
         }
         if (消息.回应输出消息编码)
@@ -1097,7 +1097,7 @@ function selectReply(item){
     selectedReply=item;
     replySelectionText.textContent=item?'正在回复：'+item.text.slice(0,100):'';
     if(item?.questionContext?.kind==='textBoundary')
-        replySelectionText.textContent+='｜原文：'+item.questionContext.rangeText+'。请按原顺序提交 JSON 字符串数组。';
+        replySelectionText.textContent+='｜原文：'+item.questionContext.rangeText+'｜请按原顺序提交 JSON 数组。词段用字符串，分隔符用 {"分隔":"。"}。';
     replySelectionBox.hidden=!item;
 }
 document.getElementById('cancel-reply').addEventListener('click',()=>{selectReply(null);input.focus();});

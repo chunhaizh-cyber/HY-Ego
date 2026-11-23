@@ -2189,7 +2189,11 @@ namespace {
             for (const auto& 项:有序下位(持有者,结构子项)) {
                 const auto 区间=读结构材料<std::vector<std::uint64_t>>(项.second,结构材料值);
                 if (区间.size()!=2) throw std::logic_error("local boundary word coordinates corrupt");
-                词段组.push_back({区间[0],区间[1],读引用(项.second,词条特征引用)});
+                const auto 类别=必读数(项.second,结构类别值);
+                if (类别<0 || 类别>static_cast<std::int64_t>(新语言分界段用途::分隔))
+                    throw std::logic_error("local boundary segment kind corrupt");
+                const auto 用途=类别==0 ? 新语言分界段用途::词面 : static_cast<新语言分界段用途>(类别);
+                词段组.push_back({区间[0],区间[1],读引用(项.second,词条特征引用),用途});
             }
             return 词段组;
         };
@@ -3844,10 +3848,10 @@ struct 模拟语言范围前态 final {
         }
         const auto 写词段=[&](std::size_t 持有者,const std::vector<新语言分界词段>& 词段组) {
             for (std::size_t i=0; i<词段组.size(); ++i) {
-                const auto T=writer.节点();
+                const auto& 词段=词段组[i];
+                const auto T=writer.节点(static_cast<std::int64_t>(词段.用途));
                 writer.子(持有者,结构子项,T);
                 writer.数(T,结构顺序值,static_cast<std::int64_t>(i));
-                const auto& 词段=词段组[i];
                 writer.写(T,结构材料值,基础值{std::vector<std::uint64_t>{词段.起始标量,词段.结束标量}});
                 if (词段.词条) writer.写(T,词条特征引用,*词段.词条);
             }
