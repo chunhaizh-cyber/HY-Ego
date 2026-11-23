@@ -44,7 +44,7 @@ param(
     [int]$HttpTimeoutSec = 30,
 
     [Parameter(Mandatory = $false)]
-    [string]$ProbeText = 'ci-smoke-probe',
+    [string]$ProbeText = '你好',
 
     [Parameter(Mandatory = $false)]
     [switch]$SkipBuild
