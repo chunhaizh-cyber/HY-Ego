@@ -80,12 +80,9 @@ struct 归类当前输入 final {
         新词条归类本能输入 input{p[0]->信息节点,p[1]->信息节点,p[2]->信息节点,p[3]->信息节点,
             std::get<稳定编码>(*conceptValue.值),{},source};
         if (f.特征->当前值) {
-            要求归类(f.当前完整材料.has_value(),"classification current concept set material missing");
-            const auto* values = std::get_if<std::vector<std::uint64_t>>(&f.当前完整材料->材料);
-            要求归类(values != nullptr,"classification current concept set is not reference material");
-            for (const auto C : *values) input.动作前概念组.push_back(稳定编码{C});
-            std::sort(input.动作前概念组.begin(),input.动作前概念组.end());
-            input.动作前概念组.erase(std::unique(input.动作前概念组.begin(),input.动作前概念组.end()),input.动作前概念组.end());
+            const auto* C=std::get_if<稳定编码>(&*f.特征->当前值);
+            要求归类(C && 有效(*C),"classification current concept identity invalid");
+            input.动作前概念组.push_back(*C);
         }
         out.条件.执行分支节点 = scene.执行分支节点();
         for (const auto& binding : scene.全部角色绑定()) {

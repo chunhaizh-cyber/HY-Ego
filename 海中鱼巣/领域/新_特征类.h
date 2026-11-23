@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -43,14 +43,14 @@ struct 新特征信息 final {
     friend bool operator==(const 新特征信息&, const 新特征信息&) = default;
 };
 
-enum class 新概念集合特征快照状态 : std::uint8_t {
+enum class 新名称挂接特征快照状态 : std::uint8_t {
     已解码 = 1, 未初始化, 信息不存在, 非本类节点, 结构不可解码, 需补快照, 能力未支持
 };
-struct 新概念集合特征快照结果 final {
-    新概念集合特征快照状态 状态=新概念集合特征快照状态::未初始化;
+struct 新名称挂接特征快照结果 final {
+    新名称挂接特征快照状态 状态=新名称挂接特征快照状态::未初始化;
     std::optional<新特征信息> 信息;
     std::vector<稳定编码> 需补节点组;
-    std::vector<稳定编码> 材料节点组;
+    std::vector<稳定编码> 概念节点组;
 };
 
 // 本次匹配采用的值式定义，不携带名称、统计或可变概念树引用视图。
@@ -62,6 +62,7 @@ struct 新特征匹配定义快照 final {
     特征概念比较规则 比较规则 = 特征概念比较规则::I64数值;
     特征概念值域 值域;
     std::optional<新信息引用范围投影> 信息对象范围;
+    std::optional<概念身份范围投影> 概念身份范围;
     friend bool operator==(const 新特征匹配定义快照&,
         const 新特征匹配定义快照&) = default;
 };
@@ -185,7 +186,7 @@ struct 新特征完整读取结果 final {
 struct 新特征当前值设置项 final {
     稳定编码 特征节点;
     std::optional<新特征准确值> 新当前值;
-    // 新一次真实Q采用即使同值也计命中；重复回执由调用owner在入此口前收束。
+    // 新一次真实Q采用或概念添加即使同值也计命中，重复回执由调用owner提前复用。
     bool 计入本次实际采用 = false;
 };
 struct 新特征当前值组完成结果 final {
@@ -527,7 +528,7 @@ public:
         稳定编码 特征概念节点,
         const 特征概念值域& 区间值) noexcept;
 
-    新概念集合特征快照结果 解码顶层概念集合特征快照(
+    新名称挂接特征快照结果 解码顶层名称挂接特征快照(
         稳定编码, std::span<const 基础联合节点读取项>) const;
     std::optional<新特征信息> 获取特征(
         稳定编码 特征节点) const noexcept;
@@ -548,6 +549,9 @@ public:
 
     // 捕获只读物理投影，不调用普通getter的当前/历史归属验证。
     // 顶层请求不存在返回空；已声明引用或物理结构损坏走工程终止。
+    新特征值域关系比较结果 比较捕获特征历史值域(
+        const 新特征信息&, const 新特征匹配定义快照& 来源定义,
+        const 新特征匹配定义快照& 目标) const noexcept;
     新特征匹配定义快照 形成特征匹配定义投影(const 特征概念信息&, 稳定编码 类型根) const;
     新特征匹配实例快照 形成特征匹配实例投影(
         const 新特征信息&, const 新特征匹配定义快照&) const;
@@ -653,7 +657,6 @@ private:
     const 新信息对象身份读取接口* 信息对象身份读取接口_ = nullptr;
     friend class 新_词类;
     friend class 新_状态类;
-    特征概念规则状态 准备词条集合材料(稳定编码 类型根, 稳定编码 材料);
 public:
     新特征当前值候选 读取准备当前值候选(
         const 新特征当前值组准备&, 稳定编码 特征) const;

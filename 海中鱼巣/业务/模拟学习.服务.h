@@ -15,6 +15,8 @@ class 新_方法类;
 class 新_存在类;
 class 概念_存在类;
 struct 新方法信息;
+struct 新词条归类联合来源;
+struct 新词典归类信息概念组;
 class 概念_特征类;
 class 概念_二次特征类;
 class 动作方法定义只读提供者;
@@ -24,6 +26,7 @@ class 模拟任务需求来源读取接口;
 class 新_模拟世界类;
 class 词典本能运行服务;
 class 新_词类;
+class 概念_名称关系类;
 class 词典材料类;
 struct 新学习结束通知 final {
     稳定编码 方法节点;
@@ -60,8 +63,12 @@ public:
     void 配置字段询问语言(std::shared_ptr<const 新字段询问语言接口>,
         std::optional<新字段询问登记配置>);
     void 配置词典学习(std::shared_ptr<词典本能运行服务>, const 新_词类&,
-        const 词典材料类&, const 新_特征值类&, 概念_存在类&);
+        const 词典材料类&, const 新_特征值类&, 概念_存在类&, const 概念_名称关系类&);
 private:
+    struct 归类样例输入;
+    struct 归类样例构造结果;
+    归类样例构造结果 构造归类样例输入(const 新方法信息&,
+        const 新词条归类联合来源&,const 新词典归类信息概念组&) const;
     struct 隔离样例责任;
     struct 隔离样例收尾;
     std::shared_ptr<隔离样例责任> 登记隔离样例(const std::shared_ptr<新_模拟世界类>&);
@@ -76,6 +83,7 @@ private:
         std::optional<稳定编码> 执行分支={},bool 已选路径=false,
         std::optional<std::uint32_t> 消息方案={});
     新_方法类& 方法_;
+    新_特征类& 特征_;
     概念_特征类& 概念_;
     概念_二次特征类& 二次概念_;
     新_二次特征类 二次计算_;
@@ -96,5 +104,6 @@ private:
     const 词典材料类* 词典材料_=nullptr;
     const 新_特征值类* 词典值_=nullptr;
     概念_存在类* 词典概念_=nullptr;
+    const 概念_名称关系类* 归类名称_=nullptr;
 };
 } // namespace 海中鱼巣

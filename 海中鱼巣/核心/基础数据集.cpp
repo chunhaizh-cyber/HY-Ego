@@ -28,10 +28,12 @@ struct 基础片段发布回执::内容 final {
     基础封存追加片段 来源;
     std::vector<稳定编码> 新节点, 追加字段, 追加外部关系;
     std::vector<std::vector<稳定编码>> 新节点初始字段;
+    std::vector<基础当前字段变化> 当前字段变化;
+    std::size_t 赋值数量;
     内容(const 基础封存追加片段& 片段, const std::vector<基础组内新节点>& 节点组,
-        std::size_t 字段数, std::size_t 关系数)
+        std::size_t 字段数, std::size_t 关系数, std::size_t 赋值数, std::size_t 递增数)
         : 来源(片段), 新节点(节点组.size()), 追加字段(字段数), 追加外部关系(关系数),
-          新节点初始字段(节点组.size()) {
+          新节点初始字段(节点组.size()), 当前字段变化(赋值数+递增数), 赋值数量(赋值数) {
         for (std::size_t i = 0; i < 节点组.size(); ++i)
             新节点初始字段[i].resize(节点组[i].字段组.size());
     }
@@ -62,6 +64,10 @@ const std::vector<稳定编码>& 基础片段发布回执::追加外部关系组
 const std::vector<std::vector<稳定编码>>& 基础片段发布回执::新节点初始字段关系组() const noexcept {
     static const std::vector<std::vector<稳定编码>> 空;
     return 内容_ ? 内容_->新节点初始字段 : 空;
+}
+const std::vector<基础当前字段变化>& 基础片段发布回执::当前字段变化组() const noexcept {
+    static const std::vector<基础当前字段变化> 空;
+    return 内容_ ? 内容_->当前字段变化 : 空;
 }
 
 namespace {
@@ -188,6 +194,40 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
     return 状态::已完成;
 }
 
+struct 窄写材料 final {
+    std::set<std::pair<稳定编码,稳定编码>> 字段键;
+    std::map<稳定编码,基础字段关系> 旧字段;
+    std::set<稳定编码> 关系端点;
+};
+// 仅解析调用方显式声明和其必要选择器；当前性由L1独占锁内核验。
+基础节点组追加状态 构造窄写材料(const 基础节点组追加请求& 请求,窄写材料& out) {
+    using S=基础节点组追加状态;
+    if(请求.窄写字段键组.empty() && 请求.窄关系端点组.empty())return S::已完成;
+    auto readonly=请求.只读预期;
+    if(只读预期为空(readonly))return S::入口拒绝;
+    const auto normalized=规范化只读预期(readonly);
+    if(normalized!=S::已完成)return normalized;
+    std::set<稳定编码> nodes;
+    for(const auto& node:readonly.节点组)nodes.insert(node.编码);
+    for(const auto& key:请求.窄写字段键组) {
+        if(!有效(key.所属节点) || !有效(key.字段节点))return S::入口拒绝;
+        const auto selector=std::find_if(readonly.字段集合组.begin(),readonly.字段集合组.end(),
+            [&](const auto& item){return item.节点==key.所属节点 && item.字段节点==std::optional{key.字段节点}
+                && item.排除字段键组.empty();});
+        if(selector==readonly.字段集合组.end())return S::入口拒绝;
+        out.字段键.emplace(key.所属节点,key.字段节点);
+        for(const auto& field:selector->字段组) {
+            const auto [it,added]=out.旧字段.emplace(field.编码,field);
+            if(!added && it->second!=field)return S::预期不符;
+        }
+    }
+    for(const auto node:请求.窄关系端点组) {
+        if(!有效(node) || !nodes.contains(node))return S::入口拒绝;
+        out.关系端点.insert(node);
+    }
+    return S::已完成;
+}
+
 // 仅核验值式结构，不访问或修改数据集；fresh相等仍由唯一原子提交点核验。
 基础节点组追加状态 规范化封存请求(基础节点组追加请求& 请求) {
     using 状态 = 基础节点组追加状态;
@@ -198,6 +238,7 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
             && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
             && 请求.删除字段关系组.empty()
             && 请求.删除节点组.empty() && 请求.删除外部关系组.empty()
+            && 请求.当前字段赋值组.empty() && 请求.当前整数递增组.empty()
             && 请求.预期联合节点组.empty() && 请求.容许新增入向预期组.empty()
             && 只读预期为空(请求.只读预期))) return 状态::入口拒绝;
     // 删除只固定精确编码；引用可由其它片段解除，提交时才检查完整候选。
@@ -270,6 +311,13 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
         for (const auto& 字段 : 快照.结构.字段组)
             if (!字段映射.emplace(字段.编码, &字段).second) return 状态::入口拒绝;
     }
+    窄写材料 窄写;
+    const auto 窄写状态 = 构造窄写材料(请求, 窄写);
+    if (窄写状态 != 状态::已完成) return 窄写状态;
+    for (const auto& [编码, 字段] : 窄写.旧字段) {
+        const auto [位置, 新增] = 字段映射.emplace(编码, &字段);
+        if (!新增 && *位置->second != 字段) return 状态::预期不符;
+    }
     std::set<稳定编码> 只读引用目标;
     for (const auto& n : 请求.只读预期.节点组) 只读引用目标.insert(n.编码);
     const auto 检查内容 = [&](const 基础组内字段内容& 内容) {
@@ -283,8 +331,14 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
     for (const auto& 节点 : 请求.新节点组)
         for (const auto& 字段 : 节点.字段组)
             if (!有效(字段.字段节点) || !检查内容(字段.内容)) return 状态::入口拒绝;
+    std::set<std::pair<稳定编码,稳定编码>> 当前追加键;
+    for (const auto& key : 请求.当前追加字段键组) {
+        if (!有效(key.所属节点) || !有效(key.字段节点)) return 状态::入口拒绝;
+        当前追加键.emplace(key.所属节点,key.字段节点);
+    }
     for (const auto& 字段 : 请求.追加字段组)
-        if (!宿主组.contains(字段.所属节点) || !有效(字段.字段节点)
+        if ((!宿主组.contains(字段.所属节点) && !窄写.字段键.contains({字段.所属节点, 字段.字段节点})
+                && !当前追加键.contains({字段.所属节点, 字段.字段节点})) || !有效(字段.字段节点)
             || !检查内容(字段.内容)) return 状态::入口拒绝;
     std::set<稳定编码> 已写字段;
     const auto 检查旧字段 = [&](稳定编码 编码) {
@@ -292,7 +346,8 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
         if (!有效(编码) || 位置 == 字段映射.end() || !已写字段.insert(编码).second)
             return false;
         const auto* 引用 = std::get_if<稳定编码>(&位置->second->内容);
-        return !引用 || 宿主组.contains(*引用);
+        return !引用 || 宿主组.contains(*引用)
+            || (窄写.旧字段.contains(编码) && 只读引用目标.contains(*引用));
     };
     for (const auto 编码 : 请求.删除字段关系组)
         if (!检查旧字段(编码)) return 状态::入口拒绝;
@@ -300,12 +355,33 @@ bool 只读预期为空(const 基础只读预期& 预期) noexcept {
         if (!检查旧字段(替换.字段关系) || !封存字段内容合法(替换.新内容))
             return 状态::入口拒绝;
         if (const auto* 引用 = std::get_if<稳定编码>(&替换.新内容);
-            引用 && !宿主组.contains(*引用)) return 状态::入口拒绝;
+            引用 && !宿主组.contains(*引用)
+                && !(窄写.旧字段.contains(替换.字段关系) && 只读引用目标.contains(*引用))) return 状态::入口拒绝;
+    }
+    std::set<std::pair<稳定编码,稳定编码>> 当前键;
+    const auto 当前内容合法=[&](const 基础组内字段内容& 内容) {
+        if(内容.valueless_by_exception())return false;
+        if(const auto* ref=std::get_if<稳定编码>(&内容))return 有效(*ref);
+        if(const auto* local=std::get_if<基础组内节点引用>(&内容))return local->索引<请求.新节点组.size();
+        return !std::get<基础值>(内容).材料.valueless_by_exception();
+    };
+    for(const auto& item:请求.当前字段赋值组)
+        if(!有效(item.所属节点) || !有效(item.字段节点) || !当前内容合法(item.内容)
+            || !当前键.emplace(item.所属节点,item.字段节点).second)return 状态::入口拒绝;
+    for(const auto& item:请求.当前整数递增组)
+        if(!有效(item.所属节点) || !有效(item.字段节点)
+            || !当前键.emplace(item.所属节点,item.字段节点).second)return 状态::入口拒绝;
+    for(const auto& item:请求.追加字段组)
+        if(当前键.contains({item.所属节点,item.字段节点}))return 状态::入口拒绝;
+    for(const auto id:已写字段) {
+        const auto it=字段映射.find(id);
+        if(it!=字段映射.end() && 当前键.contains({it->second->所属节点,it->second->字段节点}))
+            return 状态::入口拒绝;
     }
     const auto 检查端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
         if (端点.valueless_by_exception()) return false;
         if (const auto* 引用 = std::get_if<稳定编码>(&端点))
-            return 有效(*引用) && 宿主组.contains(*引用);
+            return 有效(*引用) && (宿主组.contains(*引用) || 窄写.关系端点.contains(*引用));
         return std::get<基础组内节点引用>(端点).索引 < 请求.新节点组.size();
     };
     for (const auto& 关系 : 请求.追加外部关系组)
@@ -902,7 +978,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         if (请求.新节点组.empty() && 请求.追加字段组.empty()
             && 请求.替换字段组.empty() && 请求.追加外部关系组.empty()
             && 请求.删除字段关系组.empty()
-            && 请求.删除节点组.empty() && 请求.删除外部关系组.empty())
+            && 请求.删除节点组.empty() && 请求.删除外部关系组.empty()
+            && 请求.当前字段赋值组.empty() && 请求.当前整数递增组.empty())
             return {状态::入口拒绝, {}, {}};
         std::set<稳定编码> 删除节点码, 删除外部关系码;
         for (const auto 编码 : 请求.删除节点组) {
@@ -919,6 +996,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             const auto 校验 = 核验只读预期已加锁(请求.只读预期);
             if (校验 != 状态::已完成) return {校验, {}, {}};
         }
+        窄写材料 窄写;
+        const auto 窄写状态=构造窄写材料(请求,窄写);
+        if(窄写状态!=状态::已完成)return {窄写状态,{},{}};
         const auto 检查字段 = [&](稳定编码 键, const 基础组内字段内容& 内容) {
             if (!有效(键) || 内容.valueless_by_exception()) return 状态::入口拒绝;
             if (!节点存在(键)) return 状态::引用不存在;
@@ -982,8 +1062,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (!有效(编码) || !删除字段码.insert(编码).second)
                 return {状态::入口拒绝, {}, {}};
             const auto 位置 = 字段关系_.find(编码.值);
-            if (位置 == 字段关系_.end()
-                || !联合宿主组.contains(位置->second.所属节点))
+            if (位置 == 字段关系_.end())return {状态::入口拒绝, {}, {}};
+            const bool 窄许可=窄写.旧字段.contains(编码);
+            if (!联合宿主组.contains(位置->second.所属节点) && !窄许可)
                 return {状态::入口拒绝, {}, {}};
             // 所属完整快照已相等；节点引用删除还须保护旧目标的完整结构。
             const auto& 字段 = 位置->second;
@@ -992,7 +1073,7 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             if (const auto* 目标 = std::get_if<稳定编码>(&字段.内容)) {
                 if (!节点存在(*目标))
                     throw std::logic_error("追加删除字段的当前引用目标缺失");
-                if (!联合宿主组.contains(*目标)) return {状态::入口拒绝, {}, {}};
+                if (!联合宿主组.contains(*目标) && !窄许可) return {状态::入口拒绝, {}, {}};
             } else if (std::get<基础值>(字段.内容).材料.valueless_by_exception()) {
                 throw std::logic_error("追加删除字段的当前直接值损坏");
             }
@@ -1006,15 +1087,19 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 || 删除字段码.contains(项.字段关系)
                 || 项.新内容.valueless_by_exception()) return {状态::入口拒绝, {}, {}};
             const auto 位置 = 字段关系_.find(项.字段关系.值);
-            if (位置 == 字段关系_.end() || !联合宿主组.contains(位置->second.所属节点))
+            if (位置 == 字段关系_.end())return {状态::入口拒绝, {}, {}};
+            const bool 窄许可=窄写.旧字段.contains(项.字段关系);
+            if (!联合宿主组.contains(位置->second.所属节点) && !窄许可)
                 return {状态::入口拒绝, {}, {}};
             const auto 内容 = std::visit([](const auto& 值) -> 基础组内字段内容 { return 值; }, 项.新内容);
             const auto 检查 = 检查字段(位置->second.字段节点, 内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
             const auto& 旧内容 = std::as_const(位置->second.内容);
+            if (const auto* 旧目标 = std::get_if<稳定编码>(&旧内容); 旧目标 && !节点存在(*旧目标))
+                throw std::logic_error("追加替换字段的当前引用目标缺失");
             for (const auto* 引用 : {std::get_if<稳定编码>(&旧内容),
                     std::get_if<稳定编码>(&项.新内容)})
-                if (引用 && !联合宿主组.contains(*引用)) return {状态::入口拒绝, {}, {}};
+                if (引用 && !联合宿主组.contains(*引用) && !窄许可) return {状态::入口拒绝, {}, {}};
 #if HY_EGO_CORE_INDEX_AUDIT
             核验字段索引已加锁(位置->second);
 #endif
@@ -1022,7 +1107,7 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         const auto 检查端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
             if (端点.valueless_by_exception()) return 状态::入口拒绝;
             if (const auto* 编码 = std::get_if<稳定编码>(&端点)) {
-                if (!有效(*编码) || !联合宿主组.contains(*编码)) return 状态::入口拒绝;
+                if (!有效(*编码) || (!联合宿主组.contains(*编码) && !窄写.关系端点.contains(*编码)))return 状态::入口拒绝;
                 return 节点存在(*编码) ? 状态::已完成 : 状态::引用不存在;
             }
             return std::get<基础组内节点引用>(端点).索引 < 请求.新节点组.size()
@@ -1038,14 +1123,79 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
         }
+        std::set<std::pair<稳定编码,稳定编码>> 当前追加键;
+        for (const auto& key : 请求.当前追加字段键组) {
+            if (!有效(key.所属节点) || !有效(key.字段节点)) return {状态::入口拒绝, {}, {}};
+            if (!节点存在(key.所属节点) || !节点存在(key.字段节点)) return {状态::引用不存在, {}, {}};
+            当前追加键.emplace(key.所属节点,key.字段节点);
+        }
         for (const auto& 项 : 请求.追加字段组) {
-            if (!有效(项.所属节点) || !宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
+            const bool 窄许可=窄写.字段键.contains({项.所属节点,项.字段节点})
+                || 当前追加键.contains({项.所属节点,项.字段节点});
+            if (!有效(项.所属节点) || (!宿主组.contains(项.所属节点) && !窄许可)) return {状态::入口拒绝, {}, {}};
             if ((!请求.替换字段组.empty() || !请求.追加外部关系组.empty()
                     || !请求.删除字段关系组.empty())
-                && !联合宿主组.contains(项.所属节点)) return {状态::入口拒绝, {}, {}};
+                && !联合宿主组.contains(项.所属节点) && !窄许可) return {状态::入口拒绝, {}, {}};
             const auto 检查 = 检查字段(项.字段节点, 项.内容);
             if (检查 != 状态::已完成) return {检查, {}, {}};
         }
+        // 当前字段按L1锁内索引定位，不读取或比较调用方旧值。
+        struct 当前操作准备 final {
+            稳定编码 宿主,键;
+            std::optional<基础字段关系> 前;
+            基础组内字段内容 新内容;
+        };
+        std::vector<当前操作准备> 当前操作;
+        当前操作.reserve(请求.当前字段赋值组.size()+请求.当前整数递增组.size());
+        std::set<std::pair<稳定编码,稳定编码>> 当前键;
+        const auto 查当前=[&](稳定编码 host,稳定编码 key,std::optional<基础字段关系>& out) {
+            if(!有效(host) || !有效(key))return 状态::入口拒绝;
+            if(!节点存在(host) || !节点存在(key))return 状态::引用不存在;
+            auto it=所属字段索引_.lower_bound({host.值,key.值,0});
+            if(it!=所属字段索引_.end() && std::get<0>(*it)==host.值 && std::get<1>(*it)==key.值) {
+                const auto found=字段关系_.find(std::get<2>(*it));
+                if(found==字段关系_.end())throw std::logic_error("current field index broken");
+                out=found->second;
+                ++it;
+                if(it!=所属字段索引_.end() && std::get<0>(*it)==host.值 && std::get<1>(*it)==key.值)
+                    return 状态::入口拒绝;
+            }
+            return 状态::已完成;
+        };
+        const auto prepare=[&](稳定编码 host,稳定编码 key,const 基础组内字段内容& value,bool increment) {
+            if(!当前键.emplace(host,key).second)return 状态::入口拒绝;
+            std::optional<基础字段关系> before;
+            const auto found=查当前(host,key,before);
+            if(found!=状态::已完成)return found;
+            if(increment) {
+                const auto raw=before ? std::get_if<基础值>(&before->内容) : nullptr;
+                const auto n=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+                if(!n)return 状态::入口拒绝;
+                const auto next=*n==(std::numeric_limits<std::int64_t>::max)() ? *n : *n+1;
+                当前操作.push_back({host,key,std::move(before),基础值{next}});
+            } else {
+                const auto checked=检查字段(key,value);
+                if(checked!=状态::已完成)return checked;
+                当前操作.push_back({host,key,std::move(before),value});
+            }
+            return 状态::已完成;
+        };
+        for(const auto& item:请求.当前字段赋值组) {
+            const auto checked=prepare(item.所属节点,item.字段节点,item.内容,false);
+            if(checked!=状态::已完成)return {checked,{},{}};
+        }
+        for(const auto& item:请求.当前整数递增组) {
+            const auto checked=prepare(item.所属节点,item.字段节点,基础值{std::int64_t{0}},true);
+            if(checked!=状态::已完成)return {checked,{},{}};
+        }
+        for(const auto& item:请求.追加字段组)
+            if(当前键.contains({item.所属节点,item.字段节点}))return {状态::入口拒绝,{},{}};
+        const auto 旧键冲突=[&](稳定编码 id) {
+            const auto it=字段关系_.find(id.值);
+            return it!=字段关系_.end() && 当前键.contains({it->second.所属节点,it->second.字段节点});
+        };
+        for(const auto id:请求.删除字段关系组)if(旧键冲突(id))return {状态::入口拒绝,{},{}};
+        for(const auto& item:请求.替换字段组)if(旧键冲突(item.字段关系))return {状态::入口拒绝,{},{}};
         auto 候选节点 = 节点_;
         auto 候选字段 = 字段关系_;
         auto 候选所属索引 = 所属字段索引_;
@@ -1123,6 +1273,23 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             const auto 字段码 = 加字段(项.所属节点, 项.字段节点, 项.内容);
             if (!有效(字段码)) return {状态::资源失败, {}, {}};
             结果.追加字段关系组.push_back(字段码);
+        }
+        结果.当前字段变化组.reserve(当前操作.size());
+        for(const auto& item:当前操作) {
+            稳定编码 id;
+            if(item.前) {
+                id=item.前->编码;
+                auto& field=候选字段.at(id.值);
+                删字段索引(field,候选所属索引,候选目标索引,候选入向索引,候选字段键索引);
+                if(const auto* value=std::get_if<基础值>(&item.新内容))field.内容=*value;
+                else if(const auto* ref=std::get_if<稳定编码>(&item.新内容))field.内容=*ref;
+                else field.内容=结果.新节点组.at(std::get<基础组内节点引用>(item.新内容).索引);
+                加字段索引(field,候选所属索引,候选目标索引,候选入向索引,候选字段键索引);
+            } else {
+                id=加字段(item.宿主,item.键,item.新内容);
+                if(!有效(id))return {状态::资源失败,{},{}};
+            }
+            结果.当前字段变化组.push_back({item.前,候选字段.at(id.值)});
         }
         const auto 解析端点 = [&](const std::variant<稳定编码, 基础组内节点引用>& 端点) {
             if (const auto* 编码 = std::get_if<稳定编码>(&端点)) return *编码;
@@ -1213,6 +1380,7 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
         std::set<const 基础封存追加片段::内容*> 已用片段;
         std::map<稳定编码, const 基础联合节点快照*> 联合预期;
         std::map<稳定编码, const 基础字段关系*> 旧字段;
+        std::map<稳定编码, 基础字段关系> 窄旧字段;
         std::map<稳定编码, std::size_t> 字段写者;
         std::map<std::pair<稳定编码, 稳定编码>, std::size_t> 字段键写者;
         std::set<稳定编码> 已删节点, 已删外部关系;
@@ -1256,6 +1424,18 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                     }
                 }
             }
+            窄写材料 窄写;
+            const auto 窄写状态 = 构造窄写材料(请求, 窄写);
+            if (窄写状态 != 状态::已完成) return {窄写状态, {}};
+            联合.窄写字段键组.insert(联合.窄写字段键组.end(), 请求.窄写字段键组.begin(), 请求.窄写字段键组.end());
+            联合.当前追加字段键组.insert(联合.当前追加字段键组.end(), 请求.当前追加字段键组.begin(), 请求.当前追加字段键组.end());
+            联合.窄关系端点组.insert(联合.窄关系端点组.end(), 请求.窄关系端点组.begin(), 请求.窄关系端点组.end());
+            for (const auto& [编码, 字段] : 窄写.旧字段) {
+                const auto [副本, 新增] = 窄旧字段.emplace(编码, 字段);
+                if (!新增 && 副本->second != 字段) return {状态::预期不符, {}};
+                const auto [位置, 已加入] = 旧字段.emplace(编码, &副本->second);
+                if (!已加入 && *位置->second != 字段) return {状态::预期不符, {}};
+            }
             const auto 登记键 = [&](稳定编码 宿主, 稳定编码 键) {
                 const auto [位置, 新增] = 字段键写者.emplace(std::make_pair(宿主, 键), i);
                 return 新增 || 位置->second == i;
@@ -1273,6 +1453,10 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             for (const auto& 字段 : 请求.追加字段组)
                 if (!登记键(字段.所属节点, 字段.字段节点)) return {状态::入口拒绝, {}};
 
+            for(const auto& item:请求.当前字段赋值组)
+                if(!登记键(item.所属节点,item.字段节点))return {状态::入口拒绝,{}};
+            for(const auto& item:请求.当前整数递增组)
+                if(!登记键(item.所属节点,item.字段节点))return {状态::入口拒绝,{}};
             const auto 节点偏移 = 联合.新节点组.size();
             检查容量(节点偏移, 请求.新节点组.size());
             检查容量(联合.追加字段组.size(), 请求.追加字段组.size());
@@ -1299,6 +1483,11 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
                 if (const auto* 编码 = std::get_if<稳定编码>(&端点)) return {false, 编码->值};
                 return {true, std::get<基础组内节点引用>(端点).索引};
             };
+            for(const auto& item:请求.当前字段赋值组) {
+                auto copy=item;重定位(copy.内容);联合.当前字段赋值组.push_back(std::move(copy));
+            }
+            联合.当前整数递增组.insert(联合.当前整数递增组.end(),
+                请求.当前整数递增组.begin(),请求.当前整数递增组.end());
             for (const auto& 关系 : 请求.追加外部关系组) {
                 auto 副本 = 关系;
                 重定位(副本.源节点); 重定位(副本.目标节点);
@@ -1312,7 +1501,8 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             联合.删除节点组.insert(联合.删除节点组.end(), 请求.删除节点组.begin(), 请求.删除节点组.end());
             联合.删除外部关系组.insert(联合.删除外部关系组.end(), 请求.删除外部关系组.begin(), 请求.删除外部关系组.end());
             auto 回执 = std::make_shared<基础片段发布回执::内容>(片段,
-                请求.新节点组, 请求.追加字段组.size(), 请求.追加外部关系组.size());
+                请求.新节点组, 请求.追加字段组.size(), 请求.追加外部关系组.size(),
+                请求.当前字段赋值组.size(), 请求.当前整数递增组.size());
             结果.片段回执组.push_back(基础片段发布回执{回执});
             回执内容.push_back(std::move(回执));
         }
@@ -1321,15 +1511,18 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             const auto 规范化 = 规范化只读预期(联合.只读预期);
             if (规范化 != 状态::已完成) return {规范化, {}};
         }
-        const auto 发布 = 原子追加节点组(联合);
+        auto 发布 = 原子追加节点组(联合);
         if (发布.状态 != 状态::已完成) return {发布.状态, {}};
         已发布 = true;
         if (发布.新节点组.size() != 联合.新节点组.size()
             || 发布.新节点初始字段关系组.size() != 联合.新节点组.size()
             || 发布.追加字段关系组.size() != 联合.追加字段组.size()
-            || 发布.追加外部关系组.size() != 联合.追加外部关系组.size())
+            || 发布.追加外部关系组.size() != 联合.追加外部关系组.size()
+            || 发布.当前字段变化组.size()!=联合.当前字段赋值组.size()+联合.当前整数递增组.size())
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"原子追加封存片段组", L"发布结果尺寸与封存请求不一致");
+        static_assert(std::is_nothrow_move_assignable_v<基础当前字段变化>);
         std::size_t 节点位置 = 0, 字段位置 = 0, 关系位置 = 0;
+        std::size_t 赋值位置=0,递增位置=联合.当前字段赋值组.size();
         for (auto& 回执 : 回执内容) {
             for (std::size_t i = 0; i < 回执->新节点.size(); ++i) {
                 auto& 初始字段 = 回执->新节点初始字段[i];
@@ -1341,6 +1534,9 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
             }
             for (auto& 编码 : 回执->追加字段) 编码 = 发布.追加字段关系组[字段位置++];
             for (auto& 编码 : 回执->追加外部关系) 编码 = 发布.追加外部关系组[关系位置++];
+            for(std::size_t i=0;i<回执->当前字段变化.size();++i)
+                回执->当前字段变化[i]=std::move(发布.当前字段变化组[
+                    i<回执->赋值数量 ? 赋值位置++ : 递增位置++]);
         }
         return 结果;
     } catch (const std::bad_alloc&) {

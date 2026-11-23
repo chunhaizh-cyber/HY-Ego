@@ -179,11 +179,10 @@ private:
         稳定编码 类型根, const 新场景状态参与绑定&);
     基础节点组追加状态 补齐词条概念挂接(稳定编码, const std::vector<稳定编码>&);
     bool 已装配概念挂接() const;
-    void 准备名称集合材料(const std::vector<稳定编码>&);
     新词条挂接发布结果 发布名称挂接变化(稳定编码,
-        const std::vector<稳定编码>&, const std::vector<基础封存追加片段>&);
+        稳定编码 概念, const std::vector<基础封存追加片段>&, bool 删除 = false);
     新词条挂接发布结果 发布词条初值已加锁(const 新词条建立请求&,
-        std::optional<稳定编码>, const std::vector<稳定编码>&);
+        std::optional<稳定编码>);
     std::optional<新词条特征信息> 读取特征信息已加锁(稳定编码) const;
     新_语言类& 语言服务_;
     新_特征类* 特征服务_ = nullptr;

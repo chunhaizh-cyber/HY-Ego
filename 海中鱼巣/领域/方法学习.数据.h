@@ -14,9 +14,15 @@ struct 新词典定向学习输入 final {
     std::uint64_t 来源场景标识 = 0;
     friend bool operator==(const 新词典定向学习输入&, const 新词典定向学习输入&) = default;
 };
+struct 新词条归类定向学习输入 final {
+    std::vector<新方法有序参数引用> 参数组;
+    std::optional<稳定编码> 执行分支节点;
+    friend bool operator==(const 新词条归类定向学习输入&, const 新词条归类定向学习输入&) = default;
+};
 struct 新方法学习请求 final {
     稳定编码 方法节点;
     std::optional<新词典定向学习输入> 定向输入;
+    std::optional<新词条归类定向学习输入> 归类定向输入;
     friend bool operator==(const 新方法学习请求&, const 新方法学习请求&) = default;
 };
 

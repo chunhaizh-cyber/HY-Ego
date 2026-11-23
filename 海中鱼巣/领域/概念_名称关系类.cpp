@@ -1,4 +1,4 @@
-#include "概念_名称关系类.h"
+﻿#include "概念_名称关系类.h"
 
 #include "新_词类.h"
 #include "新_存在类.h"
@@ -1191,14 +1191,14 @@ bool 概念_名称关系类::初始化() noexcept {
         if(!decoded.信息->角色)普通概念.insert(decoded.信息->概念);
         名称组.push_back(std::move(*decoded.信息));
     }
-    auto feature=特征.解码顶层概念集合特征快照(F,批次);
-    if(feature.状态==新概念集合特征快照状态::未初始化)return {状态::依赖未就绪,{}};
-    if(feature.状态==新概念集合特征快照状态::能力未支持)return {状态::能力未支持,{}};
-    if(feature.状态==新概念集合特征快照状态::信息不存在
-        || feature.状态==新概念集合特征快照状态::非本类节点)return {状态::需重新组织,{}};
-    if(feature.状态==新概念集合特征快照状态::需补快照)
+    auto feature=特征.解码顶层名称挂接特征快照(F,批次);
+    if(feature.状态==新名称挂接特征快照状态::未初始化)return {状态::依赖未就绪,{}};
+    if(feature.状态==新名称挂接特征快照状态::能力未支持)return {状态::能力未支持,{}};
+    if(feature.状态==新名称挂接特征快照状态::信息不存在
+        || feature.状态==新名称挂接特征快照状态::非本类节点)return {状态::需重新组织,{}};
+    if(feature.状态==新名称挂接特征快照状态::需补快照)
         缺少.insert(feature.需补节点组.begin(),feature.需补节点组.end());
-    else if(feature.状态!=新概念集合特征快照状态::已解码 || !feature.信息)
+    else if(feature.状态!=新名称挂接特征快照状态::已解码 || !feature.信息)
         return {状态::结构不可解码,{}};
     新名称挂接概念批次结果 conceptResult;
     if(feature.信息) {
@@ -1215,30 +1215,8 @@ bool 概念_名称关系类::初始化() noexcept {
     if(!缺少.empty())return {状态::需补快照,{}, {缺少.begin(),缺少.end()}};
     if(!feature.信息 || !conceptResult.定义 || !conceptResult.类型根)
         return {状态::结构不可解码,{}};
-    材料节点.insert(feature.材料节点组.begin(),feature.材料节点组.end());
-    if(const auto* finite=std::get_if<std::vector<稳定编码>>(&conceptResult.定义->值域))
-        材料节点.insert(finite->begin(),finite->end());
-    if(const auto* domain=std::get_if<特征概念概念集合值域>(&conceptResult.定义->值域))
-        共享概念.insert(domain->必含概念节点组.begin(),domain->必含概念节点组.end());
+    共享概念.insert(feature.概念节点组.begin(),feature.概念节点组.end());
     std::vector<新特征值信息> 材料组;
-    材料组.reserve(材料节点.size());
-    for(const auto V:材料节点) {
-        const auto item=find(V);
-        if(!item){缺少.insert(V);continue;}
-        if(!item->快照)return {状态::结构不可解码,{}};
-        auto decoded=值.解码特征值快照(item->快照->结构);
-        if(decoded.状态==新特征值快照解码状态::未初始化)return {状态::依赖未就绪,{}};
-        if(decoded.状态!=新特征值快照解码状态::已解码 || !decoded.信息
-            || decoded.信息->物理类型!=材料物理类型::U64数组)
-            return {状态::结构不可解码,{}};
-        const auto* members=std::get_if<std::vector<std::uint64_t>>(&decoded.信息->材料);
-        if(!members)return {状态::结构不可解码,{}};
-        for(const auto raw:*members) {
-            const 稳定编码 C{raw};if(!有效(C))return {状态::结构不可解码,{}};
-            共享概念.insert(C);
-        }
-        材料组.push_back(std::move(*decoded.信息));
-    }
     for(const auto C:共享概念) {
         const auto item=find(C);
         if(!item)缺少.insert(C);
@@ -1489,11 +1467,13 @@ std::vector<新词条当前概念候选> 概念_名称关系类::读取词条当
         bool 已发布 = false;
         try {
             if (!有效(词条节点) || 概念组.empty()) return {};
-            auto 有序概念 = 概念组;
-            std::sort(有序概念.begin(), 有序概念.end());
-            有序概念.erase(std::unique(有序概念.begin(), 有序概念.end()), 有序概念.end());
-            for (const auto C : 有序概念)
+            std::vector<稳定编码> 有序概念;
+            有序概念.reserve(概念组.size());
+            std::set<稳定编码> 已见概念;
+            for (const auto C : 概念组) {
                 if (!有效(C)) return {};
+                if (已见概念.insert(C).second) 有序概念.push_back(C);
+            }
             std::lock_guard 锁(概念名称关系互斥);
             if (!节点仍存在(概念名称关系根节点) || !词服务_.已装配概念挂接()
                 || !词服务_.是词条节点(词条节点))
@@ -1506,38 +1486,17 @@ std::vector<新词条当前概念候选> 概念_名称关系类::读取词条当
                 if (!类别) return {概念名称关系建立状态::依赖不存在};
                 类别组.push_back(*类别);
             }
-            const auto 名称 = 读取当前词条名称(词条节点);
             概念名称关系组建立结果 结果;
-            结果.名称关系组.resize(有序概念.size());
-            std::vector<基础封存追加片段> 片段组;
-            std::vector<std::size_t> 新增输出槽;
-            片段组.reserve(有序概念.size());
-            新增输出槽.reserve(有序概念.size());
+            结果.名称关系组.reserve(有序概念.size());
             for (std::size_t i = 0; i < 有序概念.size(); ++i) {
                 const auto C = 有序概念[i];
-                auto& 输出 = 结果.名称关系组[i];
-                输出.概念节点 = C;
-                输出.词条节点 = 词条节点;
+                const auto 名称 = 读取当前词条名称(词条节点);
                 const auto 已有 = std::find_if(名称.begin(), 名称.end(),
                     [&](const auto& 项) { return !项.角色 && 项.概念 == C; });
                 if (已有 != 名称.end()) {
-                    输出.节点 = 已有->快照.结构.节点.编码;
+                    结果.名称关系组.push_back({已有->快照.结构.节点.编码, C, 词条节点});
                     continue;
                 }
-                新增输出槽.push_back(i);
-            }
-            if (新增输出槽.empty()) {
-                结果.状态 = 概念名称关系建立状态::已复用;
-                return 结果;
-            }
-            const auto 原概念 = 当前概念集合(名称);
-            std::set<稳定编码> 全部概念(原概念.begin(), 原概念.end());
-            全部概念.insert(有序概念.begin(), 有序概念.end());
-            const std::vector<稳定编码> 新概念组(全部概念.begin(), 全部概念.end());
-            // 集合保护会改变C的入向引用，必须在封存C的联合快照前准备。
-            词服务_.准备名称集合材料(新概念组);
-            for (const auto i : 新增输出槽) {
-                const auto C = 有序概念[i];
                 const auto 请求 = 构造名称建立(C, 词条节点);
                 const auto 类别 = 类别组[i];
                 auto 封存 = 类别 == 概念类别::动态
@@ -1545,19 +1504,17 @@ std::vector<新词条当前概念候选> 概念_名称关系类::读取词条当
                     : (类别 == 概念类别::特征 || 类别 == 概念类别::特征类别根)
                         ? 特征概念服务_.封存建立名称参与(请求, 0, C)
                         : 存在概念服务_.封存建立名称参与(请求, 0, C);
-                if (封存.状态 != 基础节点组追加状态::已完成)
-                    return {普通发布失败(封存.状态)};
-                片段组.push_back(std::move(封存.片段.value()));
+                if (封存.状态 != 基础节点组追加状态::已完成) throw 封存.状态;
+                if (!封存.片段) throw std::logic_error("name publication has no sealed fragment");
+                const auto 发布 = 词服务_.发布名称挂接变化(词条节点, C, {*封存.片段});
+                if (发布.状态 != 基础节点组追加状态::已完成) throw 发布.状态;
+                已发布 = true;
+                结果.名称关系组.push_back({发布.附加片段回执组.at(0).新节点组().at(0), C, 词条节点});
+                结果.新状态 = 发布.新状态;
+                结果.变化动态 = 发布.变化动态;
+                结果.动态原因 = 发布.动态原因;
             }
-            const auto 发布 = 词服务_.发布名称挂接变化(词条节点, 新概念组, 片段组);
-            if (发布.状态 != 基础节点组追加状态::已完成) return {普通发布失败(发布.状态)};
-            已发布 = true;
-            for (std::size_t i = 0; i < 新增输出槽.size(); ++i)
-                结果.名称关系组[新增输出槽[i]].节点 = 发布.附加片段回执组.at(i).新节点组().at(0);
-            结果.状态 = 概念名称关系建立状态::已建立;
-            结果.新状态 = 发布.新状态;
-            结果.变化动态 = 发布.变化动态;
-            结果.动态原因 = 发布.动态原因;
+            结果.状态 = 已发布 ? 概念名称关系建立状态::已建立 : 概念名称关系建立状态::已复用;
             return 结果;
         } catch (基础节点组追加状态 状态) {
             if (已发布) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
@@ -1590,8 +1547,6 @@ std::vector<新词条当前概念候选> 概念_名称关系类::读取词条当
             if (项.角色) return 概念名称关系删除状态::输入不合法;
             const auto 类别 = 识别概念类别(项.概念, 特征概念服务_, 存在概念服务_, 动态概念服务_);
             if (!类别) return 概念名称关系删除状态::结构不一致;
-            const auto 名称 = 读取当前词条名称(项.词条);
-            词服务_.准备名称集合材料(当前概念集合(名称, std::nullopt, N));
             const auto 自身 = 封存名称删除(项);
             if (自身.状态 != 基础节点组追加状态::已完成) return 普通删除失败(自身.状态);
             const auto 反向 = *类别 == 概念类别::动态
@@ -1601,7 +1556,7 @@ std::vector<新词条当前概念候选> 概念_名称关系类::读取词条当
                     : 存在概念服务_.封存删除名称参与(项.概念, N);
             if (反向.状态 != 基础节点组追加状态::已完成) return 普通删除失败(反向.状态);
             const auto 发布 = 词服务_.发布名称挂接变化(项.词条,
-                当前概念集合(名称, std::nullopt, N), {自身.片段.value(), 反向.片段.value()});
+                项.概念, {自身.片段.value(), 反向.片段.value()}, true);
             return 发布.状态 == 基础节点组追加状态::已完成
                 ? 概念名称关系删除状态::已删除 : 普通删除失败(发布.状态);
         } catch (基础节点组追加状态 状态) {
@@ -2006,7 +1961,7 @@ bool 概念_名称关系类::是概念名称关系节点(
             if (指代名称键状态() != 指代名称读取状态::已读取) {
                 结果.状态 = 指代名称变更状态::依赖缺失; return 结果;
             }
-            // 首选唯一性只查询本概念；词条的集合只查询本词条，不读取名称全集。
+            // 首选唯一性只查询本概念，名称添加向词条特征写入单个概念。
             for (const auto& 边 : 全局基础数据集.查询目标字段(请求.概念节点, 被命名概念字段)) {
                 const auto 项 = 读取当前名称(边.所属节点);
                 if (!项.角色 || 项.语言 != 词.信息->语言节点) continue;
@@ -2028,8 +1983,6 @@ bool 概念_名称关系类::是概念名称关系节点(
                     return 结果;
                 }
             }
-            const auto 名称 = 读取当前词条名称(词.信息->节点);
-            词服务_.准备名称集合材料(当前概念集合(名称, 请求.概念节点));
             const auto 新名 = 构造名称建立(请求.概念节点, 词.信息->节点,
                 请求.角色, 词.信息->语言节点, 来源.信息->节点);
             const auto 封存 = 存在概念服务_.封存建立名称参与(新名, 0, 请求.概念节点);
@@ -2039,7 +1992,7 @@ bool 概念_名称关系类::是概念名称关系节点(
             auto 当前概念 = *概念.信息;
             当前概念.名称关系.reserve(当前概念.名称关系.size() + 1);
             const auto 发布 = 词服务_.发布名称挂接变化(词.信息->节点,
-                当前概念集合(名称, 请求.概念节点), {封存.片段.value()});
+                请求.概念节点, {封存.片段.value()});
             if (发布.状态 != 基础节点组追加状态::已完成) {
                 结果.状态 = 写状态(发布.状态); return 结果;
             }
@@ -2084,8 +2037,6 @@ bool 概念_名称关系类::是概念名称关系节点(
             if (!类型为(N, 名称关系节点类型)) return 结果;
             const auto 项 = 读取当前名称(N);
             if (!项.角色) return 结果;
-            const auto 名称 = 读取当前词条名称(项.词条);
-            词服务_.准备名称集合材料(当前概念集合(名称, std::nullopt, N));
             const auto 自身 = 封存名称删除(项);
             if (自身.状态 != 基础节点组追加状态::已完成) {
                 结果.状态 = 写状态(自身.状态); return 结果;
@@ -2095,7 +2046,7 @@ bool 概念_名称关系类::是概念名称关系节点(
                 结果.状态 = 写状态(反向.状态); return 结果;
             }
             const auto 发布 = 词服务_.发布名称挂接变化(项.词条,
-                当前概念集合(名称, std::nullopt, N), {自身.片段.value(), 反向.片段.value()});
+                项.概念, {自身.片段.value(), 反向.片段.value()}, true);
             if (发布.状态 != 基础节点组追加状态::已完成) {
                 结果.状态 = 写状态(发布.状态); return 结果;
             }

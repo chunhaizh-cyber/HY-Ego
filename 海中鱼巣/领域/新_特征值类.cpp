@@ -382,6 +382,12 @@ public:
         return 解码特征值快照已加锁(结构);
     }
 
+    std::optional<新特征值快照解码结构> 读取快照解码结构() const {
+        std::scoped_lock 锁(互斥_);
+        if (!已初始化_) return {};
+        return 新特征值快照解码结构{节点类型字段_,特征值类型节点_,材料物理类型字段_,原始材料字段_};
+    }
+
     std::vector<稳定编码> 查询特征值(
         材料物理类型 类型, const 新特征值材料& 材料) const noexcept {
         try {
@@ -435,6 +441,18 @@ private:
     新特征值快照解码结果 解码特征值快照已加锁(const 基础节点结构& 结构) const {
         using 状态=新特征值快照解码状态;
         if (!已初始化_) return {状态::未初始化,{}};
+        return 新_特征值类::解码特征值快照(结构,
+            {节点类型字段_,特征值类型节点_,材料物理类型字段_,原始材料字段_});
+    }
+
+public:
+    static 新特征值快照解码结果 解码快照(
+        const 基础节点结构& 结构, const 新特征值快照解码结构& keys) {
+        using 状态=新特征值快照解码状态;
+        const auto 节点类型字段_=keys.节点类型字段, 特征值类型节点_=keys.特征值类型节点;
+        const auto 材料物理类型字段_=keys.材料物理类型字段, 原始材料字段_=keys.原始材料字段;
+        if (!有效(节点类型字段_) || !有效(特征值类型节点_)
+            || !有效(材料物理类型字段_) || !有效(原始材料字段_)) return {状态::未初始化,{}};
         const 基础字段关系* 类型字段=nullptr;
         const 基础字段关系* 物理字段=nullptr;
         const 基础字段关系* 材料字段=nullptr;
@@ -464,8 +482,18 @@ private:
         else if (const auto* 字符串值=std::get_if<std::string>(&原始值->材料)) 材料=*字符串值;
         else return {状态::结构不可解码,{}};
         if (!材料形态匹配(类型,材料)) return {状态::结构不可解码,{}};
-        return {状态::已解码,新特征值信息{结构.节点.编码,类型,std::move(材料)}};
+        基础只读预期 预期;
+        预期.节点组.push_back(结构.节点);
+        for(const auto key:{节点类型字段_,材料物理类型字段_,原始材料字段_}) {
+            预期.节点组.push_back(基础节点{key});
+            基础只读字段集合预期 item{结构.节点.编码,key,{},{}};
+            for(const auto& field:结构.字段组)if(field.字段节点==key)item.字段组.push_back(field);
+            预期.字段集合组.push_back(std::move(item));
+        }
+        return {状态::已解码,新特征值信息{结构.节点.编码,类型,std::move(材料)},std::move(预期)};
     }
+
+private:
 
     std::optional<新特征值信息> 获取特征值已加锁(稳定编码 节点) const {
         if (!已初始化_ || !有效(节点)) return std::nullopt;
@@ -696,6 +724,15 @@ std::optional<新特征值信息> 新_特征值类::获取特征值(
 
 新特征值快照解码结果 新_特征值类::解码特征值快照(const 基础节点结构& 结构) const {
     return 实现_->解码特征值快照(结构);
+}
+
+std::optional<新特征值快照解码结构> 新_特征值类::读取快照解码结构() const {
+    return 实现_->读取快照解码结构();
+}
+
+新特征值快照解码结果 新_特征值类::解码特征值快照(
+    const 基础节点结构& 结构, const 新特征值快照解码结构& keys) {
+    return 实现::解码快照(结构, keys);
 }
 
 std::vector<稳定编码> 新_特征值类::查询特征值(

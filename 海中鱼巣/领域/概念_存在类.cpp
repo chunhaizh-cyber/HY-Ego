@@ -3395,7 +3395,26 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
     if(r.状态==正式状态::已读取)return {S::已读取,正式概念身份保护{n,std::move(r.完整保护组)}};
     if(r.状态==正式状态::前提已变化)return {S::前提已变化,{}};
     if(r.状态==正式状态::依赖未就绪)return {S::依赖未就绪,{}};
-    return {};
+    try {
+        // 指代定义由同一owner维护，先识别类型，避免将他方概念视作指代依赖未就绪。
+        const auto 字段组 = 全局基础数据集.查询字段(n, 节点类型字段);
+        if (字段组.size() != 1 || !有效(指代键[定义类型])
+            || 字段组.front().内容 != 基础字段内容{指代键[定义类型]}) return {};
+        auto 指代 = 读取指代概念保护(n);
+        using P = 指代概念查询状态;
+        switch (指代.状态) {
+        case P::已找到:
+            if (!指代.信息 || 指代.信息->节点 != n || 指代.完整保护.empty())
+                正式定义故障("pronoun identity receipt incomplete");
+            return {S::已读取, 正式概念身份保护{n, std::move(指代.完整保护)}};
+        case P::未找到: case P::输入拒绝: return {};
+        case P::依赖缺失: return {S::依赖未就绪, {}};
+        case P::依赖已变化: case P::读取漂移: return {S::前提已变化, {}};
+        case P::资源失败: throw std::bad_alloc{};
+        default: 正式定义故障("pronoun identity read incomplete");
+        }
+    } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+    catch (...) { 正式定义故障("pronoun identity read exception"); }
 }
 结构项概念保护结果 概念_存在类::读取结构项概念保护(稳定编码 f,稳定编码 c,
     std::span<const 正式概念身份读取接口* const> readers) const noexcept {
@@ -3910,6 +3929,9 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
                 {正式键[整数键],基础值{std::vector<std::int64_t>{}}}, {正式键[引用键],W}};
             request.新节点组.push_back(std::move(node));
             request.追加外部关系组.push_back({存在概念图根节点,基础组内节点引用{0},基础外部关系类型::父子,组织归属关系角色});
+            request.只读预期.节点组.push_back({W});
+            request.只读预期.节点组.push_back({存在概念图根节点});
+            request.窄关系端点组.push_back(存在概念图根节点);
             {
                 std::lock_guard lock(存在概念图互斥);
                 if (词条同键索引.contains(key)) continue;
@@ -3972,6 +3994,37 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
     catch (const std::exception& e) { 正式定义故障(e.what()); }
     catch (...) { 正式定义故障("word key range retirement failure"); }
     }
+}
+
+概念身份范围读取结果 概念_存在类::读取概念身份范围投影(稳定编码 n) const noexcept {
+    using S = 特征概念规则状态;
+    try {
+        if (!正式schema就绪()) return {S::读取接口未装配, {}, {}};
+        const auto 读取 = 全局基础数据集.查询节点组完整结构({n});
+        if (读取.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}};
+        if (读取.状态 == 基础结构操作状态::入口拒绝) return {S::入口拒绝, {}, {}};
+        if (读取.状态 == 基础结构操作状态::节点不存在) return {S::值不存在, {}, {}};
+        if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 1)
+            正式定义故障("concept identity range read unavailable");
+        if (!读取.节点组.front().快照) return {S::值不存在, {}, {}};
+        const auto& 当前 = *读取.节点组.front().快照;
+        if (正式形状(当前.结构) != std::optional{基础类型键}) return {S::规则不支持, {}, {}};
+        const 基础范围概念定义 定义{
+            static_cast<基础概念原语>(正式整数(当前.结构, 正式键[原语键])),
+            正式整数组(当前.结构, 正式键[整数键]), 正式引用组(当前.结构, 正式键[引用键])};
+        核基础定义(定义);
+        if (定义.原语 != 基础概念原语::正式概念身份) return {S::规则不支持, {}, {}};
+        const auto 归属 = std::count_if(当前.入向外部关系组.begin(), 当前.入向外部关系组.end(),
+            [](const auto& 边) { return 边.源节点 == 存在概念图根节点
+                && 边.类型 == 基础外部关系类型::父子 && 边.角色或顺序 == 组织归属关系角色; });
+        if (归属 != 1) 正式定义故障("concept identity range organization invalid");
+        概念身份范围投影 投影{n, {}};
+        if (!定义.引用参数.empty()) 投影.单点概念 = 定义.引用参数.front();
+        return {S::已完成, 投影, {当前}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+    catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+    catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+    catch (...) { 正式定义故障("concept identity range projection exception"); }
 }
 
 新基础范围读取结果 概念_存在类::读取当前基础范围概念(稳定编码 n) const noexcept {
@@ -4137,6 +4190,8 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
                 请求.追加外部关系组.push_back({存在概念图根节点,基础组内节点引用{0},
                     基础外部关系类型::父子,组织归属关系角色});
                 请求.只读预期.节点组.push_back({C});
+                请求.只读预期.节点组.push_back({存在概念图根节点});
+                请求.窄关系端点组.push_back(存在概念图根节点);
                 {
                     std::lock_guard 锁(存在概念图互斥);
                     if (auto 已有 = 查当前()) return {正式状态::已复用,std::move(已有)};
@@ -4189,6 +4244,44 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
             if (状态 != 正式状态::前提已变化) return {状态, {}};
         } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
         catch (...) { 正式定义故障("dictionary material identity range read exception"); }
+        std::this_thread::yield();
+    }
+}
+
+正式结构概念结果 概念_存在类::建立或取得正式概念身份范围() noexcept {
+    for (;;) {
+        try {
+            if (!初始化正式schema()) return {正式状态::依赖未就绪, {}};
+            定义模板 定义{};
+            定义.槽 = 406;
+            定义.形状 = 基础类型键;
+            定义.基础 = {基础概念原语::正式概念身份, {}, {}};
+            正式状态 发布状态;
+            稳定编码 范围;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                基础节点组追加请求 请求;
+                std::vector<std::pair<std::uint32_t, std::size_t>> 槽;
+                登记映射 登记;
+                const auto 准备 = 准备定义批({定义}, {}, 请求, 槽, 登记);
+                if (准备 == 正式状态::定义冲突) return {准备, {}};
+                发布状态 = 发布先天定义批(请求, 槽);
+                if (发布状态 != 正式状态::前提已变化) {
+                    std::vector<基础联合节点快照> 保护;
+                    const auto 当前 = 读取正式登记(保护);
+                    const auto 项 = 当前.find(406);
+                    if (项 == 当前.end()) return {发布状态, {}};
+                    范围 = 项->second;
+                }
+            }
+            if (发布状态 != 正式状态::前提已变化) {
+                auto 当前 = 读取正式结构概念(范围);
+                return {当前.信息 ? 发布状态 : 当前.状态, std::move(当前.信息)};
+            }
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("formal concept identity range publication exception"); }
         std::this_thread::yield();
     }
 }
@@ -4372,7 +4465,7 @@ std::vector<定义模板> 三类定义模板(const 登记映射&f,const 先天�
 std::vector<std::uint32_t> 所需FT槽() {
     using namespace 先天特征类型槽;
     return {需求主体,需求执行域,需求目标存在,需求目标FT,需求目标形式,需求权重,需求活动,
-        目标域,目标比较,目标方向,父需求,需求来源,需求根角色,理解来源,内容确认来源,
+        目标域,目标比较,目标方向,父需求,需求来源,需求根角色,理解来源,内容确认来源,需求目标取值位置,
         对应需求,任务虚拟存在,采用方法,执行组织,执行实例,评估依据,结算依据,
         方法头,方法作用域,方法实现方式,方法行为,动作定义,实现绑定,方法虚拟存在,共同约束,条件结果知识,
         本能登记,作用存在概念,涉及FT概念,可能结果概念,有序参数规格,方法运行次数,方法成功次数,方法可靠度,
@@ -4383,7 +4476,7 @@ std::vector<std::uint32_t> 所需FT槽() {
     特征概念定义 d;
     auto interval=[&](std::int64_t a,std::int64_t b){d.值域=std::vector<特征概念I64闭区间>{{a,b}};};
     if(slot==需求执行域||slot==需求目标形式||slot==目标方向||slot==需求根角色
-        ||slot==方法作用域||slot==方法实现方式||slot==方法行为) {interval(1,2);return d;}
+        ||slot==方法作用域||slot==方法实现方式||slot==方法行为||slot==需求目标取值位置) {interval(1,2);return d;}
     if(slot==需求活动){interval(1,4);return d;}
     if(slot==需求权重||slot==方法运行次数||slot==方法成功次数){interval(0,INT64_MAX);return d;}
     if(slot==方法可靠度){interval(0,10000);return d;}

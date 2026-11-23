@@ -1,4 +1,4 @@
-#include "新_模拟世界类.h"
+﻿#include "新_模拟世界类.h"
 #include "世界挂接.全局根.h"
 #include "新_方法类.h"
 #include "新_本能函数管理类.h"
@@ -27,6 +27,15 @@ namespace 海中鱼巣 {
 稳定编码 模拟世界树根节点{};
 thread_local int 模拟样例拒绝行=0;
 namespace {
+// 名称查询返回的多个正式概念按编码排序去重。
+using 归类签名 = std::vector<std::uint64_t>;
+
+归类签名 规范归类签名(归类签名 签名) {
+    std::sort(签名.begin(),签名.end());
+    签名.erase(std::unique(签名.begin(),签名.end()),签名.end());
+    return 签名;
+}
+
 enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数值, 任务引用, 虚拟引用,
     状态特征引用, 方法引用, 动作引用, 前状态引用, 后状态引用, 动态引用, 时间语义, 步骤,
     集合成员, 历史引用, 正文引用, 方向值, 来源引用, 对端引用, 窗口引用, 接收引用, 发送引用,
@@ -51,7 +60,7 @@ enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, �
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
-    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类 };
+    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类,模拟归类特征概念种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 struct 模拟联合预期变化 final : std::runtime_error {
@@ -71,9 +80,12 @@ void 合并模拟联合预期(基础节点组追加请求& q) {
 void 补齐模拟追加联合预期(基础节点组追加请求& q) {
     std::vector<稳定编码> 节点;
     for (const auto& s : q.预期既有节点组) 节点.push_back(s.节点.编码);
+    const auto 需要完整端点=[&](稳定编码 n) {
+        return std::find(q.窄关系端点组.begin(),q.窄关系端点组.end(),n)==q.窄关系端点组.end();
+    };
     for (const auto& e : q.追加外部关系组) {
-        if (const auto* n = std::get_if<稳定编码>(&e.源节点)) 节点.push_back(*n);
-        if (const auto* n = std::get_if<稳定编码>(&e.目标节点)) 节点.push_back(*n);
+        if (const auto* n = std::get_if<稳定编码>(&e.源节点);n && 需要完整端点(*n)) 节点.push_back(*n);
+        if (const auto* n = std::get_if<稳定编码>(&e.目标节点);n && 需要完整端点(*n)) 节点.push_back(*n);
     }
     for (const auto& s : q.预期既有节点组) for (const auto& f : s.字段组)
         if (const auto* n = std::get_if<稳定编码>(&f.内容)) 节点.push_back(*n);
@@ -336,6 +348,36 @@ struct 模拟结构写入器 final {
     default:throw std::runtime_error("local domain kind corrupt");
     }
 }
+// 同批解码归类特征复制域，概念身份值直接保留引用。
+特征概念值域 读归类结构域批次(稳定编码 n,const std::vector<基础联合节点读取项>& batch) {
+    const auto row=std::find_if(batch.begin(),batch.end(),[&](const auto& item){return item.查询节点==n;});
+    if(row==batch.end() || !row->快照)throw std::logic_error("classification domain snapshot missing");
+    std::optional<std::int64_t> tag,order;std::vector<稳定编码> refs;
+    for(const auto& field:row->快照->结构.字段组)if(field.字段节点==字段组[结构类别值]) {
+        const auto raw=std::get_if<基础值>(&field.内容);
+        const auto value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+        if(tag || !value)throw std::logic_error("classification domain tag invalid");
+        tag=*value;
+    }
+    if(tag==2)return 特征概念全材料值域{};
+    if(tag==3 || tag==9 || tag==10)for(const auto& field:row->快照->结构.字段组) {
+        if(field.字段节点==字段组[结构引用]) {
+            const auto id=std::get_if<稳定编码>(&field.内容);
+            if(!id || !有效(*id))throw std::logic_error("classification domain reference invalid");
+            refs.push_back(*id);
+        } else if((tag==9 || tag==10) && field.字段节点==字段组[结构顺序值]) {
+            const auto raw=std::get_if<基础值>(&field.内容);
+            const auto value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+            if(order || !value)throw std::logic_error("classification domain order invalid");
+            order=*value;
+        }
+    }
+    if(tag==3)return refs;
+    if(tag==9 && refs.size()==1 && order && (*order==1 || *order==2))
+        return 特征概念信息引用值域{static_cast<信息引用语义>(*order),refs.front()};
+    if(tag==10 && order)return 特征概念概念集合值域{std::move(refs),*order!=0};
+    throw std::logic_error("classification domain shape unsupported");
+}
 服务要求特征语义快照 读结构特征语义(稳定编码 n) {
     const auto a=读结构材料<std::vector<std::int64_t>>(n,结构材料值);
     if(a.size()!=2)throw std::runtime_error("local feature semantics shape corrupt");
@@ -377,6 +419,18 @@ struct 新_模拟世界类::实现 final {
     std::optional<新字段询问登记配置> 字段询问配置;
     std::optional<新模拟执行主体输入> 执行主体来源;
     std::optional<新模拟归类主体输入> 归类主体来源;
+    std::mutex 归类动作阶段互斥;
+    bool 归类动作在途=false;
+    bool 归类观察在途=false;
+    struct 本地归类调用 final {
+        新词条归类本能输入 输入;
+        新本能函数本次条件 条件;
+        std::optional<稳定编码> 动作;
+        std::optional<新本能词条归类回执> 回执;
+        // L1实际前后字段，用于后继状态、动态处理；不会重新读取替代。
+        std::vector<基础当前字段变化> 实际字段变化;
+    };
+    std::map<稳定编码,本地归类调用> 归类调用组;
     std::optional<稳定编码> 本地执行主体;
     mutable std::optional<稳定编码> 需求动作许可;
     std::optional<稳定编码> 当前调用;
@@ -410,15 +464,23 @@ struct 新_模拟世界类::实现 final {
             &&!it->second.需求参数输入&&!it->second.复制归类材料&&!本地需求.contains(n);
     }
     std::map<稳定编码,材料物理类型> 通用材料;
+    // 值式排序元数据，不是对正式材料的持久引用。
+    std::map<稳定编码,稳定编码> 复制材料来源顺序;
     // 仅身份/来源索引；业务内容始终从L1字段完整重建。
     std::map<稳定编码,std::optional<稳定编码>> 本地需求,本地理解,本地确认,本地要求,本地语言场景,本地归类材料;
     std::map<稳定编码,std::vector<std::uint32_t>> 内容参数位置;
     mutable std::vector<新模拟内容读取记录> 内容读取组;
+    mutable std::vector<新隔离归类名称读取> 归类名称读取组;
     template<class T> void 记录内容(std::uint8_t kind,稳定编码 n,const T& value,bool copied) {
         if(!记录复制读取)return;
         // 有类型的读取由学习侧逐条覆盖；该标志只保留给无正式表达的隐藏读取。
         (void)copied;
-        内容读取组.push_back({kind,n,内容参数位置[n],value,!本次已进入动作});
+        std::optional<bool> 归类已提交;
+        if(归类主体来源) {
+            const auto it=当前调用 ? 归类调用组.find(*当前调用) : 归类调用组.end();
+            归类已提交=it!=归类调用组.end() && it->second.回执.has_value();
+        }
+        内容读取组.push_back({kind,n,内容参数位置[n],value,!本次已进入动作,归类已提交});
     }
     struct 任务投影 final { 稳定编码 来源; 新任务虚拟存在特征组 本地; };
     std::map<稳定编码,任务投影> 通用任务;
@@ -475,7 +537,8 @@ struct 新_模拟世界类::实现 final {
     }
     void 预留追加(const 基础节点组追加请求& q) {
         通用节点.reserve(通用节点.size()+q.新节点组.size()+1);
-        std::size_t fields=q.追加字段组.size();for(const auto& n:q.新节点组)fields+=n.字段组.size();
+        std::size_t fields=q.追加字段组.size()+q.当前字段赋值组.size();
+        for(const auto& n:q.新节点组)fields+=n.字段组.size();
         通用字段.reserve(通用字段.size()+fields);通用外部边.reserve(通用外部边.size()+q.追加外部关系组.size());
     }
     写入来源* 准备写回槽(稳定编码 特征) {
@@ -490,6 +553,8 @@ struct 新_模拟世界类::实现 final {
         通用字段.insert(通用字段.end(),p.追加字段关系组.begin(),p.追加字段关系组.end());
         for(const auto& g:p.新节点初始字段关系组)
             通用字段.insert(通用字段.end(),g.begin(),g.end());
+        for(const auto& change:p.当前字段变化组)
+            if(!change.前)通用字段.push_back(change.后.编码);
         通用外部边.insert(通用外部边.end(),p.追加外部关系组.begin(),p.追加外部关系组.end());
     }
 
@@ -1550,6 +1615,21 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征(稳定编
     if(!实现_->样例就绪)return {};
     return 读取模拟特征内部(n,false);
 }
+新模拟局部特征概念读取结果 新_模拟世界类::读取模拟局部特征概念(稳定编码 C) const noexcept {
+    using S=新模拟局部特征概念状态;
+    try {
+        if(!实现_)return {S::样例已关闭,{}};
+        const auto& s=*实现_;std::lock_guard lock(s.互斥);
+        if(!s.通用 || !s.样例就绪)return {S::样例已关闭,{}};
+        if(std::find(s.通用节点.begin(),s.通用节点.end(),C)==s.通用节点.end())return {S::非本地,{}};
+        const auto local=读取本地归类特征概念(C);
+        if(!local || std::find(s.通用节点.begin(),s.通用节点.end(),local->类型根)!=s.通用节点.end())
+            return {S::结构损坏,{}};
+        return {S::已读取,新模拟局部特征概念身份{local->节点,local->类型根,local->父概念,local->覆盖正式概念}};
+    } catch(const std::bad_alloc&) {return {S::资源失败,{}};}
+    catch(const std::length_error&) {return {S::资源失败,{}};}
+    catch(...) {return {S::结构损坏,{}};}
+}
 新方法词条参数读取结果 新_模拟世界类::读取模拟词条挂接(稳定编码 W) const noexcept {
     using S=新方法词条参数读取状态;
     try {
@@ -1567,7 +1647,7 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征(稳定编
         for(const auto F:读引用组(W,词条特征引用)) {
             if(!s.是本地参数(F,新方法参数信息类型::特征)||读引用(F,所属)!=std::optional{W})
                 throw std::logic_error("local word feature ownership damaged");
-            const auto d=s.方法.读取模拟特征范围(s.通用参数.at(F).规格.范围概念节点);
+            const auto d=读取本地特征实际定义(F);
             if(!d||!types.insert(d->特征类型根).second)
                 throw std::logic_error("local word feature type unavailable or ambiguous");
             out.特征组.push_back({d->特征类型根,F});
@@ -1634,7 +1714,7 @@ std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟全部
         std::vector<稳定编码> 命中;
         for(const auto& [F,p]:s.通用参数) {
             if(p.规格.信息类型!=新方法参数信息类型::特征||读引用(F,所属)!=std::optional{E})continue;
-            const auto d=s.方法.读取模拟特征范围(p.规格.范围概念节点);
+            const auto d=读取本地特征实际定义(F);
             if(!d)throw std::logic_error("simulation attached feature definition missing");
             定义组.emplace(F,*d);if(d->特征类型根==FT)命中.push_back(F);
         }
@@ -1661,7 +1741,7 @@ std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟全部
         }
         if(!词条参数) {
             for(const auto& [F,d]:定义组)
-                if(s.方法.读取模拟特征范围(s.通用参数.at(F).规格.范围概念节点)!=std::optional{d})
+                if(读取本地特征实际定义(F)!=std::optional{d})
                     return {S::定义前提已变化,{},{}};
             const auto 再声明=s.方法.读取存在参数特征声明(s.通用方法,s.通用执行分支,位置,FT);
             if(再声明.状态!=S::已读取||再声明.特征定义!=声明.特征定义)
@@ -1675,11 +1755,17 @@ std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟全部
                     新本能函数条件角色材料 x;x.有序引用=b.有序引用;x.世界场景节点=b.世界场景节点;
                     s.本次存在特征读取.push_back(std::move(x));r=std::prev(s.本次存在特征读取.end());
                 }
-                const auto old=std::find_if(r->实际特征组.begin(),r->实际特征组.end(),
-                    [&](const auto& x){return x.特征节点==F;});
-                if(old!=r->实际特征组.end()&&old->动作前准确值!=out.特征->当前值)
-                    return {S::定义前提已变化,{},{}};
-                if(old==r->实际特征组.end())r->实际特征组.push_back({F,out.特征->当前值});
+                if(词条参数) {
+                    // 词条归类须保留每次实际读取，不能以不同值拒绝正常执行。
+                    // 定向导出必须逐条消费；不允许把首条记录冒充完整读取过程。
+                    r->实际特征组.push_back({F,out.特征->当前值});
+                } else {
+                    const auto old=std::find_if(r->实际特征组.begin(),r->实际特征组.end(),
+                        [&](const auto& x){return x.特征节点==F;});
+                    if(old!=r->实际特征组.end()&&old->动作前准确值!=out.特征->当前值)
+                        return {S::定义前提已变化,{},{}};
+                    if(old==r->实际特征组.end())r->实际特征组.push_back({F,out.特征->当前值});
+                }
         }
         return out;
     } catch(...) {
@@ -1693,23 +1779,46 @@ std::vector<新本能函数条件角色材料> 新_模拟世界类::读取本次
         throw std::logic_error("simulation feature read trace requires closed invocation");
     return 实现_->本次存在特征读取;
 }
-std::optional<新特征信息> 新_模拟世界类::读取模拟特征内部(稳定编码 n,bool 正式定位) const noexcept {
+std::optional<新特征信息> 新_模拟世界类::读取模拟特征内部(稳定编码 n,bool 正式定位,
+    std::optional<新特征匹配定义快照>* 实际定义,const 新特征匹配定义快照* 已取得定义,
+    const 基础节点结构* 特征快照,const std::vector<基础联合节点读取项>* 命中快照组) const noexcept {
     try {
+        if(实际定义)实际定义->reset();
         if(实现_) { auto& s=*实现_;std::lock_guard lock(s.互斥);
             if(s.通用) {
                 const auto p=s.通用参数.find(n);
                 if(p==s.通用参数.end()||p->second.规格.信息类型!=新方法参数信息类型::特征) return {};
-                新特征信息 f;f.节点=n;f.特征概念节点=p->second.规格.范围概念节点;
-                const auto def=s.方法.读取模拟特征范围(f.特征概念节点);
+                新特征信息 f;f.节点=n;
+                if(特征快照 && 特征快照->节点.编码!=n)throw std::logic_error("simulation feature snapshot identity differs");
+                const auto fields=[&](字段 key) {
+                    if(!特征快照)return 全局基础数据集.查询字段(n,字段组[key]);
+                    std::vector<基础字段关系> out;
+                    for(const auto& f:特征快照->字段组)if(f.字段节点==字段组[key])out.push_back(f);
+                    return out;
+                };
+                const auto ref=[&](字段 key)->std::optional<稳定编码> {
+                    const auto fs=fields(key);if(fs.size()!=1)return {};
+                    const auto id=std::get_if<稳定编码>(&fs.front().内容);
+                    return id && (特征快照 || 全局基础数据集.查询节点(*id)) ? std::optional{*id} : std::nullopt;
+                };
+                const auto number=[&](字段 key)->std::optional<std::int64_t> {
+                    const auto fs=fields(key);if(fs.size()!=1)return {};
+                    const auto raw=std::get_if<基础值>(&fs.front().内容);
+                    const auto value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+                    return value ? std::optional{*value} : std::nullopt;
+                };
+                const auto def=已取得定义 ? std::optional{*已取得定义} : 读取本地特征实际定义(n);
                 if(!def) return {};
+                if(实际定义)*实际定义=*def;
+                f.特征概念节点=def->概念节点;
                 if(s.记录复制读取&&p->second.复制上下文&&!正式定位
                     &&(def->材料类型!=特征概念材料物理类型::需求节点引用||!s.内容参数位置.contains(n)))
                     s.已读取复制上下文=true; // 本叶只为已映射需求F提供完整前态覆盖，其它复制读取保留旧门。
-                if(p->second.完整复制特征)f.实例单位=读引用(n,结构单位引用);
+                if(p->second.完整复制特征)f.实例单位=ref(结构单位引用);
                 else f.实例单位=def->单位;
-                if(const auto v=读值(n,数值)) f.当前值=*v;
-                else if(const auto v=读引用(n,当前材料)) f.当前值=*v;
-                for(const auto& h:全局基础数据集.查询字段(n,字段组[历史引用])) {
+                if(const auto v=number(数值)) f.当前值=*v;
+                else if(const auto v=ref(当前材料)) f.当前值=*v;
+                for(const auto& h:fields(历史引用)) {
                     const auto* ref=std::get_if<稳定编码>(&h.内容);
                     if(!ref)throw std::runtime_error("simulation history reference malformed");
                     f.历史不同值.emplace_back(*ref);
@@ -1719,25 +1828,46 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征内部(稳
                     const auto* raw=std::get_if<基础值>(&value);const auto* x=raw?std::get_if<std::int64_t>(&raw->材料):nullptr;
                     if(!x)throw std::runtime_error("copied accurate feature value malformed");return *x;
                 };
-                const auto standards=全局基础数据集.查询字段(n,字段组[标准值引用]);
+                const auto standards=fields(标准值引用);
                 if(standards.size()>1)throw std::runtime_error("multiple local standard feature values");
                 if(!standards.empty())f.标准值=accurate(standards.front().内容);
-                for(const auto& h:全局基础数据集.查询字段(n,字段组[历史项引用]))f.历史不同值.push_back(accurate(h.内容));
+                for(const auto& h:fields(历史项引用))f.历史不同值.push_back(accurate(h.内容));
                 std::vector<新特征准确值> 去重历史;
                 for(const auto& 值:f.历史不同值)
                     if(std::find(去重历史.begin(),去重历史.end(),值)==去重历史.end())去重历史.push_back(值);
                 f.历史不同值=std::move(去重历史);
-                for(const auto hit:读引用组(n,历史命中引用)) {
-                    const auto v=唯一字段(hit,结构引用);if(!v)throw std::runtime_error("local history hit value missing");
-                    const auto count=必读数(hit,命中次数值);if(count<0)throw std::runtime_error("local history hit count invalid");
+                for(const auto& hitField:fields(历史命中引用)) {
+                    const auto hitRef=std::get_if<稳定编码>(&hitField.内容);
+                    if(!hitRef || (!命中快照组 && !全局基础数据集.查询节点(*hitRef)))
+                        throw std::runtime_error("simulation history hit reference malformed");
+                    const auto hit=*hitRef;
+                    const auto hitFieldOf=[&](字段 key)->std::optional<基础字段关系> {
+                        if(!命中快照组)return 唯一字段(hit,key);
+                        const auto it=std::find_if(命中快照组->begin(),命中快照组->end(),
+                            [&](const auto& item){return item.查询节点==hit;});
+                        if(it==命中快照组->end() || !it->快照)return {};
+                        std::optional<基础字段关系> result;
+                        for(const auto& field:it->快照->结构.字段组)if(field.字段节点==字段组[key]) {
+                            if(result)return {};result=field;
+                        }
+                        return result;
+                    };
+                    const auto v=hitFieldOf(结构引用),countField=hitFieldOf(命中次数值);
+                    const auto raw=countField ? std::get_if<基础值>(&countField->内容) : nullptr;
+                    const auto countPtr=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+                    if(!v || !countPtr || *countPtr<0)throw std::runtime_error("local history hit data invalid");
+                    const auto count=*countPtr;
                     const auto value=accurate(v->内容);
                     f.历史值命中信息.push_back({value,count});
-                    if(def->材料类型==特征概念材料物理类型::信息节点引用
+                    if((def->材料类型==特征概念材料物理类型::信息节点引用
+                        || def->比较规则==特征概念比较规则::概念集合身份判等)
                         &&std::find(f.历史不同值.begin(),f.历史不同值.end(),value)==f.历史不同值.end())
                         f.历史不同值.push_back(value);
                 }
-                if(const auto domain=读引用(n,完整实例区间引用))f.实例区间值=读结构域(*domain);
-                if(const auto domain=读引用(n,完整聚合引用))f.实例历史聚合值域=读结构域(*domain);
+                if(const auto domain=ref(完整实例区间引用))f.实例区间值=命中快照组
+                    ? 读归类结构域批次(*domain,*命中快照组) : 读结构域(*domain);
+                if(const auto domain=ref(完整聚合引用))f.实例历史聚合值域=命中快照组
+                    ? 读归类结构域批次(*domain,*命中快照组) : 读结构域(*domain);
                 s.记录内容(6,n,f,p->second.复制上下文);
                 return f;
             }
@@ -1763,6 +1893,8 @@ std::optional<新特征值信息> 新_模拟世界类::读取模拟特征值材�
             else if(auto* a=std::get_if<std::string>(&v->材料))r.材料=std::move(*a);
             else throw std::runtime_error("registered local material payload category corrupt");
             if(实现_->记录复制读取) {
+                // 归类样例保存本次实际读取的材料内容，后续不以节点当前内容补造。
+                if(实现_->归类主体来源)实现_->记录内容(8,节点,r,true);
                 for(const auto& [F,p]:实现_->通用参数)if(p.规格.信息类型==新方法参数信息类型::特征) {
                     实现_->记录复制读取=false;
                     const auto f=读取模拟特征内部(F,false);
@@ -1914,45 +2046,38 @@ namespace {
         }
         return value;
     };
+    std::set<稳定编码> ids{N,config.范围.材料范围,config.范围.目标词条FT,config.范围.采用概念FT};
+    if(C==config.范围.明确材料范围)ids.insert(C);
     for(;;) {
-        auto first=全局基础数据集.查询节点组完整结构({N});
-        if(first.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
-        if(first.状态!=基础结构操作状态::已完成 || first.节点组.size()!=1 || !first.节点组.front().快照)
-            throw std::runtime_error("local classification material missing");
-        const auto& initial=*first.节点组.front().快照;
-        const auto word=field(initial,归类目标词条引用);
-        const auto adopted=field(initial,归类采用概念引用);
-        if(!word)throw std::runtime_error("local classification target word missing");
-        std::set<稳定编码> ids{N,*word,config.范围.材料范围,config.范围.目标词条FT,config.范围.采用概念FT};
-        if(adopted)ids.insert(*adopted);
-        if(C==config.范围.明确材料范围)ids.insert(C);
         auto read=全局基础数据集.查询节点组完整结构({ids.begin(),ids.end()});
         if(read.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
-        const bool endpointMissing=read.状态==基础结构操作状态::节点不存在
-            || read.状态==基础结构操作状态::引用不存在
-            || (read.状态==基础结构操作状态::已完成 && std::any_of(read.节点组.begin(),read.节点组.end(),
-                [](const auto& item){return !item.快照;}));
-        if(endpointMissing) {
-            auto retry=全局基础数据集.查询节点组完整结构({N});
-            if(retry.状态==基础结构操作状态::资源失败)return {S::资源失败,{},{}};
-            if(retry.状态!=基础结构操作状态::已完成 || retry.节点组.size()!=1 || !retry.节点组.front().快照)
-                throw std::runtime_error("local classification material missing");
-            if(field(*retry.节点组.front().快照,归类目标词条引用)!=word
-                || field(*retry.节点组.front().快照,归类采用概念引用)!=adopted)continue;
-            throw std::runtime_error("local classification referenced endpoint missing");
-        }
         if(read.状态!=基础结构操作状态::已完成 || read.节点组.size()!=ids.size())
-            throw std::runtime_error("local classification protection unavailable");
+            throw std::runtime_error("local classification material batch unavailable");
+        const auto find=[&](稳定编码 id)->const 基础联合节点快照* {
+            const auto it=std::find_if(read.节点组.begin(),read.节点组.end(),
+                [&](const auto& item){return item.查询节点==id;});
+            return it==read.节点组.end() || !it->快照 ? nullptr : &*it->快照;
+        };
+        const auto* current=find(N);
+        if(!current)throw std::runtime_error("local classification material missing");
+        const auto word=field(*current,归类目标词条引用);
+        const auto adopted=field(*current,归类采用概念引用);
+        if(!word)throw std::runtime_error("local classification target word missing");
+        const auto oldSize=ids.size();
+        ids.insert(*word);
+        if(adopted)ids.insert(*adopted);
+        if(ids.size()!=oldSize)continue; // 依当前批的引用补足读取，不比较旧内容。
+        std::set<稳定编码> required{N,*word,config.范围.材料范围,
+            config.范围.目标词条FT,config.范围.采用概念FT};
+        if(adopted)required.insert(*adopted);
+        if(C==config.范围.明确材料范围)required.insert(C);
         std::vector<基础联合节点快照> protection;
-        protection.reserve(read.节点组.size());
-        const 基础联合节点快照* current=nullptr;
-        for(auto& item:read.节点组) {
-            if(!item.快照)throw std::runtime_error("local classification endpoint missing");
-            protection.push_back(std::move(*item.快照));
-            if(item.查询节点==N)current=&protection.back();
+        protection.reserve(required.size());
+        for(const auto id:required) {
+            const auto* snapshot=find(id);
+            if(!snapshot)throw std::runtime_error("local classification referenced endpoint missing");
+            protection.push_back(*snapshot);
         }
-        if(!current)throw std::runtime_error("local classification material snapshot missing");
-        if(field(*current,归类目标词条引用)!=word || field(*current,归类采用概念引用)!=adopted)continue;
         if(field(*current,内容概念引用)!=std::optional{config.范围.材料范围}
             || !s.是本地参数(*word,新方法参数信息类型::词条))
             throw std::runtime_error("local classification material identity damaged");
@@ -2269,7 +2394,7 @@ namespace 海中鱼巣 {
     const std::optional<新模拟归类主体输入>& 归类主体输入) {
     if(执行主体输入 && 归类主体输入)return {新模拟世界状态::入口拒绝,{}};
     if(归类主体输入 && (!有效(归类主体输入->来源存在) || !有效(归类主体输入->专属概念)
-        || 归类主体输入->同源存在输入!=4 || 归类主体输入->身份预期.字段集合组.empty()))
+        || 归类主体输入->同源存在输入!=4))
         return {新模拟世界状态::入口拒绝,{}};
     // 只允许图内重映射的内容引用；来源世界的实例身份不能穿透进样例。
     for(const auto& 需求:需求图.需求组) {
@@ -2372,6 +2497,19 @@ namespace 海中鱼巣 {
     std::vector<bool> 需求参数(输入.size(),false),归类参数(输入.size(),false);
     for(std::size_t i=0;i<输入.size();++i) {
         const auto& p=输入[i];
+        if(p.复制特征概念) {
+            if(m->本能函数登记名!=std::optional<std::string>{新本能函数登记名_按归类材料挂接词条}
+                || i!=1 || p.规格.信息类型!=新方法参数信息类型::特征
+                || p.所属存在参数!=1 || !p.完整复制特征 || !有效(*p.复制特征概念))
+                return {新模拟世界状态::入口拒绝,{}};
+            const auto actual=s.方法.读取模拟特征范围(*p.复制特征概念);
+            const auto declared=s.方法.读取模拟特征范围(p.规格.范围概念节点);
+            if(!actual || !declared || actual->特征类型根!=declared->特征类型根
+                || actual->材料类型!=declared->材料类型
+                || actual->比较规则!=特征概念比较规则::信息引用身份精确
+                || declared->比较规则!=actual->比较规则)
+                return {新模拟世界状态::入口拒绝,{}};
+        }
         if(p.规格.信息类型==新方法参数信息类型::词条) {
             if(!s.存在概念) throw std::logic_error("simulation word concept reader unavailable");
             const auto d=s.存在概念->读取当前基础范围概念(p.规格.范围概念节点);
@@ -2526,6 +2664,18 @@ namespace 海中鱼巣 {
             ? std::get_if<新特征值信息>(&current.内容) : nullptr;
         return value ? &value->材料 : nullptr;
     };
+    const auto 输入概念引用命中=[&](const 新模拟有序参数输入& in,
+        const 新方法条件项定义& 条件,const 新特征匹配定义快照& 域) {
+        if(!in.完整复制特征 || !域.概念身份范围)return false;
+        const auto accepts=[&](const 新模拟复制准确值& value) {
+            const auto* C=value.种类==新模拟复制值种类::正式概念引用
+                ? std::get_if<稳定编码>(&value.内容) : nullptr;
+            return C && 有效(*C) && (!域.概念身份范围->单点概念 || *C==*域.概念身份范围->单点概念);
+        };
+        if(条件.取值位置==特征取值位置::历史不同值)
+            return std::any_of(in.完整复制特征->历史不同值.begin(),in.完整复制特征->历史不同值.end(),accepts);
+        return in.完整复制特征->当前值 && accepts(*in.完整复制特征->当前值);
+    };
     if(m->初始必要条件) {
         const auto& 必要=*m->初始必要条件;
         if(必要.条件.关系规则!=新方法项关系规则::全部成立){ 模拟样例拒绝行=__LINE__; return {}; }
@@ -2572,7 +2722,11 @@ namespace 海中鱼巣 {
                     if(条件.特征值域概念节点) {
                         const auto 域=s.方法.读取模拟特征范围(*条件.特征值域概念节点);
                         if(!域||域->特征类型根!=d->特征类型根||域->材料类型!=d->材料类型){ 模拟样例拒绝行=__LINE__; return {}; }
-                        if(const auto* 有限=std::get_if<std::vector<稳定编码>>(&域->值域)) {
+                        if(域->概念身份范围) {
+                            if(!输入概念引用命中(in,条件,*域)){ 模拟样例拒绝行=__LINE__; return {}; }
+                        } else if(条件.取值位置==特征取值位置::历史不同值) {
+                            return {新模拟世界状态::能力未支持,{}};
+                        } else if(const auto* 有限=std::get_if<std::vector<稳定编码>>(&域->值域)) {
                             const auto* 当前材料=输入材料(in);
                             if(!当前材料){ 模拟样例拒绝行=__LINE__; return {}; }
                             bool 命中=false;
@@ -2599,6 +2753,18 @@ namespace 海中鱼巣 {
                 const auto d=s.方法.读取模拟特征范围(in.规格.范围概念节点);
                 auto shape=条件;shape.特征类型概念节点.reset();shape.特征值域概念节点.reset();shape.精确数值域.reset();
                 新方法条件项定义 expected;expected.参数序号=条件.参数序号;
+                if(d && d->概念身份范围) {
+                    expected.取值位置=条件.取值位置;
+                    if(shape!=expected || 条件.精确数值域
+                        || 条件.特征类型概念节点!=std::optional{d->特征类型根}){ 模拟样例拒绝行=__LINE__; return {}; }
+                    if(条件.特征值域概念节点) {
+                        const auto 域=s.方法.读取模拟特征范围(*条件.特征值域概念节点);
+                        if(!域 || 域->特征类型根!=d->特征类型根
+                            || !输入概念引用命中(in,条件,*域)){ 模拟样例拒绝行=__LINE__; return {}; }
+                    } else if(条件.取值位置!=特征取值位置::当前值) return {新模拟世界状态::能力未支持,{}};
+                    continue;
+                }
+                if(条件.取值位置!=特征取值位置::当前值) return {新模拟世界状态::能力未支持,{}};
                 // 存在引用特征参数的值域条件（如“自我.交互者有值”）：模拟只记录条件实参、不构造值存在，
                 // 值域由筹办按分支必要条件核验（与模拟学习侧口径一致）。
                 if(d&&d->材料类型==特征概念材料物理类型::存在节点引用&&shape==expected
@@ -2738,7 +2904,7 @@ namespace 海中鱼巣 {
             归类b->目标词条参数=static_cast<std::uint32_t>(代表.at(归类b->目标词条参数-1)+1);
         }
         if(a.值!=b.值||a.材料!=b.材料||a.来源任务成员组!=b.来源任务成员组
-            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征||a.复制词条!=b.复制词条||归类a!=归类b){ 模拟样例拒绝行=__LINE__; return {}; }
+            ||a.引用需求输入!=b.引用需求输入||a.需求参数输入!=b.需求参数输入||a.初值方式!=b.初值方式||a.完整复制特征!=b.完整复制特征||a.复制词条!=b.复制词条||a.复制特征概念!=b.复制特征概念||归类a!=归类b){ 模拟样例拒绝行=__LINE__; return {}; }
         if(引用代表(a)!=引用代表(b)){ 模拟样例拒绝行=__LINE__; return {}; }
         if(a.规格.信息类型==新方法参数信息类型::特征) {
             if(a.所属存在参数&&b.所属存在参数
@@ -2851,40 +3017,16 @@ namespace 海中鱼巣 {
     const auto 场景预留=主场景准备.建节点();
     基础节点组追加请求 q;
     q.预期联合节点组=消息声明保护.完整保护组;
-    q.预期联合节点组.insert(q.预期联合节点组.end(),需求图.正式定义保护.begin(),需求图.正式定义保护.end());
     if(执行主体输入)q.预期联合节点组.insert(q.预期联合节点组.end(),执行主体输入->来源身份保护.begin(),执行主体输入->来源身份保护.end());
     q.只读预期=需求图.存在范围语义保护;
+    for(const auto& definition:需求图.正式定义保护)
+        q.只读预期.节点组.push_back(definition.结构.节点);
     if(归类主体输入) {
         const auto& expected=归类主体输入->身份预期;
+        // 仅保留本次引用所需的节点身份，不以采集时的主体字段作为变化门槛。
         q.只读预期.节点组.insert(q.只读预期.节点组.end(),expected.节点组.begin(),expected.节点组.end());
-        q.只读预期.字段集合组.insert(q.只读预期.字段集合组.end(),expected.字段集合组.begin(),expected.字段集合组.end());
-        q.只读预期.外部关系集合组.insert(q.只读预期.外部关系集合组.end(),expected.外部关系集合组.begin(),expected.外部关系集合组.end());
-    }
-    // 语义合法性由需求/概念owner在采集时核验；这里要求这些共享引用确实进入同次原子前提。
-    const auto 需正式保护=[&](稳定编码 C) {
-        if(!有效(C)||std::none_of(需求图.正式定义保护.begin(),需求图.正式定义保护.end(),[&](const auto& x){return x.结构.节点.编码==C;}))
-            throw std::invalid_argument("typed demand definition lacks formal owner protection");
-    };
-    const auto 需目标保护=[&](const 新需求目标定义& t) {
-        需正式保护(t.目标特征类型概念节点);
-        if(t.目标值域概念节点)需正式保护(*t.目标值域概念节点);
-        if(t.目标比较关系概念节点)需正式保护(*t.目标比较关系概念节点);
-    };
-    for(const auto& d:需求图.需求组) {
-        需正式保护(d.内容概念);for(const auto C:d.附加内容概念组)需正式保护(C);
-        if(d.已知目标) {
-            const auto& t=*d.已知目标;
-            if(t.目标特征类型概念节点)需正式保护(*t.目标特征类型概念节点);
-            if(t.目标值域概念节点)需正式保护(*t.目标值域概念节点);
-            if(t.目标比较关系概念节点)需正式保护(*t.目标比较关系概念节点);
-        } else 需目标保护(d.目标);
-        if(d.引用内容定位输入)for(const auto FT:d.引用内容定位输入->正式内容路径)需正式保护(FT);
-    }
-    for(const auto& u:需求图.理解组)需目标保护(u.目标);
-    for(const auto& r:需求图.要求组) {
-        if(r.已知目标.目标特征类型概念节点)需正式保护(*r.已知目标.目标特征类型概念节点);
-        if(r.已知目标.目标值域概念节点)需正式保护(*r.已知目标.目标值域概念节点);
-        if(r.已知目标.目标比较关系概念节点)需正式保护(*r.已知目标.目标比较关系概念节点);
+        q.只读预期.节点组.push_back({归类主体输入->来源存在});
+        q.只读预期.节点组.push_back({归类主体输入->专属概念});
     }
     const auto 新节点=[&](节点种类 k)->std::size_t {
         const auto n=q.新节点组.size();
@@ -3033,7 +3175,7 @@ namespace 海中鱼巣 {
             if(延后词典初值[i]) {index[i]=q.新节点组.size();q.新节点组.emplace_back();}
             else {
                 index[i]=新节点(特征种类);
-                q.新节点组[index[i]].字段组.push_back({字段组[特征类型],p.规格.范围概念节点});
+                q.新节点组[index[i]].字段组.push_back({字段组[特征类型],p.复制特征概念.value_or(p.规格.范围概念节点)});
             }
         }
         if(延后词典初值[i])continue; // 仅预留身份；完整F与首次Q持有同组发表。
@@ -3153,9 +3295,11 @@ namespace 海中鱼巣 {
         }
     }
     std::map<std::size_t,材料物理类型> material;
-    std::map<稳定编码,std::size_t> 复制材料索引;
+    using 复制材料键=std::tuple<稳定编码,材料物理类型,新特征值材料>;
+    std::map<复制材料键,std::size_t> 复制材料索引;
     std::map<std::pair<新模拟复制值种类,std::vector<std::uint32_t>>,std::size_t> 复制集合索引;
     std::set<std::pair<std::size_t,稳定编码>> 已保持概念;
+    std::set<稳定编码> 正式复制概念;
     const auto 保持集合概念=[&](std::size_t materialIndex,const 新特征值材料& value) {
         const auto* members=std::get_if<std::vector<std::uint64_t>>(&value);
         if(!members)throw std::invalid_argument("simulation concept collection material is not U64 array");
@@ -3171,6 +3315,13 @@ namespace 海中鱼巣 {
         if(conceptSet && value.种类!=K::普通材料)
             throw std::invalid_argument("simulation concept collection requires copied material");
         switch(value.种类) {
+        case K::正式概念引用: {
+            const auto C=std::get<稳定编码>(value.内容);
+            if(!有效(C))throw std::invalid_argument("copied formal concept identity invalid");
+            正式复制概念.insert(C);
+            q.只读预期.节点组.push_back(基础节点{C});
+            return C;
+        }
         case K::I64:return 基础值{std::get<std::int64_t>(value.内容)};
         case K::存在引用:return E引用(std::get<std::uint32_t>(value.内容));
         case K::需求引用:return 图引用(D节点,std::get<std::uint32_t>(value.内容));
@@ -3178,16 +3329,28 @@ namespace 海中鱼巣 {
             const auto& v=std::get<新特征值信息>(value.内容);
             if(conceptSet && v.物理类型!=材料物理类型::U64数组)
                 throw std::invalid_argument("simulation concept collection physical type differs");
-            if(有效(v.节点))if(const auto it=复制材料索引.find(v.节点);it!=复制材料索引.end()) {
+            const 复制材料键 key{v.节点,v.物理类型,v.材料};
+            if(有效(v.节点))if(const auto it=复制材料索引.find(key);it!=复制材料索引.end()) {
                 if(conceptSet && material.at(it->second)!=材料物理类型::U64数组)
                     throw std::invalid_argument("simulation cached concept collection physical type differs");
-                if(conceptSet)保持集合概念(it->second,v.材料);
+                if(conceptSet) {
+                    const auto& fields=q.新节点组.at(it->second).字段组;
+                    const auto payload=std::find_if(fields.begin(),fields.end(),[](const auto& f) {
+                        return f.字段节点==字段组[数值];
+                    });
+                    const auto* raw=payload!=fields.end() ? std::get_if<基础值>(&payload->内容) : nullptr;
+                    const auto* stored=raw ? std::get_if<std::vector<std::uint64_t>>(&raw->材料) : nullptr;
+                    if(!stored)throw std::logic_error("simulation cached concept collection payload missing");
+                    // 引用对应样例内已保存的材料，不比较也不混入另一时刻的读取。
+                    const 新特征值材料 saved{*stored};
+                    保持集合概念(it->second,saved);
+                }
                 return 基础组内节点引用{it->second};
             }
             const auto x=新节点(材料种类);std::visit([&](const auto& raw){q.新节点组[x].字段组.push_back({字段组[数值],基础值{raw}});},v.材料);
             if(conceptSet)保持集合概念(x,v.材料);
             q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{x},基础外部关系类型::父子});
-            material.emplace(x,v.物理类型);if(有效(v.节点))复制材料索引.emplace(v.节点,x);return 基础组内节点引用{x};
+            material.emplace(x,v.物理类型);if(有效(v.节点))复制材料索引.emplace(key,x);return 基础组内节点引用{x};
         }
         case K::存在集合:case K::需求集合:case K::任务集合: {
             auto positions=std::get<std::vector<std::uint32_t>>(value.内容);
@@ -3258,7 +3421,11 @@ namespace 海中鱼巣 {
                 writer.写(index[i],scalar ? 数值 : 当前材料,v);
             }
             if(f.标准值)writer.写(index[i],标准值引用,复制准确(*f.标准值,conceptSet));
-            for(const auto& h:f.历史不同值)writer.写(index[i],历史项引用,复制准确(h,conceptSet));
+            for(const auto& h:f.历史不同值) {
+                const bool 已有命中=conceptSet && std::any_of(f.历史值命中信息.begin(),f.历史值命中信息.end(),
+                    [&](const auto& hit){return hit.值==h;});
+                if(!已有命中)writer.写(index[i],历史项引用,复制准确(h,conceptSet));
+            }
             for(const auto& h:f.历史值命中信息) {
                 if(h.命中次数<0)throw std::invalid_argument("negative copied feature hit count");
                 const auto hit=writer.节点();writer.写(hit,结构引用,复制准确(h.值,conceptSet));writer.数(hit,命中次数值,h.命中次数);writer.子(index[i],历史命中引用,hit);
@@ -3350,6 +3517,10 @@ namespace 海中鱼巣 {
         图身份准备.节点=std::move(prepared.节点组);std::size_t next=0;
         for(std::size_t i=0;i<图身份.size();++i)if(i!=场景)图身份[i]=图身份准备.节点[next++];
     }
+    std::map<稳定编码,稳定编码> 材料来源顺序准备;
+    for(const auto& [来源键,索引]:复制材料索引)
+        if(!材料来源顺序准备.emplace(图身份.at(索引),std::get<0>(来源键)).second)
+            throw std::logic_error("duplicate local material source mapping");
     const auto resolveField=[&](基础组内字段内容 value)->基础组内字段内容 {
         if(const auto* local=std::get_if<基础组内节点引用>(&value))return 图身份.at(local->索引);
         return value;
@@ -3367,7 +3538,7 @@ namespace 海中鱼巣 {
     q.新节点组.clear();
     s.通用字段.reserve(s.通用字段.size()+q.追加字段组.size());
     const auto 概念来源已退出=[&]() {
-        std::set<稳定编码> concepts;
+        auto concepts=正式复制概念;
         for(const auto& [material,C]:已保持概念)concepts.insert(C);
         if(concepts.empty())return false;
         const auto read=全局基础数据集.查询节点组完整结构({concepts.begin(),concepts.end()});
@@ -3384,6 +3555,16 @@ namespace 海中鱼巣 {
         if(read.状态!=基础结构操作状态::已完成)throw std::runtime_error("classification actor source read failed");
         return std::any_of(read.节点组.begin(),read.节点组.end(),[](const auto& x){return !x.快照;});
     };
+    // 样例关系只依赖已有端点身份；私有写宿主仍使用上面预留的写入合同。
+    std::set<稳定编码> 关系端点;
+    for(const auto& edge:q.追加外部关系组) {
+        if(const auto* n=std::get_if<稳定编码>(&edge.源节点))关系端点.insert(*n);
+        if(const auto* n=std::get_if<稳定编码>(&edge.目标节点))关系端点.insert(*n);
+    }
+    for(const auto id:关系端点) {
+        q.窄关系端点组.push_back(id);
+        q.只读预期.节点组.push_back(基础节点{id});
+    }
     try { 补齐模拟追加联合预期(q); }
     catch(const 模拟联合预期变化&) { return {新模拟世界状态::定义前提已变化,{}}; }
     catch(const std::runtime_error&) {
@@ -3398,6 +3579,7 @@ namespace 海中鱼巣 {
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("generic simulation graph publication failed, status="+std::to_string(static_cast<int>(p.状态)));
     p.新节点组=std::move(图身份);主场景准备.保留=true;图身份准备.保留=true;
     s.通用=true;s.通用方法=M;s.收集追加(p);s.通用场景=p.新节点组[场景];
+    s.复制材料来源顺序=std::move(材料来源顺序准备);
     s.执行主体来源=执行主体输入;
     s.归类主体来源=归类主体输入;
     if(归类主体输入)s.本地执行主体=E节点.at(代表.at(归类主体输入->同源存在输入-1));
@@ -3950,12 +4132,16 @@ bool 模拟需求业务相同(const 新本能需求材料& 左,const 新本能�
                 return {定义.信息 ? 符合::符合 : 符合::不符合,定义.预期节点组};
             }
             if(原语==基础概念原语::正式概念身份) {
-                const 正式概念身份读取接口* 提供者[]{内部.特征概念,内部.二次概念,内部.存在概念};
+                const 正式概念身份读取接口* 提供者[]{内部.特征概念,内部.二次概念,内部.存在概念,内部.动作概念};
+                bool 依赖未就绪=false;
                 for(const auto* 提供:提供者) {
+                    if(!提供) {依赖未就绪=true;continue;}
                     const auto 读取=提供->读取正式概念身份保护(节点);
                     if(读取.状态==正式概念读取状态::前提已变化)return {符合::前提已变化,{}};
+                    if(读取.状态==正式概念读取状态::依赖未就绪)依赖未就绪=true;
                     if(读取.身份)return {符合::符合,读取.身份->完整保护组};
-                }return {符合::不符合,{}};
+                }
+                return {依赖未就绪 ? 符合::未支持 : 符合::不符合,{}};
             }
             return {符合::未支持,{}};
         };
@@ -4374,7 +4560,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     auto& s=*实现_;
     bool open=false;
     停止样例后继发布();
-    {std::lock_guard lock(s.互斥);if(s.词典在途)return false;open=s.通用&&s.记录写回;}
+    {std::lock_guard lock(s.互斥);if(s.词典在途 || s.归类动作在途 || s.归类观察在途)return false;open=s.通用&&s.记录写回;}
     // 关闭会锁外询问协作停止，不能持world锁调用该回调。
     if(open)(void)结束记录复制上下文读取();
     std::unique_lock lock(s.互斥);
@@ -4477,13 +4663,13 @@ bool 新_模拟世界类::尝试释放有序样例() {
         if(r!=基础结构操作状态::已完成)throw std::runtime_error("simulation temporary node exit failed");
     }
     s.词典接收定位.reset();s.词典查询责任.clear();s.词典接收值组.clear();
-    s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用输入节点.clear();s.通用参数.clear();s.通用材料.clear();s.通用任务.clear();s.任务成员读取组.clear();
-    s.本地归类材料.clear();s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();
+    s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用输入节点.clear();s.通用参数.clear();s.通用材料.clear();s.复制材料来源顺序.clear();s.通用任务.clear();s.任务成员读取组.clear();
+    s.本地归类材料.clear();s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();s.归类名称读取组.clear();
     s.记录复制读取=false;s.已读取复制上下文=false;s.本次已进入动作=false;s.本次存在特征读取.clear();
     s.交互事实.clear();s.本次场景读取.clear();
     s.记录写回=false;s.写回窗口已关闭=false;s.最后写入来源组.clear();
     s.当前调用.reset();s.停止检查={};s.请求取消=false;
-    s.执行主体来源.reset();s.归类主体来源.reset();s.本地执行主体.reset();s.需求动作许可.reset();
+    s.执行主体来源.reset();s.归类主体来源.reset();s.归类调用组.clear();s.本地执行主体.reset();s.需求动作许可.reset();
     s.消息定义保护={};
     s.词典回执组.clear();s.通用节点.clear();s.通用字段.clear();s.通用外部边.clear();s.通用事件.clear();s.消息事件组.clear();s.消息序号=0;
     auto runtime=std::move(s.词典运行);lock.unlock();runtime.reset();
@@ -4701,12 +4887,14 @@ void 新_模拟世界类::开始记录复制上下文读取(const std::function<
     s.最后写入来源组.swap(新槽组);
     s.需求动作许可.reset();
     s.写回窗口已关闭=false;s.记录写回=true;
-    s.已读取复制上下文=false;s.任务成员读取组.clear();s.本次场景读取.clear();s.本次存在特征读取.clear();s.内容读取组.clear();s.本次已进入动作=false;s.记录复制读取=true;
+    s.已读取复制上下文=false;s.任务成员读取组.clear();s.本次场景读取.clear();s.本次存在特征读取.clear();s.内容读取组.clear();s.归类名称读取组.clear();s.本次已进入动作=false;s.记录复制读取=true;
 }
 bool 新_模拟世界类::结束记录复制上下文读取() {
     if(!实现_)throw std::runtime_error("simulation owner unavailable");
     (void)请求停止已成立();
     auto& s=*实现_;
+    // 与归类动作保持相同的阶段锁顺序，等待本次动作离开跨owner读取和提交阶段后再关闭调用窗口。
+    std::lock_guard phase(s.归类动作阶段互斥);
     for(;;) {
     std::unique_lock lock(s.互斥);
     if (!s.记录写回 || !s.记录复制读取)
@@ -4728,6 +4916,27 @@ bool 新_模拟世界类::结束记录复制上下文读取() {
     s.记录复制读取=false;s.停止检查={};return s.已读取复制上下文;
     }
 }
+std::optional<新特征信息> 新_模拟世界类::观察本次归类结果() const {
+    if(!实现_)return {};
+    auto& s=*实现_;
+    std::lock_guard phase(s.归类动作阶段互斥);
+    稳定编码 F;
+    {
+        std::lock_guard lock(s.互斥);
+        if(!s.通用 || !s.样例就绪 || s.请求取消 || !s.记录写回 || !s.记录复制读取 || !s.当前调用)return {};
+        const auto it=s.归类调用组.find(*s.当前调用);
+        if(it==s.归类调用组.end() || !it->second.回执)return {};
+        F=it->second.回执->实际输入.挂接特征;
+        s.归类观察在途=true;
+    }
+    struct 观察租约 final {
+        实现& 所有者;
+        ~观察租约(){std::lock_guard lock(所有者.互斥);所有者.归类观察在途=false;}
+    } lease{s};
+    // 参数2为正式定位的样例特征；观察结果不作为方法实际读取的隐藏前提。
+    return 读取模拟特征内部(F,true);
+}
+
 std::vector<稳定编码> 新_模拟世界类::读取本次写回特征组() const {
     if (!实现_) throw std::runtime_error("simulation owner unavailable");
     const auto& s=*实现_;std::lock_guard 锁(s.互斥);
@@ -4901,10 +5110,23 @@ void 新_模拟世界类::发布模拟数值变化(稳定编码 F,std::int64_t v
     auto& s=*实现_;
     稳定编码 method{};std::optional<稳定编码> call;
     {std::lock_guard lock(s.互斥);method=s.通用方法;call=s.当前调用;}
-    const auto proof=s.方法.读取方法执行结构闭包({method});
+    auto proof=s.方法.读取方法执行结构闭包({method});
+    while(proof.状态==新_方法类::执行结构读取状态::前提已变化) {
+        {
+            std::lock_guard lock(s.互斥);
+            if(!s.通用 || method!=s.通用方法 || call!=s.当前调用 || !s.记录写回)
+                return 新模拟操作状态::停止取消;
+        }
+        if(请求停止已成立())return 新模拟操作状态::停止取消;
+        proof=s.方法.读取方法执行结构闭包({method});
+    }
     std::lock_guard lock(s.互斥);
     if(!s.通用)return 新模拟操作状态::输入不适用;
-    if(method!=s.通用方法||call!=s.当前调用||!s.记录写回)throw std::runtime_error("message input invocation changed");
+    // 方法定义读取在样例锁外进行；原调用结束或切换时不向新调用投递旧输入。
+    if(method!=s.通用方法||call!=s.当前调用||!s.记录写回)return 新模拟操作状态::停止取消;
+    if(proof.状态==新_方法类::执行结构读取状态::方法不存在
+        ||proof.状态==新_方法类::执行结构读取状态::来源不是抽象方法)
+        return 新模拟操作状态::输入不适用;
     if(proof.状态!=新_方法类::执行结构读取状态::已读取||proof.方法组.size()!=1)throw std::runtime_error("message input definition unavailable");
     s.消息定义保护=proof;
     bool pending=false;
@@ -5402,6 +5624,910 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
         throw std::invalid_argument("isolation stage target position differs");
     return 建立本地参数动作(scene,request,2);
 }
+std::optional<新_模拟世界类::本地归类特征概念> 新_模拟世界类::读取本地归类特征概念(稳定编码 C) const {
+    if(!实现_)return {};
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || std::find(s.通用节点.begin(),s.通用节点.end(),C)==s.通用节点.end()
+        || !属于样例(C,模拟归类特征概念种类,s.通用场景))return {};
+    if(读引用(C,所属)!=std::optional{s.通用场景})throw std::logic_error("local classification concept scene invalid");
+    const auto root=必读引用(C,内容概念引用),parent=必读引用(C,结构引用),domain=必读引用(C,完整聚合引用);
+    if(!属于样例(domain,语义快照种类,s.通用场景))throw std::logic_error("local classification concept domain outside sample");
+    const auto value=读结构域(domain);
+    const auto materials=std::get_if<std::vector<稳定编码>>(&value);
+    if(!materials || materials->empty())throw std::logic_error("local classification concept domain invalid");
+    for(const auto id:*materials) {
+        const auto it=s.通用材料.find(id);
+        if(it==s.通用材料.end() || it->second!=材料物理类型::U64数组
+            || !属于样例(id,材料种类,s.通用场景))
+            throw std::logic_error("local classification concept material outside sample or wrong type");
+    }
+    const auto sourceFields=全局基础数据集.查询字段(C,字段组[来源引用]);
+    if(sourceFields.size()>1)throw std::logic_error("local classification overlay source duplicated");
+    std::optional<稳定编码> source;
+    if(!sourceFields.empty()) {
+        const auto id=std::get_if<稳定编码>(&sourceFields.front().内容);
+        if(!id || !有效(*id))throw std::logic_error("local classification overlay source malformed");
+        source=*id;
+    }
+    return 本地归类特征概念{C,root,parent,domain,*materials,source};
+}
+
+std::optional<新_模拟世界类::本地归类特征概念> 新_模拟世界类::查找本地归类概念覆盖(稳定编码 source) const {
+    if(!实现_ || !有效(source))return {};
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用)return {};
+    std::optional<本地归类特征概念> found;
+    for(const auto& field:全局基础数据集.查询目标字段(source,字段组[来源引用])) {
+        if(std::find(s.通用节点.begin(),s.通用节点.end(),field.所属节点)==s.通用节点.end()
+            || !属于样例(field.所属节点,模拟归类特征概念种类,s.通用场景))continue;
+        const auto localConcept=读取本地归类特征概念(field.所属节点);
+        if(!localConcept || localConcept->覆盖正式概念!=std::optional{source})
+            throw std::logic_error("local classification overlay identity invalid");
+        if(found)throw std::logic_error("local classification overlay source duplicated");
+        found=std::move(localConcept);
+    }
+    return found;
+}
+
+std::optional<std::vector<稳定编码>> 新_模拟世界类::读取归类混合子概念(稳定编码 parent) const {
+    if(!实现_ || !有效(parent))return {};
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || !s.样例就绪)return {};
+    const auto isLocal=[&](稳定编码 id) {
+        return std::find(s.通用节点.begin(),s.通用节点.end(),id)!=s.通用节点.end();
+    };
+    std::optional<稳定编码> formalParent;
+    std::optional<稳定编码> localParent;
+    if(isLocal(parent)) {
+        const auto local=读取本地归类特征概念(parent);
+        if(!local)return {};
+        localParent=parent;formalParent=local->覆盖正式概念;
+    } else {
+        formalParent=parent;
+        if(const auto overlay=查找本地归类概念覆盖(parent))localParent=overlay->节点;
+    }
+    const auto belongs=[&](稳定编码 nodeParent) {
+        return (formalParent && nodeParent==*formalParent) || (localParent && nodeParent==*localParent);
+    };
+    std::set<稳定编码> result;
+    if(formalParent)for(const auto& edge:全局基础数据集.查询源关系(*formalParent,基础外部关系类型::父子)) {
+        if(const auto overlay=查找本地归类概念覆盖(edge.目标节点)) {
+            if(belongs(overlay->父概念))result.insert(overlay->节点);
+        } else result.insert(edge.目标节点);
+    }
+    const auto addLocal=[&](稳定编码 nodeParent) {
+        for(const auto& field:全局基础数据集.查询目标字段(nodeParent,字段组[结构引用])) {
+            // 根覆盖以正式根作为锚点，不是自己的子概念。
+            if(localParent && field.所属节点==*localParent)continue;
+            if(!isLocal(field.所属节点) || !属于样例(field.所属节点,模拟归类特征概念种类,s.通用场景))continue;
+            const auto local=读取本地归类特征概念(field.所属节点);
+            if(!local || !belongs(local->父概念))throw std::logic_error("local classification mixed child invalid");
+            result.insert(local->节点);
+        }
+    };
+    if(formalParent)addLocal(*formalParent);
+    if(localParent && localParent!=formalParent)addLocal(*localParent);
+    return std::vector<稳定编码>{result.begin(),result.end()};
+}
+
+std::optional<新特征匹配定义快照> 新_模拟世界类::读取本地特征实际定义(稳定编码 F) const {
+    if(!实现_)return {};
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    const auto p=s.通用参数.find(F);
+    if(!s.通用 || p==s.通用参数.end() || p->second.规格.信息类型!=新方法参数信息类型::特征)return {};
+    const bool 分类特征=s.归类主体来源 && s.通用绑定.size()>=2
+        && s.通用绑定[1].有序引用
+        && s.通用绑定[1].有序引用->信息类型==新方法参数信息类型::特征
+        && s.通用绑定[1].有序引用->信息节点==F;
+    if(!分类特征)return s.方法.读取模拟特征范围(p->second.规格.范围概念节点);
+    const auto actual=读引用(F,特征类型);
+    if(!actual)throw std::logic_error("local classification feature concept missing");
+    std::optional<本地归类特征概念> local;
+    if(std::find(s.通用节点.begin(),s.通用节点.end(),*actual)!=s.通用节点.end()) {
+        local=读取本地归类特征概念(*actual);
+        if(!local)throw std::logic_error("local classification feature concept invalid");
+    } else local=查找本地归类概念覆盖(*actual);
+    if(local) {
+        auto root=s.方法.读取模拟特征范围(local->类型根);
+        if(!root || root->特征类型根!=local->类型根
+            || root->材料类型!=特征概念材料物理类型::U64数组
+            || root->比较规则!=特征概念比较规则::概念集合身份判等)
+            throw std::logic_error("local classification feature root unavailable");
+        root->概念节点=local->节点;root->值域=local->值域材料;
+        return root;
+    }
+    return s.方法.读取模拟特征范围(*actual);
+}
+
+新_模拟世界类::本地归类名称准备 新_模拟世界类::准备本地归类名称(
+    稳定编码 W,稳定编码 C,稳定编码 F,基础节点组追加请求& q) const {
+    if(!实现_ || !有效(C))throw std::invalid_argument("local classification name input invalid");
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || !s.是本地参数(W,新方法参数信息类型::词条))return {};
+    // 从词条开始按批次扩展，避免批次外逐个读取会变化的名称节点。
+    std::set<稳定编码> wanted{W};
+    std::vector<新模拟普通名称信息> names;
+    std::vector<稳定编码> all;
+    稳定编码 scene;
+    for(;;) {
+        const auto batch=全局基础数据集.查询节点组完整结构({wanted.begin(),wanted.end()});
+        if(batch.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(batch.状态!=基础结构操作状态::已完成 || batch.节点组.size()!=wanted.size())
+            throw std::logic_error("local classification name batch unavailable");
+        const auto find=[&](稳定编码 id)->const 基础联合节点快照* {
+            const auto it=std::find_if(batch.节点组.begin(),batch.节点组.end(),
+                [&](const auto& item){return item.查询节点==id;});
+            return it==batch.节点组.end() || !it->快照 ? nullptr : &*it->快照;
+        };
+        const auto word=find(W);if(!word)return {};
+        const auto fields=[&](const 基础联合节点快照& node,字段 key) {
+            std::vector<基础字段关系> result;
+            for(const auto& f:node.结构.字段组)if(f.字段节点==字段组[key])result.push_back(f);
+            return result;
+        };
+        const auto oneRef=[&](const 基础联合节点快照& node,字段 key)->std::optional<稳定编码> {
+            const auto fs=fields(node,key);
+            if(fs.size()!=1)return {};
+            const auto id=std::get_if<稳定编码>(&fs.front().内容);
+            return id && 有效(*id) ? std::optional{*id} : std::nullopt;
+        };
+        const auto oneNum=[&](const 基础联合节点快照& node,字段 key)->std::optional<std::int64_t> {
+            const auto fs=fields(node,key);if(fs.size()!=1)return {};
+            const auto raw=std::get_if<基础值>(&fs.front().内容);
+            const auto value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+            return value ? std::optional{*value} : std::nullopt;
+        };
+        if(oneNum(*word,普通名称前态已知)!=1 || oneNum(*word,全部名称前态已知)!=1)return {};
+        const auto sceneId=oneRef(*word,所属);if(!sceneId)return {};scene=*sceneId;
+        std::vector<稳定编码> ids;all.clear();
+        for(const auto key:{普通名称成员,全部名称概念成员})for(const auto& f:fields(*word,key)) {
+            const auto id=std::get_if<稳定编码>(&f.内容);
+            if(!id || !有效(*id))throw std::logic_error("local classification name batch reference invalid");
+            (key==普通名称成员 ? ids : all).push_back(*id);
+        }
+        std::sort(ids.begin(),ids.end());std::sort(all.begin(),all.end());
+        if(std::adjacent_find(ids.begin(),ids.end())!=ids.end()
+            || std::adjacent_find(all.begin(),all.end())!=all.end())
+            throw std::logic_error("local classification name batch duplicates");
+        const auto before=wanted.size();wanted.insert(ids.begin(),ids.end());
+        if(wanted.size()!=before)continue;
+
+        const auto bound=fields(*word,词条特征引用);
+        if(std::none_of(bound.begin(),bound.end(),[&](const auto& f){
+            const auto id=std::get_if<稳定编码>(&f.内容);return id && *id==F;
+        }))return {};
+        names.clear();std::set<稳定编码> concepts;
+        for(const auto id:ids) {
+            const auto node=find(id);if(!node)return {};
+            if(oneNum(*node,类型)!=模拟普通名称种类 || oneRef(*node,根)!=std::optional{模拟世界树根节点}
+                || oneRef(*node,归类目标词条引用)!=std::optional{W})
+                throw std::logic_error("local classification name batch identity invalid");
+            const auto nameConcept=oneRef(*node,归类采用概念引用);
+            if(!nameConcept || !concepts.insert(*nameConcept).second)
+                throw std::logic_error("local classification name batch concept invalid");
+            基础只读外部关系集合预期 edges{id,false,基础外部关系类型::父子,{},{},{}};
+            for(const auto& edge:node->入向外部关系组)if(edge.类型==基础外部关系类型::父子)edges.关系组.push_back(edge);
+            if(edges.关系组.size()!=1 || edges.关系组.front().源节点!=scene)return {};
+            names.push_back({*nameConcept,id});
+        }
+        for(const auto& item:names)if(!std::binary_search(all.begin(),all.end(),item.概念节点))
+            throw std::logic_error("local classification ordinary name missing from all names");
+        break;
+    }
+    if(s.记录复制读取 && s.归类主体来源) {
+        新隔离归类名称读取 trace;trace.词条=W;trace.全部名称概念组=all;
+        for(const auto& item:names)trace.普通名称概念组.push_back(item.概念节点);
+        trace.前序内容读取数=static_cast<std::uint64_t>(s.内容读取组.size());
+        trace.动作前=!s.本次已进入动作;
+        const auto it=s.当前调用 ? s.归类调用组.find(*s.当前调用) : s.归类调用组.end();
+        trace.归类结果已提交=it!=s.归类调用组.end() && it->second.回执.has_value();
+        s.归类名称读取组.push_back(std::move(trace));
+    }
+    const auto found=std::find_if(names.begin(),names.end(),[&](const auto& item){return item.概念节点==C;});
+    if(found!=names.end())return {true,false,基础组内字段内容{found->名称节点},{}};
+    本地归类名称准备 result;result.已取得=true;result.新建名称=true;
+    result.目标概念组.reserve(all.size()+1);
+    for(const auto item:all)result.目标概念组.push_back(item.值);
+    result.目标概念组.push_back(C.值);
+    result.目标概念组=规范归类签名(std::move(result.目标概念组));
+    const auto slot=q.新节点组.size();
+    q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(模拟普通名称种类)}},
+        {字段组[根],模拟世界树根节点},{字段组[归类目标词条引用],W},{字段组[归类采用概念引用],C}}});
+    q.当前追加字段键组.push_back({W,字段组[普通名称成员]});
+    q.追加字段组.push_back({W,字段组[普通名称成员],基础组内节点引用{slot}});
+    if(!std::binary_search(all.begin(),all.end(),C)) {
+        q.当前追加字段键组.push_back({W,字段组[全部名称概念成员]});
+        q.追加字段组.push_back({W,字段组[全部名称概念成员],C});
+    }
+    q.只读预期.节点组.push_back(基础节点{scene});
+    q.窄关系端点组.push_back(scene);
+    q.追加外部关系组.push_back({scene,基础组内节点引用{slot},基础外部关系类型::父子});
+    result.名称引用=基础组内字段内容{基础组内节点引用{slot}};
+    return result;
+}
+
+新_模拟世界类::本地归类历史准备 新_模拟世界类::准备本地归类历史更新(
+    稳定编码 F,const 基础组内字段内容& 新材料,基础节点组追加请求& q,
+    const 基础节点结构& 特征快照,const std::vector<基础联合节点读取项>& 命中批次) const {
+    if(!实现_)throw std::logic_error("local classification history owner unavailable");
+    const auto& s=*实现_;std::lock_guard lock(s.互斥);
+    if(!s.通用 || !s.是本地参数(F,新方法参数信息类型::特征))
+        throw std::invalid_argument("local classification history feature unavailable");
+    const auto target=std::get_if<稳定编码>(&新材料);
+    if(!target && !std::holds_alternative<基础组内节点引用>(新材料))
+        throw std::invalid_argument("local classification history material reference invalid");
+    if(target && !有效(*target))throw std::invalid_argument("local classification history material invalid");
+    const auto fields=[&](const 基础节点结构& node,字段 key) {
+        std::vector<基础字段关系> out;
+        for(const auto& field:node.字段组)if(field.字段节点==字段组[key])out.push_back(field);
+        return out;
+    };
+    if(特征快照.节点.编码!=F)throw std::logic_error("classification history feature snapshot differs");
+    struct 历史记录 final {std::int64_t 次数;std::optional<稳定编码> 次数字段;std::optional<稳定编码> 命中节点;};
+    std::map<稳定编码,历史记录> history;
+    for(const auto& hitField:fields(特征快照,历史命中引用)) {
+        const auto node=std::get_if<稳定编码>(&hitField.内容);
+        if(!node)throw std::logic_error("classification history reference invalid");
+        const auto it=std::find_if(命中批次.begin(),命中批次.end(),[&](const auto& item){return item.查询节点==*node;});
+        if(it==命中批次.end() || !it->快照)throw std::logic_error("classification history snapshot missing");
+        const auto values=fields(it->快照->结构,结构引用),counts=fields(it->快照->结构,命中次数值);
+        if(values.size()!=1 || counts.size()!=1)throw std::logic_error("classification history snapshot malformed");
+        const auto value=std::optional{values.front()},count=std::optional{counts.front()};
+        const auto id=value ? std::get_if<稳定编码>(&value->内容) : nullptr;
+        const auto raw=count ? std::get_if<基础值>(&count->内容) : nullptr;
+        const auto num=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+        if(!id || !有效(*id) || !num || *num<=0 || !history.emplace(*id,历史记录{*num,count->编码,*node}).second)
+            throw std::logic_error("local classification history record corrupt");
+    }
+    本地归类历史准备 result;
+    const auto addRecord=[&](基础组内字段内容 value,std::int64_t count) {
+        const auto index=q.新节点组.size();
+        q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(语义快照种类)}},
+            {字段组[根],模拟世界树根节点},{字段组[结构引用],value},{字段组[命中次数值],基础值{count}}}});
+        q.当前追加字段键组.push_back({F,字段组[历史命中引用]});
+        q.追加字段组.push_back({F,字段组[历史命中引用],基础组内节点引用{index}});
+        q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{index},基础外部关系类型::父子});
+    };
+    std::set<稳定编码> direct;
+    for(const auto key:{历史引用,历史项引用})for(const auto& field:fields(特征快照,key)) {
+        const auto id=std::get_if<稳定编码>(&field.内容);
+        if(!id || !有效(*id))throw std::logic_error("local classification direct history corrupt");
+        direct.insert(*id);
+    }
+    for(const auto id:direct)if(!history.contains(id)) {
+        const auto count=std::int64_t{target && *target==id ? 2 : 1};
+        history.emplace(id,历史记录{count,std::nullopt,std::nullopt});
+        addRecord(id,count);
+    }
+    // 单概念历史由命中记录读回，不为已有命中再复制一份历史项。
+    if(target && history.contains(*target)) {
+        auto& active=history.at(*target);
+        if(active.次数字段) {
+            if(!active.命中节点)throw std::logic_error("classification hit owner missing");
+            q.当前整数递增组.push_back({*active.命中节点,字段组[命中次数值]});
+            // 本次读取只用于标准值选择；递增及饱和由L1对写入时的当前值处理。
+            if(active.次数!=(std::numeric_limits<std::int64_t>::max)())++active.次数;
+        }
+        result.新命中次数=active.次数;
+    } else {
+        result.新命中次数=1;
+        addRecord(新材料,1);
+    }
+    const auto standardFields=fields(特征快照,标准值引用);
+    if(standardFields.size()>1)throw std::logic_error("local classification multiple standard values");
+    const auto standard=standardFields.empty() ? std::optional<基础字段关系>{}
+        : std::optional<基础字段关系>{standardFields.front()};
+    bool change=!standard;
+    if(standard) {
+        const auto old=std::get_if<稳定编码>(&standard->内容);
+        if(!old || !history.contains(*old))throw std::logic_error("local classification standard not in history");
+        if(!target || *old!=*target)change=result.新命中次数>history.at(*old).次数;
+    }
+    if(change) {
+        q.当前字段赋值组.push_back({F,字段组[标准值引用],新材料});
+        result.标准值改变=true;
+    }
+    return result;
+}
+
+std::optional<新_模拟世界类::本地归类候选> 新_模拟世界类::准备本地归类候选(
+    稳定编码 W,稳定编码 C,稳定编码 N,稳定编码 A,稳定编码 F,
+    std::unique_lock<std::recursive_mutex>& lock,bool& 已观察停止) const {
+    if(!实现_)throw std::logic_error("local classification candidate owner unavailable");
+    auto& s=*实现_;
+    if(!lock.owns_lock() || lock.mutex()!=&s.互斥)
+        throw std::logic_error("local classification candidate requires sample lock");
+    if(!s.通用 || !s.归类动作在途 || !s.是本地参数(W,新方法参数信息类型::词条)
+        || !s.是本地参数(F,新方法参数信息类型::特征))return {};
+    // 动作与调用的实际字段由恢复锁后的同批读取判断，不遍历既有动作结果。
+    if(s.当前调用!=std::optional{N})return {};
+    std::optional<稳定编码> 已读正式概念;
+    std::optional<新特征匹配定义快照> 已读正式定义;
+重新读取归类特征:
+    std::set<稳定编码> fWanted{F};
+    基础联合节点查询结果 fBatch;
+    for(;;) {
+        fBatch=全局基础数据集.查询节点组完整结构({fWanted.begin(),fWanted.end()});
+        if(fBatch.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+        if(fBatch.状态!=基础结构操作状态::已完成 || fBatch.节点组.size()!=fWanted.size())
+            throw std::logic_error("local classification feature batch unavailable");
+        const auto current=std::find_if(fBatch.节点组.begin(),fBatch.节点组.end(),
+            [&](const auto& item){return item.查询节点==F;});
+        if(current==fBatch.节点组.end() || !current->快照)return {};
+        const auto before=fWanted.size();
+        std::optional<稳定编码> batchConcept;
+        for(const auto& field:current->快照->结构.字段组)if(field.字段节点==字段组[特征类型]) {
+            const auto ref=std::get_if<稳定编码>(&field.内容);
+            if(batchConcept || !ref)return {};batchConcept=*ref;
+        }
+        if(!batchConcept)return {};
+        for(const auto& field:current->快照->结构.字段组) {
+            if(field.字段节点!=字段组[历史命中引用] && field.字段节点!=字段组[当前材料]
+                && field.字段节点!=字段组[历史引用] && field.字段节点!=字段组[历史项引用]
+                && field.字段节点!=字段组[标准值引用] && field.字段节点!=字段组[完整实例区间引用]
+                && field.字段节点!=字段组[完整聚合引用])continue;
+            const auto id=std::get_if<稳定编码>(&field.内容);
+            if(!id || !有效(*id))throw std::logic_error("local classification history reference invalid");
+            fWanted.insert(*id);
+            if(field.字段节点==字段组[历史命中引用]) {
+                const auto hit=std::find_if(fBatch.节点组.begin(),fBatch.节点组.end(),
+                    [&](const auto& item){return item.查询节点==*id;});
+                if(hit==fBatch.节点组.end())continue;
+                if(!hit->快照)return {};
+                for(const auto& h:hit->快照->结构.字段组)if(h.字段节点==字段组[结构引用]) {
+                    const auto value=std::get_if<稳定编码>(&h.内容);
+                    if(!value || !有效(*value))throw std::logic_error("local classification hit value invalid");
+                    fWanted.insert(*value);
+                }
+            }
+        }
+        if(fWanted.size()==before)break;
+    }
+    const auto fItem=std::find_if(fBatch.节点组.begin(),fBatch.节点组.end(),
+        [&](const auto& item){return item.查询节点==F;});
+    const auto& fSnapshot=*fItem->快照;
+    const auto snapshotRef=[&](字段 key)->std::optional<稳定编码> {
+        const 基础字段关系* one=nullptr;
+        for(const auto& field:fSnapshot.结构.字段组)if(field.字段节点==字段组[key]) {
+            if(one)return {};one=&field;
+        }
+        const auto id=one ? std::get_if<稳定编码>(&one->内容) : nullptr;
+        return id ? std::optional{*id} : std::nullopt;
+    };
+    const auto actualConcept=snapshotRef(特征类型);
+    if(!actualConcept || snapshotRef(所属)!=std::optional{W})return {};
+    const auto formalConcept=*actualConcept;
+    if(已读正式概念!=std::optional{formalConcept}) {
+        lock.unlock();
+        已读正式定义=s.方法.读取模拟特征范围(formalConcept);
+        lock.lock();
+        if(!s.通用 || !s.样例就绪 || s.请求取消 || !s.归类动作在途
+            || s.当前调用!=std::optional{N} || !已读正式定义)return {};
+        已读正式概念=formalConcept;
+        goto 重新读取归类特征;
+    }
+    const auto currentDefinition=已读正式定义;
+    if(currentDefinition->材料类型!=特征概念材料物理类型::信息节点引用
+        || !currentDefinition->概念身份范围
+        || currentDefinition->比较规则!=特征概念比较规则::信息引用身份精确)
+        throw std::logic_error("classification feature is not a formal concept reference");
+    const auto invocation=s.归类调用组.find(N);
+    if(invocation==s.归类调用组.end() || invocation->second.动作!=std::optional{A}
+        || invocation->second.输入.词条!=W || invocation->second.输入.挂接特征!=F
+        || invocation->second.输入.采用概念!=C || invocation->second.回执)
+        throw std::logic_error("local classification candidate invocation identity invalid");
+    const auto currentFeature=读取模拟特征内部(F,false,nullptr,&*currentDefinition,&fSnapshot.结构,&fBatch.节点组);
+    if(!currentFeature)return {};
+    const auto& feature=*currentFeature;
+    本地归类候选 candidate;
+    // 只登记本次写入实际引用的已有节点身份；具体字段值仍仅来自原读取批次。
+    const auto finishCandidate=[&]() {
+        auto& q=candidate.请求;
+        std::sort(q.当前追加字段键组.begin(),q.当前追加字段键组.end(),[](const auto& a,const auto& b) {
+            return std::tie(a.所属节点,a.字段节点)<std::tie(b.所属节点,b.字段节点);
+        });
+        q.当前追加字段键组.erase(std::unique(q.当前追加字段键组.begin(),q.当前追加字段键组.end(),[](const auto& a,const auto& b) {
+            return a.所属节点==b.所属节点 && a.字段节点==b.字段节点;
+        }),q.当前追加字段键组.end());
+        // 旧写入口仍要求实际写键的字段集合；其余读取结果不作为事后变化门槛。
+        std::set<std::pair<稳定编码,稳定编码>> keys;
+        for(const auto& key:q.窄写字段键组)keys.emplace(key.所属节点,key.字段节点);
+        std::map<std::pair<稳定编码,稳定编码>,基础只读字段集合预期> required;
+        for(const auto& selector:q.只读预期.字段集合组) {
+            if(!selector.字段节点 || !selector.排除字段键组.empty())continue;
+            const auto key=std::make_pair(selector.节点,*selector.字段节点);
+            if(keys.contains(key))required.try_emplace(key,selector);
+        }
+        q.只读预期.字段集合组.clear();
+        for(auto& [key,selector]:required)q.只读预期.字段集合组.push_back(std::move(selector));
+        q.只读预期.外部关系集合组.clear();
+        q.只读预期.节点组.clear();
+        q.窄关系端点组.clear();
+        std::set<稳定编码> ids;
+        for(const auto& [host,key]:keys){ids.insert(host);ids.insert(key);}
+        for(const auto& key:q.当前追加字段键组) {
+            ids.insert(key.所属节点);ids.insert(key.字段节点);
+        }
+        for(const auto node:q.删除节点组)ids.insert(node);
+        const auto content=[&](const auto& value) {
+            if(const auto ref=std::get_if<稳定编码>(&value))ids.insert(*ref);
+        };
+        for(const auto& node:q.新节点组)for(const auto& field:node.字段组) {
+            ids.insert(field.字段节点);content(field.内容);
+        }
+        for(const auto& field:q.追加字段组) {
+            ids.insert(field.所属节点);ids.insert(field.字段节点);content(field.内容);
+        }
+        for(const auto& field:q.当前字段赋值组) {
+            ids.insert(field.所属节点);ids.insert(field.字段节点);content(field.内容);
+        }
+        for(const auto& field:q.当前整数递增组) {
+            ids.insert(field.所属节点);ids.insert(field.字段节点);
+        }
+        std::set<稳定编码> oldFields(q.删除字段关系组.begin(),q.删除字段关系组.end());
+        for(const auto& field:q.替换字段组) {
+            oldFields.insert(field.字段关系);content(field.新内容);
+        }
+        for(const auto& selector:q.只读预期.字段集合组)for(const auto& field:selector.字段组)
+            if(oldFields.contains(field.编码)) {
+                ids.insert(field.所属节点);ids.insert(field.字段节点);content(field.内容);
+            }
+        const auto endpoint=[&](const auto& value) {
+            if(const auto ref=std::get_if<稳定编码>(&value)) {
+                ids.insert(*ref);q.窄关系端点组.push_back(*ref);
+            }
+        };
+        for(const auto& relation:q.追加外部关系组) {
+            endpoint(relation.源节点);endpoint(relation.目标节点);
+        }
+        for(const auto id:ids)q.只读预期.节点组.push_back(基础节点{id});
+        // 调用方继续持有样例锁至提交；在事实发表前预留清理账本容量和写入来源槽。
+        s.预留追加(q);
+        if(candidate.值改变)(void)s.准备写回槽(F);
+    };
+    candidate.待填回执.实际输入=invocation->second.输入;
+    candidate.待填回执.动作=A;
+    candidate.待填回执.名称关系组.reserve(1);
+    candidate.名称=准备本地归类名称(W,C,F,candidate.请求);
+    if(!candidate.名称.已取得)return {};
+    // 恢复样例锁后按同一批次取得实际动作与调用身份，避免沿用释放锁之前的读数。
+    const auto actionBatch=全局基础数据集.查询节点组完整结构({A,N,W});
+    if(actionBatch.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+    if(actionBatch.状态!=基础结构操作状态::已完成)return {};
+    const auto snap=[&](稳定编码 id)->const 基础联合节点快照* {
+        const auto it=std::find_if(actionBatch.节点组.begin(),actionBatch.节点组.end(),
+            [&](const auto& row){return row.查询节点==id;});
+        return it==actionBatch.节点组.end() || !it->快照 ? nullptr : &*it->快照;
+    };
+    const auto actionSnap=snap(A), callSnap=snap(N), wordSnap=snap(W);
+    if(!actionSnap || !callSnap || !wordSnap)return {};
+    const auto refIs=[&](const 基础联合节点快照& source,字段 key,稳定编码 value) {
+        const 基础字段关系* found=nullptr;
+        for(const auto& field:source.结构.字段组)if(field.字段节点==字段组[key]) {
+            if(found)return false;found=&field;
+        }
+        const auto ref=found ? std::get_if<稳定编码>(&found->内容) : nullptr;
+        return ref && *ref==value;
+    };
+    const auto numberIs=[&](const 基础联合节点快照& source,字段 key,std::int64_t value) {
+        const 基础字段关系* found=nullptr;
+        for(const auto& field:source.结构.字段组)if(field.字段节点==字段组[key]) {
+            if(found)return false;found=&field;
+        }
+        const auto raw=found ? std::get_if<基础值>(&found->内容) : nullptr;
+        const auto number=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+        return number && *number==value;
+    };
+    if(!refIs(*actionSnap,来源引用,N) || !refIs(*actionSnap,所属,W)
+        || !refIs(*actionSnap,状态特征引用,F) || !refIs(*callSnap,调用主动作引用,A)
+        || !numberIs(*actionSnap,类型,动作种类) || !refIs(*actionSnap,根,模拟世界树根节点)
+        || !numberIs(*wordSnap,类型,词条种类))return {};
+    基础只读外部关系集合预期 actionParents{A,false,基础外部关系类型::父子,{},{},{}};
+    for(const auto& edge:actionSnap->入向外部关系组)
+        if(edge.类型==基础外部关系类型::父子)actionParents.关系组.push_back(edge);
+    if(actionParents.关系组.size()!=1 || actionParents.关系组.front().源节点!=s.通用场景)return {};
+    const auto prepareProgress=[&]() {
+        auto& q=candidate.请求;
+        const bool writes=!q.新节点组.empty() || !q.追加字段组.empty() || !q.替换字段组.empty()
+            || !q.追加外部关系组.empty() || !q.删除字段关系组.empty()
+            || !q.删除节点组.empty() || !q.删除外部关系组.empty()
+            || !q.当前字段赋值组.empty() || !q.当前整数递增组.empty();
+        if(!writes || !s.记录写回)return;
+        q.当前整数递增组.push_back({N,字段组[调用进展值]});
+    };
+    candidate.待填回执.新增名称=candidate.名称.新建名称;
+    if(!candidate.名称.名称引用)throw std::logic_error("local classification name candidate missing");
+    if(const auto id=std::get_if<稳定编码>(&*candidate.名称.名称引用))
+        candidate.待填回执.名称关系组.push_back(*id);
+    else if(std::holds_alternative<基础组内节点引用>(*candidate.名称.名称引用))
+        candidate.待填回执.名称关系组.push_back({}); // 仅供发表后按原子结果槽填回。
+    else throw std::logic_error("local classification name candidate type invalid");
+    if(!candidate.名称.新建名称) {candidate.概念分支已准备=true;prepareProgress();finishCandidate();return candidate;}
+    candidate.目标材料=基础组内字段内容{C};
+    candidate.值改变=feature.当前值!=std::optional<新特征准确值>{新特征准确值{C}};
+    candidate.概念分支已准备=true;
+    candidate.请求.当前字段赋值组.push_back({feature.节点,字段组[当前材料],C});
+    const auto history=准备本地归类历史更新(feature.节点,*candidate.目标材料,candidate.请求,fSnapshot.结构,fBatch.节点组);
+    candidate.删除的本地字段.insert(candidate.删除的本地字段.end(),
+        history.删除的本地字段.begin(),history.删除的本地字段.end());
+    if(!candidate.值改变) {prepareProgress();finishCandidate();return candidate;}
+    // 正式owner读取已结束；调用方继续持样例锁，按最新状态准备本次状态与动态。
+    if(s.模拟步骤==(std::numeric_limits<std::int64_t>::max)())
+        throw std::overflow_error("local classification time exhausted");
+    candidate.新步骤=s.模拟步骤+1;
+    // 跨领域读取已结束，当前持样例锁直到发表；状态选择使用此时读取的材料。
+    {
+        // 以F的入向状态特征引用扩批，再从同一批解码并选择最新状态。
+        std::set<稳定编码> wanted{F};
+        基础联合节点查询结果 batch;
+        std::set<稳定编码> sources;
+        for(;;) {
+            batch=全局基础数据集.查询节点组完整结构({wanted.begin(),wanted.end()});
+            if(batch.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+            if(batch.状态!=基础结构操作状态::已完成 || batch.节点组.size()!=wanted.size())
+                throw std::logic_error("classification state batch unavailable");
+            const auto f=std::find_if(batch.节点组.begin(),batch.节点组.end(),[&](const auto& item){return item.查询节点==F;});
+            if(f==batch.节点组.end() || !f->快照)return {};
+            sources.clear();
+            for(const auto& ref:f->快照->入向字段组)if(ref.字段节点==字段组[状态特征引用]
+                && std::find(s.通用节点.begin(),s.通用节点.end(),ref.所属节点)!=s.通用节点.end())sources.insert(ref.所属节点);
+            const auto before=wanted.size();wanted.insert(sources.begin(),sources.end());
+            if(wanted.size()==before)break;
+        }
+        const auto currentRow=std::find_if(batch.节点组.begin(),batch.节点组.end(),
+            [&](const auto& item){return item.查询节点==F;});
+        if(currentRow==batch.节点组.end() || !currentRow->快照)return {};
+        std::optional<稳定编码> old;
+        for(const auto& field:currentRow->快照->结构.字段组) {
+            if(field.字段节点!=字段组[当前材料])continue;
+            if(const auto* value=std::get_if<稳定编码>(&field.内容))old=*value;
+            break;
+        }
+        std::optional<稳定编码> latest;
+        std::optional<std::int64_t> latestTime;
+        std::optional<新特征准确值> latestValue;
+        bool 同时刻不唯一=false,最新值无法解释=false;
+        for(const auto node:sources) {
+            const auto row=std::find_if(batch.节点组.begin(),batch.节点组.end(),[&](const auto& item){return item.查询节点==node;});
+            if(row==batch.节点组.end() || !row->快照)return {};
+            const auto& snap=*row->快照;
+            const auto fields=[&](字段 key) {
+                std::vector<基础字段关系> out;
+                for(const auto& f:snap.结构.字段组)if(f.字段节点==字段组[key])out.push_back(f);
+                return out;
+            };
+            const auto number=[&](字段 key)->std::optional<std::int64_t> {
+                const auto fs=fields(key);if(fs.size()!=1)return {};
+                const auto raw=std::get_if<基础值>(&fs.front().内容);
+                const auto value=raw ? std::get_if<std::int64_t>(&raw->材料) : nullptr;
+                return value ? std::optional{*value} : std::nullopt;
+            };
+            const auto ref=[&](字段 key)->std::optional<稳定编码> {
+                const auto fs=fields(key);if(fs.size()!=1)return {};
+                const auto value=std::get_if<稳定编码>(&fs.front().内容);
+                return value ? std::optional{*value} : std::nullopt;
+            };
+            if(number(类型)!=状态种类)continue;
+            if(ref(根)!=std::optional{模拟世界树根节点})continue;
+            基础只读外部关系集合预期 parents{node,false,基础外部关系类型::父子,{},{},{}};
+            for(const auto& edge:snap.入向外部关系组)if(edge.类型==基础外部关系类型::父子)parents.关系组.push_back(edge);
+            if(parents.关系组.size()!=1 || parents.关系组.front().源节点!=s.通用场景)continue;
+            if(ref(所属)!=std::optional{W} || ref(状态特征引用)!=std::optional{F})continue;
+            const auto time=number(步骤),sem=number(时间语义);
+            if(!time || *time<0 || !sem || *sem!=static_cast<std::int64_t>(新状态时间语义::抽象相对))
+                throw std::logic_error("local classification state snapshot malformed");
+            std::optional<新特征准确值> value;
+            if(const auto v=ref(当前材料))value=新特征准确值{*v};
+            else if(const auto v=number(数值))value=新特征准确值{*v};
+            // 保留最新状态的位置；无法解释的值不能冒充未知，也不能回退到较旧状态。
+            const bool 无法解释=!value && (!fields(当前材料).empty() || !fields(数值).empty());
+            if(!latestTime || *time>*latestTime) {
+                latest=node;latestTime=*time;latestValue=std::move(value);
+                最新值无法解释=无法解释;同时刻不唯一=false;
+            } else if(*time==*latestTime && latest && *latest!=node)同时刻不唯一=true;
+        }
+        bool 与当前值相同=latest.has_value() && !old && !latestValue;
+        if(old && latestValue)if(const auto stateValue=std::get_if<稳定编码>(&*latestValue)) {
+            if(*stateValue==*old)与当前值相同=true;
+
+        }
+        if(latest && latestTime && !同时刻不唯一 && !最新值无法解释 && 与当前值相同) {
+            if(*latestTime<*candidate.新步骤)candidate.前状态=*latest;
+            else candidate.待填回执.动态原因=新词条动态记录原因::时间不递增;
+        }
+    }
+    if(!candidate.前状态 && candidate.待填回执.动态原因!=新词条动态记录原因::时间不递增)
+        candidate.待填回执.动态原因=新词条动态记录原因::无前态;
+    const auto add=[&](节点种类 kind) {
+        const auto slot=candidate.请求.新节点组.size();
+        candidate.请求.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(kind)}},
+            {字段组[根],模拟世界树根节点}}});
+        candidate.请求.追加外部关系组.push_back({s.通用场景,基础组内节点引用{slot},基础外部关系类型::父子});
+        return slot;
+    };
+    candidate.后状态槽=add(状态种类);
+    auto& after=candidate.请求.新节点组[*candidate.后状态槽].字段组;
+    after.insert(after.end(),{{字段组[所属],W},{字段组[状态特征引用],feature.节点},
+        {字段组[当前材料],*candidate.目标材料},
+        {字段组[动作引用],A},{字段组[步骤],基础值{*candidate.新步骤}},
+        {字段组[时间语义],基础值{static_cast<std::int64_t>(新状态时间语义::抽象相对)}}});
+    if(candidate.前状态) {
+        candidate.待填回执.动态原因=新词条动态记录原因::已形成;
+        candidate.变化槽=add(动态种类);
+        auto& change=candidate.请求.新节点组[*candidate.变化槽].字段组;
+        change.insert(change.end(),{{字段组[所属],W},{字段组[状态特征引用],feature.节点},
+            {字段组[前状态引用],*candidate.前状态},{字段组[后状态引用],基础组内节点引用{*candidate.后状态槽}},
+            {字段组[动作引用],A},{字段组[来源引用],N},{字段组[方法直接写入值],基础值{std::int64_t{1}}}});
+        candidate.请求.当前追加字段键组.push_back({A,字段组[动态引用]});
+        candidate.请求.当前追加字段键组.push_back({N,字段组[动态引用]});
+        candidate.请求.追加字段组.push_back({A,字段组[动态引用],基础组内节点引用{*candidate.变化槽}});
+        candidate.请求.追加字段组.push_back({N,字段组[动态引用],基础组内节点引用{*candidate.变化槽}});
+    }
+    prepareProgress();
+    finishCandidate();
+    return candidate;
+}
+
+新本能词条归类回执 新_模拟世界类::填回本地归类回执(
+    本地归类候选&& candidate,const 基础节点组追加结果& published) {
+    if(published.状态!=基础节点组追加状态::已完成
+        || published.新节点组.size()!=candidate.请求.新节点组.size()
+        || candidate.待填回执.名称关系组.size()!=1 || !candidate.名称.名称引用)
+        throw std::logic_error("local classification publication receipt shape invalid");
+    const auto resolve=[&](std::size_t index) {
+        if(index>=published.新节点组.size() || !有效(published.新节点组[index]))
+            throw std::logic_error("local classification published node slot invalid");
+        return published.新节点组[index];
+    };
+    auto& receipt=candidate.待填回执;
+    if(const auto slot=std::get_if<基础组内节点引用>(&*candidate.名称.名称引用))
+        receipt.名称关系组[0]=resolve(slot->索引);
+    else if(const auto existing=std::get_if<稳定编码>(&*candidate.名称.名称引用))
+        receipt.名称关系组[0]=*existing;
+    else throw std::logic_error("local classification name receipt invalid");
+    if(candidate.后状态槽)receipt.新状态=resolve(*candidate.后状态槽);
+    if(candidate.变化槽)receipt.变化动态=resolve(*candidate.变化槽);
+    return std::move(receipt);
+}
+
+// 只接管已经成功的L1结果；调用方须从准备至接管持续持有样例锁。
+const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果(
+    稳定编码 call,本地归类候选&& candidate,基础节点组追加结果&& published,
+    std::unique_lock<std::recursive_mutex>& lock) {
+    if(!实现_ || !lock.owns_lock() || lock.mutex()!=&实现_->互斥)
+        throw std::logic_error("local classification receipt requires sample lock");
+    auto& s=*实现_;
+    const auto invocation=s.归类调用组.find(call);
+    if(invocation==s.归类调用组.end() || invocation->second.回执
+        || invocation->second.动作!=std::optional{candidate.待填回执.动作})
+        throw std::logic_error("local classification invocation receipt slot unavailable");
+    if(published.状态!=基础节点组追加状态::已完成
+        || published.新节点组.size()!=candidate.请求.新节点组.size())
+        throw std::logic_error("local classification receipt does not match publication");
+    // 预留在发表前完成；原子结果中的身份只登记一次，不重新执行写入。
+    s.收集追加(published);
+    for(const auto old:candidate.删除的本地字段)
+        s.通用字段.erase(std::remove(s.通用字段.begin(),s.通用字段.end(),old),s.通用字段.end());
+    if(candidate.新步骤)s.模拟步骤=*candidate.新步骤;
+    if(candidate.值改变)
+        if(auto* slot=s.准备写回槽(candidate.待填回执.实际输入.挂接特征))*slot=实现::写入来源::方法;
+    static_assert(std::is_nothrow_move_constructible_v<新本能词条归类回执>);
+    static_assert(std::is_nothrow_move_assignable_v<std::vector<基础当前字段变化>>);
+    invocation->second.实际字段变化=std::move(published.当前字段变化组);
+    invocation->second.回执.emplace(填回本地归类回执(std::move(candidate),published));
+    return *invocation->second.回执;
+}
+
+新词条归类提交结果 新_模拟世界类::读取本地归类结果(const 方法参数场景& scene) const {
+    using S=新词条归类运行状态;
+    if(!实现_ || scene.用途()!=新方法参数场景用途::模拟 || scene.获取模拟运行接口()!=this)
+        throw std::invalid_argument("local classification result scene owner differs");
+    const auto& s=*实现_;
+    std::lock_guard lock(s.互斥);
+    if(scene.方法节点()!=s.通用方法 || scene.全部角色绑定()!=s.通用绑定 || !s.当前调用)
+        return {S::需重新组织};
+    const auto it=s.归类调用组.find(*s.当前调用);
+    if(it!=s.归类调用组.end() && it->second.回执)return {S::已完成,it->second.回执,{}};
+    if(!s.样例就绪 || s.请求取消)return {S::已停止};
+    return {S::需重新组织};
+}
+
+// 按已登记归类调用组合发表，返回原调用的正式回执。
+新词条归类提交结果 新_模拟世界类::提交本地归类候选(const 方法参数场景& scene) {
+    using S=新词条归类运行状态;
+    using L=基础节点组追加状态;
+    if(!实现_ || scene.用途()!=新方法参数场景用途::模拟 || scene.获取模拟运行接口()!=this)
+        throw std::invalid_argument("local classification submit scene owner differs");
+    auto& s=*实现_;
+    std::lock_guard phase(s.归类动作阶段互斥);
+    {
+        std::lock_guard lock(s.互斥);
+        if(scene.方法节点()!=s.通用方法 || scene.全部角色绑定()!=s.通用绑定 || !s.当前调用)
+            return {S::需重新组织};
+        const auto old=s.归类调用组.find(*s.当前调用);
+        if(old!=s.归类调用组.end() && old->second.回执)return {S::已完成,old->second.回执,{}};
+        if(!s.样例就绪 || s.请求取消)return {S::已停止};
+        s.归类动作在途=true;
+    }
+    struct 阶段租约 final {
+        实现& 所有者;
+        ~阶段租约(){std::lock_guard lock(所有者.互斥);所有者.归类动作在途=false;}
+    } lease{s};
+    for(;;) {
+        if(请求停止已成立())return {S::已停止};
+        std::unique_lock lock(s.互斥);
+        if(!s.样例就绪 || s.请求取消)return {S::已停止};
+        if(scene.方法节点()!=s.通用方法 || scene.全部角色绑定()!=s.通用绑定 || !s.当前调用)
+            return {S::需重新组织};
+        const auto N=*s.当前调用;
+        const auto it=s.归类调用组.find(N);
+        if(it==s.归类调用组.end() || !it->second.动作)return {S::需重新组织};
+        if(it->second.回执)return {S::已完成,it->second.回执,{}};
+        const auto A=*it->second.动作;
+        const auto W=it->second.输入.词条,C=it->second.输入.采用概念,F=it->second.输入.挂接特征;
+        bool 已观察停止=false;
+        auto candidate=准备本地归类候选(W,C,N,A,F,lock,已观察停止);
+        // 准备期间可能为跨 owner 读取释放样例锁；停止后不能报告为材料需重新组织。
+        if(!s.样例就绪 || s.请求取消)return {S::已停止};
+        if(已观察停止) {
+            lock.unlock();
+            (void)处理隔离停止(true);
+            return {S::已停止};
+        }
+        if(!candidate || !candidate->概念分支已准备)return {S::需重新组织};
+        const auto& q=candidate->请求;
+        const bool hasWrites=!q.新节点组.empty() || !q.追加字段组.empty() || !q.替换字段组.empty()
+            || !q.追加外部关系组.empty() || !q.删除字段关系组.empty()
+            || !q.删除节点组.empty() || !q.删除外部关系组.empty()
+            || !q.当前字段赋值组.empty() || !q.当前整数递增组.empty();
+        基础节点组追加结果 result;
+        if(hasWrites)result=全局基础数据集.原子追加节点组(q);
+        else result.状态=L::已完成; // 已有名称、值无需再次写入。
+        if(result.状态==L::预期不符 || result.状态==L::节点不存在 || result.状态==L::引用不存在) {
+            if(result.状态==L::节点不存在 || result.状态==L::引用不存在) {
+                std::vector<稳定编码> ids;
+                ids.reserve(q.只读预期.节点组.size());
+                for(const auto& node:q.只读预期.节点组)ids.push_back(node.编码);
+                const auto current=全局基础数据集.查询节点组完整结构(ids);
+                if(current.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                if(current.状态!=基础结构操作状态::已完成)
+                    throw std::logic_error("local classification referenced node reread failed");
+                if(current.节点组.size()!=ids.size()
+                    || std::any_of(current.节点组.begin(),current.节点组.end(),[](const auto& row){return !row.快照;}))
+                    return {S::需重新组织};
+            }
+            lock.unlock();continue;
+        }
+        if(result.状态==L::资源失败)throw std::bad_alloc{};
+        if(result.状态!=L::已完成)throw std::logic_error("local classification atomic publication rejected");
+        const auto& receipt=接管本地归类结果(N,std::move(*candidate),std::move(result),lock);
+        return {S::已完成,receipt,{}};
+    }
+}
+
+新词条归类动作结果 新_模拟世界类::准备本地归类动作(const 方法参数场景& scene) {
+    using S=新词条归类运行状态;
+    if(!实现_ || scene.用途()!=新方法参数场景用途::模拟 || scene.获取模拟运行接口()!=this)
+        throw std::invalid_argument("local classification scene owner differs");
+    auto& s=*实现_;
+    std::lock_guard phase(s.归类动作阶段互斥);
+    {
+        std::lock_guard lock(s.互斥);
+        if(!s.样例就绪 || s.请求取消)return {S::已停止};
+        s.归类动作在途=true;
+    }
+    struct 阶段租约 final {
+        实现& 所有者;
+        ~阶段租约() {std::lock_guard lock(所有者.互斥);所有者.归类动作在途=false;}
+    } lease{s};
+    for(;;) {
+    {
+        std::lock_guard lock(s.互斥);
+        if(!s.样例就绪 || s.请求取消)return {S::已停止};
+    }
+    const auto call=读取当前调用身份();
+    {
+        std::lock_guard lock(s.互斥);
+        if(s.当前调用!=std::optional{call.调用节点} || !s.记录写回)return {S::需重新组织};
+        if(scene.方法节点()!=s.通用方法 || scene.全部角色绑定()!=s.通用绑定 || !s.归类主体来源)
+            throw std::invalid_argument("local classification sample differs");
+        const auto prior=s.归类调用组.find(call.调用节点);
+        if(prior!=s.归类调用组.end() && (prior->second.动作 || call.主动作)) {
+            if(prior->second.动作 && call.主动作!=prior->second.动作)
+                throw std::logic_error("local classification action identity differs");
+            if(!prior->second.动作)prior->second.动作=call.主动作;
+            return {S::已就绪,prior->second.动作,prior->second.条件,prior->second.输入,{}};
+        }
+        if(prior==s.归类调用组.end() && call.主动作)
+            throw std::logic_error("local classification action input missing");
+    }
+    if(请求停止已成立())return {S::已停止};
+    const std::array kinds{新方法参数信息类型::词条,新方法参数信息类型::特征,
+        新方法参数信息类型::存在,新方法参数信息类型::存在};
+    std::array<const 新方法有序参数引用*,4> p{};
+    if(scene.全部角色绑定().size()!=p.size())throw std::invalid_argument("local classification requires four parameters");
+    for(std::size_t i=0;i<p.size();++i) {
+        p[i]=scene.查询参数(static_cast<std::uint32_t>(i+1));
+        if(!p[i] || p[i]->信息类型!=kinds[i])throw std::invalid_argument("local classification parameter shape invalid");
+    }
+    新词典归类信息概念组 config;
+    {
+        std::lock_guard lock(s.互斥);
+        const auto it=s.通用参数.find(p[2]->信息节点);
+        if(it==s.通用参数.end() || !it->second.复制归类材料
+            || s.本地执行主体!=std::optional{p[3]->信息节点})
+            throw std::logic_error("local classification material or actor unavailable");
+        config=it->second.复制归类材料->范围;
+    }
+    const auto word=scene.读取词条参数挂接(1);
+    if(word.状态==新方法词条参数读取状态::资源失败)throw std::bad_alloc{};
+    if(word.状态==新方法词条参数读取状态::参数已失效)return {S::需重新组织};
+    if(word.状态!=新方法词条参数读取状态::已读取 || !word.信息)
+        throw std::logic_error("local classification word unavailable");
+    const auto bound=scene.读取绑定特征(p[1]->信息节点);
+    if(!bound)throw std::logic_error("local classification bound feature unavailable");
+    const auto definition=读取本地特征实际定义(p[1]->信息节点);
+    if(!definition)throw std::logic_error("local classification feature definition unavailable");
+    const auto f=scene.读取存在参数特征(1,definition->特征类型根);
+    if(f.状态==新方法参数特征读取状态::定义前提已变化){std::this_thread::yield();continue;}
+    if(f.状态==新方法参数特征读取状态::特征未取得)return {S::条件未具备};
+    if(!f.特征 || (f.状态!=新方法参数特征读取状态::已读取
+        && f.状态!=新方法参数特征读取状态::当前值未取得))
+        throw std::logic_error("local classification feature unavailable");
+    if(f.特征->节点!=p[1]->信息节点)return {S::需重新组织};
+    const auto r=scene.读取正式信息参数保护(3);
+    if(r.状态==正式信息参数读取状态::资源失败)throw std::bad_alloc{};
+    if(r.状态==正式信息参数读取状态::前提已变化){std::this_thread::yield();continue;}
+    if(r.状态==正式信息参数读取状态::信息不存在)return {S::需重新组织};
+    if(r.状态!=正式信息参数读取状态::已读取 || !r.信息)throw std::logic_error("local classification input unavailable");
+    const auto field=[&](稳定编码 key)->const 正式内容值& {
+        const auto it=std::find_if(r.信息->直接内容组.begin(),r.信息->直接内容组.end(),
+            [&](const auto& x){return x.特征类型==key;});
+        if(it==r.信息->直接内容组.end())throw std::logic_error("local classification input field absent");
+        return it->内容;
+    };
+    const auto& target=field(config.目标词条FT);const auto& adopted=field(config.采用概念FT);
+    if(target.种类!=正式内容值种类::词条引用 || adopted.种类!=正式内容值种类::概念引用)
+        throw std::logic_error("local classification input field type invalid");
+    if(target.状态!=正式内容值状态::已知 || !target.值 || adopted.状态!=正式内容值状态::已知 || !adopted.值)
+        return {S::条件未具备};
+    const auto W=std::get_if<稳定编码>(&*target.值);const auto C=std::get_if<稳定编码>(&*adopted.值);
+    if(!W || !C || !有效(*C))throw std::logic_error("local classification reference invalid");
+    if(*W!=p[0]->信息节点)return {S::需重新组织};
+    if(!读取模拟普通名称(*W) || !读取模拟全部名称概念(*W))return {S::条件未具备};
+    新词条归类本能输入 input{*W,p[1]->信息节点,p[2]->信息节点,p[3]->信息节点,*C,{},std::nullopt};
+    if(f.特征->当前值) {
+        const auto* current=std::get_if<稳定编码>(&*f.特征->当前值);
+        if(!current || !有效(*current))throw std::logic_error("local classification concept identity invalid");
+        input.动作前概念组.push_back(*current);
+    }
+    新本能函数本次条件 conditions;conditions.执行分支节点=scene.执行分支节点();
+    for(const auto& binding:scene.全部角色绑定()) {
+        if(!binding.有序引用)throw std::logic_error("local classification ordered binding missing");
+        新本能函数条件角色材料 row;row.参数角色节点=binding.参数角色节点;
+        row.世界场景节点=binding.世界场景节点;row.有序引用=binding.有序引用;
+        if(binding.有序引用->序号==2)row.实际特征组.push_back({f.特征->节点,f.特征->当前值});
+        conditions.参数角色组.push_back(std::move(row));
+    }
+    {
+        std::lock_guard lock(s.互斥);
+        if(s.当前调用!=std::optional{call.调用节点} || !s.记录写回)return {S::需重新组织};
+        const auto it=s.归类调用组.find(call.调用节点);
+        if(it!=s.归类调用组.end() && it->second.动作)
+            return {S::已就绪,it->second.动作,it->second.条件,it->second.输入,{}};
+        if(it==s.归类调用组.end())s.归类调用组.emplace(call.调用节点,实现::本地归类调用{std::move(input),std::move(conditions)});
+        else it->second=实现::本地归类调用{std::move(input),std::move(conditions)};
+    }
+    const auto action=建立参数动作(scene,{4,1,2});
+    if(!有效(action))return {S::已停止};
+    std::lock_guard lock(s.互斥);
+    const auto it=s.归类调用组.find(call.调用节点);
+    if(it==s.归类调用组.end())throw std::logic_error("local classification call record lost");
+    it->second.动作=action;
+    return {S::已就绪,action,it->second.条件,it->second.输入,{}};
+    }
+}
+
 稳定编码 新_模拟世界类::建立参数动作(const 方法参数场景& scene,const 新模拟参数动作请求& request) {
     if(!实现_||scene.用途()!=新方法参数场景用途::模拟||scene.获取模拟运行接口()!=this)
         throw std::invalid_argument("simulation parameter action scene owner differs");
@@ -5429,7 +6555,7 @@ std::vector<新方法初始场景事实限定> 新_模拟世界类::读取本次
     if(!特征)throw std::invalid_argument("simulation parameter action feature absent");
     auto type=特征->特征概念节点;
     if(word) {
-        const auto definition=实现_->方法.读取模拟特征范围(type);
+        const auto definition=读取本地特征实际定义(参数->信息节点);
         if(!definition)throw std::logic_error("local word action feature definition absent");
         type=definition->特征类型根;
     }
@@ -5579,19 +6705,29 @@ std::uint64_t 新_模拟世界类::读取进展序号() const {
     if(!value||*value<0)throw std::runtime_error("isolation progress unavailable");
     return static_cast<std::uint64_t>(*value);
 }
-bool 新_模拟世界类::请求停止已成立() {
+bool 新_模拟世界类::请求停止已成立() { return 处理隔离停止(false); }
+bool 新_模拟世界类::处理隔离停止(bool 已观察停止) {
     if(!实现_)throw std::runtime_error("isolation owner absent");
     auto& s=*实现_;std::unique_lock lock(s.互斥);
+    // 已没有活动调用时，本次调用无需继续；不尝试读取已关闭的调用窗口。
+    if(!s.通用 || !s.当前调用 || !s.记录写回)return true;
     const auto id=读取当前调用身份();
     const auto cb=s.停止检查;const bool prior=s.请求取消;
-    lock.unlock();const bool stop=prior||(cb&&cb());lock.lock();
-    if(s.当前调用!=std::optional{id.调用节点}||!s.记录写回)throw std::runtime_error("isolation stop call changed");
+    lock.unlock();const bool stop=prior||已观察停止||(cb&&cb());lock.lock();
+    // 回调在锁外执行；原调用已关闭或被替换时，本次旧调用停止，不操作新的调用。
+    if(s.当前调用!=std::optional{id.调用节点}||!s.记录写回)return true;
     if(stop&&!s.请求取消) {
-        const auto f=唯一字段(id.调用节点,调用取消值);
-        if(!f)throw std::runtime_error("isolation cancellation field absent");
-        基础节点组追加请求 q;q.替换字段组.push_back({f->编码,基础值{std::int64_t{1}}});
-        补齐隔离追加联合预期(q);
-        if(全局基础数据集.原子追加节点组(q).状态!=基础节点组追加状态::已完成)throw std::runtime_error("isolation cancellation publication failed");
+        for(;;) {
+            const auto f=唯一字段(id.调用节点,调用取消值);
+            if(!f)throw std::runtime_error("isolation cancellation field absent");
+            基础节点组追加请求 q;q.替换字段组.push_back({f->编码,基础值{std::int64_t{1}}});
+            补齐隔离追加联合预期(q);
+            const auto result=全局基础数据集.原子追加节点组(q);
+            if(result.状态==基础节点组追加状态::预期不符)continue;
+            if(result.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
+            if(result.状态!=基础节点组追加状态::已完成)throw std::runtime_error("isolation cancellation publication failed");
+            break;
+        }
         s.请求取消=true;
     }
     return s.请求取消;
@@ -5601,7 +6737,9 @@ std::optional<新状态信息> 新_模拟世界类::读取本地状态(稳定编
     const auto& s=*实现_;std::lock_guard lock(s.互斥);
     if(!s.通用||std::find(s.通用节点.begin(),s.通用节点.end(),n)==s.通用节点.end()
         ||读值(n,类型)!=状态种类||读引用(n,根)!=模拟世界树根节点)return {};
-    const auto E=读引用(n,所属),F=读引用(n,状态特征引用),FT=读引用(n,特征类型);
+    const auto E=读引用(n,所属),F=读引用(n,状态特征引用);
+    // 状态的特征类型来自来源特征的当前定义；旧状态上保存的类型不再作为事实。
+    const auto FT=F ? 读引用(*F,特征类型) : std::nullopt;
     const auto time=读值(n,步骤),sem=读值(n,时间语义);
     if(!E||!F||!FT||!time||*time<0||!sem||*sem!=static_cast<std::int64_t>(新状态时间语义::抽象相对))
         throw std::runtime_error("isolation state shape corrupt");
@@ -5719,6 +6857,35 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
     新隔离调用证据 r;r.身份={N,s.通用方法,s.通用场景,读引用(N,调用主动作引用)};r.已请求取消=*cancelled!=0;
     const auto dictionary=读取本地词典调用(N);
     if(dictionary)r.词典读取=dictionary->回执;
+    // 只交付本调用已保存的归类回执，不从当前特征重建历史结果。
+    const auto classification=s.归类调用组.find(N);
+    if(classification!=s.归类调用组.end())r.词条归类=classification->second.回执;
+    if(s.归类主体来源)r.归类名称读取组=s.归类名称读取组;
+    if(s.归类主体来源)for(std::size_t i=0;i<s.内容读取组.size();++i) {
+        const auto& trace=s.内容读取组[i];
+        const auto 序号=static_cast<std::uint64_t>(i);
+        if(trace.类别==7) {
+            const auto* 内容=std::get_if<正式信息参数投影>(&trace.投影);
+            if(!内容 || !trace.归类结果已提交.has_value())
+                throw std::logic_error("classification material read trace malformed");
+            r.归类材料读取组.push_back({*内容,trace.参数位置组,trace.动作前,*trace.归类结果已提交,序号});
+        } else if(trace.类别==6) {
+            const auto* 内容=std::get_if<新特征信息>(&trace.投影);
+            if(!内容 || !trace.归类结果已提交.has_value())
+                throw std::logic_error("classification feature read trace malformed");
+            r.归类特征读取组.push_back({*内容,trace.参数位置组,trace.动作前,*trace.归类结果已提交,序号});
+        } else if(trace.类别==8) {
+            const auto* 内容=std::get_if<新特征值信息>(&trace.投影);
+            if(!内容 || !trace.归类结果已提交.has_value())
+                throw std::logic_error("classification value read trace malformed");
+            r.归类值读取组.push_back({*内容,trace.动作前,*trace.归类结果已提交,序号});
+        } else {
+            if(!trace.归类结果已提交.has_value())
+                throw std::logic_error("classification other read trace stage missing");
+            r.归类其他读取组.push_back({trace.类别,trace.节点,trace.参数位置组,trace.投影,
+                trace.动作前,*trace.归类结果已提交,序号});
+        }
+    }
     if(r.身份.主动作){if(!读取本地动作(*r.身份.主动作))throw std::runtime_error("isolation main action evidence corrupt");r.阶段动作组.push_back(*r.身份.主动作);}
     for(const auto& f:全局基础数据集.查询字段(N,字段组[调用阶段成员])) {
         const auto* J=std::get_if<稳定编码>(&f.内容);const auto A=J?读引用(*J,动作引用):std::nullopt;

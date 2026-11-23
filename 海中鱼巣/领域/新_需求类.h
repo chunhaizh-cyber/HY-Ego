@@ -102,6 +102,7 @@ struct 新需求目标定义 final {
     std::optional<新需求变化方向> 目标变化方向;
     std::optional<新需求引用内容定位> 引用内容定位;
     std::optional<新需求新增成员见证约束> 新增成员来源见证;
+    特征取值位置 取值位置 = 特征取值位置::当前值;
     friend bool operator==(const 新需求目标定义&,
         const 新需求目标定义&) = default;
 };
@@ -132,6 +133,7 @@ struct 新部分服务要求目标 final {
     std::optional<新需求目标形式> 目标形式;
     std::optional<稳定编码> 目标值域概念节点, 目标比较关系概念节点;
     std::optional<新需求变化方向> 目标变化方向;
+    特征取值位置 取值位置 = 特征取值位置::当前值;
     friend bool operator==(const 新部分服务要求目标&, const 新部分服务要求目标&) = default;
 };
 enum class 新服务要求缺项 : std::uint8_t {

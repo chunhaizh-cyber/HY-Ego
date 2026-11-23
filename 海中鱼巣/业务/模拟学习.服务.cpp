@@ -1,13 +1,15 @@
-#include "模拟学习.服务.h"
+﻿#include "模拟学习.服务.h"
 #include "模拟学习.算法.h"
 #include "词典.本能运行服务.h"
 #include "词典.知识导出服务.h"
 #include "../领域/新_词类.h"
+#include "../领域/概念_名称关系类.h"
 #include "模拟任务需求来源.服务.h"
 #include "../领域/新_模拟世界类.h"
 #include "../领域/新_方法类.h"
 #include "../领域/新_本能函数管理类.h"
 #include "../领域/概念_特征类.h"
+#include "../领域/概念_二次特征类.h"
 #include "../领域/概念_存在类.h"
 #include "../领域/新_存在类.h"
 #include "../领域/动作概念.只读投影合同.h"
@@ -80,7 +82,7 @@ struct 模拟学习进度观察 final {
 #endif
 模拟学习服务::模拟学习服务(新_方法类& 方法, 新_特征类& 特征,概念_特征类& 概念,概念_二次特征类& 二次,
     const 模拟任务需求来源读取接口& 来源) noexcept
-    : 方法_(方法), 概念_(概念), 二次概念_(二次),二次计算_(特征,二次),业务来源_(来源) {}
+    : 方法_(方法), 特征_(特征), 概念_(概念), 二次概念_(二次),二次计算_(特征,二次),业务来源_(来源) {}
 struct 模拟学习服务::隔离样例责任 final {
     std::shared_ptr<新_模拟世界类> world;
     bool 待退出=false, 正在退出=false;
@@ -184,16 +186,92 @@ const char* 新学习运行异常::what() const noexcept {
     }
 }
 
+struct 模拟学习服务::归类样例输入 final {
+    std::vector<新模拟有序参数输入> 参数组;
+    新模拟归类主体输入 主体;
+};
+
+struct 模拟学习服务::归类样例构造结果 final {
+    enum class 状态类型 { 已构造, 规格不支持, 主体未取得, 采用概念未取得, 材料不可解码 };
+    状态类型 状态;
+    std::unique_ptr<归类样例输入> 输入;
+};
+
+模拟学习服务::归类样例构造结果 模拟学习服务::构造归类样例输入(
+    const 新方法信息& method,const 新词条归类联合来源& source,
+    const 新词典归类信息概念组& config) const {
+    using K=新模拟复制值种类;
+    const std::array kinds{新方法参数信息类型::词条,新方法参数信息类型::特征,
+        新方法参数信息类型::存在,新方法参数信息类型::存在};
+    using S=归类样例构造结果::状态类型;
+    if(method.参数规格组.size()!=kinds.size())return {S::规格不支持,{}};
+    if(!source.主体)return {S::主体未取得,{}};
+    auto out=std::make_unique<归类样例输入>();
+    out->参数组.resize(kinds.size());
+    for(std::size_t i=0;i<kinds.size();++i) {
+        const auto& spec=method.参数规格组[i].有序规格;
+        if(!spec || spec->序号!=i+1 || spec->信息类型!=kinds[i])return {S::规格不支持,{}};
+        out->参数组[i].规格=*spec;
+    }
+    // 归类执行分支要求R的采用概念已知；参数规格本身仍是一般材料范围。
+    if(!source.采用概念)return {S::采用概念未取得,{}};
+    const auto& f=source.前态.特征;
+    const auto material=[](const 新特征准确值& value)->std::optional<新模拟复制准确值> {
+        const auto* C=std::get_if<稳定编码>(&value);
+        if(!C || !有效(*C))return {};
+        return 新模拟复制准确值{K::正式概念引用,*C};
+    };
+    const auto domain=[&](const 特征概念值域& value)->std::optional<新模拟复制值域> {
+        if(const auto* refs=std::get_if<std::vector<稳定编码>>(&value)) {
+            std::vector<新模拟复制准确值> values;
+            for(const auto id:*refs) {
+                auto copy=material(新特征准确值{id});
+                if(!copy)return {};
+                values.push_back(std::move(*copy));
+            }
+            return 新模拟复制值域{std::move(values)};
+        }
+        return 新模拟复制值域{value};
+    };
+    新模拟完整特征复制输入 copy;copy.实例单位=f.实例单位;
+    if(f.当前值) {copy.当前值=material(*f.当前值);if(!copy.当前值)return {S::材料不可解码,{}};}
+    if(f.标准值) {copy.标准值=material(*f.标准值);if(!copy.标准值)return {S::材料不可解码,{}};}
+    if(f.实例区间值) {copy.实例区间=domain(*f.实例区间值);if(!copy.实例区间)return {S::材料不可解码,{}};}
+    if(f.实例历史聚合值域) {copy.历史聚合=domain(*f.实例历史聚合值域);if(!copy.历史聚合)return {S::材料不可解码,{}};}
+    for(const auto& value:f.历史不同值) {
+        auto v=material(value);if(!v)return {S::材料不可解码,{}};copy.历史不同值.push_back(std::move(*v));
+    }
+    for(const auto& hit:f.历史值命中信息) {
+        auto v=material(hit.值);if(!v)return {S::材料不可解码,{}};
+        copy.历史值命中信息.push_back({std::move(*v),hit.命中次数});
+    }
+    out->参数组[0].复制词条=source.前态.词条;
+    auto& feature=out->参数组[1];feature.所属存在参数=1;feature.复制上下文=true;
+    feature.复制特征概念=f.特征概念节点;
+    feature.初值方式=f.当前值 ? 新模拟特征初值方式::复制准确 : 新模拟特征初值方式::复制未知;
+    feature.完整复制特征=std::move(copy);
+    std::vector<稳定编码> all;
+    for(const auto& item:source.前态.名称组)all.push_back(item.概念);
+    std::sort(all.begin(),all.end());all.erase(std::unique(all.begin(),all.end()),all.end());
+    auto& input=out->参数组[2];
+    input.复制归类材料=新模拟归类材料复制输入{source.归类材料,source.前态.词条.节点,
+        source.采用概念,config,1,source.前态.普通名称概念组,std::move(all)};
+    auto& actor=out->参数组[3];actor.来源存在=source.主体->存在节点;
+    actor.构造存在概念=source.主体->专属概念节点;
+    out->主体={source.主体->存在节点,source.主体->专属概念节点,4,source.主体->身份预期};
+    return {S::已构造,std::move(out)};
+}
+
 void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行服务> 运行,
     const 新_词类& 词条, const 词典材料类& 材料,
-    const 新_特征值类& 值, 概念_存在类& 概念) {
+    const 新_特征值类& 值, 概念_存在类& 概念, const 概念_名称关系类& 名称) {
     if (!运行) throw std::invalid_argument("dictionary learning runtime missing");
     std::lock_guard lock(字段询问装配锁_);
     if (活动学习数_) throw std::logic_error("dictionary learning dependencies in use");
     if (词典运行_ && (词典运行_ != 运行 || 词典词条_ != &词条
-        || 词典材料_ != &材料 || 词典值_ != &值 || 词典概念_ != &概念))
+        || 词典材料_ != &材料 || 词典值_ != &值 || 词典概念_ != &概念 || 归类名称_ != &名称))
         throw std::logic_error("dictionary learning dependency conflict");
-    词典运行_=std::move(运行);词典词条_=&词条;词典材料_=&材料;词典值_=&值;词典概念_=&概念;
+    词典运行_=std::move(运行);词典词条_=&词条;词典材料_=&材料;词典值_=&值;词典概念_=&概念;归类名称_=&名称;
 }
 
 新学习结束通知 模拟学习服务::学习(const 新方法学习请求& 请求, const std::function<bool()>& 停止检查) {
@@ -218,7 +296,9 @@ void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行�
         };
         if (协作停止()) throw 新学习运行异常(方法节点, 原因::停止取消);
         const auto 方法 = 方法_.获取方法(方法节点);
-        if (请求.定向输入 && (!方法 || 方法->来源方法节点 || 方法->实例根节点
+        if (请求.定向输入 && 请求.归类定向输入)
+            throw 新学习运行异常(方法节点,原因::输入不合法,"multiple directed learning inputs");
+        if ((请求.定向输入 || 请求.归类定向输入) && (!方法 || 方法->来源方法节点 || 方法->实例根节点
             || 方法->实现方式 != 新方法实现方式::本能
             || 方法->启用状态 != 新方法启用状态::启用))
             return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
@@ -230,6 +310,148 @@ void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行�
             throw 新学习运行异常(方法节点, 原因::输入不合法);
         if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
             throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 152");
+        if (请求.归类定向输入) {
+            if (*方法->本能函数登记名 != 新本能函数登记名_按归类材料挂接词条)
+                throw 新学习运行异常(方法节点,原因::输入不合法,"classification input on another intrinsic");
+            if (!归类名称_ || !词典值_ || !词典概念_ || !来源身份_)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification source dependencies unavailable");
+            const auto& args=请求.归类定向输入->参数组;
+            const std::array kinds{新方法参数信息类型::词条,新方法参数信息类型::特征,
+                新方法参数信息类型::存在,新方法参数信息类型::存在};
+            if(args.size()!=kinds.size())throw 新学习运行异常(方法节点,原因::输入不合法,"classification requires four parameters");
+            for(std::size_t i=0;i<kinds.size();++i)
+                if(args[i].序号!=i+1 || args[i].信息类型!=kinds[i] || !有效(args[i].信息节点))
+                    throw 新学习运行异常(方法节点,原因::输入不合法,"classification parameter shape invalid");
+            auto config=词典概念_->读取词典归类信息概念();
+            while(config.状态==正式结构操作状态::前提已变化) {
+                if(协作停止())throw 新学习运行异常(方法节点,原因::停止取消);
+                config=词典概念_->读取词典归类信息概念();
+            }
+            if(config.状态!=正式结构操作状态::已读取 || !config.信息)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification concept definitions unavailable");
+            const auto source=归类名称_->读取词条归类联合来源(args[0].信息节点,args[1].信息节点,
+                args[2].信息节点,*config.信息,特征_,*词典值_,协作停止,args[3].信息节点,来源身份_);
+            using RS=新词条归类前态读取状态;
+            if(source.状态==RS::已停止)throw 新学习运行异常(方法节点,原因::停止取消);
+            if(source.状态==RS::资源失败)throw std::bad_alloc{};
+            if(source.状态==RS::需重新组织)
+                return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+            if(source.状态==RS::依赖未就绪)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification source provider not initialized");
+            if(source.状态==RS::能力未支持)
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification source unsupported");
+            if(source.状态!=RS::已读取 || !source.信息)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification source cannot be decoded");
+            const auto sample=构造归类样例输入(*方法,*source.信息,*config.信息);
+            using CS=归类样例构造结果::状态类型;
+            if(sample.状态==CS::采用概念未取得 || sample.状态==CS::主体未取得) {
+                新定向学习结束材料 normal;normal.结局=新定向学习结局::条件未具备;
+                const std::uint32_t position=sample.状态==CS::主体未取得 ? 4 : sample.状态==CS::采用概念未取得 ? 3 : 2;
+                normal.正式变化依赖节点组.push_back(args[position-1].信息节点);
+                normal.缺口组.push_back({新词典学习缺口种类::参数当前值未取得,position,args[position-1].信息节点,{},{}});
+                return {方法节点,std::move(normal)};
+            }
+            if(sample.状态==CS::材料不可解码)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification copied feature material unavailable");
+            if(sample.状态!=CS::已构造 || !sample.输入)
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification sample shape unsupported");
+            if(!动作定义_ || !动态定义_ || !动态概念_)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification isolated action dependencies unavailable");
+            auto branch=请求.归类定向输入->执行分支节点;
+            if(!branch && 方法->执行分支组.size()>1)
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification directed branch selection unavailable");
+            if(!branch && 方法->执行分支组.size()==1)branch=方法->执行分支组.front().节点;
+            auto world=std::make_shared<新_模拟世界类>(方法_,*动作定义_,*动态定义_,*动态概念_);
+            const auto responsibility=登记隔离样例(world);
+            隔离样例收尾 cleanup{*this,responsibility};
+            world->配置二次特征计算(二次计算_);
+            world->配置需求执行读取(*来源身份_,*词典概念_,概念_,二次概念_);
+            const auto created=world->建立有序样例(方法节点,sample.输入->参数组,{}, {},{},branch,{}, {},{}, {},sample.输入->主体);
+            if(created.状态==新模拟世界状态::资源失败)throw std::bad_alloc{};
+            if(created.状态==新模拟世界状态::定义前提已变化 || created.状态==新模拟世界状态::需重新组织输入)
+                return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+            if(created.状态==新模拟世界状态::能力未支持)
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification isolated sample unsupported");
+            if(created.状态!=新模拟世界状态::已完成)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification isolated sample creation failed");
+            const auto bindings=world->读取参数绑定();
+            if(!bindings)throw 新学习运行异常(方法节点,原因::结构不一致,"classification isolated bindings unavailable");
+            auto scene=方法_.建立模拟参数场景(方法节点,*bindings,world,{},branch);
+            if(scene.状态==新方法操作状态::资源失败)throw std::bad_alloc{};
+            if(scene.状态==新方法操作状态::定义前提已变化 || scene.状态==新方法操作状态::方法不存在)
+                return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+            if(scene.状态==新方法操作状态::能力未支持)
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification parameter scene unsupported");
+            if(!scene.参数场景)
+                throw 新学习运行异常(方法节点,原因::结构不一致,"classification parameter scene unavailable");
+            const auto declaration=方法_.读取执行分支必要条件(方法节点,branch);
+            if(declaration.状态==新方法执行分支读取状态::前提已变化)
+                return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+            if(declaration.状态!=新方法执行分支读取状态::已读取)
+                throw std::logic_error("classification execution declaration unavailable");
+            world->开始记录复制上下文读取(协作停止);
+            const auto call=方法_.调用本能函数(方法节点,*scene.参数场景);
+            (void)world->观察本次归类结果();
+            (void)world->结束记录复制上下文读取();
+            const auto evidence=world->读取已关闭调用证据();
+            if(协作停止())throw 新学习运行异常(方法节点,原因::停止取消);
+            if(call.状态==新方法本能调用状态::资源失败)throw std::bad_alloc{};
+            if(call.状态==新方法本能调用状态::定义前提已变化
+                || call.状态==新方法本能调用状态::方法不存在 || call.状态==新方法本能调用状态::方法停用)
+                return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+            if(call.状态!=新方法本能调用状态::已调用 || !call.本次条件结果对 || !evidence)
+                throw std::logic_error("classification isolated invocation incomplete");
+            if(evidence->已请求取消 || 协作停止())throw 新学习运行异常(方法节点,原因::停止取消);
+            if(const auto& disposition=call.本次条件结果对->结果.词条归类处置) {
+                if(disposition->状态==新词条归类运行状态::已停止)
+                    throw 新学习运行异常(方法节点,原因::停止取消);
+                if(disposition->状态==新词条归类运行状态::需重新组织)
+                    return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+                if(disposition->状态==新词条归类运行状态::条件未具备) {
+                    新定向学习结束材料 normal;normal.结局=新定向学习结局::条件未具备;
+                    for(const auto local:disposition->变化依赖节点组) {
+                        const auto it=std::find_if(bindings->begin(),bindings->end(),
+                            [&](const auto& b){return b.有序引用 && b.有序引用->信息节点==local;});
+                        if(it==bindings->end() || !it->有序引用 || !it->有序引用->序号
+                            || it->有序引用->序号>args.size())
+                            throw std::logic_error("classification dependency has no formal parameter mapping");
+                        const auto position=it->有序引用->序号;
+                        const auto formal=args[position-1].信息节点;
+                        normal.正式变化依赖节点组.push_back(formal);
+                        normal.缺口组.push_back({新词典学习缺口种类::参数当前值未取得,position,formal,{},{}});
+                    }
+                    if(normal.正式变化依赖节点组.empty())
+                        throw std::logic_error("classification wait has no formal dependency");
+                    return {方法节点,std::move(normal)};
+                }
+            }
+            if(!evidence->词条归类)
+                throw std::logic_error("classification successful invocation has no formal receipt");
+            const 正式概念身份读取接口* providers[]={词典概念_,&概念_,&二次概念_,动态概念_};
+            const auto slot=概念_.读取当前先天特征类型槽(先天特征类型槽::概念名称挂接);
+            if(slot.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+            if(!slot.类型根)throw std::logic_error("classification feature type unavailable");
+            const auto candidate=构造归类学习候选(declaration.有效必要条件,
+                call.本次条件结果对->条件,*evidence,world->读取本次场景事实组(),
+                *config.信息,*slot.类型根,*词典概念_,方法_,providers);
+            if(!candidate) {
+                if(协作停止())throw 新学习运行异常(方法节点,原因::停止取消);
+                throw 新学习运行异常(方法节点,原因::规格未支持,"classification formal knowledge export unavailable");
+            }
+            for(;;) {
+                if(协作停止())throw 新学习运行异常(方法节点,原因::停止取消);
+                const auto published=方法_.追加模拟条件结果(方法节点,{*candidate});
+                if(published.状态==新方法学习发布状态::前提已变化)continue;
+                if(published.状态==新方法学习发布状态::资源失败)throw std::bad_alloc{};
+                if(published.状态==新方法学习发布状态::已发布 || published.状态==新方法学习发布状态::精确重复)
+                    return {方法节点,新定向学习结束材料{新定向学习结局::已完成学习,{},{}}};
+                if(published.状态==新方法学习发布状态::方法不可用)
+                    return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
+                if(published.状态==新方法学习发布状态::发布结果未知)
+                    throw 新学习运行异常(方法节点,原因::发布结果未知);
+                throw std::logic_error("classification condition-result publication rejected");
+            }
+        }
         if (请求.定向输入) {
             if (*方法->本能函数登记名 != "builtin.dictionary.lookup.v1")
                 throw 新学习运行异常(方法节点, 原因::输入不合法,"directed dictionary input on another intrinsic");
@@ -781,11 +1003,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         基础只读预期 只读预期;
     };
     std::map<稳定编码,存在归属读取依据> 存在归属保护;
-    const auto 归属根相同=[](const 基础联合节点快照& a,const 基础联合节点快照& b) {
-        return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组
-            &&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组
-            &&a.出向外部关系组==b.出向外部关系组;
-    };
     const auto 读取归属语义=[&](稳定编码 C) {
         auto read=方法_.读取模拟存在范围语义保护(C);
         if(read.状态==正式概念读取状态::前提已变化)throw 模拟输入采集漂移{};
@@ -1053,8 +1270,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         auto& F=base[代表[限定.特征参数序号-1]];
         F.历史引用存在参数组.push_back(static_cast<std::uint32_t>(代表[限定.对象参数序号-1]+1));
     }
-    std::map<稳定编码,新存在信息> 原型存在快照;
-    std::map<稳定编码,新特征匹配实例快照> 原型特征快照;
     std::map<std::size_t,稳定编码> 固定来源特征;
     const bool 需要需求构造=!需求参数位置.empty()||std::any_of(defs.begin(),defs.end(),[](const auto& d) {
         return d&&d->材料类型==特征概念材料物理类型::需求节点引用;
@@ -1105,15 +1320,9 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 if(ec.对应存在节点) {
                     const auto E=方法_.读取模拟来源存在(*ec.对应存在节点);
                     if(!E) throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype source unreadable");
-                    const auto [旧E,新增E]=原型存在快照.emplace(*ec.对应存在节点,*E);
-                    if(!新增E&&旧E->second!=*E)
-                        throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype existence changed during capture");
                     for(const auto F:E->特征节点组) {
                         const auto 实际=方法_.读取模拟来源特征(F);
                         if(!实际||实际->定义.特征类型根!=d->特征类型根) continue;
-                        const auto [旧F,新增F]=原型特征快照.emplace(F,*实际);
-                        if(!新增F&&旧F->second!=*实际)
-                            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype feature changed during capture");
                         固定来源特征.emplace(k,F);base[k].复制上下文=true;
                         break;
                     }
@@ -1147,12 +1356,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(k>=N) {base[k].复制上下文=false;base[k].值.reset();base[k].材料.reset();固定来源特征.erase(k);}
     }
     for(std::size_t i=0;i<N;++i)if(代表[i]!=i&&defs[i])defs[i]=defs[代表[i]];
-    for(const auto& [E,快照]:原型存在快照)
-        if(方法_.读取模拟来源存在(E)!=快照)
-            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype existence capture changed");
-    for(const auto& [F,快照]:原型特征快照)
-        if(方法_.读取模拟来源特征(F)!=快照)
-            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"dedicated prototype feature capture changed");
     const auto 数值候选 = [&](std::size_t 位置, std::optional<std::size_t> 分量) {
         const auto 读取区间 = [&](const 新特征匹配定义快照& 定义)
             -> const std::vector<特征概念I64闭区间>* {
@@ -1292,8 +1495,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     std::map<稳定编码, std::size_t> 来源存在位置;
     HY_SIM_PROGRESS(L"开始构造引用闭包",首批需求.size());
     std::map<稳定编码, 新存在信息> 来源存在快照;
-    std::map<稳定编码, 新特征匹配实例快照> 来源特征快照;
-    std::map<稳定编码,新特征信息> 来源完整特征快照;
     std::vector<稳定编码> 待复制存在;
     const auto 加入来源存在 = [&](稳定编码 E) -> std::size_t {
         if(const auto it=来源存在位置.find(E);it!=来源存在位置.end())
@@ -1333,20 +1534,10 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
     }
     // 下方单一typed队列同时展开E/F/D/U/C/要求/语言场景，保持内容环与别名。
-    std::map<稳定编码,基础联合节点快照> 定义保护;
     std::map<稳定编码,基础联合节点快照> 共享定义保护;
-    const auto 加保护=[&](const auto& group) {
-        for(const auto& snap:group) {
-            const auto [it,added]=定义保护.emplace(snap.结构.节点.编码,snap);
-            if(!added&&(it->second.结构.字段组!=snap.结构.字段组||it->second.入向字段组!=snap.入向字段组
-                ||it->second.入向外部关系组!=snap.入向外部关系组||it->second.出向外部关系组!=snap.出向外部关系组))
-                throw 模拟输入采集漂移{};
-        }
-    };
     const auto 加正式保护=[&](const auto& group) {
         for(const auto& n:group) {
-            const auto [it,added]=共享定义保护.emplace(n.结构.节点.编码,n);
-            if(!added&&!归属根相同(it->second,n))throw 模拟输入采集漂移{};
+            共享定义保护.insert_or_assign(n.结构.节点.编码,n);
         }
     };
     const auto 保护引用定义=[&](const 新需求目标定义& target) {
@@ -1391,11 +1582,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         加正式保护(read.完整保护组);return it->second;
     };
     std::map<稳定编码,std::uint32_t> D位置,U位置,C位置,R位置,L位置;
-    std::map<稳定编码,新模拟需求来源投影> D来源;
-    std::map<稳定编码,服务要求理解信息> U来源;
-    std::map<稳定编码,服务要求确认信息> C来源;
-    std::map<稳定编码,新部分服务要求材料> R来源;
-    std::map<稳定编码,新自然语言场景复制信息> L来源;
     std::vector<稳定编码> 待复制D,待复制U,待复制C,待复制R,待复制L;
     const auto 入列=[&](auto& positions,auto& queue,auto& inputs,稳定编码 id) {
         if(!有效(id))throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed source has invalid identity");
@@ -1424,7 +1610,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     const auto 转准确=[&](const 新特征准确值& value,const 新特征匹配定义快照& def,
         const 复制失败诊断上下文& diagnostic)->新模拟复制准确值 {
         using K=新模拟复制值种类;
-        if(def.比较规则==特征概念比较规则::概念集合身份判等)不支持(0,"concept reference set sampling is unsupported");
         if(const auto* x=std::get_if<std::int64_t>(&value)) {
             if(def.材料类型!=特征概念材料物理类型::I64标量)throw std::runtime_error("typed copied scalar disagrees with feature type");
             return {K::I64,*x};
@@ -1477,8 +1662,6 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
     };
     const auto 转域=[&](const 特征概念值域& domain,const 新特征匹配定义快照& def,
         const 复制失败诊断上下文& diagnostic)->新模拟复制值域 {
-        if(def.比较规则==特征概念比较规则::概念集合身份判等
-            ||std::holds_alternative<特征概念概念集合值域>(domain))不支持(0,"concept reference set domain sampling is unsupported");
         if(const auto* ids=std::get_if<std::vector<稳定编码>>(&domain)) {
             std::vector<新模拟复制准确值> out;std::size_t 索引=0;
             for(const auto id:*ids){
@@ -1497,39 +1680,39 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(const auto it=来源F位置.find(F);it!=来源F位置.end()) {
             const auto& p=base.at(it->second);if(p.所属存在参数!=owner||p.所属语言场景输入!=language)throw std::runtime_error("source feature has conflicting owners");return it->second;
         }
-        const auto shape=方法_.读取模拟来源特征(F);const auto full=方法_.读取模拟来源完整特征(F);
-        if(!shape||!full)throw std::runtime_error("full source feature unavailable");
+        const auto full=方法_.读取模拟来源完整特征(F);
+        if(!full)throw std::runtime_error("full source feature unavailable");
+        const auto definition=方法_.读取模拟特征范围(full->特征概念节点);
+        if(!definition)throw std::runtime_error("source feature definition unavailable");
         if(full->上级特征节点)不支持(0,"source feature: non-top-level organization unsupported");
-        if(shape->当前值!=full->当前值||shape->实例区间值!=full->实例区间值||shape->实例单位!=full->实例单位)
-            throw 模拟输入采集漂移{};
         新模拟完整特征复制输入 copied;copied.实例单位=full->实例单位;
-        if(full->当前值)copied.当前值=转准确(*full->当前值,shape->定义,{F,entry,existing,owner,language,"current",{}});
-        if(full->标准值)copied.标准值=转准确(*full->标准值,shape->定义,{F,entry,existing,owner,language,"standard",{}});
-        if(full->实例区间值)copied.实例区间=转域(*full->实例区间值,shape->定义,{F,entry,existing,owner,language,"interval-finite",{}});
-        if(full->实例历史聚合值域)copied.历史聚合=转域(*full->实例历史聚合值域,shape->定义,{F,entry,existing,owner,language,"history-domain-finite",{}});
+        if(full->当前值)copied.当前值=转准确(*full->当前值,(*definition),{F,entry,existing,owner,language,"current",{}});
+        if(full->标准值)copied.标准值=转准确(*full->标准值,(*definition),{F,entry,existing,owner,language,"standard",{}});
+        if(full->实例区间值)copied.实例区间=转域(*full->实例区间值,(*definition),{F,entry,existing,owner,language,"interval-finite",{}});
+        if(full->实例历史聚合值域)copied.历史聚合=转域(*full->实例历史聚合值域,(*definition),{F,entry,existing,owner,language,"history-domain-finite",{}});
         std::size_t 历史不同值索引=0;
         for(const auto& v:full->历史不同值)
-            copied.历史不同值.push_back(转准确(v,shape->定义,{F,entry,existing,owner,language,"history-distinct",历史不同值索引++}));
+            copied.历史不同值.push_back(转准确(v,(*definition),{F,entry,existing,owner,language,"history-distinct",历史不同值索引++}));
         std::size_t 命中记录索引=0;
         for(const auto& hit:full->历史值命中信息) {
-            copied.历史值命中信息.push_back({转准确(hit.值,shape->定义,{F,entry,existing,owner,language,"history-hit",命中记录索引++}),hit.命中次数});
+            copied.历史值命中信息.push_back({转准确(hit.值,(*definition),{F,entry,existing,owner,language,"history-hit",命中记录索引++}),hit.命中次数});
         }
         auto pos=existing.value_or(base.size());
-        新模拟有序参数输入 input{{0,新方法参数信息类型::特征,shape->定义.概念节点},owner};
+        新模拟有序参数输入 input{{0,新方法参数信息类型::特征,(*definition).概念节点},owner};
         if(existing)input.规格=base.at(pos).规格;
         input.所属语言场景输入=language;input.复制上下文=true;input.完整复制特征=std::move(copied);
         if(full->当前值)input.初值方式=新模拟特征初值方式::复制准确;
         else input.初值方式=新模拟特征初值方式::复制未知;
         if(existing){
-            收窄特征范围(pos,shape->定义);
+            收窄特征范围(pos,(*definition));
             const auto 约束诊断=[&](const std::string& status,const std::string& relation) {
                 std::string current="unknown";
                 if(full->当前值) {
                     if(const auto* x=std::get_if<std::int64_t>(&*full->当前值))current="I64:"+std::to_string(*x);
                     else current="node:"+std::to_string(std::get<稳定编码>(*full->当前值).值);
                 }
-                return " position="+std::to_string(pos+1)+" FT="+std::to_string(shape->定义.特征类型根.值)
-                    +" material="+std::to_string(static_cast<int>(shape->定义.材料类型))+" current="+current
+                return " position="+std::to_string(pos+1)+" FT="+std::to_string((*definition).特征类型根.值)
+                    +" material="+std::to_string(static_cast<int>((*definition).材料类型))+" current="+current
                     +" right-domain-variant="+std::to_string(defs[pos]->值域.index())
                     +" comparison-status="+status+" relation="+relation;
             };
@@ -1540,13 +1723,13 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 });
                 const bool attached=std::any_of(初始附属条件.begin(),初始附属条件.end(),[&](const auto& c) {
                     return c.参数序号&&c.参数序号<=N&&代表[c.参数序号-1]+1==owner
-                        &&c.特征类型概念节点==std::optional{shape->定义.特征类型根}
+                        &&c.特征类型概念节点==std::optional{(*definition).特征类型根}
                         &&(c.特征值域概念节点||c.精确数值域);
                 });
                 if(direct||attached)不支持(static_cast<std::uint32_t>(pos+1),"unknown copied current cannot satisfy a necessary value constraint"+约束诊断("not-compared","unknown"));
             }
             if(full->当前值) {
-                if(shape->定义.材料类型==特征概念材料物理类型::存在节点引用) {
+                if((*definition).材料类型==特征概念材料物理类型::存在节点引用) {
                     const auto* E=std::get_if<稳定编码>(&*full->当前值);
                     const auto* domain=std::get_if<特征概念存在引用值域>(&defs[pos]->值域);
                     if(!E||!domain)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,
@@ -1564,7 +1747,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     特征概念值域 singleton;
                     if(const auto* x=std::get_if<std::int64_t>(&*full->当前值))singleton=std::vector<特征概念I64闭区间>{{*x,*x}};
                     else singleton=std::vector<稳定编码>{std::get<稳定编码>(*full->当前值)};
-                    const auto check=概念_.比较值域(shape->定义.特征类型根,singleton,defs[pos]->值域);
+                    const auto check=概念_.比较值域((*definition).特征类型根,singleton,defs[pos]->值域);
                     const auto detail=约束诊断(std::to_string(static_cast<int>(check.状态)),
                         check.关系 ? std::to_string(static_cast<int>(*check.关系)) : "absent");
                     if(check.状态==特征概念规则状态::资源失败)
@@ -1589,8 +1772,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     不支持(static_cast<std::uint32_t>(pos+1),"fixed source history lacks required formal relation"+约束诊断("history-membership-completed","outside"));
             }
             base[pos]=std::move(input);
-        }else {base.push_back(std::move(input));defs.push_back(shape->定义);}
-        来源F位置.emplace(F,pos);来源特征快照.emplace(F,*shape);来源完整特征快照.emplace(F,*full);return pos;
+        }else {base.push_back(std::move(input));defs.push_back((*definition));}
+        来源F位置.emplace(F,pos);return pos;
     };
     for(const auto& [pos,F]:固定来源特征)复制F(F,pos,base.at(pos).所属存在参数,0,"fixed-source-feature");
     std::size_t nextE=0,nextD=0,nextU=0,nextC=0,nextR=0,nextL=0;
@@ -1598,7 +1781,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(read.状态==新模拟需求状态::前提已变化)throw 模拟输入采集漂移{};
         if(read.状态==新模拟需求状态::资源失败)throw std::bad_alloc{};
         if(read.状态!=新模拟需求状态::已完成||!read.信息)throw std::runtime_error(std::string(category)+" source unavailable");
-        加保护(read.完整保护);return *read.信息;
+        return *read.信息;
     };
     while(nextE<待复制存在.size()||nextD<待复制D.size()||nextU<待复制U.size()||nextC<待复制C.size()||nextR<待复制R.size()||nextL<待复制L.size()) {
         停止();
@@ -1633,7 +1816,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(read.状态==新模拟业务来源状态::来源已变化)throw 模拟输入采集漂移{};
             if(read.状态==新模拟业务来源状态::尚缺依赖提供者)不支持(0,read.诊断);
             if(read.状态!=新模拟业务来源状态::已读取||!read.信息||!read.信息->完整需求)不支持(0,"source demand has no complete target");
-            加保护(read.完整保护);const auto g=read.信息->治理;const auto d=*read.信息->完整需求;
+            const auto g=read.信息->治理;const auto d=*read.信息->完整需求;
             if(d.目标.引用内容定位)不支持(0,"引用内容目标不能映射为普通值或方向需求");
             for(const auto& edge:read.信息->实例引用组)switch(edge.类别) {
                 case 新模拟业务引用类别::存在:case 新模拟业务引用类别::需求:
@@ -1650,7 +1833,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(d.认知来源){input.理解输入=加U(d.认知来源->理解节点);input.确认输入=加C(d.认知来源->内容确认节点);if(d.认知来源->来源要求节点)input.来源要求输入=加R(*d.认知来源->来源要求节点);}
             if(g.外部要求节点)input.外部要求输入=加R(*g.外部要求节点);
             for(const auto c:d.服务要求确认组)input.服务要求确认输入组.push_back(加C(c));
-            input.来源=新模拟需求来源种类::单向复制;input.来源需求=D;需求图模板.需求组.at(input.序号-1)=std::move(input);D来源.emplace(D,*read.信息);continue;
+            input.来源=新模拟需求来源种类::单向复制;input.来源需求=D;需求图模板.需求组.at(input.序号-1)=std::move(input);continue;
         }
         if(nextU<待复制U.size()) {
             const auto id=待复制U[nextU++];const auto read=业务来源_.读取模拟理解来源(id);const auto u=sourceRead(read,"understanding");
@@ -1658,12 +1841,12 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             input.来源存在输入=static_cast<std::uint32_t>(加入来源存在(u.来源人类节点)+1);input.目标存在输入=static_cast<std::uint32_t>(加入来源存在(u.目标存在节点)+1);
             input.公开会话标识=u.公开会话标识;input.目标=u.目标;input.固定语义=u.固定语义;input.来源身份=id;
             if(u.来源要求节点)input.来源要求输入=加R(*u.来源要求节点);保护引用定义(input.目标);
-            需求图模板.理解组.at(input.序号-1)=std::move(input);U来源.emplace(id,u);continue;
+            需求图模板.理解组.at(input.序号-1)=std::move(input);continue;
         }
         if(nextC<待复制C.size()) {
             const auto id=待复制C[nextC++];const auto read=业务来源_.读取模拟确认来源(id);const auto c=sourceRead(read,"confirmation");
             新模拟确认输入 input{C位置.at(id),加U(c.理解.节点),c.需重新确认,id};
-            需求图模板.确认组.at(input.序号-1)=input;C来源.emplace(id,c);continue;
+            需求图模板.确认组.at(input.序号-1)=input;continue;
         }
         if(nextR<待复制R.size()) {
             const auto id=待复制R[nextR++];const auto read=业务来源_.读取模拟要求来源(id);const auto r=sourceRead(read,"requirement");
@@ -1671,7 +1854,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(r.已知目标.目标存在节点)input.目标存在输入=static_cast<std::uint32_t>(加入来源存在(*r.已知目标.目标存在节点)+1);
             input.已知目标=r.已知目标;input.已知目标.目标存在节点.reset();input.公开会话标识=r.公开会话标识;input.来源要求标识=r.来源要求标识;
             if(r.理解节点)input.理解输入=加U(*r.理解节点);if(r.确认节点)input.确认输入=加C(*r.确认节点);
-            input.来源身份=id;需求图模板.要求组.at(input.序号-1)=std::move(input);R来源.emplace(id,r);continue;
+            input.来源身份=id;需求图模板.要求组.at(input.序号-1)=std::move(input);continue;
         }
         if(nextL<待复制L.size()) {
             const auto id=待复制L[nextL++];const auto read=业务来源_.读取语言场景来源(id);
@@ -1679,13 +1862,13 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             if(read.状态==新自然语言场景结构比较状态::前提已变化)throw 模拟输入采集漂移{};
             if(read.状态==新自然语言场景结构比较状态::复制内容未支持)不支持(0,"language source scene contains unsupported child/state/dynamic records");
             if(read.状态!=新自然语言场景结构比较状态::已完成||!read.信息)throw std::runtime_error("language scene source unreadable");
-            加保护(read.完整保护);const auto l=*read.信息;新模拟语言场景输入 input;input.序号=L位置.at(id);input.专属存在概念=l.场景.专属存在概念节点;input.来源身份=id;
+            const auto l=*read.信息;新模拟语言场景输入 input;input.序号=L位置.at(id);input.专属存在概念=l.场景.专属存在概念节点;input.来源身份=id;
             if(const auto e=来源存在位置.find(id);e!=来源存在位置.end())base.at(e->second).引用语言场景输入=input.序号;
             for(const auto F:l.场景.特征节点组)input.特征输入组.push_back(static_cast<std::uint32_t>(复制F(F,{},0,input.序号,"language-scene-all-features")+1));
             for(const auto E:l.场景.直接成员存在组)input.成员存在输入组.push_back(static_cast<std::uint32_t>(加入来源存在(E)+1));
             for(const auto E:l.场景.边界存在组)input.边界存在输入组.push_back(static_cast<std::uint32_t>(加入来源存在(E)+1));
             for(const auto& e:l.概念实例组)input.实例组.push_back({static_cast<std::uint32_t>(加入来源存在(e.节点)+1),e.概念节点,e.种类});
-            需求图模板.语言场景组.at(input.序号-1)=std::move(input);L来源.emplace(id,l);
+            需求图模板.语言场景组.at(input.序号-1)=std::move(input);
         }
     }
     // 生成分支使用正式概念结构及原型FT闭包；不以来源D存在为条件。
@@ -1744,7 +1927,7 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             }
         }
         // 概念建立可能改变入向关系：全部定义建立结束后统一捕获，不拼旧保护。
-        定义保护.clear();共享定义保护.clear();加正式保护(方法_.读取模拟正式结构(concepts.信息->需求).完整保护组);
+        共享定义保护.clear();加正式保护(方法_.读取模拟正式结构(concepts.信息->需求).完整保护组);
         for(const auto C:{valueC,directionC,recognizedC})加正式保护(方法_.读取模拟正式结构(C).完整保护组);
         for(const auto role:{408u,411u,413u,414u})(void)内容概念(role);
         if(!有数值FT)需求构造缺口="value target lacks a legal I64 FT in the formal prototype closure";
@@ -1844,11 +2027,14 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         if(published.状态!=新方法学习发布状态::已发布&&published.状态!=新方法学习发布状态::精确重复
             &&published.状态!=新方法学习发布状态::发布结果未知)
             throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"declaration-only condition pair publication rejected");
-        const auto fresh=方法_.获取方法(m.节点);
-        if(!fresh||!std::any_of(fresh->条件结果组.begin(),fresh->条件结果组.end(),[&](const auto& p) {
-            return p.条件==pair.条件&&p.结果==pair.结果&&p.知识来源==新方法知识来源种类::模拟
-                &&(!执行分支||std::find(p.来源执行分支节点组.begin(),p.来源执行分支节点组.end(),*执行分支)!=p.来源执行分支节点组.end());
-        }))throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"published pair not found on readback");
+        // 仅发布结果未知时需要读取以确定是否已发表；明确回执不再核对后续实时状态。
+        if(published.状态==新方法学习发布状态::发布结果未知) {
+            const auto fresh=方法_.获取方法(m.节点);
+            if(!fresh||!std::any_of(fresh->条件结果组.begin(),fresh->条件结果组.end(),[&](const auto& p) {
+                return p.条件==pair.条件&&p.结果==pair.结果&&p.知识来源==新方法知识来源种类::模拟
+                    &&(!执行分支||std::find(p.来源执行分支节点组.begin(),p.来源执行分支节点组.end(),*执行分支)!=p.来源执行分支节点组.end());
+            }))throw 新学习运行异常(m.节点,新学习运行异常原因::发布结果未知,"declaration-only pair publication remains indeterminate");
+        }
         if(published.状态==新方法学习发布状态::已发布&&published.新配对节点组.size()==1) {
             const auto 融合=方法_.融合模拟条件结果(m.节点,published.新配对节点组.front());
             if(融合.状态==新方法学习发布状态::发布结果未知||融合.状态==新方法学习发布状态::结构不一致)
@@ -1856,78 +2042,22 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
         }
         return;
     }
-    // owner逐项采集不是跨世界原子快照。读回检测采集期间变化；之后只用值副本。
-    HY_SIM_PROGRESS(L"需求图构造完成，开始核同来源",需求图模板.需求组.size());
-    for(const auto& [E,e]:来源存在快照)if(方法_.读取模拟来源存在(E)!=e)
-        throw 模拟输入采集漂移{};
-    for(const auto& [F,f]:来源特征快照)if(方法_.读取模拟来源特征(F)!=f)
-        throw 模拟输入采集漂移{};
-    for(const auto& [F,f]:来源完整特征快照)if(方法_.读取模拟来源完整特征(F)!=f)
-        throw 模拟输入采集漂移{};
-    for(const auto& [id,old]:D来源) {
-        const auto fresh=业务来源_.读取需求来源(id);
-        if(fresh.状态==新模拟业务来源状态::来源已变化||fresh.状态==新模拟业务来源状态::来源不存在)throw 模拟输入采集漂移{};
-        if(fresh.状态==新模拟业务来源状态::尚缺依赖提供者)不支持(0,fresh.诊断);
-        if(fresh.状态!=新模拟业务来源状态::已读取||!fresh.信息)throw std::runtime_error("fresh typed demand owner unavailable");
-        if(fresh.信息->治理!=old.治理||fresh.信息->完整需求!=old.完整需求)
-            throw 模拟输入采集漂移{};
-        加保护(fresh.完整保护);
-        if(old.治理.外部要求材料) {
-            const auto r=R来源.find(old.治理.外部要求材料->要求节点);
-            if(r==R来源.end()||r->second!=*old.治理.外部要求材料)throw std::runtime_error("external requirement projection differs from typed owner");
-        }
-    }
-    for(const auto& [id,old]:U来源){const auto read=业务来源_.读取模拟理解来源(id);if(sourceRead(read,"understanding")!=old)throw 模拟输入采集漂移{};}
-    for(const auto& [id,old]:C来源){const auto read=业务来源_.读取模拟确认来源(id);if(sourceRead(read,"confirmation")!=old)throw 模拟输入采集漂移{};}
-    for(const auto& [id,old]:R来源){const auto read=业务来源_.读取模拟要求来源(id);if(sourceRead(read,"requirement")!=old)throw 模拟输入采集漂移{};}
-    for(const auto& [id,old]:L来源) {
-        const auto read=业务来源_.读取语言场景来源(id);
-        if(read.状态==新自然语言场景结构比较状态::资源失败)throw std::bad_alloc{};
-        if(read.状态==新自然语言场景结构比较状态::前提已变化||read.状态==新自然语言场景结构比较状态::场景不存在)throw 模拟输入采集漂移{};
-        if(read.状态==新自然语言场景结构比较状态::复制内容未支持)不支持(0,"fresh source language scene content became unsupported");
-        if(read.状态!=新自然语言场景结构比较状态::已完成||!read.信息)throw std::runtime_error("fresh language scene source engineering read failed");
-        if(read.信息->场景!=old.场景||read.信息->概念实例组!=old.概念实例组||read.信息->普通成员存在组!=old.普通成员存在组)
-            throw 模拟输入采集漂移{};加保护(read.完整保护);
-    }
+    // owner逐项采集并非跨世界原子快照；存在信息使用本次读取的值副本。
+    HY_SIM_PROGRESS(L"需求图构造完成，继续处理来源",需求图模板.需求组.size());
     const auto 保护内容定义=[&](稳定编码 C) {
         const auto p=方法_.读取模拟正式结构(C);
         if(p.状态==正式结构操作状态::前提已变化)throw 模拟输入采集漂移{};
         if(p.状态!=正式结构操作状态::已读取||!p.信息)throw std::runtime_error("typed content formal definition unavailable");
         加正式保护(p.完整保护组);
     };
-    if(需求构造依据) {
-        const auto fresh=业务来源_.读取模拟构造依据();
-        if(fresh.状态==新模拟需求状态::前提已变化)throw 模拟输入采集漂移{};
-        if(fresh.状态==新模拟需求状态::资源失败)throw std::bad_alloc{};
-        if(fresh.状态!=新模拟需求状态::已完成||!fresh.信息)throw std::runtime_error("human construction definition unavailable");
-        if(fresh.信息->人类概念!=需求构造依据->信息->人类概念)throw 模拟输入采集漂移{};
-        加正式保护(fresh.完整保护);
-    }
+    // 构造使用此前实际取得的人类概念；不因后续信息变化重读比较。
+    if(需求构造依据)加正式保护(需求构造依据->完整保护);
     for(const auto& d:需求图模板.需求组){保护目标(d.目标);保护内容定义(d.内容概念);for(const auto C:d.附加内容概念组)保护内容定义(C);}
     for(const auto& u:需求图模板.理解组)保护引用定义(u.目标);
     for(const auto& r:需求图模板.要求组){新需求目标定义 t;t.目标特征类型概念节点=r.已知目标.目标特征类型概念节点.value_or(稳定编码{});t.目标值域概念节点=r.已知目标.目标值域概念节点;t.目标比较关系概念节点=r.已知目标.目标比较关系概念节点;保护引用定义(t);}
-    if(!定义保护.empty()) {
-        std::vector<稳定编码> ids;for(const auto& [id,p]:定义保护)ids.push_back(id);
-        const auto fresh=全局基础数据集.查询节点组完整结构(ids);
-        if(fresh.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
-        if(fresh.状态!=基础结构操作状态::已完成||fresh.节点组.size()!=ids.size())throw std::runtime_error("input graph final protection read failed");
-        for(const auto& n:fresh.节点组) {
-            const auto& old=定义保护.at(n.查询节点);if(!n.快照||old.结构.字段组!=n.快照->结构.字段组||old.入向字段组!=n.快照->入向字段组
-                ||old.入向外部关系组!=n.快照->入向外部关系组||old.出向外部关系组!=n.快照->出向外部关系组)throw 模拟输入采集漂移{};
-        }
-    }
     for(std::size_t i=0;i<N;++i)if(代表[i]!=i&&defs[i]) {
         const auto spec=base[i].规格;base[i]=base[代表[i]];base[i].规格=spec;
         base[i].同一参数=static_cast<std::uint32_t>(代表[i]+1);defs[i]=defs[代表[i]];
-    }
-    for(const auto 任务:任务顺序){
-        停止();const auto 复读=业务来源_.读取任务来源(任务);
-        if(复读.状态==新模拟业务来源状态::来源已变化)throw 模拟输入采集漂移{};
-        if(复读.状态!=新模拟业务来源状态::已读取||!复读.信息)
-            throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"typed task final source unavailable: "+复读.诊断);
-        const auto& 来源=任务来源.at(任务);
-        if(复读.信息->任务!=来源.任务||复读.信息->虚拟存在!=来源.虚拟存在||复读.信息->治理特征!=来源.治理特征)
-            throw 模拟输入采集漂移{};
     }
     for(const auto 任务:任务顺序)任务治理组.push_back({任务来源.at(任务).治理特征});
     const auto K=base.size(); // 到此闭包完成；轴开始后禁止扩容。
@@ -2057,31 +2187,15 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
             axes.push_back({static_cast<std::uint32_t>(axes.size()+1),std::move(choices)});
         }
     }
-    // 轴生成也会查存在范围；待所有归属调用结束再统一核同并并入world的原子发表前提。
+    // 样例使用已读取的存在范围；仅保留引用节点身份。
     for(const auto& [C,captured]:存在归属保护) {
-        const auto fresh=读取归属语义(C);
-        if(*fresh.信息!=captured.概念)throw 模拟输入采集漂移{};
-        const auto status=全局基础数据集.核验只读预期(captured.只读预期);
-        if(status==基础节点组追加状态::预期不符||status==基础节点组追加状态::节点不存在
-            ||status==基础节点组追加状态::引用不存在)throw 模拟输入采集漂移{};
-        if(status==基础节点组追加状态::资源失败)throw std::bad_alloc{};
-        if(status!=基础节点组追加状态::已完成)throw std::runtime_error("existence semantic readset verification failed");
         auto& target=需求图模板.存在范围语义保护;
         target.节点组.insert(target.节点组.end(),captured.只读预期.节点组.begin(),captured.只读预期.节点组.end());
-        target.字段集合组.insert(target.字段集合组.end(),captured.只读预期.字段集合组.begin(),captured.只读预期.字段集合组.end());
-        target.外部关系集合组.insert(target.外部关系集合组.end(),captured.只读预期.外部关系集合组.begin(),captured.只读预期.外部关系集合组.end());
     }
     需求图模板.正式定义保护.clear();
-    // 来源事实的完整读取依据必须一直送到world的同锁提交点，不能只在采集阶段核一次。
-    for(const auto& [C,p]:定义保护)需求图模板.正式定义保护.push_back(p);
-    // 只替换owner已授权的存在范围C本身；不能把readset中的schema/端点身份当作定义替代证明。
-    // 来源事实的独立full仍留在定义保护中，绝不按编码全局删除。
+    // 来源事实已复制为样例输入，不把其旧字段和关系作为样例发布条件。
+    // 正式定义提供本次内容；L1检查本次写入的节点和引用。
     for(const auto& [C,p]:共享定义保护)if(!存在归属保护.contains(C)) {
-        const auto fresh=全局基础数据集.查询节点组完整结构({C});
-        if(fresh.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
-        if(fresh.状态!=基础结构操作状态::已完成||fresh.节点组.size()!=1)
-            throw std::runtime_error("shared definition final protection read failed");
-        if(!fresh.节点组.front().快照||!归属根相同(p,*fresh.节点组.front().快照))throw 模拟输入采集漂移{};
         需求图模板.正式定义保护.push_back(p);
     }
     const auto 选择需求图=[&](std::vector<新模拟有序参数输入>& input) {
@@ -2727,7 +2841,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 if(d->比较规则==特征概念比较规则::存在集合身份判等
                     ||d->比较规则==特征概念比较规则::需求集合身份判等
                     ||d->比较规则==特征概念比较规则::服务任务集合身份判等
-                    ||d->比较规则==特征概念比较规则::消息集合身份判等) {
+                    ||d->比较规则==特征概念比较规则::消息集合身份判等
+                    ||d->比较规则==特征概念比较规则::概念集合身份判等) {
                     const auto* ids=std::get_if<std::vector<std::uint64_t>>(&value.材料);
                     if(!ids)throw std::logic_error("typed knowledge collection has invalid material");
                     for(const auto id:*ids)不得本地引用(稳定编码{id});
@@ -2766,7 +2881,8 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                 if(defs[i]&&(defs[i]->材料类型==特征概念材料物理类型::需求节点引用
                     ||defs[i]->材料类型==特征概念材料物理类型::信息节点引用
                     ||defs[i]->比较规则==特征概念比较规则::需求集合身份判等))continue;
-                if(defs[i]&&!before[i]->当前值)continue; // 未被实际读取的未知输入不补准确C。
+                // 输入未知时不补准确条件，但实际写回仍须作为结果处理。
+                if(!defs[i] || before[i]->当前值) {
                 新方法条件项定义 c;c.参数序号=static_cast<std::uint32_t>(i+1);
                 if(!defs[i]) {
                     c.存在概念节点=有效存在概念(i);
@@ -2804,8 +2920,11 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     }
                 }
                 pair.条件.条件项组.push_back(std::move(c));
+                }
                 if(!defs[i])continue;
                 const auto id=(*bindings)[i].有序引用->信息节点;
+                // 起初未知且没有写回时，没有条件或结果需要导出。
+                if(!before[i]->当前值 && !是本次方法写回(id))continue;
                 const auto f=context.参数场景->读取绑定特征(id);
                 if(!f||!f->当前值)throw 新学习运行异常(m.节点,新学习运行异常原因::结构不一致,"structure inconsistent at line 2391");
                 if (!成员读取组.empty() && 成员读取组.front().集合参数序号 == i + 1) {
@@ -2893,14 +3012,20 @@ void 模拟学习服务::学习有序本能(const 新方法信息& 原方法,con
                     }
                 };
                 if(used) {
-                    if(used->动作前准确值!=项.前.特征->当前值)
-                        throw 新学习运行异常(m.节点,新学习运行异常原因::定义前提已变化,"attached feature changed before actual read");
+                    // 条件使用方法实际读到的值，不与更早的准备快照比较。
+                    auto 实际读取=项.前;
+                    实际读取.特征->当前值=used->动作前准确值;
+                    实际读取.当前完整材料.reset();
+                    if(used->动作前准确值) {
+                        if(const auto* id=std::get_if<稳定编码>(&*used->动作前准确值))
+                            实际读取.当前完整材料=world->读取模拟特征值材料(*id);
+                    }
                     新方法条件项定义 c;c.参数序号=项.位置;c.特征类型概念节点=项.FT;
                     const auto 已知存在=std::find_if(pair.条件.条件项组.begin(),pair.条件.条件项组.end(),[&](const auto& x) {
                         return x.参数序号==项.位置&&x.存在概念节点&&!x.特征类型概念节点;
                     });
                     if(已知存在!=pair.条件.条件项组.end())c.存在概念节点=已知存在->存在概念节点;
-                    if(used->动作前准确值)填域(c,项.前);
+                    if(used->动作前准确值)填域(c,实际读取);
                     pair.条件.条件项组.push_back(std::move(c));
                 }
                 if(是本次方法写回(F)&&结果类型组.contains(项.FT)) {

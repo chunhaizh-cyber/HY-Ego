@@ -38,6 +38,13 @@ enum class 新特征值快照解码状态 : std::uint8_t {
 struct 新特征值快照解码结果 final {
     新特征值快照解码状态 状态 = 新特征值快照解码状态::未初始化;
     std::optional<新特征值信息> 信息;
+    // 与已解码材料来自同一结构，供组合原子发表使用。
+    基础只读预期 窄预期;
+};
+
+// 由对应的特征值 owner 在初始化后取得；仅在该 owner 及其数据集存活期间使用。
+struct 新特征值快照解码结构 final {
+    稳定编码 节点类型字段, 特征值类型节点, 材料物理类型字段, 原始材料字段;
 };
 
 class 新_特征值类 final {
@@ -63,6 +70,9 @@ public:
     std::optional<新特征值信息> 获取特征值(稳定编码 节点) const noexcept;
     // 只解码调用方提供的结构，不读取底层或判断快照当前性。
     新特征值快照解码结果 解码特征值快照(const 基础节点结构&) const;
+    std::optional<新特征值快照解码结构> 读取快照解码结构() const;
+    static 新特征值快照解码结果 解码特征值快照(
+        const 基础节点结构&, const 新特征值快照解码结构&);
     std::vector<稳定编码> 查询特征值(
         材料物理类型 物理类型, const 新特征值材料& 材料) const noexcept;
     bool 是特征值节点(稳定编码 节点) const noexcept;

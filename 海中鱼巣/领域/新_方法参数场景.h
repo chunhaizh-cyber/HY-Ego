@@ -78,11 +78,26 @@ struct 新方法参数角色绑定 final {
         const 新方法参数角色绑定&) = default;
 };
 
+enum class 新模拟局部特征概念状态 : std::uint8_t {
+    已读取 = 1, 非本地, 样例已关闭, 资源失败, 结构损坏
+};
+struct 新模拟局部特征概念身份 final {
+    稳定编码 概念节点, 正式类型根, 父概念;
+    std::optional<稳定编码> 覆盖正式概念;
+};
+struct 新模拟局部特征概念读取结果 final {
+    新模拟局部特征概念状态 状态=新模拟局部特征概念状态::非本地;
+    std::optional<新模拟局部特征概念身份> 身份;
+};
+
 // 一个调用期所有者同时提供只读投影与隔离写端口，不能拼接不同样例。
 class 新方法模拟运行接口 : public 新内部治理对象读取接口 {
 public:
     virtual 正式信息参数读取结果 读取正式信息参数保护(
         稳定编码,稳定编码) const noexcept { return {}; }
+    virtual 新模拟局部特征概念读取结果 读取模拟局部特征概念(稳定编码) const noexcept {
+        return {};
+    }
     virtual 新模拟需求读回 读取模拟需求(稳定编码) const = 0;
     virtual 新模拟需求关联读回<服务要求理解信息> 读取模拟理解(稳定编码) const = 0;
     virtual 新模拟需求关联读回<服务要求确认信息> 读取模拟确认(稳定编码) const = 0;

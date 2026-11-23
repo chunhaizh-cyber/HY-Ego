@@ -110,15 +110,16 @@ struct 动态概念包含结果 final {
 // 全局基础数据集中的物理组织根。它不是动态概念。
 extern 稳定编码 动态概念图根节点;
 
-class 概念_动态类 final {
+class 概念_动态类 final : public 正式概念身份读取接口 {
 public:
     概念_动态类(
         概念_特征类& 特征概念服务,
         const 新_特征值类& 特征值服务,
         概念_二次特征类& 二次特征概念服务,
-        const 概念_存在类* 动作存在概念读取 = nullptr) noexcept;
+        概念_存在类* 动作存在概念读取 = nullptr) noexcept;
 
     bool 初始化() noexcept;
+    正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
 
     // 仅由真实动作入口提交已核验的方法声明投影；不推断动作效果。
     动态概念建立结果 建立或取得动作概念(const 动作概念定义&) noexcept;
@@ -185,7 +186,7 @@ private:
         const std::vector<稳定编码>& 动态外部关系组) noexcept;
     概念_特征类& 特征概念服务_;
     const 新_特征值类& 特征值服务_;
-    const 概念_存在类* 动作存在概念读取_ = nullptr;
+    概念_存在类* 动作存在概念读取_ = nullptr;
     概念_二次特征类& 二次特征概念服务_;
 };
 

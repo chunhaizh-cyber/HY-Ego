@@ -1,16 +1,21 @@
-#pragma once
+﻿#pragma once
 #include <memory>
 #include <functional>
+#include <mutex>
+#include <map>
 #include <string>
 #include "新_方法参数场景.h"
 #include "方法问题反馈.数据.h"
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
+#include "本能词条归类.运行接口.h"
 #include "数据服务.词典材料类.h"
 #include "数据服务.外设词典记录类.h"
 
 namespace 海中鱼巣 {
+struct 新名称挂接概念解码结构;
+struct 新特征值快照解码结构;
 extern 稳定编码 模拟世界树根节点;
 enum class 新模拟特征初值方式 : std::uint8_t { 常规输入=0, 复制准确=1, 复制未知=2, 概念构造未知=3 };
 struct 新模拟执行主体输入 final {
@@ -33,8 +38,10 @@ struct 新模拟内容读取记录 final {
     稳定编码 节点;
     std::vector<std::uint32_t> 参数位置组;
     std::variant<新模拟需求信息,服务要求理解信息,服务要求确认信息,
-        新部分服务要求材料,新模拟语言场景信息,新特征信息,正式信息参数投影> 投影;
+        新部分服务要求材料,新模拟语言场景信息,新特征信息,正式信息参数投影,新特征值信息> 投影;
     bool 动作前=true;
+    // 仅归类样例使用：记录读取时同次归类回执是否已经取得。
+    std::optional<bool> 归类结果已提交;
 };
 enum class 新模拟世界状态 : std::uint8_t { 已完成 = 1, 入口拒绝, 结构不一致, 资源失败, 定义前提已变化, 能力未支持 = 6, 需重新组织输入 = 7 };
 struct 新模拟世界建立结果 final {
@@ -85,6 +92,8 @@ struct 新模拟有序参数输入 final {
     // 正式W的不可变键及来源映射；发布localW时不写入来源W引用。
     std::optional<新词条信息> 复制词条;
     std::optional<新模拟归类材料复制输入> 复制归类材料;
+    // 归类样例中正式来源特征的实际概念；不改变方法参数规格。
+    std::optional<稳定编码> 复制特征概念;
 };
 struct 新模拟词典材料复制输入 final {
     新词典材料信息 材料;
@@ -283,6 +292,8 @@ public:
     std::optional<新任务虚拟存在特征组> 读取任务虚拟存在特征组(const 新任务虚拟存在引用&) const noexcept override;
     void 开始记录复制上下文读取(const std::function<bool()>& 停止检查 = {});
     bool 结束记录复制上下文读取();
+    // 归类提交后、关闭调用前读取完整F及历史；只产生观察轨迹。
+    std::optional<新特征信息> 观察本次归类结果() const;
     // 只返回已关闭调用窗口中最后由方法实际提交的F身份；结果值仍须正式读回。
     std::vector<稳定编码> 读取本次写回特征组() const;
     std::optional<新任务虚拟存在特征组> 读取模拟集合任务治理(std::uint32_t, 稳定编码) const noexcept override;
@@ -301,10 +312,59 @@ public:
     稳定编码 模拟根节点() const noexcept override;
     bool 核验模拟参数(稳定编码, const std::vector<新方法参数角色绑定>&) const noexcept override;
     std::optional<新特征信息> 读取模拟特征(稳定编码) const noexcept override;
+    新模拟局部特征概念读取结果 读取模拟局部特征概念(稳定编码) const noexcept override;
     std::optional<新特征值信息> 读取模拟特征值材料(稳定编码) const noexcept override;
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
     正式信息参数读取结果 读取本地归类材料(稳定编码,稳定编码) const;
+    struct 本地归类特征概念 final {
+        稳定编码 节点,类型根,父概念,值域节点;
+        std::vector<稳定编码> 值域材料;
+        std::optional<稳定编码> 覆盖正式概念;
+    };
+    std::optional<本地归类特征概念> 读取本地归类特征概念(稳定编码) const;
+    std::optional<本地归类特征概念> 查找本地归类概念覆盖(稳定编码) const;
+    std::optional<std::vector<稳定编码>> 读取归类混合子概念(稳定编码) const;
+    std::optional<新特征匹配定义快照> 读取本地特征实际定义(稳定编码) const;
+    struct 本地归类名称准备 final {
+        bool 已取得=false;
+        bool 新建名称=false;
+        std::optional<基础组内字段内容> 名称引用;
+        std::vector<std::uint64_t> 目标概念组;
+    };
+    本地归类名称准备 准备本地归类名称(稳定编码,稳定编码,稳定编码,基础节点组追加请求&) const;
+    struct 本地归类历史准备 final {
+        std::int64_t 新命中次数=0;
+        bool 标准值改变=false;
+        std::vector<稳定编码> 删除的本地字段;
+    };
+    本地归类历史准备 准备本地归类历史更新(稳定编码,
+        const 基础组内字段内容&,基础节点组追加请求&,const 基础节点结构&,
+        const std::vector<基础联合节点读取项>&) const;
+    struct 本地归类候选 final {
+        基础节点组追加请求 请求;
+        本地归类名称准备 名称;
+        std::optional<基础组内字段内容> 目标材料;
+        std::vector<稳定编码> 删除的本地字段;
+        bool 值改变=false;
+        // 仅表示概念分支已组装，仍需L1前提及发表后接管。
+        bool 概念分支已准备=false;
+        std::optional<std::size_t> 后状态槽,变化槽;
+        std::optional<稳定编码> 前状态;
+        std::optional<std::int64_t> 新步骤;
+        新本能词条归类回执 待填回执;
+    };
+    // 调用方持样例锁并负责在候选返回后持续持锁至发表；正式owner读取时本函数暂时释放锁。
+    // 单C及名称、历史、状态共同发表，成功后由同一调用接管。
+    std::optional<本地归类候选> 准备本地归类候选(稳定编码,稳定编码,稳定编码,稳定编码,稳定编码,
+        std::unique_lock<std::recursive_mutex>&,bool& 已观察停止) const;
+    bool 处理隔离停止(bool 已观察停止);
+    static 新本能词条归类回执 填回本地归类回执(本地归类候选&&,const 基础节点组追加结果&);
+    const 新本能词条归类回执& 接管本地归类结果(稳定编码,本地归类候选&&,基础节点组追加结果&&,
+        std::unique_lock<std::recursive_mutex>&);
+    新词条归类动作结果 准备本地归类动作(const 方法参数场景&);
+    新词条归类提交结果 读取本地归类结果(const 方法参数场景&) const;
+    新词条归类提交结果 提交本地归类候选(const 方法参数场景&);
     struct 词典接收提供者;
     struct 词典接收准备;
     void 建立本地词典接收场景();
@@ -332,7 +392,11 @@ private:
     新交互写入读回 发布本地队列(稳定编码 F,const std::vector<std::uint64_t>&,
         std::optional<稳定编码> 动作,bool 方法写入,
         const std::function<void(基础节点组追加请求&,std::size_t,std::size_t)>& 附加 = {});
-    std::optional<新特征信息> 读取模拟特征内部(稳定编码,bool 正式定位) const noexcept;
+    std::optional<新特征信息> 读取模拟特征内部(稳定编码,bool 正式定位,
+        std::optional<新特征匹配定义快照>* 实际定义=nullptr,
+        const 新特征匹配定义快照* 已取得定义=nullptr,
+        const 基础节点结构* 特征快照=nullptr,
+        const std::vector<基础联合节点读取项>* 命中快照组=nullptr) const noexcept;
     struct 实现;
     std::unique_ptr<实现> 实现_;
 };

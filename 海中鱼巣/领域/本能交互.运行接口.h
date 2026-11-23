@@ -2,13 +2,18 @@
 #include <cstdint>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 #include "../核心/基础数据集.h"
 #include "消息交互.数据.h"
 #include "本能词典.数据.h"
+#include "本能词条归类.数据.h"
+#include "信息内容.数据.h"
 #include "新_方法公共类型.h"
 #include "新_存在类.h"
+#include "新_特征值类.h"
 #include "新_二次特征类.h"
+#include "模拟需求.数据.h"
 
 namespace 海中鱼巣 {
 class 方法参数场景;
@@ -37,12 +42,55 @@ struct 新隔离变化证据 final {
     std::optional<稳定编码> 前状态,动作节点;
     bool 方法直接写入=false;
 };
+struct 新隔离归类材料读取 final {
+    正式信息参数投影 内容;
+    std::vector<std::uint32_t> 参数位置组;
+    bool 动作前=false;
+    bool 归类结果已提交=false;
+    std::uint64_t 读取序号=0;
+};
+struct 新隔离归类特征读取 final {
+    新特征信息 内容;
+    std::vector<std::uint32_t> 参数位置组;
+    bool 动作前=false;
+    bool 归类结果已提交=false;
+    std::uint64_t 读取序号=0;
+};
+struct 新隔离归类值读取 final {
+    新特征值信息 内容;
+    bool 动作前=false;
+    bool 归类结果已提交=false;
+    std::uint64_t 读取序号=0;
+};
+// 其他读取保留原始投影；是否能抽象为正式条件由学习侧决定。
+struct 新隔离归类其他读取 final {
+    std::uint8_t 类别=0;
+    稳定编码 节点;
+    std::vector<std::uint32_t> 参数位置组;
+    std::variant<新模拟需求信息,服务要求理解信息,服务要求确认信息,
+        新部分服务要求材料,新模拟语言场景信息,新特征信息,正式信息参数投影,新特征值信息> 投影;
+    bool 动作前=false;
+    bool 归类结果已提交=false;
+    std::uint64_t 读取序号=0;
+};
+struct 新隔离归类名称读取 final {
+    稳定编码 词条;
+    std::vector<稳定编码> 普通名称概念组,全部名称概念组;
+    std::uint64_t 前序内容读取数=0;
+    bool 动作前=false,归类结果已提交=false;
+};
 struct 新隔离调用证据 final {
     新隔离调用身份 身份;
     bool 已请求取消=false;
     std::vector<稳定编码> 阶段动作组;
     std::vector<新隔离变化证据> 变化组;
     std::optional<新本能词典读取回执> 词典读取;
+    std::optional<新本能词条归类回执> 词条归类;
+    std::vector<新隔离归类材料读取> 归类材料读取组;
+    std::vector<新隔离归类特征读取> 归类特征读取组;
+    std::vector<新隔离归类值读取> 归类值读取组;
+    std::vector<新隔离归类其他读取> 归类其他读取组;
+    std::vector<新隔离归类名称读取> 归类名称读取组;
 };
 struct 新隔离连接完成材料 final {
     新交互绑定 绑定;
