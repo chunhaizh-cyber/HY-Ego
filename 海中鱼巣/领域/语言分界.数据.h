@@ -149,5 +149,14 @@ struct 新语言分界采用回执 final {
     std::optional<稳定编码> 新状态;
     std::optional<std::int64_t> 新状态UTC纳秒;
 };
+struct 新语言分界依据采用请求 final {
+    稳定编码 范围, 依据;
+    std::optional<稳定编码> 预期当前依据;
+};
+struct 新语言分界依据采用回执 final {
+    稳定编码 范围, 实际依据, 特征类型, 特征;
+    std::optional<稳定编码> 新状态;
+    std::optional<std::int64_t> 新状态UTC纳秒;
+};
 
 } // namespace 海中鱼巣
