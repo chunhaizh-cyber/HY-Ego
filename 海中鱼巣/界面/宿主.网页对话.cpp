@@ -515,7 +515,8 @@ std::string JSON转义(std::string_view 文本) {
     return 结果;
 }
 
-std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消息组) {
+std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消息组,
+    const 网页对话框目标& 目标, const 网页服务输入回调组& 回调) {
     std::string 结果 = "{\"messages\":[";
     bool 首项 = true;
     for (const auto& 消息 : 消息组) {
@@ -528,6 +529,16 @@ std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消
             + "\",\"text\":\"" + JSON转义(消息.UTF8正文) + "\"";
         if (消息.正式输出消息编码)
             结果 += ",\"outputMessageId\":\"" + std::to_string(*消息.正式输出消息编码) + "\"";
+        if (消息.正式输出消息编码 && 回调.读取原文分界引文) {
+            if (const auto 引文 = 回调.读取原文分界引文(目标,*消息.正式输出消息编码)) {
+                结果 += ",\"questionContext\":{\"kind\":\"textBoundary\",\"questionId\":\""
+                    + std::to_string(引文->问题编码) + "\",\"rangeId\":\"" + std::to_string(引文->范围编码)
+                    + "\",\"start\":\"" + std::to_string(引文->起始标量) + "\",\"end\":\""
+                    + std::to_string(引文->结束标量) + "\",\"sourceText\":\"" + JSON转义(引文->固定原文)
+                    + "\",\"rangeText\":\"" + JSON转义(引文->范围原文)
+                    + "\",\"answerFormat\":\"json-string-array\"}";
+            }
+        }
         if (消息.回应输出消息编码)
             结果 += ",\"replyTo\":\"" + std::to_string(*消息.回应输出消息编码) + "\"";
         结果 += '}';
@@ -1085,6 +1096,8 @@ let selectedReply=null;
 function selectReply(item){
     selectedReply=item;
     replySelectionText.textContent=item?'正在回复：'+item.text.slice(0,100):'';
+    if(item?.questionContext?.kind==='textBoundary')
+        replySelectionText.textContent+='｜原文：'+item.questionContext.rangeText+'。请按原顺序提交 JSON 字符串数组。';
     replySelectionBox.hidden=!item;
 }
 document.getElementById('cancel-reply').addEventListener('click',()=>{selectReply(null);input.focus();});
@@ -1101,6 +1114,12 @@ function render(items){
         const message=document.createElement('div');
         message.className='message '+item.role;
         message.textContent=item.text;
+        if(item.questionContext?.kind==='textBoundary'){
+            const quote=document.createElement('blockquote');
+            quote.style.whiteSpace='pre-wrap';
+            quote.textContent=item.questionContext.rangeText;
+            message.append(quote);
+        }
         if(item.role==='assistant'&&typeof item.outputMessageId==='string'){
             const button=document.createElement('button');
             button.type='button';
@@ -1541,7 +1560,7 @@ bool 处理请求(SOCKET 客户端,
             return true;
         }
         发送响应(客户端, "200 OK", "application/json;charset=utf-8",
-            构造消息JSON(读取.消息组));
+            构造消息JSON(读取.消息组,*目标,服务输入));
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 消息路径) {

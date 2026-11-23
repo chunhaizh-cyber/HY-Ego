@@ -1,5 +1,8 @@
 #include "接收需求认知.服务.h"
 #include "新_外设世界树类.h"
+#include "字段询问.语言服务.h"
+#include "新_世界树类.h"
+#include "../适配/适配器.UTC时钟.h"
 #include "转换.语言场景基础.h"
 #include "转换.语言场景共同.h"
 #include "../领域/新_自然语言世界树类.h"
@@ -604,6 +607,101 @@ std::optional<新接收场景信息> 提取接收场景信息(const 语言基础
         throw std::logic_error("received legacy value concept invalid");
     return out;
 }
+std::optional<稳定编码> 输出接收分界询问(认知依赖& d, const 接收分界询问配置& 配置,
+    const 新前置语言输入定位& p, 稳定编码 R, const 新外设消息信息& 消息,
+    std::stop_token 停止, const std::function<bool()>& 会话活动, std::string& 等待原因) {
+    等待原因 = "等待原文分界询问的外设窗口定位";
+    检查认知停止(停止);
+    if (!会话活动()) return {};
+    const auto 外设 = d.外设.按场景读取交互场景(消息.场景节点);
+    if (!外设 || !外设->来源.定位.输出队列特征) return {};
+    const auto& 来源窗口 = 外设->来源;
+    if (来源窗口.定位.窗口节点 != 消息.窗口节点
+        || 来源窗口.公开宿主会话 != p.公开宿主会话
+        || 来源窗口.对话框标识 != 消息.来源.对话框标识) return {};
+
+    auto 出站 = d.语言.读取出站具体表达(R);
+    if (!出站) {
+        等待原因 = "等待原文分界询问的现实交互场景";
+        const auto 交互场景 = 配置.世界->查找现实交互场景(消息.场景节点, 配置.外设场景标识类型);
+        using C = 新场景操作状态;
+        if (交互场景.状态 == C::资源失败) 资源();
+        if (交互场景.状态 == C::存在不存在 || 交互场景.状态 == C::入口拒绝) return {};
+        if (交互场景.状态 != C::无变化 || !交互场景.存在节点)
+            throw std::logic_error("分界询问的现实交互窗口定位不一致");
+        const auto 作用域 = d.现实场景.查询所属场景(*交互场景.存在节点);
+        if (!作用域) return {};
+        正式表达需求 表达;
+        表达.表达对象 = 正式表达信息字段{R, 配置.有效分界类型, 配置.材料范围概念};
+        表达.说话者 = {新指称类别::存在, p.自我存在节点, {}};
+        表达.受话者 = {新指称类别::存在, p.来源人类节点, {}};
+        表达.成文参数 = {p.语言节点, *交互场景.存在节点, *作用域,
+            配置.第三方指代概念, 配置.第三方别名关系, 100};
+        const auto 问句 = 配置.表达->生成候选话语(表达, *配置.取材);
+        if (问句.状态 != 新字段询问文字状态::已生成且唯一回读) {
+            等待原因 = "原文分界询问尚未生成，语言状态=" + std::to_string(static_cast<int>(问句.状态));
+            return {};
+        }
+        等待原因 = "等待原文分界询问的正式出站表达";
+        检查认知停止(停止);
+        if (!会话活动()) return {};
+        const auto 场景 = d.语言世界.建立或取得出站来源场景(R);
+        using L = 新来源子场景状态;
+        if (场景.状态 == L::资源失败) 资源();
+        if (场景.状态 == L::前提已变化 || 场景.状态 == L::未建立) return {};
+        if ((场景.状态 != L::已建立 && 场景.状态 != L::已存在) || !场景.信息)
+            throw std::logic_error("分界询问的出站来源场景不一致");
+        出站 = d.语言.建立或取得出站具体表达(场景.信息->场景节点, 问句.含义网,
+            问句.所用组织知识节点, 问句.UTF8正文, R, 新出站正式被询定位{R, 配置.有效分界类型});
+        if (!出站) return {};
+    }
+
+    等待原因 = "等待原文分界询问的正式问题";
+    const 新语言原文分界被询目标 目标{R, 配置.有效分界类型, 消息.场景节点, 消息.窗口节点,
+        来源窗口.公开宿主会话, 来源窗口.对话框标识};
+    稳定编码 Q;
+    if (const auto 已有 = d.语言.按出站来源读取问题(R)) {
+        if (已有->定义.被问种类 != 新问题被问种类::原文分界
+            || 已有->定义.分界目标 != 目标 || 已有->定义.交互者 != p.来源人类节点)
+            throw std::logic_error("同源分界问题定位冲突");
+        Q = 已有->问题节点;
+    } else {
+        检查认知停止(停止);
+        if (!会话活动()) return {};
+        const auto 时间 = UTC时钟适配器{}.读取当前UTC时间证据_v1({});
+        if (!时间.成功()) throw std::logic_error("无法取得正式分界提问的UTC时刻");
+        新语言问题定义 定义;
+        定义.出站来源场景 = 出站->场景;
+        定义.出站来源 = R;
+        定义.交互场景 = 消息.场景节点;
+        定义.交互者 = p.来源人类节点;
+        定义.被问种类 = 新问题被问种类::原文分界;
+        定义.提问时刻 = 时间.证据->UTC纳秒;
+        定义.分界目标 = 目标;
+        const auto 建立 = d.语言.建立或取得出站问题(定义);
+        using S = 新语言问题建立状态;
+        if (建立.状态 == S::前提已变化) return {};
+        if ((建立.状态 != S::已建立 && 建立.状态 != S::已存在) || !建立.问题节点)
+            throw std::logic_error("正式分界问题建立失败");
+        Q = *建立.问题节点;
+    }
+    检查认知停止(停止);
+    if (!会话活动()) return {};
+    const auto 入列 = d.外设.提交输出({来源窗口.定位, 出站->候选话语原文, {}, {}, Q});
+    using S = 新外设输出队列状态;
+    if (入列.状态 == S::资源失败) 资源();
+    if (入列.状态 == S::目标不符) throw std::logic_error("同问题的外设输出来源冲突");
+    等待原因 = "等待原文分界询问的外设入列，状态=" + std::to_string(static_cast<int>(入列.状态));
+    if (入列.状态 != S::已入列 && 入列.状态 != S::已复用) return {};
+    if (!入列.消息 || 入列.消息->关联问题 != Q) throw std::logic_error("正式分界询问出站回执不一致");
+    try {
+        std::wostringstream 记录;
+        记录 << L"M=" << 消息.消息节点.值 << L" R=" << R.值 << L" Q=" << Q.值 << L" O=" << 入列.消息->消息节点.值;
+        (void)记录运行日志(L"接收需求认知", L"分界问题出站", 记录.str());
+    } catch (...) {}
+    return 入列.消息->消息节点;
+}
+
 } // namespace
 
 struct 接收需求认知服务::实现 final {
@@ -615,6 +713,8 @@ struct 接收需求认知服务::实现 final {
         前置阶段 前置=前置阶段::无;
         std::optional<新前置语言输入定位> 定位;
         std::optional<新任务前置语言输入结果> 已确认结果;
+        bool 分界询问已收束=false;
+        std::optional<稳定编码> 分界询问输出;
         // 本消息首次确定的说话者（当前交互者）；重入沿用，不随交互者后续变化改写。
         std::optional<稳定编码> 说话者;
     };
@@ -624,6 +724,7 @@ struct 接收需求认知服务::实现 final {
     std::optional<接收需求认知观察> 最近;
     std::optional<稳定编码> 上次;
     std::optional<稳定编码> 交互者特征类型;
+    std::optional<接收分界询问配置> 分界询问配置;
     explicit 实现(认知依赖 d):依赖(d){}
     新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,std::stop_token);
     std::optional<新前置有效分界目标> 读取当前分界缺口(const 新前置语言输入材料&) const;
@@ -633,6 +734,15 @@ struct 接收需求认知服务::实现 final {
     新_特征值类& v,新_特征类& f,新_场景类& s,新_需求类& d)
     :实现_(std::make_unique<实现>(认知依赖{a,b,c,e,n,ce,cf,c2,ex,v,f,s,d})){}
 接收需求认知服务::~接收需求认知服务()=default;
+bool 接收需求认知服务::装配被动分界询问(接收分界询问配置 配置) {
+    if(!配置.世界||!配置.表达||!配置.取材||!有效(配置.外设场景标识类型)||!有效(配置.材料范围概念)
+        ||!有效(配置.候选类型)||!有效(配置.依据类型)||!有效(配置.有效分界类型)
+        ||!有效(配置.第三方指代概念)||!有效(配置.第三方别名关系))return false;
+    std::lock_guard 锁(实现_->锁);
+    if(实现_->分界询问配置)return *实现_->分界询问配置==配置;
+    实现_->分界询问配置=std::move(配置);
+    return true;
+}
 接收认知语境接纳状态 接收需求认知服务::登记会话语境(const 接收需求认知会话语境& c){
     using S=接收认知语境接纳状态;
     if(c.公开宿主会话.empty()||!有效(c.现实根)||!有效(c.语言)||(c.已绑定人类&&!有效(*c.已绑定人类))
@@ -925,8 +1035,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     // 公平轮转，不让单条反复前提变化阻挡后续真实M。
     // 已登记且未封存会话上的M优先：旧会话残留不得长期挡住当前入站认知（§8.2 真实M公平）。
     const auto eligible=[&](const auto& m){std::lock_guard g(impl.锁);const auto it=impl.进度.find(m.消息节点);
-        if(it!=impl.进度.end()&&(it->second.前置==实现::前置阶段::待筹办||it->second.前置==实现::前置阶段::具名等待
-            ||it->second.前置==实现::前置阶段::已停用))return false;
+        if(it!=impl.进度.end()){
+            const auto& 工作=it->second;
+            if(工作.前置==实现::前置阶段::待筹办||工作.前置==实现::前置阶段::已停用)return false;
+            if(工作.前置==实现::前置阶段::具名等待)
+                return impl.分界询问配置 && !工作.分界询问已收束 && 工作.观察.前置输入等待材料
+                    && 工作.观察.前置输入等待材料->有效分界缺口 && 工作.下次<=now;
+        }
         return it==impl.进度.end()
         ||((!it->second.终结||(it->second.观察.阶段==阶段::已读回行动请求&&!it->second.行动请求已交接))&&it->second.下次<=now);};
     const auto 会话仍活跃=[&](const auto& m){
@@ -951,7 +1066,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         return {};}
     const auto& m=*chosen;本次消息=m.消息节点;
     实现::调度 work;
-    {std::lock_guard g(impl.锁);impl.上次=m.消息节点;work=impl.进度[m.消息节点];}
+    std::optional<接收分界询问配置> 分界配置;
+    {std::lock_guard g(impl.锁);impl.上次=m.消息节点;work=impl.进度[m.消息节点];分界配置=impl.分界询问配置;}
     const auto 原阶段=work.前置;const auto 原定位=work.定位;const auto 原交接=work.行动请求已交接;
     const auto 提交进度=[&]() {
         std::lock_guard g(impl.锁);auto& actual=impl.进度.at(m.消息节点);
@@ -1039,6 +1155,47 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         if (stop.stop_requested() || !提交进度()) return {};
         保存观察(out);
         return out;
+    }
+    if(work.前置==实现::前置阶段::具名等待 && 分界配置 && out.前置输入等待材料
+        && out.前置输入等待材料->有效分界缺口) {
+        const auto& 材料=*out.前置输入等待材料;
+        using S=正式信息参数读取状态;
+        try {
+            if(stop.stop_requested()||!会话仍活跃(m))return {};
+            if(const auto 缺口=impl.读取当前分界缺口(材料)) {
+                const auto 取材=分界配置->取材->读取正式信息参数保护(缺口->范围,分界配置->材料范围概念);
+                if(取材.状态==S::资源失败)资源();
+                if(取材.状态==S::已读取&&取材.信息) {
+                    const auto& 字段=取材.信息->直接内容组;
+                    const auto 已知=[&](稳定编码 类型){
+                        return std::any_of(字段.begin(),字段.end(),[&](const auto& 项){
+                            return 项.特征类型==类型&&项.内容.状态==正式内容值状态::已知;
+                        });
+                    };
+                    if(已知(分界配置->依据类型)||已知(分界配置->有效分界类型)) {
+                        work.分界询问已收束=true;
+                    } else if(已知(分界配置->候选类型)) {
+                        work.分界询问输出=输出接收分界询问(d,*分界配置,材料.定位,缺口->范围,m,stop,
+                            [&]{return 会话仍活跃(m);},out.原因);
+                        if(work.分界询问输出){
+                            work.分界询问已收束=true;
+                            out.原因="正式分界问题已入列，等待明确关联回答";
+                        }
+                    }
+                }
+            } else work.分界询问已收束=true;
+        } catch(const 推进中断& 中断) {
+            if(stop.stop_requested())return {};
+            out.原因=中断.原因;
+        } catch(const std::bad_alloc&) {
+            out.原因="正式分界询问资源延后";
+        } catch(const std::length_error&) {
+            out.原因="正式分界询问材料资源延后";
+        }
+        work.观察=out;
+        work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
+        if(!提交进度())return {};
+        保存观察(out);return out;
     }
     if(work.前置==实现::前置阶段::待重入) {
         work.前置=实现::前置阶段::无;work.观察.前置输入等待材料.reset();out.前置输入等待材料.reset();

@@ -14,6 +14,15 @@ class 概念_存在类; class 概念_特征类; class 概念_二次特征类;
 class 新_存在类; class 新_特征值类; class 新_特征类;
 class 新_场景类; class 新_需求类;
 struct 新任务前置语言输入结果;
+class 字段询问语言服务; class 新_世界树类; class 正式信息参数读取接口;
+struct 接收分界询问配置 final {
+    const 新_世界树类* 世界;
+    std::shared_ptr<const 字段询问语言服务> 表达;
+    const 正式信息参数读取接口* 取材;
+    稳定编码 外设场景标识类型, 材料范围概念, 候选类型, 依据类型, 有效分界类型;
+    稳定编码 第三方指代概念, 第三方别名关系;
+    friend bool operator==(const 接收分界询问配置&,const 接收分界询问配置&)=default;
+};
 struct 接收需求认知会话语境 final {
     std::string 公开宿主会话;
     std::optional<稳定编码> 已绑定人类;
@@ -56,6 +65,7 @@ public:
         概念_特征类&,概念_二次特征类&,新_存在类&,
         新_特征值类&,新_特征类&,新_场景类&,新_需求类&);
     ~接收需求认知服务();
+    bool 装配被动分界询问(接收分界询问配置);
     接收认知语境接纳状态 登记会话语境(const 接收需求认知会话语境&);
     void 封存会话(std::string_view) noexcept;
     std::optional<接收需求认知观察> 推进一次(std::stop_token);

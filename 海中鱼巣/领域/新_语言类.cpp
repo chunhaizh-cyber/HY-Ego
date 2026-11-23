@@ -6288,7 +6288,7 @@ std::optional<稳定编码> 查采用源已加锁(const 新接收认知来源键
 namespace {
 // CONV-EXPR-STRUCT：仅语言owner使用的结构字段编解码。引用始终是L1引用；
 // 局部编号/顺序是直接值，未把稳定编码藏入文本或整数向量。
-enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,词典材料登记,词典材料组登记,词典归类解读,总数 };
+enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,词典材料登记,词典材料组登记,词典归类解读,出站被询定位,总数 };
 std::array<稳定编码,static_cast<std::size_t>(组织键::总数)> 组织句柄{};
 稳定编码 组键(组织键 k){return 组织句柄[static_cast<std::size_t>(k)];}
 void 组织要求(bool ok){if(!ok)throw std::logic_error("表达组织知识或出站含义记录结构不一致");}
@@ -6344,7 +6344,9 @@ auto 组织记录字段(新接收场景信息& v){return std::tie(v.种类,v.来
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.招呼操作,v.目标存在,v.原文起点,v.原文终点,v.时刻);}
 auto 组织记录字段(新自我写入语言信息& v){return std::tie(v.写入来源,v.来源场景,v.自我,v.主体存在,v.特征类型,
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.时刻);}
-auto 组织记录字段(新语言问题定义& v){return std::tie(v.出站来源场景,v.出站来源,v.交互场景,v.交互者,v.被认知需求,v.主体,v.被问栏,v.提问时刻,v.被问种类);}
+auto 组织记录字段(新出站正式被询定位& v){return std::tie(v.信息节点,v.特征类型);}
+auto 组织记录字段(新语言原文分界被询目标& v){return std::tie(v.范围,v.特征类型,v.外设场景,v.外设窗口,v.公开会话,v.对话框);}
+auto 组织记录字段(新语言问题定义& v){return std::tie(v.出站来源场景,v.出站来源,v.交互场景,v.交互者,v.被认知需求,v.主体,v.被问栏,v.提问时刻,v.被问种类,v.分界目标);}
 auto 组织记录字段(新词典语言词段& v) {
     return std::tie(v.起始标量, v.结束标量, v.规范化词面, v.依据);
 }
@@ -6399,7 +6401,16 @@ struct 组织写入现场 {
         else if constexpr(组织数组<T>::value){n=节点(6,order);std::int64_t i=0;for(const auto& c:v){const auto child=写(c,i++);子(n,组织键::子项,child);}}
         else if constexpr(组织可选<T>::value){n=节点(7,order);if(v){const auto child=写(*v);子(n,组织键::子项,child);}}
         else if constexpr(组织变体<T>::value){n=节点(8,order);值(n,static_cast<std::int64_t>(v.index()));std::visit([&](const auto& x){const auto child=写(x);子(n,组织键::子项,child);},v);}
-        else {n=节点(5,order);auto copy=v;std::int64_t i=0;std::apply([&](const auto&... x){((子(n,组织键::子项,写(x,i++))),...);},组织记录字段(copy));}
+        else {
+            n=节点(5,order);auto copy=v;std::int64_t i=0;
+            const auto 写项=[&](const auto& 项){
+                if constexpr(std::is_same_v<T,新语言问题定义>
+                    &&std::is_same_v<std::decay_t<decltype(项)>,std::optional<新语言原文分界被询目标>>)
+                    if(!项)return;
+                子(n,组织键::子项,写(项,i++));
+            };
+            std::apply([&](const auto&... 项){(写项(项),...);},组织记录字段(copy));
+        }
         return n;
     }
     bool 保护(组织读取现场& 现场){
@@ -6428,6 +6439,8 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
             组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新组织绑定角色::正式信息));
         else if constexpr(std::is_same_v<T,新组织取材算子>)
             组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新组织取材算子::正式字段值域概念));
+        else if constexpr(std::is_same_v<T,新问题被问种类>)
+            组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新问题被问种类::原文分界));
         v=static_cast<T>(原值);
     }
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
@@ -6443,7 +6456,18 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else if constexpr(组织数组<T>::value){组织要求(tag==6);for(auto c:children)v.push_back(组织读值<typename T::value_type>(r,c,path));}
     else if constexpr(组织可选<T>::value){组织要求(tag==7&&children.size()<=1);if(!children.empty())v=组织读值<typename T::value_type>(r,children.front(),path);}
     else if constexpr(组织变体<T>::value){组织要求(tag==8&&children.size()==1);const auto index=r.整数(id,组织键::值);组织要求(index>=0);组织读变体(v,static_cast<std::size_t>(index),r,children.front(),path);}
-    else {组织要求(tag==5);auto fs=组织记录字段(v);组织要求(children.size()==std::tuple_size_v<decltype(fs)>);std::size_t i=0;std::apply([&](auto&... x){((x=组织读值<std::decay_t<decltype(x)>>(r,children[i++],path)),...);},fs);}
+    else {
+        组织要求(tag==5);auto fs=组织记录字段(v);
+        constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
+        if constexpr(std::is_same_v<T,新语言问题定义>)
+            组织要求(children.size()==字段数||children.size()==字段数-1);
+        else 组织要求(children.size()==字段数);
+        std::size_t i=0;
+        const auto 读项=[&](auto& 项){
+            if(i<children.size())项=组织读值<std::decay_t<decltype(项)>>(r,children[i++],path);
+        };
+        std::apply([&](auto&... 项){(读项(项),...);},fs);
+    }
     const auto scalars=r.字段(id,组织键::值).size(),refs=r.字段(id,组织键::引用).size();
     组织要求(r.读(id).结构.字段组.size()==2+children.size()+scalars+refs);
     组织要求(scalars==static_cast<std::size_t>(tag==1||tag==2||tag==3||tag==8||tag==9));
@@ -6517,6 +6541,12 @@ std::optional<新出站具体表达信息> 读出站(组织读取现场& r,稳�
         新出站具体表达信息 v{id,scene,r.引用(id,组织键::组织知识),source,
             组织读值<新语言含义网>(r,r.引用(id,组织键::含义网),path),
             std::get<std::string>(std::get<基础值>(r.唯一(id,组织键::原文)).材料)};
+        const auto 被询=r.字段(id,组织键::出站被询定位);
+        组织要求(被询.size()<=1);
+        if(!被询.empty()){
+            v.正式被询定位=组织读值<新出站正式被询定位>(r,std::get<稳定编码>(被询.front()),path);
+            组织要求(v.正式被询定位->信息节点==source&&有效(v.正式被询定位->特征类型));
+        }
         核验含义网结构(v.含义网);组织要求(!v.候选话语原文.empty());out=std::move(v);
     }
     return out;
@@ -6593,8 +6623,15 @@ void 核自我写入信息(const 新自我写入语言信息& v){
     核值形状(v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向);
 }
 void 核问题定义(const 新语言问题定义& v){
-    组织要求(有效(v.出站来源场景)&&有效(v.出站来源)&&有效(v.交互场景)&&有效(v.交互者)&&有效(v.被认知需求)
-        &&有效(v.主体)&&有效(v.被问栏)&&v.提问时刻>0
+    组织要求(有效(v.出站来源场景)&&有效(v.出站来源)&&有效(v.交互场景)&&有效(v.交互者)&&v.提问时刻>0);
+    if(v.被问种类==新问题被问种类::原文分界){
+        组织要求(v.分界目标&&!有效(v.被认知需求)&&!有效(v.主体)&&!有效(v.被问栏));
+        const auto& 目标=*v.分界目标;
+        组织要求(目标.范围==v.出站来源&&有效(目标.特征类型)&&有效(目标.外设场景)
+            &&有效(目标.外设窗口)&&!目标.公开会话.empty()&&!目标.对话框.empty());
+        return;
+    }
+    组织要求(!v.分界目标&&有效(v.被认知需求)&&有效(v.主体)&&有效(v.被问栏)
         &&(v.被问种类==新问题被问种类::载荷栏||v.被问种类==新问题被问种类::目标栏));
 }
 std::vector<新值陈述信息> 读全部场景信息(组织读取现场& r){
@@ -6662,6 +6699,7 @@ bool 是值陈述答案(const 新接收场景信息& v){
 // 值陈述的结构比对（顶层裁决 2026-11-12，依计划既有规则放宽）：主体已绑定时按结构一致；主体待定时，
 // 说话者是该问题所在交互的交互者（同一交互场景、说话者＝提问时的交互者）、特征类型＝被问栏、时刻晚于提问，也算答案。
 bool 值陈述结构一致(const 新语言问题定义& q,const 新接收场景信息& v){
+    if(q.被问种类==新问题被问种类::原文分界)return false;
     // R121（7240 §5.5第3项）：目标栏问题的答案是需求主体与问题主体一致、出现在提问之后的需求信息；载荷栏比对不变。
     if(q.被问种类==新问题被问种类::目标栏)
         return v.种类==新接收场景信息种类::需求信息&&v.主体存在==std::optional{q.主体}&&v.时刻>q.提问时刻;
@@ -6670,6 +6708,7 @@ bool 值陈述结构一致(const 新语言问题定义& q,const 新接收场景�
     return v.交互场景==q.交互场景&&v.说话者==q.交互者&&v.特征类型&&*v.特征类型==q.被问栏&&v.时刻>q.提问时刻;
 }
 新问题答案查询结果 查答案已加锁(组织读取现场& r,const 新语言问题定义& q){
+    if(q.被问种类==新问题被问种类::原文分界)return {};
     新问题答案查询结果 out;
     for(const auto& x:读全部场景信息(r))
         if(值陈述结构一致(q,x.内容))
@@ -6774,6 +6813,8 @@ std::vector<新值陈述信息> 新_语言类::查询值陈述(稳定编码 交�
     // 问题只随已留档的出站问句建立：出站来源场景须有同来源的出站具体表达。
     const auto 出站=读出站(r,v.出站来源场景);
     if(!出站||出站->场景!=v.出站来源场景||出站->来源!=v.出站来源)return {S::出站留档不符,{}};
+    if(v.分界目标 && 出站->正式被询定位!=std::optional{新出站正式被询定位{
+            v.分界目标->范围,v.分界目标->特征类型}})return {S::出站留档不符,{}};
     组织写入现场 w;const auto root=w.节点(103,0),def=w.写(v);
     w.引用(root,组织键::场景,v.出站来源场景);w.引用(root,组织键::来源,v.出站来源);w.子(root,组织键::定义,def);
     w.请求.追加字段组.push_back({组键(组织键::登记根),组键(组织键::问题登记),基础组内节点引用{root}});
@@ -6801,7 +6842,7 @@ std::vector<新语言问题信息> 新_语言类::查询同结构问题(稳定�
     组织要求(有效(被认知需求)&&有效(主体)&&有效(被问栏));
     std::lock_guard lock(新语言互斥);组织读取现场 r;std::vector<新语言问题信息> out;
     for(auto& q:读全部问题(r))
-        if(q.定义.被认知需求==被认知需求&&q.定义.主体==主体&&q.定义.被问栏==被问栏)out.push_back(std::move(q));
+        if(q.定义.被问种类!=新问题被问种类::原文分界&&q.定义.被认知需求==被认知需求&&q.定义.主体==主体&&q.定义.被问栏==被问栏)out.push_back(std::move(q));
     return out;
 }
 新问题答案查询结果 新_语言类::查找问题答案(稳定编码 问题节点) const {
@@ -6875,21 +6916,24 @@ void 新_语言类::解除问题答案就绪通知(const void* 所有者) noexce
     }
 }
 std::optional<新出站具体表达信息> 新_语言类::建立或取得出站具体表达(稳定编码 scene,const 新语言含义网& meaning,
-    稳定编码 knowledge,const std::string& text,稳定编码 source){
+    稳定编码 knowledge,const std::string& text,稳定编码 source,
+    std::optional<新出站正式被询定位> 被询){
+    组织要求(!被询||(被询->信息节点==source&&有效(被询->特征类型)));
     核验含义网结构(meaning);组织要求(有效(scene)&&有效(source)&&有效(knowledge)&&!text.empty());
     std::lock_guard lock(新语言互斥);组织读取现场 r;
     const auto prior=读出站(r,scene);
-    if(prior){组织要求(prior->场景==scene&&prior->来源==source&&prior->所用组织知识==knowledge&&prior->含义网==meaning&&prior->候选话语原文==text);return prior;}
+    if(prior){组织要求(prior->场景==scene&&prior->来源==source&&prior->所用组织知识==knowledge&&prior->含义网==meaning&&prior->候选话语原文==text&&prior->正式被询定位==被询);return prior;}
     (void)读组织知识(r,knowledge);
     组织写入现场 w;const auto root=w.节点(101,0),graph=w.写(meaning);
     w.引用(root,组织键::场景,scene);w.引用(root,组织键::来源,source);w.引用(root,组织键::组织知识,knowledge);
     w.子(root,组织键::含义网,graph);w.请求.新节点组[root].字段组.push_back({组键(组织键::原文),基础值{text}});
+    if(被询)w.子(root,组织键::出站被询定位,w.写(*被询));
     w.请求.追加字段组.push_back({组键(组织键::登记根),组键(组织键::出站登记),基础组内节点引用{root}});
     w.保护(r);const auto p=全局基础数据集.原子追加节点组(w.请求);
     if(p.状态==基础节点组追加状态::预期不符)return std::nullopt;
     组织要求(p.状态==基础节点组追加状态::已完成&&p.新节点组.size()==w.请求.新节点组.size());
     组织读取现场 back;const auto out=读出站(back,scene);
-    组织要求(out&&out->来源==source&&out->所用组织知识==knowledge&&out->含义网==meaning&&out->候选话语原文==text);return out;
+    组织要求(out&&out->来源==source&&out->所用组织知识==knowledge&&out->含义网==meaning&&out->候选话语原文==text&&out->正式被询定位==被询);return out;
 }
 
 namespace {

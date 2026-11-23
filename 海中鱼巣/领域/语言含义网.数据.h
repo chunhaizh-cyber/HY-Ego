@@ -286,8 +286,13 @@ struct 新表达组织知识候选 final {
     std::vector<新表达组织知识信息> 候选组;
     std::vector<基础联合节点快照> 完整保护;
 };
+struct 新出站正式被询定位 final {
+    稳定编码 信息节点{}, 特征类型{};
+    friend bool operator==(const 新出站正式被询定位&,const 新出站正式被询定位&)=default;
+};
 struct 新出站具体表达信息 final {
     稳定编码 节点{},场景{},所用组织知识{},来源{}; 新语言含义网 含义网; std::string 候选话语原文;
+    std::optional<新出站正式被询定位> 正式被询定位;
 };
 // CONV-INPUT 最小切片：出站具体表达中对某受话者就需求D某字段的填项询问（按登记顺序）。
 struct 新出站字段询问 final {

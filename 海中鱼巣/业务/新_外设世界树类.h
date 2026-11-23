@@ -25,7 +25,7 @@ struct 新外设对话框来源 final {
 };
 enum class 新外设输出队列状态 : std::uint8_t {
     已入列=1, 已复用, 已领取, 已移除, 已清空, 已读取,
-    队列为空, 不在队列, 来源不存在, 目标不符, 未初始化
+    队列为空, 不在队列, 来源不存在, 目标不符, 未初始化, 资源失败
 };
 struct 新外设输出入列请求 final {
     新外设对话框定位 定位;
@@ -39,6 +39,7 @@ struct 新外设输出提交请求 final {
     // 三场景分工（7240 §1）：内部说话动作作用于对应本外设窗口的交互窗口副本（调用方已按外设场景标识核对对应）；
     // 给出时来源动作目标可为该副本及其自身特征，外设只记录执行事实。
     std::optional<稳定编码> 来源动作窗口副本;
+    std::optional<稳定编码> 关联问题;
 };
 struct 新外设输出队列结果 final {
     新外设输出队列状态 状态;
@@ -134,16 +135,19 @@ private:
         std::optional<稳定编码> 状态节点, 动态节点;
         operator 新外设事实状态() const noexcept { return 状态; }
     };
-    新外设输出队列结果 输出入列_已加锁(const 新外设输出入列请求&, std::optional<稳定编码> 来源动作={});
+    新外设输出队列结果 输出入列_已加锁(const 新外设输出入列请求&, std::optional<稳定编码> 来源动作={},
+        std::optional<稳定编码> 关联问题={});
     新外设对话框定位 补齐消息集合(const 新外设对话框定位&);
     新外设事实状态 记录消息(const 新外设对话框定位&, 新外设消息方向,
         std::uint64_t, std::string_view, const 新状态强时间&, std::optional<稳定编码> 关联输出);
     std::vector<稳定编码> 读取消息成员(稳定编码 特征节点) const;
+    std::vector<新外设消息信息> 读取输出队列材料成员(
+        const 新外设对话框定位&, 稳定编码 材料节点) const;
     std::vector<新外设消息信息> 读取输出队列成员(const 新外设对话框定位&) const;
     特征变化读回 更新输出队列(const 新外设对话框定位&,
         const std::vector<新外设消息信息>&, std::optional<稳定编码> 来源动作={});
     新外设消息信息 建立输出消息(const 新外设对话框定位&,
-        const 新外设消息来源键&, std::string_view);
+        const 新外设消息来源键&, std::string_view, std::optional<稳定编码> 关联问题);
     void 完成消息集合变化(const 新外设对话框定位&, 稳定编码 特征节点,
         稳定编码 新材料, const 新特征值添加结果&,
         const std::optional<新状态信息>& 前, const 新状态强时间&);

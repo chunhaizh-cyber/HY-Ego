@@ -176,6 +176,11 @@ struct 网页部分服务要求结果 {
     网页服务材料投递状态 材料投递状态 = 网页服务材料投递状态::未尝试;
 };
 
+struct 网页对话框目标;
+struct 网页原文分界引文 final {
+    std::uint64_t 问题编码, 范围编码, 起始标量, 结束标量;
+    std::string 固定原文, 范围原文;
+};
 struct 网页服务输入回调组 {
     网页服务输入状态 (*会话开始)(std::string_view 公开会话标识) noexcept = nullptr;
     void (*会话结束)(std::string_view 公开会话标识) noexcept = nullptr;
@@ -191,6 +196,7 @@ struct 网页服务输入回调组 {
     网页部分服务要求结果 (*查询部分要求)(std::string_view,
         std::uint64_t 要求编码) noexcept = nullptr;
     void (*接收事实已记录)(std::string_view 会话,std::string_view 页面,std::uint64_t 上行序号) noexcept = nullptr;
+    std::optional<网页原文分界引文> (*读取原文分界引文)(const 网页对话框目标&,std::uint64_t 输出编码) noexcept = nullptr;
 };
 
 struct 网页对话框目标 final {
