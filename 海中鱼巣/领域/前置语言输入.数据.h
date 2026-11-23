@@ -25,10 +25,15 @@ struct 新前置语言缺口 final {
     std::vector<稳定编码> 已取得相关节点;
     friend bool operator==(const 新前置语言缺口&,const 新前置语言缺口&)=default;
 };
+struct 新前置有效分界目标 final {
+    稳定编码 范围, 特征类型, 特征;
+    friend bool operator==(const 新前置有效分界目标&,const 新前置有效分界目标&)=default;
+};
 struct 新前置语言输入材料 final {
     新前置语言输入定位 定位;
     std::vector<新前置语言缺口> 缺口组;
     bool 可重入原认知=false;
+    std::optional<新前置有效分界目标> 有效分界缺口{};
     friend bool operator==(const 新前置语言输入材料&,const 新前置语言输入材料&)=default;
 };
 enum class 新前置语言读取状态 : std::uint8_t {
@@ -43,5 +48,7 @@ public:
     virtual ~新前置语言输入读取接口()=default;
     virtual 新前置语言输入读取结果 读取前置语言输入材料(
         const 新前置语言输入定位&,std::stop_token) const=0;
+    virtual 新前置语言输入读取结果 复读已筹办分界缺口(
+        const 新前置语言输入材料&,std::stop_token) const=0;
 };
 }

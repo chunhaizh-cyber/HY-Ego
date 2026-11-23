@@ -767,7 +767,7 @@ enum class 自我需求合法性判定 : std::uint8_t { 合法 = 1, 不合法 = 
 // 发送点的承接依据：标明本次为哪一种需求向任务管理线程请求建立任务。
 enum class 自我需求承接依据 : std::uint8_t {
     全树扫描 = 1, 本能根复核, 显式请求, 外部服务要求, 行动请求,
-    条件子需求, 复合子需求, 因果子需求
+    条件子需求, 复合子需求, 因果子需求, 前置分界
 };
 
 struct 新_自我线程类::实现 final {
@@ -992,6 +992,9 @@ struct 新_自我线程类::实现 final {
         bool 复合合法项已提交 = false;
         std::optional<新任务前置语言输入请求> 前置请求;
         std::optional<新任务工作请求> 前置工作;
+        std::optional<新任务前置语言输入结果> 前置已读回结果;
+        std::optional<稳定编码> 前置分界子需求;
+        std::optional<新任务承接消息> 前置分界承接消息;
         std::shared_future<新任务工作处理结果> 前置结果;
         std::set<稳定编码> 已处理内容学习方法;
     };
@@ -2480,6 +2483,88 @@ struct 新_自我线程类::实现 final {
         }catch(const std::bad_alloc&){return {S::资源失败,{}};}
         catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"接纳前置输入",L"同M输入邮箱定位不变量异常");}
     }
+    std::optional<新自我消息处理结果> 承接前置分界空缺(消息项& 项,新自我消息处理结果 out) {
+        using R=新前置语言读取状态;
+        using S=新自我消息处理状态;
+        const auto& 来源=*项.前置已读回结果;
+        out.前置语言输入=来源;
+        out.状态=S::等待材料;
+        if(项.管理结果.valid()) {
+            if(项.管理结果.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready)return {};
+            const auto 回执=项.管理结果.get();
+            if(!项.前置分界承接消息 || 回执.原消息!=*项.前置分界承接消息)
+                throw std::logic_error("segmentation task acceptance source mismatch");
+            out.任务承接=回执;
+            if(回执.状态==新任务承接处理状态::停止取消 || 回执.状态==新任务承接处理状态::入口拒绝) {
+                out.状态=S::停止取消;return out;
+            }
+            if(回执.状态==新任务承接处理状态::需求当前已满足)return out;
+            if(回执.状态!=新任务承接处理状态::已承接 && 回执.状态!=新任务承接处理状态::已重新启用
+                && 回执.状态!=新任务承接处理状态::既有终结)
+                throw std::logic_error("segmentation acceptance did not complete");
+            if(!回执.承接 || !回执.承接->任务 || 回执.承接->任务->需求节点!=项.前置分界子需求)
+                throw std::logic_error("segmentation acceptance did not return its original task association");
+            const auto 任务=任务服务->获取任务(回执.承接->任务->节点);
+            if(!任务 || 任务->需求节点!=*项.前置分界子需求)
+                throw std::logic_error("segmentation task association cannot be read back");
+            return out;
+        }
+        const auto 当前=接收认知->复读已筹办分界缺口(*来源.材料,停止源.get_token());
+        if(当前.状态==R::资源失败 || 当前.状态==R::前提已变化)return {};
+        if(当前.状态==R::来源停用 || 当前.状态==R::停止取消 || 当前.状态==R::输入不适用) {
+            out.状态=S::停止取消;return out;
+        }
+        if(当前.状态!=R::已读取 || !当前.材料)throw std::logic_error("segmentation gap unreadable");
+        if(!当前.材料->有效分界缺口)return out;
+        const auto& 目标=*当前.材料->有效分界缺口;
+        const auto& 请求=来源.原请求;
+        if(!项.前置分界承接消息) {
+            auto& 概念=世界树服务->获取事实服务引用().二次特征概念服务;
+            const auto 比较=概念.建立或取得默认二次特征概念(二次特征算法::特征材料相似度,
+                子需求比较输入(目标.特征类型),目标.特征类型);
+            if(比较.状态==二次特征概念操作状态::资源失败)return {};
+            if(!比较.概念节点)throw std::logic_error("segmentation value comparator unavailable");
+            const auto 关系=概念.建立或取得参照结果域概念(*比较.概念节点,二次特征结果域种类::包含于参照值域);
+            if(关系.状态==二次特征概念操作状态::资源失败)return {};
+            if(!关系.概念节点)throw std::logic_error("segmentation value comparator relation unavailable");
+            if(停止源.stop_requested()){out.状态=S::停止取消;return out;}
+            const 新普通需求建立请求 建立请求{请求.父需求节点,目标.范围,
+                {目标.特征类型,新需求目标形式::值,目标.特征类型,关系.概念节点,{}},
+                新需求来源类型::任务子目标,请求.父任务节点,{}};
+            const auto 建立=需求服务->建立或取得普通需求已核验(建立请求,true);
+            if(建立.需求节点) {
+                if(项.前置分界子需求 && 项.前置分界子需求!=建立.需求节点)
+                    throw std::logic_error("segmentation demand changed during continuation");
+                项.前置分界子需求=建立.需求节点;
+            }
+            if(建立.状态==新需求操作状态::资源失败 || 建立.状态==新需求操作状态::前提已变化
+                || 建立.状态==新需求操作状态::目标内容依赖未就绪)return {};
+            if(!建立.需求节点 || (建立.状态!=新需求操作状态::已建立 && 建立.状态!=新需求操作状态::已复用))
+                throw std::logic_error("segmentation demand creation or reuse failed");
+            const auto D=*建立.需求节点;
+            const auto 需求=需求服务->获取需求(D);
+            if(!需求 || 需求->父需求节点!=请求.父需求节点 || 需求->来源承接节点!=请求.父任务节点
+                || 需求->目标存在节点!=目标.范围 || 需求->目标.目标特征类型概念节点!=目标.特征类型)
+                throw std::logic_error("segmentation demand could not be read back");
+            if(需求->活动状态!=新需求活动状态::活动 || 判定需求合法性(D,自我需求承接依据::前置分界)
+                ==自我需求合法性判定::不合法)return out;
+            新任务承接消息 承接{项.消息.消息编号,D,新任务承接依据::自我前置分界};
+            承接.前置分界来源=来源;
+            项.前置分界承接消息=std::move(承接);
+        }
+        const auto 接收=任务管理->提交消息(*项.前置分界承接消息);
+        switch(接收.状态) {
+        case 新任务承接接收状态::已接收:case 新任务承接接收状态::精确重复:
+            if(!接收.处理结果.valid())throw std::logic_error("segmentation acceptance future missing");
+            项.管理结果=接收.处理结果;
+            return {};
+        case 新任务承接接收状态::邮箱已满:case 新任务承接接收状态::尚未启动:
+        case 新任务承接接收状态::资源失败:return {};
+        case 新任务承接接收状态::已停止接收:out.状态=S::停止取消;return out;
+        default:throw std::logic_error("segmentation task acceptance rejected");
+        }
+    }
+
     std::optional<新自我消息处理结果> 处理前置语言输入材料(消息项& 项) {
         using R=新前置语言读取状态;
         try {
@@ -2488,6 +2573,7 @@ struct 新_自我线程类::实现 final {
             const auto& p=*项.消息.前置语言输入;
             新自我消息处理结果 out;out.原消息=项.消息;
             if(p.自我存在节点!=*初始化结果->自我存在)throw std::logic_error("preunderstanding self identity conflict");
+            if(项.前置已读回结果)return 承接前置分界空缺(项,std::move(out));
             if(!项.前置工作) {
                 if(!项.前置请求) {
                 if(停止源.stop_requested()){out.状态=新自我消息处理状态::停止取消;return out;}
@@ -2543,6 +2629,10 @@ struct 新_自我线程类::实现 final {
             default:throw std::logic_error("material result state unknown");
             }
             if(ack==接收行动请求交接确认状态::输入拒绝)out.状态=新自我消息处理状态::停止取消;
+            if(out.状态==新自我消息处理状态::等待材料 && r.材料 && r.材料->有效分界缺口) {
+                项.前置已读回结果=r;
+                return 承接前置分界空缺(项,std::move(out));
+            }
             return out;
         }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理前置输入材料",L"输入父域、原工作读回或结果确认异常");}
     }

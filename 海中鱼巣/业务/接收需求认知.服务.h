@@ -66,6 +66,8 @@ public:
     接收行动请求交接确认状态 确认前置输入已筹办(const 新任务前置语言输入结果&) noexcept;
     新前置语言输入读取结果 读取前置语言输入材料(
         const 新前置语言输入定位&,std::stop_token) const override;
+    新前置语言输入读取结果 复读已筹办分界缺口(
+        const 新前置语言输入材料&,std::stop_token) const override;
     std::optional<接收需求认知观察> 读取最近观察() const;
     // ASK-READ-SCENE v0.4 §3.3 第4项：说话者取自我的交互者特征当前值；须在首次推进前由装配设置一次。
     void 设置交互者特征类型(稳定编码) noexcept;

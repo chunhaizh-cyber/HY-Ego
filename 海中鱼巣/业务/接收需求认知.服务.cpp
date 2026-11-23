@@ -626,6 +626,7 @@ struct 接收需求认知服务::实现 final {
     std::optional<稳定编码> 交互者特征类型;
     explicit 实现(认知依赖 d):依赖(d){}
     新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,std::stop_token);
+    std::optional<新前置有效分界目标> 读取当前分界缺口(const 新前置语言输入材料&) const;
 };
 接收需求认知服务::接收需求认知服务(新_外设世界树类& a,新_自然语言世界树类& b,新_语言类& c,新_词类& e,
     概念_名称关系类& n,概念_存在类& ce,概念_特征类& cf,概念_二次特征类& c2,新_存在类& ex,
@@ -730,6 +731,33 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
     }catch(const std::bad_alloc&){return S::资源失败;}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"确认前置输入筹办",L"实际筹办结果或进度不变量异常");}
 }
+std::optional<新前置有效分界目标> 接收需求认知服务::实现::读取当前分界缺口(
+    const 新前置语言输入材料& 材料) const {
+    using R=新语言分界工程状态;
+    using F=新特征完整读取状态;
+    const auto& 定位=材料.定位;
+    if(材料.可重入原认知 || !定位.正式原文范围 ||
+        std::none_of(材料.缺口组.begin(),材料.缺口组.end(),[](const auto& 项){
+            return 项.种类==新前置语言缺口种类::角色原文待确认;
+        })) return {};
+    const auto 范围=依赖.语言.读取材料范围特征(*定位.正式原文范围);
+    if(范围.状态==R::资源失败)资源();
+    if(范围.状态==R::前提已变化 || 范围.状态==R::材料未就绪 || 范围.状态==R::未找到)漂移();
+    if(范围.状态!=R::已完成 || !范围.信息)throw std::logic_error("formal segmentation range unavailable");
+    const auto& 正式=范围.信息->范围;
+    if(正式.定位.前置来源节点!=定位.前置来源节点 || 正式.定位.语言节点!=定位.语言节点
+        || 正式.定位.起始标量!=定位.来源.原文起点 || 正式.定位.结束标量!=定位.来源.原文终点)
+        throw std::logic_error("segmentation range does not belong to the original input");
+    constexpr auto 槽=static_cast<std::size_t>(新语言范围特征种类::有效分界结果);
+    const auto 特征=依赖.特征.读取特征完整保护(正式.特征节点组[槽]);
+    if(特征.状态==F::资源失败)资源();
+    if(特征.状态==F::前提已变化 || 特征.状态==F::特征不存在)漂移();
+    if(特征.状态!=F::已读取 || !特征.信息 || 特征.信息->特征类型根!=范围.信息->特征类型组[槽])
+        throw std::logic_error("formal segmentation result feature unreadable");
+    if(特征.信息->特征.当前值)return {};
+    return 新前置有效分界目标{正式.节点,特征.信息->特征类型根,正式.特征节点组[槽]};
+}
+
 新前置语言输入读取结果 接收需求认知服务::实现::读取前置材料内部(const 新前置语言输入定位& p,std::stop_token stop) {
     using R=新前置语言读取状态;
     auto& d=依赖;检查认知停止(stop);
@@ -777,6 +805,7 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
         }
         if (out.缺口组.empty()) out.缺口组.push_back({新前置语言缺口种类::非本入口构式,
             p.来源.原文起点, p.来源.原文终点, {}});
+        out.有效分界缺口=读取当前分界缺口(out);
         检查认知停止(stop);
         return {R::已读取, std::move(out)};
     }
@@ -807,6 +836,7 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
         }
         out.缺口组.push_back({kind,p.来源.原文起点,p.来源.原文终点,parsed.受阻节点组});
     }
+    out.有效分界缺口=读取当前分界缺口(out);
     检查认知停止(stop);return {R::已读取,std::move(out)};
 }
 新前置语言输入读取结果 接收需求认知服务::读取前置语言输入材料(const 新前置语言输入定位& p,std::stop_token stop) const {
@@ -831,6 +861,34 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
     catch(const std::bad_alloc&){return {R::资源失败,{}};}
     catch(const std::length_error&){return {R::资源失败,{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取前置输入材料",L"只读材料来源或内部结构不变量异常");}
+}
+
+新前置语言输入读取结果 接收需求认知服务::复读已筹办分界缺口(
+    const 新前置语言输入材料& 材料,std::stop_token stop) const {
+    using R=新前置语言读取状态;
+    try {
+        if(stop.stop_requested())return {R::停止取消,{}};
+        const auto& p=材料.定位;
+        const auto 读取工作状态=[&] {
+            std::lock_guard 锁(实现_->锁);
+            const auto c=实现_->会话组.find(p.公开宿主会话);
+            if(c==实现_->会话组.end() || c->second.封存)return R::来源停用;
+            const auto w=实现_->进度.find(p.来源.接收消息节点);
+            if(!材料.有效分界缺口 || w==实现_->进度.end() || !w->second.已确认结果
+                || !w->second.已确认结果->材料 || *w->second.已确认结果->材料!=材料)return R::输入不适用;
+            if(w->second.前置==实现::前置阶段::已停用)return R::来源停用;
+            if(w->second.前置!=实现::前置阶段::具名等待)return R::输入不适用;
+            return R::已读取;
+        };
+        const auto 前=读取工作状态();
+        if(前!=R::已读取)return {前,{}};
+        auto 当前=实现_->读取前置材料内部(p,stop);
+        const auto 后=读取工作状态();
+        return 后==R::已读取 ? std::move(当前) : 新前置语言输入读取结果{后,{}};
+    }catch(const 推进中断& e){return {e.状态==阶段::资源延后 ? R::资源失败 : R::前提已变化,{}};}
+    catch(const std::bad_alloc&){return {R::资源失败,{}};}
+    catch(const std::length_error&){return {R::资源失败,{}};}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"复读已筹办分界缺口",L"已确认的原M与分界范围无法读回");}
 }
 
 std::optional<接收需求认知观察> 接收需求认知服务::推进一次(std::stop_token stop){

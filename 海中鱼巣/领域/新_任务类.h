@@ -1728,6 +1728,8 @@ public:
     // 只判断前置语言读取的父域资格，不把同一T限制为排他的材料任务。
     bool 是前置语言材料父任务(稳定编码 T) const noexcept;
     新任务前置语言输入结果 筹办前置语言输入材料(const 新任务前置语言输入请求&,std::stop_token) const;
+    新任务治理承接结果 承接前置有效分界子需求(
+        const 新任务前置语言输入结果&,稳定编码,std::stop_token) noexcept;
     新需求新增成员基准结果 读取新增成员目标基准(稳定编码,稳定编码) const noexcept override;
     新需求新增成员判定结果 判定新增成员来源(const 新需求完整目标&) const noexcept override;
     新任务需求准备结果 复核任务需求准备(稳定编码 任务节点) const noexcept;

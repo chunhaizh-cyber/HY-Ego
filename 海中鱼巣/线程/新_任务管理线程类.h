@@ -51,7 +51,8 @@ enum class 新任务承接依据 : std::uint8_t {
     自我全树扫描 = 4,
     自我条件子需求 = 5,
     外部服务要求 = 7,
-    行动请求 = 8
+    行动请求 = 8,
+    自我前置分界 = 9
 };
 
 
@@ -65,6 +66,7 @@ struct 新任务承接消息 final {
     std::optional<稳定编码> 来源状态节点;
     std::optional<稳定编码> 外部要求节点;
     std::optional<新行动请求承接来源> 行动请求来源{};
+    std::optional<新任务前置语言输入结果> 前置分界来源{};
     friend bool operator==(const 新任务承接消息&, const 新任务承接消息&) = default;
 };
 
