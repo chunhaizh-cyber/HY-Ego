@@ -4,10 +4,12 @@
 #include "语言含义图.数据.h"
 #include "新_特征类.h"
 #include "新_存在类.h"
+#include "新_场景类.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cwchar>
 #include <initializer_list>
 #include <limits>
@@ -74,9 +76,15 @@ enum class 接收含义键 : std::size_t {
 std::array<稳定编码, static_cast<std::size_t>(接收含义键::总数)> 接收含义句柄{};
 enum class 语言分界键 : std::size_t {
     角色, 所属语言组织, 来源消息, 来源根范围, 来源根路径,
-    来源正文材料, 来源登记, 总数
+    来源正文材料, 来源登记, 范围登记, 范围来源, 范围语言, 范围合同, 范围场景,
+    范围区间, 范围候选F, 范围依据F, 范围结果F, 范围准入F, 总数
 };
 std::array<稳定编码, static_cast<std::size_t>(语言分界键::总数)> 语言分界句柄{};
+std::atomic<std::uint64_t> 分界身份范围{0};
+
+constexpr std::array 范围特征键组{语言分界键::范围候选F, 语言分界键::范围依据F,
+    语言分界键::范围结果F, 语言分界键::范围准入F};
+
 稳定编码 分界键(语言分界键 键) noexcept {
     return 语言分界句柄[static_cast<std::size_t>(键)];
 }
@@ -525,6 +533,108 @@ void 访问分界来源(const 新接收认知来源键& 来源, const 新语言�
     结果.信息 = std::move(信息);
     结果.状态 = 状态::已完成;
 }
+
+新语言材料范围信息 解码语言范围(const 基础节点结构& 结构) {
+    const auto 取 = [&](语言分界键 键) -> const 基础字段内容* {
+        const 基础字段内容* 结果 = nullptr;
+        for (const auto& 项 : 结构.字段组) if (项.字段节点 == 分界键(键)) {
+            if (结果) throw std::logic_error("language range field duplicated");
+            结果 = &项.内容;
+        }
+        return 结果;
+    };
+    const auto 节点值 = [&](语言分界键 键) {
+        const auto* 内容 = 取(键);
+        if (!内容) throw std::logic_error("language range metadata missing");
+        return std::get<稳定编码>(*内容);
+    };
+    const auto* 角色 = 取(语言分界键::角色);
+    if (!角色 || std::get<std::int64_t>(std::get<基础值>(*角色).材料) != 2
+        || 节点值(语言分界键::所属语言组织) != 语言组织根节点)
+        throw 分界输入拒绝{};
+    新语言材料范围信息 结果;
+    结果.节点 = 结构.节点.编码;
+    结果.定位.前置来源节点 = 节点值(语言分界键::范围来源);
+    结果.定位.语言节点 = 节点值(语言分界键::范围语言);
+    结果.定位.规范化合同节点 = 节点值(语言分界键::范围合同);
+    结果.定位.所属语言场景 = 节点值(语言分界键::范围场景);
+    const auto* 区间内容 = 取(语言分界键::范围区间);
+    if (!区间内容) throw std::logic_error("language range interval missing");
+    const auto& 区间 = std::get<std::vector<std::uint64_t>>(std::get<基础值>(*区间内容).材料);
+    if (区间.size() != 2 || 区间[0] >= 区间[1])
+        throw std::logic_error("language range interval corrupt");
+    结果.定位.起始标量 = 区间[0];
+    结果.定位.结束标量 = 区间[1];
+    for (std::size_t i = 0; i < 范围特征键组.size(); ++i) {
+        if (const auto* 内容 = 取(范围特征键组[i]))
+            结果.特征节点组[i] = std::get<稳定编码>(*内容);
+    }
+    return 结果;
+}
+
+class 语言空特征持有 final : public 新空特征持有参与接口 {
+public:
+    语言空特征持有(稳定编码 R, 稳定编码 键) : 范围_(R), 键_(键) {}
+    基础节点组追加请求 构造空特征持有(基础组内节点引用 F) const override {
+        基础节点组追加请求 请求;
+        请求.只读预期.节点组 = {{范围_}, {键_}};
+        请求.只读预期.字段集合组.push_back({范围_, 键_, {}, {}});
+        请求.当前追加字段键组.push_back({范围_, 键_});
+        请求.追加字段组.push_back({范围_, 键_, F});
+        return 请求;
+    }
+private:
+    稳定编码 范围_, 键_;
+};
+
+class 语言分界稳定身份读取 final : public 新信息对象身份读取接口 {
+public:
+    新信息对象身份读取结果 读取信息对象身份(稳定编码 节点) const noexcept override {
+        using S = 新信息对象身份读取状态;
+        try {
+            const 稳定编码 范围{分界身份范围.load(std::memory_order_acquire)};
+            if (!有效(范围)) return {S::依赖未就绪, {}};
+            if (!有效(节点)) return {S::信息不存在, {}};
+            const auto 批 = 全局基础数据集.查询节点组完整结构({节点});
+            if (批.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}};
+            if (批.状态 == 基础结构操作状态::节点不存在) return {S::信息不存在, {}};
+            if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 1)
+                throw std::logic_error("language range identity read failed");
+            if (!批.节点组.front().快照) return {S::信息不存在, {}};
+            const auto& 字段组 = 批.节点组.front().快照->结构.字段组;
+            const auto 有字段 = [&](语言分界键 键, const 基础字段内容& 值) {
+                return std::any_of(字段组.begin(), 字段组.end(), [&](const auto& 字段) {
+                    return 字段.字段节点 == 分界键(键) && 字段.内容 == 值;
+                });
+            };
+            if (!有字段(语言分界键::角色, 基础值{std::int64_t{2}})
+                || !有字段(语言分界键::所属语言组织, 语言组织根节点))
+                return {S::信息不存在, {}};
+            return {S::已读取, 新信息对象身份投影{节点,
+                {范围, 新信息引用范围形状::语言分界材料身份}}};
+        } catch (const std::bad_alloc&) {
+            return {S::资源失败, {}};
+        } catch (const std::length_error&) {
+            return {S::资源失败, {}};
+        } catch (const std::exception& 异常) {
+            分界来源工程终止(L"读取语言分界稳定身份", 节点, {}, 异常.what());
+        } catch (...) {
+            分界来源工程终止(L"读取语言分界稳定身份", 节点, {}, nullptr);
+        }
+    }
+};
+
+std::optional<新语言材料范围信息> 读取当前语言范围(稳定编码 节点) {
+    if (!有效(节点)) return std::nullopt;
+    const auto 批 = 全局基础数据集.查询节点组完整结构({节点});
+    if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (批.状态 == 基础结构操作状态::节点不存在) return std::nullopt;
+    if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 1)
+        throw std::logic_error("language range read failed");
+    if (!批.节点组.front().快照) return std::nullopt;
+    return 解码语言范围(取分界快照(批, 节点).结构);
+}
+
 } // namespace
 
 bool 新_语言类::严格UTF8字节串有效(const std::string& 文本) noexcept {
@@ -672,6 +782,171 @@ bool 新_语言类::初始化() noexcept {
         分界来源工程终止(L"读取前置来源", 来源.接收消息节点, {}, 异常.what());
     } catch (...) { 分界来源工程终止(L"读取前置来源", 来源.接收消息节点, {}, nullptr); }
     if (结果.状态 != 新语言分界工程状态::已完成) 结果.信息.reset();
+    return 结果;
+}
+
+新语言分界工程状态 新_语言类::配置分界范围特征(
+    const 新语言分界特征配置& 配置, 新_特征类& 特征) {
+    using S = 新语言分界工程状态;
+    try {
+        std::lock_guard 锁(新语言互斥);
+        if (!分界结构就绪已加锁()) return S::未初始化;
+        auto 类型组 = 配置.特征类型组;
+        std::sort(类型组.begin(), 类型组.end());
+        if (!有效(配置.信息身份范围) || !有效(类型组.front())
+            || std::adjacent_find(类型组.begin(), 类型组.end()) != 类型组.end())
+            return S::输入拒绝;
+        if (分界特征服务_)
+            return 分界特征服务_ == &特征 && 分界特征配置_ == 配置 ? S::已完成 : S::输入拒绝;
+        const 稳定编码 已登记范围{分界身份范围.load(std::memory_order_relaxed)};
+        if (有效(已登记范围) && 已登记范围 != 配置.信息身份范围) return S::输入拒绝;
+        分界特征配置_ = 配置;
+        分界特征服务_ = &特征;
+        分界身份范围.store(配置.信息身份范围.值, std::memory_order_release);
+        return S::已完成;
+    } catch (const std::bad_alloc&) {
+        return S::资源失败;
+    } catch (const std::length_error&) {
+        return S::资源失败;
+    } catch (const std::exception& 异常) {
+        分界来源工程终止(L"配置分界范围特征", {}, {}, 异常.what());
+    } catch (...) {
+        分界来源工程终止(L"配置分界范围特征", {}, {}, nullptr);
+    }
+}
+
+const 新信息对象身份读取接口& 新_语言类::取得分界稳定身份读取接口() noexcept {
+    static const 语言分界稳定身份读取 读取;
+    return 读取;
+}
+
+新语言分界调用结果<新语言材料范围信息> 新_语言类::读取材料范围(稳定编码 节点) const {
+    using S = 新语言分界工程状态;
+    try {
+        if (!分界身份范围.load(std::memory_order_acquire)) return {S::未初始化, {}, {}};
+        auto 当前 = 读取当前语言范围(节点);
+        if (!当前) return {S::未找到, {}, {}};
+        if (!std::all_of(当前->特征节点组.begin(), 当前->特征节点组.end(),
+            [](稳定编码 F) { return 有效(F); })) return {S::材料未就绪, {}, {}};
+        return {S::已完成, std::move(当前), {}};
+    } catch (const 分界输入拒绝&) {
+        return {S::未找到, {}, {}};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败, {}, {}};
+    } catch (const std::length_error&) {
+        return {S::资源失败, {}, {}};
+    } catch (const std::exception& 异常) {
+        分界来源工程终止(L"读取语言材料范围", 节点, {}, 异常.what());
+    } catch (...) {
+        分界来源工程终止(L"读取语言材料范围", 节点, {}, nullptr);
+    }
+}
+
+新语言分界调用结果<新语言材料范围信息> 新_语言类::建立或取得材料范围(
+    const 新语言材料范围请求& 输入, const 新_场景类& 场景) {
+    using S = 新语言分界工程状态;
+    using L1 = 基础节点组追加状态;
+    新语言分界调用结果<新语言材料范围信息> 结果;
+    try {
+        if (!有效(输入.前置来源节点) || 输入.起始标量 >= 输入.结束标量
+            || 输入.规范化合同节点 != 严格UTF8字节精确规范化合同节点) return 结果;
+        const auto 语言 = 获取语言(输入.语言节点);
+        if (语言.状态 == 新语言查询状态::资源失败) return {S::资源失败, {}, {}};
+        if (语言.状态 != 新语言查询状态::已找到
+            || !场景.是场景节点(输入.所属语言场景)) return 结果;
+        新_特征类* 特征 = nullptr;
+        新语言分界特征配置 配置;
+        稳定编码 范围;
+        // 同一范围的登记和唯一键读取由语言所有者在同一锁域内完成。
+        for (int 尝试 = 0; 尝试 < 2; ++尝试) {
+            std::lock_guard 锁(新语言互斥);
+            if (!分界特征服务_) return {S::未初始化, {}, {}};
+            if (输入.前置来源节点 == 语言组织根节点) return 结果;
+            特征 = 分界特征服务_;
+            配置 = 分界特征配置_;
+            const auto 批 = 全局基础数据集.查询节点组完整结构({语言组织根节点, 输入.前置来源节点});
+            if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+            const auto& 根 = 取分界快照(批, 语言组织根节点).结构;
+            const auto 来源 = std::find_if(批.节点组.begin(), 批.节点组.end(), [&](const auto& 项) {
+                return 项.查询节点 == 输入.前置来源节点;
+            });
+            const auto 登记 = 读取分界登记(根);
+            if (来源 == 批.节点组.end() || !来源->快照
+                || !std::binary_search(登记.begin(), 登记.end(), 输入.前置来源节点))
+                return {S::未找到, {}, {}};
+            if (输入.结束标量 > 解析分界来源(来源->快照->结构).来源.原文终点) return 结果;
+            for (const auto& 字段 : 根.字段组) {
+                if (字段.字段节点 != 分界键(语言分界键::范围登记)) continue;
+                const auto 已有 = 读取当前语言范围(std::get<稳定编码>(字段.内容));
+                if (!已有 || 已有->定位.前置来源节点 != 输入.前置来源节点
+                    || 已有->定位.起始标量 != 输入.起始标量 || 已有->定位.结束标量 != 输入.结束标量)
+                    continue;
+                if (已有->定位 != 输入) return 结果;
+                范围 = 已有->节点;
+                break;
+            }
+            if (有效(范围)) break;
+
+            基础节点组追加请求 请求;
+            基础组内新节点 新范围;
+            新范围.字段组 = {
+                {分界键(语言分界键::角色), 基础值{std::int64_t{2}}},
+                {分界键(语言分界键::所属语言组织), 语言组织根节点},
+                {分界键(语言分界键::范围来源), 输入.前置来源节点},
+                {分界键(语言分界键::范围语言), 输入.语言节点},
+                {分界键(语言分界键::范围合同), 输入.规范化合同节点},
+                {分界键(语言分界键::范围场景), 输入.所属语言场景},
+                {分界键(语言分界键::范围区间),
+                    基础值{std::vector<std::uint64_t>{输入.起始标量, 输入.结束标量}}}};
+            请求.新节点组.push_back(std::move(新范围));
+            请求.追加字段组.push_back({
+                语言组织根节点, 分界键(语言分界键::范围登记), 基础组内节点引用{0}});
+            请求.当前追加字段键组.push_back({语言组织根节点, 分界键(语言分界键::范围登记)});
+            for (const auto 节点 : {语言组织根节点, 输入.前置来源节点, 输入.语言节点,
+                输入.规范化合同节点, 输入.所属语言场景})
+                请求.只读预期.节点组.push_back({节点});
+            for (const auto 键 : 语言分界句柄) 请求.只读预期.节点组.push_back({键});
+            const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+            if (发布.状态 == L1::资源失败) throw std::bad_alloc{};
+            if (发布.状态 == L1::预期不符 || 发布.状态 == L1::节点不存在
+                || 发布.状态 == L1::引用不存在)
+                continue;
+            if (发布.状态 != L1::已完成 || 发布.新节点组.size() != 1)
+                throw std::logic_error("language range publication failed");
+            范围 = 发布.新节点组.front();
+            break;
+        }
+        if (!有效(范围)) return {S::材料未就绪, {}, {}};
+
+        结果.本次已发表身份 = 范围;
+        for (std::size_t i = 0; i < 范围特征键组.size(); ++i) {
+            const auto 当前 = 读取当前语言范围(范围);
+            if (!当前) return {S::未找到, {}, {}};
+            if (有效(当前->特征节点组[i])) continue;
+            const 语言空特征持有 持有{范围, 分界键(范围特征键组[i])};
+            const auto 建立 = 特征->建立并挂接空信息引用特征(配置.特征类型组[i], 持有);
+            if (建立.状态 == 新特征写入状态::前提已变化) {
+                const auto 重读 = 读取当前语言范围(范围);
+                if (!重读) return {S::未找到, {}, {}};
+                if (有效(重读->特征节点组[i])) continue;
+                return {S::材料未就绪, {}, 范围};
+            }
+            if (建立.状态 == 新特征写入状态::资源失败) throw std::bad_alloc{};
+            if (建立.状态 != 新特征写入状态::已完成 || !建立.特征节点)
+                throw std::logic_error("language range empty feature publication failed");
+        }
+        auto 当前 = 读取材料范围(范围);
+        if (当前.状态 != S::未找到) 当前.本次已发表身份 = 范围;
+        return 当前;
+    } catch (const std::bad_alloc&) {
+        结果.状态 = S::资源失败;
+    } catch (const std::length_error&) {
+        结果.状态 = S::资源失败;
+    } catch (const std::exception& 异常) {
+        分界来源工程终止(L"建立或取得语言材料范围", {}, 结果.本次已发表身份, 异常.what());
+    } catch (...) {
+        分界来源工程终止(L"建立或取得语言材料范围", {}, 结果.本次已发表身份, nullptr);
+    }
     return 结果;
 }
 

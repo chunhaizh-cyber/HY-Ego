@@ -20,6 +20,13 @@
 
 namespace 海中鱼巣 {
 
+namespace {
+bool 是具名信息对象范围(新信息引用范围形状 形状) noexcept {
+    return 形状 == 新信息引用范围形状::词典材料身份
+        || 形状 == 新信息引用范围形状::语言分界材料身份;
+}
+}
+
 namespace 调试内部 {
 namespace {
 // 固定大小的本线程失败材料，不读取事实、不记录日志、不影响写入结果。
@@ -2369,6 +2376,8 @@ std::optional<新信息引用范围投影> 新_特征类::读取信息对象范�
         return 新信息引用范围投影{域.内容概念, 新信息引用范围形状::正式信息身份};
     if (d.原语 == 基础概念原语::具名领域身份 && d.整数参数 == std::vector<std::int64_t>{17})
         return 新信息引用范围投影{域.内容概念, 新信息引用范围形状::词典材料身份};
+    if (d.原语 == 基础概念原语::具名领域身份 && d.整数参数 == std::vector<std::int64_t>{18})
+        return 新信息引用范围投影{域.内容概念, 新信息引用范围形状::语言分界材料身份};
     return std::nullopt;
 }
 新特征信息 新_特征类::读取信息对象引用实例(稳定编码 F, const 特征概念信息& 定义) const {
@@ -3586,17 +3595,17 @@ bool 新_特征类::初始化() noexcept {
     if (!n) throw std::runtime_error("feature projection reference is not a node");
     if (d.材料类型 == 特征概念材料物理类型::信息节点引用) {
         if (!d.信息对象范围) return r;
-        const bool Q范围 = d.信息对象范围->形状 == 新信息引用范围形状::词典材料身份;
+        const bool 具名范围 = 是具名信息对象范围(d.信息对象范围->形状);
         if (!信息对象身份读取接口_) {
-            if (Q范围) throw std::runtime_error("information identity reader not installed");
+            if (具名范围) throw std::runtime_error("information identity reader not installed");
             return r;
         }
         const auto 身份 = 信息对象身份读取接口_->读取信息对象身份(*n);
         if (身份.状态 == 新信息对象身份读取状态::资源失败) throw std::bad_alloc{};
         if (身份.状态 == 新信息对象身份读取状态::依赖未就绪)
             throw std::runtime_error("information identity schema not ready");
-        if (Q范围 && 身份.状态 == 新信息对象身份读取状态::身份不相容)
-            throw std::runtime_error("dictionary feature references a non-Q node");
+        if (具名范围 && 身份.状态 == 新信息对象身份读取状态::身份不相容)
+            throw std::runtime_error("named feature references an incompatible information node");
         if (身份.状态 == 新信息对象身份读取状态::已读取) {
             if (!身份.身份 || 身份.身份->信息节点 != *n)
                 throw std::runtime_error("information identity projection unavailable");
@@ -3656,7 +3665,7 @@ std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实�
                     const auto 实例 = 读取信息对象引用实例(特征节点, *信息定义);
                     结果 = 形成特征匹配实例投影(实例, *定义);
                     if (!结果.当前值 || 结果.当前信息对象身份
-                        || 定义->信息对象范围->形状 == 新信息引用范围形状::词典材料身份) return 结果;
+                        || 是具名信息对象范围(定义->信息对象范围->形状)) return 结果;
                     // 正式信息根也容纳E；明确不是Q时继续原存在读取。
                 }
                 std::vector<基础联合节点快照> 信息定义保护;
@@ -3885,7 +3894,7 @@ std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实�
             }
             const auto* Q = std::get_if<稳定编码>(&*实例.当前值);
             const auto& 身份 = *实例.当前信息对象身份;
-            if (!Q || 身份.信息节点 != *Q || 身份.身份范围.形状 != 新信息引用范围形状::词典材料身份)
+            if (!Q || 身份.信息节点 != *Q || !是具名信息对象范围(身份.身份范围.形状))
                 return {S::材料不足, {}};
             const auto& 左范围 = *实例.定义.信息对象范围;
             if (左范围.内容概念 != 左域->内容概念
@@ -3894,7 +3903,7 @@ std::optional<新特征匹配实例快照> 新_特征类::捕获特征匹配实�
             const auto& 范围 = *目标.信息对象范围;
             if (范围.内容概念 != 右域->内容概念) return {S::材料不足, {}};
             if (范围.形状 != 新信息引用范围形状::正式信息身份
-                && (范围.形状 != 新信息引用范围形状::词典材料身份
+                && (范围.形状 != 身份.身份范围.形状
                     || 范围.内容概念 != 身份.身份范围.内容概念)) return {S::规则不支持, {}};
             return {S::已完成, static_cast<std::int64_t>(特征概念值域关系::右包含左)};
         }
@@ -4197,7 +4206,7 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         if (是正式概念引用形状(*概念信息)) return 读取正式概念引用实例(特征节点, *概念信息, true);
         if (是信息存在引用形状(*概念信息)) {
             const auto 范围 = 读取信息对象范围投影(*概念信息);
-            if (范围 && 范围->形状 == 新信息引用范围形状::词典材料身份)
+            if (范围 && 是具名信息对象范围(范围->形状))
                 return 读取信息对象引用实例(特征节点, *概念信息);
         }
         if (是信息存在引用形状(*概念信息)) {
@@ -4587,7 +4596,7 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         const auto 初始定义 = 概念节点 ? 特征概念服务_.获取特征概念(*概念节点) : std::nullopt;
         if (初始定义 && 是信息存在引用形状(*初始定义)) {
             const auto 范围 = 读取信息对象范围投影(*初始定义);
-            if (范围 && 范围->形状 == 新信息引用范围形状::词典材料身份)
+            if (范围 && 是具名信息对象范围(范围->形状))
                 return 读取信息对象引用当前结构(F, *初始定义);
         }
         if(初始定义 && 初始定义->比较规则==特征概念比较规则::概念集合身份判等){
@@ -6098,7 +6107,7 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
         const bool 单节点引用 = 单存在引用 || 单需求引用 || 单概念引用 || 单信息对象引用;
         if (单信息对象引用) {
             const auto 范围 = 读取信息对象范围投影(*定义);
-            if (!范围 || 范围->形状 != 新信息引用范围形状::词典材料身份)
+            if (!范围 || !是具名信息对象范围(范围->形状))
                 return 结果;
             if (!信息对象身份读取接口_) return 结果;
         }
@@ -6798,7 +6807,7 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
             const bool 概念引用 = 是正式概念引用形状(*C);
             const bool 概念集合=C->比较规则==特征概念比较规则::概念集合身份判等;
             const auto 信息范围 = 读取信息对象范围投影(*C);
-            const bool 信息对象 = 信息范围 && 信息范围->形状 == 新信息引用范围形状::词典材料身份;
+            const bool 信息对象 = 信息范围 && 是具名信息对象范围(信息范围->形状);
             if (q.计入本次实际采用 && ((!信息对象 && !概念引用) || !q.新当前值)) return {S::入口拒绝, {}};
             if (C->材料类型 != 特征概念材料物理类型::I64标量 && !概念引用 && !概念集合 && !信息对象)
                 return {S::材料类型不相容, {}};
