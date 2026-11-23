@@ -1,6 +1,7 @@
 ﻿#include "表达.组织.h"
 #include "表达.基础语言.h"
 #include <algorithm>
+#include <new>
 #include "../领域/概念_存在类.h"
 #include "../领域/概念_特征类.h"
 
@@ -51,30 +52,37 @@ namespace {
     const auto 失败=[&](S s){新表达结构组织结果 r;r.状态=s;return r;};
     if(const auto* g=std::get_if<正式表达招呼>(&请求.表达对象))return 组织招呼(请求,*g,语言);
     // 载荷栏问题与目标栏问题（R120）共用需求D、字段与范围；目标栏问题另带问题主体（D的需求主体）。
-    std::optional<正式表达需求字段> 字段对象;std::optional<稳定编码> 问题主体;
-    if(const auto* p=std::get_if<正式表达需求字段>(&请求.表达对象))字段对象=*p;
+    std::optional<正式表达信息字段> 字段对象;std::optional<稳定编码> 问题主体;
+    if(const auto* p=std::get_if<正式表达需求字段>(&请求.表达对象))字段对象=正式表达信息字段{p->需求D,p->字段特征类型,p->需求范围概念};
     else if(const auto* t=std::get_if<正式表达需求目标栏>(&请求.表达对象)){
-        字段对象=正式表达需求字段{t->需求D,t->字段特征类型,t->需求范围概念};
+        字段对象=正式表达信息字段{t->需求D,t->字段特征类型,t->需求范围概念};
         if(!有效(t->问题主体))return 失败(S::缺材);问题主体=t->问题主体;
     }
+    else if(const auto* p=std::get_if<正式表达信息字段>(&请求.表达对象))字段对象=*p;
     if(!字段对象)return 失败(S::范围未支持);
+    const bool 通用=std::holds_alternative<正式表达信息字段>(请求.表达对象);
     const auto* d=&*字段对象;
-    if(!有效(d->需求D)||!有效(d->字段特征类型)||!有效(d->需求范围概念))return 失败(S::缺材);
+    if(!有效(d->信息节点)||!有效(d->字段特征类型)||!有效(d->范围概念))return 失败(S::缺材);
     const auto 候选=语言.查询适用表达组织知识({请求.表达用途,static_cast<std::int64_t>(请求.表达对象.index())});
     std::map<稳定编码,基础联合节点快照> 保护;
-    const auto 同=[&](const auto& a,const auto& b){return a.结构.节点==b.结构.节点&&a.结构.字段组==b.结构.字段组
-        &&a.入向字段组==b.入向字段组&&a.入向外部关系组==b.入向外部关系组&&a.出向外部关系组==b.出向外部关系组;};
-    const auto 并保护=[&](const auto& 组){for(const auto& s:组){const auto [i,added]=保护.emplace(s.结构.节点.编码,s);if(!added&&!同(i->second,s))return false;}return true;};
-    if(!并保护(候选.完整保护))return 失败(S::前提已变化);
+    const auto 并保护=[&](const auto& 组) {
+        for(const auto& 项:组)保护.insert_or_assign(项.结构.节点.编码,项);
+    };
+    并保护(候选.完整保护);
     std::optional<正式信息参数读取结果> 材料;
-    const auto 取需求=[&]()->S {
-        if(材料)return S::已组织;
-        材料=读取.读取正式信息参数保护(d->需求D,d->需求范围概念);
+    const auto 取正式信息=[&]()->S {
+        if(!材料)材料=读取.读取正式信息参数保护(d->信息节点,d->范围概念);
         if(材料->状态==正式信息参数读取状态::前提已变化)return S::前提已变化;
         if(材料->状态==正式信息参数读取状态::范围未支持)return S::范围未支持;
-        if(材料->状态!=正式信息参数读取状态::已读取||!材料->信息||材料->完整保护组.empty())
-            throw std::logic_error("表达组织正式需求保护读取未完成");
-        return 并保护(材料->完整保护组) ? S::已组织 : S::前提已变化;
+        if(材料->状态==正式信息参数读取状态::依赖未就绪||材料->状态==正式信息参数读取状态::信息不存在)
+            return S::缺材;
+        if(材料->状态==正式信息参数读取状态::资源失败)throw std::bad_alloc{};
+        if(材料->状态!=正式信息参数读取状态::已读取||!材料->信息)
+            throw std::logic_error("表达组织正式信息读取未完成");
+        if(材料->信息->信息节点!=d->信息节点||材料->信息->类别概念!=d->范围概念)
+            throw std::logic_error("表达组织正式信息身份不一致");
+        并保护(材料->完整保护组);
+        return S::已组织;
     };
     std::vector<const 新表达组织知识信息*> 成立;
     bool 未知=false,不成立=false;
@@ -82,14 +90,19 @@ namespace {
         bool 条件成立=true;
         // 完整求值每项，不用AND短路掩盖工程故障或未覆盖范围。
         for(auto 条件:k.定义.适用条件组){
-            if(条件!=新组织取材算子::需求字段内容状态)throw std::logic_error("未登记组织条件算子");
-            const auto s=取需求();
-            if(s==S::前提已变化)return 失败(s);
+            if(条件!=(通用 ? 新组织取材算子::正式字段内容状态 : 新组织取材算子::需求字段内容状态))
+                throw std::logic_error("未登记组织条件算子");
+            const auto s=取正式信息();
+            if(s==S::前提已变化||s==S::缺材)return 失败(s);
             if(s==S::范围未支持){未知=true;条件成立=false;continue;}
             const auto& 组=材料->信息->直接内容组;
-            const auto i=std::find_if(组.begin(),组.end(),[&](const auto& x){return x.特征类型==d->字段特征类型;});
-            if(i==组.end()){未知=true;条件成立=false;continue;}
-            switch(i->内容.状态){
+            const 正式内容值* 当前字段=nullptr;
+            for(const auto& 项:组)if(项.特征类型==d->字段特征类型){
+                if(当前字段)throw std::logic_error("表达组织正式字段重复");
+                当前字段=&项.内容;
+            }
+            if(!当前字段){未知=true;条件成立=false;continue;}
+            switch(当前字段->状态){
             case 正式内容值状态::当前未知:break;
             case 正式内容值状态::已知:
             case 正式内容值状态::不适用:条件成立=false;不成立=true;break;
@@ -109,7 +122,8 @@ namespace {
         新绑定指称 v;
         if(t.算子==新组织取材算子::绑定角色){
             switch(t.输出角色){
-            case 新组织绑定角色::需求D:v={新指称类别::需求,d->需求D,d->需求范围概念};break;
+            case 新组织绑定角色::需求D:v={新指称类别::需求,d->信息节点,d->范围概念};break;
+            case 新组织绑定角色::正式信息:v={新指称类别::正式信息,d->信息节点,d->范围概念};break;
             case 新组织绑定角色::字段特征类型:v={新指称类别::特征类型,d->字段特征类型,d->字段特征类型};break;
             case 新组织绑定角色::说话者:v=请求.说话者;break;
             case 新组织绑定角色::受话者:v=请求.受话者;break;
@@ -121,16 +135,18 @@ namespace {
         } else if(t.算子==新组织取材算子::存在根概念){
             const auto r=存在概念.读取存在根概念保护();
             if(r.状态==正式概念读取状态::前提已变化)return 失败(S::前提已变化);
-            if(r.状态!=正式概念读取状态::已读取||!r.信息||r.完整保护组.empty())return 失败(S::范围未支持);
-            if(!并保护(r.完整保护组))return 失败(S::前提已变化);
+            if(r.状态==正式概念读取状态::依赖未就绪)return 失败(S::缺材);
+            if(r.状态!=正式概念读取状态::已读取||!r.信息)return 失败(S::范围未支持);
+            并保护(r.完整保护组);
             v={新指称类别::概念,r.信息->节点,r.信息->节点};
-        } else if(t.算子==新组织取材算子::需求字段值域概念){
-            const auto s=取需求();if(s!=S::已组织)return 失败(s);
+        } else if(t.算子==新组织取材算子::需求字段值域概念||t.算子==新组织取材算子::正式字段值域概念){
+            const auto s=取正式信息();if(s!=S::已组织)return 失败(s);
             const auto r=读取正式字段询问范围(*材料,d->字段特征类型,存在概念,特征概念);
             if(r.状态==结构项概念保护状态::前提已变化)return 失败(S::前提已变化);
+            if(r.状态==结构项概念保护状态::依赖未就绪)return 失败(S::缺材);
             if(r.状态==结构项概念保护状态::未取得正式概念证明||r.状态==结构项概念保护状态::输入拒绝)return 失败(S::范围未支持);
-            if(r.状态!=结构项概念保护状态::已读取||!r.内容概念||r.完整保护组.empty())throw std::logic_error("组织取材值域概念读取未完成");
-            if(!并保护(r.完整保护组))return 失败(S::前提已变化);
+            if(r.状态!=结构项概念保护状态::已读取||!r.内容概念)throw std::logic_error("组织取材值域概念读取未完成");
+            并保护(r.完整保护组);
             v={新指称类别::概念,*r.内容概念,*r.内容概念};
         } else throw std::logic_error("组织取材算子未登记");
         if(!有效(v.节点))return 失败(S::缺材);
@@ -169,10 +185,7 @@ namespace {
     }
     if(!完备)return 失败(S::缺材);
     核验含义网结构(out.含义网);
-    std::vector<稳定编码> ids;for(const auto& [id,v]:保护){ids.push_back(id);out.完整保护.push_back(v);}
-    const auto fresh=全局基础数据集.查询节点组完整结构(ids);
-    if(fresh.状态!=基础结构操作状态::已完成)throw std::logic_error("组织材料完整复读工程失败");
-    for(const auto& v:fresh.节点组)if(!v.快照||!同(保护.at(v.查询节点),*v.快照))return 失败(S::前提已变化);
+    for(const auto& [id,v]:保护)out.完整保护.push_back(v);
     out.状态=S::已组织;out.所用组织知识节点=k.节点;return out;
 }
 } // namespace 海中鱼巣

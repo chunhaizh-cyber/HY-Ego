@@ -3134,7 +3134,11 @@ void 初始化普通应用结构化子概念(普通应用上下文& 当前, 普�
 std::vector<初始化语言概念名称绑定> 读取字段询问名称绑定(普通应用上下文& 当前) {
     const auto d=当前.世界事实.存在概念服务.读取先天需求任务方法概念();
     if (!d.信息) throw std::logic_error("字段询问正式需求根未就绪");
+    const auto 分界=当前.世界事实.存在概念服务.读取语言材料范围参数概念();
+    if (!分界.信息) throw std::logic_error("字段询问语言材料范围未就绪");
     return {{"DEMAND",d.信息->需求},
+        {"LANGUAGE-MATERIAL-RANGE",分界.信息->节点},
+        {"EFFECTIVE-BOUNDARY-RESULT",读取字段询问先天类型(当前,先天特征类型槽::有效分界结果)},
         {"DEMAND-TARGET-EXISTENCE",读取字段询问先天类型(当前,1003)},
         {"DEMAND-TARGET-FEATURE",读取字段询问先天类型(当前,1004)},
         {"DEMAND-TARGET-FORM",读取字段询问先天类型(当前,1005)},

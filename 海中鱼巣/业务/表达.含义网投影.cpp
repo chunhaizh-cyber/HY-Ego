@@ -84,7 +84,7 @@ private:
         const auto 来源=有效(b->范围概念) ? std::optional<稳定编码>{b->范围概念} : std::nullopt;
         switch(b->类别) {
         case 新指称类别::存在: return 对象值{类别::存在,{类别::存在,b->节点,来源,{}}};
-        case 新指称类别::需求: case 新指称类别::任务: case 新指称类别::方法:
+        case 新指称类别::需求: case 新指称类别::任务: case 新指称类别::方法: case 新指称类别::正式信息:
             if(!来源)return std::nullopt;
             用到正式信息_=true;
             return 对象值{类别::正式信息节点,{类别::正式信息节点,b->节点,来源,{}}};

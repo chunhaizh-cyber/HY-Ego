@@ -813,6 +813,8 @@
 
 # 正式内容填项问：语义与词面同源，字段及类别名称由正式名称关系读取。
 名称 DEMAND 需求
+名称 LANGUAGE-MATERIAL-RANGE 语言材料范围
+名称 EFFECTIVE-BOUNDARY-RESULT 有效分界结果
 名称 DEMAND-TARGET-EXISTENCE 需求目标存在
 名称 DEMAND-TARGET-FEATURE 需求目标FT
 名称 DEMAND-TARGET-FORM 需求目标形式

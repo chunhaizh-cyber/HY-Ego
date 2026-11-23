@@ -14,7 +14,7 @@
 namespace 海中鱼巣 {
 // 招呼（7240 §2.1）：发起、维持或结束交往，顶层内容为招呼套语（CONV-EXPR-TEXT §3.5）。
 enum class 新表达用途 : std::uint8_t { 陈述=1, 疑问, 祈使, 招呼 };
-enum class 新指称类别 : std::uint8_t { 存在=1, 场景, 特征, 状态, 动态, 关系, 因果, 需求, 任务, 方法, 概念, 特征类型 };
+enum class 新指称类别 : std::uint8_t { 存在=1, 场景, 特征, 状态, 动态, 关系, 因果, 需求, 任务, 方法, 概念, 特征类型, 正式信息=13 };
 struct 新绑定指称 final {
     新指称类别 类别=新指称类别::存在; 稳定编码 节点{},范围概念{};
     friend bool operator==(const 新绑定指称&,const 新绑定指称&)=default;
@@ -42,7 +42,7 @@ struct 新匿名表达对象 final {
 };
 struct 新明确未知 final { friend bool operator==(const 新明确未知&,const 新明确未知&)=default; };
 // 问题主体：目标栏问题的被问结构主体（D的需求主体，R120）；目标存在范围：待求目标存在的内容范围（存在根概念）。
-enum class 新组织绑定角色 : std::uint8_t { 需求D=1, 字段特征类型, 说话者, 受话者, 字段值域概念, 问题主体, 目标存在范围 };
+enum class 新组织绑定角色 : std::uint8_t { 需求D=1, 字段特征类型, 说话者, 受话者, 字段值域概念, 问题主体, 目标存在范围, 正式信息=8 };
 struct 新规则角色变量 final {
     新组织绑定角色 角色=新组织绑定角色::需求D;
     friend bool operator==(const 新规则角色变量&,const 新规则角色变量&)=default;
@@ -171,7 +171,10 @@ inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=fals
     std::function<void(const 新表达指称&,bool)> 指称;
     指称=[&](const 新表达指称& v,bool 询问){std::visit([&](const auto& x){
         using T=std::decay_t<decltype(x)>;
-        if constexpr(std::is_same_v<T,新绑定指称>)要求(有效(x.节点)&&x.类别>=新指称类别::存在&&x.类别<=新指称类别::特征类型);
+        if constexpr(std::is_same_v<T,新绑定指称>){
+            要求(有效(x.节点)&&x.类别>=新指称类别::存在&&x.类别<=新指称类别::正式信息);
+            if(x.类别==新指称类别::正式信息)要求(有效(x.范围概念));
+        }
         else if constexpr(std::is_same_v<T,新指代实例引用>){
             要求(x.节点.has_value()!=x.网内编号.has_value());
             if(x.节点)要求(有效(*x.节点));else 要求(*x.网内编号>=0);
@@ -254,7 +257,7 @@ inline void 核验含义网结构(const 新语言含义网& 网,bool 模板=fals
 
 // 首批三个静态签名的取材算子；知识保存签名，不保存代码或字段反射路径。
 // 存在根概念：读取存在根概念作为目标栏问题待求目标存在的内容范围。
-enum class 新组织取材算子 : std::uint8_t { 绑定角色=1, 需求字段内容状态, 需求字段值域概念, 存在根概念 };
+enum class 新组织取材算子 : std::uint8_t { 绑定角色=1, 需求字段内容状态, 需求字段值域概念, 存在根概念, 正式字段内容状态=5, 正式字段值域概念=6 };
 struct 新组织取材步骤 final {
     std::int64_t 编号=0; 新组织取材算子 算子=新组织取材算子::绑定角色;
     新组织绑定角色 输出角色=新组织绑定角色::需求D;
@@ -262,7 +265,7 @@ struct 新组织取材步骤 final {
 };
 struct 新表达需求类型 final {
     新表达用途 用途=新表达用途::疑问;
-    // 表达对象的variant索引：0 需求字段，1 招呼，2 需求目标栏（正式表达需求.h）。
+    // 表达对象的variant索引：0 需求字段，1 招呼，2 需求目标栏，3 正式信息字段（正式表达需求.h）。
     std::int64_t 对象种类=0;
     friend bool operator==(const 新表达需求类型&,const 新表达需求类型&)=default;
 };

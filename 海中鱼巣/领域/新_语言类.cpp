@@ -6419,7 +6419,17 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     std::sort(children.begin(),children.end(),[&](auto a,auto b){return r.整数(a,组织键::序号)<r.整数(b,组织键::序号);});
     for(std::size_t i=0;i<children.size();++i)组织要求(r.整数(children[i],组织键::序号)==static_cast<std::int64_t>(i));
     const auto tag=r.整数(id,组织键::类型);
-    if constexpr(std::is_enum_v<T>){组织要求(tag==2&&children.empty());v=static_cast<T>(r.整数(id,组织键::值));}
+    if constexpr(std::is_enum_v<T>){
+        组织要求(tag==2&&children.empty());
+        const auto 原值=r.整数(id,组织键::值);
+        if constexpr(std::is_same_v<T,新指称类别>)
+            组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新指称类别::正式信息));
+        else if constexpr(std::is_same_v<T,新组织绑定角色>)
+            组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新组织绑定角色::正式信息));
+        else if constexpr(std::is_same_v<T,新组织取材算子>)
+            组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新组织取材算子::正式字段值域概念));
+        v=static_cast<T>(原值);
+    }
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
     else if constexpr(std::is_same_v<T,std::uint64_t>){
         组织要求(tag==9&&children.empty());
@@ -6457,19 +6467,27 @@ template<class T> void 核验组织模板绑定(const T& v,const std::map<std::i
 }
 void 核验组织定义(const 新表达组织知识定义& d){
     // 对象种类：0 需求字段（陈述/疑问/祈使）；1 招呼（用途招呼，无条件、无取材，CONV-EXPR-TEXT §3.5）；
-    // 2 需求目标栏（用途疑问，目标栏问题“Y需要什么？”，R120）。
+    // 2 需求目标栏、3 正式信息字段均用于疑问。
     组织要求((d.适用类型.对象种类==0&&d.适用类型.用途>=新表达用途::陈述&&d.适用类型.用途<=新表达用途::祈使)
         ||(d.适用类型.对象种类==2&&d.适用类型.用途==新表达用途::疑问)
+        ||(d.适用类型.对象种类==3&&d.适用类型.用途==新表达用途::疑问)
         ||(d.适用类型.对象种类==1&&d.适用类型.用途==新表达用途::招呼&&d.适用条件组.empty()&&d.取材步骤组.empty()));
     组织要求(d.缺材处理==新组织缺材处理::必需不足);
-    for(auto c:d.适用条件组)组织要求(c==新组织取材算子::需求字段内容状态);
+    const bool 通用=d.适用类型.对象种类==3;
+    if(通用)组织要求(d.适用条件组==std::vector{新组织取材算子::正式字段内容状态});
+    for(auto c:d.适用条件组)组织要求(c==(通用
+        ? 新组织取材算子::正式字段内容状态 : 新组织取材算子::需求字段内容状态));
     std::set<std::int64_t> ids;std::set<新组织绑定角色> roles;std::map<std::int64_t,新组织绑定角色> steps;
     for(const auto& t:d.取材步骤组){
         组织要求(t.编号>0&&ids.insert(t.编号).second&&roles.insert(t.输出角色).second);steps.emplace(t.编号,t.输出角色);
-        组织要求((t.算子==新组织取材算子::绑定角色&&(t.输出角色>=新组织绑定角色::需求D&&t.输出角色<=新组织绑定角色::受话者))
+        组织要求((t.算子==新组织取材算子::绑定角色
+                &&(t.输出角色==新组织绑定角色::字段特征类型||t.输出角色==新组织绑定角色::说话者||t.输出角色==新组织绑定角色::受话者))
+            ||(t.算子==新组织取材算子::绑定角色&&t.输出角色==新组织绑定角色::需求D&&!通用)
+            ||(t.算子==新组织取材算子::绑定角色&&t.输出角色==新组织绑定角色::正式信息&&通用)
             ||(t.算子==新组织取材算子::绑定角色&&t.输出角色==新组织绑定角色::问题主体&&d.适用类型.对象种类==2)
-            ||(t.算子==新组织取材算子::需求字段值域概念&&t.输出角色==新组织绑定角色::字段值域概念)
-            ||(t.算子==新组织取材算子::存在根概念&&t.输出角色==新组织绑定角色::目标存在范围));
+            ||(t.算子==新组织取材算子::需求字段值域概念&&t.输出角色==新组织绑定角色::字段值域概念&&!通用)
+            ||(t.算子==新组织取材算子::正式字段值域概念&&t.输出角色==新组织绑定角色::字段值域概念&&通用)
+            ||(t.算子==新组织取材算子::存在根概念&&t.输出角色==新组织绑定角色::目标存在范围&&!通用));
     }
     核验含义网结构(d.含义网模板,true);
     核验组织模板绑定(d.含义网模板,steps,roles);
