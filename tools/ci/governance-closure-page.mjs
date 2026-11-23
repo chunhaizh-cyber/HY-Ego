@@ -67,13 +67,37 @@ async function fetchControl(base) {
 }
 
 async function sendViaDom(page, text) {
-  await page.fill('#input', text);
-  await page.click('#form button[type="submit"]');
-  // 页面清空输入表示提交路径已走完（不证明业务理解）
-  await page.waitForFunction(
-    () => (document.getElementById('input')?.value ?? '') === '',
-    { timeout: 15000 }
+  const input = page.locator('#input');
+  await input.fill(text);
+  // 正式页面 CSP 为 script-src 'unsafe-inline'（无 unsafe-eval）。
+  // 禁止使用 page.waitForFunction/字符串 eval；改用 locator + 响应等待。
+  const submit = page.locator('#form button[type="submit"]');
+  const responsePromise = page.waitForResponse(
+    (r) =>
+      r.request().method() === 'POST' &&
+      r.url().includes('/api/messages') &&
+      r.status() === 202,
+    { timeout: 20000 }
   );
+  await submit.click();
+  const response = await responsePromise;
+  // 输入框清空表示页面提交处理器已跑完（仍不证明业务理解）
+  await expectEmptyInput(input, 15000);
+  return { status: response.status(), url: response.url() };
+}
+
+async function expectEmptyInput(input, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const value = await input.inputValue();
+    if (value === '') return;
+    await pageWait(200);
+  }
+  throw new Error('提交后 #input 未在时限内清空');
+}
+
+function pageWait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function observe(page, base, evidenceDir, timeline, label, observeMs) {
@@ -149,7 +173,12 @@ async function main() {
     headless: true,
     args: ['--disable-gpu', '--no-sandbox'],
   });
-  const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
+  // bypassCSP：仅解除观测驱动对 Playwright 注入的限制；不改产品 CSP/业务语义。
+  const context = await browser.newContext({
+    viewport: { width: 1400, height: 900 },
+    bypassCSP: true,
+  });
+  const page = await context.newPage();
   page.setDefaultTimeout(30000);
 
   try {
@@ -164,7 +193,8 @@ async function main() {
 
     // 正向用例
     timeline.push({ at: stamp(), event: 'send-positive', text: probeNl });
-    await sendViaDom(page, probeNl);
+    const positivePost = await sendViaDom(page, probeNl);
+    timeline.push({ at: stamp(), event: 'positive-post-accepted', ...positivePost });
     await page.screenshot({ path: path.join(evidenceDir, 'screen-02-after-positive-send.png'), fullPage: true });
     writeJson(path.join(evidenceDir, 'messages-after-positive.json'), await readMessages(page));
     await observe(page, base, evidenceDir, timeline, 'positive', observeMs);
@@ -172,7 +202,8 @@ async function main() {
     // 负例（可选，较短观察）
     if (negativeNl) {
       timeline.push({ at: stamp(), event: 'send-negative', text: negativeNl });
-      await sendViaDom(page, negativeNl);
+      const negativePost = await sendViaDom(page, negativeNl);
+      timeline.push({ at: stamp(), event: 'negative-post-accepted', ...negativePost });
       await page.screenshot({ path: path.join(evidenceDir, 'screen-03-after-negative-send.png'), fullPage: true });
       await observe(page, base, evidenceDir, timeline, 'negative', Math.min(observeMs, 120000));
     }
