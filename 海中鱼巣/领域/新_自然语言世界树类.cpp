@@ -563,6 +563,11 @@ std::optional<稳定编码> 新_自然语言世界树类::获取根节点() cons
     throw std::logic_error("unknown received source scene state");
 }
 
+新语言分界调用结果<新语言分界采用回执> 新_自然语言世界树类::采用语言分界材料(
+    新_语言类& 语言, const 新语言分界采用请求& 请求) {
+    return 语言.采用分界材料(请求, 场景服务_, 状态服务_);
+}
+
 新来源子场景结果 新_自然语言世界树类::建立或取得词典来源场景(稳定编码 材料Q) noexcept {
     std::lock_guard 锁(自然语言世界树互斥);
     return 场景服务_.建立或取得来源子场景(自然语言世界树根节点, 材料Q);

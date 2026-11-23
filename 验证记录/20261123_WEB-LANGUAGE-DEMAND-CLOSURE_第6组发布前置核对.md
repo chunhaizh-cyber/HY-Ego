@@ -159,3 +159,14 @@ Debug 产物 SHA-256 为 830D15C83561535BB4680B25BE1ED93A144D80965C2A7FFDBC5743C
 修正前 Debug/x64 与 Release/x64 全量编译分别为 546.6 秒和 512.62 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 31.89 秒和 49.3 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 369DFF757FF833FA4B9F80DEAE8D7B65DB006BD395E9054881F30E82191B0329，六文件差异 SHA-256 为 AD5FA2FA6EAF2BF724F8CAC3F3C5ABF55843FEE2114792C67E4D9FEBFB71BE7A。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Release\56C7-source.patch)
 
 Debug 产物 SHA-256 为 6588753167D5ECBCAF2BBD4226E5E9D20C7B0EBCE2A20FD3D64DE97D4E1C50A0，Release 产物 SHA-256 为 C23D239B9AEEFFE027629659B802B42E69EB15FD4E0E0C91494409FE3F532DA4。程序未运行。仍需正式分词及准入本能、236 隔离学习、前置需求派生、分界依据及网页问答。第 6 组同 D 写回与正式承接未验收。
+
+
+## 56C8 分词与词条准入本能登记、分派和同步执行
+
+依主设计 v1.159 §10.90 和计划 v2.114 施工，双配置终稿构建基线为 78a52aef0 加本片 16 个文件。分词首次登记两条冻结分支和两个结果，词条准入登记正式有效分界条件。普通入口在启动工作线程前调用两项登记。真实运行沿同一 X 读回 A 和正式采用，实际动作挂接到现实场景，回执及新状态由语言和自然语言场景所有者共同发表。已登记词条原样保留，只在分界已确认的未知范围取固定原词面，由词条所有者建立或取得。
+
+独立复核覆盖正式参数、分支顺序、空前值、权威场景归属、同一次执行恢复、同值采用及关闭顺序。修正同一 X 绑定不能替代正式场景关系、旧动作无冻结输入先读回执、普通 W3 零动作资源状态。场景归属读口复用现有场景结构核验，底层场景父链读取发生资源耗尽时沿该入口既有工程保护。
+
+最终 Debug/x64 用时 533.49 秒，Release/x64 用时 501.99 秒，均为 0 错误、0 警告。各 249 项工程与初始化输入在两配置的构建前后逐项相同。输入清单 SHA-256 为 D313B1B17409BA94A5C9B148D8CE719BC325363CCC242C81D15F2252B175589B。[Debug 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c8-boundary-instinct-Debug/final-result.json) · [Release 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c8-boundary-instinct-Release/final-result.json)
+
+Debug 产物 SHA-256 为 B64A639E0DF822DE5E92F8AE3463782AF056582B2426B73B10687D5D0F7C06ED，Release 产物 SHA-256 为 8F9DB5BDAEB8CF15BA03D6E12D27E29DF1EF9B22F51C30F25BA9F018401875C2。两套产物包及工作区的词典批次清单均为 32a232f557d644be5336699a83c9c80de5af972676feb8b56e315cb3142da27d。未启动应用。正式 236 隔离样例、定向学习、真实前置派生和分界问答待后继，未取得第 6 组或 P0–P6 的实际验收证据。

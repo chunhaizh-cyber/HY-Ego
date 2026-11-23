@@ -184,6 +184,13 @@ struct 新本能函数本次条件结果对 final {
         const 新本能函数本次条件结果对&) = default;
 };
 
+class 新本能语言分界运行接口 {
+public:
+    virtual ~新本能语言分界运行接口() = default;
+    virtual 新本能函数本次条件结果对 运行语言片段分词(const 方法参数场景&) = 0;
+    virtual 新本能函数本次条件结果对 运行词条准入(const 方法参数场景&) = 0;
+};
+
 using 新本能函数 = 新本能函数本次条件结果对 (*)(
     const 方法参数场景& 参数场景) noexcept;
 
@@ -193,6 +200,8 @@ using 新本能函数 = 新本能函数本次条件结果对 (*)(
 class 新_本能函数集 final {
 public:
     static 新本能函数本次条件结果对 按归类材料挂接词条(const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 语言片段分词(const 方法参数场景&) noexcept;
+    static 新本能函数本次条件结果对 未登记片段建立或取得词条(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 查词典(const 方法参数场景&) noexcept;
     static 新本能函数本次条件结果对 获取交互者(
         const 方法参数场景& 场景) noexcept;
@@ -206,6 +215,11 @@ public:
     static 新字段询问答案读回 读取字段询问执行问题答案(稳定编码 出站来源) noexcept;
     static 新字段询问答案读回 取得字段询问执行问题答案(稳定编码 出站来源) noexcept;
     static 新本能函数本次条件结果对 进入场景(const 方法参数场景&) noexcept;
+
+private:
+    static 新本能函数本次条件结果对 分派语言分界本能(const 方法参数场景&,
+        新本能函数本次条件结果对 (新本能语言分界运行接口::*)(const 方法参数场景&),
+        const wchar_t*) noexcept;
 };
 
 } // namespace 海中鱼巣

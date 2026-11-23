@@ -125,6 +125,14 @@ struct 新语言词条准入定义 final {
     std::vector<新语言分界词段> 词段组;
     friend bool operator==(const 新语言词条准入定义&, const 新语言词条准入定义&) = default;
 };
+struct 新语言词条准入词段材料 final {
+    新语言分界词段 词段;
+    std::optional<std::string> 未登记原文词面;
+};
+struct 新语言词条准入取材 final {
+    稳定编码 语言节点, 规范化合同节点;
+    std::vector<新语言词条准入词段材料> 词段材料组;
+};
 using 新语言分界材料定义 = std::variant<新语言分界候选定义, 新语言分界依据定义,
     新语言有效分界定义, 新语言词条准入定义>;
 struct 新语言分界材料信息 final {

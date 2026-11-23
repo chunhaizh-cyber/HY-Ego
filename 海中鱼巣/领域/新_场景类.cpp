@@ -3228,6 +3228,15 @@ std::vector<稳定编码> 新_场景类::查询状态列表(
     }
 }
 
+std::optional<稳定编码> 新_场景类::查询动态所属场景(稳定编码 动态节点) const {
+    std::lock_guard 锁(新场景互斥);
+    const auto 挂接 = 全局基础数据集.查询目标字段(动态节点, 动态列表字段);
+    if (挂接.empty()) return {};
+    if (挂接.size() != 1 || !是场景节点(挂接.front().所属节点))
+        throw std::logic_error("dynamic attachment does not belong to this scene tree");
+    return 挂接.front().所属节点;
+}
+
 std::vector<稳定编码> 新_场景类::查询动态列表(
     稳定编码 场景节点) const noexcept {
     try {

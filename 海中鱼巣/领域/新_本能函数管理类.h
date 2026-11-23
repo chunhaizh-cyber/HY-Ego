@@ -14,6 +14,8 @@
 
 namespace 海中鱼巣 {
 inline constexpr std::string_view 新本能函数登记名_按归类材料挂接词条 = "builtin.word.classification.apply.v1";
+inline constexpr std::string_view 新本能函数登记名_语言片段分词 = "builtin.language.segment.v1";
+inline constexpr std::string_view 新本能函数登记名_未登记片段建立或取得词条 = "builtin.language.word.admit.v1";
 inline constexpr std::string_view 新本能函数登记名_查词典 = "builtin.dictionary.lookup.v1";
 inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_获取交互者 =
@@ -104,6 +106,10 @@ public:
     static 新本能函数端口装配状态 装配词典登记端口(std::shared_ptr<新词典登记端口>) noexcept;
     static 新本能函数端口装配状态 关闭词典登记端口(新词典登记端口&) noexcept;
 
+    static 新本能函数端口装配状态 装配语言分界端口(
+        std::shared_ptr<新本能语言分界运行接口>) noexcept;
+    static 新本能函数端口装配状态 关闭语言分界端口(新本能语言分界运行接口&) noexcept;
+
     // 线程池调用期的工程停止能力；不进入业务参数或条件结果知识。
     class 本能停止守卫 final {
     public:
@@ -160,6 +166,7 @@ public:
         const 方法参数场景& 参数场景) noexcept;
 
 private:
+    static std::shared_ptr<新本能语言分界运行接口> 租用语言分界端口() noexcept;
     static std::shared_ptr<新词典登记端口> 租用词典登记端口() noexcept;
     static std::shared_ptr<新词条归类登记端口> 租用词条归类登记端口() noexcept;
     static std::shared_ptr<新字段询问登记端口> 租用字段询问端口() noexcept;
