@@ -1,0 +1,44 @@
+# 拟议路径：.github/workflows/cloud-windows-loopback-http.yml
+# 独立环境探针：Winsock2 回环 HTTP（同 HY-Ego 正式宿主网络栈；非业务冒烟）。
+name: cloud-windows-loopback-http
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/cloud-windows-loopback-http.yml'
+      - 'tools/ci/windows-loopback-http-smoke.cpp'
+      - 'tools/ci/windows-loopback-http-smoke.ps1'
+  push:
+    branches:
+      - 'cursor/cloud-msvc-smoke-c720'
+    paths:
+      - '.github/workflows/cloud-windows-loopback-http.yml'
+      - 'tools/ci/windows-loopback-http-smoke.cpp'
+      - 'tools/ci/windows-loopback-http-smoke.ps1'
+
+permissions:
+  contents: read
+
+jobs:
+  loopback-http:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Winsock loopback HTTP smoke
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & "$env:GITHUB_WORKSPACE\tools\ci\windows-loopback-http-smoke.ps1"
+
+      - name: Upload loopback evidence (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-windows-loopback-http-${{ github.run_id }}
+          path: _ci_upload_loopback_http/**
+          if-no-files-found: warn
+          retention-days: 14
