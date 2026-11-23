@@ -19,6 +19,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <filesystem>
 #include <limits>
 #include <mutex>
 #include <new>
@@ -1796,11 +1797,25 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
         (void)记录运行日志(L"网页对话宿主", L"传输会话已开始", L"网页对话会话租约开始成功");
         if (!服务会话.开始()) return {网页对话宿主状态::会话绑定失败};
         (void)记录运行日志(L"网页对话宿主", L"服务会话已开始", L"即将写出 session URL 旁路文件");
+        // 必须用宽路径打开：源码 /utf-8 下窄字面量是 UTF-8，Windows ofstream(const char*) 走 ACP，
+        // 在 en-US Actions runner 上无法命中 D:\TEMP\海中鱼巣（与日志系统 L"D:\\海中鱼巣\\日志" 同理）。
+        bool 旁路已写出 = false;
         try {
-            std::ofstream 会话旁路("D:/TEMP/海中鱼巣/last-session-url.txt", std::ios::trunc);
-            if (会话旁路) 会话旁路 << 浏览器地址 << std::flush;
-        } catch (...) {}
-        (void)记录运行日志(L"网页对话宿主", L"session URL 旁路已尝试写出", L"进入 accept 循环");
+            const std::filesystem::path 旁路路径(L"D:/TEMP/海中鱼巣/last-session-url.txt");
+            std::ofstream 会话旁路(旁路路径, std::ios::trunc | std::ios::binary);
+            if (会话旁路) {
+                会话旁路 << 浏览器地址 << std::flush;
+                旁路已写出 = static_cast<bool>(会话旁路);
+            }
+        } catch (...) {
+            旁路已写出 = false;
+        }
+        if (旁路已写出) {
+            (void)记录运行日志(L"网页对话宿主", L"session URL 旁路已写出", L"进入 accept 循环");
+        } else {
+            (void)记录运行日志(L"网页对话宿主", L"session URL 旁路写出失败",
+                L"宽路径打开或写入失败；accept 仍继续，外部可能读不到会话地址");
+        }
         // 不自动打开浏览器：页面轮询会在单线程 accept 上与启动期任务承接争用外设/场景锁，导致入站饿死甚至死锁。
         // 会话地址已写入旁路文件，由外部按同一 /api/messages 契约提交。
         (void)浏览器地址;
