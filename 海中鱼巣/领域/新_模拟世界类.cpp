@@ -60,7 +60,8 @@ enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, �
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
-    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类,模拟归类特征概念种类 };
+    语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类,模拟归类特征概念种类,
+    语言范围种类, 语言分界材料种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 struct 模拟联合预期变化 final : std::runtime_error {
@@ -461,8 +462,14 @@ struct 新_模拟世界类::实现 final {
     bool 是普通存在参数(稳定编码 n) const {
         const auto it=通用参数.find(n);
         return it!=通用参数.end()&&it->second.规格.信息类型==新方法参数信息类型::存在
-            &&!it->second.需求参数输入&&!it->second.复制归类材料&&!本地需求.contains(n);
+            &&!it->second.需求参数输入&&!it->second.复制归类材料&&!本地需求.contains(n)
+            &&(!本地语言范围||本地语言范围->本地范围!=n);
     }
+    struct 语言范围索引 final {
+        稳定编码 本地范围, 来源范围, 结构概念;
+        std::array<稳定编码, 4> 本地特征, 来源特征;
+    };
+    std::optional<语言范围索引> 本地语言范围;
     std::map<稳定编码,材料物理类型> 通用材料;
     // 值式排序元数据，不是对正式材料的持久引用。
     std::map<稳定编码,稳定编码> 复制材料来源顺序;
@@ -1706,7 +1713,9 @@ std::optional<std::vector<稳定编码>> 新_模拟世界类::读取模拟全部
             if(word.状态!=新方法词条参数读取状态::已读取||!word.信息)
                 throw std::logic_error("simulation word reader unavailable");
         } else if(b.有序引用->信息类型!=新方法参数信息类型::存在
-            ||!s.是普通存在参数(b.有序引用->信息节点))return {S::信息类型不符,{},{}};
+            ||(!s.是普通存在参数(b.有序引用->信息节点)
+                &&(!s.本地语言范围||s.本地语言范围->本地范围!=b.有序引用->信息节点)))
+            return {S::信息类型不符,{},{}};
         const auto 声明=s.方法.读取存在参数特征声明(s.通用方法,s.通用执行分支,位置,FT);
         if(声明.状态!=S::已读取)return {声明.状态,{},{}};
         const auto E=b.有序引用->信息节点;
@@ -1814,7 +1823,9 @@ std::optional<新特征信息> 新_模拟世界类::读取模拟特征内部(稳
                 if(s.记录复制读取&&p->second.复制上下文&&!正式定位
                     &&(def->材料类型!=特征概念材料物理类型::需求节点引用||!s.内容参数位置.contains(n)))
                     s.已读取复制上下文=true; // 本叶只为已映射需求F提供完整前态覆盖，其它复制读取保留旧门。
-                if(p->second.完整复制特征)f.实例单位=ref(结构单位引用);
+                const bool 分界F=s.本地语言范围 && std::find(s.本地语言范围->本地特征.begin(),
+                    s.本地语言范围->本地特征.end(),n)!=s.本地语言范围->本地特征.end();
+                if(p->second.完整复制特征||分界F)f.实例单位=ref(结构单位引用);
                 else f.实例单位=def->单位;
                 if(const auto v=number(数值)) f.当前值=*v;
                 else if(const auto v=ref(当前材料)) f.当前值=*v;
@@ -2091,6 +2102,135 @@ namespace {
         return {S::已读取,std::move(out),std::move(protection)};
     }
 }
+正式信息参数读取结果 新_模拟世界类::读取本地语言范围参数(稳定编码 R,稳定编码 C) const {
+    using S=正式信息参数读取状态;
+    const auto& 范围=*实现_->本地语言范围;
+    if (C!=范围.结构概念) return {S::范围未支持,{},{}};
+    std::vector<稳定编码> 节点组{R};
+    节点组.insert(节点组.end(),范围.本地特征.begin(),范围.本地特征.end());
+    auto 批=全局基础数据集.查询节点组完整结构(节点组);
+    if (批.状态==基础结构操作状态::资源失败) return {S::资源失败,{},{}};
+    if (批.状态==基础结构操作状态::节点不存在) return {S::前提已变化,{},{}};
+    if (批.状态!=基础结构操作状态::已完成 || 批.节点组.size()!=节点组.size())
+        throw std::logic_error("local language range snapshot failed");
+
+    正式信息参数投影 投影{R,C,{},{}};
+    std::vector<基础联合节点快照> 保护;
+    for (std::size_t i=0; i<节点组.size(); ++i) {
+        const auto it=std::lower_bound(批.节点组.begin(),批.节点组.end(),节点组[i],
+            [](const auto& 项,稳定编码 节点) { return 项.查询节点<节点; });
+        if (it==批.节点组.end() || it->查询节点!=节点组[i])
+            throw std::logic_error("local language range batch identity differs");
+        auto& 项=*it;
+        if (!项.快照) {
+            if (i==0) return {S::信息不存在,{},{}};
+            throw std::logic_error("registered local language feature is missing");
+        }
+        if (i) {
+            const auto FT=实现_->通用参数.at(项.查询节点).规格.范围概念节点;
+            std::optional<稳定编码> 材料;
+            for (const auto& 字段:项.快照->结构.字段组) {
+                if (字段.字段节点==字段组[当前材料]) 材料=std::get<稳定编码>(字段.内容);
+            }
+            正式内容值 值{正式内容值种类::信息对象引用,正式内容值状态::当前未知,{}};
+            if (材料) {
+                值.状态=正式内容值状态::已知;
+                值.值=正式内容准确值{*材料};
+            }
+            投影.直接内容组.push_back({FT,std::move(值)});
+            投影.特征定位组.push_back({FT,项.查询节点});
+        }
+        保护.push_back(std::move(*项.快照));
+    }
+    实现_->记录内容(7,R,投影,true);
+    return {S::已读取,std::move(投影),std::move(保护)};
+}
+
+新语言分界调用结果<新语言范围原文信息> 新_模拟世界类::读取本地语言范围原文(稳定编码 R) const {
+    using S=新语言分界工程状态;
+    try {
+        if (!实现_) return {S::未找到,{},{}};
+        const auto& s=*实现_;
+        std::lock_guard 锁(s.互斥);
+        if (!s.通用 || !s.样例就绪 || !s.本地语言范围 || s.本地语言范围->本地范围!=R)
+            return {S::未找到,{},{}};
+        const auto 区间=读结构材料<std::vector<std::uint64_t>>(R,结构材料值);
+        if (区间.size()!=2) throw std::logic_error("local language range coordinates corrupt");
+        新语言材料范围请求 定位{必读引用(R,来源引用),区间[0],区间[1],
+            必读引用(R,词条语言引用),必读引用(R,词条规范化合同引用),s.通用场景};
+        return {S::已完成,新语言范围原文信息{
+            {R,定位,s.本地语言范围->本地特征},必读引用(R,正文引用),
+            读结构材料<std::string>(R,固定语义引用),读结构材料<std::string>(R,数值)},{}};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败,{},{}};
+    }
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_模拟世界类::读取本地语言分界材料(稳定编码 节点) const {
+    using S=新语言分界工程状态;
+    try {
+        if (!实现_) return {S::未找到,{},{}};
+        const auto& s=*实现_;
+        std::lock_guard 锁(s.互斥);
+        if (!s.通用 || !s.样例就绪 || !s.本地语言范围
+            || !属于样例(节点,语言分界材料种类,s.通用场景))
+            return {S::未找到,{},{}};
+        const auto R=s.本地语言范围->本地范围;
+        if (读引用(节点,所属)!=R) throw std::logic_error("local boundary material has a different range");
+        const auto 有序下位=[](稳定编码 持有者,字段 键) {
+            std::vector<std::pair<std::int64_t,稳定编码>> 组;
+            for (const auto 子:读引用组(持有者,键))
+                组.emplace_back(必读数(子,结构顺序值),子);
+            std::sort(组.begin(),组.end());
+            return 组;
+        };
+        const auto 读词段=[&](稳定编码 持有者) {
+            std::vector<新语言分界词段> 词段组;
+            for (const auto& 项:有序下位(持有者,结构子项)) {
+                const auto 区间=读结构材料<std::vector<std::uint64_t>>(项.second,结构材料值);
+                if (区间.size()!=2) throw std::logic_error("local boundary word coordinates corrupt");
+                词段组.push_back({区间[0],区间[1],读引用(项.second,词条特征引用)});
+            }
+            return 词段组;
+        };
+        新语言分界材料定义 定义;
+        using 种类=新语言范围特征种类;
+        switch (static_cast<种类>(必读数(节点,结构类别值))) {
+        case 种类::分词候选材料: {
+            新语言分界候选定义 候选;
+            for (const auto& 项:有序下位(节点,结构子项)) {
+                新语言分界候选路径 路径{读词段(项.second),{}};
+                for (const auto& 应用:有序下位(项.second,场景成员引用))
+                    路径.规则应用记录组.push_back(必读引用(应用.second,来源引用));
+                候选.路径组.push_back(std::move(路径));
+            }
+            定义=std::move(候选);
+            break;
+        }
+        case 种类::分界依据: {
+            const auto 来源=必读引用(节点,来源引用);
+            const auto 问题=读引用(节点,目标引用);
+            const 新语言分界取材来源 依据来源=问题
+                ? 新语言分界取材来源{新语言回答分界来源{*问题,必读引用(节点,确认引用),来源}}
+                : 新语言分界取材来源{新语言规则分界来源{来源}};
+            定义=新语言分界依据定义{必读引用(节点,结构引用),{读词段(节点),依据来源}};
+            break;
+        }
+        case 种类::有效分界结果:
+            定义=新语言有效分界定义{必读引用(节点,结构引用)};
+            break;
+        case 种类::词条准入结果:
+            定义=新语言词条准入定义{必读引用(节点,结构引用),读词段(节点)};
+            break;
+        default:
+            throw std::logic_error("local boundary material kind corrupt");
+        }
+        return {S::已完成,新语言分界材料信息{节点,R,std::move(定义)},{}};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败,{},{}};
+    }
+}
+
 正式信息参数读取结果 新_模拟世界类::读取正式信息参数保护(稳定编码 N,稳定编码 C) const noexcept {
     using S=正式信息参数读取状态;
     try {
@@ -2100,6 +2240,10 @@ namespace {
             std::lock_guard lock(s.互斥);
             if(!s.通用)return {S::信息不存在,{},{}};
             if(s.本地归类材料.contains(N))return 读取本地归类材料(N,C);
+            if(s.本地语言范围&&s.本地语言范围->本地范围==N) {
+                if(!s.样例就绪)return {S::信息不存在,{},{}};
+                return 读取本地语言范围参数(N,C);
+            }
         }
         const auto roots=s.方法.读取模拟需求概念组();
         if(roots.状态==正式结构操作状态::前提已变化)return {S::前提已变化,{},{}};
@@ -2385,13 +2529,90 @@ std::vector<稳定编码> 新_模拟世界类::读取本地实例身份组() con
 } // namespace 海中鱼巣
 
 namespace 海中鱼巣 {
+namespace {
+struct 模拟语言范围前态 final {
+    新语言范围原文信息 原文;
+    std::array<稳定编码, 4> 特征类型;
+    std::array<std::optional<稳定编码>, 4> 当前材料;
+    std::array<新特征信息, 4> 特征组;
+    std::map<稳定编码, 新语言分界材料定义> 材料组;
+};
+
+新模拟世界状态 取得模拟语言范围前态(const 新模拟语言范围样例来源& 来源,
+    模拟语言范围前态& 前态) {
+    using 状态 = 新模拟世界状态;
+    using 材料状态 = 新语言分界工程状态;
+    const auto 待重取 = [](材料状态 读回) {
+        return 读回 == 材料状态::资源失败 ? 状态::资源失败
+            : 读回 == 材料状态::前提已变化 ? 状态::定义前提已变化 : 状态::需重新组织输入;
+    };
+    const auto 归属=来源.语言.读取材料范围特征(来源.范围);
+    if (归属.状态!=材料状态::已完成) return 待重取(归属.状态);
+    auto 正文=来源.语言.读取材料范围原文(来源.范围,来源.特征值);
+    if (正文.状态!=材料状态::已完成) return 待重取(正文.状态);
+    if (归属.信息->范围.特征节点组!=正文.信息->范围.特征节点组) return 状态::定义前提已变化;
+    前态.原文=std::move(*正文.信息);
+    前态.特征类型=归属.信息->特征类型组;
+
+    // 完整特征读取会返回历史；不能把只读到的空当前值解释成没有历史。
+    std::vector<std::pair<稳定编码,std::size_t>> 待读取;
+    using 特征状态=新特征完整读取状态;
+    for (std::size_t i=0; i<前态.特征类型.size(); ++i) {
+        auto 读取=来源.特征.读取特征完整保护(前态.原文.范围.特征节点组[i]);
+        if (读取.状态==特征状态::前提已变化) return 状态::定义前提已变化;
+        if (读取.状态==特征状态::资源失败) return 状态::资源失败;
+        if (读取.状态==特征状态::类型未支持) return 状态::能力未支持;
+        if (读取.状态!=特征状态::已读取) return 状态::需重新组织输入;
+        if (读取.信息->特征类型根!=前态.特征类型[i]) return 状态::定义前提已变化;
+        auto& F=前态.特征组[i];
+        F=std::move(读取.信息->特征);
+        const auto 是引用域=[](const auto& 域) {
+            return !域 || std::holds_alternative<特征概念信息引用值域>(*域);
+        };
+        if (F.上级特征节点 || !是引用域(F.实例区间值) || !是引用域(F.实例历史聚合值域))
+            return 状态::能力未支持;
+        const auto 录入=[&](const 新特征准确值& 值) {
+            待读取.emplace_back(std::get<稳定编码>(值),i);
+            return 待读取.back().first;
+        };
+        if (F.当前值) 前态.当前材料[i]=录入(*F.当前值);
+        if (F.标准值) 录入(*F.标准值);
+        for (const auto& 历史:F.历史不同值) 录入(历史);
+        for (const auto& 命中:F.历史值命中信息) 录入(命中.值);
+    }
+    while (!待读取.empty()) {
+        const auto [节点, 种类]=待读取.back();
+        待读取.pop_back();
+        auto 已读=前态.材料组.find(节点);
+        if (已读 != 前态.材料组.end()) {
+            if (已读->second.index()!=种类) throw std::logic_error("language range material used with conflicting roles");
+            continue;
+        }
+        auto 材料=来源.语言.读取分界材料(节点);
+        if (材料.状态 != 材料状态::已完成) return 待重取(材料.状态);
+        if (材料.信息->所属范围 != 来源.范围 || 材料.信息->定义.index()!=种类)
+            throw std::logic_error("formal language range material reference has a different owner or kind");
+        auto& 定义=材料.信息->定义;
+        if (const auto* 依据=std::get_if<新语言分界依据定义>(&定义))
+            待读取.emplace_back(依据->候选材料,0);
+        if (const auto* 有效=std::get_if<新语言有效分界定义>(&定义))
+            待读取.emplace_back(有效->正式依据,1);
+        if (const auto* 准入=std::get_if<新语言词条准入定义>(&定义))
+            待读取.emplace_back(准入->有效结果,2);
+        前态.材料组.emplace(节点,std::move(定义));
+    }
+    return 状态::已完成;
+}
+} // namespace
+
 新模拟世界建立结果 新_模拟世界类::建立有序样例(稳定编码 M,
-    const std::vector<新模拟有序参数输入>& 输入,const std::vector<新模拟输入事件>& 事件,
+    const std::vector<新模拟有序参数输入>& 正式输入,const std::vector<新模拟输入事件>& 事件,
     const std::vector<新模拟任务治理输入>& 任务组,const std::vector<新模拟场景事实输入>& 场景输入,
     std::optional<稳定编码> 执行分支,const std::optional<新模拟消息方案输入>& 消息输入,
     const 新模拟需求输入图& 需求图,const std::optional<新模拟执行主体输入>& 执行主体输入,
     const std::vector<新模拟词典材料复制输入>& 词典材料输入,
-    const std::optional<新模拟归类主体输入>& 归类主体输入) {
+    const std::optional<新模拟归类主体输入>& 归类主体输入,
+    const std::optional<新模拟语言范围样例来源>& 语言范围来源) {
     if(执行主体输入 && 归类主体输入)return {新模拟世界状态::入口拒绝,{}};
     if(归类主体输入 && (!有效(归类主体输入->来源存在) || !有效(归类主体输入->专属概念)
         || 归类主体输入->同源存在输入!=4))
@@ -2441,7 +2662,59 @@ namespace 海中鱼巣 {
             throw std::logic_error("simulation actor dedicated concept source invalid");
     }
     auto m=s.方法.获取方法(M);
-    if(!m||m->参数规格组.size()>输入.size()) { 模拟样例拒绝行=__LINE__; return {}; }
+    if(!m||m->参数规格组.size()>正式输入.size()) { 模拟样例拒绝行=__LINE__; return {}; }
+    std::optional<模拟语言范围前态> 语言前态;
+    std::vector<新模拟有序参数输入> 语言样例输入;
+    std::array<std::size_t, 4> 语言特征位置{};
+    if (语言范围来源) {
+        using P=新方法参数信息类型;
+        const bool 分词=m->本能函数登记名==新本能函数登记名_语言片段分词;
+        const bool 准入=m->本能函数登记名==新本能函数登记名_未登记片段建立或取得词条;
+        if ((!分词&&!准入) || !执行分支 || 正式输入.size()!=m->参数规格组.size()
+            || 正式输入.size()!=(分词 ? 5 : 4) || 正式输入.front().规格.信息类型!=P::存在)
+            return {新模拟世界状态::入口拒绝,{}};
+        const auto C=正式输入.front().规格.范围概念节点;
+        const auto 结构=s.方法.读取模拟正式结构(C);
+        if (结构.状态==正式结构操作状态::前提已变化)
+            return {新模拟世界状态::定义前提已变化,{}};
+        if (!结构.信息 || !std::holds_alternative<信息结构概念定义>(结构.信息->定义))
+            return {新模拟世界状态::能力未支持,{}};
+        语言前态.emplace();
+        const auto 取材=取得模拟语言范围前态(*语言范围来源,*语言前态);
+        if (取材!=新模拟世界状态::已完成) return {取材,{}};
+        语言样例输入=正式输入;
+        const auto& 类型组=语言前态->特征类型;
+        for (std::size_t i=0; i<类型组.size(); ++i) {
+            auto 位置=std::find_if(语言样例输入.begin(),语言样例输入.end(),[&](const auto& 项) {
+                return 项.规格.信息类型==P::特征 && 项.规格.所属存在位置==1
+                    && 项.规格.范围概念节点==类型组[i];
+            });
+            const auto 索引=static_cast<std::size_t>(位置-语言样例输入.begin());
+            语言特征位置[i]=索引;
+            if (位置==语言样例输入.end()) {
+                新模拟有序参数输入 私有字段{{static_cast<std::uint32_t>(索引+1),P::特征,类型组[i],{},1}};
+                私有字段.所属存在参数=1;
+                语言样例输入.push_back(std::move(私有字段));
+            } else {
+                if (位置->值 || 位置->材料 || 位置->同一参数 || 位置->完整复制特征 || 位置->引用存在参数
+                    || 位置->引用需求输入 || 位置->所属语言场景输入 || 位置->来源存在 || 位置->复制上下文
+                    || !位置->集合成员参数组.empty() || !位置->来源任务成员组.empty()
+                    || !位置->历史引用存在参数组.empty() || 位置->复制特征概念
+                    || 位置->初值方式!=新模拟特征初值方式::常规输入
+                    || (位置->所属存在参数 && 位置->所属存在参数!=1))
+                    return {新模拟世界状态::入口拒绝,{}};
+                位置->所属存在参数=1;
+            }
+        }
+    }
+    const auto& 输入=语言前态 ? 语言样例输入 : 正式输入;
+    const auto 是语言范围=[&](std::size_t i) { return 语言前态.has_value() && i==0; };
+    const auto 语言槽=[&](std::size_t i)->std::optional<std::size_t> {
+        if (!语言前态) return {};
+        const auto it=std::find(语言特征位置.begin(),语言特征位置.end(),i);
+        if (it==语言特征位置.end()) return {};
+        return static_cast<std::size_t>(it-语言特征位置.begin());
+    };
     新_方法类::执行结构读取结果 消息声明保护;
     if(消息输入) {
         消息声明保护=s.方法.读取方法执行结构闭包({M});
@@ -2481,6 +2754,17 @@ namespace 海中鱼巣 {
         if(有效声明.状态==新方法执行分支读取状态::前提已变化)
             return {新模拟世界状态::定义前提已变化,{}};
         if(有效声明.状态!=新方法执行分支读取状态::已读取) { 模拟样例拒绝行=__LINE__; return {}; }
+        if (语言前态) {
+            if (!有效声明.分支) return {新模拟世界状态::入口拒绝,{}};
+            const auto& 当前=语言前态->当前材料;
+            const bool 准入=m->本能函数登记名==新本能函数登记名_未登记片段建立或取得词条;
+            if (准入 && !当前[2]) return {新模拟世界状态::需重新组织输入,{}};
+            if (!准入 && 有效声明.分支->定义.顺序==1) {
+                if (!当前[0] || !当前[1] || std::get<新语言分界依据定义>(
+                    语言前态->材料组.at(*当前[1])).候选材料 != 当前[0])
+                    return {新模拟世界状态::需重新组织输入,{}};
+            }
+        }
         m->初始必要条件=有效声明.有效必要条件;
     }
     s.通用执行分支=执行分支;
@@ -2527,6 +2811,12 @@ namespace 海中鱼巣 {
                 ||!p.来源任务成员组.empty()||!p.历史引用存在参数组.empty()
                 ||p.初值方式!=新模拟特征初值方式::常规输入) { 模拟样例拒绝行=__LINE__; return {}; }
         } else if(p.复制词条) { 模拟样例拒绝行=__LINE__; return {}; }
+        if(是语言范围(i)) {
+            if(p.同一参数 || p.复制归类材料 || p.复制词条 || p.需求参数输入 || p.来源存在
+                || p.构造存在概念 || p.引用语言场景输入 || p.值 || p.材料)
+                return {新模拟世界状态::入口拒绝,{}};
+            continue;
+        }
         if(p.复制归类材料) {
             const auto& r=*p.复制归类材料;
             if(p.规格.信息类型!=新方法参数信息类型::存在 || !有效(r.来源材料) || !有效(r.来源词条)
@@ -2568,13 +2858,14 @@ namespace 海中鱼巣 {
         }
         if(!需求参数[i]&&p.需求参数输入){ 模拟样例拒绝行=__LINE__; return {}; }
     }
-    const auto 是普通存在=[&](std::size_t i){return 输入[i].规格.信息类型==新方法参数信息类型::存在&&!需求参数[i]&&!归类参数[i];};
+    const auto 是普通存在=[&](std::size_t i){return 输入[i].规格.信息类型==新方法参数信息类型::存在&&!需求参数[i]&&!归类参数[i]&&!是语言范围(i);};
     std::vector<std::size_t> 代表(输入.size());
     for(std::size_t i=0;i<代表.size();++i)代表[i]=i;
     const auto 查代表=[&](std::size_t i) { while(代表[i]!=i)i=代表[i];return i; };
     for(std::size_t i=0;i<输入.size();++i) if(输入[i].同一参数) {
         const auto j=static_cast<std::size_t>(输入[i].同一参数-1);
-        if(j>=输入.size()||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]||归类参数[i]!=归类参数[j]) { 模拟样例拒绝行=__LINE__; return {}; }
+        if(j>=输入.size()||是语言范围(i)||是语言范围(j)||语言槽(i)||语言槽(j)
+            ||输入[i].规格.信息类型!=输入[j].规格.信息类型||需求参数[i]!=需求参数[j]||归类参数[i]!=归类参数[j]) { 模拟样例拒绝行=__LINE__; return {}; }
         const auto a=查代表(i),b=查代表(j);代表[(std::max)(a,b)]=(std::min)(a,b);
     }
     for(std::size_t i=0;i<代表.size();++i)代表[i]=查代表(i);
@@ -2631,7 +2922,7 @@ namespace 海中鱼巣 {
     };
     std::vector<稳定编码> 构造范围(输入.size());
     for(std::size_t i=0;i<输入.size();++i) {
-        if(需求参数[i]||归类参数[i])continue;
+        if(需求参数[i]||归类参数[i]||是语言范围(i))continue;
         if(输入[i].规格.信息类型!=新方法参数信息类型::存在) {
             if(输入[i].构造存在概念){ 模拟样例拒绝行=__LINE__; return {}; }
             continue;
@@ -2680,6 +2971,24 @@ namespace 海中鱼巣 {
         const auto& 必要=*m->初始必要条件;
         if(必要.条件.关系规则!=新方法项关系规则::全部成立){ 模拟样例拒绝行=__LINE__; return {}; }
         for(auto 条件:必要.条件.条件项组) {
+            if (条件.参数序号) {
+                if (是语言范围(条件.参数序号-1)) {
+                    新方法条件项定义 声明;
+                    声明.参数序号=条件.参数序号;
+                    声明.存在概念节点=输入.front().规格.范围概念节点;
+                    if (条件!=声明) return {新模拟世界状态::能力未支持,{}};
+                    continue;
+                }
+                if (const auto 槽=语言槽(条件.参数序号-1)) {
+                    新方法条件项定义 声明;
+                    声明.参数序号=条件.参数序号;
+                    声明.特征类型概念节点=语言前态->特征类型[*槽];
+                    声明.特征值域概念节点=声明.特征类型概念节点;
+                    if (条件!=声明) return {新模拟世界状态::能力未支持,{}};
+                    if (!语言前态->当前材料[*槽]) return {新模拟世界状态::需重新组织输入,{}};
+                    continue;
+                }
+            }
             if(条件.参数序号&&条件.参数序号<=m->参数规格组.size()&&(需求参数[条件.参数序号-1]||归类参数[条件.参数序号-1])) {
                 const auto position=条件.参数序号-1;
                 新方法条件项定义 expected;expected.参数序号=条件.参数序号;
@@ -3130,7 +3439,7 @@ namespace 海中鱼巣 {
         i=代表.at(i);
         if(场景参数&&i==*场景参数)return 场景预留;
         if(需求参数[i])return D节点.at(输入[i].需求参数输入-1);
-        if(归类参数[i])return 基础组内节点引用{index.at(i)};
+        if(归类参数[i]||是语言范围(i))return 基础组内节点引用{index.at(i)};
         if(输入[i].规格.信息类型==新方法参数信息类型::存在)return E节点.at(i);
         return 基础组内节点引用{index.at(i)};
     };
@@ -3145,6 +3454,11 @@ namespace 海中鱼巣 {
     for(std::size_t i=0;i<输入.size();++i) if(代表[i]==i) {
         const auto& p=输入[i];
         if(归类参数[i]) { index[i]=新节点(归类材料种类); continue; }
+        if(是语言范围(i)) {
+            index[i]=新节点(语言范围种类);
+            q.追加外部关系组.push_back({基础组内节点引用{场景},引用(i),基础外部关系类型::父子});
+            continue;
+        }
         if(需求参数[i])continue; // D由需求图prepare统一发表，不再分配或写成普通E。
         if(场景参数&&i==*场景参数)continue;
         if(p.规格.信息类型==新方法参数信息类型::存在) {
@@ -3175,7 +3489,10 @@ namespace 海中鱼巣 {
             if(延后词典初值[i]) {index[i]=q.新节点组.size();q.新节点组.emplace_back();}
             else {
                 index[i]=新节点(特征种类);
-                q.新节点组[index[i]].字段组.push_back({字段组[特征类型],p.复制特征概念.value_or(p.规格.范围概念节点)});
+                const auto 分界槽=语言槽(i);
+                const auto C=分界槽 ? 语言前态->特征组[*分界槽].特征概念节点
+                    : p.复制特征概念.value_or(p.规格.范围概念节点);
+                q.新节点组[index[i]].字段组.push_back({字段组[特征类型],C});
             }
         }
         if(延后词典初值[i])continue; // 仅预留身份；完整F与首次Q持有同组发表。
@@ -3393,6 +3710,7 @@ namespace 海中鱼巣 {
         if(代表[i]!=i||输入[i].规格.信息类型!=新方法参数信息类型::特征)continue;
         if(延后词典初值[i])continue;
         const auto& p=输入[i];
+        if(语言槽(i)) continue; // 与本地 R、固定材料和其引用一起由下方图写入。
         if(p.所属语言场景输入) {
             if(p.所属存在参数)throw std::invalid_argument("copied feature has two owners");
             q.新节点组[index[i]].字段组.push_back({字段组[所属],图引用(L节点,p.所属语言场景输入)});
@@ -3502,6 +3820,95 @@ namespace 海中鱼巣 {
             q.新节点组[index[i]].字段组.push_back({字段组[数值],基础值{std::get<std::int64_t>(*p.值)}});
         }
     }
+    std::map<稳定编码,std::size_t> 语言材料索引;
+    if (语言前态) {
+        const auto R=index.front();
+        const auto& 文本=语言前态->原文;
+        const auto& 定位=文本.范围.定位;
+        writer.写(R,所属,基础组内节点引用{场景});
+        writer.写(R,特征类型,输入.front().规格.范围概念节点);
+        writer.写(R,来源引用,定位.前置来源节点);
+        writer.写(R,词条语言引用,定位.语言节点);
+        writer.写(R,词条规范化合同引用,定位.规范化合同节点);
+        writer.写(R,正文引用,文本.固定正文材料);
+        writer.写(R,结构材料值,基础值{std::vector<std::uint64_t>{定位.起始标量,定位.结束标量}});
+        writer.写(R,固定语义引用,基础值{文本.根UTF8原文});
+        writer.写(R,数值,基础值{文本.范围UTF8原文});
+
+        for (const auto& [来源,定义]:语言前态->材料组) {
+            const auto N=新节点(语言分界材料种类);
+            语言材料索引.emplace(来源,N);
+            writer.子(N,所属,R);
+            writer.数(N,结构类别值,static_cast<std::int64_t>(定义.index()));
+            q.追加外部关系组.push_back({基础组内节点引用{场景},基础组内节点引用{N},基础外部关系类型::父子});
+        }
+        const auto 写词段=[&](std::size_t 持有者,const std::vector<新语言分界词段>& 词段组) {
+            for (std::size_t i=0; i<词段组.size(); ++i) {
+                const auto T=writer.节点();
+                writer.子(持有者,结构子项,T);
+                writer.数(T,结构顺序值,static_cast<std::int64_t>(i));
+                const auto& 词段=词段组[i];
+                writer.写(T,结构材料值,基础值{std::vector<std::uint64_t>{词段.起始标量,词段.结束标量}});
+                if (词段.词条) writer.写(T,词条特征引用,*词段.词条);
+            }
+        };
+        for (const auto& [来源,定义]:语言前态->材料组) {
+            const auto N=语言材料索引.at(来源);
+            if (const auto* 候选=std::get_if<新语言分界候选定义>(&定义)) {
+                for (std::size_t i=0; i<候选->路径组.size(); ++i) {
+                    const auto P=writer.节点();
+                    writer.子(N,结构子项,P);
+                    writer.数(P,结构顺序值,static_cast<std::int64_t>(i));
+                    const auto& 路径=候选->路径组[i];
+                    写词段(P,路径.词段组);
+                    for (std::size_t k=0; k<路径.规则应用记录组.size(); ++k) {
+                        const auto 应用=writer.节点();
+                        writer.子(P,场景成员引用,应用);
+                        writer.数(应用,结构顺序值,static_cast<std::int64_t>(k));
+                        writer.写(应用,来源引用,路径.规则应用记录组[k]);
+                    }
+                }
+            } else if (const auto* 依据=std::get_if<新语言分界依据定义>(&定义)) {
+                writer.子(N,结构引用,语言材料索引.at(依据->候选材料));
+                写词段(N,依据->取材.已证明词段);
+                if (const auto* 规则=std::get_if<新语言规则分界来源>(&依据->取材.来源)) {
+                    writer.写(N,来源引用,规则->正式匹配记录);
+                } else {
+                    const auto& 回答=std::get<新语言回答分界来源>(依据->取材.来源);
+                    writer.写(N,目标引用,回答.正式问题);
+                    writer.写(N,确认引用,回答.正式回答);
+                    writer.写(N,来源引用,回答.分段对齐材料);
+                }
+            } else if (const auto* 有效=std::get_if<新语言有效分界定义>(&定义)) {
+                writer.子(N,结构引用,语言材料索引.at(有效->正式依据));
+            } else {
+                const auto& 准入=std::get<新语言词条准入定义>(定义);
+                writer.子(N,结构引用,语言材料索引.at(准入.有效结果));
+                写词段(N,准入.词段组);
+            }
+        }
+        for (std::size_t 槽=0; 槽<语言特征位置.size(); ++槽) {
+            const auto F=index[语言特征位置[槽]];
+            writer.子(R,场景特征引用,F);
+            writer.子(F,所属,R);
+            const auto& 前态=语言前态->特征组[槽];
+            const auto 本地材料=[&](const 新特征准确值& 值) {
+                return 语言材料索引.at(std::get<稳定编码>(值));
+            };
+            if (前态.实例单位) writer.写(F,结构单位引用,*前态.实例单位);
+            if (前态.实例区间值) writer.子(F,完整实例区间引用,writer.域(*前态.实例区间值));
+            if (前态.实例历史聚合值域) writer.子(F,完整聚合引用,writer.域(*前态.实例历史聚合值域));
+            if (前态.当前值) writer.子(F,当前材料,本地材料(*前态.当前值));
+            if (前态.标准值) writer.子(F,标准值引用,本地材料(*前态.标准值));
+            for (const auto& 历史:前态.历史不同值) writer.子(F,历史项引用,本地材料(历史));
+            for (const auto& 命中:前态.历史值命中信息) {
+                const auto H=writer.节点();
+                writer.子(H,结构引用,本地材料(命中.值));
+                writer.数(H,命中次数值,命中.命中次数);
+                writer.子(F,历史命中引用,H);
+            }
+        }
+    }
     s.通用节点.reserve(s.通用节点.size()+q.新节点组.size()+32);
     s.通用字段.reserve(q.新节点组.size()*8+q.追加字段组.size()+128);
     s.通用外部边.reserve(q.追加外部关系组.size()+32);
@@ -3521,6 +3928,8 @@ namespace 海中鱼巣 {
     for(const auto& [来源键,索引]:复制材料索引)
         if(!材料来源顺序准备.emplace(图身份.at(索引),std::get<0>(来源键)).second)
             throw std::logic_error("duplicate local material source mapping");
+    for (const auto& [来源,槽]:语言材料索引)
+        材料来源顺序准备.emplace(图身份.at(槽),来源);
     const auto resolveField=[&](基础组内字段内容 value)->基础组内字段内容 {
         if(const auto* local=std::get_if<基础组内节点引用>(&value))return 图身份.at(local->索引);
         return value;
@@ -3574,12 +3983,19 @@ namespace 海中鱼巣 {
     auto p=全局基础数据集.原子追加节点组(q);
     if(p.状态==基础节点组追加状态::预期不符)return {新模拟世界状态::定义前提已变化,{}};
     if((p.状态==基础节点组追加状态::节点不存在 || p.状态==基础节点组追加状态::引用不存在)
-        &&(概念来源已退出() || 归类主体已退出()))return {新模拟世界状态::需重新组织输入,{}};
+        &&(语言前态 || 概念来源已退出() || 归类主体已退出()))return {新模拟世界状态::需重新组织输入,{}};
     if(p.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
     if(p.状态!=基础节点组追加状态::已完成)throw std::runtime_error("generic simulation graph publication failed, status="+std::to_string(static_cast<int>(p.状态)));
     p.新节点组=std::move(图身份);主场景准备.保留=true;图身份准备.保留=true;
     s.通用=true;s.通用方法=M;s.收集追加(p);s.通用场景=p.新节点组[场景];
     s.复制材料来源顺序=std::move(材料来源顺序准备);
+    if (语言前态) {
+        实现::语言范围索引 范围{p.新节点组[index.front()],语言前态->原文.范围.节点,
+            输入.front().规格.范围概念节点,{},语言前态->原文.范围.特征节点组};
+        for (std::size_t 槽=0; 槽<语言特征位置.size(); ++槽)
+            范围.本地特征[槽]=p.新节点组[index[语言特征位置[槽]]];
+        s.本地语言范围=范围;
+    }
     s.执行主体来源=执行主体输入;
     s.归类主体来源=归类主体输入;
     if(归类主体输入)s.本地执行主体=E节点.at(代表.at(归类主体输入->同源存在输入-1));
@@ -3611,7 +4027,7 @@ namespace 海中鱼巣 {
     }
     for(std::size_t i=0;i<输入.size();++i) {
         const auto n=输入[i].规格.信息类型==新方法参数信息类型::存在
-            ? (归类参数[i] ? p.新节点组[index[i]] : 需求参数[i] ? D节点.at(输入[i].需求参数输入-1)
+            ? ((归类参数[i]||是语言范围(i)) ? p.新节点组[index[i]] : 需求参数[i] ? D节点.at(输入[i].需求参数输入-1)
                 :场景参数&&代表[i]==*场景参数 ? s.通用场景 : E节点.at(代表[i])) : p.新节点组[index[i]];
         auto 本地参数=输入[i];
         if(是普通存在(i)) {
@@ -3625,7 +4041,7 @@ namespace 海中鱼巣 {
         if(i>=s.通用绑定.size())continue;
         auto& b=s.通用绑定[i];b.世界场景节点=s.通用场景;
         if(延后词典初值[代表[i]])b.世界场景节点=p.新节点组.at(*词条场景);
-        auto owner = 是普通存在(i)||归类参数[i]||输入[i].规格.信息类型==新方法参数信息类型::词条
+        auto owner = 是普通存在(i)||归类参数[i]||是语言范围(i)||输入[i].规格.信息类型==新方法参数信息类型::词条
             ? std::optional<稳定编码>{n} : 读引用(n,所属);
         if(owner&&*owner!=s.通用场景)if(const auto actual=读引用(*owner,所属))b.世界场景节点=*actual;
         b.有序引用=新方法有序参数引用{static_cast<std::uint32_t>(i+1),输入[i].规格.信息类型,n};
@@ -3775,6 +4191,12 @@ namespace 海中鱼巣 {
         }
     }
     const auto 完成场景=s.通用场景;
+    if (const auto& 本地=s.本地语言范围) {
+        const auto 读回=读取本地语言范围参数(本地->本地范围,本地->结构概念);
+        if (读回.状态==正式信息参数读取状态::资源失败) return {新模拟世界状态::资源失败,{}};
+        if (读回.状态!=正式信息参数读取状态::已读取 || 读回.信息->直接内容组.size()!=4)
+            throw std::logic_error("local language range publication readback failed");
+    }
     std::vector<std::pair<稳定编码,稳定编码>> 直接需求;
     for(std::size_t i=0;i<m->参数规格组.size();++i)if(需求参数[i])
         直接需求.push_back({s.通用绑定[i].有序引用->信息节点,输入[i].规格.范围概念节点});
@@ -4664,6 +5086,7 @@ bool 新_模拟世界类::尝试释放有序样例() {
     }
     s.词典接收定位.reset();s.词典查询责任.clear();s.词典接收值组.clear();
     s.通用=false;s.通用执行分支.reset();s.通用绑定.clear();s.通用输入节点.clear();s.通用参数.clear();s.通用材料.clear();s.复制材料来源顺序.clear();s.通用任务.clear();s.任务成员读取组.clear();
+    s.本地语言范围.reset();
     s.本地归类材料.clear();s.本地需求.clear();s.本地理解.clear();s.本地确认.clear();s.本地要求.clear();s.本地语言场景.clear();s.内容参数位置.clear();s.内容读取组.clear();s.归类名称读取组.clear();
     s.记录复制读取=false;s.已读取复制上下文=false;s.本次已进入动作=false;s.本次存在特征读取.clear();
     s.交互事实.clear();s.本次场景读取.clear();
@@ -5719,7 +6142,12 @@ std::optional<新特征匹配定义快照> 新_模拟世界类::读取本地特�
         && s.通用绑定[1].有序引用
         && s.通用绑定[1].有序引用->信息类型==新方法参数信息类型::特征
         && s.通用绑定[1].有序引用->信息节点==F;
-    if(!分类特征)return s.方法.读取模拟特征范围(p->second.规格.范围概念节点);
+    if(!分类特征) {
+        if (s.本地语言范围 && std::find(s.本地语言范围->本地特征.begin(),
+                s.本地语言范围->本地特征.end(),F)!=s.本地语言范围->本地特征.end())
+            return s.方法.读取模拟特征范围(必读引用(F,特征类型));
+        return s.方法.读取模拟特征范围(p->second.规格.范围概念节点);
+    }
     const auto actual=读引用(F,特征类型);
     if(!actual)throw std::logic_error("local classification feature concept missing");
     std::optional<本地归类特征概念> local;

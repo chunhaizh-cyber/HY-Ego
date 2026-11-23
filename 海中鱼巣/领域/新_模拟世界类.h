@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include "新_方法参数场景.h"
+#include "语言分界.数据.h"
 #include "方法问题反馈.数据.h"
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
@@ -14,6 +15,8 @@
 #include "数据服务.外设词典记录类.h"
 
 namespace 海中鱼巣 {
+class 新_语言类;
+class 新_特征值类;
 struct 新名称挂接概念解码结构;
 struct 新特征值快照解码结构;
 extern 稳定编码 模拟世界树根节点;
@@ -47,6 +50,13 @@ enum class 新模拟世界状态 : std::uint8_t { 已完成 = 1, 入口拒绝, �
 struct 新模拟世界建立结果 final {
     新模拟世界状态 状态 = 新模拟世界状态::入口拒绝;
     std::optional<稳定编码> 场景节点;
+};
+// 只读来源，在本次样例建立前取得正式材料；不向样例交出现实写入权。
+struct 新模拟语言范围样例来源 final {
+    const 新_语言类& 语言;
+    const 新_特征值类& 特征值;
+    const 新_特征类& 特征;
+    稳定编码 范围;
 };
 struct 新模拟归类材料复制输入 final {
     稳定编码 来源材料, 来源词条;
@@ -224,7 +234,10 @@ public:
         const 新模拟需求输入图& 需求图 = {},
         const std::optional<新模拟执行主体输入>& 执行主体输入 = {},
         const std::vector<新模拟词典材料复制输入>& 词典材料输入 = {},
-        const std::optional<新模拟归类主体输入>& 归类主体输入 = {});
+        const std::optional<新模拟归类主体输入>& 归类主体输入 = {},
+        const std::optional<新模拟语言范围样例来源>& 语言范围来源 = {});
+    新语言分界调用结果<新语言范围原文信息> 读取本地语言范围原文(稳定编码 R) const;
+    新语言分界调用结果<新语言分界材料信息> 读取本地语言分界材料(稳定编码 节点) const;
     新模拟需求执行预检结果 预检需求执行(const 方法参数场景&) const;
     新本能需求运行接口* 获取需求运行接口() noexcept override;
     新本能需求材料读回 读取新需求材料(const 方法参数场景&) const override;
@@ -317,6 +330,7 @@ public:
     std::optional<新任务虚拟存在读回> 读取任务虚拟存在引用(const 新任务虚拟存在引用&) const noexcept override;
 private:
     正式信息参数读取结果 读取本地归类材料(稳定编码,稳定编码) const;
+    正式信息参数读取结果 读取本地语言范围参数(稳定编码,稳定编码) const;
     struct 本地归类特征概念 final {
         稳定编码 节点,类型根,父概念,值域节点;
         std::vector<稳定编码> 值域材料;

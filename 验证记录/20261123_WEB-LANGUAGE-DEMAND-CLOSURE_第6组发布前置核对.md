@@ -170,3 +170,14 @@ Debug 产物 SHA-256 为 6588753167D5ECBCAF2BBD4226E5E9D20C7B0EBCE2A20FD3D64DE97
 最终 Debug/x64 用时 533.49 秒，Release/x64 用时 501.99 秒，均为 0 错误、0 警告。各 249 项工程与初始化输入在两配置的构建前后逐项相同。输入清单 SHA-256 为 D313B1B17409BA94A5C9B148D8CE719BC325363CCC242C81D15F2252B175589B。[Debug 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c8-boundary-instinct-Debug/final-result.json) · [Release 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c8-boundary-instinct-Release/final-result.json)
 
 Debug 产物 SHA-256 为 B64A639E0DF822DE5E92F8AE3463782AF056582B2426B73B10687D5D0F7C06ED，Release 产物 SHA-256 为 8F9DB5BDAEB8CF15BA03D6E12D27E29DF1EF9B22F51C30F25BA9F018401875C2。两套产物包及工作区的词典批次清单均为 32a232f557d644be5336699a83c9c80de5af972676feb8b56e315cb3142da27d。未启动应用。正式 236 隔离样例、定向学习、真实前置派生和分界问答待后继，未取得第 6 组或 P0–P6 的实际验收证据。
+
+
+## 56C9 从真实语言范围建立隔离模拟样例
+
+依主设计 v1.160 §10.91 及实施计划 v2.115，在主工作区基线 32f79c6b1 实施三个源码文件。主入口按正式分词或准入方法及选中分支取得真实 R。语言所有者提供固定原文、范围与四槽身份，特征所有者提供 F 当前值、标准值、历史和命中信息。复制材料按来源去重，依赖链在组内重映射，源词条与正式证据只读引用。样例以一次图发布建立本地 R、四个本地 F、材料及关系，仍按方法规格绑定五个或四个参数。样例关闭沿现有完整闭包退出，本地映射只在成功删除后清除。
+
+独立复核定位并修正 236 隐含条件误入普通存在、空分界 F 误查词典依赖、未取历史被读成空历史，以及已关闭样例的读口边界。方法侧仅对同样例 236 正式投影中的实际 F/FT 允许空当前值。发布前受影响三文件差异检查通过。
+
+修正后 Debug/x64 用时 64.57 秒，Release/x64 用时 87.72 秒，均为 0 错误、0 警告。两套构建各 249 项工程与初始化输入前后相同，清单 SHA-256 为 CF6ECBA56632AC1D5E6B39234D18CE1C7DB974F8B1C446B74C179AFE3E66328B。[Debug 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c9-local-range-Debug/final-result.json) · [Release 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c9-local-range-Release/final-result.json)
+
+Debug 产物 SHA-256 为 3B063DD7403E37893809586CD6E1E6961CE2A58EFAA63A295C37F4BE107279F0，Release 产物 SHA-256 为 1FA170A70B563DEB3ED9EB639E03C328868B546218649013AA0494072AD7A9D4。应用未启动，样例执行、真实待办定向学习、配对发布、第 6 组和 P0–P6 仍待实际运行取证。
