@@ -193,3 +193,13 @@ Debug 产物 SHA-256 为 3B063DD7403E37893809586CD6E1E6961CE2A58EFAA63A295C37F4B
 同一 Release/x64 构建经正式网页再次收到同一前置原文。入站 M29080 于 22:00:22 取得交互者 959 和同源正式原文范围，22:00:49 进入「前置输入治理等待」。22:02:11 的末次快照仍处于该阶段，U、D 为空；网页消息仍只有用户原话，无出站问题。关闭返回 200，PID 38988 正常退出，退出码 0，进程已回收。[范围交接](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/control-220022143.json) · [治理等待](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/control-220049562.json) · [末次网页消息](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/messages-220211819.json) · [关闭](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/exit.json)
 
 源码核对：接收侧会自动进行基础解释和词面匹配。解释缺口交给任务后，现有前置筹办只读取材料并返回，自我确认回执将原消息置于具名等待。当前主线的多路径候选生成仅在分界本能中接线；正式分界依据入口没有生产调用。历史词典联合工作树提供接收来源的被动候选采用与网页关联回答，可按现行合同核对最小生产接线。分词候选只用来支持解释；有效分界仍须正式规则或明确关联的回答。第 56C10 片验证的是已声明方法的隔离学习，不能接通当前网页的缺口等待。尚需在同源范围产生正式分界材料或真实澄清，并在材料到达后恢复原消息。本轮只验证第 6 组前置原文。
+
+## 56C11 普通接收按正式原文采用分词候选
+
+源码随 `77f2ebbcba176cad7234a03eea1a1e6e838f184b` 发布。按现有同源范围和词面多路径算法，接收服务在原 M 的 R 就绪后，经自然语言世界转交语言所有者采用候选。原文来源和 X 执行采用使用独立范围登记，复用现有特征、状态和联合发表。候选暂缺时保留原定位并重读，采用完成才交原前置输入入口。没有产生有效分界、正式询问、词条或方法配对。
+
+独立静态复核检查两种回执各自来源、旧字段保持、首写、同源复用、失败后重试、已理解路径及取消。首轮编译发现自由函数不能读取特征候选的私有变更标记，已把共享提交收回语言所有者。复核发现 L1 提交前的取消窗口，已补充提交前停止检查和取消未发表准备。
+
+Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误、0 警告。249 项工程和初始化输入构建前后一致，与发布树中暂存 blob 逐项核同。输入清单 SHA-256 为 724471C6EA4801AC353A7D39277AC208C7FE384A5A985BCB21FAE0BF892CEE18。Release 可执行文件 SHA-256 为 FC28DBCC57E75E082BB5B13489B471A8D2A3B76640C7DD009C93B574AE1A77C8。[双配置构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-received-candidate-20261123-221430/final-result.json) · [构建输入与源码 blob](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-received-candidate-20261123-221430/staged-build-inputs.json)
+
+发布构建以普通网页入口提交「测试杯甲是一个杯子。它的颜色是白色。」。22:29:14，入站 M29790 的业务控制状态读回「已按原文来源采用分词候选，等待前置材料交接」，交互者为 960。22:29:31 进入「前置输入治理等待」。22:30:19 的最后一份控制和消息快照仍处于等待，网页只有用户原话，U 和 D 为空。22:30:22 正常关闭，退出码 0，PID 39060 已回收。第 6 组本句、正式分界问题、明确回答、同一 D 补全及承接都未发生。候选采用由普通入口成功回执驱动的控制状态证明，本轮未另行调用 owner 进行独立材料读回。[构建和运行身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/process.json) · [候选采用](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/control-222914625.json) · [末次消息](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/messages-223019165.json) · [退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c11-published-ingress-20261123-222619/exit.json)
