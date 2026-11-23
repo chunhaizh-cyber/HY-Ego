@@ -426,6 +426,77 @@ bool 对象证据技术未完成(基础现实对象短语候选状态 状态) no
 }
 
 } // namespace
+std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文) {
+    const auto 原文 = 解码标准UTF8(固定原文);
+    if (!原文) return {};
+
+    const auto& 码点 = 原文->码点;
+    const auto 是终止符 = [](std::uint32_t 字) {
+        return 字 == 0x3002 || 字 == 0xFF01 || 字 == 0xFF1F || 字 == U'!' || 字 == U'?';
+    };
+    const auto 是空白 = [](std::uint32_t 字) {
+        return 字 == U' ' || 字 == U'\t' || 字 == U'\r' || 字 == U'\n' || 字 == 0x3000;
+    };
+
+    const auto 是ASCII写法字符 = [](std::uint32_t 字) {
+        return (字 >= U'a' && 字 <= U'z') || (字 >= U'A' && 字 <= U'Z') || (字 >= U'0' && 字 <= U'9');
+    };
+
+    std::vector<接收篇章句段候选> 结果;
+    std::vector<std::uint32_t> 待闭合引号;
+    std::size_t 段起点 = 0;
+    const auto 加入句段 = [&](std::size_t 段终点) {
+        auto 起点 = 段起点;
+        auto 终点 = 段终点;
+        段起点 = 段终点;
+        while (起点 < 终点 && 是空白(码点[起点])) ++起点;
+        while (终点 > 起点 && 是空白(码点[终点 - 1])) --终点;
+        const auto 首 = 码点.begin() + 起点;
+        const auto 尾 = 码点.begin() + 终点;
+        if (std::all_of(首, 尾, 是终止符)) return;
+
+        const auto 首字节 = 原文->字节边界[起点];
+        const auto 尾字节 = 原文->字节边界[终点];
+        结果.push_back({{起点, 终点}, 固定原文.substr(首字节, 尾字节 - 首字节)});
+    };
+
+    for (std::size_t i = 0; i < 码点.size(); ++i) {
+        const auto 字 = 码点[i];
+        // ASCII 单引号也作引号，保留英文缩写中的撇号。
+        if (字 == U'\'' && i > 0 && i + 1 < 码点.size()
+            && 是ASCII写法字符(码点[i - 1]) && 是ASCII写法字符(码点[i + 1])) continue;
+        if (!待闭合引号.empty() && 待闭合引号.back() == 字) {
+            待闭合引号.pop_back();
+            continue;
+        }
+        switch (字) {
+        case 0x201C: 待闭合引号.push_back(0x201D); continue; // “”
+        case 0x2018: 待闭合引号.push_back(0x2019); continue; // ‘’
+        case 0x300C: 待闭合引号.push_back(0x300D); continue; // 「」
+        case 0x300E: 待闭合引号.push_back(0x300F); continue; // 『』
+        case 0x3008: 待闭合引号.push_back(0x3009); continue; // 〈〉
+        case 0x300A: 待闭合引号.push_back(0x300B); continue; // 《》
+        case U'"': 待闭合引号.push_back(U'"'); continue;
+        case U'\'': 待闭合引号.push_back(U'\''); continue;
+        case 0x201D: case 0x2019: case 0x300D: case 0x300F: case 0x3009: case 0x300B:
+            return {};
+        default: break;
+        }
+        if (!待闭合引号.empty()) continue;
+
+        if (是终止符(字)) {
+            while (i + 1 < 码点.size() && 是终止符(码点[i + 1])) ++i;
+            加入句段(i + 1);
+        } else if (字 == U'\n' || (字 == U'\r' && (i + 1 == 码点.size() || 码点[i + 1] != U'\n'))) {
+            加入句段(i + 1);
+        }
+    }
+    if (!待闭合引号.empty()) return {};
+    加入句段(码点.size());
+    if (结果.size() < 2) 结果.clear();
+    return 结果;
+}
+
 
 语言候选路由结果 语言候选路由业务::形成候选(
     const 语言候选路由请求& 请求, const 新_世界树类& 世界树,
@@ -3969,6 +4040,15 @@ bool 解释图整数(std::string& 原文) {
     if(起==原文.size()||!std::all_of(原文.begin()+起,原文.end(),[](char 字){return 字>='0'&&字<='9';}))return false;
     const auto 非零=原文.find_first_not_of('0',起);原文=非零==std::string::npos ? "0" : (负 ? "-" : "")+原文.substr(非零);return true;
 }
+bool 解释静态陈述图知识(const 新语言知识定义& 定义) {
+    if (定义.目标.目的 != 新语言知识表达目的::陈述 || !定义.目标.含义图
+        || 定义.目标.含义图->节点组.size() != 1 || !定义.目标.适用条件组.empty()) return false;
+
+    const auto& 根 = 定义.目标.含义图->节点组.front();
+    return 根.局部编号 == 定义.目标.含义图->根含义编号
+        && 根.作用域 == 新语言知识作用域::普通陈述
+        && (根.操作 == 新语言知识含义操作::概念归类 || 根.操作 == 新语言知识含义操作::特征描述);
+}
 bool 解释招呼图知识(const 新语言知识定义& 定义) {
     if(定义.目标.目的!=新语言知识表达目的::招呼||!定义.目标.含义图||定义.目标.含义图->节点组.size()!=1)return false;
     const auto& 根=定义.目标.含义图->节点组.front();
@@ -4089,6 +4169,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         if(集.信息)for(const auto& 模式:集.信息->模式组)if(模式.定义.实现知识节点)根知识.insert(*模式.定义.实现知识节点);
         for(const auto& 知识:全知识.信息组)if(解释旧六图兼容(知识.定义)
             &&std::none_of(知识.定义.结构.有序项组.begin(),知识.定义.结构.有序项组.end(),[](const auto& 项){const auto* 角色=std::get_if<新语言知识角色表达项>(&项.载荷);return 角色&&角色->方式==新语言知识表达方式::已消解指代;}))根知识.insert(知识.节点);
+        for (const auto& 知识 : 全知识.信息组)
+            if (解释静态陈述图知识(知识.定义)) 根知识.insert(知识.节点);
         // 图请求知识使用正式图角色指代；不适用旧六构式“排除已消解指代”的召回过滤。
         for(const auto& 知识:全知识.信息组)if(知识.定义.目标.含义图) {
             const auto& 图=*知识.定义.目标.含义图;

@@ -29,7 +29,8 @@ using 阶段=接收需求认知阶段;
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
 std::atomic_uint64_t 接收解释诊断序号{0};
 void 记录接收解释调用(std::uint64_t 序号, 稳定编码 消息,
-    std::chrono::steady_clock::time_point 开始, const 语言基础统一输入结果* 结果) noexcept {
+    std::chrono::steady_clock::time_point 开始, const 语言基础统一输入结果* 结果,
+    const 解释原文范围* 句段 = nullptr) noexcept {
     if (序号 > 64) return;
     try {
         std::wostringstream 文本;
@@ -37,6 +38,7 @@ void 记录接收解释调用(std::uint64_t 序号, 稳定编码 消息,
             << L"；环节=" << (结果 ? L"返回" : L"开始")
             << L"；耗时毫秒=" << std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - 开始).count();
+        if (句段) 文本 << L"；原文起点=" << 句段->起始标量 << L"；原文终点=" << 句段->结束标量;
         if (结果) {
             文本 << L"；统一状态=" << static_cast<int>(结果->状态)
                 << L"；图解释状态=" << (结果->图解释状态 ? static_cast<int>(*结果->图解释状态) : -1)
@@ -53,6 +55,41 @@ void 检查认知停止(std::stop_token stop){
 }
 [[noreturn]] void 漂移(){throw 推进中断{阶段::前提变化,"正式来源或解释依据已变化"};}
 [[noreturn]] void 资源(){throw 推进中断{阶段::资源延后,"正式读取或分配资源未完成"};}
+void 追加句段缺口(const 语言基础统一输入结果& 解释, 解释原文范围 句段,
+    std::vector<新前置语言缺口>& 缺口组) {
+    using I = 语言场景基础输入状态;
+    using K = 新前置语言缺口种类;
+    K 种类 = K::语言规则不足;
+    switch (解释.状态) {
+    case I::已形成且读回:
+    case I::已形成值式图:
+    case I::已形成只读候选:
+        return;
+    case I::缺名称:
+        种类 = K::名称材料不足;
+        break;
+    case I::对象待绑定:
+        种类 = K::对象未唯一绑定;
+        break;
+    case I::概念多义待解:
+    case I::多规则待解:
+    case I::构式多义待解:
+        种类 = K::解释多义;
+        break;
+    default:
+        break;
+    }
+
+    bool 已列范围 = false;
+    const auto 长度 = 句段.结束标量 - 句段.起始标量;
+    for (const auto& 未覆盖 : 解释.未覆盖范围组) {
+        if (未覆盖.起始标量 >= 未覆盖.结束标量 || 未覆盖.结束标量 > 长度) continue;
+        缺口组.push_back({种类, 句段.起始标量 + 未覆盖.起始标量,
+            句段.起始标量 + 未覆盖.结束标量, 解释.受阻节点组});
+        已列范围 = true;
+    }
+    if (!已列范围) 缺口组.push_back({种类, 句段.起始标量, 句段.结束标量, 解释.受阻节点组});
+}
 bool 同结构(const 基础节点结构& a,const 基础节点结构& b){return a.节点==b.节点&&a.字段组==b.字段组;}
 bool 同联合(const 基础联合节点快照& a,const 基础联合节点快照& b){
     return 同结构(a.结构,b.结构)&&a.入向字段组==b.入向字段组
@@ -689,11 +726,40 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
     接收专名读取器 names(d,p.现实根场景,stop);
     语言基础统一输入请求 q{p.语言节点,pre.信息->固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
     q.交互上下文=语言图交互上下文{p.来源.接收消息节点,p.来源人类节点,p.自我存在节点,p.现实根场景};
-    const auto parsed=只读解释单句基础语言(q,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
-    if(parsed.状态==语言场景基础输入状态::读取漂移)漂移();
-    if(parsed.状态==语言场景基础输入状态::工程未完成||parsed.状态==语言场景基础输入状态::额度不足)资源();
-    if(parsed.状态==语言场景基础输入状态::内部不一致)throw std::logic_error("input material parse corrupt");
+    const auto 解释当前句 = [&](const 解释原文范围* 句段 = nullptr) {
+#ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
+        const auto 解释诊断号 = 接收解释诊断序号.fetch_add(1, std::memory_order_relaxed) + 1;
+        const auto 解释诊断开始 = std::chrono::steady_clock::now();
+        if (句段) 记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, nullptr, 句段);
+#endif
+        auto 结果 = 只读解释单句基础语言(q, d.语言, d.词, d.名称, d.存在概念, d.特征概念, d.存在);
+#ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
+        if (句段) 记录接收解释调用(解释诊断号, p.来源.接收消息节点, 解释诊断开始, &结果, 句段);
+#else
+        (void)句段;
+#endif
+        if (结果.状态 == 语言场景基础输入状态::读取漂移
+            || (句段 && 结果.状态 == 语言场景基础输入状态::引用不可读)) 漂移();
+        if (结果.状态 == 语言场景基础输入状态::工程未完成 || 结果.状态 == 语言场景基础输入状态::额度不足) 资源();
+        if (结果.状态 == 语言场景基础输入状态::内部不一致) throw std::logic_error("input material parse corrupt");
+        return 结果;
+    };
+
     新前置语言输入材料 out{p};
+    const auto 候选句段 = 投影接收篇章句界(q.固定原文);
+    if (!候选句段.empty()) {
+        for (const auto& 句段 : 候选句段) {
+            检查认知停止(stop);
+            q.固定原文 = 句段.句面原文;
+            追加句段缺口(解释当前句(&句段.全文范围), 句段.全文范围, out.缺口组);
+        }
+        if (out.缺口组.empty()) out.缺口组.push_back({新前置语言缺口种类::非本入口构式,
+            p.来源.原文起点, p.来源.原文终点, {}});
+        检查认知停止(stop);
+        return {R::已读取, std::move(out)};
+    }
+
+    const auto parsed = 解释当前句();
     if(parsed.状态==语言场景基础输入状态::已形成值式图&&parsed.含义&&std::holds_alternative<语言图含义材料>(*parsed.含义)
         &&(parsed.构式==语言基础统一构式::需求陈述||parsed.构式==语言基础统一构式::行动请求)) {
         const auto roles=读取认知图角色(std::get<语言图含义材料>(*parsed.含义));
@@ -738,6 +804,7 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
         return out;
     }catch(const 推进中断& e){return {e.状态==阶段::停止未完成 ? R::停止取消 : e.状态==阶段::资源延后 ? R::资源失败 : R::前提已变化,{}};}
     catch(const std::bad_alloc&){return {R::资源失败,{}};}
+    catch(const std::length_error&){return {R::资源失败,{}};}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"读取前置输入材料",L"只读材料来源或内部结构不变量异常");}
 }
 
@@ -1094,6 +1161,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 }
             }
         } else if(adopted.状态==新语言含义采用状态::未找到){
+            if (!投影接收篇章句界(固定来源.固定UTF8原文).empty()) {
+                进入步骤("篇章候选");
+                throw 推进中断{阶段::非支持输入, "收到多句原文，进入同源逐句解释"};
+            }
             进入步骤("读取语言解释资源");
             const auto resources=读资源(d,context.语言,stop);
             进入步骤("读取现实对象范围");

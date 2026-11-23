@@ -24,6 +24,11 @@ class 新_存在类;
 // 世界根只限定解释的检索范围，不是词条或概念名称。
 struct 解释目标世界根 final { 稳定编码 场景根; };
 struct 解释原文范围 final { std::size_t 起始标量, 结束标量; };
+struct 接收篇章句段候选 final {
+    解释原文范围 全文范围;
+    std::string 句面原文;
+};
+std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文);
 enum class 语言图专名绑定状态 : std::uint8_t {
     已绑定=1, 非实例专名, 不在范围, 前提已变化, 资源失败
 };
