@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stop_token>
 #include <cstdint>
 #include <optional>
 #include <vector>
@@ -151,6 +152,9 @@ public:
     新来源子场景结果 建立或取得接收来源场景(稳定编码 消息节点) noexcept;
     新语言分界调用结果<新语言材料范围信息> 建立或取得接收原文范围(
         新_语言类&, const 新接收认知来源键&, 稳定编码 前置来源节点, 稳定编码 语言节点);
+    新语言分界调用结果<稳定编码> 采用接收分词候选(
+        新_语言类&, 稳定编码 R, 稳定编码 前置来源,
+        const 新_特征值类&, const 新_词类&, std::stop_token);
     新语言分界调用结果<新语言分界采用回执> 采用语言分界材料(
         新_语言类&, const 新语言分界采用请求&);
     新来源子场景结果 建立或取得词典来源场景(稳定编码 材料Q) noexcept;

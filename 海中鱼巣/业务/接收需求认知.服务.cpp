@@ -850,9 +850,38 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }
         out.待交接前置输入.reset();
         if (work.定位->正式原文范围) {
-            out.阶段 = 阶段::前置输入待治理;
-            out.原因 = "已取得同源正式原文范围，等待前置材料交接";
-            out.待交接前置输入 = work.定位;
+            步骤 = "采用接收分词候选";
+            const auto& p = *work.定位;
+            const auto 候选 = d.语言世界.采用接收分词候选(
+                d.语言, *p.正式原文范围, p.前置来源节点, d.特征值, d.词, stop);
+            out.阶段 = 阶段::前置输入治理等待;
+            out.原因 = "等待同源分词候选材料";
+            switch (候选.状态) {
+            case S::已完成:
+                if (!候选.信息) throw std::logic_error("received lexical candidate adoption missing");
+                out.阶段 = 阶段::前置输入待治理;
+                out.原因 = "已按原文来源采用分词候选，等待前置材料交接";
+                out.待交接前置输入 = work.定位;
+                break;
+            case S::未找到:
+                work.定位->正式原文范围.reset();
+                break;
+            case S::资源失败:
+                out.阶段 = 阶段::资源延后;
+                out.原因 = "原文分词候选资源未完成";
+                break;
+            case S::未初始化:
+            case S::材料未就绪:
+            case S::前提已变化:
+                break;
+            case S::输入拒绝:
+            case S::未支持:
+                work.前置 = P::已停用;
+                work.终结 = true;
+                out.阶段 = 阶段::非支持输入;
+                out.原因 = "同源分词候选材料无法采用";
+                break;
+            }
         }
         work.观察 = out;
         work.下次 = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
@@ -1181,8 +1210,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         if(!out.U&&!out.D&&work.定位&&(e.状态==阶段::对象未决||e.状态==阶段::非支持输入)) {
             work.前置 = 实现::前置阶段::待接纳;
             out.待交接前置输入.reset();
-            if (work.定位->正式原文范围) out.待交接前置输入 = work.定位;
-            out.阶段 = out.待交接前置输入 ? 阶段::前置输入待治理 : 阶段::前置输入治理等待;
+            out.阶段 = 阶段::前置输入治理等待;
             本次终结 = false;
         }
         if(e.状态==阶段::停止未完成&&work.定位){work.前置=实现::前置阶段::已停用;out.待交接前置输入.reset();}
