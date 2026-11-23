@@ -252,6 +252,26 @@ std::optional<稳定编码> 方法参数场景::执行分支节点() const noexc
                 信息.实例单位=f->实例单位;信息.当前值=f->当前值;
                 return {f->当前值 ? S::已读取 : S::当前值未取得,std::move(信息),f->当前完整材料};
             }
+            if (声明.正式信息参数) {
+                using R = 正式信息参数读取状态;
+                const auto 参数 = 读取正式信息参数保护(位置);
+                if (参数.状态 == R::前提已变化) throw 参数材料需要重读{};
+                if (参数.状态 == R::资源失败) throw std::bad_alloc{};
+                if (参数.状态 == R::范围未支持) return {S::能力未支持,{},{}};
+                if (参数.状态 == R::信息不存在 || 参数.状态 == R::依赖未就绪)
+                    return {S::特征未取得,{},{}};
+                if (!参数.信息 || !特征服务_)
+                    throw std::logic_error("formal parameter feature reader unavailable");
+                const auto 定位 = std::find_if(参数.信息->特征定位组.begin(), 参数.信息->特征定位组.end(),
+                    [FT](const auto& 项) { return 项.特征类型 == FT; });
+                if (定位 == 参数.信息->特征定位组.end()) return {S::特征未取得,{},{}};
+                const auto F = 特征服务_->捕获特征匹配实例(定位->特征节点);
+                if (!F) return {S::特征未取得,{},{}};
+                新特征信息 信息;
+                信息.节点=F->特征节点; 信息.特征概念节点=F->定义.概念节点;
+                信息.实例单位=F->实例单位; 信息.当前值=F->当前值;
+                return {F->当前值 ? S::已读取 : S::当前值未取得,std::move(信息),F->当前完整材料};
+            }
             if(!存在读取_||!特征服务_||!特征值服务_)
                 throw std::logic_error("existence feature instance owners unavailable");
             const auto E=存在读取_->获取存在(p->信息节点);

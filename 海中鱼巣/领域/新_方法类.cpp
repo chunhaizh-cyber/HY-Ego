@@ -9409,8 +9409,25 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
             } else {
                 const auto existence=存在概念服务_.读取普通存在概念定义保护(参数.范围概念节点);
                 if(existence.状态==正式概念读取状态::前提已变化)throw 引用内容定义前提变化{};
-                // 正式需求等内容走原信息reader，不在这里冒充普通E的实际F。
-                if(existence.状态==正式概念读取状态::非本提供者概念)return out;
+                if (existence.状态 == 正式概念读取状态::非本提供者概念) {
+                    using 内容状态 = 正式结构有效内容读取状态;
+                    const auto 正式 = 存在概念服务_.读取正式结构有效内容保护(参数.范围概念节点);
+                    if (正式.状态 == 内容状态::前提已变化) throw 引用内容定义前提变化{};
+                    if (正式.状态 == 内容状态::资源失败) throw std::bad_alloc{};
+                    if (正式.状态 == 内容状态::依赖未就绪) {
+                        out.状态 = 新方法参数特征读取状态::能力未支持;
+                        return out;
+                    }
+                    if (正式.状态 != 内容状态::已读取) return out;
+                    if (!正式.信息) throw std::logic_error("formal parameter declaration missing content");
+                    out.正式信息参数 = true;
+                    if (std::any_of(正式.信息->内容项组.begin(), 正式.信息->内容项组.end(),
+                            [FT](const auto& 项) { return 项.特征类型 == FT && 项.读取路径.empty(); })) {
+                        out.状态 = 新方法参数特征读取状态::已读取;
+                        out.特征定义 = *definition;
+                    }
+                    return out;
+                }
                 if(!existence.信息)return out;
                 authorized=std::any_of(existence.信息->特征组.begin(),existence.信息->特征组.end(),
                     [&](const auto& f){return f.特征类型概念==FT;});

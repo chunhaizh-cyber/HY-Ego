@@ -3285,14 +3285,17 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
         std::map<稳定编码,正式结构有效约束> 约束;
         for(const auto& 项:定义.信息->内容项组)必需.emplace(std::pair{项.特征类型,项.内容概念},项);
         for(const auto& 项:定义.信息->约束组)约束.emplace(项.约束概念节点,项);
-        const auto 比较=[&](稳定编码 FT,稳定编码 要求) {
-            auto 结果=比较正式内容范围(要求,读取内容(实例,FT),身份核验,结构判定);
+        const auto 比较=[&](稳定编码 FT,稳定编码 要求,bool 允许未知=false) {
+            const auto 当前 = 读取内容(实例,FT);
+            if (允许未知 && 当前.状态 == 正式内容值状态::当前未知) return S::符合;
+            auto 结果=比较正式内容范围(要求,当前,身份核验,结构判定);
             if(结果.状态==S::前提已变化||结果.状态==S::资源失败)throw 结果.状态;
             并保护(输出.完整保护组,结果.完整保护组);return 结果.状态;
         };
-        std::set<稳定编码> 待定判别;
+        std::set<稳定编码> 待定判别, 分支判别FT;
         const auto 初始约束=约束;
         for(const auto& [节点,项]:初始约束)if(项.定义.原语==结构约束原语::同一对象恰一结构分支) {
+            分支判别FT.insert(项.定义.项目FT组.begin(),项.定义.项目FT组.end());
             std::optional<正式结构有效内容> 所选;
             bool 未知=false;std::size_t 命中=0;
             for(const auto 分支:项.定义.引用参数) {
@@ -3325,6 +3328,11 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
                 for(const auto& 限制:所选->约束组)约束.emplace(限制.约束概念节点,限制);
             }
         }
+        std::set<稳定编码> 允许未知FT;
+        for (const auto& [节点, 项] : 约束) {
+            if (项.定义.原语 == 结构约束原语::允许未知当前值)
+                允许未知FT.insert(项.定义.项目FT组.front());
+        }
         for(const auto& [键,项]:必需) {
             const auto FT=项.特征类型;
             // R120（5380 §3.6“补问先后由条件形成，不设逐栏先后表”）：判别栏未知（分支待定）时，共同项也逐项判定
@@ -3342,7 +3350,10 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
                 auto 状态=S::当前未知;
                 if(路径->状态==正式路径值状态::已读取) {
                     if(!路径->值)正式定义故障("resolved path value lacks content");
-                    auto 结果=比较正式内容范围(项.内容概念,*路径->值,身份核验,结构判定);
+                    const bool 允许未知 = 允许未知FT.contains(FT) && !分支判别FT.contains(FT)
+                        && 路径->值->状态 == 正式内容值状态::当前未知;
+                    auto 结果 = 允许未知 ? 正式内容符合结果{S::符合,{}}
+                        : 比较正式内容范围(项.内容概念,*路径->值,身份核验,结构判定);
                     if(结果.状态==S::前提已变化||结果.状态==S::资源失败)throw 结果.状态;
                     并保护(输出.完整保护组,结果.完整保护组);
                     状态=结果.状态==S::不适用 ? S::不符合 : 结果.状态;
@@ -3353,7 +3364,7 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
                 else if(状态==S::当前未知&&输出.状态==S::符合)输出.状态=S::当前未知;
                 continue;
             }
-            auto 状态=比较(FT,项.内容概念);
+            auto 状态=比较(FT,项.内容概念,允许未知FT.contains(FT)&&!分支判别FT.contains(FT));
             if(状态==S::不适用)状态=S::不符合;
             if(待定共同项&&状态==S::未支持)continue;
             输出.项目组.push_back({FT,项.内容概念,状态});
@@ -3363,6 +3374,7 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
         }
         if(!待定判别.empty()&&输出.状态!=S::未支持)输出.状态=S::当前未知;
         if(待定判别.empty())for(const auto& [节点,项]:约束) {
+            if (项.定义.原语 == 结构约束原语::允许未知当前值) continue;
             if(项.定义.原语==结构约束原语::同一对象恰一结构分支) {
                 if(!初始约束.contains(节点))return {S::未支持,{},{},{}};
                 continue;
@@ -3375,7 +3387,6 @@ std::optional<bool> 概念_存在类::正式结构概念属于(稳定编码 下,
             else if(核验.状态==S::不符合&&输出.状态!=S::未支持)输出.状态=S::不符合;
             else if(核验.状态==S::当前未知&&输出.状态==S::符合)输出.状态=S::当前未知;
         }
-        if(!正式保护未变(输出.完整保护组))return {S::前提已变化,{},{},{}};
         return 输出;
     }catch(正式内容符合状态 状态){return {状态,{},{},{}};}
     catch(正式状态){return {S::前提已变化,{},{},{}};}
@@ -4370,6 +4381,84 @@ void 概念_存在类::装配词条读取(const 新_词类& reader) noexcept {
         } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
         catch (...) { 正式定义故障("language boundary material identity range publication exception"); }
         // 前提变化只发生在零发布阶段；本轮锁和准备对象已释放。
+        std::this_thread::yield();
+    }
+}
+
+
+正式结构概念结果 概念_存在类::读取语言材料范围参数概念() const noexcept {
+    for (;;) {
+        try {
+            if (!正式schema就绪()) return {正式状态::依赖未就绪, {}};
+            std::lock_guard 锁(存在概念图互斥);
+            std::vector<基础联合节点快照> 登记材料;
+            const auto 登记 = 读取正式登记(登记材料);
+            const auto 位置 = 登记.find(236);
+            if (位置 == 登记.end()) return {正式状态::未找到, {}};
+            std::vector<基础联合节点快照> 当前材料;
+            std::set<稳定编码> 已读;
+            auto 信息 = 解码正式定义(位置->second, 当前材料, 已读);
+            if (!std::holds_alternative<信息结构概念定义>(信息.定义))
+                return {正式状态::定义冲突, {}};
+            return {正式状态::已读取, std::move(信息)};
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("language range parameter schema read exception"); }
+        std::this_thread::yield();
+    }
+}
+
+正式结构概念结果 概念_存在类::建立或取得语言材料范围参数概念() noexcept {
+    for (;;) {
+        try {
+            if (!正式schema就绪()) return {正式状态::依赖未就绪, {}};
+            const auto 身份范围 = 读取语言分界材料身份范围概念();
+            if (!身份范围.信息) return {身份范围.状态, {}};
+            const auto 根 = 读取存在根概念保护();
+            if (根.状态 == 正式概念读取状态::前提已变化) throw 正式状态::前提已变化;
+            if (!根.信息) return {正式状态::依赖未就绪, {}};
+
+            constexpr std::array 特征槽组{先天特征类型槽::分词候选材料, 先天特征类型槽::分界依据,
+                先天特征类型槽::有效分界结果, 先天特征类型槽::词条准入结果};
+            定义模板 结构{};
+            结构.槽 = 236;
+            结构.形状 = 结构类型键;
+            结构.普通上位引用组 = {根.信息->节点};
+            std::vector<定义模板> 定义组;
+            for (std::size_t i = 0; i < 特征槽组.size(); ++i) {
+                const auto FT = 特征概念服务_.读取当前先天特征类型槽(特征槽组[i]);
+                if (FT.状态 == 特征概念规则状态::资源失败) throw std::bad_alloc{};
+                if (FT.状态 == 特征概念规则状态::前提已变化) throw 正式状态::前提已变化;
+                if (!FT.类型根) return {正式状态::依赖未就绪, {}};
+                const auto 约束槽 = static_cast<std::uint32_t>(823 + i);
+                结构.项目.push_back({*FT.类型根, 518, {}});
+                结构.约束槽.push_back(约束槽);
+                定义模板 约束{};
+                约束.槽 = 约束槽;
+                约束.形状 = 约束类型键;
+                约束.约束 = {结构约束原语::允许未知当前值, {*FT.类型根}, {}, {}};
+                定义组.push_back(std::move(约束));
+            }
+            定义组.push_back(std::move(结构));
+            正式状态 发布状态;
+            {
+                std::lock_guard 锁(存在概念图互斥);
+                基础节点组追加请求 请求;
+                std::vector<std::pair<std::uint32_t, std::size_t>> 槽;
+                登记映射 登记;
+                const auto 准备 = 准备定义批(定义组, {}, 请求, 槽, 登记);
+                if (准备 == 正式状态::定义冲突) return {准备, {}};
+                发布状态 = 发布先天定义批(请求, 槽);
+            }
+            if (发布状态 == 正式状态::前提已变化) throw 发布状态;
+            auto 当前 = 读取语言材料范围参数概念();
+            if (!当前.信息) return 当前;
+            return {发布状态, std::move(当前.信息)};
+        } catch (正式状态 状态) {
+            if (状态 != 正式状态::前提已变化) return {状态, {}};
+        } catch (const std::exception& 错误) { 正式定义故障(错误.what()); }
+        catch (...) { 正式定义故障("language range parameter schema publication exception"); }
         std::this_thread::yield();
     }
 }

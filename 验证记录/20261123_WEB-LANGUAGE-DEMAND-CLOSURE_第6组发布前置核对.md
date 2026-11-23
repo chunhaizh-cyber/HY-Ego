@@ -99,3 +99,13 @@ Debug产物SHA-256为 D1D0D8897B2F771F757DD6C080F0BDE8267212CB0D41853F5D50D29C24
 最终 Debug/x64 用时 437.59 秒、Release/x64 用时 447.92 秒，均为0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 D8E5203DDB9AEEA3FCDEF720D8958E76954E48AC963E6C250351E8EA16BDC680，三文件差异SHA-256为 4F608DEDC365ADED37DF07057583825472C3BFF5609B9D54EE8E87C78C8958F1。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c1-fixed-text-final-Release/56C1-source.patch)
 
 Debug产物SHA-256为 88C35721C2C4F38012DE842A42A13C2F1844D10266BCE6F53707E22D16FF1204，Release产物SHA-256为 72A2B9A632E38287198AC091FACAEF9ED6F7FA27AE0A2C16F2B031F00A67956B。程序未运行。正式R的入站生产、已确认分界的实际取材、任务方法与网页接线继续推进，原第6组及P0–P6待正式验收。
+
+## 56C2 语言范围参数结构与实际特征读取
+
+第56C1已发布为b2a70a076。第56C2按计划v2.107和设计第10.84节，在主工作区 46faaf5cbbb796fe150790304dc58c77e63b2d6f 修改十一文件。先天结构236使用四个直接FT和约束823至826，沿普通装配正式建立和命名。C18负责具名材料身份，236负责角色2语言范围R的有序方法参数形状，405仍为需求字段通用身份。正式参数投影返回实际FT/F，特征所有者提供当前值及保护材料。当前值为空时保留实际F身份。
+
+独立复查了槽位、普通命名与装配、双路由、普通存在和词条分支、模拟分流、直接FT授权与实际F读取。复核修正结构判别项的允许未知边界，初读已选分支、后续读取转为未知时也保留未知。原末尾旧整组核同退出，写入仍由L1使用当次保护材料。首轮两套全构建通过，最终轮复用各自本片对象目录增量重编并重新链接，最终二进制和取证目录独立保存。
+
+最终 Debug/x64 用时 12.84 秒、Release/x64 用时 38.85 秒，均0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 BD4936316D340E99C7799AAC932994BBB20EE3E34B5E4FAC0A0455A43EBD7E48，十一文件差异SHA-256为 1546E6B8013EF94A1659C9A41BF5E44946D0F05B6BF103AF4406E6B06B550463。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c2-parameter-feature-final-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c2-parameter-feature-final-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c2-parameter-feature-final-Release/56C2-source.patch)
+
+Debug产物SHA-256为 D7F9733A726099B07725C10244D54C5D201758D8158B6807B8D9BD7A61DAF18A，Release产物SHA-256为 D06E1B1511030292D136E8C233A8731C15E66DEE9A49F9FE8D8318B14C648CE3。程序未运行。动作目标核心及后续任务、本能和生产网页接线继续推进。原第6组及P0–P6待实际验收。

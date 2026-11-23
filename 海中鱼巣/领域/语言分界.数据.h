@@ -43,6 +43,7 @@ enum class 新语言范围特征种类 : std::uint8_t {
 struct 新语言分界特征配置 final {
     稳定编码 信息身份范围;
     std::array<稳定编码, 4> 特征类型组;
+    稳定编码 参数结构范围{};
     friend bool operator==(const 新语言分界特征配置&,
         const 新语言分界特征配置&) = default;
 };
