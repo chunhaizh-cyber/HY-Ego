@@ -331,3 +331,16 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 首轮以 `41dae1d7c` 和第 56C19 十三份在制源码构建普通 Release/x64，0 错误、0 警告，249 项输入在构建中无变化。网页接收「测试杯甲是一个杯子。它的颜色是白色。」，实际承接 M30316、R37276、FT6566、F37293、D38373、T38517。控制页读到分界问句生成返回「多义」，浏览器等待超时，无业务 Q/O 显示。06:58:58 另有指代读取工程异常。正式关闭请求返回 HTTP 200，应用仍须强停，退出码 −1，进程已回收。该轮未通过正常退出或出站验收。[构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-build-20261124-030829/release-result.json) · [承接摘录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-build-20261124-030829/release-web-20261124-065041/task-range-evidence.log) · [网页消息](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-build-20261124-030829/release-web-20261124-065041/latest-messages.json) · [工程异常](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-build-20261124-030829/release-web-20261124-065041/field-pronoun-engineering-error.log) · [退出记录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-build-20261124-030829/release-web-20261124-065041/exit.json)
 
 源码核对确认，普通装配与语言种子为同一个结构概念 236 登记了不同中文名称，成文未指定名称关系时会返回名称待选。依设计 §10.102 第 6 项，两处统一为「语言材料范围」。字段询问沿既有返回合同处理可重读的指代读取状态，保留真正的工程故障分类。首轮异常未记录底层状态值，修订后的诊断补上状态。修订构建仍使用 `41dae1d7c` 作为源码起点，首轮 249 项清单中只改变 `装配.普通应用.cpp` 及 `字段询问.语言服务.cpp`，构建前后清单无差异。Release/x64 编译链接退出 0，EXE SHA256 为 `5F8C45817B0D5B0BE892C9CA7999B1A644CE4987E407340CC4B878CEE348F6AD`，网页结果以本节后续取证为准。[修订构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-result.json) · [输入清单](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/build-inputs.json)
+
+### 56C19 正式分界问题发布与网页复测
+
+修订版普通 Release/x64 编译链接 0 错误、0 警告。14 份源码随 `231f4c5a2afbc0576444ca5bab3bae3e0aff8ec5` 发布，249 项输入与暂存树、`origin/main` 发布树逐项一致。[发布输入读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/published-inputs.json)
+
+同一构建接收正式前置原文 M30125，承接同源 R36204、D36585、T37026。控制页一度读到语言状态 7，原 M 继续等待。随后网页实际显示「它（语言材料范围）的有效分界结果是什么」，记录 Q38264、O38358 及完整原文半开范围 [0,18)。用户界面上选中此行，实际回复键为 O38358，并保留该 Q 与原文引用。短时提交另一组已知文本后，网页仍只有同一条 Q/O；本轮只选择回复，没有提交分界材料。运行日志摘录与页面读取分别提供正式来源和线上消息证据。[来源与正式出站摘录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/formal-source-and-output.log) · [控制页观察](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/receive-stage-observed.jsonl) · [问题与引文](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/displayed-question.json) · [网页选择](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/reply-selection.json) · [结束前消息读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/final-messages.json)
+
+应用 PID 11488 经正常网页结束，应用和浏览器退出 0，进程已回收且未强制停止。运行另有既有方法 25208 的模拟学习记录「未形成正式实际结果」，该记录不属于本次分界问句。紧邻后继用实际网页答复形成依据，验证同一 T 的唤醒。第 6 组业务原句、同 D 写回及 P0–P6 仍待完成。[关闭记录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/exit.json) · [学习异常摘录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c19-retest-20261124-070413/release-web-20261124-070626/logic-error-delta.log)
+
+### 56C19 代码知识变更
+
+- 接收认知从具名分界等待使用实际 M/R 与出站表达组织 Q，再调用外设输出入列；同源重入使用既有 Q 和保留的 O。字段询问消费当前指代名称读口，暂时不可读沿现轮转重读，确实结构错误保留工程诊断。
+- 语言问题留档新增原文分界被询目标；外设输出保存正式 Q 引用，普通网页通过实际 O 读回同一 Q/R、固定引文和回复选择。原普通出站及需求问题继续使用原入口。用途知识以源码 `231f4c5a2` 待复核。
