@@ -1,0 +1,121 @@
+# GB-3：正式入口 + 真实网页 DOM 的需求/治理闭环观测（不声称业务刷绿）。
+name: cloud-windows-governance-closure
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/cloud-windows-governance-closure.yml'
+      - 'tools/ci/windows-governance-closure.ps1'
+      - 'tools/ci/governance-closure-page.mjs'
+      - 'tools/ci/windows-msvc-smoke.ps1'
+      - '海中鱼巣.vcxproj'
+  push:
+    branches:
+      - 'cursor/cloud-msvc-smoke-c720'
+    paths:
+      - '.github/workflows/cloud-windows-governance-closure.yml'
+      - 'tools/ci/windows-governance-closure.ps1'
+      - 'tools/ci/governance-closure-page.mjs'
+      - 'tools/ci/windows-msvc-smoke.ps1'
+      - '海中鱼巣.vcxproj'
+
+permissions:
+  contents: read
+
+jobs:
+  governance-closure:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild (VS2026 / v145 image)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+
+      - name: Setup Node (Playwright driver)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: "Prepare D: contract paths (no source change)"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP 'hy-ego-droot'
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          if (-not (Test-Path 'D:\')) {
+            subst D: $root
+            if ($LASTEXITCODE -ne 0) { throw "subst D: failed: $LASTEXITCODE" }
+          }
+          New-Item -ItemType Directory -Force -Path 'D:\海中鱼巣\日志' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'D:\TEMP\海中鱼巣' | Out-Null
+
+      - name: Build Release|x64 (formal vcxproj)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $buildRoot = Join-Path $env:RUNNER_TEMP 'HY-Ego-build-Release-gov'
+          $out = Join-Path $buildRoot 'bin\'
+          $obj = Join-Path $buildRoot 'obj\'
+          $artifactRoot = Join-Path $env:RUNNER_TEMP 'hy-ego-governance-closure\artifacts'
+          New-Item -ItemType Directory -Force -Path $out, $obj, $artifactRoot | Out-Null
+          $buildLog = Join-Path $artifactRoot 'msbuild.log'
+          msbuild .\海中鱼巣.vcxproj `
+            /t:Build /m `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            "/p:OutDir=$out" `
+            "/p:IntDir=$obj" `
+            /nologo /v:minimal `
+            /fl "/flp:LogFile=$buildLog;Verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { throw "msbuild failed: $LASTEXITCODE" }
+          $exe = Join-Path $out '海中鱼巣.exe'
+          if (-not (Test-Path $exe)) { throw "missing exe: $exe" }
+          "BUILD_OUT=$out" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "GOV_ARTIFACT_ROOT=$artifactRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "GIT_HEAD=$(git rev-parse HEAD)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Real-page governance closure observation
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & "$env:GITHUB_WORKSPACE\tools\ci\windows-governance-closure.ps1" `
+            -ExeDir $env:BUILD_OUT `
+            -ArtifactRoot $env:GOV_ARTIFACT_ROOT `
+            -ObserveMs 360000 `
+            -SkipBuild
+
+      - name: Stage evidence into workspace for upload (always)
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $stage = Join-Path $env:GITHUB_WORKSPACE '_ci_upload_gov'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          $sources = @(
+            (Join-Path $env:RUNNER_TEMP 'hy-ego-governance-closure\artifacts'),
+            'D:\TEMP\海中鱼巣',
+            'D:\海中鱼巣\日志'
+          )
+          foreach ($src in $sources) {
+            if (-not (Test-Path -LiteralPath $src)) { continue }
+            $leaf = ($src -replace '[:\\]', '_')
+            $dest = Join-Path $stage $leaf
+            New-Item -ItemType Directory -Force -Path $dest | Out-Null
+            Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          "HEAD=$env:GIT_HEAD" | Set-Content -LiteralPath (Join-Path $stage 'git-head.txt') -Encoding utf8
+          Get-ChildItem -LiteralPath $stage -Recurse -File | Select-Object -First 60 FullName, Length
+
+      - name: Upload governance-closure evidence (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-governance-closure-${{ github.run_id }}
+          path: _ci_upload_gov/**
+          if-no-files-found: warn
+          retention-days: 14
