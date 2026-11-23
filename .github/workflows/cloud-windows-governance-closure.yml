@@ -1,4 +1,4 @@
-# GB-3：正式入口 + 真实网页 DOM 的需求/治理闭环观测（不声称业务刷绿）。
+# GB-3 R2：正式入口 + 真实网页 DOM 的需求/治理闭环观测（不声称业务刷绿）。
 name: cloud-windows-governance-closure
 
 on:
@@ -26,7 +26,8 @@ permissions:
 jobs:
   governance-closure:
     runs-on: windows-2025-vs2026
-    timeout-minutes: 120
+    # R2：交互者前置等待 + 正句长观察 + 编译；留足裕量
+    timeout-minutes: 180
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -79,14 +80,16 @@ jobs:
           "GOV_ARTIFACT_ROOT=$artifactRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "GIT_HEAD=$(git rev-parse HEAD)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      - name: Real-page governance closure observation
+      - name: Real-page governance closure observation (R2)
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           & "$env:GITHUB_WORKSPACE\tools\ci\windows-governance-closure.ps1" `
             -ExeDir $env:BUILD_OUT `
             -ArtifactRoot $env:GOV_ARTIFACT_ROOT `
-            -ObserveMs 360000 `
+            -ObserveMs 900000 `
+            -InteractantWaitMs 600000 `
+            -RoundId 'gb3-r2' `
             -SkipBuild
 
       - name: Stage evidence into workspace for upload (always)

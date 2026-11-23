@@ -1,15 +1,15 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  GB-3：Windows 正式入口 + 真实网页 DOM 驱动的需求获取/理解/满足闭环观测。
+  GB-3 R2：Windows 正式入口 + 真实网页 DOM 驱动的需求获取/理解/满足闭环观测。
 
 .DESCRIPTION
-  结论范围：在默认种子与绑定服务对象条件下，通过 Playwright 操作真实页面 #input/#form，
-  观察接收→需求/任务/方法/结算相关可观测证据。不声称 202 即闭环；不注入需求节点；不改业务语义。
+  R2：干净种子启动 → 有界等待自我当前交互者正式证据 → 只投正句 → 按 messageId 长观察。
+  不声称 202 即闭环；不注入需求节点；不改业务语义。页面 service-object 不算交互者正式读回。
 
 .NOTES
   启动参数：--web-service-object-login=zch2005（与装配默认第一权限人登录名一致）。
-  正向 NL 选择理由见 evidence/case-plan.json。
+  用例计划见 evidence/case-plan.json。
 #>
 [CmdletBinding()]
 param(
@@ -26,16 +26,19 @@ param(
     [int]$StartupTimeoutSec = 180,
 
     [Parameter(Mandatory = $false)]
-    [int]$ObserveMs = 360000,
+    [int]$ObserveMs = 900000,
+
+    [Parameter(Mandatory = $false)]
+    [int]$InteractantWaitMs = 600000,
 
     [Parameter(Mandatory = $false)]
     [string]$ProbeNl = '请把登录名为zch2005的人的姓名保持为周春海',
 
     [Parameter(Mandatory = $false)]
-    [string]$NegativeNl = 'asdfqwer没有结构的乱码输入',
+    [string]$ServiceObjectLogin = 'zch2005',
 
     [Parameter(Mandatory = $false)]
-    [string]$ServiceObjectLogin = 'zch2005',
+    [string]$RoundId = 'gb3-r2',
 
     [Parameter(Mandatory = $false)]
     [switch]$SkipBuild
@@ -108,38 +111,49 @@ if (Test-Path -LiteralPath $sessionUrlFile) {
 
 # 用例计划（固定进证据，供中文报告引用）
 $casePlan = [ordered]@{
-    caseId = 'GB3-E2E-01'
-    headHint = '基于 PR17/GB-2 已绿正式入口'
+    caseId = 'GB3-E2E-01-R2'
+    roundId = $RoundId
+    businessBaselineHead = 'b167bd0deb5333a4bd1496a8b9dea0d9b68b1756'
+    noteOnHead = '业务源码基线保持 b167bd0d；本轮仅允许 CI/观测脚本差异，产品断言不得因脚本绿而升格。'
     seedBaseline = '默认 PostBuild 初始化材料 + 基础数据\词典；不另改种子'
     serviceObjectLogin = $ServiceObjectLogin
-    positiveNl = $ProbeNl
-    negativeNl = $NegativeNl
+    probeNl = $ProbeNl
+    negativeNl = $null
+    protocol = @(
+        '干净正式种子启动并打开真实网页',
+        '有界等待自我当前交互者正式证据（cognition.speaker 或自我出站等）；页面 service-object 不算正式读回',
+        '前置未达成则明确记录，不假装已满足',
+        '再单独 DOM 提交正句；本轮不投乱码',
+        '按 receivedDemandCognition.message 贯穿追踪；文件名 phase 仅采集阶段'
+    )
     selectionRationale = @(
-        '完整目标 H 需要：需求主体、目标信息节点、目标特征类型、以及值目标的值域/比较或方向目标的方向（3100）。',
-        '需求主体 ≠ 目标存在：本句主体为会话绑定服务对象（登录名 zch2005 / 第一权限人），目标信息节点为其人，目标特征为姓名，目标值为「周春海」。',
-        '选择该句是因为装配默认第一权限人登录名/姓名即 zch2005/周春海，属种子世界已有可指对象，不注入新节点；是否被 NL 理解成正式被认知需求仍属观测对象。',
-        '负例用于区分「无法理解/拒绝」与缺陷：期望正常追问或明确未理解，而不是伪装成已满足。'
+        '完整目标 H 需要：需求主体、目标信息节点、目标特征类型、以及值目标的值域/比较或方向（3100）。',
+        '种子下 zch2005 姓名已是周春海：正例验收识别人/理解目标/正式读回当前值/避免无意义动作；已满足不要求改名，不算本次服务贡献（5260/6190）。',
+        '区分三类：交互者取得耗时；句子未解释成受支持角色结构；前置治理后无人接续。',
+        '方法 24038 模拟学习异常继续记录是否重现；无证据链不归因。'
     )
     expectedChain = @(
-        '真实页面 DOM 提交 NL',
-        '外设接收消息 / 接收认知推进',
-        '解析或澄清完整目标 H（存在/特征类型/值域或方向）',
-        '形成被认知需求或待完善需求',
-        '服务对象需求→自我执行需求/任务筹办（若规范路径允许）',
-        '查找方法→执行→满足判定→结算/反馈'
+        '交互者正式证据（或有界前置失败证据）',
+        '真实页面 DOM 提交正句',
+        '外设接收 / 接收认知推进（按 messageId）',
+        '对象绑定/构式/角色/正式含义或前置治理分支',
+        '若已满足：读回当前值与零动作；不强制改名结算',
+        '页面反馈或有界超时稳定结论'
     )
     observableAssertions = [ordered]@{
         A1_pageSubmit = '页面 #input 提交后输入清空；#messages 出现用户侧文本'
-        A2_binding = '页面 service-object 或控制快照可观测到会话绑定服务对象（非空登录绑定）'
-        A3_receive = '运行.log 或控制快照 receivedDemandCognition / 消息承接证据与本次输入关联'
-        A4_demand = '控制快照 demands.items 出现与本次目标相关的需求（完整或待完善）；否则记未证实'
-        A5_task = '控制快照 tasks.items 出现承接任务；否则记未证实'
-        A6_method = '方法目录/执行证据/学习工作快照显示查找或执行；否则记未证实'
-        A7_satisfy = '需求活动/满足相关字段显示已满足且有反馈；否则记未证实/失败'
-        A8_not202 = '不得将 HTTP 入队或单条完成日志升级为全闭环'
+        A2_interactant = '提交前 interactant-gate.json 标明正式证据是否达成；不得仅用页面 service-object 充数'
+        A3_receive = '控制快照 receivedDemandCognition.message 与本次正句关联'
+        A4_demand = '同 message 下 demand/meaning 出现与本句目标相关材料；否则记未证实'
+        A5_task = '同 message 关联任务承接；内部自我域 D/T 不得冒充本句姓名任务'
+        A6_method = '方法/执行证据；否则未证实'
+        A7_satisfy = '已满足时允许零动作；改名结算非本用例默认目标'
+        A8_not202 = '不得将 HTTP 入队升格为全闭环'
+        A9_classes = '报告须区分：交互者耗时 / 未支持角色结构 / 前置治理无人接续'
     }
     observeMs = $ObserveMs
-    driver = 'playwright-chromium DOM (#input form submit)'
+    interactantWaitMs = $InteractantWaitMs
+    driver = 'playwright-chromium DOM (#input form submit) R2'
 }
 $casePlan | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $EvidenceDir 'case-plan.json') -Encoding utf8
 
@@ -205,13 +219,15 @@ try {
         Pop-Location
     }
 
-    Write-Step '真实页面 DOM 驱动（正向+负例观察）'
+    Write-Step '真实页面 DOM 驱动（R2：交互者前置 + 只投正句）'
     $env:SESSION_URL = $sessionUrl
     $env:EVIDENCE_DIR = $PageEvidenceDir
     $env:PROBE_NL = $ProbeNl
-    $env:NEGATIVE_NL = $NegativeNl
     $env:OBSERVE_MS = [string]$ObserveMs
-    $env:CASE_ID = 'GB3-E2E-01'
+    $env:INTERACTANT_WAIT_MS = [string]$InteractantWaitMs
+    $env:CASE_ID = 'GB3-E2E-01-R2'
+    $env:ROUND_ID = $RoundId
+    if ($env:NEGATIVE_NL) { Remove-Item Env:\NEGATIVE_NL -ErrorAction SilentlyContinue }
     $driverSrc = Join-Path $RepoRoot 'tools\ci\governance-closure-page.mjs'
     $driverLocal = Join-Path $pwRoot 'governance-closure-page.mjs'
     Copy-Item -LiteralPath $driverSrc -Destination $driverLocal -Force
@@ -256,16 +272,18 @@ try {
 结论: $conclusion
 闭环脚本判定占位: $closureJudgement
 HEAD_HINT: 由 workflow 注入
+RoundId: $RoundId
 sessionUrl: $sessionUrl
 ProbeNl: $ProbeNl
-NegativeNl: $NegativeNl
+NegativeNl: (本轮禁用)
 ServiceObjectLogin: $ServiceObjectLogin
 ObserveMs: $ObserveMs
+InteractantWaitMs: $InteractantWaitMs
 PageDriverExit: $pageExit
 ProcExited: $(if ($ownedProcess) { $ownedProcess.HasExited } else { 'n/a' })
 ExitCode: $(if ($ownedProcess -and $ownedProcess.HasExited) { $ownedProcess.ExitCode } else { 'n/a' })
 证据目录: $EvidenceDir
-说明: 本摘要不把 202/页面回显升格为治理全闭环；以 case-plan 断言与日志/快照交叉核验为准。
+说明: CI 脚本绿只说明取证完成；产品断言见中文验证记录。不把 202/页面回显升格为治理全闭环。
 "@
     Set-Content -LiteralPath $SummaryPath -Value $summary -Encoding utf8
     Write-Host $summary
