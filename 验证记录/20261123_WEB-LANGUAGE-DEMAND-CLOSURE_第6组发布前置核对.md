@@ -181,3 +181,15 @@ Debug 产物 SHA-256 为 B64A639E0DF822DE5E92F8AE3463782AF056582B2426B73B10687D5
 修正后 Debug/x64 用时 64.57 秒，Release/x64 用时 87.72 秒，均为 0 错误、0 警告。两套构建各 249 项工程与初始化输入前后相同，清单 SHA-256 为 CF6ECBA56632AC1D5E6B39234D18CE1C7DB974F8B1C446B74C179AFE3E66328B。[Debug 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c9-local-range-Debug/final-result.json) · [Release 构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c9-local-range-Release/final-result.json)
 
 Debug 产物 SHA-256 为 3B063DD7403E37893809586CD6E1E6961CE2A58EFAA63A295C37F4BE107279F0，Release 产物 SHA-256 为 1FA170A70B563DEB3ED9EB639E03C328868B546218649013AA0494072AD7A9D4。应用未启动，样例执行、真实待办定向学习、配对发布、第 6 组和 P0–P6 仍待实际运行取证。
+
+## 56C9 发布构建的第一轮网页前置观测
+
+2026-11-23 21:48 至 21:53，使用与源码提交 `dee9cec6a2fb7d7670bda8b3aa489c17cf01c3ba` 一致的 Release/x64 和普通入口 `--web-service-object-login=zch2005`。网页返回 200，提交「测试杯甲是一个杯子。它的颜色是白色。」返回 202。入站 M29080 起初等待自我当前交互者；21:53:42 的快照读回交互者 959，进入「前置输入待治理」，原因为「已取得同源正式原文范围，等待前置材料交接」。该快照的 U、D 为空，网页消息列表只有原话。随后网页关闭返回 200，PID 12516 正常退出，退出码 0，进程已回收。
+
+最新快照到关闭相隔约 7 秒，只证明已进入原文范围交接，尚不能确定交接是否超时或停在后续某个分支。第 6 组本句、业务补问、关联回答及同一 D 的写回本轮均未发生。[进程与构建身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-20261123-214845/process.json) · [末次网页状态](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-20261123-214845/control-215342752.json) · [关闭结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-20261123-214845/exit.json)
+
+## 56C9 发布构建延长网页前置观测
+
+同一 Release/x64 构建经正式网页再次收到同一前置原文。入站 M29080 于 22:00:22 取得交互者 959 和同源正式原文范围，22:00:49 进入「前置输入治理等待」。22:02:11 的末次快照仍处于该阶段，U、D 为空；网页消息仍只有用户原话，无出站问题。关闭返回 200，PID 38988 正常退出，退出码 0，进程已回收。[范围交接](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/control-220022143.json) · [治理等待](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/control-220049562.json) · [末次网页消息](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/messages-220211819.json) · [关闭](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/published-case06-ingress-observe-20261123-215630/exit.json)
+
+源码核对：接收侧会自动进行基础解释和词面匹配。解释缺口交给任务后，现有前置筹办只读取材料并返回，自我确认回执将原消息置于具名等待。当前主线的多路径候选生成仅在分界本能中接线；正式分界依据入口没有生产调用。历史词典联合工作树提供接收来源的被动候选采用与网页关联回答，可按现行合同核对最小生产接线。分词候选只用来支持解释；有效分界仍须正式规则或明确关联的回答。第 56C10 片验证的是已声明方法的隔离学习，不能接通当前网页的缺口等待。尚需在同源范围产生正式分界材料或真实澄清，并在材料到达后恢复原消息。本轮只验证第 6 组前置原文。
