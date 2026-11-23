@@ -869,7 +869,8 @@ bool 动作对象类别合法(动作参数对象类别 类别) noexcept {
     case 动作参数对象类别::服务要求目标定义:
     case 动作参数对象类别::服务要求确认:
     case 动作参数对象类别::方法虚拟存在:
-    case 动作参数对象类别::词条: return true;
+    case 动作参数对象类别::词条:
+    case 动作参数对象类别::语言材料范围: return true;
     }
     return false;
 }
@@ -963,8 +964,18 @@ void 核验信息关系动作规格(const 动作概念定义& 定义) {
     const auto 校验存在C = [&](const auto& C) {
         if (C && !存在->获取存在概念(*C)) throw std::runtime_error("action role is not an existence concept");
     };
-    校验存在C(定义.执行主体.存在概念节点); 校验存在C(定义.作用目标.存在概念节点);
+    校验存在C(定义.执行主体.存在概念节点);
     const bool 词条目标=定义.作用目标.对象类别==动作参数对象类别::词条;
+    const bool 语言目标 = 定义.作用目标.对象类别 == 动作参数对象类别::语言材料范围;
+    if (语言目标) {
+        const auto 范围 = 存在->读取语言材料范围参数概念();
+        if (范围.状态 != 正式结构操作状态::已读取 || !范围.信息
+            || 定义.作用目标.存在概念节点 != 范围.信息->节点
+            || 定义.作用目标.参数角色节点 || !定义.目标特征类型概念节点)
+            throw std::runtime_error("invalid language range action role shape");
+    } else {
+        校验存在C(定义.作用目标.存在概念节点);
+    }
     if(定义.执行主体.词条范围概念节点
         ||(!词条目标&&定义.作用目标.词条范围概念节点)
         ||(词条目标&&(!定义.作用目标.词条范围概念节点||定义.作用目标.存在概念节点
@@ -1003,7 +1014,7 @@ void 核验信息关系动作规格(const 动作概念定义& 定义) {
         || !可选存在(定义.作用目标.参数角色节点)
         || 定义.执行主体.对象类别 != 动作参数对象类别::普通世界
         || (定义.作用目标.对象类别 != 动作参数对象类别::普通世界
-            && !词条目标 && !虚拟对象类别(定义.作用目标.对象类别))
+            && !词条目标 && !语言目标 && !虚拟对象类别(定义.作用目标.对象类别))
         || (定义.作用目标.对象类别 == 动作参数对象类别::普通世界
             && !定义.作用目标.存在概念节点)
         || (虚拟对象类别(定义.作用目标.对象类别)
@@ -1013,8 +1024,8 @@ void 核验信息关系动作规格(const 动作概念定义& 定义) {
         throw std::runtime_error("invalid action target feature concept");
     std::set<稳定编码> 角色;
     const bool 有序参数 = !定义.参数规格组.empty() && 定义.参数规格组.front().有序规格.has_value();
-    if(动作含词条(定义)&&(!有序参数||!方法能力))
-        throw std::runtime_error("word action requires ordered method parameters");
+    if ((动作含词条(定义) || 语言目标) && (!有序参数 || !方法能力))
+        throw std::runtime_error("information action requires ordered method parameters");
     std::size_t 参数位置 = 0;
     for (auto& 规格 : 定义.参数规格组) {
         ++参数位置;
@@ -1044,8 +1055,9 @@ void 核验信息关系动作规格(const 动作概念定义& 定义) {
             }
             continue;
         }
-        if(规格.对象类别==动作参数对象类别::词条)
-            throw std::runtime_error("word parameter requires ordered format");
+        if (规格.对象类别 == 动作参数对象类别::词条
+            || 规格.对象类别 == 动作参数对象类别::语言材料范围)
+            throw std::runtime_error("information action parameter requires ordered format");
         校验存在C(规格.存在概念节点);
         if (!节点仍存在(规格.参数角色节点) || !角色.insert(规格.参数角色节点).second
             || !可选存在(规格.存在概念节点) || !动作对象类别合法(规格.对象类别))
@@ -1268,7 +1280,8 @@ std::vector<基础节点初始字段> 编码动作定义(const 动作概念定�
         const auto v = 数字();
         const auto c = static_cast<动作参数对象类别>(v);
         if (static_cast<std::int64_t>(c) != v || !动作对象类别合法(c)
-            ||(c==动作参数对象类别::词条&&版本!=5))
+            || (c == 动作参数对象类别::词条 && 版本 != 5)
+            || (c == 动作参数对象类别::语言材料范围 && 版本 != 4 && 版本 != 5))
             throw std::runtime_error("invalid action object category");
         return c;
     };

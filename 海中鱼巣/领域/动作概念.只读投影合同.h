@@ -13,7 +13,8 @@ enum class 动作参数对象类别 : std::int64_t {
     服务要求目标存在=4, 服务要求目标特征类型=5,
     服务要求目标定义=6, 服务要求确认=7,
     方法虚拟存在=8,  // METHOD-LEARN-STATE（7190）：方法状态变化动作的作用对象。
-    词条=9
+    词条=9,
+    语言材料范围=10
 };
 struct 动作参数特征规格 {
     稳定编码 特征类型概念节点;
@@ -68,6 +69,7 @@ struct 动作方法投影请求 {
     bool 任务虚拟目标=false;
     bool 方法虚拟目标=false;
     std::optional<稳定编码> 词条目标范围概念节点;
+    std::optional<稳定编码> 语言范围目标概念节点{};
     friend bool operator==(const 动作方法投影请求&, const 动作方法投影请求&)=default;
 };
 class 动作方法定义只读提供者 {
