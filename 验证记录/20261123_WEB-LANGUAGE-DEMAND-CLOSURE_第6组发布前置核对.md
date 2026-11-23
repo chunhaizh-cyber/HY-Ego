@@ -149,3 +149,13 @@ Debug 产物 SHA-256 为 1782DAA1E3DC3637B5D2F1DFD49D48B8A5DEFBE447F3B3CEB3A31B8
 修正前 Debug/x64 与 Release/x64 全量编译分别为 542.7 秒和 509.86 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 9.57 秒和 33.17 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 36ED0E714D45C26484FF837933A57D4F9449EB612BAC6748BA08D6061199AE2D，四文件差异 SHA-256 为 73031D00BDF7CA1E9F30991837101FA66FB947C39F743923863FD156B6700328。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Release\56C6-source.patch)
 
 Debug 产物 SHA-256 为 830D15C83561535BB4680B25BE1ED93A144D80965C2A7FFDBC5743CC48A6958A，Release 产物 SHA-256 为 7DB043F4C70E12606E16F2A49C12D4E577933C9E001A1357736E441FF54E9791。程序未运行。仍需接任务结果渠道、分词及词条准入本能、分界依据和网页问答。第 6 组同 D 写回与正式承接未验收。
+
+## 56C7 任务消费同一执行的正式分界材料采用
+
+依计划 v2.112 和唯一设计第 10.89 节在主工作区实施六个源码文件。新增正式分界采用渠道 8，保留原渠道编码。规划使用锁外取得的正式范围 R、实际特征 F 和 FT，支持直接特征参数及范围参数加 FT。核对同一执行 X 正式绑定的动作、范围、特征、方法和冻结输入后消费语言所有者回执。有新状态时只取原状态并核对时序；同值采用没有新状态时直接比较正式材料和值域。任务结束和影响评估沿现有所有者写入口。
+
+独立复核发现显式分界结果的空前值还需要进入开始执行和冻结执行读回；有 S 的信息引用值域不能使用通用按值找概念。已补齐独立开工确认与历史读取，修正为有无 S 都根据正式采用材料比较值域，并保留有 S 的归因和时序验证。
+
+修正前 Debug/x64 与 Release/x64 全量编译分别为 546.6 秒和 512.62 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 31.89 秒和 49.3 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 369DFF757FF833FA4B9F80DEAE8D7B65DB006BD395E9054881F30E82191B0329，六文件差异 SHA-256 为 AD5FA2FA6EAF2BF724F8CAC3F3C5ABF55843FEE2114792C67E4D9FEBFB71BE7A。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c7-task-receipt-Release\56C7-source.patch)
+
+Debug 产物 SHA-256 为 6588753167D5ECBCAF2BBD4226E5E9D20C7B0EBCE2A20FD3D64DE97D4E1C50A0，Release 产物 SHA-256 为 C23D239B9AEEFFE027629659B802B42E69EB15FD4E0E0C91494409FE3F532DA4。程序未运行。仍需正式分词及准入本能、236 隔离学习、前置需求派生、分界依据及网页问答。第 6 组同 D 写回与正式承接未验收。
