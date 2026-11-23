@@ -221,6 +221,7 @@ private:
     friend class 新_特征类;
     friend class 新_状态类;
     friend class 新_词类;
+    friend class 新_语言类;
     friend class 新_模拟世界类;
 };
 

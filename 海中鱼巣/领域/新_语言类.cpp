@@ -5,11 +5,13 @@
 #include "新_特征类.h"
 #include "新_存在类.h"
 #include "新_场景类.h"
+#include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <array>
 #include <atomic>
+#include <chrono>
 #include <cwchar>
 #include <initializer_list>
 #include <limits>
@@ -77,10 +79,15 @@ std::array<稳定编码, static_cast<std::size_t>(接收含义键::总数)> 接�
 enum class 语言分界键 : std::size_t {
     角色, 所属语言组织, 来源消息, 来源根范围, 来源根路径,
     来源正文材料, 来源登记, 范围登记, 范围来源, 范围语言, 范围合同, 范围场景,
-    范围区间, 范围候选F, 范围依据F, 范围结果F, 范围准入F, 总数
+    范围区间, 范围候选F, 范围依据F, 范围结果F, 范围准入F,
+    范围材料登记, 材料范围, 材料定义, 范围采用登记,
+    采用来源, 采用种类, 采用材料, 采用特征类型, 采用特征, 采用状态, 采用状态时间, 总数
 };
 std::array<稳定编码, static_cast<std::size_t>(语言分界键::总数)> 语言分界句柄{};
 std::atomic<std::uint64_t> 分界身份范围{0};
+std::mutex 新语言分界采用互斥;
+constexpr std::int64_t 首个分界材料角色 = 3;
+constexpr std::int64_t 末个分界材料角色 = 6;
 
 constexpr std::array 范围特征键组{语言分界键::范围候选F, 语言分界键::范围依据F,
     语言分界键::范围结果F, 语言分界键::范围准入F};
@@ -607,9 +614,15 @@ public:
                     return 字段.字段节点 == 分界键(键) && 字段.内容 == 值;
                 });
             };
-            if (!有字段(语言分界键::角色, 基础值{std::int64_t{2}})
-                || !有字段(语言分界键::所属语言组织, 语言组织根节点))
+            if (!有字段(语言分界键::所属语言组织, 语言组织根节点))
                 return {S::信息不存在, {}};
+            const bool 是范围或材料 = std::any_of(字段组.begin(), 字段组.end(), [](const auto& 字段) {
+                if (字段.字段节点 != 分界键(语言分界键::角色)) return false;
+                const auto* 值 = std::get_if<基础值>(&字段.内容);
+                const auto* 角色 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+                return 角色 && *角色 >= 2 && *角色 <= 末个分界材料角色;
+            });
+            if (!是范围或材料) return {S::信息不存在, {}};
             return {S::已读取, 新信息对象身份投影{节点,
                 {范围, 新信息引用范围形状::语言分界材料身份}}};
         } catch (const std::bad_alloc&) {
@@ -6301,6 +6314,16 @@ auto 组织记录字段(新词典语言材料组定义& v) {
     return std::tie(v.来源场景, v.已处理行组);
 }
 
+auto 组织记录字段(新语言分界词段& v) { return std::tie(v.起始标量, v.结束标量, v.词条); }
+auto 组织记录字段(新语言分界候选路径& v) { return std::tie(v.词段组, v.规则应用记录组); }
+auto 组织记录字段(新语言分界候选定义& v) { return std::tie(v.路径组); }
+auto 组织记录字段(新语言规则分界来源& v) { return std::tie(v.正式匹配记录); }
+auto 组织记录字段(新语言回答分界来源& v) { return std::tie(v.正式问题, v.正式回答, v.分段对齐材料); }
+auto 组织记录字段(新语言正式分界取材& v) { return std::tie(v.已证明词段, v.来源); }
+auto 组织记录字段(新语言分界依据定义& v) { return std::tie(v.候选材料, v.取材); }
+auto 组织记录字段(新语言有效分界定义& v) { return std::tie(v.正式依据); }
+auto 组织记录字段(新语言词条准入定义& v) { return std::tie(v.有效结果, v.词段组); }
+
 template<class T> struct 组织可选 : std::false_type {};
 template<class T> struct 组织可选<std::optional<T>> : std::true_type {};
 template<class T> struct 组织数组 : std::false_type {};
@@ -6321,6 +6344,10 @@ struct 组织写入现场 {
         std::size_t n=0;
         if constexpr(std::is_enum_v<T>){n=节点(2,order);值(n,static_cast<std::int64_t>(v));}
         else if constexpr(std::is_same_v<T,std::int64_t>){n=节点(1,order);值(n,v);}
+        else if constexpr(std::is_same_v<T,std::uint64_t>){
+            n=节点(9,order);
+            值(n,std::vector<std::uint64_t>{v});
+        }
         else if constexpr(std::is_same_v<T,std::string>){n=节点(3,order);值(n,v);}
         else if constexpr(std::is_same_v<T,稳定编码>){n=节点(4,order);if(有效(v))引用(n,组织键::引用,v);}
         else if constexpr(组织数组<T>::value){n=节点(6,order);std::int64_t i=0;for(const auto& c:v){const auto child=写(c,i++);子(n,组织键::子项,child);}}
@@ -6348,6 +6375,13 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     const auto tag=r.整数(id,组织键::类型);
     if constexpr(std::is_enum_v<T>){组织要求(tag==2&&children.empty());v=static_cast<T>(r.整数(id,组织键::值));}
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
+    else if constexpr(std::is_same_v<T,std::uint64_t>){
+        组织要求(tag==9&&children.empty());
+        const auto 字段=r.唯一(id,组织键::值);
+        const auto& 数组=std::get<std::vector<std::uint64_t>>(std::get<基础值>(字段).材料);
+        组织要求(数组.size()==1);
+        v=数组.front();
+    }
     else if constexpr(std::is_same_v<T,std::string>){组织要求(tag==3&&children.empty());v=std::get<std::string>(std::get<基础值>(r.唯一(id,组织键::值)).材料);}
     else if constexpr(std::is_same_v<T,稳定编码>){组织要求(tag==4&&children.empty());const auto a=r.字段(id,组织键::引用);组织要求(a.size()<=1);if(!a.empty()){v=std::get<稳定编码>(a.front());r.读(v);}}
     else if constexpr(组织数组<T>::value){组织要求(tag==6);for(auto c:children)v.push_back(组织读值<typename T::value_type>(r,c,path));}
@@ -6356,7 +6390,7 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else {组织要求(tag==5);auto fs=组织记录字段(v);组织要求(children.size()==std::tuple_size_v<decltype(fs)>);std::size_t i=0;std::apply([&](auto&... x){((x=组织读值<std::decay_t<decltype(x)>>(r,children[i++],path)),...);},fs);}
     const auto scalars=r.字段(id,组织键::值).size(),refs=r.字段(id,组织键::引用).size();
     组织要求(r.读(id).结构.字段组.size()==2+children.size()+scalars+refs);
-    组织要求(scalars==static_cast<std::size_t>(tag==1||tag==2||tag==3||tag==8));
+    组织要求(scalars==static_cast<std::size_t>(tag==1||tag==2||tag==3||tag==8||tag==9));
     组织要求(tag==4||refs==0);
     path.erase(id);return v;
 }
@@ -6371,7 +6405,7 @@ template<class T> void 核验组织模板绑定(const T& v,const std::map<std::i
     } else if constexpr(组织数组<T>::value){for(const auto& x:v)核验组织模板绑定(x,steps,roles);}
     else if constexpr(组织可选<T>::value){if(v)核验组织模板绑定(*v,steps,roles);}
     else if constexpr(组织变体<T>::value){std::visit([&](const auto& x){核验组织模板绑定(x,steps,roles);},v);}
-    else if constexpr(!std::is_enum_v<T>&&!std::is_same_v<T,std::int64_t>&&!std::is_same_v<T,std::string>&&!std::is_same_v<T,稳定编码>){
+    else if constexpr(!std::is_enum_v<T>&&!std::is_same_v<T,std::int64_t>&&!std::is_same_v<T,std::uint64_t>&&!std::is_same_v<T,std::string>&&!std::is_same_v<T,稳定编码>){
         auto copy=v;std::apply([&](const auto&... x){(核验组织模板绑定(x,steps,roles),...);},组织记录字段(copy));
     }
 }
@@ -7189,6 +7223,424 @@ std::optional<新词典语言材料组信息> 新_语言类::读取词典语言�
     新词典语言材料组信息 结果{*根, Q, 定义.来源场景, {}};
     for (const auto 行根 : 定义.已处理行组) 结果.行组.push_back(读取词典语言行(读, 行根));
     return 结果;
+}
+
+namespace {
+using 分界状态 = 新语言分界工程状态;
+using 追加状态 = 基础节点组追加状态;
+
+bool 分界追加需要重读(追加状态 状态) noexcept {
+    return 状态 == 追加状态::预期不符 || 状态 == 追加状态::节点不存在
+        || 状态 == 追加状态::引用不存在;
+}
+
+const 基础字段内容* 查分界材料字段(const 基础节点结构& 结构, 语言分界键 键) {
+    const 基础字段内容* 结果 = nullptr;
+    for (const auto& 项 : 结构.字段组) {
+        if (项.字段节点 != 分界键(键)) continue;
+        if (结果) throw std::logic_error("boundary material field duplicated");
+        结果 = &项.内容;
+    }
+    return 结果;
+}
+
+const 基础字段内容& 取分界材料字段(const 基础节点结构& 结构, 语言分界键 键) {
+    const auto* 项 = 查分界材料字段(结构, 键);
+    if (!项) throw std::logic_error("boundary material field missing");
+    return *项;
+}
+
+std::optional<新语言分界材料信息> 读分界材料已加锁(稳定编码 节点) {
+    if (!有效(节点)) return {};
+    const auto 批 = 全局基础数据集.查询节点组完整结构({节点});
+    if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (批.状态 == 基础结构操作状态::节点不存在) return {};
+    if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 1)
+        throw std::logic_error("boundary material read failed");
+    if (!批.节点组.front().快照) return {};
+    const auto& 结构 = 批.节点组.front().快照->结构;
+    const auto* 角色项 = 查分界材料字段(结构, 语言分界键::角色);
+    const auto* 值 = 角色项 ? std::get_if<基础值>(角色项) : nullptr;
+    const auto* 角色 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+    if (!角色 || *角色 < 首个分界材料角色 || *角色 > 末个分界材料角色) return {};
+
+    const auto* 组织 = 查分界材料字段(结构, 语言分界键::所属语言组织);
+    if (!组织 || *组织 != 基础字段内容{语言组织根节点}) return {};
+    if (结构.字段组.size() != 4) throw std::logic_error("invalid boundary material header");
+
+    组织读取现场 读;
+    std::set<稳定编码> 路径;
+    auto 定义 = 组织读值<新语言分界材料定义>(读,
+        std::get<稳定编码>(取分界材料字段(结构, 语言分界键::材料定义)), 路径);
+    if (定义.index() != static_cast<std::size_t>(*角色 - 首个分界材料角色))
+        throw std::logic_error("boundary material role does not match definition");
+    return 新语言分界材料信息{节点,
+        std::get<稳定编码>(取分界材料字段(结构, 语言分界键::材料范围)), std::move(定义)};
+}
+
+bool 分界词段完整(const std::vector<新语言分界词段>& 词段, const 新语言材料范围请求& 范围) {
+    auto 当前位置 = 范围.起始标量;
+    for (const auto& 项 : 词段) {
+        if (项.起始标量 != 当前位置 || 项.结束标量 <= 项.起始标量
+            || 项.结束标量 > 范围.结束标量 || (项.词条 && !有效(*项.词条))) return false;
+        当前位置 = 项.结束标量;
+    }
+    return !词段.empty() && 当前位置 == 范围.结束标量;
+}
+
+bool 分界各段相符(const std::vector<新语言分界词段>& 原词段,
+    const std::vector<新语言分界词段>& 新词段) {
+    return std::equal(原词段.begin(), 原词段.end(), 新词段.begin(), 新词段.end(),
+        [](const auto& 原段, const auto& 新段) {
+            return 原段.起始标量 == 新段.起始标量 && 原段.结束标量 == 新段.结束标量
+                && (!原段.词条 || 原段.词条 == 新段.词条);
+        });
+}
+
+bool 分界来源完整(const 新语言分界取材来源& 来源) {
+    return std::visit([](const auto& 项) {
+        if constexpr (std::is_same_v<std::decay_t<decltype(项)>, 新语言规则分界来源>)
+            return 有效(项.正式匹配记录);
+        else
+            return 有效(项.正式问题) && 有效(项.正式回答) && 有效(项.分段对齐材料);
+    }, 来源);
+}
+
+新语言范围特征信息 取得分界范围(const 新_语言类& 语言, 稳定编码 R) {
+    auto 范围 = 语言.读取材料范围特征(R);
+    if (范围.状态 != 分界状态::已完成) throw 范围.状态;
+    if (!范围.信息) throw std::logic_error("boundary range missing on success");
+    return std::move(*范围.信息);
+}
+
+新语言分界材料信息 取得分界材料已加锁(稳定编码 R, 稳定编码 节点, 新语言范围特征种类 种类) {
+    auto 材料 = 读分界材料已加锁(节点);
+    if (!材料) throw 分界状态::材料未就绪;
+    if (材料->所属范围 != R || 材料->定义.index() != static_cast<std::size_t>(种类))
+        throw 分界输入拒绝{};
+    return std::move(*材料);
+}
+
+void 保存分界材料已加锁(稳定编码 R, 新语言分界材料定义 定义,
+    新语言分界调用结果<新语言分界材料信息>& 结果) {
+    if (!有效(组织句柄.front())) throw 分界状态::未初始化;
+    // 语言锁维护同R同定义唯一，L1只核对本次追加使用的端点。
+    for (int 尝试 = 0; 尝试 < 2; ++尝试) {
+        for (const auto& 登记 : 全局基础数据集.查询字段(R, 分界键(语言分界键::范围材料登记))) {
+            auto 已有 = 读分界材料已加锁(std::get<稳定编码>(登记.内容));
+            if (!已有 || 已有->所属范围 != R) throw std::logic_error("invalid range material registration");
+            if (已有->定义 == 定义) {
+                结果.信息 = std::move(已有);
+                结果.状态 = 分界状态::已完成;
+                return;
+            }
+        }
+
+        组织写入现场 写;
+        const auto 定义槽 = 写.写(定义);
+        const auto 材料槽 = 写.请求.新节点组.size();
+        写.请求.新节点组.push_back({{
+            {分界键(语言分界键::角色), 基础值{首个分界材料角色 + static_cast<std::int64_t>(定义.index())}},
+            {分界键(语言分界键::所属语言组织), 语言组织根节点},
+            {分界键(语言分界键::材料范围), R},
+            {分界键(语言分界键::材料定义), 基础组内节点引用{定义槽}}}});
+        const auto 登记键 = 分界键(语言分界键::范围材料登记);
+        写.请求.当前追加字段键组.push_back({R, 登记键});
+        写.请求.追加字段组.push_back({R, 登记键, 基础组内节点引用{材料槽}});
+        for (const auto 引用 : 写.引用组) 写.请求.只读预期.节点组.push_back({引用});
+        const auto 发布 = 全局基础数据集.原子追加节点组(写.请求);
+        if (分界追加需要重读(发布.状态)) continue;
+        if (发布.状态 == 追加状态::资源失败) throw std::bad_alloc{};
+        if (发布.状态 != 追加状态::已完成 || 发布.新节点组.size() != 写.请求.新节点组.size())
+            throw std::logic_error("boundary material publication failed");
+        结果.本次已发表身份 = 发布.新节点组[材料槽];
+        结果.信息 = 新语言分界材料信息{*结果.本次已发表身份, R, std::move(定义)};
+        结果.状态 = 分界状态::已完成;
+        return;
+    }
+    throw 分界状态::材料未就绪;
+}
+
+template<class 材料 = 新语言分界材料信息, class 操作>
+新语言分界调用结果<材料> 调用分界材料入口(const wchar_t* 入口, 操作&& 执行) {
+    新语言分界调用结果<材料> 结果;
+    try { 执行(结果); }
+    catch (const 分界输入拒绝&) { 结果.状态 = 分界状态::输入拒绝; }
+    catch (分界状态 状态) { 结果.状态 = 状态; }
+    catch (追加状态 状态) {
+        if (状态 == 追加状态::资源失败) 结果.状态 = 分界状态::资源失败;
+        else if (分界追加需要重读(状态)) 结果.状态 = 分界状态::材料未就绪;
+        else 分界来源工程终止(入口, {}, 结果.本次已发表身份, "boundary write endpoint rejected");
+    }
+    catch (const std::bad_alloc&) { 结果.状态 = 分界状态::资源失败; }
+    catch (const std::length_error&) { 结果.状态 = 分界状态::资源失败; }
+    catch (const std::exception& 异常) { 分界来源工程终止(入口, {}, 结果.本次已发表身份, 异常.what()); }
+    catch (...) { 分界来源工程终止(入口, {}, 结果.本次已发表身份, nullptr); }
+    if (结果.状态 != 分界状态::已完成) 结果.信息.reset();
+    return 结果;
+}
+
+std::optional<新语言分界采用回执> 读已有分界采用已加锁(const 新语言分界采用请求& 输入) {
+    for (const auto& 登记 : 全局基础数据集.查询字段(输入.范围, 分界键(语言分界键::范围采用登记))) {
+        const auto 节点 = std::get<稳定编码>(登记.内容);
+        const auto 批 = 读取分界节点组({节点});
+        const auto& 结构 = 取分界快照(批, 节点).结构;
+        const auto 取引用 = [&](语言分界键 键) {
+            return std::get<稳定编码>(取分界材料字段(结构, 键));
+        };
+        const auto 种类 = std::get<std::int64_t>(
+            std::get<基础值>(取分界材料字段(结构, 语言分界键::采用种类)).材料);
+        if (取引用(语言分界键::采用来源) != 输入.执行 || 种类 != static_cast<std::int64_t>(输入.种类))
+            continue;
+        if (取引用(语言分界键::材料范围) != 输入.范围)
+            throw std::logic_error("boundary adoption registered on a different range");
+        新语言分界采用回执 结果{输入.范围,
+            取引用(语言分界键::采用材料), 取引用(语言分界键::采用特征类型),
+            取引用(语言分界键::采用特征), 输入.执行, {}, {}};
+        const auto* 状态 = 查分界材料字段(结构, 语言分界键::采用状态);
+        const auto* 状态时间 = 查分界材料字段(结构, 语言分界键::采用状态时间);
+        if ((状态 == nullptr) != (状态时间 == nullptr))
+            throw std::logic_error("boundary adoption state and time must be recorded together");
+        if (状态) {
+            结果.新状态 = std::get<稳定编码>(*状态);
+            结果.新状态UTC纳秒 = std::get<std::int64_t>(std::get<基础值>(*状态时间).材料);
+        }
+        return 结果;
+    }
+    return {};
+}
+
+class 分界采用记录参与 final : public 新状态结果引用参与接口 {
+public:
+    分界采用记录参与(新语言分界采用回执& 回执, 新语言范围特征种类 种类)
+        : 回执_(回执), 种类_(种类) {}
+
+    基础节点组追加请求 构造记录() const {
+        return 构造记录(0);
+    }
+
+    新状态结果追加构造 构造同组状态引用(const 新同组状态端点& 状态) const override {
+        状态槽_ = std::get<基础组内节点引用>(状态.状态定位).索引;
+        auto 请求 = 构造记录(状态.后续新节点起点);
+        auto& 字段组 = 请求.新节点组.front().字段组;
+        字段组.push_back({分界键(语言分界键::采用状态), 基础组内节点引用{*状态槽_}});
+        字段组.push_back({分界键(语言分界键::采用状态时间), 基础值{状态.强时间.纳秒}});
+        回执_.新状态UTC纳秒 = 状态.强时间.纳秒;
+        return {std::move(请求), 1};
+    }
+
+    void 登记共同发表回执(const 基础片段发布回执& 发布) noexcept override {
+        const auto& 节点组 = 发布.新节点组();
+        if (记录槽_ >= 节点组.size() || (状态槽_ && *状态槽_ >= 节点组.size()))
+            分界来源工程终止(L"登记分界采用回执", {}, {}, "boundary adoption receipt missing nodes");
+        记录身份_ = 节点组[记录槽_];
+        if (状态槽_) 回执_.新状态 = 节点组[*状态槽_];
+    }
+
+    稳定编码 记录身份() const noexcept { return 记录身份_; }
+
+private:
+    基础节点组追加请求 构造记录(std::size_t 记录槽) const {
+        记录槽_ = 记录槽;
+        基础节点组追加请求 请求;
+        请求.新节点组.push_back({{
+            {分界键(语言分界键::材料范围), 回执_.范围},
+            {分界键(语言分界键::采用来源), 回执_.执行},
+            {分界键(语言分界键::采用种类), 基础值{static_cast<std::int64_t>(种类_)}},
+            {分界键(语言分界键::采用材料), 回执_.实际材料},
+            {分界键(语言分界键::采用特征类型), 回执_.特征类型},
+            {分界键(语言分界键::采用特征), 回执_.特征}}});
+        const auto 登记键 = 分界键(语言分界键::范围采用登记);
+        请求.追加字段组.push_back({回执_.范围, 登记键, 基础组内节点引用{记录槽}});
+        请求.当前追加字段键组.push_back({回执_.范围, 登记键});
+        const std::set<稳定编码> 引用{回执_.范围, 回执_.执行, 回执_.实际材料, 回执_.特征类型, 回执_.特征};
+        for (const auto 节点 : 引用) 请求.只读预期.节点组.push_back({节点});
+        return 请求;
+    }
+
+    新语言分界采用回执& 回执_;
+    新语言范围特征种类 种类_;
+    mutable std::size_t 记录槽_ = 0;
+    mutable std::optional<std::size_t> 状态槽_;
+    稳定编码 记录身份_;
+};
+
+新状态强时间 取得分界当前UTC() {
+    using namespace std::chrono;
+    const auto 当前 = system_clock::now().time_since_epoch();
+    if (当前 < system_clock::duration::zero()
+        || 当前 > duration_cast<system_clock::duration>((nanoseconds::max)()))
+        throw std::logic_error("boundary adoption time cannot be represented as UTC nanoseconds");
+    return {新状态时间语义::实例绝对UTC, duration_cast<nanoseconds>(当前).count()};
+}
+} // namespace
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::保存分界候选(
+    稳定编码 R, const 新语言分界候选定义& 输入) {
+    return 调用分界材料入口(L"保存分界候选", [&](auto& 结果) {
+        const auto 范围 = 取得分界范围(*this, R);
+        if (输入.路径组.empty()) throw 分界输入拒绝{};
+        新语言分界候选定义 定义;
+        for (const auto& 路径 : 输入.路径组) {
+            if (!分界词段完整(路径.词段组, 范围.范围.定位)
+                || !std::all_of(路径.规则应用记录组.begin(), 路径.规则应用记录组.end(),
+                    [](稳定编码 节点) { return 有效(节点); }))
+                throw 分界输入拒绝{};
+            if (std::find(定义.路径组.begin(), 定义.路径组.end(), 路径) == 定义.路径组.end())
+                定义.路径组.push_back(路径);
+        }
+        std::lock_guard 锁(新语言互斥);
+        保存分界材料已加锁(R, std::move(定义), 结果);
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::形成分界依据(
+    稳定编码 R, 稳定编码 候选, const 新语言正式分界取材接口& 端口) {
+    return 调用分界材料入口(L"形成分界依据", [&](auto& 结果) {
+        const auto 范围 = 取得分界范围(*this, R);
+        const auto 原材料 = [&] {
+            std::lock_guard 锁(新语言互斥);
+            if (!有效(组织句柄.front())) throw 分界状态::未初始化;
+            return 取得分界材料已加锁(R, 候选, 新语言范围特征种类::分词候选材料);
+        }();
+        auto 取材 = 端口.读取已确认分界(R, 候选);
+        if (取材.状态 != 分界状态::已完成) {
+            结果.状态 = 取材.状态 == 分界状态::未找到 ? 分界状态::材料未就绪 : 取材.状态;
+            return;
+        }
+        if (!取材.信息) throw std::logic_error("confirmed boundary source missing on success");
+        const auto& 证明 = 取材.信息->已证明词段;
+        const auto& 路径组 = std::get<新语言分界候选定义>(原材料.定义).路径组;
+        if (!分界词段完整(证明, 范围.范围.定位) || !分界来源完整(取材.信息->来源)
+            || std::none_of(路径组.begin(), 路径组.end(), [&](const auto& 路径) {
+                return 分界各段相符(路径.词段组, 证明);
+            }))
+            throw 分界输入拒绝{};
+        std::lock_guard 锁(新语言互斥);
+        保存分界材料已加锁(R, 新语言分界依据定义{候选, std::move(*取材.信息)}, 结果);
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::保存有效分界结果(稳定编码 R, 稳定编码 依据) {
+    return 调用分界材料入口(L"保存有效分界结果", [&](auto& 结果) {
+        (void)取得分界范围(*this, R);
+        std::lock_guard 锁(新语言互斥);
+        if (!有效(组织句柄.front())) throw 分界状态::未初始化;
+        (void)取得分界材料已加锁(R, 依据, 新语言范围特征种类::分界依据);
+        保存分界材料已加锁(R, 新语言有效分界定义{依据}, 结果);
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::保存词条准入回执(
+    稳定编码 R, const 新语言词条准入定义& 定义) {
+    return 调用分界材料入口(L"保存词条准入回执", [&](auto& 结果) {
+        (void)取得分界范围(*this, R);
+        std::lock_guard 锁(新语言互斥);
+        if (!有效(组织句柄.front())) throw 分界状态::未初始化;
+        using 种类 = 新语言范围特征种类;
+        const auto 有效结果 = 取得分界材料已加锁(R, 定义.有效结果, 种类::有效分界结果);
+        const auto 依据 = 取得分界材料已加锁(R,
+            std::get<新语言有效分界定义>(有效结果.定义).正式依据, 种类::分界依据);
+        const auto& 证明 = std::get<新语言分界依据定义>(依据.定义).取材.已证明词段;
+        if (!分界各段相符(证明, 定义.词段组)
+            || !std::all_of(定义.词段组.begin(), 定义.词段组.end(),
+                [](const auto& 词段) { return 词段.词条 && 有效(*词段.词条); }))
+            throw 分界输入拒绝{};
+        保存分界材料已加锁(R, 定义, 结果);
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::读取分界材料(稳定编码 节点) const {
+    return 调用分界材料入口(L"读取分界材料", [&](auto& 结果) {
+        std::lock_guard 锁(新语言互斥);
+        if (!分界配置就绪_.load(std::memory_order_acquire) || !有效(组织句柄.front()))
+            throw 分界状态::未初始化;
+        结果.信息 = 读分界材料已加锁(节点);
+        结果.状态 = 结果.信息 ? 分界状态::已完成 : 分界状态::未找到;
+    });
+}
+
+新语言分界调用结果<新语言分界采用回执> 新_语言类::采用分界材料(
+    const 新语言分界采用请求& 输入, 新_场景类& 场景, 新_状态类& 状态) {
+    return 调用分界材料入口<新语言分界采用回执>(L"采用分界材料", [&](auto& 结果) {
+        using 准备状态 = 新特征I64准备状态;
+        const auto R = 输入.范围;
+        const auto 种类 = static_cast<std::size_t>(输入.种类);
+        if (!有效(R) || !有效(输入.执行) || 种类 >= 范围特征键组.size()) throw 分界输入拒绝{};
+        if (!分界配置就绪_.load(std::memory_order_acquire)) throw 分界状态::未初始化;
+        std::lock_guard 采用锁(新语言分界采用互斥);
+        for (int 尝试 = 0; 尝试 < 2; ++尝试) {
+            std::optional<新语言分界采用回执> 已有;
+            {
+                std::lock_guard 锁(新语言互斥);
+                if (!有效(组织句柄.front())) throw 分界状态::未初始化;
+                已有 = 读已有分界采用已加锁(输入);
+                if (!已有) {
+                    if (!有效(输入.材料)) throw 分界输入拒绝{};
+                    (void)取得分界材料已加锁(R, 输入.材料, 输入.种类);
+                }
+            }
+            if (已有) {
+                结果.信息 = std::move(已有);
+                结果.状态 = 分界状态::已完成;
+                return;
+            }
+
+            // 先取场景／状态构造绑定；取得特征准备后只调用纯构造入口。
+            const auto 范围 = 取得分界范围(*this, R);
+            const auto F = 范围.范围.特征节点组[种类];
+            新语言分界采用回执 回执{R, 输入.材料, 范围.特征类型组[种类], F, 输入.执行, {}, {}};
+            std::optional<新场景状态参与绑定> 场景绑定;
+            try {
+                场景绑定 = 场景.取得场景状态参与绑定(范围.范围.定位.所属语言场景);
+            } catch (追加状态 状态码) {
+                if (分界追加需要重读(状态码)) continue;
+                throw;
+            }
+            const auto 状态绑定 = 状态.取得特征状态构造绑定();
+            auto& 特征 = *分界特征服务_;
+            auto 准备 = 特征.准备特征当前值组({{F, 新特征准确值{输入.材料}, false}});
+            if (准备.状态 == 准备状态::预期已变化 || 准备.状态 == 准备状态::特征不存在
+                || 准备.状态 == 准备状态::概念不存在) continue;
+            if (准备.状态 == 准备状态::联合更新占用) throw 分界状态::材料未就绪;
+            if (准备.状态 == 准备状态::资源失败) throw std::bad_alloc{};
+            if (准备.状态 != 准备状态::已准备 || !准备.准备)
+                throw std::logic_error("boundary feature group preparation failed");
+
+            const auto 候选 = 特征.读取准备当前值候选(*准备.准备, F);
+            分界采用记录参与 参与(回执, 输入.种类);
+            auto 封存 = [&] {
+                if (!候选.已改变_)
+                    return 全局基础数据集.封存原子追加片段(参与.构造记录());
+                const auto 时间 = 取得分界当前UTC();
+                auto 状态材料 = 状态.准备特征状态(状态绑定, 候选, R, 时间);
+                状态.合并结果引用(状态材料, 参与);
+                return 场景.封存场景状态挂接(*场景绑定, std::move(状态材料)).封存;
+            }();
+            if (封存.状态 != 追加状态::已完成) {
+                特征.取消特征当前值组(*准备.准备);
+                if (分界追加需要重读(封存.状态)) continue;
+                throw 封存.状态;
+            }
+            if (!封存.片段) throw std::logic_error("boundary adoption seal missing");
+            const auto 发布 = 特征.提交特征当前值组(*准备.准备, {*封存.片段});
+            if (发布.状态 != 追加状态::已完成) {
+                特征.取消特征当前值组(*准备.准备);
+                if (分界追加需要重读(发布.状态)) continue;
+                throw 发布.状态;
+            }
+            if (发布.附加片段回执组.size() != 1)
+                分界来源工程终止(L"采用分界材料", 输入.执行, {}, "published boundary adoption receipt missing");
+            参与.登记共同发表回执(发布.附加片段回执组.front());
+            结果.本次已发表身份 = 参与.记录身份();
+            (void)特征.完成特征当前值组(*准备.准备);
+            特征.结束特征当前值组(*准备.准备);
+            结果.信息 = std::move(回执);
+            结果.状态 = 分界状态::已完成;
+            return;
+        }
+        throw 分界状态::材料未就绪;
+    });
 }
 
 } // namespace 海中鱼巣

@@ -79,3 +79,13 @@ Debug产物SHA-256为1390E32ED3A17748B5C6594C9ED8E114A915B7A7C0480418973D6A5C534
 以本地和远端 main 的同一基线 c2e264f5e87008ca9f17db59b40b379034ae1826 为准，逐项比较构建清单原始文件摘要、当前主线 blob、当前文件经 Git 入库转换后的 blob。247 项记录的构建输入均已纳入版本管理，全部仍与编译时的原始摘要一致。相对当前 main，仅第 56B1 的九个白名单源码 blob 不同，其余 238 项相同。本地提交前用本清单核对暂存的九个源码 blob；后续获得推送授权后按同一清单核对远端提交。预检时暂存区为空，程序未运行。
 
 清单 SHA-256 为 57438D370D0A8BF8CA1A56F6B9895226522983FDCBA0D15673F7FEAF969CD348。[发布前逐文件核对清单](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56B1-release-preflight-c2e264f5e.json)
+
+## 56B2 分界材料保存与采用
+
+第56B1已发布于 f8b043b95。第56B2按计划v2.105与唯一主设计第10.82节，在主工作区 35654a01b902528178c4ab34d2ca3d0d8eb58f51 上实施。代码差异只涉及语言分界数据、语言类头源和特征类头。组织编解码支持U64标量；域18识别四类正式材料，需求目标仍经角色2的专属读取。相同范围和同一材料定义复用不可变节点。经正式取材得到依据后才可保存有效分界。
+
+语言所有者按范围、材料种类和执行X复用采用回执。每次通过特征所属服务组提交，同批记录F当前值、采用记录及必要场景状态。独立复核发现并修正了L1封存的五个只读引用声明和重入状态时间读取，状态所有者的UTC与状态边随采用回执同批保存。复核确认场景和采用记录各保持一次状态、同值无新状态、零发表竞争重读和已发表收尾顺序。因两项修正取消首轮构建，最终工程取证仅使用修正后的源码。
+
+最终 Debug/x64 用时 388.02 秒、Release/x64 用时 474.27 秒，均为0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 28E9A32E1C81DB72D4CD9EB45B6CD0E0113F5C61DBB7E4C143DB5E7E93208425，四文件差异SHA-256为 7AC35610B946612C5ED25588B72F11D3301728653CC8064EE7DDE4B029D66320。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56b2-material-adoption-final-Release/56B2-source.patch)
+
+Debug产物SHA-256为 D1D0D8897B2F771F757DD6C080F0BDE8267212CB0D41853F5D50D29C24729FE4，Release产物SHA-256为 67F8D3606111B2449D2C3F897BC53AF4D820DA7807D887AD876CD12F0BE69631。本轮程序及测试未运行。固定原文与多路径属于紧邻后继，建立范围的正式入站调用和实际分界取材仍待接线。原第6组及后续正式验收继续按原判据取证。
