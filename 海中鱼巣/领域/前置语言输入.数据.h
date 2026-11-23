@@ -13,6 +13,7 @@ struct 新前置语言输入定位 final {
     稳定编码 前置来源节点, 固定文本材料, 语言节点;
     稳定编码 来源人类节点, 自我存在节点, 现实根场景;
     std::string 公开宿主会话;
+    std::optional<稳定编码> 正式原文范围{};
     friend bool operator==(const 新前置语言输入定位&,const 新前置语言输入定位&)=default;
 };
 enum class 新前置语言缺口种类 : std::uint8_t {

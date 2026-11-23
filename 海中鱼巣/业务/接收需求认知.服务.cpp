@@ -810,10 +810,55 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         actual=work;return true;
     };
     auto out=work.观察;out.M=m.消息节点;
-    if(work.前置==实现::前置阶段::待接纳) {
-        out.待交接前置输入=work.定位;work.观察=out;
-        work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
-        if(!提交进度())return {};保存观察(out);return out;
+    if (work.前置 == 实现::前置阶段::待接纳) {
+        using S = 新语言分界工程状态;
+        using P = 实现::前置阶段;
+        if (!work.定位) throw std::logic_error("preunderstanding handoff lacks source");
+        if (stop.stop_requested() || !会话仍活跃(m)) return {};
+        if (!work.定位->正式原文范围) {
+            步骤 = "建立或取得接收原文范围";
+            const auto& p = *work.定位;
+            const auto 范围 = d.语言世界.建立或取得接收原文范围(d.语言, p.来源, p.前置来源节点, p.语言节点);
+            out.阶段 = 阶段::前置输入治理等待;
+            out.原因 = "等待原文范围与实际特征就绪";
+            switch (范围.状态) {
+            case S::已完成:
+                if (!范围.信息) throw std::logic_error("received range success without information");
+                work.定位->正式原文范围 = 范围.信息->节点;
+                break;
+            case S::未找到:
+                work.前置 = P::待重入;
+                out.原因 = "原文范围来源未找到，重新读取原消息";
+                break;
+            case S::资源失败:
+                out.阶段 = 阶段::资源延后;
+                out.原因 = "原文范围建立资源未完成";
+                break;
+            case S::未初始化:
+            case S::材料未就绪:
+            case S::前提已变化:
+                break;
+            case S::输入拒绝:
+            case S::未支持:
+                (void)记录逻辑错误日志(L"接收需求认知", L"建立或取得接收原文范围", L"正式前置输入的范围定位被拒绝。");
+                work.前置 = P::已停用;
+                work.终结 = true;
+                out.阶段 = 阶段::非支持输入;
+                out.原因 = "正式前置输入的范围定位被拒绝";
+                break;
+            }
+        }
+        out.待交接前置输入.reset();
+        if (work.定位->正式原文范围) {
+            out.阶段 = 阶段::前置输入待治理;
+            out.原因 = "已取得同源正式原文范围，等待前置材料交接";
+            out.待交接前置输入 = work.定位;
+        }
+        work.观察 = out;
+        work.下次 = std::chrono::steady_clock::now() + std::chrono::milliseconds(500);
+        if (stop.stop_requested() || !提交进度()) return {};
+        保存观察(out);
+        return out;
     }
     if(work.前置==实现::前置阶段::待重入) {
         work.前置=实现::前置阶段::无;work.观察.前置输入等待材料.reset();out.前置输入等待材料.reset();
@@ -868,6 +913,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         case 新语言分界工程状态::已完成:break;
         case 新语言分界工程状态::资源失败:资源();
         case 新语言分界工程状态::前提已变化:漂移();
+        case 新语言分界工程状态::未找到:
+            throw 推进中断{阶段::非本次人类需求, "当前消息已无正式前置来源，结束本次交接"};
         default:来源工程错误("正式保留消息的前置来源返回不符合接线前置的状态");
         }
         if(!pre.信息)来源工程错误("前置来源成功却缺少正式载荷");
@@ -891,8 +938,19 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }
         const auto speaker=*work.说话者;
         out.H=speaker;
-        if(!out.U)
-            work.定位=新前置语言输入定位{k,固定来源.节点,固定来源.固定文本材料,context.语言,speaker,*context.已绑定自我,context.现实根,context.公开宿主会话};
+        if (!out.U) {
+            新前置语言输入定位 定位{k, 固定来源.节点, 固定来源.固定文本材料, context.语言, speaker,
+                *context.已绑定自我, context.现实根, context.公开宿主会话};
+            if (work.定位 && work.定位->正式原文范围) {
+                定位.正式原文范围 = work.定位->正式原文范围;
+                if (定位 != *work.定位) {
+                    work.前置 = 实现::前置阶段::已停用;
+                    out.待交接前置输入.reset();
+                    throw 推进中断{阶段::非本次人类需求, "当前会话与原前置交接定位不一致，结束本次交接"};
+                }
+            }
+            work.定位 = std::move(定位);
+        }
         if(adopted.状态==新语言含义采用状态::已采用){
             if(!adopted.信息)throw std::logic_error("adopted meaning source returned no payload");
             out.U=adopted.信息->节点;out.S=adopted.信息->场景节点;
@@ -1121,8 +1179,11 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         } else throw std::logic_error("same-source meaning lookup failed");
     }catch(const 推进中断& e){out.阶段=e.状态;out.原因=std::string(步骤)+"："+e.原因;本次终结=e.状态!=阶段::资源延后&&e.状态!=阶段::前提变化&&e.状态!=阶段::停止未完成;
         if(!out.U&&!out.D&&work.定位&&(e.状态==阶段::对象未决||e.状态==阶段::非支持输入)) {
-            work.前置=实现::前置阶段::待接纳;out.待交接前置输入=work.定位;
-            out.阶段=阶段::前置输入待治理;本次终结=false;
+            work.前置 = 实现::前置阶段::待接纳;
+            out.待交接前置输入.reset();
+            if (work.定位->正式原文范围) out.待交接前置输入 = work.定位;
+            out.阶段 = out.待交接前置输入 ? 阶段::前置输入待治理 : 阶段::前置输入治理等待;
+            本次终结 = false;
         }
         if(e.状态==阶段::停止未完成&&work.定位){work.前置=实现::前置阶段::已停用;out.待交接前置输入.reset();}
     }

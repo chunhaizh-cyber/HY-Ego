@@ -6,6 +6,7 @@
 #include "概念_特征类.h"
 #include "概念_名称关系类.h"
 #include "新_词类.h"
+#include "新_语言类.h"
 #include "新_特征值类.h"
 
 #include <algorithm>
@@ -541,6 +542,25 @@ std::optional<稳定编码> 新_自然语言世界树类::获取根节点() cons
 新来源子场景结果 新_自然语言世界树类::建立或取得接收来源场景(稳定编码 消息) noexcept {
     std::lock_guard 锁(自然语言世界树互斥);
     return 场景服务_.建立或取得来源子场景(自然语言世界树根节点, 消息);
+}
+
+新语言分界调用结果<新语言材料范围信息> 新_自然语言世界树类::建立或取得接收原文范围(
+    新_语言类& 语言, const 新接收认知来源键& 来源, 稳定编码 前置来源节点, 稳定编码 语言节点) {
+    using S = 新语言分界工程状态;
+    using 场景状态 = 新来源子场景状态;
+    const auto 场景 = 建立或取得接收来源场景(来源.接收消息节点);
+    switch (场景.状态) {
+    case 场景状态::资源失败: return {S::资源失败, {}, {}};
+    case 场景状态::前提已变化: return {S::前提已变化, {}, {}};
+    case 场景状态::未建立: return {S::材料未就绪, {}, {}};
+    case 场景状态::输入不合法: return {S::输入拒绝, {}, {}};
+    case 场景状态::已建立:
+    case 场景状态::已存在:
+        if (!场景.信息) throw std::logic_error("received source scene result is empty");
+        return 语言.建立或取得材料范围({前置来源节点, 来源.原文起点, 来源.原文终点,
+            语言节点, 严格UTF8字节精确规范化合同节点, 场景.信息->场景节点}, 场景服务_);
+    }
+    throw std::logic_error("unknown received source scene state");
 }
 
 新来源子场景结果 新_自然语言世界树类::建立或取得词典来源场景(稳定编码 材料Q) noexcept {

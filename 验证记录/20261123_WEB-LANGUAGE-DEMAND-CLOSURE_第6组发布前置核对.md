@@ -129,3 +129,13 @@ Debug产物SHA-256为 4BD4D9F7582F10B71D728C48085B2ACF704EF722245F9A053E7D6F172E
 修正前 Debug/x64 和 Release/x64 全量编译分别为 503.76 秒和 469.58 秒，均 0 错误、0 警告。修正后实际工程 Debug/x64 和 Release/x64 分别为 29.82 秒和 45.77 秒，均 0 错误、0 警告。两套构建各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 4E335F82031AAF534F8ADBFF5B4A8754E7EAD85BF9B673FA77E8255011BC5DD3，八文件差异 SHA-256 为 DE50B8DAB1469F74C8DEC411562DF5BF114A9F290B17E1FD9F85D238CB55367D。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Release\56C4-source.patch)
 
 Debug 产物 SHA-256 为 D901E60E5681A837394645A7CEA9926E76EFA0BF57D67429C42268914CBBF703，Release 产物 SHA-256 为 AA8B6E411C02EF2B9732E9B99C7E12A8B73856DB2E00CBDD55B861021B63A39C。程序未运行。当前普通网页入站仍需生产正式语言范围并交接前置任务，第 6 组问答、同 D 写回和 P6 正式承接待取证。
+
+## 56C5 普通接收来源产生正式语言范围
+
+在主工作区基线 870c4e1d7b60114d6ca09c991617b1023e5f1aea 依计划 v2.110 和主设计第 10.87 节实施四个源码文件。正常网页接收仍先走原解释。只有需要前置交接且尚无同源 U/D 的原话才取得自然语言来源场景并建立同源正式 R。四个实际 F 完整后才提交进度并公开含 R 的定位。已解释原话沿原有路径。范围未就绪、资源失败和前提变化可重试，未找到则回到原消息入口。同源重入保留已经交接的 R，既有任务材料读取仍是只读。
+
+独立静态复核发现首次写入前可能已经封存会话。已在写入前复用会话活动读取，提交时继续使用原有进度和封存检查。仅调用开始后发生封存时保留已发表材料；封存后的结果不交接。未发现其余静态回归。
+
+修正前 Debug/x64 与 Release/x64 全量编译分别为 557.31 秒和 526.14 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 12.57 秒和 34.29 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 1685C36E112727D8EE1F302957E1200DA6059F7373996A0BAFFA5188C3B1F7C0，四文件差异 SHA-256 为 4B78F271ABDD064B8BCA25033B841D9123AFFDD9EFDD712C658274AC71C7FB9F。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Release\56C5-source.patch)
+
+Debug 产物 SHA-256 为 1782DAA1E3DC3637B5D2F1DFD49D48B8A5DEFBE447F3B3CEB3A31B8541E8853B，Release 产物 SHA-256 为 0CBE96BEBBF2C2DE38D797F375624F7EF6C133792BE1CD619EFCC679D34C84F3。程序未运行。仍需接分词及词条准入的本能、有效分界取材、问题和回答，再取第 6 组网页与同 D 证据。
