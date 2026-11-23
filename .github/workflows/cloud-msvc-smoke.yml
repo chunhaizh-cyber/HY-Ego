@@ -61,14 +61,20 @@ jobs:
           $ErrorActionPreference = 'Stop'
           $root = Join-Path $env:RUNNER_TEMP 'hy-ego-droot'
           New-Item -ItemType Directory -Force -Path $root | Out-Null
-          if (-not (Test-Path 'D:\')) {
+          $dExisted = Test-Path 'D:\'
+          Write-Host "D: pre-existed=$dExisted"
+          if (-not $dExisted) {
             subst D: $root
             if ($LASTEXITCODE -ne 0) { throw "subst D: failed: $LASTEXITCODE" }
+            Write-Host "subst D: -> $root"
+          } else {
+            Write-Host "D: already present; skip subst (use existing volume for hardcoded D:/ paths)"
           }
           # 日志根 + 会话 URL 旁路（宿主硬编码 D:/TEMP/海中鱼巣/last-session-url.txt）
           New-Item -ItemType Directory -Force -Path 'D:\海中鱼巣\日志' | Out-Null
           New-Item -ItemType Directory -Force -Path 'D:\TEMP\海中鱼巣' | Out-Null
           Write-Host "D: prepared. log=$([IO.Directory]::Exists('D:\海中鱼巣\日志')) temp=$([IO.Directory]::Exists('D:\TEMP\海中鱼巣'))"
+          Get-PSDrive -Name D | Format-List Name, Root, DisplayRoot, Description, Used, Free
 
       - name: Build Release|x64 (formal vcxproj; persist msbuild.log always)
         id: build
@@ -112,15 +118,39 @@ jobs:
             -ArtifactRoot $env:SMOKE_ARTIFACT_ROOT `
             -SkipBuild
 
+      - name: Stage evidence into workspace for upload (always)
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $stage = Join-Path $env:GITHUB_WORKSPACE '_ci_upload'
+          New-Item -ItemType Directory -Force -Path $stage | Out-Null
+          $sources = @(
+            (Join-Path $env:RUNNER_TEMP 'hy-ego-smoke\artifacts'),
+            'D:\TEMP\海中鱼巣',
+            'D:\海中鱼巣\日志'
+          )
+          foreach ($src in $sources) {
+            if (-not (Test-Path -LiteralPath $src)) { continue }
+            $leaf = ($src -replace '[:\\]', '_')
+            $dest = Join-Path $stage $leaf
+            New-Item -ItemType Directory -Force -Path $dest | Out-Null
+            Copy-Item -Path (Join-Path $src '*') -Destination $dest -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "staged $src -> $dest"
+          }
+          $exe = Join-Path $env:RUNNER_TEMP 'HY-Ego-build-Release\bin\海中鱼巣.exe'
+          if (Test-Path -LiteralPath $exe) {
+            Copy-Item -LiteralPath $exe -Destination (Join-Path $stage '海中鱼巣.exe') -Force
+            Write-Host "staged exe"
+          }
+          Get-ChildItem -LiteralPath $stage -Recurse -File | Select-Object -First 40 FullName, Length
+
       - name: Upload build log + smoke evidence (always, including failure)
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: cloud-msvc-smoke-${{ github.run_id }}
-          path: |
-            ${{ runner.temp }}/hy-ego-smoke/artifacts/**
-            ${{ runner.temp }}/HY-Ego-build-Release/bin/海中鱼巣.exe
-            D:/TEMP/海中鱼巣/**
-            D:/海中鱼巣/日志/**
+          # 仅上传 workspace 内暂存目录，避免 upload-artifact 跨盘 LCA 失败
+          path: _ci_upload/**
           if-no-files-found: warn
           retention-days: 14

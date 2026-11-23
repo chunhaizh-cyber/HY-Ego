@@ -213,6 +213,93 @@ function Copy-Evidence {
     Copy-Item -LiteralPath $Source -Destination (Join-Path $DestinationDir $Name) -Force -ErrorAction SilentlyContinue
 }
 
+function Write-LogTail([string]$Path, [int]$TailLines = 80) {
+    if (-not (Test-Path -LiteralPath $Path)) {
+        Write-Host ("(missing) {0}" -f $Path) -ForegroundColor Yellow
+        return
+    }
+    Write-Host ("---- tail {0} ({1} lines) ----" -f $Path, $TailLines)
+    try {
+        Get-Content -LiteralPath $Path -Tail $TailLines -ErrorAction Stop | ForEach-Object { Write-Host $_ }
+    } catch {
+        Write-Host ("无法读取: {0}" -f $_.Exception.Message) -ForegroundColor Yellow
+    }
+}
+
+function Write-StartupDiagnostics {
+    param(
+        [Parameter(Mandatory = $false)][System.Diagnostics.Process]$Process,
+        [Parameter(Mandatory = $true)][string]$SessionUrlFile
+    )
+    Write-Host '---- startup diagnostics ----' -ForegroundColor Yellow
+    if ($null -ne $Process) {
+        try {
+            Write-Host ("ProcId={0} HasExited={1} ExitCode={2}" -f `
+                $Process.Id, $Process.HasExited, $(if ($Process.HasExited) { $Process.ExitCode } else { 'n/a' }))
+        } catch {
+            Write-Host ("进程句柄异常: {0}" -f $_.Exception.Message)
+        }
+    } else {
+        Write-Host 'ProcId=(none)'
+    }
+    Write-Host ("sessionUrlFile exists={0}" -f (Test-Path -LiteralPath $SessionUrlFile))
+    if (Test-Path -LiteralPath $SessionUrlFile) {
+        try {
+            $item = Get-Item -LiteralPath $SessionUrlFile
+            Write-Host ("sessionUrlFile Length={0} LastWriteTime={1}" -f $item.Length, $item.LastWriteTimeUtc)
+            $raw = Get-Content -LiteralPath $SessionUrlFile -Raw -ErrorAction SilentlyContinue
+            if ($null -eq $raw) { Write-Host 'sessionUrlFile raw=(null)' }
+            else { Write-Host ("sessionUrlFile raw=<<<{0}>>>" -f $raw) }
+        } catch {
+            Write-Host ("sessionUrlFile 读取失败: {0}" -f $_.Exception.Message)
+        }
+    }
+    $tempDir = 'D:\TEMP\海中鱼巣'
+    Write-Host ("tempDir exists={0}" -f (Test-Path -LiteralPath $tempDir))
+    if (Test-Path -LiteralPath $tempDir) {
+        Get-ChildItem -LiteralPath $tempDir -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host ("  TEMP item: {0} ({1} bytes)" -f $_.Name, $_.Length) }
+    }
+    $logDir = 'D:\海中鱼巣\日志'
+    Write-Host ("logDir exists={0}" -f (Test-Path -LiteralPath $logDir))
+    if (Test-Path -LiteralPath $logDir) {
+        Get-ChildItem -LiteralPath $logDir -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host ("  LOG item: {0} ({1} bytes)" -f $_.Name, $_.Length) }
+    }
+    Write-LogTail -Path (Join-Path $logDir '运行.log') -TailLines 80
+}
+
+function Publish-WorkspaceUploadStaging {
+    # upload-artifact@v4 不能跨盘上传到仓库根之外；把证据拷进 GITHUB_WORKSPACE/_ci_upload
+    if ([string]::IsNullOrWhiteSpace($env:GITHUB_WORKSPACE)) { return }
+    $stage = Join-Path $env:GITHUB_WORKSPACE '_ci_upload'
+    try {
+        if (Test-Path -LiteralPath $stage) {
+            Remove-Item -LiteralPath $stage -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        New-Directory $stage | Out-Null
+        if (Test-Path -LiteralPath $ArtifactRoot) {
+            Copy-Item -Path (Join-Path $ArtifactRoot '*') -Destination $stage -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        foreach ($extra in @(
+            'D:\TEMP\海中鱼巣',
+            'D:\海中鱼巣\日志'
+        )) {
+            if (-not (Test-Path -LiteralPath $extra)) { continue }
+            $name = Split-Path $extra -Leaf
+            $dest = Join-Path $stage ("from-" + ($extra -replace '[:\\]', '_'))
+            New-Directory $dest | Out-Null
+            Copy-Item -Path (Join-Path $extra '*') -Destination $dest -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if ($OutDir -and (Test-Path -LiteralPath (Join-Path $OutDir '海中鱼巣.exe'))) {
+            Copy-Item -LiteralPath (Join-Path $OutDir '海中鱼巣.exe') -Destination (Join-Path $stage '海中鱼巣.exe') -Force -ErrorAction SilentlyContinue
+        }
+        Write-Host ("已暂存上传目录: {0}" -f $stage)
+    } catch {
+        Write-Host ("暂存上传目录失败（继续）: {0}" -f $_.Exception.Message) -ForegroundColor Yellow
+    }
+}
+
 # ---- 路径与隔离目录 ----
 $RepoRoot = (Resolve-Path -LiteralPath $RepoRoot).Path
 $baseTemp = if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }
@@ -315,8 +402,10 @@ try {
 
     Write-Step '等待合法 session URL（D:\TEMP\海中鱼巣\last-session-url.txt）'
     $deadline = (Get-Date).AddSeconds($StartupTimeoutSec)
+    $nextDiag = (Get-Date).AddSeconds(30)
     while ((Get-Date) -lt $deadline) {
         if ($ownedProcess.HasExited) {
+            Write-StartupDiagnostics -Process $ownedProcess -SessionUrlFile $sessionUrlFile
             throw ("正式入口在写出 URL 前退出，ExitCode={0}" -f $ownedProcess.ExitCode)
         }
         if (Test-Path -LiteralPath $sessionUrlFile) {
@@ -337,9 +426,14 @@ try {
             }
         }
         if ($sessionUrl) { break }
+        if ((Get-Date) -ge $nextDiag) {
+            Write-StartupDiagnostics -Process $ownedProcess -SessionUrlFile $sessionUrlFile
+            $nextDiag = (Get-Date).AddSeconds(30)
+        }
         Start-Sleep -Milliseconds 500
     }
     if (-not $sessionUrl) {
+        Write-StartupDiagnostics -Process $ownedProcess -SessionUrlFile $sessionUrlFile
         throw ("等待合法 session URL 超时（{0}s）: {1}" -f $StartupTimeoutSec, $sessionUrlFile)
     }
 
@@ -412,6 +506,9 @@ finally {
     Write-Host $conclusion
     Write-Host ("摘要: {0}" -f $SummaryPath)
     Write-Host ("构建日志(若有): {0}" -f $BuildLogPath)
+
+    # 必须在清理后仍把证据拷进 workspace，供 upload-artifact（禁止跨盘根 LCA）
+    Publish-WorkspaceUploadStaging
 }
 
 if (-not $smokePassed) {
