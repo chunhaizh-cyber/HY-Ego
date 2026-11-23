@@ -452,7 +452,8 @@ void 核验分界消息端口(const 新分界消息读取结果& 读取, 稳定�
         if (!节点组.contains(节点)) throw std::logic_error("boundary message endpoint projection missing");
     const auto& 选择 = 预期.字段集合组.front();
     if (节点组.size() != 5 || 选择.节点 != 消息节点 || 选择.字段节点
-        || !选择.排除字段键组.empty() || 选择.字段组.size() != 10)
+        || !选择.排除字段键组.empty()
+        || 选择.字段组.size() != 10 + static_cast<std::size_t>(消息.回应消息节点.has_value()))
         throw std::logic_error("boundary message field selector contract corrupt");
     std::set<稳定编码> 字段码组, 字段键组;
     for (const auto& 字段 : 选择.字段组)

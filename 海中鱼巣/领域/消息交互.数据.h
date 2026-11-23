@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <optional>
 #include "新_动态类.h"
 #include <string>
 
@@ -20,6 +21,8 @@ struct 新外设消息信息 final {
     新外设消息来源键 来源;
     std::string UTF8正文;
     新状态强时间 正式记录时间;
+    std::optional<稳定编码> 回应消息节点{};
+    std::optional<稳定编码> 对应输出消息节点{};
 };
 struct 新连接事实 final {
     稳定编码 调用身份, 动作节点, 现实场景, 自我存在, 目标存在;

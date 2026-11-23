@@ -167,7 +167,7 @@ struct 网页外设运行模块::实现 final {
     }
 
     bool 接收消息(std::string_view 会话, std::string_view 页面,
-        std::uint64_t 序号, std::string_view 正文) noexcept {
+        std::uint64_t 序号, std::string_view 正文, std::optional<std::uint64_t> 回应输出编码) noexcept {
         try {
             bool 新建 = false;
             {
@@ -178,7 +178,10 @@ struct 网页外设运行模块::实现 final {
                 if (!目标格式有效(目标)) return false;
                 const auto& 定位 = 建立页面(目标, &新建);
                 const auto 时间 = 取得正式发布时间();
-                if (!事实发布完成(世界->更新接收(定位, 序号, 正文, 时间)))
+                const auto 回应输出 = 回应输出编码 ? std::optional{稳定编码{*回应输出编码}} : std::nullopt;
+                const auto 结果 = 世界->更新接收(定位, 序号, 正文, 时间, 回应输出);
+                if (回应输出 && 结果 == 新外设事实状态::入口拒绝) return false;
+                if (!事实发布完成(结果))
                     throw std::runtime_error("peripheral received fact publication incomplete");
             }
             if (新建) 通知交互场景建立();
@@ -193,12 +196,13 @@ struct 网页外设运行模块::实现 final {
     void 发送完成(const 网页定向发送事实& 事实) noexcept {
         try {
             std::lock_guard 锁(互斥);
-            if (!事实.提交序号 || 事实.UTF8正文.empty()
+            if (!事实.提交序号 || !事实.正式输出消息编码 || 事实.UTF8正文.empty()
                 || !新_语言类::严格UTF8字节串有效(事实.UTF8正文))
                 throw std::runtime_error("peripheral completed send fact malformed");
             const auto& 定位 = 取得页面(事实.目标);
             const auto 时间 = 取得正式发布时间();
-            if (!事实发布完成(世界->更新发送(定位, 事实.提交序号, 事实.UTF8正文, 时间)))
+            if (!事实发布完成(世界->更新发送(定位, 事实.提交序号, 事实.UTF8正文, 时间,
+                    稳定编码{事实.正式输出消息编码})))
                 throw std::runtime_error("peripheral completed send publication incomplete");
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录网页外设发送事实", L"完整写出后寿命、定位或正式发布失败，保留事实，不再次发送。", 异常.what());
@@ -276,7 +280,9 @@ struct 网页外设运行模块::实现 final {
         结果.会话结束 = [当前](std::string_view 会话) { 当前->结束会话(会话); };
         结果.确认页面 = [当前](const 网页对话框目标& 目标) { return 当前->确认页面(目标); };
         结果.接收消息 = [当前](std::string_view 会话, std::string_view 页面,
-            std::uint64_t 序号, std::string_view 正文) { return 当前->接收消息(会话, 页面, 序号, 正文); };
+            std::uint64_t 序号, std::string_view 正文, std::optional<std::uint64_t> 回应输出) {
+            return 当前->接收消息(会话, 页面, 序号, 正文, 回应输出);
+        };
         结果.发送完成 = [当前](const 网页定向发送事实& 事实) { 当前->发送完成(事实); };
         结果.输出队列.入列 = [当前](const 网页输出入列请求& 请求) {
             return 当前->操作队列(实现::队列操作::入列, 请求.目标, 0, 请求.UTF8正文);

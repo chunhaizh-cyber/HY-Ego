@@ -27,7 +27,9 @@ std::array<稳定编码, 2> 消息类型{};
 // 先分配记录再发表C；此映射只保存尚未完成的创建责任，不是场景类别事实。
 std::map<std::string, 稳定编码, std::less<>> 待完成词典场景;
 // 私有消息结构的字段键；消息不是普通存在，不能借用存在身份。
-std::array<稳定编码, 12> 消息字段{};
+constexpr std::size_t 接收回应字段 = 12;
+constexpr std::size_t 发送对应输出字段 = 13;
+std::array<稳定编码, 14> 消息字段{};
 稳定编码 消息根{};
 const 新_特征值类* 消息值服务 = nullptr;
 std::mutex 外设互斥;
@@ -58,17 +60,20 @@ std::optional<新外设消息信息> 读取正式消息(
         return std::nullopt;
     const auto 消息 = 读取消息快照(节点);
     const auto 根 = 读取消息快照(消息根);
-    const auto 取 = [&](std::size_t 位置) -> const 基础字段内容& {
-        const 基础字段关系* 命中 = nullptr;
+    const auto 查 = [&](std::size_t 位置) -> const 基础字段内容* {
+        const 基础字段内容* 命中 = nullptr;
         for (const auto& 字段 : 消息.结构.字段组) if (字段.字段节点 == 消息字段[位置]) {
             if (命中) throw std::runtime_error("peripheral message field duplicated");
-            命中 = &字段;
+            命中 = &字段.内容;
         }
-        if (!命中) throw std::runtime_error("peripheral message field missing");
-        return 命中->内容;
+        return 命中;
     };
-    if (消息.结构.字段组.size() != 10 || std::get<稳定编码>(取(0)) != 消息字段[11]
-        || std::get<稳定编码>(取(1)) != 消息根)
+    const auto 取 = [&](std::size_t 位置) -> const 基础字段内容& {
+        const auto* 命中 = 查(位置);
+        if (!命中) throw std::runtime_error("peripheral message field missing");
+        return *命中;
+    };
+    if (std::get<稳定编码>(取(0)) != 消息字段[11] || std::get<稳定编码>(取(1)) != 消息根)
         throw std::runtime_error("peripheral message identity corrupt");
     std::size_t 持有数 = 0;
     for (const auto& 字段 : 根.结构.字段组)
@@ -86,6 +91,23 @@ std::optional<新外设消息信息> 读取正式消息(
         || 结果.来源.公开宿主会话.empty() || 结果.来源.对话框标识.empty())
         throw std::runtime_error("peripheral message source invalid");
     结果.来源.方向 = static_cast<新外设消息方向>(方向);
+    const auto* 回应 = 查(接收回应字段);
+    const auto* 对应输出 = 查(发送对应输出字段);
+    if (消息.结构.字段组.size() != 10 + static_cast<std::size_t>(回应 != nullptr)
+            + static_cast<std::size_t>(对应输出 != nullptr)
+        || (回应 && 结果.来源.方向 != 新外设消息方向::接收)
+        || (对应输出 && 结果.来源.方向 != 新外设消息方向::发送))
+        throw std::runtime_error("peripheral reply field shape invalid");
+    if (回应) {
+        const auto 编码 = std::get<稳定编码>(*回应);
+        if (!有效(编码) || 编码 == 节点) throw std::runtime_error("peripheral reply endpoint invalid");
+        结果.回应消息节点 = 编码;
+    }
+    if (对应输出) {
+        const auto 编码 = std::get<稳定编码>(*对应输出);
+        if (!有效(编码) || 编码 == 节点) throw std::runtime_error("peripheral sent output endpoint invalid");
+        结果.对应输出消息节点 = 编码;
+    }
     结果.来源.来源序号 = 序号[0];
     结果.正文材料节点 = std::get<稳定编码>(取(8));
     结果.正式记录时间 = {新状态时间语义::实例绝对UTC,
@@ -917,7 +939,8 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
 }
 
 新外设事实状态 新_外设世界树类::记录消息(const 新外设对话框定位& 定位,
-    新外设消息方向 方向, std::uint64_t 来源序号, std::string_view 正文, const 新状态强时间& 时间) {
+    新外设消息方向 方向, std::uint64_t 来源序号, std::string_view 正文, const 新状态强时间& 时间,
+    std::optional<稳定编码> 关联输出) {
     if (!来源序号 || 时间.语义 != 新状态时间语义::实例绝对UTC || 时间.纳秒 < 0
         || (方向 != 新外设消息方向::接收 && 方向 != 新外设消息方向::发送)
         || !新_语言类::严格UTF8字节串有效(std::string(正文)))
@@ -928,10 +951,22 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     if (!场景) throw std::runtime_error("peripheral message scene disappeared");
     新外设消息来源键 来源{读取文本特征(读取类型特征(场景->特征节点组, 类型[0])),
         读取文本特征(读取类型特征(场景->特征节点组, 类型[1])), 方向, 来源序号};
+    const auto 同关联 = [&](const 新外设消息信息& 信息) {
+        return (方向 == 新外设消息方向::接收 ? 信息.回应消息节点 : 信息.对应输出消息节点) == 关联输出;
+    };
     if (const auto 旧 = 按来源查找消息(来源)) {
-        if (旧->场景节点 != 定位.场景节点 || 旧->窗口节点 != 定位.窗口节点 || 旧->UTF8正文 != 正文)
+        if (旧->场景节点 != 定位.场景节点 || 旧->窗口节点 != 定位.窗口节点
+            || 旧->UTF8正文 != 正文 || !同关联(*旧))
             throw std::runtime_error("peripheral repeated message source has conflicting material");
         return 新外设事实状态::无变化;
+    }
+    if (关联输出 && 方向 == 新外设消息方向::发送) {
+        const auto 输出 = 读取正式消息(*关联输出);
+        auto 输出来源 = 来源;
+        输出来源.方向 = 新外设消息方向::输出;
+        if (!输出 || 输出->来源 != 输出来源 || 输出->场景节点 != 定位.场景节点
+            || 输出->窗口节点 != 定位.窗口节点 || 输出->UTF8正文 != 正文)
+            throw std::runtime_error("complete send does not match its formal output");
     }
     const auto 特征节点 = 方向 == 新外设消息方向::接收 ? *定位.接收消息特征 : *定位.发送消息特征;
     const auto 前 = 读取最近特征状态(定位.场景节点, 定位.窗口节点, 特征节点);
@@ -974,6 +1009,10 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     for (std::size_t 序号 = 0; 序号 < 值.size(); ++序号)
         请求.追加字段组.push_back({裸节点, 消息字段[序号], 值[序号]});
     请求.追加字段组.push_back({消息根, 消息字段[10], 裸节点});
+    if (关联输出) {
+        const auto 字段 = 方向 == 新外设消息方向::接收 ? 接收回应字段 : 发送对应输出字段;
+        请求.追加字段组.push_back({裸节点, 消息字段[字段], *关联输出});
+    }
     const auto 保护字段 = 服务_.特征概念服务.消息集合成员保护字段();
     if (!有效(保护字段)) throw std::runtime_error("peripheral message protection key unavailable");
     for (const auto 编码 : 成员) 请求.追加字段组.push_back({集合材料, 保护字段, 编码});
@@ -981,6 +1020,7 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     // 消息类型和旧消息成员只被引用，不应为补保护而取得它们的写资格。
     std::set<稳定编码> 只读目标(成员.begin(), 成员.end());
     只读目标.insert(消息字段[11]);
+    if (关联输出) 只读目标.insert(*关联输出);
     for (const auto 编码 : 只读目标) {
         const auto 节点 = 全局基础数据集.查询节点(编码);
         if (!节点) throw std::runtime_error("peripheral message referenced identity unavailable");
@@ -1012,7 +1052,8 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     完成消息集合变化(定位, 特征节点, 集合材料, 特征结果, 前, 时间);
     const auto 正式 = 读取正式消息(裸节点);
     if (!正式 || 正式->来源 != 来源 || 正式->UTF8正文 != 正文 || 正式->正式记录时间 != 时间
-        || 读取消息成员(特征节点) != 成员)
+        || 正式->场景节点 != 定位.场景节点 || 正式->窗口节点 != 定位.窗口节点
+        || !同关联(*正式) || 读取消息成员(特征节点) != 成员)
         throw std::runtime_error("peripheral message publication readback failed");
     服务_.特征服务.结束顶层引用集合更新(*准备.准备);
     return 新外设事实状态::已完成;
@@ -1041,8 +1082,9 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
 }
 
 新外设事实状态 新_外设世界树类::更新接收(const 新外设对话框定位& 定位,
-    std::uint64_t 来源序号, std::string_view 实际UTF8正文, const 新状态强时间& 接收时间) noexcept {
-    if (实际UTF8正文.empty()) return 新外设事实状态::入口拒绝;
+    std::uint64_t 来源序号, std::string_view 实际UTF8正文, const 新状态强时间& 接收时间,
+    std::optional<稳定编码> 回应输出) noexcept {
+    if (实际UTF8正文.empty() || (回应输出 && !有效(*回应输出))) return 新外设事实状态::入口拒绝;
     try {
         std::vector<稳定编码> 新状态组;
         {
@@ -1050,6 +1092,18 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
         if (!有效(外设根)) return 新外设事实状态::未初始化;
         if (读取窗口定位(定位.场景节点) != 定位)
             throw std::runtime_error("peripheral receive location changed");
+        if (回应输出) {
+            const auto 输出 = 读取正式消息(*回应输出);
+            if (!输出 || 输出->来源.方向 != 新外设消息方向::输出
+                || 输出->场景节点 != 定位.场景节点 || 输出->窗口节点 != 定位.窗口节点)
+                return 新外设事实状态::入口拒绝;
+            auto 发送来源 = 输出->来源;
+            发送来源.方向 = 新外设消息方向::发送;
+            const auto 发送 = 按来源查找消息(发送来源);
+            if (!发送 || 发送->对应输出消息节点 != 回应输出 || 发送->场景节点 != 定位.场景节点
+                || 发送->窗口节点 != 定位.窗口节点)
+                return 新外设事实状态::入口拒绝;
+        }
         // 首次收到消息时派生交互者：以存在根零特征建立，与窗口并列（6120 §11.1，Q2=A）。
         if (const auto 场景材料 = 场景_.获取场景(定位.场景节点);
             !场景材料 || !区分窗口与交互者(*场景材料).second) {
@@ -1058,7 +1112,7 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
             if (交互者.状态 != 新场景操作状态::已完成 || !交互者.存在节点)
                 throw std::runtime_error("peripheral interactor derivation failed");
         }
-        const auto 消息结果 = 记录消息(定位, 新外设消息方向::接收, 来源序号, 实际UTF8正文, 接收时间);
+        const auto 消息结果 = 记录消息(定位, 新外设消息方向::接收, 来源序号, 实际UTF8正文, 接收时间, 回应输出);
         if (消息结果 == 新外设事实状态::无变化) return 消息结果;
         const auto 特征材料 = 服务_.特征服务.获取特征(定位.接收数量特征);
         const auto* 数量 = 特征材料 && 特征材料->当前值 ? std::get_if<std::int64_t>(&*特征材料->当前值) : nullptr;
@@ -1089,8 +1143,9 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
     }
 }
 新外设事实状态 新_外设世界树类::更新发送(const 新外设对话框定位& 定位,
-    std::uint64_t 来源序号, std::string_view 实际UTF8正文, const 新状态强时间& 发布时间) noexcept {
-    if (实际UTF8正文.empty()) return 新外设事实状态::入口拒绝;
+    std::uint64_t 来源序号, std::string_view 实际UTF8正文, const 新状态强时间& 发布时间,
+    std::optional<稳定编码> 对应输出) noexcept {
+    if (实际UTF8正文.empty() || (对应输出 && !有效(*对应输出))) return 新外设事实状态::入口拒绝;
     try {
         if (!新_语言类::严格UTF8字节串有效(std::string(实际UTF8正文)))
             return 新外设事实状态::入口拒绝;
@@ -1098,7 +1153,7 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
         if (!有效(外设根)) return 新外设事实状态::未初始化;
         if (读取窗口定位(定位.场景节点) != 定位 || !定位.发送数量特征 || !定位.发送内容特征)
             throw std::runtime_error("outbound current page missing formal send features");
-        const auto 消息结果 = 记录消息(定位, 新外设消息方向::发送, 来源序号, 实际UTF8正文, 发布时间);
+        const auto 消息结果 = 记录消息(定位, 新外设消息方向::发送, 来源序号, 实际UTF8正文, 发布时间, 对应输出);
         if (消息结果 == 新外设事实状态::无变化) return 消息结果;
         const auto 特征 = 服务_.特征服务.获取特征(*定位.发送数量特征);
         const auto* 数量 = 特征 && 特征->当前值 ? std::get_if<std::int64_t>(&*特征->当前值) : nullptr;
@@ -1217,7 +1272,8 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
                 结果.发布前提.字段集合组.push_back({节点, std::nullopt, {}, 快照.结构.字段组});
         }
         if (结果.发布前提.字段集合组.size() != 1
-            || 结果.发布前提.字段集合组.front().字段组.size() != 10)
+            || 结果.发布前提.字段集合组.front().字段组.size()
+                != 10 + static_cast<std::size_t>(结果.消息->回应消息节点.has_value()))
             throw std::logic_error("boundary message final projection missing");
         return 结果;
     } catch (const std::bad_alloc&) {

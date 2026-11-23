@@ -32,8 +32,7 @@
 namespace 海中鱼巣 {
 namespace {
 
-using 网页对话消息接收函数 = std::function<bool(
-    std::string_view, std::string_view, std::uint64_t, std::string_view)>;
+using 网页对话消息接收函数 = decltype(网页外设运行回调组::接收消息);
 struct 网页对话框事实回调组 final {
     std::function<bool(const 网页对话框目标&)> 确认页面;
     std::function<void(const 网页定向发送事实&)> 发送完成;
@@ -103,6 +102,7 @@ struct HTTP请求 final {
     std::string 正文;
     std::string 内容类型;
     std::optional<std::string> 对话框标识;
+    std::optional<std::uint64_t> 回应输出消息编码;
     std::optional<std::string> 主机, 来源, 控制输出标记;
     bool 控制安全头无效 = false;
     bool 有正文长度 = false;
@@ -373,8 +373,14 @@ bool 是合法对话框标识(std::string_view 值) noexcept {
         }
         const std::string_view 行(缓冲.data() + 当前行, 行结束 - 当前行);
         const auto 冒号 = 行.find(':');
-        if (冒号 == std::string_view::npos) return 请求读取状态::请求无效;
-        const auto 名称 = 转小写ASCII(行.substr(0, 冒号));
+        if (冒号 == std::string_view::npos || 冒号 == 0) return 请求读取状态::请求无效;
+        const auto 字段名 = 行.substr(0, 冒号);
+        if (!std::all_of(字段名.begin(), 字段名.end(), [](char 字符) {
+                constexpr std::string_view 符号 = "!#$%&'*+-.^_\x60|~";
+                return (字符 >= 'a' && 字符 <= 'z') || (字符 >= 'A' && 字符 <= 'Z')
+                    || (字符 >= '0' && 字符 <= '9') || 符号.find(字符) != std::string_view::npos;
+            })) return 请求读取状态::请求无效;
+        const auto 名称 = 转小写ASCII(字段名);
         std::string_view 值 = 行.substr(冒号 + 1);
         const bool 标识含控制字符 = 名称 == "x-hy-dialogue-id"
             && std::any_of(值.begin(), 值.end(), [](unsigned char 字符) {
@@ -400,6 +406,13 @@ bool 是合法对话框标识(std::string_view 值) noexcept {
             if (请求.对话框标识 || 标识含控制字符 || !是合法对话框标识(值))
                 return 请求读取状态::请求无效;
             请求.对话框标识 = std::string(值);
+        } else if (名称 == "x-hy-reply-to") {
+            if (请求.回应输出消息编码 || 值.empty()) return 请求读取状态::请求无效;
+            std::uint64_t 编码 = 0;
+            const auto 转换 = std::from_chars(值.data(), 值.data() + 值.size(), 编码);
+            if (转换.ec != std::errc{} || 转换.ptr != 值.data() + 值.size() || !编码)
+                return 请求读取状态::请求无效;
+            请求.回应输出消息编码 = 编码;
         } else if (名称 == "host" || 名称 == "origin" || 名称 == "x-hy-control-output") {
             auto& 目标头 = 名称 == "host" ? 请求.主机
                 : 名称 == "origin" ? 请求.来源 : 请求.控制输出标记;
@@ -512,7 +525,12 @@ std::string 构造消息JSON(const std::vector<网页对话已显示消息>& 消
             + "\",\"role\":\""
             + (消息.角色 == 网页对话消息角色::交互者
                 ? "user" : "assistant")
-            + "\",\"text\":\"" + JSON转义(消息.UTF8正文) + "\"}";
+            + "\",\"text\":\"" + JSON转义(消息.UTF8正文) + "\"";
+        if (消息.正式输出消息编码)
+            结果 += ",\"outputMessageId\":\"" + std::to_string(*消息.正式输出消息编码) + "\"";
+        if (消息.回应输出消息编码)
+            结果 += ",\"replyTo\":\"" + std::to_string(*消息.回应输出消息编码) + "\"";
+        结果 += '}';
     }
     结果 += "]}";
     return 结果;
@@ -894,6 +912,8 @@ form{padding:16px;border-top:1px solid #304157;display:grid;grid-template-column
 textarea{resize:none;min-height:54px;max-height:160px;padding:12px;border:1px solid #405773;border-radius:12px;background:#0f1823;color:inherit;font:inherit}
 button{border:0;border-radius:11px;padding:0 18px;font:inherit;color:white;background:#2e73c8;cursor:pointer}button.secondary{background:#4a5566}button:disabled{opacity:.55;cursor:wait}
 footer{grid-column:1/-1;font-size:12px;color:#8d9aac}
+#reply-selection{grid-column:1/-1;min-width:0;color:#b4c6db;font-size:13px}#reply-selection-text{overflow-wrap:anywhere}
+.reply-action{display:block;margin-top:6px;padding:4px 8px;font-size:12px}
 #service{padding:18px;border-top:1px solid #304157}#service h2{font-size:18px;margin:0 0 10px}
 #service-form{padding:0;border:0;display:block}#service-fields{border:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
 label{display:grid;gap:6px;font-size:14px}[hidden]{display:none!important}input,select{min-width:0;padding:9px;border:1px solid #405773;border-radius:8px;background:#0f1823;color:inherit;font:inherit}input[readonly]{color:#a5b6c9}
@@ -916,7 +936,7 @@ body{display:block;background:#0e1520}main{width:min(1760px,96vw);margin:20px au
 <section class="panel"><h2 id="detail-title">选中项详情</h2><div id="control-detail" class="panel-body detail"><p class="muted">选择需求或任务，查看目标、筹办和执行材料。</p></div></section>
 <div class="stack interaction-column"><section class="panel"><h2>当前窗口交互</h2>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
-<form id="form"><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
+<form id="form"><div id="reply-selection" hidden><span id="reply-selection-text" aria-live="polite"></span> <button type="button" class="secondary" id="cancel-reply">取消回复</button></div><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
 <section id="output-control" style="padding:14px;border-top:1px solid #304157">
 <h2>控制台提交输出</h2>
 <p class="notice">操作员供稿：将正文提交到当前窗口的正式输出队列。不是交互入站，不表示自我自主生成意图，不生成需求或本能动作。对话历史中的出站方向也不证明内容自主生成。</p>
@@ -1059,11 +1079,67 @@ function controlRetainSections(snapshot){const retain=(block,previous)=>{if(bloc
 async function controlRefresh(){if(controlRefreshing||controlClosed)return;controlRefreshing=true;const abort=new AbortController();controlAbort=abort;const timer=setTimeout(()=>abort.abort(),4000);try{const response=await fetch(base+'/api/control',{cache:'no-store',signal:abort.signal});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(typeof data.status!=='string'||typeof data.sequence!=='string'||typeof data.ageMs!=='string')throw new Error('快照结构不一致');controlStatus.textContent='控制快照：'+data.status+' · #'+data.sequence+' · 距采集 '+data.ageMs+' ms'+(data.collecting?' · 正在采集':'')+(data.stale?' · 快照已陈旧':'');controlStatus.className=data.stale||data.status==='采集失败'?'warning':'';if(data.snapshot!==null)controlRender(controlRetainSections(data.snapshot));}catch(error){controlStatus.textContent='控制快照读取失败：'+(error.name==='AbortError'?'请求超时':error.message)+'；保留上次显示，不影响消息交互';controlStatus.className='warning';}finally{clearTimeout(timer);if(controlAbort===abort)controlAbort=null;controlRefreshing=false;if(!controlClosed)setTimeout(controlRefresh,2000);}}
 window.addEventListener('pagehide',()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();});
 controlRefresh();
-function render(items){messages.replaceChildren();if(!items.length){const e=document.createElement('div');e.className='empty';e.textContent='尚无对话消息';messages.append(e);return;}for(const item of items){const e=document.createElement('div');e.className='message '+item.role;e.textContent=item.text;messages.append(e);}messages.scrollTop=messages.scrollHeight;}
+const replySelectionBox=document.getElementById('reply-selection');
+const replySelectionText=document.getElementById('reply-selection-text');
+let selectedReply=null;
+function selectReply(item){
+    selectedReply=item;
+    replySelectionText.textContent=item?'正在回复：'+item.text.slice(0,100):'';
+    replySelectionBox.hidden=!item;
+}
+document.getElementById('cancel-reply').addEventListener('click',()=>{selectReply(null);input.focus();});
+function render(items){
+    messages.replaceChildren();
+    if(!items.length){
+        const empty=document.createElement('div');
+        empty.className='empty';
+        empty.textContent='尚无对话消息';
+        messages.append(empty);
+        return;
+    }
+    for(const item of items){
+        const message=document.createElement('div');
+        message.className='message '+item.role;
+        message.textContent=item.text;
+        if(item.role==='assistant'&&typeof item.outputMessageId==='string'){
+            const button=document.createElement('button');
+            button.type='button';
+            button.className='secondary reply-action';
+            button.textContent='回复';
+            button.addEventListener('click',()=>{selectReply(item);input.focus();});
+            message.append(button);
+        }
+        messages.append(message);
+    }
+    messages.scrollTop=messages.scrollHeight;
+}
 let refreshing=false;
 async function refresh(){if(refreshing||outputClosed)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);outputReady=true;renderOutputReceipts();status.textContent='本机服务可访问';await outputRefreshStates();}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
 async function poll(){if(outputClosed)return;await refresh();if(!outputClosed)setTimeout(poll,750);}
-form.addEventListener('submit',async e=>{e.preventDefault();const text=input.value;if(!text)return;if(!dialogueId){status.textContent='浏览器不支持安全对话框标识，不能提交';return;}const button=form.querySelector('button[type=submit]');button.disabled=true;try{const r=await fetch(base+'/api/messages',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId},body:text});if(!r.ok)throw new Error();input.value='';await refresh();}catch{status.textContent='消息提交失败';}finally{button.disabled=false;input.focus();}});
+form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    const text=input.value;
+    if(!text)return;
+    if(!dialogueId){status.textContent='浏览器不支持安全对话框标识，不能提交';return;}
+    const button=form.querySelector('button[type=submit]');
+    if(button.disabled)return;
+    const reply=selectedReply;
+    const headers={'Content-Type':'text/plain;charset=utf-8','X-HY-Dialogue-Id':dialogueId};
+    if(reply)headers['X-HY-Reply-To']=reply.outputMessageId;
+    button.disabled=true;
+    try{
+        const response=await fetch(base+'/api/messages',{method:'POST',headers,body:text});
+        if(!response.ok)throw new Error();
+        if(input.value===text)input.value='';
+        if(selectedReply===reply)selectReply(null);
+        await refresh();
+    }catch{
+        status.textContent='消息提交失败';
+    }finally{
+        button.disabled=false;
+        input.focus();
+    }
+});
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
 document.getElementById('close').addEventListener('click',async()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();try{await fetch(base+'/api/close',{method:'POST'});}finally{const ended=controlNode('main');ended.append(controlNode('h1','交互宿主已结束'),controlNode('p','现在可以关闭此页面。'));document.body.replaceChildren(ended);}});
 )HTML";
@@ -1154,11 +1230,21 @@ std::optional<std::uint64_t> 取得下一上行序号(
     return 命中;
 }
 
-void 追加页面消息(网页对话框传输状态& 页面, 网页对话消息角色 角色, std::string 正文) {
+bool 同页已完整显示输出(const 网页对话框目标& 目标, std::uint64_t 输出编码) {
+    std::lock_guard 锁(共享状态.互斥);
+    if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识) return false;
+    const auto* 页面 = 查找传输页面(目标);
+    return 页面 && std::any_of(页面->消息组.begin(), 页面->消息组.end(), [&](const auto& 消息) {
+        return 消息.角色 == 网页对话消息角色::自我 && 消息.正式输出消息编码 == 输出编码;
+    });
+}
+
+void 追加页面消息(网页对话框传输状态& 页面, 网页对话消息角色 角色, std::string 正文,
+    std::optional<std::uint64_t> 正式输出, std::optional<std::uint64_t> 回应输出) {
     if (页面.下一页面序号 == 0 || 页面.下一页面序号 == (std::numeric_limits<std::uint64_t>::max)()
         || 页面.消息组.size() != 页面.下一页面序号 - 1)
         throw std::runtime_error("dialogue display sequence corrupted");
-    页面.消息组.push_back({页面.下一页面序号, 角色, std::move(正文)});
+    页面.消息组.push_back({页面.下一页面序号, 角色, std::move(正文), 正式输出, 回应输出});
     ++页面.下一页面序号;
 }
 
@@ -1174,13 +1260,13 @@ bool 确认传输页面(const 网页对话框目标& 目标, const 网页对话�
 }
 
 void 追加交互者消息(const 网页对话框目标& 目标,
-    std::uint64_t 上行序号, std::string UTF8正文) {
+    std::uint64_t 上行序号, std::string UTF8正文, std::optional<std::uint64_t> 回应输出) {
     std::lock_guard 锁(共享状态.互斥);
     auto* 页面 = 查找传输页面(目标);
     if (!共享状态.运行中 || 共享状态.会话标识 != 目标.公开会话标识
         || !页面 || 共享状态.下一上行序号 != 上行序号)
         throw std::runtime_error("received dialogue projection identity changed");
-    追加页面消息(*页面, 网页对话消息角色::交互者, std::move(UTF8正文));
+    追加页面消息(*页面, 网页对话消息角色::交互者, std::move(UTF8正文), {}, 回应输出);
     ++共享状态.下一上行序号;
 }
 
@@ -1246,7 +1332,7 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
     }
     const std::string 正文 = "{\"id\":\"" + std::to_string(事实->提交序号)
         + "\",\"text\":\"" + JSON转义(事实->UTF8正文) + "\"}";
-    const 网页定向发送事实 发送事实{事实->目标, 事实->提交序号, 事实->UTF8正文};
+    const 网页定向发送事实 发送事实{事实->目标, 事实->提交序号, 事实->UTF8正文, 事实->正式消息编码};
     const auto 写出 = 发送响应(客户端, "200 OK", "application/json;charset=utf-8", 正文);
     if (写出.完整写出) 回调.发送完成(发送事实);
     {
@@ -1266,7 +1352,8 @@ void 处理定向取件(SOCKET 客户端, const 网页对话框目标& 目标,
         命中->结果.状态 = 写出.完整写出 ? 网页定向发送状态::已完整写出 : 网页定向发送状态::写出未完成;
         命中->结果.HTTP已写字节数 = 写出.已写字节数;
         命中->结果.系统错误 = 写出.系统错误;
-        if (写出.完整写出) 追加页面消息(*页面, 网页对话消息角色::自我, 事实->UTF8正文);
+        if (写出.完整写出)
+            追加页面消息(*页面, 网页对话消息角色::自我, 事实->UTF8正文, 事实->正式消息编码, {});
     }
 }
 
@@ -1430,6 +1517,11 @@ bool 处理请求(SOCKET 客户端,
             return true;
         }
         目标 = 网页对话框目标{std::string(会话标识), *请求.对话框标识};
+        if (请求.方法 == "POST" && 请求.回应输出消息编码
+            && !同页已完整显示输出(*目标, *请求.回应输出消息编码)) {
+            发送响应(客户端, "422 Unprocessable Content", "text/plain;charset=utf-8", "请选择当前对话中已显示的消息");
+            return true;
+        }
         if (!确认传输页面(*目标, 对话框事实)) {
             发送响应(客户端, "503 Service Unavailable", "application/json;charset=utf-8", "{\"available\":false}");
             return true;
@@ -1456,16 +1548,18 @@ bool 处理请求(SOCKET 客户端,
         const auto 上行序号 = 取得下一上行序号(会话标识);
         if (!上行序号
             || (消息接收
-                && !消息接收(会话标识, *请求.对话框标识, *上行序号, 请求.正文))) {
-            发送响应(客户端, "503 Service Unavailable",
-                "application/json;charset=utf-8",
-                "{\"accepted\":false,\"retryable\":true}");
+                && !消息接收(会话标识, *请求.对话框标识, *上行序号, 请求.正文, 请求.回应输出消息编码))) {
+            if (上行序号 && 请求.回应输出消息编码)
+                发送响应(客户端, "422 Unprocessable Content", "text/plain;charset=utf-8", "回复消息已不可用");
+            else
+                发送响应(客户端, "503 Service Unavailable", "application/json;charset=utf-8",
+                    "{\"accepted\":false,\"retryable\":true}");
             return true;
         }
         if(消息接收&&服务输入.接收事实已记录)
             服务输入.接收事实已记录(会话标识,*请求.对话框标识,*上行序号);
         try {
-            追加交互者消息(*目标, *上行序号, std::move(请求.正文));
+            追加交互者消息(*目标, *上行序号, std::move(请求.正文), 请求.回应输出消息编码);
         } catch (...) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"发布网页接收投影",
                 L"外设已接收真实消息，但宿主显示列表追加失败，保留正式事实。");

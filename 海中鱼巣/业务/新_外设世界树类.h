@@ -103,10 +103,10 @@ public:
     const 新_场景类& 获取场景只读视图() const noexcept { return 场景_; }
     新外设事实状态 更新发送(
         const 新外设对话框定位&, std::uint64_t 来源序号, std::string_view 实际UTF8正文,
-        const 新状态强时间& 发布时间) noexcept;
+        const 新状态强时间& 发布时间, std::optional<稳定编码> 对应输出 = {}) noexcept;
     新外设事实状态 更新接收(
         const 新外设对话框定位&, std::uint64_t 来源序号, std::string_view 实际UTF8正文,
-        const 新状态强时间& 接收时间) noexcept;
+        const 新状态强时间& 接收时间, std::optional<稳定编码> 回应输出 = {}) noexcept;
     std::optional<新外设消息信息> 读取消息(稳定编码 消息节点) const noexcept;
     新外设接收记录完整结果 完整读取仍保留的接收记录() const noexcept;
     新外设消息保护结果 读取消息保护(稳定编码 消息节点) const noexcept;
@@ -137,7 +137,7 @@ private:
     新外设输出队列结果 输出入列_已加锁(const 新外设输出入列请求&, std::optional<稳定编码> 来源动作={});
     新外设对话框定位 补齐消息集合(const 新外设对话框定位&);
     新外设事实状态 记录消息(const 新外设对话框定位&, 新外设消息方向,
-        std::uint64_t, std::string_view, const 新状态强时间&);
+        std::uint64_t, std::string_view, const 新状态强时间&, std::optional<稳定编码> 关联输出);
     std::vector<稳定编码> 读取消息成员(稳定编码 特征节点) const;
     std::vector<新外设消息信息> 读取输出队列成员(const 新外设对话框定位&) const;
     特征变化读回 更新输出队列(const 新外设对话框定位&,

@@ -56,6 +56,7 @@ struct 网页对话已显示消息 final {
     std::uint64_t 页面序号 = 0;
     网页对话消息角色 角色 = 网页对话消息角色::交互者;
     std::string UTF8正文;
+    std::optional<std::uint64_t> 正式输出消息编码{}, 回应输出消息编码{};
     friend bool operator==(const 网页对话已显示消息&,
         const 网页对话已显示消息&) = default;
 };
@@ -217,6 +218,7 @@ struct 网页定向发送事实 final {
     网页对话框目标 目标;
     std::uint64_t 提交序号 = 0;
     std::string UTF8正文;
+    std::uint64_t 正式输出消息编码 = 0;
 };
 struct 网页输出入列请求 final {
     网页对话框目标 目标;
@@ -248,7 +250,7 @@ struct 网页外设运行回调组 final {
     std::function<void(std::string_view)> 会话结束;
     std::function<bool(const 网页对话框目标&)> 确认页面;
     std::function<bool(std::string_view, std::string_view,
-        std::uint64_t, std::string_view)> 接收消息;
+        std::uint64_t, std::string_view, std::optional<std::uint64_t>)> 接收消息;
     std::function<void(const 网页定向发送事实&)> 发送完成;
     网页输出队列回调组 输出队列;
 };

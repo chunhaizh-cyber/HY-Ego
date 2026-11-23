@@ -85,7 +85,8 @@ bool 同名称(const 概念名称候选正式信息& a,const 概念名称候选�
 }
 bool 同消息(const 新外设消息信息& a,const 新外设消息信息& b){
     return a.消息节点==b.消息节点&&a.场景节点==b.场景节点&&a.窗口节点==b.窗口节点
-        &&a.正文材料节点==b.正文材料节点&&a.来源==b.来源&&a.UTF8正文==b.UTF8正文;
+        &&a.正文材料节点==b.正文材料节点&&a.来源==b.来源&&a.UTF8正文==b.UTF8正文
+        &&a.回应消息节点==b.回应消息节点&&a.对应输出消息节点==b.对应输出消息节点;
 }
 std::uint64_t 标量数(const std::string& s){
     if(!新_语言类::严格UTF8字节串有效(s))throw std::logic_error("received UTF8 fact corrupt");
