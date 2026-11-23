@@ -1,6 +1,7 @@
 #pragma once
 #include "语言含义网.数据.h"
 
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -803,6 +804,8 @@ public:
     新语言分界调用结果<新语言材料范围信息> 建立或取得材料范围(
         const 新语言材料范围请求&, const 新_场景类&);
     新语言分界调用结果<新语言材料范围信息> 读取材料范围(稳定编码) const;
+    新语言分界调用结果<新语言范围特征信息> 读取材料范围特征(稳定编码) const;
+    正式信息参数读取结果 读取分界参数保护(稳定编码 信息, 稳定编码 范围) const noexcept;
     static const 新信息对象身份读取接口& 取得分界稳定身份读取接口() noexcept;
 
     新语言建立结果 建立或取得语言(
@@ -961,6 +964,7 @@ private:
     // 配置的特征服务与同一普通应用上下文同生存期；只在初始化阶段设置。
     新语言分界特征配置 分界特征配置_{};
     新_特征类* 分界特征服务_ = nullptr;
+    std::atomic<bool> 分界配置就绪_{false};
 };
 
 

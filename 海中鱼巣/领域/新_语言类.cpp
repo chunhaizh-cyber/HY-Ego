@@ -624,7 +624,8 @@ public:
     }
 };
 
-std::optional<新语言材料范围信息> 读取当前语言范围(稳定编码 节点) {
+std::optional<新语言材料范围信息> 读取当前语言范围(
+    稳定编码 节点, 基础联合节点快照* 范围快照 = nullptr) {
     if (!有效(节点)) return std::nullopt;
     const auto 批 = 全局基础数据集.查询节点组完整结构({节点});
     if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
@@ -632,7 +633,10 @@ std::optional<新语言材料范围信息> 读取当前语言范围(稳定编码
     if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 1)
         throw std::logic_error("language range read failed");
     if (!批.节点组.front().快照) return std::nullopt;
-    return 解码语言范围(取分界快照(批, 节点).结构);
+    const auto& 快照 = 取分界快照(批, 节点);
+    auto 内容 = 解码语言范围(快照.结构);
+    if (范围快照) *范围快照 = 快照;
+    return 内容;
 }
 
 } // namespace
@@ -803,6 +807,7 @@ bool 新_语言类::初始化() noexcept {
         分界特征配置_ = 配置;
         分界特征服务_ = &特征;
         分界身份范围.store(配置.信息身份范围.值, std::memory_order_release);
+        分界配置就绪_.store(true, std::memory_order_release);
         return S::已完成;
     } catch (const std::bad_alloc&) {
         return S::资源失败;
@@ -820,15 +825,17 @@ const 新信息对象身份读取接口& 新_语言类::取得分界稳定身份
     return 读取;
 }
 
-新语言分界调用结果<新语言材料范围信息> 新_语言类::读取材料范围(稳定编码 节点) const {
+新语言分界调用结果<新语言范围特征信息> 新_语言类::读取材料范围特征(稳定编码 节点) const {
     using S = 新语言分界工程状态;
     try {
-        if (!分界身份范围.load(std::memory_order_acquire)) return {S::未初始化, {}, {}};
-        auto 当前 = 读取当前语言范围(节点);
+        if (!分界配置就绪_.load(std::memory_order_acquire)) return {S::未初始化, {}, {}};
+        基础联合节点快照 范围快照;
+        auto 当前 = 读取当前语言范围(节点, &范围快照);
         if (!当前) return {S::未找到, {}, {}};
         if (!std::all_of(当前->特征节点组.begin(), 当前->特征节点组.end(),
             [](稳定编码 F) { return 有效(F); })) return {S::材料未就绪, {}, {}};
-        return {S::已完成, std::move(当前), {}};
+        return {S::已完成, 新语言范围特征信息{std::move(*当前),
+            分界特征配置_.特征类型组, std::move(范围快照)}, {}};
     } catch (const 分界输入拒绝&) {
         return {S::未找到, {}, {}};
     } catch (const std::bad_alloc&) {
@@ -839,6 +846,75 @@ const 新信息对象身份读取接口& 新_语言类::取得分界稳定身份
         分界来源工程终止(L"读取语言材料范围", 节点, {}, 异常.what());
     } catch (...) {
         分界来源工程终止(L"读取语言材料范围", 节点, {}, nullptr);
+    }
+}
+
+新语言分界调用结果<新语言材料范围信息> 新_语言类::读取材料范围(稳定编码 节点) const {
+    auto 读 = 读取材料范围特征(节点);
+    新语言分界调用结果<新语言材料范围信息> 结果{读.状态, {}, 读.本次已发表身份};
+    if (读.信息) 结果.信息 = std::move(读.信息->范围);
+    return 结果;
+}
+
+正式信息参数读取结果 新_语言类::读取分界参数保护(
+    稳定编码 节点, 稳定编码 范围) const noexcept {
+    using S = 正式信息参数读取状态;
+    using R = 新语言分界工程状态;
+    using F = 新特征完整读取状态;
+    try {
+        if (!分界配置就绪_.load(std::memory_order_acquire)) return {S::依赖未就绪, {}, {}};
+        if (范围 != 分界特征配置_.信息身份范围) return {S::范围未支持, {}, {}};
+        auto 读 = 读取材料范围特征(节点);
+        switch (读.状态) {
+        case R::未找到: return {S::信息不存在, {}, {}};
+        case R::未初始化:
+        case R::材料未就绪: return {S::依赖未就绪, {}, {}};
+        case R::资源失败: return {S::资源失败, {}, {}};
+        case R::前提已变化: return {S::前提已变化, {}, {}};
+        case R::已完成: break;
+        default: throw std::logic_error("unexpected language range projection status");
+        }
+        if (!读.信息) throw std::logic_error("language range projection missing");
+        auto& 范围信息 = *读.信息;
+        正式信息参数投影 输出{节点, 范围, {}, {}};
+        输出.直接内容组.reserve(范围信息.特征类型组.size());
+        std::vector<基础联合节点快照> 保护;
+        保护.push_back(std::move(范围信息.范围快照));
+        for (std::size_t i = 0; i < 范围信息.特征类型组.size(); ++i) {
+            auto 特征 = 分界特征服务_->读取特征完整保护(范围信息.范围.特征节点组[i]);
+            switch (特征.状态) {
+            case F::前提已变化: return {S::前提已变化, {}, {}};
+            case F::资源失败: return {S::资源失败, {}, {}};
+            case F::特征不存在:
+            case F::依赖未就绪: return {S::依赖未就绪, {}, {}};
+            case F::类型未支持: return {S::范围未支持, {}, {}};
+            case F::已读取: break;
+            }
+            if (!特征.信息) throw std::logic_error("language range feature projection missing");
+            正式内容值 值{正式内容值种类::信息对象引用, 正式内容值状态::当前未知, {}};
+            if (const auto& 当前 = 特征.信息->特征.当前值; 当前) {
+                值.值 = 正式内容准确值{std::get<稳定编码>(*当前)};
+                值.状态 = 正式内容值状态::已知;
+            }
+            输出.直接内容组.push_back({范围信息.特征类型组[i], std::move(值)});
+            // 保护材料只传给需要建立L1写入前提的调用者。
+            for (auto& 项 : 特征.信息->完整保护组) {
+                const auto 编码 = 项.结构.节点.编码;
+                if (std::none_of(保护.begin(), 保护.end(), [编码](const auto& 已有) {
+                        return 已有.结构.节点.编码 == 编码;
+                    }))
+                    保护.push_back(std::move(项));
+            }
+        }
+        return {S::已读取, std::move(输出), std::move(保护)};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败, {}, {}};
+    } catch (const std::length_error&) {
+        return {S::资源失败, {}, {}};
+    } catch (const std::exception& 异常) {
+        分界来源工程终止(L"读取语言分界正式参数", 节点, {}, 异常.what());
+    } catch (...) {
+        分界来源工程终止(L"读取语言分界正式参数", 节点, {}, nullptr);
     }
 }
 

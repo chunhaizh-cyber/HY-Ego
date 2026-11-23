@@ -59,3 +59,23 @@
 - 普通 MSBuild 工程的 Release/x64 和 Debug/x64 编译链接均退出 0，0 错误、0 警告。两种配置采用互相独立的输出目录，MSBuild 调度每配置最多五个编译进程。Release 用时 553.03 秒，Debug 用时 445.73 秒。两次在 3dc211b7f 及同一组 13 个源码差异上构建，247 项输入的四份前后清单 SHA-256 均为 42BB57C414C42AB11427DABC17075628ACCA62E2D636FCBE19A711BB44891AAE。重新读取当前 247 个输入，均与清单相同。[Release 结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-155132-provider-56a-final-Release/Release/result.json) · [Debug 结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-155132-provider-56a-final-Debug/Debug/result.json)
 - Release 产物 SHA-256 为 8FA05628C52D619450FC9AC54815480F051697D2ECDB8FA08AE6DC8C7989AD0B。Debug 产物 SHA-256 为 75E0FF7E9EEDB9FDDCD7969B3BDFCB0513CAD7903F5C33821F10114DBCC3EF39。源码差异 SHA-256 为 FA06CD5050D01C97FA0C599AFBFBB016CEC24C89825B78A032DE302821C9B690。[源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-155132-provider-56a-final-Release/56A-source.patch)
 - 以上是已登记提供者的工程编译及静态复核证据。用户明确授权发布第 56A 片的 13 个源码文件及本记录，提交前复核各文件与上述构建输入一致。程序及测试未运行。第 56B 至 56D 的真实材料、分界本能、正常网页入口和第 6 组业务证据仍在目标范围内。
+
+## 56A 发布与 56B1 实施
+
+- 用户授权后，5320e235a 普通推送到 origin/main。本次准确包含 13 个第 56A 源码文件和本记录。推送前逐项读回 247 个构建输入，推送后读回远端提交及 13 个源码 blob，均与已编译版本一致。a270d1388 更新原计划 v2.103，65a6705f3 按精确 blob 14da9bdbc573de1f48f450a7ab4d40db7220e51e 激活后继。[计划索引](../计划/计划索引.md)
+- 第 56B1 在主工作区以 65a6705f3 为基线，按 S0 核对计划九文件、现有工作树和实际构建资源。范围 DTO 每次读回R及四个FT/F，语言实例的初次配置以独立就绪标记同步。正式参数读取走C18，沿现有端口重读L1变化。需求六个目标分类路径、需求与任务的三个具名身份谓词和普通装配同步接入。R材料未就绪进入等待；若目标特征存在但值为空，合法非根当前值目标可进入筹办。独立静态复核检查锁方向、这些状态和原存在/词条分支。
+- 上述流程涉及 9 个源文件，其他工作树的在制材料原地保留。只核对后继的直接依赖。第 56B2 的材料角色3至6必须在正式采用写入之前加入同一个稳定身份读口，因为特征写入准备按当前身份读取实际材料。任务在第 56C 接入实际本能时仍需补语言范围的条件参数和已发表子需求身份，原方法的未就绪处理也须按正式材料等待接入。上述都尚未在第 56B1 实施。
+
+### 56B1 编译与保留范围
+
+实际工程 Debug/x64 和 Release/x64 均退出0，0错误、0警告。Debug用时374.20秒，Release用时467.49秒。两配置基线为65a6705f3及同一9文件差异，247项构建输入的四份前后清单一致，与当前文件逐项核对一致。清单SHA-256为70E7CD996F32A22789F749E86874F51122BC4D2FB5EA183EC9AF6DDB93C36C37。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-163803-reader-56b1-Debug/Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-163803-reader-56b1-Release/Release/result.json)
+
+Debug产物SHA-256为1390E32ED3A17748B5C6594C9ED8E114A915B7A7C0480418973D6A5C534FE0E2。Release产物SHA-256为407D8821D5E9F8697A6ECC8BED808F52A9FEA8315EA0ABAAA77387F40832A771。源码差异SHA-256为9ACDBE1540EB167A569AFA52E556C40C55FC0C0A5AD8B76D96AD6857B41F1FCB。[精确源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-163803-reader-56b1-Release/56B1-source.patch)
+
+第56B1的工程和静态证据已收齐。按用户新增的「完成前一步就直接提交」，本轮仅将九个源码及本记录形成本地提交，远端发布另待明确授权。程序和测试未运行。第6组正式网页补问、同D写回及自我承接仍待后续验收。
+
+### 56B1 Git 发布前核对
+
+以本地和远端 main 的同一基线 c2e264f5e87008ca9f17db59b40b379034ae1826 为准，逐项比较构建清单原始文件摘要、当前主线 blob、当前文件经 Git 入库转换后的 blob。247 项记录的构建输入均已纳入版本管理，全部仍与编译时的原始摘要一致。相对当前 main，仅第 56B1 的九个白名单源码 blob 不同，其余 238 项相同。本地提交前用本清单核对暂存的九个源码 blob；后续获得推送授权后按同一清单核对远端提交。预检时暂存区为空，程序未运行。
+
+清单 SHA-256 为 57438D370D0A8BF8CA1A56F6B9895226522983FDCBA0D15673F7FEAF969CD348。[发布前逐文件核对清单](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56B1-release-preflight-c2e264f5e.json)

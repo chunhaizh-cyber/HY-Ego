@@ -59,4 +59,10 @@ struct 新语言材料范围信息 final {
         const 新语言材料范围信息&) = default;
 };
 
+struct 新语言范围特征信息 final {
+    新语言材料范围信息 范围;
+    std::array<稳定编码, 4> 特征类型组;
+    基础联合节点快照 范围快照;
+};
+
 } // namespace 海中鱼巣

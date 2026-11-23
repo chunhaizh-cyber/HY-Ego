@@ -4027,7 +4027,8 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             throw std::logic_error("formal parameter named ranges unavailable");
         if (!当前.正式信息读取)
             当前.正式信息读取 = std::make_unique<正式信息参数读取服务>(当前.需求服务,当前.世界事实.语言服务,
-                std::array{先天读回.信息->需求,被认知范围->second,补问概念.信息->节点},*归类概念.信息);
+                std::array{先天读回.信息->需求,被认知范围->second,补问概念.信息->节点},
+                *归类概念.信息,分界配置.信息身份范围);
         if (!当前.方法服务.装配正式信息参数读取接口(当前.正式信息读取.get())
             || !当前.任务服务.装配正式信息参数读取接口(当前.正式信息读取.get(),&*归类概念.信息))
             throw std::logic_error("formal information parameter reader binding failed");
