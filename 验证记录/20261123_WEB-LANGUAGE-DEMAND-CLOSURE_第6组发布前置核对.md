@@ -139,3 +139,13 @@ Debug 产物 SHA-256 为 D901E60E5681A837394645A7CEA9926E76EFA0BF57D67429C422689
 修正前 Debug/x64 与 Release/x64 全量编译分别为 557.31 秒和 526.14 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 12.57 秒和 34.29 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 1685C36E112727D8EE1F302957E1200DA6059F7373996A0BAFFA5188C3B1F7C0，四文件差异 SHA-256 为 4B78F271ABDD064B8BCA25033B841D9123AFFDD9EFDD712C658274AC71C7FB9F。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c5-ingress-range-Release\56C5-source.patch)
 
 Debug 产物 SHA-256 为 1782DAA1E3DC3637B5D2F1DFD49D48B8A5DEFBE447F3B3CEB3A31B8541E8853B，Release 产物 SHA-256 为 0CBE96BEBBF2C2DE38D797F375624F7EF6C133792BE1CD619EFCC679D34C84F3。程序未运行。仍需接分词及词条准入的本能、有效分界取材、问题和回答，再取第 6 组网页与同 D 证据。
+
+## 56C6 冻结分界操作的实际输入和读回同执行回执
+
+依计划 v2.111 和唯一设计第 10.88 节在主工作区实施四个源码文件。新建有效分界或准入动作时记录同 R 的正式依据或有效分界；历史动作的空字段正常读回。同 X 两个重入检查实际输入编码。动作字段随原子写入、读回及删除维护，L1 同时保护实际引用。语言所有者新增按 R、特征种类及 X 读取采用回执，复用原登记读取，原采用写入和当前值管理照旧。
+
+独立复核发现语言材料读口对现存的非材料节点也可能返回未找到。修正为在写动作前，以 L1 的节点存在判断区分错误材料和确实退出的材料。再次核对同 R、种类、旧记录、重入、原子引用及纯读取。
+
+修正前 Debug/x64 与 Release/x64 全量编译分别为 542.7 秒和 509.86 秒，均 0 错误、0 警告。修正后实际工程两配置分别为 9.57 秒和 33.17 秒，均 0 错误、0 警告。双配置各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 36ED0E714D45C26484FF837933A57D4F9449EB612BAC6748BA08D6061199AE2D，四文件差异 SHA-256 为 73031D00BDF7CA1E9F30991837101FA66FB947C39F743923863FD156B6700328。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c6-action-input-Release\56C6-source.patch)
+
+Debug 产物 SHA-256 为 830D15C83561535BB4680B25BE1ED93A144D80965C2A7FFDBC5743CC48A6958A，Release 产物 SHA-256 为 7DB043F4C70E12606E16F2A49C12D4E577933C9E001A1357736E441FF54E9791。程序未运行。仍需接任务结果渠道、分词及词条准入本能、分界依据和网页问答。第 6 组同 D 写回与正式承接未验收。

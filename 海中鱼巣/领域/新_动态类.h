@@ -62,6 +62,7 @@ struct 新词条动作动态建立请求 final {
 struct 新语言范围动作动态建立请求 final {
     稳定编码 执行主体节点, 动作定义节点, 动作来源节点, 目标语言范围节点, 目标特征节点;
     新状态强时间 动作时间;
+    std::optional<稳定编码> 语言输入材料节点{};
 };
 
 struct 新内部治理动作动态建立请求 final {
@@ -131,6 +132,7 @@ struct 新动态信息 final {
     std::optional<稳定编码> 动态概念节点;
     std::int64_t 被引用次数 = 0;
     std::optional<稳定编码> 动作目标词条节点;
+    std::optional<稳定编码> 动作语言输入材料节点{};
     friend bool operator==(const 新动态信息&, const 新动态信息&) = default;
 };
 
@@ -315,7 +317,8 @@ private:
         新事实追加保护增量* 增量 = nullptr,
         const std::optional<新方法虚拟存在引用>& 方法目标 = std::nullopt,
         std::optional<稳定编码> 词条目标 = std::nullopt,
-        bool 语言范围目标 = false) noexcept;
+        bool 语言范围目标 = false,
+        std::optional<稳定编码> 语言输入材料 = std::nullopt) noexcept;
     新动态操作状态 减少组成引用(稳定编码 动态节点) noexcept;
 
     新_状态类& 状态服务_;
