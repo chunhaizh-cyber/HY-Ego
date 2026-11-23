@@ -2,6 +2,7 @@
 #include "../业务/接收需求认知.服务.h"
 #include "../业务/词典.语言学习服务.h"
 #include "../业务/新_外设世界树类.h"
+#include "../领域/新_本能函数管理类.h"
 #include "../领域/新_方法类.h"
 #include "../核心/日志系统.h"
 #include "../核心/容错检查.h"
@@ -1127,7 +1128,7 @@ struct 新_自我线程类::实现 final {
     }
 
     enum class 方法学习发现状态 : std::uint8_t {
-        已接纳 = 1, 已在途, 已处理仍无配对, 已有配对, 无需学习, 暂缓, 停止取消
+        已接纳 = 1, 已在途, 已处理仍无配对, 已有配对, 无需学习, 暂缓, 停止取消, 等待分界取材
     };
     static void 合并词典请求者(std::vector<词典学习请求者>& 组, 词典学习请求者 请求者) {
         const auto 已有 = std::find_if(组.begin(), 组.end(), [&](const auto& 项) {
@@ -1303,6 +1304,9 @@ struct 新_自我线程类::实现 final {
                 || 方法->实现方式 != 新方法实现方式::本能) return S::无需学习;
             if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
                 throw std::logic_error("正式本能方法缺少登记名");
+            if (*方法->本能函数登记名==新本能函数登记名_语言片段分词
+                || *方法->本能函数登记名==新本能函数登记名_未登记片段建立或取得词条)
+                return S::无需学习;
             const auto 事实 = 世界树服务->获取事实服务引用();
             const auto 词典类型 = 事实.特征概念服务.读取当前先天特征类型槽(先天特征类型槽::词典材料);
             if (词典类型.状态 == 特征概念规则状态::资源失败) return S::暂缓;
@@ -1378,12 +1382,102 @@ struct 新_自我线程类::实现 final {
         }
     }
 
-    方法学习发现状态 发现候选方法学习(稳定编码 T, 稳定编码 M,
+    std::optional<方法学习发现状态> 读取候选分界学习材料(稳定编码 T,稳定编码 候选需求,稳定编码 M,
+        std::vector<新任务依赖键>& 等待键,bool 记录本次) {
+        using S=方法学习发现状态;
+        using P=正式信息参数读取状态;
+        const auto 方法=方法服务->获取方法(M);
+        if(!方法 || !方法->本能函数登记名)return {};
+        const auto& 名称=*方法->本能函数登记名;
+        const bool 分词=名称==新本能函数登记名_语言片段分词;
+        if(!分词 && 名称!=新本能函数登记名_未登记片段建立或取得词条)return {};
+        if(停止源.stop_requested())return S::停止取消;
+
+        const auto D=需求服务->获取需求(候选需求);
+        if(!D || D->执行域!=新需求执行域::自我执行 || D->活动状态!=新需求活动状态::活动
+            || D->目标.目标形式!=新需求目标形式::值 || D->目标.取值位置!=特征取值位置::当前值)
+            return S::无需学习;
+        if(方法->参数规格组.empty() || !方法->参数规格组.front().有序规格)
+            throw std::logic_error("segmentation method has no formal range parameter");
+        const auto& 范围规格=*方法->参数规格组.front().有序规格;
+        if(范围规格.序号!=1 || 范围规格.信息类型!=新方法参数信息类型::存在)
+            throw std::logic_error("segmentation range parameter does not correspond to its declaration");
+        const auto R=D->目标存在节点;
+        const auto 事实=世界树服务->获取事实服务引用();
+        const auto 读取=事实.语言服务.读取分界参数保护(R,范围规格.范围概念节点);
+        if(读取.状态==P::前提已变化 || 读取.状态==P::资源失败 || 读取.状态==P::依赖未就绪)
+            return S::暂缓;
+        if(读取.状态==P::信息不存在)return S::无需学习;
+        if(读取.状态!=P::已读取 || !读取.信息)
+            throw std::logic_error("segmentation range did not read through the formal parameter owner");
+
+        using K=新语言范围特征种类;
+        const auto& 内容=读取.信息->直接内容组;
+        const auto& 定位=读取.信息->特征定位组;
+        constexpr auto 准入=static_cast<std::size_t>(K::词条准入结果);
+        constexpr auto 有效分界=static_cast<std::size_t>(K::有效分界结果);
+        constexpr auto 候选=static_cast<std::size_t>(K::分词候选材料);
+        constexpr auto 依据=static_cast<std::size_t>(K::分界依据);
+        if(内容.size()!=准入+1 || 定位.size()!=内容.size())
+            throw std::logic_error("segmentation parameter does not contain its four formal features");
+        const auto FT=D->目标.目标特征类型概念节点;
+        const auto 输出槽=分词 ? (FT==内容[候选].特征类型 ? 候选 : 有效分界) : 准入;
+        if(FT!=内容[输出槽].特征类型 || 内容[输出槽].内容.状态==正式内容值状态::已知)
+            return S::无需学习;
+        const auto 顺序=输出槽==有效分界 ? 1u : 0u;
+        const auto 分支=std::find_if(方法->执行分支组.begin(),方法->执行分支组.end(),[顺序](const auto& 项) {
+            return 项.定义.顺序==顺序;
+        });
+        if(分支==方法->执行分支组.end())throw std::logic_error("segmentation result branch is unavailable");
+        if(std::any_of(方法->条件结果组.begin(),方法->条件结果组.end(),[&](const auto& 对) {
+            return std::find(对.来源执行分支节点组.begin(),对.来源执行分支节点组.end(),分支->节点)
+                !=对.来源执行分支节点组.end() && std::any_of(对.结果.结果项组.begin(),对.结果.结果项组.end(),[&](const auto& 项) {
+                    return 项.参数序号==范围规格.序号 && 项.特征类型概念节点==FT
+                        && 项.取值位置==特征取值位置::当前值;
+                });
+        }))return S::已有配对;
+
+        const auto 已有键数=等待键.size();
+        for(const auto& 条件:分支->定义.必要条件.条件项组) {
+            if(条件.参数序号==0 || 条件.参数序号>方法->参数规格组.size())
+                throw std::logic_error("segmentation condition has no ordered parameter");
+            const auto& 参数=方法->参数规格组[条件.参数序号-1].有序规格;
+            if(!参数 || 参数->信息类型!=新方法参数信息类型::特征 || 参数->所属存在位置!=范围规格.序号
+                || 条件.特征类型概念节点!=参数->范围概念节点 || 条件.取值位置!=特征取值位置::当前值)
+                throw std::logic_error("segmentation condition is not a current feature of the range");
+            const auto 项=std::find_if(内容.begin(),内容.end(),[&](const auto& 值) {
+                return 值.特征类型==参数->范围概念节点;
+            });
+            if(项==内容.end())throw std::logic_error("segmentation condition feature is absent from the range projection");
+            if(项->内容.状态==正式内容值状态::当前未知) {
+                const auto& F=定位[static_cast<std::size_t>(项-内容.begin())];
+                等待键.push_back({新任务依赖键种类::节点,F.特征节点,{}});
+            }
+        }
+        const bool 缺材料=等待键.size()!=已有键数;
+        if(记录本次)try {
+            std::wostringstream 文;
+            文 << L"T=" << T.值 << L"；D=" << D->节点.值 << L"；R=" << R.值 << L"；方法=" << M.值
+                << L"；分支=" << 顺序 << L"；目标F=" << 定位[输出槽].特征节点.值
+                << L"；候选F=" << 定位[候选].特征节点.值
+                << L"；候选已知=" << (内容[候选].内容.状态==正式内容值状态::已知)
+                << L"；依据F=" << 定位[依据].特征节点.值
+                << L"；取材=" << (缺材料 ? L"等待正式输入" : L"隔离执行待接入");
+            for(auto i=已有键数;i<等待键.size();++i)文 << L"；缺F=" << 等待键[i].节点.值;
+            (void)记录运行日志(L"自我线程",L"分界学习取材",文.str());
+        }catch(...){}
+        return S::等待分界取材;
+    }
+
+    方法学习发现状态 发现候选方法学习(稳定编码 T, 稳定编码 候选需求, 稳定编码 M,
         std::vector<新任务依赖键>& 等待键, std::optional<新词典学习处置>& 词典处置) noexcept {
         try {
             const auto 读 = 读取当前词典学习发现(T, M);
-            if (!读.发现) return 读.状态 == 新词典学习发现状态::不涉及
-                ? 发现方法学习(M) : 方法学习发现状态::无需学习;
+            if (!读.发现) {
+                if(读.状态!=新词典学习发现状态::不涉及)return 方法学习发现状态::无需学习;
+                if(const auto 分界=读取候选分界学习材料(T,候选需求,M,等待键,true))return *分界;
+                return 发现方法学习(M);
+            }
             const auto& 当前 = *读.发现;
             词典处置 = 当前.处置;
             等待键.insert(等待键.end(), 当前.等待依赖键组.begin(), 当前.等待依赖键组.end());
@@ -2119,25 +2213,34 @@ struct 新_自我线程类::实现 final {
             || 定位.原因 == 新任务等待原因::同次执行比较材料不足) return 出口(__LINE__);
         if (资格.状态 == 新需求筹办资格状态::允许筹办
             || 资格.状态 == 新需求筹办资格状态::等待普通材料) {
-            bool 词典仍需材料 = false;
+            bool 候选仍需材料 = false;
             bool 词典已有知识 = false;
             bool 有其它候选 = false;
             if (const auto 候选 = 任务服务->获取当前候选方法材料(任务.节点)) {
                 for (const auto M : 候选->候选方法节点组) {
                     const auto 读 = 读取当前词典学习发现(任务.节点, M);
-                    if (!读.发现) { 有其它候选 = true; continue; }
+                    if (!读.发现) {
+                        if(const auto 分界=读取候选分界学习材料(
+                            任务.节点,候选->需求节点,M,决议.附加等待依赖键组,false)) {
+                            if(*分界==方法学习发现状态::暂缓)return std::nullopt;
+                            if(*分界==方法学习发现状态::停止取消)return 出口(__LINE__);
+                            if(*分界==方法学习发现状态::等待分界取材)候选仍需材料=true;
+                            else 有其它候选=true;
+                        } else 有其它候选=true;
+                        continue;
+                    }
                     const auto& 当前发现 = *读.发现;
                     决议.附加等待依赖键组.insert(决议.附加等待依赖键组.end(),
                         当前发现.等待依赖键组.begin(), 当前发现.等待依赖键组.end());
                     const auto 接纳 = 接纳词典学习发现(M, 当前发现);
                     if (接纳 == 方法学习发现状态::暂缓) return std::nullopt;
-                    词典仍需材料 |= 当前发现.处置 == 新词典学习处置::条件未具备
+                    候选仍需材料 |= 当前发现.处置 == 新词典学习处置::条件未具备
                         || 当前发现.处置 == 新词典学习处置::可提交学习;
                     词典已有知识 |= 当前发现.处置 == 新词典学习处置::已有覆盖知识
                         || 当前发现.处置 == 新词典学习处置::已有空结果配对;
                 }
             }
-            if (词典仍需材料 && !词典已有知识 && !有其它候选) {
+            if (候选仍需材料 && !词典已有知识 && !有其它候选) {
                 决议.状态 = 新自我等待复核状态::等待材料;
                 return 出口(__LINE__);
             }
@@ -4518,10 +4621,11 @@ struct 新_自我线程类::实现 final {
             标记因果停止并移交进度(项, 结果);
             return 结果;
         }
-        std::vector<新任务依赖键> 词典等待键;
+        std::vector<新任务依赖键> 附加等待键;
         bool 词典条件暂缺 = false;
         bool 词典需要学习 = false;
         bool 词典已有知识 = false;
+        bool 分界等待取材 = false;
         if (const auto 候选=任务服务->获取当前候选方法材料(定位.任务节点)) {
             for (const auto 方法节点:候选->候选方法节点组) {
                 if (停止源.stop_requested()) {
@@ -4529,11 +4633,12 @@ struct 新_自我线程类::实现 final {
                     return 结果;
                 }
                 std::optional<新词典学习处置> 处置;
-                const auto 学习 = 发现候选方法学习(定位.任务节点, 方法节点, 词典等待键, 处置);
+                const auto 学习 = 发现候选方法学习(定位.任务节点, 候选->需求节点, 方法节点, 附加等待键, 处置);
                 if (学习 == 方法学习发现状态::暂缓) return std::nullopt;
                 if (学习 == 方法学习发现状态::停止取消) {
                     结果.状态 = 新自我消息处理状态::停止取消; return 结果;
                 }
+                分界等待取材 |= 学习==方法学习发现状态::等待分界取材;
                 词典条件暂缺 |= 处置 == 新词典学习处置::条件未具备;
                 词典需要学习 |= 处置 == 新词典学习处置::可提交学习;
                 词典已有知识 |= 处置 == 新词典学习处置::已有覆盖知识
@@ -4570,16 +4675,16 @@ struct 新_自我线程类::实现 final {
         const auto 分类候选 = 任务服务->获取当前候选方法材料(定位.任务节点);
         结果.筹办裁决 = 分类筹办结果(
             定位, *结果.筹办独立读回);
-        结果.筹办裁决->附加等待依赖键组 = std::move(词典等待键);
-        if (!词典已有知识 && (词典条件暂缺 || 词典需要学习)
+        结果.筹办裁决->附加等待依赖键组 = std::move(附加等待键);
+        if (!词典已有知识 && (词典条件暂缺 || 词典需要学习 || 分界等待取材)
             && (结果.筹办裁决->状态 == 新自我筹办裁决状态::等待材料
                 || 结果.筹办裁决->状态 == 新自我筹办裁决状态::当前无可用方法)) {
-            结果.筹办裁决->状态 = 词典条件暂缺 ? 新自我筹办裁决状态::等待材料
+            结果.筹办裁决->状态 = (词典条件暂缺 || 分界等待取材) ? 新自我筹办裁决状态::等待材料
                 : 新自我筹办裁决状态::当前无可用方法;
         }
         if (停止源.stop_requested()) { 结果.状态 = 新自我消息处理状态::停止取消; return 结果; }
         if (结果.筹办裁决->状态 == 新自我筹办裁决状态::当前无可用方法
-            && !词典需要学习 && !词典条件暂缺
+            && !词典需要学习 && !词典条件暂缺 && !分界等待取材
             && !登记当前缺失方法(定位, 分类候选)) {
             // 仍将失效决定交回manager收口旧反馈；不遗留永远待接收的定位。
             结果.筹办裁决->状态 = 新自我筹办裁决状态::任务状态变化;
