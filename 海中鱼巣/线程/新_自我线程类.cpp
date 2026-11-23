@@ -46,7 +46,7 @@ const wchar_t* 主线因果状态文字(新任务因果子需求提议状态 值
     switch (值) { HY_MAINLINE_STATE(已形成) HY_MAINLINE_STATE(无需子需求)
         HY_MAINLINE_STATE(材料已变化) HY_MAINLINE_STATE(无路径) HY_MAINLINE_STATE(路径待选择)
         HY_MAINLINE_STATE(资源延后)
-        case 状态::能力未支持: return L"词条参与者尚未支持"; }
+        case 状态::能力未支持: return L"能力未支持"; }
     return L"未知因果提议状态";
 }
 const wchar_t* 主线因果状态文字(二次特征概念操作状态 值) noexcept {

@@ -119,3 +119,13 @@ Debug产物SHA-256为 D7F9733A726099B07725C10244D54C5D201758D8158B6807B8D9BD7A61
 实际 Debug/x64 用时 155.74 秒、Release/x64 用时 163.51 秒，均0错误、0警告。两个配置各247项构建输入前后相同，当前逐项重读与记录一致。构建输入SHA-256为 6307C9EE6AF013EAA764E7AC52CF41B58E33B8B3B24558759F52C26E896542D0，六文件差异SHA-256为 DF1AE352BBAB0DA3A87CE27BD2C761725325D9C103D5BC2870A6F060D8019D43。[Debug结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c3-action-target-Debug/result.json) · [Release结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c3-action-target-Release/result.json) · [源码差异](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/20261123-56c3-action-target-Release/56C3-source.patch)
 
 Debug产物SHA-256为 4BD4D9F7582F10B71D728C48085B2ACF704EF722245F9A053E7D6F172EDC33C3，Release产物SHA-256为 4C86C1F8487171F4C584BED9742E2F51A3996E6C2E51E181C0956075D3AEDFD9。程序未运行。场景、任务、治理和因果接纳在第56C4接续，正常网页补问与同D验收继续等待完整接线。
+
+## 56C4 语言范围动作的场景、任务及治理接纳
+
+在主工作区基线 9e6566a65b7e5bf7f71a68904e8b2522a3d59bc3 依计划 v2.109 和主设计第 10.86 节实施八个源码文件。语言范围动作挂入实际执行主体所在的普通场景。任务读取冻结 X 的动作来源、方法、执行窗口及参数位置，将实际 F 所属位置与 R 的实际绑定对齐。三处内部治理读口接受种类5，同时沿原入口核对旧 T 来源、主体及时间。反向因果和筹办用具名缺口携带实际 R，控制面板可显示语言材料范围。
+
+独立静态复核发现，缺双根时原拟使用的依赖未实现状态会被调用方当作工程异常。已改为现有可恢复的任务状态不允许，保留已发生动作。其余场景、冻结位置、旧 T 来源、缺口和控制显示未见静态回归。
+
+修正前 Debug/x64 和 Release/x64 全量编译分别为 503.76 秒和 469.58 秒，均 0 错误、0 警告。修正后实际工程 Debug/x64 和 Release/x64 分别为 29.82 秒和 45.77 秒，均 0 错误、0 警告。两套构建各 247 项实际输入前后不变且逐项一致。输入清单 SHA-256 为 4E335F82031AAF534F8ADBFF5B4A8754E7EAD85BF9B673FA77E8255011BC5DD3，八文件差异 SHA-256 为 DE50B8DAB1469F74C8DEC411562DF5BF114A9F290B17E1FD9F85D238CB55367D。[Debug 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Debug/final-result.json) · [Release 构建证据](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Release/final-result.json) · [源码差异](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\20261123-56c4-range-consumers-Release\56C4-source.patch)
+
+Debug 产物 SHA-256 为 D901E60E5681A837394645A7CEA9926E76EFA0BF57D67429C42268914CBBF703，Release 产物 SHA-256 为 AA8B6E411C02EF2B9732E9B99C7E12A8B73856DB2E00CBDD55B861021B63A39C。程序未运行。当前普通网页入站仍需生产正式语言范围并交接前置任务，第 6 组问答、同 D 写回和 P6 正式承接待取证。

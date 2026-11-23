@@ -167,12 +167,13 @@ struct 反向因果未绑定角色边界
                            const 反向因果未绑定角色边界 &) = default;
 };
 enum class 反向因果能力缺口种类 : std::uint8_t {
-    词条参与者尚未支持=1
+    词条参与者尚未支持=1, 语言范围参与者尚未支持=2
 };
 struct 反向因果能力缺口 final {
     反向因果能力缺口种类 种类=反向因果能力缺口种类::词条参与者尚未支持;
     稳定编码 词条节点;
     std::optional<稳定编码> 起点动作节点;
+    std::optional<稳定编码> 语言范围节点{};
     friend bool operator==(const 反向因果能力缺口&,const 反向因果能力缺口&)=default;
 };
 struct 反向因果查询结果

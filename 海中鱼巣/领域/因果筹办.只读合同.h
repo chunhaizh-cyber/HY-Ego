@@ -452,7 +452,8 @@ struct 新因果静态状态缺口 final {
 };
 enum class 新因果能力缺口种类 : std::uint8_t {
     未知动作=1, 触发方式未确定, 主动动作无对应方法,
-    状态目标尚无路径, 未绑定参与者, 值域暂不能转换, 词条参与者尚未支持=7
+    状态目标尚无路径, 未绑定参与者, 值域暂不能转换, 词条参与者尚未支持=7,
+    语言范围参与者尚未支持=8
 };
 struct 新因果能力缺口 final {
     新因果能力缺口种类 种类=新因果能力缺口种类::状态目标尚无路径;
@@ -461,6 +462,7 @@ struct 新因果能力缺口 final {
     std::optional<反向因果状态条件> 需要状态;
     std::optional<新需求变化方向> 目标方向;
     std::optional<稳定编码> 词条节点, 起点动作节点;
+    std::optional<稳定编码> 语言范围节点{};
     friend bool operator==(const 新因果能力缺口&,const 新因果能力缺口&)=default;
 };
 struct 新因果筹办读回 final {
