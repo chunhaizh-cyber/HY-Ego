@@ -1,0 +1,126 @@
+# 拟议路径：.github/workflows/cloud-msvc-smoke.yml
+# 零业务代码改动。结论范围：MSVC 编译 + 正式入口启动/收发接口/关闭冒烟。
+# 不声称消息理解或业务闭环。HTTP 202 仅表示入队 Accepted。
+name: cloud-msvc-smoke
+
+on:
+  # 登记到默认分支后可用；首次未经测试的 workflow 不要先靠合并到 main 再 dispatch。
+  workflow_dispatch:
+    inputs:
+      run_smoke:
+        description: After Release|x64 build, run formal-entry API smoke (start / POST messages 202 / close)
+        type: boolean
+        default: true
+
+  # 同仓 PR：用 PR head 上的 workflow 文件直接跑，无需先合并到 main。
+  pull_request:
+    paths:
+      - '.github/workflows/cloud-msvc-smoke.yml'
+      - 'tools/ci/windows-msvc-smoke.ps1'
+      - '海中鱼巣.vcxproj'
+
+  # 建议分支首次推送即可触发（与 PR 二选一或并行）；不覆盖任意 push 到 main。
+  push:
+    branches:
+      - 'cursor/cloud-msvc-smoke-c720'
+    paths:
+      - '.github/workflows/cloud-msvc-smoke.yml'
+      - 'tools/ci/windows-msvc-smoke.ps1'
+      - '海中鱼巣.vcxproj'
+
+permissions:
+  contents: read
+
+jobs:
+  msvc-smoke:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild (VS2026 / v145 image)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+
+      - name: Verify toolset presence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Image label expectation: windows-2025-vs2026 (VS 2026 / PlatformToolset v145)"
+          msbuild -version
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          if (Test-Path $vswhere) {
+            & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          }
+
+      - name: "Prepare D: contract paths (no source change)"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP 'hy-ego-droot'
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          if (-not (Test-Path 'D:\')) {
+            subst D: $root
+            if ($LASTEXITCODE -ne 0) { throw "subst D: failed: $LASTEXITCODE" }
+          }
+          # 日志根 + 会话 URL 旁路（宿主硬编码 D:/TEMP/海中鱼巣/last-session-url.txt）
+          New-Item -ItemType Directory -Force -Path 'D:\海中鱼巣\日志' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'D:\TEMP\海中鱼巣' | Out-Null
+          Write-Host "D: prepared. log=$([IO.Directory]::Exists('D:\海中鱼巣\日志')) temp=$([IO.Directory]::Exists('D:\TEMP\海中鱼巣'))"
+
+      - name: Build Release|x64 (formal vcxproj; persist msbuild.log always)
+        id: build
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $buildRoot = Join-Path $env:RUNNER_TEMP 'HY-Ego-build-Release'
+          $out = Join-Path $buildRoot 'bin\'
+          $obj = Join-Path $buildRoot 'obj\'
+          $artifactRoot = Join-Path $env:RUNNER_TEMP 'hy-ego-smoke\artifacts'
+          New-Item -ItemType Directory -Force -Path $out, $obj, $artifactRoot | Out-Null
+          $buildLog = Join-Path $artifactRoot 'msbuild.log'
+          # EnableD455RealSense 默认 false；PostBuild 将 初始化材料/词典 复制到 OutDir（exe 旁）
+          msbuild .\海中鱼巣.vcxproj `
+            /t:Build /m `
+            /p:Configuration=Release `
+            /p:Platform=x64 `
+            "/p:OutDir=$out" `
+            "/p:IntDir=$obj" `
+            /nologo /v:minimal `
+            /fl "/flp:LogFile=$buildLog;Verbosity=normal"
+          if ($LASTEXITCODE -ne 0) { throw "msbuild failed: $LASTEXITCODE (log=$buildLog)" }
+          $exe = Join-Path $out '海中鱼巣.exe'
+          if (-not (Test-Path $exe)) { throw "missing exe: $exe" }
+          foreach ($rel in @('初始化材料', '基础数据\词典')) {
+            $p = Join-Path $out $rel
+            if (-not (Test-Path $p)) { throw "PostBuild data missing next to exe: $p" }
+          }
+          Get-Item $exe | Format-List FullName, Length, LastWriteTime
+          "BUILD_OUT=$out" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "SMOKE_ARTIFACT_ROOT=$artifactRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Formal-entry API smoke (start / messages 202 / close)
+        # workflow_dispatch 可关冒烟；push/PR 默认跑
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_smoke }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & "$env:GITHUB_WORKSPACE\tools\ci\windows-msvc-smoke.ps1" `
+            -ExeDir $env:BUILD_OUT `
+            -ArtifactRoot $env:SMOKE_ARTIFACT_ROOT `
+            -SkipBuild
+
+      - name: Upload build log + smoke evidence (always, including failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-msvc-smoke-${{ github.run_id }}
+          path: |
+            ${{ runner.temp }}/hy-ego-smoke/artifacts/**
+            ${{ runner.temp }}/HY-Ego-build-Release/bin/海中鱼巣.exe
+            D:/TEMP/海中鱼巣/**
+            D:/海中鱼巣/日志/**
+          if-no-files-found: warn
+          retention-days: 14
