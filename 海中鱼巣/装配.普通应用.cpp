@@ -1554,6 +1554,35 @@ public:
                         [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
             }
         }
+        std::string 词条准入 = "null";
+        if (有效(item.M) && item.词条准入 && item.词条准入->来源.接收消息节点 == item.M) {
+            const auto& 证据 = *item.词条准入;
+            const auto& 语言 = 当前_.世界事实.语言服务;
+            const auto 来源读回 = 语言.读取前置来源(证据.来源, 当前_.外设世界树);
+            const auto 准入 = 语言.读取当前接收词条准入(证据.范围, 证据.前置来源);
+            if (来源读回.信息 && 来源读回.信息->节点 == 证据.前置来源
+                && 准入.信息 && 准入.信息->节点 == 证据.准入材料) {
+                const auto& 定义 = std::get<新语言词条准入定义>(准入.信息->定义);
+                std::string 分段 = "[";
+                bool 词条齐备 = true;
+                for (const auto& 段 : 定义.词段组) {
+                    检查停止();
+                    const bool 分隔 = 段.用途 == 新语言分界段用途::分隔;
+                    const auto 词 = 段.词条 ? 当前_.世界事实.词服务.获取词条(*段.词条) : 新词条查询结果{};
+                    if (!分隔 && (词.状态 != 新词条查询状态::已找到 || !词.信息)) {
+                        词条齐备 = false;
+                        break;
+                    }
+                    if (分段.size() != 1) 分段 += ',';
+                    分段 += "{\"start\":" + 控制计数(段.起始标量) + ",\"end\":" + 控制计数(段.结束标量)
+                        + ",\"separator\":" + 控制布尔(分隔) + ",\"word\":" + 控制编码(段.词条)
+                        + ",\"surface\":" + (词.信息 ? 字符串(词.信息->规范化词面) : "null") + "}";
+                }
+                if (词条齐备)
+                    词条准入 = "{\"range\":" + 控制编码(证据.范围) + ",\"effective\":" + 控制编码(定义.有效结果)
+                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"segments\":" + 分段 + "]}";
+            }
+        }
         检查停止();
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
@@ -1561,7 +1590,7 @@ public:
             +",\"meaning\":"+控制编码(item.U)+",\"demand\":"+控制编码(item.D)
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
-            +",\"boundaryReply\":"+分界答复+"}";
+            +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入+"}";
         检查停止();
         return JSON;
     }

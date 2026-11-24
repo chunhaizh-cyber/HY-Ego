@@ -1144,7 +1144,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             const auto& 工作=it->second;
             if(工作.前置==实现::前置阶段::待筹办||工作.前置==实现::前置阶段::已停用)return false;
             if(工作.前置==实现::前置阶段::具名等待)
-                return impl.分界询问配置 && !工作.分界询问已收束 && 工作.观察.前置输入等待材料
+                return impl.分界询问配置 && !工作.观察.词条准入 && 工作.观察.前置输入等待材料
                     && 工作.观察.前置输入等待材料->有效分界缺口 && 工作.下次<=now;
         }
         return it==impl.进度.end()
@@ -1267,28 +1267,45 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         using S=正式信息参数读取状态;
         try {
             if(stop.stop_requested()||!会话仍活跃(m))return {};
-            if(const auto 缺口=impl.读取当前分界缺口(材料)) {
-                const auto 取材=分界配置->取材->读取正式信息参数保护(缺口->范围,分界配置->材料范围概念);
-                if(取材.状态==S::资源失败)资源();
-                if(取材.状态==S::已读取&&取材.信息) {
-                    const auto& 字段=取材.信息->直接内容组;
-                    const auto 已知=[&](稳定编码 类型){
-                        return std::any_of(字段.begin(),字段.end(),[&](const auto& 项){
-                            return 项.特征类型==类型&&项.内容.状态==正式内容值状态::已知;
-                        });
-                    };
-                    if(已知(分界配置->依据类型)||已知(分界配置->有效分界类型)) {
-                        work.分界询问已收束=true;
-                    } else if(已知(分界配置->候选类型)) {
-                        work.分界询问输出=输出接收分界询问(d,*分界配置,材料.定位,缺口->范围,m,stop,
-                            [&]{return 会话仍活跃(m);},out.原因);
-                        if(work.分界询问输出){
+            using 准入状态 = 新语言分界工程状态;
+            const auto& 定位 = 材料.定位;
+            const auto 准入 = d.语言世界.采用接收词条准入(d.语言, 材料.有效分界缺口->范围,
+                定位.前置来源节点, d.特征值, d.词, stop);
+            if (准入.状态 == 准入状态::已完成) {
+                if (!准入.信息) throw std::logic_error("source admission readback missing");
+                work.分界询问已收束 = true;
+                out.词条准入 = 接收词条准入证据{定位.来源, 定位.前置来源节点,
+                    准入.信息->所属范围, 准入.信息->节点};
+                out.原因 = "原消息已读回同范围的正式词条准入，待按正式词段解释";
+            } else if (准入.状态 == 准入状态::资源失败) {
+                资源();
+            } else if (准入.状态 == 准入状态::输入拒绝 || 准入.状态 == 准入状态::未支持) {
+                throw std::logic_error("formal reception admission source rejected");
+            }
+            if (!work.分界询问已收束 && 准入.状态 == 准入状态::未找到) {
+                if(const auto 缺口=impl.读取当前分界缺口(材料)) {
+                    const auto 取材=分界配置->取材->读取正式信息参数保护(缺口->范围,分界配置->材料范围概念);
+                    if(取材.状态==S::资源失败)资源();
+                    if(取材.状态==S::已读取&&取材.信息) {
+                        const auto& 字段=取材.信息->直接内容组;
+                        const auto 已知=[&](稳定编码 类型){
+                            return std::any_of(字段.begin(),字段.end(),[&](const auto& 项){
+                                return 项.特征类型==类型&&项.内容.状态==正式内容值状态::已知;
+                            });
+                        };
+                        if(已知(分界配置->依据类型)||已知(分界配置->有效分界类型)) {
                             work.分界询问已收束=true;
-                            out.原因="正式分界问题已入列，等待明确关联回答";
+                        } else if(已知(分界配置->候选类型)) {
+                            work.分界询问输出=输出接收分界询问(d,*分界配置,材料.定位,缺口->范围,m,stop,
+                                [&]{return 会话仍活跃(m);},out.原因);
+                            if(work.分界询问输出){
+                                work.分界询问已收束=true;
+                                out.原因="正式分界问题已入列，等待明确关联回答";
+                            }
                         }
                     }
-                }
-            } else work.分界询问已收束=true;
+                } else work.分界询问已收束=true;
+            }
         } catch(const 推进中断& 中断) {
             if(stop.stop_requested())return {};
             out.原因=中断.原因;

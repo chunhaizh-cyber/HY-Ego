@@ -54,6 +54,10 @@ enum class 接收行动请求交接确认状态 : std::uint8_t {
 struct 接收分界答复证据 final {
     稳定编码 问题, 范围, 依据;
 };
+struct 接收词条准入证据 final {
+    新接收认知来源键 来源;
+    稳定编码 前置来源, 范围, 准入材料;
+};
 struct 接收需求认知观察 final {
     稳定编码 M;
     std::optional<稳定编码> H,S,U,D;
@@ -65,6 +69,7 @@ struct 接收需求认知观察 final {
     std::optional<新前置语言输入定位> 待交接前置输入{};
     std::optional<新前置语言输入材料> 前置输入等待材料{};
     std::optional<接收分界答复证据> 分界答复{};
+    std::optional<接收词条准入证据> 词条准入{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。

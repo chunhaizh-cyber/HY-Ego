@@ -83,7 +83,7 @@ enum class 语言分界键 : std::size_t {
     范围区间, 范围候选F, 范围依据F, 范围结果F, 范围准入F,
     范围材料登记, 材料范围, 材料定义, 范围采用登记,
     采用来源, 采用种类, 采用材料, 采用特征类型, 采用特征, 采用状态, 采用状态时间,
-    接收候选采用登记, 正式依据采用登记, 总数
+    接收候选采用登记, 正式依据采用登记, 接收准入采用登记, 总数
 };
 std::array<稳定编码, static_cast<std::size_t>(语言分界键::总数)> 语言分界句柄{};
 std::atomic<std::uint64_t> 分界身份范围{0};
@@ -7777,6 +7777,7 @@ auto 新_语言类::提交分界材料采用(
         case 分界采用来路::执行: return 语言分界键::范围采用登记;
         case 分界采用来路::接收候选: return 语言分界键::接收候选采用登记;
         case 分界采用来路::正式依据: return 语言分界键::正式依据采用登记;
+        case 分界采用来路::接收准入: return 语言分界键::接收准入采用登记;
         }
         throw std::logic_error("unknown boundary adoption origin");
     }();
@@ -7794,6 +7795,9 @@ auto 新_语言类::提交分界材料采用(
             const auto 材料信息 = 取得分界材料已加锁(R, 材料, 目标种类);
             if (来路 == 分界采用来路::正式依据)
                 依据候选 = std::get<新语言分界依据定义>(材料信息.定义).候选材料;
+            if (来路 == 分界采用来路::接收准入
+                && std::get<新语言词条准入定义>(材料信息.定义).有效结果 != 来源)
+                throw 分界输入拒绝{};
         }
 
         // 先取场景／状态构造绑定；取得特征准备后只调用纯构造入口。
@@ -7825,13 +7829,26 @@ auto 新_语言类::提交分界材料采用(
             throw;
         }
         const auto 状态绑定 = 状态.取得特征状态构造绑定();
-        auto 准备 = 特征.准备特征当前值组({{F, 新特征准确值{材料}, false}});
+        std::vector<新特征当前值设置项> 设置组{{F, 新特征准确值{材料}, false}};
+        std::optional<稳定编码> 有效结果特征;
+        if (来路 == 分界采用来路::接收准入) {
+            constexpr auto 结果槽 = static_cast<std::size_t>(新语言范围特征种类::有效分界结果);
+            有效结果特征 = 范围.范围.特征节点组[结果槽];
+            设置组.push_back({*有效结果特征, 新特征准确值{来源}, false});
+        }
+        auto 准备 = 特征.准备特征当前值组(设置组);
         if (准备.状态 == 准备状态::预期已变化 || 准备.状态 == 准备状态::特征不存在
             || 准备.状态 == 准备状态::概念不存在) continue;
         if (准备.状态 == 准备状态::联合更新占用) throw 分界状态::材料未就绪;
         if (准备.状态 == 准备状态::资源失败) throw std::bad_alloc{};
         if (准备.状态 != 准备状态::已准备 || !准备.准备)
             throw std::logic_error("boundary feature group preparation failed");
+
+        if (有效结果特征 && 特征.读取准备原当前值(*准备.准备, *有效结果特征)
+            != 新特征准确值{来源}) {
+            特征.取消特征当前值组(*准备.准备);
+            throw 分界状态::前提已变化;
+        }
 
         if (来路 == 分界采用来路::正式依据) {
             const auto 原值 = 特征.读取准备原当前值(*准备.准备, F);
@@ -8149,6 +8166,102 @@ std::optional<新语言分界回答信息> 新_语言类::读取原文分界回�
         const auto 采用 = 提交分界材料采用(R, 种类, 材料.信息->节点, 前置来源,
             分界采用来路::接收候选, 场景, 状态, 结果.本次已发表身份, 停止);
         结果.信息 = 采用.实际材料;
+        结果.状态 = 分界状态::已完成;
+    });
+}
+
+namespace {
+std::optional<稳定编码> 读取分界槽当前引用(const 新_特征类& 特征, 稳定编码 F) {
+    using S = 新特征完整读取状态;
+    const auto 读 = 特征.读取特征完整保护(F);
+    switch (读.状态) {
+    case S::资源失败: throw std::bad_alloc{};
+    case S::前提已变化: throw 分界状态::前提已变化;
+    case S::特征不存在:
+    case S::依赖未就绪: throw 分界状态::材料未就绪;
+    case S::已读取: break;
+    default: throw std::logic_error("formal reception boundary feature unreadable");
+    }
+    if (!读.信息) throw std::logic_error("formal reception boundary feature read missing");
+    const auto& 当前值 = 读.信息->特征.当前值;
+    if (!当前值) return {};
+    const auto* 引用 = std::get_if<稳定编码>(&*当前值);
+    if (!引用 || !有效(*引用)) throw std::logic_error("formal reception boundary value is not a reference");
+    return *引用;
+}
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::保存已确认词条准入(
+    稳定编码 R, 稳定编码 有效结果, const 新语言词条准入取材& 取材, 新_词类& 词条服务,
+    const std::function<bool()>& 停止已请求) {
+    return 调用分界材料入口(L"保存已确认词条准入", [&](auto& 结果) {
+        新语言词条准入定义 定义{有效结果, {}};
+        定义.词段组.reserve(取材.词段材料组.size());
+        for (const auto& 材料 : 取材.词段材料组) {
+            if (停止已请求()) throw 分界状态::材料未就绪;
+            auto 词段 = 材料.词段;
+            if (词段.用途 == 新语言分界段用途::词面 && !词段.词条) {
+                if (!材料.未登记原文词面) throw std::logic_error("confirmed source word surface missing");
+                const auto 词条 = 词条服务.建立或取得词条({取材.语言节点,
+                    取材.规范化合同节点, *材料.未登记原文词面, 有效结果});
+                using S = 新词条建立状态;
+                if (词条.状态 == S::依赖已变化) throw 分界状态::前提已变化;
+                if (词条.状态 == S::依赖不存在) throw 分界状态::材料未就绪;
+                if (词条.状态 == S::资源失败) throw std::bad_alloc{};
+                if (!词条.词条节点) throw std::logic_error("confirmed source word was not admitted");
+                词段.词条 = *词条.词条节点;
+            }
+            定义.词段组.push_back(std::move(词段));
+        }
+        if (停止已请求()) throw 分界状态::材料未就绪;
+        结果 = 保存词条准入回执(R, 定义);
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::读取当前接收词条准入(
+    稳定编码 R, 稳定编码 前置来源) const {
+    return 调用分界材料入口(L"读取当前接收词条准入", [&](auto& 结果) {
+        if (!分界配置就绪_.load(std::memory_order_acquire)) throw 分界状态::未初始化;
+        std::lock_guard 采用锁(新语言分界采用互斥);
+        const auto 范围 = 取得分界范围(*this, R);
+        if (范围.范围.定位.前置来源节点 != 前置来源) throw 分界输入拒绝{};
+        constexpr auto 结果槽 = static_cast<std::size_t>(新语言范围特征种类::有效分界结果);
+        constexpr auto 准入槽 = static_cast<std::size_t>(新语言范围特征种类::词条准入结果);
+        const auto 有效结果 = 读取分界槽当前引用(*分界特征服务_, 范围.范围.特征节点组[结果槽]);
+        const auto 准入 = 读取分界槽当前引用(*分界特征服务_, 范围.范围.特征节点组[准入槽]);
+        if (!有效结果 || !准入) throw 分界状态::未找到;
+        std::lock_guard 锁(新语言互斥);
+        auto 材料 = 取得分界材料已加锁(R, *准入, 新语言范围特征种类::词条准入结果);
+        if (std::get<新语言词条准入定义>(材料.定义).有效结果 != *有效结果) throw 分界状态::未找到;
+        结果.信息 = std::move(材料);
+        结果.状态 = 分界状态::已完成;
+    });
+}
+
+新语言分界调用结果<新语言分界材料信息> 新_语言类::采用接收词条准入(
+    稳定编码 R, 稳定编码 前置来源, const 新_特征值类& 值, 新_词类& 词条,
+    新_场景类& 场景, 新_状态类& 状态, std::stop_token 停止) {
+    return 调用分界材料入口(L"采用接收词条准入", [&](auto& 结果) {
+        if (停止.stop_requested()) throw 分界状态::材料未就绪;
+        结果 = 读取当前接收词条准入(R, 前置来源);
+        if (结果.状态 != 分界状态::未找到) return;
+        const auto 范围 = 取得分界范围(*this, R);
+        if (范围.范围.定位.前置来源节点 != 前置来源) throw 分界输入拒绝{};
+        constexpr auto 结果槽 = static_cast<std::size_t>(新语言范围特征种类::有效分界结果);
+        const auto 有效结果 = 读取分界槽当前引用(*分界特征服务_, 范围.范围.特征节点组[结果槽]);
+        if (!有效结果) throw 分界状态::未找到;
+        const auto 取材 = 读取词条准入取材(R, *有效结果, 值);
+        if (取材.状态 != 分界状态::已完成) throw 取材.状态;
+        if (!取材.信息) throw std::logic_error("formal reception admission source missing");
+        const auto 保存 = 保存已确认词条准入(R, *有效结果, *取材.信息, 词条,
+            [&] { return 停止.stop_requested(); });
+        if (保存.状态 != 分界状态::已完成) throw 保存.状态;
+        if (!保存.信息) throw std::logic_error("formal reception admission material missing");
+        (void)提交分界材料采用(R, 新语言范围特征种类::词条准入结果, 保存.信息->节点,
+            *有效结果, 分界采用来路::接收准入, 场景, 状态, 结果.本次已发表身份, 停止);
+        auto 读回 = 读取当前接收词条准入(R, 前置来源);
+        if (读回.状态 != 分界状态::已完成) throw 读回.状态;
+        结果.信息 = std::move(读回.信息);
         结果.状态 = 分界状态::已完成;
     });
 }
