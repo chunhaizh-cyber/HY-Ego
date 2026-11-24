@@ -1,6 +1,8 @@
 #pragma once
 #include "关系陈述.语言服务.h"
 #include "../领域/关系概念类.h"
+#include "../领域/概念_存在类.h"
+#include "../领域/新_自然语言世界树类.h"
 #include <string>
 #include <vector>
 
@@ -12,6 +14,8 @@ struct 关系概念出站自检依赖 final {
     新_词类& 词;
     新_存在类& 存在;
     新_需求类& 需求;
+    概念_存在类* 存在概念 = nullptr; // 入站专名绑定；空则跳过入站项
+    新_自然语言世界树类* 语言世界 = nullptr;
     稳定编码 中文语言{};
     std::optional<稳定编码> 英文语言;
     std::string 种子文本;
@@ -23,6 +27,8 @@ struct 关系概念出站自检依赖 final {
     std::optional<稳定编码> 正式子需求;
     // 目标存在=正式部分存在 的需求；供字段引用/多连接夹具；空则对应项未验证。
     std::optional<稳定编码> 正式部分目标需求;
+    // 入站自我衔接：交互场景键；空则入站材料不挂交互场景（仍可按 NL 场景读回）。
+    std::optional<稳定编码> 交互场景夹具;
 };
 
 struct 关系概念出站自检条目 final {

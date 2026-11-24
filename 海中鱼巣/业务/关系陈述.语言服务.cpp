@@ -2,7 +2,9 @@
 #include "../领域/关系概念类.h"
 #include "../领域/新_存在类.h"
 #include "../领域/新_需求类.h"
+#include "../领域/新_自然语言世界树类.h"
 #include "../领域/语言含义图.数据.h"
+#include "解释.基础语言.h"
 
 #include <algorithm>
 #include <limits>
@@ -423,7 +425,7 @@ std::vector<稳定编码> 解析段根知识(
 } // namespace
 
 关系陈述语言服务::关系陈述语言服务(
-    const 关系概念类& 关系,
+    关系概念类& 关系,
     const 新_语言类& 语言,
     const 新_词类& 词,
     const 概念_名称关系类& 名称,
@@ -431,7 +433,7 @@ std::vector<稳定编码> 解析段根知识(
     const 概念_特征类& 特征概念,
     const 新_存在类& 存在,
     const 新_需求类& 需求,
-    const 新_自然语言世界树类& 语言世界) noexcept
+    新_自然语言世界树类& 语言世界) noexcept
     : 关系_(关系), 语言_(语言), 词_(词), 名称_(名称), 存在概念_(存在概念),
       特征概念_(特征概念), 存在_(存在), 需求_(需求), 语言世界_(语言世界) {}
 
@@ -559,6 +561,264 @@ std::vector<稳定编码> 解析段根知识(
     out.UTF8正文 = std::move(组合正文);
     out.所用知识节点组 = std::move(组合知识);
     out.所用表达为预置 = 表达->预置;
+    out.诊断.clear();
+    return out;
+}
+
+namespace {
+
+struct 入站匹配段 final {
+    std::string 种子键;
+    关系表达陈述段 段;
+    bool 预置 = true;
+};
+
+// 用与出站相同的表达知识解析，把解释命中的知识节点反查到关系种子+陈述段。
+std::vector<入站匹配段> 按知识匹配关系段(
+    稳定编码 知识节点,
+    稳定编码 语言节点,
+    const 关系概念类& 关系,
+    const 新_语言类& 语言,
+    const 新_词类& 词,
+    const 概念_存在类& 存在概念,
+    std::string& 诊断) {
+    std::vector<入站匹配段> 命中;
+    const auto 列表 = 关系.列出全部();
+    if (列表.状态 != 关系概念操作状态::已读取) {
+        诊断 = "关系概念列表不可读";
+        return {};
+    }
+    for (const auto& 信息 : 列表.信息组) {
+        const 关系概念表达关联* 表达 = nullptr;
+        for (const auto& a : 信息.定义.表达关联组) {
+            if (a.语言节点 == 语言节点) {
+                表达 = &a;
+                break;
+            }
+        }
+        if (!表达) continue;
+        std::vector<关系表达陈述段> 段组;
+        if (!表达->陈述段组.empty()) 段组 = 表达->陈述段组;
+        else {
+            关系表达陈述段 单;
+            单.含义操作码 = 表达->含义操作码;
+            单.预置知识尾词 = 表达->预置知识尾词;
+            单.表达知识节点组 = 表达->表达知识节点组;
+            单.角色槽组 = 表达->角色槽组;
+            段组.push_back(std::move(单));
+        }
+        for (const auto& 段 : 段组) {
+            if (段.含义操作码 == 0 || 段.角色槽组.size() < 2) continue;
+            std::set<std::int64_t> 期望;
+            for (const auto& 槽 : 段.角色槽组) 期望.insert(槽.参数角色码);
+            std::string 段诊;
+            auto 根 = 解析段根知识(
+                段.表达知识节点组, 段.预置知识尾词,
+                static_cast<新语言知识含义操作>(段.含义操作码), 期望,
+                语言节点, 语言, 词, 存在概念, 段诊);
+            if (根.empty()) continue;
+            if (std::find(根.begin(), 根.end(), 知识节点) == 根.end()) continue;
+            命中.push_back({信息.定义.稳定种子键, 段, 表达->预置});
+        }
+    }
+    return 命中;
+}
+
+std::optional<稳定编码> 图角色存在节点(
+    const 语言图含义材料& 图, std::int64_t 参数角色码) {
+    const auto 根 = std::find_if(
+        图.出现组.begin(), 图.出现组.end(),
+        [&](const auto& a) { return a.出现编号 == 图.根出现编号; });
+    if (根 == 图.出现组.end()) return std::nullopt;
+    const auto 定义 = std::find_if(
+        图.定义图.节点组.begin(), 图.定义图.节点组.end(),
+        [&](const auto& n) { return n.局部编号 == 根->定义含义编号; });
+    if (定义 == 图.定义图.节点组.end()) return std::nullopt;
+    std::optional<std::int64_t> 角色编号;
+    for (const auto& p : 定义->参数组) {
+        if (static_cast<std::int64_t>(p.参数) == 参数角色码) {
+            角色编号 = p.规则角色;
+            break;
+        }
+    }
+    if (!角色编号) return std::nullopt;
+    for (const auto& b : 根->角色组) {
+        if (b.角色编号 != *角色编号) continue;
+        const auto* 引用 = std::get_if<语言图引用值>(&b.值);
+        if (!引用) return std::nullopt;
+        if (引用->类别 == 新语言知识角色类别::存在 && 有效(引用->节点))
+            return 引用->节点;
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+std::optional<稳定编码> 图角色来源概念(
+    const 语言图含义材料& 图, std::int64_t 参数角色码) {
+    const auto 根 = std::find_if(
+        图.出现组.begin(), 图.出现组.end(),
+        [&](const auto& a) { return a.出现编号 == 图.根出现编号; });
+    if (根 == 图.出现组.end()) return std::nullopt;
+    const auto 定义 = std::find_if(
+        图.定义图.节点组.begin(), 图.定义图.节点组.end(),
+        [&](const auto& n) { return n.局部编号 == 根->定义含义编号; });
+    if (定义 == 图.定义图.节点组.end()) return std::nullopt;
+    std::optional<std::int64_t> 角色编号;
+    for (const auto& p : 定义->参数组) {
+        if (static_cast<std::int64_t>(p.参数) == 参数角色码) {
+            角色编号 = p.规则角色;
+            break;
+        }
+    }
+    if (!角色编号) return std::nullopt;
+    for (const auto& b : 根->角色组) {
+        if (b.角色编号 != *角色编号) continue;
+        const auto* 引用 = std::get_if<语言图引用值>(&b.值);
+        if (!引用) return std::nullopt;
+        if (引用->类别 == 新语言知识角色类别::存在概念 && 有效(引用->节点))
+            return 引用->节点;
+        if (引用->来源概念 && 有效(*引用->来源概念)) return *引用->来源概念;
+        return std::nullopt;
+    }
+    return std::nullopt;
+}
+
+} // namespace
+
+关系陈述理解结果 关系陈述语言服务::理解关系陈述(
+    const 关系陈述理解请求& 请求) {
+    关系陈述理解结果 out;
+    if (请求.UTF8正文.empty() || !有效(请求.目标语言节点)) {
+        out.状态 = 关系陈述理解状态::输入拒绝;
+        out.诊断 = "缺正文或目标语言";
+        return out;
+    }
+    if (!语言_.是语言节点(请求.目标语言节点)) {
+        out.状态 = 关系陈述理解状态::输入拒绝;
+        out.诊断 = "目标语言不是语言节点";
+        return out;
+    }
+
+    语言图解释请求 图请求;
+    图请求.语言节点 = 请求.目标语言节点;
+    图请求.固定原文 = 请求.UTF8正文;
+    图请求.对象绑定组 = 请求.对象绑定组;
+    图请求.专名绑定读取 = 请求.专名绑定读取;
+    图请求.交互上下文 = 请求.交互上下文;
+    图请求.读取模式 = 语言解释读取模式::显式额度;
+
+    const auto 图解释 = 解释单句含义图(
+        图请求, 语言_, 词_, 名称_, 存在概念_, 特征概念_, 存在_);
+    if (图解释.状态 == 基础语言输入状态::概念多义待解
+        || 图解释.状态 == 基础语言输入状态::多规则待解
+        || 图解释.完整候选组.size() > 1) {
+        out.状态 = 关系陈述理解状态::多义待解;
+        out.诊断 = "解释多义，不任取候选";
+        return out;
+    }
+    if (图解释.状态 == 基础语言输入状态::缺名称) {
+        out.状态 = 关系陈述理解状态::缺名称;
+        return out;
+    }
+    if (图解释.状态 == 基础语言输入状态::缺规则
+        || 图解释.完整候选组.empty()) {
+        out.状态 = 关系陈述理解状态::缺语言知识;
+        out.诊断 = "含义图未形成唯一候选";
+        return out;
+    }
+    if (图解释.状态 != 基础语言输入状态::已形成唯一含义
+        && 图解释.状态 != 基础语言输入状态::主体待绑定) {
+        out.状态 = 关系陈述理解状态::范围未支持;
+        out.诊断 = "解释状态=" + std::to_string(static_cast<int>(图解释.状态));
+        return out;
+    }
+    const auto& 图 = 图解释.完整候选组.front();
+    const auto 根 = std::find_if(
+        图.出现组.begin(), 图.出现组.end(),
+        [&](const auto& a) { return a.出现编号 == 图.根出现编号; });
+    if (根 == 图.出现组.end() || !有效(根->所用知识节点)) {
+        out.状态 = 关系陈述理解状态::缺语言知识;
+        out.诊断 = "根出现缺所用知识";
+        return out;
+    }
+
+    auto 匹配 = 按知识匹配关系段(
+        根->所用知识节点, 请求.目标语言节点, 关系_, 语言_, 词_, 存在概念_,
+        out.诊断);
+    if (匹配.empty()) {
+        out.状态 = 关系陈述理解状态::缺语言知识;
+        if (out.诊断.empty()) out.诊断 = "所用知识未匹配任何关系表达段";
+        return out;
+    }
+    // 同知识命中多种子：多义（例如未消歧的同构尾词）；同种子多段组合不在本最小闭环。
+    std::set<std::string> 种子集;
+    for (const auto& m : 匹配) 种子集.insert(m.种子键);
+    if (种子集.size() > 1) {
+        out.状态 = 关系陈述理解状态::多义待解;
+        out.诊断 = "同一知识命中多个关系种子，不任取";
+        return out;
+    }
+    const auto& 选 = 匹配.front();
+
+    关系陈述入站材料 材料;
+    材料.关系种子键 = 选.种子键;
+    材料.固定原文 = 请求.UTF8正文;
+    材料.交互场景 = 请求.交互场景;
+    材料.所用知识节点组 = {根->所用知识节点};
+
+    for (const auto& 槽 : 选.段.角色槽组) {
+        关系陈述入站角色材料 角色;
+        角色.端点角色键 = 槽.端点角色键;
+        角色.所指存在 = 图角色存在节点(图, 槽.参数角色码);
+        角色.来源概念 = 图角色来源概念(图, 槽.参数角色码);
+        if (!角色.所指存在 && !角色.来源概念) {
+            角色.未确定 = true;
+        }
+        // 入站忠实记录所说角色；不按世界边「纠正」方向。
+        材料.角色组.push_back(std::move(角色));
+    }
+
+    const auto 场景 = 语言世界_.建立空场景();
+    if (场景.状态 != 新自然语言场景操作状态::已建立 || !场景.场景节点) {
+        out.状态 = 关系陈述理解状态::场景建立未完成;
+        out.诊断 = "自然语言空场景未建立";
+        return out;
+    }
+    材料.自然语言场景 = *场景.场景节点;
+
+    for (auto& 角色 : 材料.角色组) {
+        稳定编码 概念{};
+        if (角色.来源概念) 概念 = *角色.来源概念;
+        else if (角色.所指存在) {
+            const auto 专 = 存在_.查询专属存在概念(*角色.所指存在);
+            if (专) 概念 = *专;
+        }
+        if (!有效(概念)) continue;
+        const auto 实例 = 语言世界_.实例化概念(材料.自然语言场景, 概念);
+        if (实例.状态 != 新自然语言概念实例操作状态::已建立 || !实例.实例) {
+            out.状态 = 关系陈述理解状态::场景建立未完成;
+            out.诊断 = "角色场景实例化失败:" + 角色.端点角色键;
+            return out;
+        }
+        角色.场景实例 = 实例.实例->节点;
+        if (!角色.来源概念) 角色.来源概念 = 概念;
+    }
+
+    const auto 保存 = 关系_.建立入站材料(材料);
+    if (保存.状态 != 关系概念操作状态::已建立
+        && 保存.状态 != 关系概念操作状态::已复用) {
+        out.状态 = 关系陈述理解状态::材料保存失败;
+        out.诊断 = "入站材料保存状态="
+            + std::to_string(static_cast<int>(保存.状态));
+        return out;
+    }
+    if (!保存.信息) {
+        out.状态 = 关系陈述理解状态::材料保存失败;
+        out.诊断 = "入站材料保存无信息";
+        return out;
+    }
+    out.材料 = std::move(*保存.信息);
+    out.状态 = 关系陈述理解状态::已形成场景材料;
     out.诊断.clear();
     return out;
 }

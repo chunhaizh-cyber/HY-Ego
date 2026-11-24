@@ -22,6 +22,8 @@ on:
   push:
     branches:
       - 'cursor/relation-concept-nl-outbound-c720'
+      - 'cursor/relation-nl-bidirectional-c720'
+      - 'cursor/pr19-main-compat-c720'
     paths:
       - '.github/workflows/cloud-relation-concept-nl.yml'
       - 'tools/ci/windows-relation-concept-nl.ps1'

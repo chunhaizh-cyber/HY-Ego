@@ -24,6 +24,11 @@ public:
     关系概念操作状态 追加表达知识(
         稳定编码 关系概念节点, 稳定编码 语言节点, 稳定编码 知识节点) noexcept;
 
+    // 入站材料登记（挂关系概念登记根下；指向自然语言场景实例，不写业务边）。
+    关系陈述入站材料结果 建立入站材料(const 关系陈述入站材料&) noexcept;
+    关系陈述入站材料结果 按自然语言场景读取入站材料(稳定编码 场景) const noexcept;
+    std::vector<关系陈述入站材料> 按交互场景查询入站材料(稳定编码 交互场景) const noexcept;
+
 private:
     mutable std::recursive_mutex 互斥_;
     bool 已初始化_ = false;

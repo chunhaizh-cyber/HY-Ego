@@ -135,4 +135,31 @@ struct 关系概念列表结果 final {
     std::vector<关系概念信息> 信息组;
 };
 
+// 入站材料：解析结果写入自然语言场景侧材料（角色/来源/未确定），不写业务边/需求事实。
+// 自我经交互场景查询取用；与出站共享关系种子键、角色槽与表达知识。
+struct 关系陈述入站角色材料 final {
+    std::string 端点角色键;
+    std::optional<稳定编码> 所指存在;   // 已绑定存在；空=未确定
+    std::optional<稳定编码> 场景实例;   // 自然语言场景内实例
+    std::optional<稳定编码> 来源概念;
+    bool 未确定 = false;
+    friend bool operator==(const 关系陈述入站角色材料&, const 关系陈述入站角色材料&) = default;
+};
+
+struct 关系陈述入站材料 final {
+    稳定编码 材料节点{};
+    稳定编码 自然语言场景{};
+    std::optional<稳定编码> 交互场景; // 供自我衔接；空=仅语言场景材料
+    std::string 关系种子键;
+    std::string 固定原文;
+    std::vector<关系陈述入站角色材料> 角色组;
+    std::vector<稳定编码> 所用知识节点组;
+    friend bool operator==(const 关系陈述入站材料&, const 关系陈述入站材料&) = default;
+};
+
+struct 关系陈述入站材料结果 final {
+    关系概念操作状态 状态 = 关系概念操作状态::输入不合法;
+    std::optional<关系陈述入站材料> 信息;
+};
+
 } // namespace 海中鱼巣
