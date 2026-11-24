@@ -58,7 +58,7 @@ bool 需求父子边成立(const 新_需求类& 需求, 稳定编码 父, 稳定
     return std::find(子组.begin(), 子组.end(), 子) != 子组.end();
 }
 
-// owner 正式读边：领域能力分派，不是按关系种子键写专用成句。
+// owner 正式读边/字段：领域能力分派，不是按关系种子键写专用成句。
 bool 核验外部边(
     const 关系外部边连接& 边,
     稳定编码 源,
@@ -88,6 +88,63 @@ bool 核验外部边(
     return false;
 }
 
+bool 核验字段引用(
+    const 关系字段引用连接& 字段,
+    稳定编码 宿主,
+    稳定编码 目标,
+    const 新_需求类& 需求,
+    bool& 成立,
+    std::string& 诊断) {
+    成立 = false;
+    if (字段.owner标识 == "新_需求类" && 字段.字段键名 == "目标存在") {
+        const auto 信息 = 需求.获取需求(宿主);
+        if (!信息) {
+            诊断 = "字段宿主需求不可读";
+            return true; // 已接线；成立=false
+        }
+        成立 = 信息->目标存在节点 == 目标;
+        if (!成立) 诊断 = "需求目标存在与绑定目标不一致";
+        return true;
+    }
+    诊断 = "未接线的字段引用:" + 字段.owner标识 + "/" + 字段.字段键名;
+    return false;
+}
+
+bool 核验单连接(
+    const 关系连接描述& 连接,
+    const std::map<std::string, 稳定编码>& 绑定,
+    const 新_存在类& 存在,
+    const 新_需求类& 需求,
+    bool& 正向成立,
+    bool& 反向成立,
+    std::string& 诊断) {
+    正向成立 = false;
+    反向成立 = false;
+    if (const auto* 字段 = std::get_if<关系字段引用连接>(&连接)) {
+        const auto 宿主It = 绑定.find(字段->宿主角色键);
+        const auto 目标It = 绑定.find(字段->目标角色键);
+        if (宿主It == 绑定.end() || 目标It == 绑定.end()) {
+            诊断 = "字段连接缺端点绑定";
+            return false;
+        }
+        bool 成立 = false;
+        if (!核验字段引用(*字段, 宿主It->second, 目标It->second, 需求, 成立, 诊断))
+            return false;
+        正向成立 = 成立;
+        return true;
+    }
+    const auto* 边 = std::get_if<关系外部边连接>(&连接);
+    if (!边) return false;
+    const auto 源It = 绑定.find(边->源角色键);
+    const auto 目标It = 绑定.find(边->目标角色键);
+    if (源It == 绑定.end() || 目标It == 绑定.end()) {
+        诊断 = "边连接缺端点绑定";
+        return false;
+    }
+    return 核验外部边(
+        *边, 源It->second, 目标It->second, 存在, 需求, 正向成立, 反向成立, 诊断);
+}
+
 std::optional<稳定编码> 取材存在节点(
     const 关系表达角色槽& 槽,
     稳定编码 端点,
@@ -102,12 +159,8 @@ std::optional<稳定编码> 取材存在节点(
         }
         return 端点;
     }
-    if (槽.投影 != 关系表达取材投影::需求目标存在) {
-        诊断 = "未知取材投影";
-        return std::nullopt;
-    }
     if (端点种类 != 关系端点对象种类::需求) {
-        诊断 = "投影=需求目标存在但端点不是需求:" + 槽.端点角色键;
+        诊断 = "需求投影但端点不是需求:" + 槽.端点角色键;
         return std::nullopt;
     }
     const auto 信息 = 需求.获取需求(端点);
@@ -115,17 +168,121 @@ std::optional<稳定编码> 取材存在节点(
         诊断 = "需求端点读回失败:" + 槽.端点角色键;
         return std::nullopt;
     }
-    if (!有效(信息->目标存在节点) || !存在.获取存在(信息->目标存在节点)) {
-        诊断 = "需求目标存在不可读:" + 槽.端点角色键;
-        return std::nullopt;
+    if (槽.投影 == 关系表达取材投影::需求目标存在) {
+        if (!有效(信息->目标存在节点) || !存在.获取存在(信息->目标存在节点)) {
+            诊断 = "需求目标存在不可读:" + 槽.端点角色键;
+            return std::nullopt;
+        }
+        return 信息->目标存在节点;
     }
-    return 信息->目标存在节点;
+    if (槽.投影 == 关系表达取材投影::需求主体存在) {
+        if (!有效(信息->需求主体存在节点)
+            || !存在.获取存在(信息->需求主体存在节点)) {
+            诊断 = "需求主体存在不可读:" + 槽.端点角色键;
+            return std::nullopt;
+        }
+        return 信息->需求主体存在节点;
+    }
+    诊断 = "未知取材投影";
+    return std::nullopt;
+}
+
+bool 知识含指代表达(const 新语言知识定义& 定义) {
+    for (const auto& 项 : 定义.结构.有序项组) {
+        if (const auto* 图角色 = std::get_if<新语言知识图角色表达项>(&项.载荷)) {
+            if (图角色->方式 == 新语言知识表达方式::已消解指代) return true;
+        }
+        if (const auto* 旧角色 = std::get_if<新语言知识角色表达项>(&项.载荷)) {
+            if (旧角色->方式 == 新语言知识表达方式::已消解指代) return true;
+        }
+    }
+    return false;
+}
+
+bool 知识含固定尾词(
+    const 新语言知识信息& 知识,
+    const std::string& 尾词,
+    const 新_词类& 词) {
+    if (尾词.empty()) return false;
+    // 排除带「我/你」指代的同尾词变体，保证预置尾词唯一命中。
+    if (知识含指代表达(知识.定义)) return false;
+    for (const auto& 项 : 知识.定义.结构.有序项组) {
+        const auto* 固定 = std::get_if<新语言知识固定词项>(&项.载荷);
+        if (!固定) continue;
+        const auto 读 = 词.获取词条(固定->词条节点);
+        if (读.状态 == 新词条查询状态::已找到 && 读.信息
+            && 读.信息->规范化词面 == 尾词)
+            return true;
+    }
+    return false;
+}
+
+// 解析表达关联要消费的根知识：后天节点优先；否则按预置尾词+含义操作在语言知识中解析。
+std::vector<稳定编码> 解析表达根知识(
+    const 关系概念表达关联& 表达,
+    新语言知识含义操作 操作,
+    稳定编码 语言节点,
+    const 新_语言类& 语言,
+    const 新_词类& 词,
+    const 概念_存在类& 存在概念,
+    std::string& 诊断) {
+    if (!表达.表达知识节点组.empty()) {
+        for (const auto n : 表达.表达知识节点组) {
+            if (!有效(n)) {
+                诊断 = "表达知识节点无效";
+                return {};
+            }
+            const auto 读 = 语言.获取语言知识(n, 词, 存在概念);
+            if (读.状态 != 新语言知识状态::已完成 || !读.信息) {
+                诊断 = "表达知识节点不可读";
+                return {};
+            }
+        }
+        return 表达.表达知识节点组;
+    }
+    if (表达.预置知识尾词.empty()) {
+        诊断 = "表达关联无知识节点且无预置尾词（须真消费，不暗匹配全库）";
+        return {};
+    }
+    const auto 候选 = 语言.枚举语言知识候选(
+        语言节点, (std::numeric_limits<std::size_t>::max)(), 词, 存在概念);
+    if (候选.状态 != 新语言知识状态::已完成) {
+        诊断 = "枚举语言知识失败";
+        return {};
+    }
+    std::vector<稳定编码> 命中;
+    for (const auto& 信息 : 候选.信息组) {
+        if (信息.定义.目标.目的 != 新语言知识表达目的::陈述) continue;
+        bool 操作匹配 = false;
+        if (信息.定义.目标.含义图) {
+            for (const auto& 节点 : 信息.定义.目标.含义图->节点组) {
+                if (节点.局部编号 == 信息.定义.目标.含义图->根含义编号
+                    && 节点.操作 == 操作)
+                    操作匹配 = true;
+            }
+        } else if (信息.定义.目标.含义组.size() == 1
+            && 信息.定义.目标.含义组.front().操作 == 操作) {
+            操作匹配 = true;
+        }
+        if (!操作匹配) continue;
+        if (知识含固定尾词(信息, 表达.预置知识尾词, 词)) 命中.push_back(信息.节点);
+    }
+    if (命中.empty()) {
+        诊断 = "预置尾词未命中语言知识:" + 表达.预置知识尾词;
+        return {};
+    }
+    if (命中.size() > 1) {
+        诊断 = "预置尾词命中多条语言知识:" + 表达.预置知识尾词;
+        return {};
+    }
+    return 命中;
 }
 
 关系陈述结果 完成成文(
     const 关系陈述请求& 请求,
     const 关系概念表达关联& 表达,
     语言图含义材料 图,
+    std::vector<稳定编码> 允许根知识,
     const 新_语言类& 语言,
     const 新_词类& 词,
     const 概念_名称关系类& 名称,
@@ -138,7 +295,7 @@ std::optional<稳定编码> 取材存在节点(
     const auto 无限 = (std::numeric_limits<std::size_t>::max)();
     语言基础统一输出请求 成文{
         请求.目标语言节点, 图, 无限, 无限, 无限, 无限, 无限, 无限,
-        请求.说话者, 请求.受话者};
+        请求.说话者, 请求.受话者, std::move(允许根知识)};
     const auto 输出 = 从基础信息生成可回读单句(
         成文, 语言世界, 语言, 词, 名称, 存在概念, 特征概念, 存在, nullptr);
     switch (输出.状态) {
@@ -233,32 +390,26 @@ std::optional<稳定编码> 取材存在节点(
         }
     }
 
-    if (const auto* 字段 = std::get_if<关系字段引用连接>(&定义.连接)) {
-        (void)字段;
-        out.状态 = 关系陈述状态::范围未支持;
-        out.诊断 = "字段引用连接生成尚未接线（结构已可登记）";
-        return out;
-    }
-    const auto* 边 = std::get_if<关系外部边连接>(&定义.连接);
-    if (!边) {
-        out.状态 = 关系陈述状态::输入拒绝;
-        return out;
-    }
-    const auto 源 = 请求.端点绑定.at(边->源角色键);
-    const auto 目标 = 请求.端点绑定.at(边->目标角色键);
+    std::vector<关系连接描述> 待核验;
+    待核验.push_back(定义.连接);
+    for (const auto& a : 定义.附加连接组) 待核验.push_back(a);
 
-    bool 正向成立 = false;
-    bool 反向成立 = false;
-    if (!核验外部边(*边, 源, 目标, 存在_, 需求_, 正向成立, 反向成立, out.诊断)) {
-        out.状态 = 关系陈述状态::范围未支持;
-        return out;
-    }
-    if (!正向成立) {
-        out.状态 = 反向成立 ? 关系陈述状态::方向或角色错误
-                            : 关系陈述状态::关系不成立;
-        out.诊断 = 反向成立 ? "端点方向与关系概念源/目标相反"
-                            : "正式读未找到匹配边";
-        return out;
+    for (std::size_t i = 0; i < 待核验.size(); ++i) {
+        bool 正向 = false, 反向 = false;
+        if (!核验单连接(
+                待核验[i], 请求.端点绑定, 存在_, 需求_, 正向, 反向, out.诊断)) {
+            out.状态 = 关系陈述状态::范围未支持;
+            if (i > 0) out.诊断 = "附加连接未接线:" + out.诊断;
+            return out;
+        }
+        if (!正向) {
+            out.状态 = (i == 0 && 反向) ? 关系陈述状态::方向或角色错误
+                                        : 关系陈述状态::关系不成立;
+            if (i > 0) out.诊断 = "附加连接不成立:" + out.诊断;
+            else if (反向) out.诊断 = "端点方向与关系概念源/目标相反";
+            else if (out.诊断.empty()) out.诊断 = "正式读未找到匹配边/字段";
+            return out;
+        }
     }
 
     const 关系概念表达关联* 表达 = nullptr;
@@ -280,6 +431,13 @@ std::optional<稳定编码> 取材存在节点(
     }
 
     const auto 操作 = static_cast<新语言知识含义操作>(表达->含义操作码);
+    auto 允许根知识 = 解析表达根知识(
+        *表达, 操作, 请求.目标语言节点, 语言_, 词_, 存在概念_, out.诊断);
+    if (允许根知识.empty()) {
+        out.状态 = 关系陈述状态::缺语言知识;
+        return out;
+    }
+
     std::set<std::string> 已用端点;
     std::set<std::int64_t> 已用参数;
     std::vector<std::pair<参数, 稳定编码>> 槽材料;
@@ -302,7 +460,7 @@ std::optional<稳定编码> 取材存在节点(
         auto 存在节点 = 取材存在节点(
             槽, 绑定It->second, 种类It->second, 存在_, 需求_, out.诊断);
         if (!存在节点) {
-            out.状态 = (槽.投影 == 关系表达取材投影::需求目标存在
+            out.状态 = (槽.投影 != 关系表达取材投影::端点身份
                             && 种类It->second == 关系端点对象种类::需求)
                 ? 关系陈述状态::缺名称
                 : 关系陈述状态::端点不合法;
@@ -314,6 +472,7 @@ std::optional<稳定编码> 取材存在节点(
     return 完成成文(
         请求, *表达,
         按表达槽构造含义图(请求.目标语言节点, 操作, 槽材料),
+        std::move(允许根知识),
         语言_, 词_, 名称_, 存在概念_, 特征概念_, 存在_, 语言世界_,
         std::move(out));
 }

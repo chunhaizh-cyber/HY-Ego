@@ -1230,6 +1230,7 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
         请求.操作=根->操作;请求.作用域=根->作用域;请求.含义图=*图;
         请求.最大知识条目数=q.最大知识条目数;请求.最大名称条目数=q.最大名称候选数;请求.最大输出标量数=q.最大输出标量数;
         请求.成文说话者=q.说话者;请求.成文受话者=q.受话者;
+        请求.允许根知识节点组=q.允许根知识节点组;
         const auto 表达=生成基础语言表达(请求,lang,words,names,es,fs,instances,正式读取);
         if(表达.状态!=基础表达状态::已生成){result.状态=图表达输出状态(表达.状态);return result;}
         if(!表达.已用含义图)throw std::logic_error("graph expression success has no meaning material");
