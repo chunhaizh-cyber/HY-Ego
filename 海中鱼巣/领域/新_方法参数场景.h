@@ -24,6 +24,7 @@ class 新本能需求运行接口;
 class 新本能字段询问运行接口;
 class 新本能词典运行接口;
 class 新本能词条归类运行接口;
+class 新本能语言分界运行接口;
 
 enum class 新方法参数特征读取状态 : std::uint8_t {
     已读取=1, 参数未绑定, 信息类型不符, 未声明,
@@ -114,6 +115,7 @@ public:
     virtual 新本能字段询问运行接口* 获取字段询问运行接口() noexcept { return nullptr; }
     virtual 新本能词典运行接口* 获取词典运行接口() noexcept { return nullptr; }
     virtual 新本能词条归类运行接口* 获取词条归类运行接口() noexcept { return nullptr; }
+    virtual 新本能语言分界运行接口* 获取语言分界运行接口() noexcept { return nullptr; }
 
     // 无此能力的模拟owner返回不适用，绝不回退现实owner。
     virtual std::optional<std::vector<稳定编码>> 读取模拟存在特征组(稳定编码) const noexcept { return {}; }
@@ -144,6 +146,7 @@ public:
     新本能字段询问运行接口* 获取字段询问运行接口() const noexcept;
     新本能词典运行接口* 获取词典运行接口() const noexcept;
     新本能词条归类运行接口* 获取词条归类运行接口() const noexcept;
+    新本能语言分界运行接口* 获取语言分界运行接口() const noexcept;
     新方法模拟运行接口* 获取模拟运行接口() const noexcept;
     稳定编码 方法节点() const noexcept;
     新方法参数场景用途 用途() const noexcept;

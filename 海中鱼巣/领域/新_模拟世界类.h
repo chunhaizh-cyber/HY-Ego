@@ -7,10 +7,12 @@
 #include "新_方法参数场景.h"
 #include "语言分界.数据.h"
 #include "方法问题反馈.数据.h"
+#include "方法学习.数据.h"
 #include "本能交互.运行接口.h"
 #include "本能需求.运行接口.h"
 #include "本能字段询问.运行接口.h"
 #include "本能词条归类.运行接口.h"
+#include "新_本能函数集.h"
 #include "数据服务.词典材料类.h"
 #include "数据服务.外设词典记录类.h"
 
@@ -57,6 +59,7 @@ struct 新模拟语言范围样例来源 final {
     const 新_特征值类& 特征值;
     const 新_特征类& 特征;
     稳定编码 范围;
+    std::optional<新分界定向学习输入> 定向输入;
 };
 struct 新模拟归类材料复制输入 final {
     稳定编码 来源材料, 来源词条;
@@ -173,7 +176,7 @@ class 新_模拟世界类 final : public 新方法模拟运行接口,
     public 新本能交互运行接口, public 新方法隔离执行接口,
     public 新本能需求运行接口, public 正式信息参数读取接口,
     public 新本能字段询问运行接口, public 新词典材料场景读取接口,
-    public 新词典隔离退出读取接口 {
+    public 新词典隔离退出读取接口, public 新本能语言分界运行接口 {
 public:
     explicit 新_模拟世界类(新_方法类&) noexcept;
     新_模拟世界类(新_方法类&,const 动作方法定义只读提供者&,新_动态类&,const 概念_动态类&) noexcept;
@@ -238,6 +241,9 @@ public:
         const std::optional<新模拟语言范围样例来源>& 语言范围来源 = {});
     新语言分界调用结果<新语言范围原文信息> 读取本地语言范围原文(稳定编码 R) const;
     新语言分界调用结果<新语言分界材料信息> 读取本地语言分界材料(稳定编码 节点) const;
+    新本能语言分界运行接口* 获取语言分界运行接口() noexcept override;
+    新本能函数本次条件结果对 运行语言片段分词(const 方法参数场景&) override;
+    新本能函数本次条件结果对 运行词条准入(const 方法参数场景&) override;
     新模拟需求执行预检结果 预检需求执行(const 方法参数场景&) const;
     新本能需求运行接口* 获取需求运行接口() noexcept override;
     新本能需求材料读回 读取新需求材料(const 方法参数场景&) const override;
@@ -391,7 +397,8 @@ private:
         const std::vector<新模拟词典材料复制输入>&,const std::vector<std::size_t>&,
         const std::vector<稳定编码>&,稳定编码);
     稳定编码 建立本地参数动作(const 方法参数场景&,
-        const 新隔离阶段动作请求&,std::uint32_t 主体位置);
+        const 新隔离阶段动作请求&,std::uint32_t 主体位置,std::optional<稳定编码> 语言输入 = {});
+    std::optional<新隔离分界回执> 读取本地分界回执(稳定编码 调用) const;
     新本能需求材料读回 读取本地需求材料(const 方法参数场景&) const;
     新本能已发布需求核验结果 核验本地需求结果(
         const 方法参数场景&,稳定编码,const 新本能已发布需求结果&,bool 要求关闭) const;

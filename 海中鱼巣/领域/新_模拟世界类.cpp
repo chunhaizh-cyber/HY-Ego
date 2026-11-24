@@ -55,13 +55,13 @@ enum 字段 : std::size_t { 类型, 根, 所属, 特征类型, 当前材料, 数
     词条语言引用,词条规范化合同引用,词条词面值,词条特征引用,
     词典回执引用,词典格式,词典词条,词典材料特征,词典外设场景,词典查询记录,
     词典查阅结局,词典采用阶段,词典新状态标记,词典材料,词典前状态,词典后状态,
-    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,集合概念引用,全部名称前态已知,全部名称概念成员,字段数 };
+    词典变化阶段,词典无需原因,词典变化动态,动作观察动态引用,归类目标词条引用,归类采用概念引用,普通名称前态已知,普通名称成员,集合概念引用,全部名称前态已知,全部名称概念成员,分界采用回执引用,字段数 };
 enum 节点种类 : std::int64_t { 根种类 = 1, 场景种类, 存在种类, 特征种类, 材料种类,
     任务种类, 虚拟种类, 动作种类, 状态种类, 动态种类,
     消息种类, 过程种类,
     调用种类,阶段来源种类,传输种类,需求种类,理解种类,确认种类,要求种类,
     语言场景种类,语义快照种类,语言实例关联种类,需求发布种类,队列入列种类,词条种类,词典回执种类,归类材料种类,模拟普通名称种类,模拟归类特征概念种类,
-    语言范围种类, 语言分界材料种类 };
+    语言范围种类, 语言分界材料种类, 分界采用回执种类 };
 std::array<稳定编码, 字段数> 字段组{};
 std::mutex 根互斥;
 struct 模拟联合预期变化 final : std::runtime_error {
@@ -2686,6 +2686,14 @@ struct 模拟语言范围前态 final {
         语言前态.emplace();
         const auto 取材=取得模拟语言范围前态(*语言范围来源,*语言前态);
         if (取材!=新模拟世界状态::已完成) return {取材,{}};
+        if (const auto& 来源=语言范围来源->定向输入) {
+            using F=新语言范围特征种类;
+            const auto 当前=[&](F 槽){return 语言前态->当前材料[static_cast<std::size_t>(槽)];};
+            if (来源->范围!=语言范围来源->范围 || 来源->执行分支!=执行分支
+                || 当前(F::分词候选材料)!=来源->候选材料 || 当前(F::分界依据)!=来源->分界依据
+                || 当前(F::有效分界结果))
+                return {新模拟世界状态::需重新组织输入,{}};
+        }
         语言样例输入=正式输入;
         const auto& 类型组=语言前态->特征类型;
         for (std::size_t i=0; i<类型组.size(); ++i) {
@@ -6997,7 +7005,7 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     return 建立本地参数动作(scene,{request.目标存在位置,type,新隔离动作阶段::主动作},request.主体位置);
 }
 稳定编码 新_模拟世界类::建立本地参数动作(const 方法参数场景& scene,
-    const 新隔离阶段动作请求& request,std::uint32_t 主体位置) {
+    const 新隔离阶段动作请求& request,std::uint32_t 主体位置,std::optional<稳定编码> 语言输入) {
     if(!实现_||scene.用途()!=新方法参数场景用途::模拟)throw std::invalid_argument("isolation action scene unavailable");
     auto& s=*实现_;
     for(;;) {
@@ -7008,12 +7016,18 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     if(!target||!self||(target->信息类型!=新方法参数信息类型::存在&&target->信息类型!=新方法参数信息类型::词条)||self->信息类型!=新方法参数信息类型::存在)
         throw std::invalid_argument("isolation action target binding absent");
     const bool word=target->信息类型==新方法参数信息类型::词条;
+    bool 语言范围=false;
     稳定编码 selfConcept{},targetConcept{};
     {
         std::lock_guard lock(s.互斥);
+        语言范围=s.本地语言范围&&s.本地语言范围->本地范围==target->信息节点;
         if(scene.方法节点()!=s.通用方法||scene.全部角色绑定()!=s.通用绑定
-            ||!(word?s.是本地参数(target->信息节点,新方法参数信息类型::词条):s.是普通存在参数(target->信息节点))||!s.是普通存在参数(self->信息节点))
+            ||!(word?s.是本地参数(target->信息节点,新方法参数信息类型::词条):语言范围||s.是普通存在参数(target->信息节点))
+            ||!s.是普通存在参数(self->信息节点))
             throw std::invalid_argument("isolation action binding changed");
+        if(语言输入&&(!语言范围||!属于样例(*语言输入,语言分界材料种类,s.通用场景)
+            ||读引用(*语言输入,所属)!=std::optional{target->信息节点}))
+            throw std::invalid_argument("isolation boundary input is outside its range");
         if(word&&request.阶段==新隔离动作阶段::主动作)if(const auto prior=读引用(N.调用节点,调用主动作引用)) {
             const auto action=读取本地动作(*prior);
             if(!action||action->主题存在节点!=self->信息节点||action->动作目标词条节点!=std::optional{target->信息节点}
@@ -7022,7 +7036,17 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
                 throw std::logic_error("local word action source conflict");
             return *prior; // 本次已发生动作不按后来方法定义重建。
         }
-        if(word&&(!s.样例就绪||s.请求取消))return {};
+        if(语言范围 && request.阶段==新隔离动作阶段::主动作) {
+            if(const auto prior=读引用(N.调用节点,调用主动作引用)) {
+                const auto 动作=读取本地动作(*prior);
+                if(!动作 || 动作->主题存在节点!=self->信息节点
+                    || 动作->动作目标存在节点!=target->信息节点 || 动作->动作语言输入材料节点!=语言输入
+                    || !动作->动作目标特征节点 || 读引用(*动作->动作目标特征节点,所属)!=target->信息节点)
+                    throw std::logic_error("local language action source conflict");
+                return *prior;
+            }
+        }
+        if((word||语言范围)&&(!s.样例就绪||s.请求取消))return {};
         selfConcept=s.通用参数.at(self->信息节点).规格.范围概念节点;
         targetConcept=s.通用参数.at(target->信息节点).规格.范围概念节点;
     }
@@ -7032,13 +7056,14 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
         throw std::invalid_argument("isolation action target not formally declared");
     动作方法投影请求 definitionRequest{N.方法节点,selfConcept,targetConcept,request.目标特征类型,false};
     if(word){definitionRequest.普通目标概念节点.reset();definitionRequest.词条目标范围概念节点=targetConcept;}
+    if(语言范围){definitionRequest.普通目标概念节点.reset();definitionRequest.语言范围目标概念节点=targetConcept;}
     const auto projection=s.动作定义读取->读取动作方法投影(definitionRequest);
     const auto C=s.动作定义发布->确保动作定义概念(definitionRequest);
     if(C.状态!=动态概念操作状态::已建立&&C.状态!=动态概念操作状态::已复用)
         throw std::runtime_error("isolation action concept unavailable");
     if(!C.概念节点)throw std::runtime_error("isolation action concept identity absent");
     const auto protection=s.动作概念->读取动作概念定义保护(*C.概念节点);
-    if(word&&(protection.状态==动作概念定义保护状态::前提已变化
+    if((word||语言范围)&&(protection.状态==动作概念定义保护状态::前提已变化
         ||protection.状态==动作概念定义保护状态::概念不存在
         ||(protection.信息&&protection.信息->动作定义!=std::optional{projection}))) {
         std::lock_guard guard(s.互斥);
@@ -7048,7 +7073,7 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     if(protection.状态!=动作概念定义保护状态::已读取||!protection.信息||protection.信息->动作定义!=std::optional{projection})
         throw std::runtime_error("isolation action concept protection unavailable");
     std::unique_lock lock(s.互斥);
-    if(word&&(!s.样例就绪||s.请求取消))return {};
+    if((word||语言范围)&&(!s.样例就绪||s.请求取消))return {};
     if(s.当前调用!=std::optional{N.调用节点}||!s.记录写回||scene.全部角色绑定()!=s.通用绑定)
         throw std::runtime_error("isolation action call changed during preparation");
     const auto F=binding.特征->节点;
@@ -7057,6 +7082,7 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
         if(const auto A=读引用(N.调用节点,调用主动作引用)) {
             const auto old=读取本地动作(*A);
             if(!old||old->主题存在节点!=self->信息节点||(word?old->动作目标词条节点:old->动作目标存在节点)!=std::optional{target->信息节点}||old->动作目标特征节点!=std::optional{F}
+                ||old->动作语言输入材料节点!=语言输入
                 ||(!word&&old->动态概念节点!=C.概念节点))throw std::runtime_error("isolation main action idempotency conflict");
             return *A;
         }
@@ -7095,6 +7121,7 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     }
     put(A,方法引用,N.方法节点);put(A,特征类型,*C.概念节点);put(A,所属,target->信息节点);
     put(A,对端引用,self->信息节点);put(A,状态特征引用,F);put(A,时间语义,基础值{static_cast<std::int64_t>(新状态时间语义::抽象相对)});put(A,步骤,基础值{time});
+    if(语言输入)put(A,结构引用,*语言输入);
     if(request.阶段==新隔离动作阶段::主动作) {
         put(A,来源引用,N.调用节点);q.追加字段组.push_back({N.调用节点,字段组[调用主动作引用],基础组内节点引用{A}});
     } else {
@@ -7108,10 +7135,16 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     if(word) {
         auto prior=std::move(q.预期联合节点组);q.预期联合节点组.clear();
         补齐隔离追加联合预期(q);q.预期联合节点组.insert(q.预期联合节点组.end(),prior.begin(),prior.end());
-    } else 补齐隔离追加联合预期(q);
+    } else {
+        try { 补齐隔离追加联合预期(q); }
+        catch(const 模拟联合预期变化&) {
+            if(!语言范围)throw;
+            lock.unlock();std::this_thread::yield();continue;
+        }
+    }
     s.预留追加(q);
     const auto made=全局基础数据集.原子追加节点组(q);
-    if(word&&made.状态==基础节点组追加状态::预期不符){lock.unlock();std::this_thread::yield();continue;}
+    if((word||语言范围)&&made.状态==基础节点组追加状态::预期不符){lock.unlock();std::this_thread::yield();continue;}
     if(made.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
     if(made.状态!=基础节点组追加状态::已完成||made.新节点组.size()!=q.新节点组.size())throw std::runtime_error("isolation action publication failed");
     s.收集追加(made);s.模拟步骤=time;s.本次已进入动作=true;
@@ -7124,6 +7157,185 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
     std::lock_guard lock(实现_->互斥);
     return 实现_->通用&&实现_->动作定义读取&&实现_->动作定义发布&&实现_->动作概念&&实现_->场景构成 ? this : nullptr;
 }
+新本能语言分界运行接口* 新_模拟世界类::获取语言分界运行接口() noexcept {
+    if (!实现_) return nullptr;
+    std::lock_guard 锁(实现_->互斥);
+    return 实现_->样例就绪 && 实现_->本地语言范围 ? this : nullptr;
+}
+
+std::optional<新隔离分界回执> 新_模拟世界类::读取本地分界回执(稳定编码 N) const {
+    const auto& s=*实现_;
+    const auto 回执=读引用(N,分界采用回执引用);
+    if (!回执) return {};
+    if (!属于样例(*回执,分界采用回执种类,s.通用场景) || 读引用(*回执,来源引用)!=N)
+        throw std::logic_error("isolated boundary receipt owner differs");
+    新隔离分界回执 r{N,必读引用(*回执,动作引用),必读引用(*回执,所属),
+        必读引用(*回执,结构引用),必读引用(*回执,确认引用),必读引用(*回执,当前材料),
+        必读引用(*回执,状态特征引用),必读引用(*回执,后状态引用)};
+    const auto 动作=读取本地动作(r.动作);
+    const auto 状态=读取本地状态(r.状态);
+    const auto 结果=读取本地语言分界材料(r.结果);
+    if (结果.状态==新语言分界工程状态::资源失败) throw std::bad_alloc{};
+    const auto* 有效结果=结果.信息 ? std::get_if<新语言有效分界定义>(&结果.信息->定义) : nullptr;
+    if (!动作 || !状态 || !有效结果 || 结果.信息->所属范围!=r.范围 || 有效结果->正式依据!=r.依据
+        || 动作->动作目标种类!=新动作目标种类::语言材料范围 || 动作->动作来源节点!=N
+        || 动作->动作目标存在节点!=r.范围 || 动作->动作目标特征节点!=r.特征
+        || 动作->动作语言输入材料节点!=r.依据 || 状态->被描述存在节点!=r.范围
+        || 状态->来源实例特征节点!=r.特征 || 状态->固定准确值!=新特征准确值{r.结果})
+        throw std::logic_error("isolated boundary receipt does not match action and state");
+    return r;
+}
+
+新本能函数本次条件结果对 新_模拟世界类::运行语言片段分词(const 方法参数场景& 场景) {
+    新本能函数本次条件结果对 返回;
+    auto& 结果=返回.结果;
+    using 执行=新本能函数执行状态;
+    using 参数=新方法参数信息类型;
+    if (!实现_ || 场景.用途()!=新方法参数场景用途::模拟 || 场景.获取模拟运行接口()!=this) {
+        结果.状态=执行::参数不匹配;
+        return 返回;
+    }
+    auto& s=*实现_;
+    const auto 分支=s.方法.读取执行分支必要条件(场景.方法节点(),场景.执行分支节点());
+    if (分支.状态!=新方法执行分支读取状态::已读取 || !分支.分支 || 分支.分支->定义.顺序!=1)
+        return 返回;
+    返回.条件.执行分支节点=分支.分支->节点;
+    const auto* R参数=场景.查询参数(1);
+    const auto* E参数=场景.查询参数(5);
+    if (!R参数 || !E参数 || R参数->信息类型!=参数::存在 || E参数->信息类型!=参数::存在
+        || 场景.全部角色绑定().size()!=5) {
+        结果.状态=执行::参数不匹配;
+        return 返回;
+    }
+
+    const auto R=R参数->信息节点;
+    std::lock_guard 阶段(s.归类动作阶段互斥);
+    if (请求停止已成立()) return 返回;
+    const auto N=读取当前调用身份().调用节点;
+    {
+        std::lock_guard 锁(s.互斥);
+        if (!s.本地语言范围 || s.本地语言范围->本地范围!=R || s.本地执行主体!=E参数->信息节点
+            || 场景.全部角色绑定()!=s.通用绑定) {
+            结果.状态=执行::参数不匹配;
+            return 返回;
+        }
+        for (std::uint32_t 位置=2;位置<=4;++位置) {
+            const auto* 项=场景.查询参数(位置);
+            if (!项 || 项->信息类型!=参数::特征 || 项->信息节点!=s.本地语言范围->本地特征[位置-2]) {
+                结果.状态=执行::参数不匹配;
+                return 返回;
+            }
+        }
+    }
+    for (const auto& 绑定:场景.全部角色绑定()) {
+        新本能函数条件角色材料 角色;
+        角色.有序引用=绑定.有序引用;
+        角色.世界场景节点=绑定.世界场景节点;
+        返回.条件.参数角色组.push_back(std::move(角色));
+    }
+    const auto 读取=[&](std::size_t 位置){
+        auto F=场景.读取绑定特征(场景.查询参数(static_cast<std::uint32_t>(位置))->信息节点);
+        if (F) 返回.条件.参数角色组[位置-1].实际特征组.push_back({F->节点,F->当前值});
+        return F;
+    };
+    const auto 候选特征=读取(2),依据特征=读取(3),目标特征=读取(4);
+    if (!候选特征 || !依据特征 || !目标特征 || !候选特征->当前值 || !依据特征->当前值)
+        return 返回;
+    const auto* C=std::get_if<稳定编码>(&*候选特征->当前值);
+    const auto* B=std::get_if<稳定编码>(&*依据特征->当前值);
+    if (!C || !B) throw std::logic_error("isolated boundary inputs are not references");
+    const auto 候选=读取本地语言分界材料(*C),依据=读取本地语言分界材料(*B);
+    if (候选.状态==新语言分界工程状态::资源失败 || 依据.状态==新语言分界工程状态::资源失败)
+        throw std::bad_alloc{};
+    if (!候选.信息 || !依据.信息) return 返回;
+    const auto* 定义=std::get_if<新语言分界依据定义>(&依据.信息->定义);
+    if (!定义 || !std::holds_alternative<新语言分界候选定义>(候选.信息->定义)
+        || 依据.信息->所属范围!=R || 候选.信息->所属范围!=R)
+        throw std::logic_error("isolated boundary input type or range differs");
+    if (定义->候选材料!=*C) return 返回;
+
+    const auto 完成=[&](const 新隔离分界回执& a) {
+        结果.动作动态节点=a.动作;
+        结果.已形成状态节点组.push_back(a.状态);
+        结果.状态=执行::已按合同返回;
+        结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
+        结果.结果取得状态=新本能函数结果取得状态::已取得;
+    };
+    {
+        std::lock_guard 锁(s.互斥);
+        if (const auto 已有=读取本地分界回执(N)) {
+            完成(*已有);
+            return 返回;
+        }
+    }
+    if (目标特征->当前值 || 请求停止已成立()) return 返回;
+    const auto FT=目标特征->特征概念节点,F=目标特征->节点;
+    const auto A=建立本地参数动作(场景,{1,FT,新隔离动作阶段::主动作},5,*B);
+    if (!有效(A)) return 返回;
+    结果.动作动态节点=A;
+    结果.状态=执行::动作结果未知;
+    结果.动作阶段=新本能函数动作阶段::结果未知;
+    if (请求停止已成立()) return 返回;
+
+    std::lock_guard 锁(s.互斥);
+    if (!s.记录写回 || s.当前调用!=N || s.请求取消) return 返回;
+    if (s.模拟步骤==(std::numeric_limits<std::int64_t>::max)())
+        throw std::overflow_error("isolated boundary state time exhausted");
+    const auto 时刻=s.模拟步骤+1;
+    基础节点组追加请求 q;
+    const auto 新建=[&](节点种类 种类) {
+        const auto 槽=q.新节点组.size();
+        q.新节点组.push_back({{{字段组[类型],基础值{static_cast<std::int64_t>(种类)}},
+            {字段组[根],模拟世界树根节点}}});
+        q.追加外部关系组.push_back({s.通用场景,基础组内节点引用{槽},基础外部关系类型::父子});
+        return 基础组内节点引用{槽};
+    };
+    const auto 写=[&](基础组内节点引用 目标,字段 键,基础组内字段内容 值) {
+        q.新节点组[目标.索引].字段组.push_back({字段组[键],std::move(值)});
+    };
+    const auto V=新建(语言分界材料种类),S=新建(状态种类),L=新建(分界采用回执种类);
+    写(V,所属,R);写(V,结构引用,*B);
+    写(V,结构类别值,基础值{static_cast<std::int64_t>(新语言范围特征种类::有效分界结果)});
+    写(S,所属,R);写(S,状态特征引用,F);写(S,特征类型,FT);写(S,当前材料,V);
+    写(S,步骤,基础值{时刻});写(S,时间语义,基础值{static_cast<std::int64_t>(新状态时间语义::抽象相对)});
+    写(L,来源引用,N);写(L,动作引用,A);写(L,所属,R);写(L,状态特征引用,F);
+    写(L,结构引用,*C);写(L,确认引用,*B);写(L,当前材料,V);写(L,后状态引用,S);
+    q.追加字段组.push_back({N,字段组[分界采用回执引用],L});
+    q.当前字段赋值组.push_back({F,字段组[当前材料],V});
+    std::vector<稳定编码> 历史节点{F};
+    const auto 命中组=读引用组(F,历史命中引用);
+    历史节点.insert(历史节点.end(),命中组.begin(),命中组.end());
+    const auto 历史快照=全局基础数据集.查询节点组完整结构(历史节点);
+    if (历史快照.状态==基础结构操作状态::资源失败) throw std::bad_alloc{};
+    const auto f=std::find_if(历史快照.节点组.begin(),历史快照.节点组.end(),
+        [&](const auto& 项){return 项.查询节点==F;});
+    if (历史快照.状态!=基础结构操作状态::已完成 || f==历史快照.节点组.end() || !f->快照)
+        throw std::logic_error("isolated boundary target history is unavailable");
+    (void)准备本地归类历史更新(F,V,q,f->快照->结构,历史快照.节点组);
+    s.追加进展(q);
+    补齐隔离追加联合预期(q);
+    s.预留追加(q);
+    auto* const 归因=s.准备写回槽(F);
+    const auto 发布=全局基础数据集.原子追加节点组(q);
+    if (发布.状态==基础节点组追加状态::资源失败) throw std::bad_alloc{};
+    if (发布.状态==基础节点组追加状态::预期不符) return 返回;
+    if (发布.状态!=基础节点组追加状态::已完成 || 发布.新节点组.size()!=q.新节点组.size())
+        throw std::logic_error("isolated boundary result publication failed");
+    s.收集追加(发布);
+    s.模拟步骤=时刻;
+    *归因=实现::写入来源::方法;
+    const auto 回执=读取本地分界回执(N);
+    if (!回执) throw std::logic_error("isolated boundary publication receipt missing");
+    完成(*回执);
+    return 返回;
+}
+
+新本能函数本次条件结果对 新_模拟世界类::运行词条准入(const 方法参数场景&) {
+    新本能函数本次条件结果对 返回;
+    返回.结果.状态=新本能函数执行状态::参数不匹配;
+    return 返回;
+}
+
 新隔离调用身份 新_模拟世界类::读取当前调用身份() const {
     if(!实现_)throw std::runtime_error("isolation owner absent");
     const auto& s=*实现_;std::lock_guard lock(s.互斥);
@@ -7252,8 +7464,15 @@ std::optional<新动态信息> 新_模拟世界类::读取本地动作(稳定编
     新动态信息 result;result.节点=A;result.种类=新动态种类::动作;
     result.主题存在节点=读引用(A,对端引用).value_or(*E);
     result.动作定义节点=*M;result.动作来源节点=*source;
-    if(读值(*E,类型)==词条种类){result.动作目标种类=新动作目标种类::词条;result.动作目标词条节点=*E;}
-    else result.动作目标存在节点=*E;
+    const auto 目标类型=读值(*E,类型);
+    if(目标类型==词条种类){result.动作目标种类=新动作目标种类::词条;result.动作目标词条节点=*E;}
+    else {
+        result.动作目标存在节点=*E;
+        if(目标类型==语言范围种类) {
+            result.动作目标种类=新动作目标种类::语言材料范围;
+            result.动作语言输入材料节点=读引用(A,结构引用);
+        }
+    }
     result.动作目标特征节点=*F;result.动态概念节点=*C;
     result.动作时间=新状态强时间{新状态时间语义::抽象相对,*time};
     for(const auto& f:全局基础数据集.查询字段(A,字段组[动态引用])) {
@@ -7292,6 +7511,7 @@ std::optional<新隔离调用证据> 新_模拟世界类::读取已关闭调用�
     // 只交付本调用已保存的归类回执，不从当前特征重建历史结果。
     const auto classification=s.归类调用组.find(N);
     if(classification!=s.归类调用组.end())r.词条归类=classification->second.回执;
+    if(s.本地语言范围)r.有效分界=读取本地分界回执(N);
     if(s.归类主体来源)r.归类名称读取组=s.归类名称读取组;
     if(s.归类主体来源)for(std::size_t i=0;i<s.内容读取组.size();++i) {
         const auto& trace=s.内容读取组[i];

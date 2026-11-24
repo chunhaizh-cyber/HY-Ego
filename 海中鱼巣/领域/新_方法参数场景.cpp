@@ -46,6 +46,9 @@ namespace 海中鱼巣 {
         return 模拟运行_ ? 模拟运行_->获取词条归类运行接口() : nullptr;
     return 用途_ == 新方法参数场景用途::执行 ? 词条归类运行_.get() : nullptr;
 }
+新本能语言分界运行接口* 方法参数场景::获取语言分界运行接口() const noexcept {
+    return 用途_ == 新方法参数场景用途::模拟 && 模拟运行_ ? 模拟运行_->获取语言分界运行接口() : nullptr;
+}
 namespace {
 
 struct 参数材料需要重读 {};

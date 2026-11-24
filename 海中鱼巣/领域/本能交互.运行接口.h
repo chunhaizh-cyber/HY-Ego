@@ -79,6 +79,9 @@ struct 新隔离归类名称读取 final {
     std::uint64_t 前序内容读取数=0;
     bool 动作前=false,归类结果已提交=false;
 };
+struct 新隔离分界回执 final {
+    稳定编码 调用, 动作, 范围, 候选, 依据, 结果, 特征, 状态;
+};
 struct 新隔离调用证据 final {
     新隔离调用身份 身份;
     bool 已请求取消=false;
@@ -91,6 +94,7 @@ struct 新隔离调用证据 final {
     std::vector<新隔离归类值读取> 归类值读取组;
     std::vector<新隔离归类其他读取> 归类其他读取组;
     std::vector<新隔离归类名称读取> 归类名称读取组;
+    std::optional<新隔离分界回执> 有效分界;
 };
 struct 新隔离连接完成材料 final {
     新交互绑定 绑定;

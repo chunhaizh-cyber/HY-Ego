@@ -3,6 +3,7 @@
 #include "词典.本能运行服务.h"
 #include "词典.知识导出服务.h"
 #include "../领域/新_词类.h"
+#include "../领域/新_语言类.h"
 #include "../领域/概念_名称关系类.h"
 #include "模拟任务需求来源.服务.h"
 #include "../领域/新_模拟世界类.h"
@@ -15,6 +16,7 @@
 #include "../领域/动作概念.只读投影合同.h"
 #include "../领域/概念_动态类.h"
 #include "../核心/容错检查.h"
+#include "../核心/日志系统.h"
 #include <cstdlib>
 #include <algorithm>
 #include <array>
@@ -27,7 +29,6 @@
 #include <thread>
 #include <tuple>
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-#include "../核心/日志系统.h"
 #include <atomic>
 #endif
 
@@ -90,7 +91,7 @@ struct 模拟学习服务::隔离样例责任 final {
 struct 模拟学习服务::隔离样例收尾 final {
     模拟学习服务& owner;
     std::shared_ptr<隔离样例责任> 责任;
-    ~隔离样例收尾() { owner.结束隔离样例(责任); }
+    ~隔离样例收尾() { if (责任) owner.结束隔离样例(责任); }
 };
 模拟学习服务::~模拟学习服务() {
     // 普通应用在工作线程最终join后、材料owner销毁前析构本服务。
@@ -155,6 +156,12 @@ void 模拟学习服务::配置需求执行来源(稳定编码 自我存在,cons
         ||(来源身份_&&来源身份_!=&来源)||(存在概念_&&存在概念_!=&存在))
         throw std::logic_error("simulation demand actor source conflict");
     需求执行来源_=自我存在;来源身份_=&来源;存在概念_=&存在;
+}
+void 模拟学习服务::配置分界学习(const 新_语言类& 语言, const 新_特征值类& 值) {
+    if ((分界语言_ && 分界语言_!=&语言) || (分界特征值_ && 分界特征值_!=&值))
+        throw std::logic_error("simulation boundary source conflict");
+    分界语言_=&语言;
+    分界特征值_=&值;
 }
 void 模拟学习服务::配置字段询问语言(std::shared_ptr<const 新字段询问语言接口> 语言,
     std::optional<新字段询问登记配置> 配置) {
@@ -296,9 +303,11 @@ void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行�
         };
         if (协作停止()) throw 新学习运行异常(方法节点, 原因::停止取消);
         const auto 方法 = 方法_.获取方法(方法节点);
-        if (请求.定向输入 && 请求.归类定向输入)
+        const auto 定向输入数=请求.定向输入.has_value()+请求.归类定向输入.has_value()
+            +请求.分界定向输入.has_value();
+        if (定向输入数>1)
             throw 新学习运行异常(方法节点,原因::输入不合法,"multiple directed learning inputs");
-        if ((请求.定向输入 || 请求.归类定向输入) && (!方法 || 方法->来源方法节点 || 方法->实例根节点
+        if (定向输入数 && (!方法 || 方法->来源方法节点 || 方法->实例根节点
             || 方法->实现方式 != 新方法实现方式::本能
             || 方法->启用状态 != 新方法启用状态::启用))
             return {方法节点,新定向学习结束材料{新定向学习结局::需重新组织输入,{},{}}};
@@ -310,6 +319,11 @@ void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行�
             throw 新学习运行异常(方法节点, 原因::输入不合法);
         if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
             throw 新学习运行异常(方法节点, 原因::结构不一致,"structure inconsistent at line 152");
+        if (请求.分界定向输入) {
+            if (*方法->本能函数登记名 != 新本能函数登记名_语言片段分词)
+                throw 新学习运行异常(方法节点,原因::输入不合法,"boundary input on another intrinsic");
+            return {方法节点,学习有效分界(*方法,*请求.分界定向输入,协作停止)};
+        }
         if (请求.归类定向输入) {
             if (*方法->本能函数登记名 != 新本能函数登记名_按归类材料挂接词条)
                 throw 新学习运行异常(方法节点,原因::输入不合法,"classification input on another intrinsic");
@@ -491,6 +505,180 @@ void 模拟学习服务::配置词典学习(std::shared_ptr<词典本能运行�
 } // namespace 海中鱼巣
 
 namespace 海中鱼巣 {
+
+新定向学习结束材料 模拟学习服务::学习有效分界(const 新方法信息& 方法,
+    const 新分界定向学习输入& 请求, const std::function<bool()>& 停止检查) {
+    using 结局=新定向学习结局;
+    using 原因=新学习运行异常原因;
+    using 世界=新模拟世界状态;
+    const auto M=方法.节点;
+    const 新定向学习结束材料 重组{结局::需重新组织输入,{},{}};
+    if (!分界语言_ || !分界特征值_ || !来源身份_ || !存在概念_
+        || !动作定义_ || !动态定义_ || !动态概念_)
+        throw std::logic_error("isolated boundary dependencies unavailable");
+    if (!有效(请求.范围) || !有效(请求.执行分支) || !有效(请求.候选材料)
+        || !有效(请求.分界依据) || !有效(请求.执行主体))
+        throw 新学习运行异常(M,原因::输入不合法);
+    if (请求.执行主体!=需求执行来源_) return 重组;
+
+    const auto 基线=方法_.读取方法执行结构闭包({M});
+    if (基线.状态==新_方法类::执行结构读取状态::前提已变化) return 重组;
+    const auto 声明=std::find_if(基线.方法组.begin(),基线.方法组.end(),
+        [&](const auto& 项){return 项.节点==M;});
+    if (基线.状态!=新_方法类::执行结构读取状态::已读取 || 声明==基线.方法组.end())
+        throw std::logic_error("isolated boundary method declaration unavailable");
+    if (声明->参数规格组!=方法.参数规格组 || 声明->登记结果组!=方法.登记结果组)
+        return 重组;
+    const auto 分支=std::find_if(声明->执行分支组.begin(),声明->执行分支组.end(),
+        [&](const auto& 项){return 项.节点==请求.执行分支;});
+    if (分支==声明->执行分支组.end() || 分支->定义.顺序!=1) return 重组;
+
+    using P=新方法参数信息类型;
+    constexpr std::array 类型{P::存在,P::特征,P::特征,P::特征,P::存在};
+    if (声明->参数规格组.size()!=类型.size()) return 重组;
+    std::vector<新模拟有序参数输入> 参数;
+    参数.reserve(类型.size());
+    for (std::size_t i=0;i<类型.size();++i) {
+        const auto& 规格=声明->参数规格组[i].有序规格;
+        if (!规格 || 规格->序号!=i+1 || 规格->信息类型!=类型[i]
+            || (类型[i]==P::特征 && 规格->所属存在位置!=1)) return 重组;
+        新模拟有序参数输入 项{*规格};
+        if (类型[i]==P::特征) 项.所属存在参数=1;
+        参数.push_back(std::move(项));
+    }
+    const auto FT=参数[3].规格.范围概念节点;
+    if (std::none_of(声明->登记结果组.begin(),声明->登记结果组.end(),[&](const auto& 项) {
+        return 项.参数序号==1 && 项.特征类型概念节点==FT;
+    })) return 重组;
+    const auto& 必要=分支->定义.必要条件;
+    if (必要.条件项组.size()!=2) return 重组;
+    for (std::uint32_t 位置 : {2u,3u}) {
+        const auto 类型根=参数[位置-1].规格.范围概念节点;
+        if (std::none_of(必要.条件项组.begin(),必要.条件项组.end(),[&](const auto& 项) {
+            return 项.参数序号==位置 && 项.特征类型概念节点==类型根
+                && 项.特征值域概念节点==类型根 && 项.取值位置==特征取值位置::当前值;
+        })) return 重组;
+    }
+
+    const auto 身份=来源身份_->读取存在身份保护(请求.执行主体);
+    if (身份.状态==基础结构操作状态::资源失败) throw std::bad_alloc{};
+    if (身份.前提已变化 || !身份.信息) return 重组;
+    const auto EC=身份.信息->专属存在概念节点;
+    const auto 类别=存在概念_->读取普通存在概念定义保护(EC);
+    if (类别.状态==正式概念读取状态::前提已变化) return 重组;
+    if (!类别.信息 || 类别.信息->种类!=存在概念种类::专属
+        || 类别.信息->对应存在节点!=请求.执行主体)
+        throw std::logic_error("isolated boundary actor concept unavailable");
+    新模拟执行主体输入 主体{请求.执行主体,EC,身份.预期节点组};
+    主体.来源身份保护.insert(主体.来源身份保护.end(),类别.完整保护组.begin(),类别.完整保护组.end());
+    主体.同源存在输入=5;
+    参数[4].来源存在=请求.执行主体;
+    参数[4].构造存在概念=EC;
+
+    auto 样例=std::make_shared<新_模拟世界类>(方法_,*动作定义_,*动态定义_,*动态概念_);
+    隔离样例收尾 收尾{*this,登记隔离样例(样例)};
+    样例->配置需求执行读取(*来源身份_,*存在概念_,概念_,二次概念_);
+    const 新模拟语言范围样例来源 来源{*分界语言_,*分界特征值_,特征_,请求.范围,请求};
+    const auto 建立=样例->建立有序样例(M,参数,{},{},{},请求.执行分支,{},{},主体,{},{},来源);
+    if (建立.状态==世界::定义前提已变化 || 建立.状态==世界::需重新组织输入) return 重组;
+    if (建立.状态==世界::资源失败) throw std::bad_alloc{};
+    if (建立.状态!=世界::已完成)
+        throw std::logic_error("directed boundary sample rejected at "+std::to_string(模拟样例拒绝行));
+    const auto 绑定=样例->读取参数绑定();
+    if (!绑定) throw std::logic_error("directed boundary bindings missing");
+    auto 场景=方法_.建立模拟参数场景(M,*绑定,样例,{},请求.执行分支);
+    if (场景.状态==新方法操作状态::定义前提已变化 || 场景.状态==新方法操作状态::方法不存在)
+        return 重组;
+    if (场景.状态==新方法操作状态::资源失败) throw std::bad_alloc{};
+    if (!场景.参数场景) throw std::logic_error("directed boundary parameter scene unavailable");
+
+    样例->开始记录复制上下文读取(停止检查);
+    const auto 调用=方法_.调用本能函数(M,*场景.参数场景);
+    (void)样例->结束记录复制上下文读取();
+    const auto 证据=样例->读取已关闭调用证据();
+    if (停止检查()) throw 新学习运行异常(M,原因::停止取消);
+    if (调用.状态==新方法本能调用状态::资源失败) throw std::bad_alloc{};
+    if (调用.状态==新方法本能调用状态::定义前提已变化
+        || 调用.状态==新方法本能调用状态::方法不存在 || 调用.状态==新方法本能调用状态::方法停用)
+        return 重组;
+    if (调用.状态!=新方法本能调用状态::已调用 || !调用.本次条件结果对 || !证据)
+        throw std::logic_error("directed boundary invocation incomplete");
+    if (调用.本次条件结果对->结果.状态==新本能函数执行状态::资源失败) throw std::bad_alloc{};
+    if (!证据->有效分界)
+        return {结局::条件未具备,{},{请求.候选材料,请求.分界依据}};
+
+    const auto& 回执=*证据->有效分界;
+    const auto& 实际=*调用.本次条件结果对;
+    const auto F=样例->读取模拟特征(回执.特征);
+    const auto 结果=样例->读取本地语言分界材料(回执.结果);
+    const auto 依据=样例->读取本地语言分界材料(回执.依据);
+    if (结果.状态==新语言分界工程状态::资源失败 || 依据.状态==新语言分界工程状态::资源失败)
+        throw std::bad_alloc{};
+    const auto* 结果定义=结果.信息 ? std::get_if<新语言有效分界定义>(&结果.信息->定义) : nullptr;
+    const auto* 依据定义=依据.信息 ? std::get_if<新语言分界依据定义>(&依据.信息->定义) : nullptr;
+    const auto& 角色=实际.条件.参数角色组;
+    if (实际.条件.执行分支节点!=请求.执行分支
+        || 实际.结果.动作动态节点!=回执.动作 || 证据->身份.主动作!=回执.动作
+        || 证据->身份.调用节点!=回执.调用 || !F || F->特征概念节点!=FT
+        || F->当前值!=新特征准确值{回执.结果}
+        || !结果定义 || 结果定义->正式依据!=回执.依据
+        || !依据定义 || 依据定义->候选材料!=回执.候选
+        || 角色.size()!=类型.size()
+        || 角色[1].实际特征组.size()!=1 || 角色[2].实际特征组.size()!=1
+        || 角色[1].实际特征组.front().动作前准确值!=新特征准确值{回执.候选}
+        || 角色[2].实际特征组.front().动作前准确值!=新特征准确值{回执.依据})
+        throw std::logic_error("directed boundary result does not match actual sample");
+
+    新方法条件结果定义 配对;
+    配对.条件.关系规则=新方法项关系规则::全部成立;
+    配对.条件.条件项组=必要.条件项组;
+    配对.结果.关系规则=新方法项关系规则::全部成立;
+    新方法结果项定义 结果项;
+    结果项.参数序号=1;
+    结果项.特征类型概念节点=FT;
+    结果项.特征值域概念节点=FT;
+    配对.结果.结果项组.push_back(结果项);
+    配对.来源执行分支节点组={请求.执行分支};
+    场景.参数场景.reset();
+    const auto 已退出=结束隔离样例(收尾.责任);
+    收尾.责任.reset();
+    const auto 当前=方法_.获取方法(M);
+    if (!当前 || 当前->登记结果组!=声明->登记结果组) return 重组;
+    const auto 发布=方法_.追加模拟条件结果(M,{配对},&基线);
+    try {
+        std::wostringstream 文;
+        文 << L"方法=" << M.值 << L"；分支=" << 请求.执行分支.值 << L"；源R=" << 请求.范围.值
+            << L"；源候选=" << 请求.候选材料.值 << L"；源依据=" << 请求.分界依据.值
+            << L"；模拟R=" << 回执.范围.值 << L"；模拟调用=" << 回执.调用.值
+            << L"；模拟动作=" << 回执.动作.值 << L"；模拟结果=" << 回执.结果.值
+            << L"；模拟状态=" << 回执.状态.值 << L"；样例已退出=" << 已退出
+            << L"；发布=" << static_cast<int>(发布.状态);
+        for (const auto P : 发布.新配对节点组) 文 << L"；配对=" << P.值;
+        (void)记录运行日志(L"模拟学习",L"有效分界样例收束",文.str());
+    } catch (...) {}
+    switch (发布.状态) {
+    case 新方法学习发布状态::已发布:
+        return {结局::已完成学习,{},{}};
+    case 新方法学习发布状态::精确重复:
+        return {结局::已被现有知识覆盖,{},{}};
+    case 新方法学习发布状态::前提已变化:
+        return 重组;
+    case 新方法学习发布状态::资源失败:
+        throw std::bad_alloc{};
+    case 新方法学习发布状态::发布结果未知: {
+        const auto 读回=方法_.获取方法(M);
+        if (读回 && std::any_of(读回->条件结果组.begin(),读回->条件结果组.end(),[&](const auto& 项) {
+            return 项.条件==配对.条件 && 项.结果==配对.结果
+                && 项.知识来源==新方法知识来源种类::模拟
+                && std::find(项.来源执行分支节点组.begin(),项.来源执行分支节点组.end(),请求.执行分支)
+                    !=项.来源执行分支节点组.end();
+        })) return {结局::已完成学习,{},{}};
+        throw 新学习运行异常(M,原因::发布结果未知);
+    }
+    default:
+        throw std::logic_error("directed boundary pair publication rejected");
+    }
+}
 
 新定向学习结束材料 模拟学习服务::学习词典本能(const 新方法信息& 原方法,
     const 新词典定向学习输入& 请求, const std::function<bool()>& 停止检查) {

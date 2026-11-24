@@ -1186,16 +1186,21 @@ struct 新_自我线程类::实现 final {
             throw std::logic_error("dictionary discovery missing full learning request");
         词典学习请求者 请求者{发现.任务节点, 发现.需求节点, 候选, 发现.当前目标, 发现.等待依赖键组};
         if (词典输入已未命中(*发现.学习请求, 请求者)) return S::已处理仍无配对;
+        return 接纳定向学习(*发现.学习请求,std::move(请求者));
+    }
+
+    方法学习发现状态 接纳定向学习(const 新方法学习请求& 请求, 词典学习请求者 请求者) {
+        using S=方法学习发现状态;
         std::lock_guard 锁(状态互斥);
         if (停止已请求) return S::停止取消;
         if (!学习线程) return S::暂缓;
-        const auto [位置, 新建] = 在途学习.try_emplace(发现.方法节点);
+        const auto [位置, 新建] = 在途学习.try_emplace(请求.方法节点);
         auto& 槽 = 位置->second;
         if (新建) 槽.阶段 = 学习交接阶段::待提交;
-        if (槽.当前请求 == 发现.学习请求) {
+        if (槽.当前请求==请求) {
             合并词典请求者(槽.请求者组, std::move(请求者));
             槽.定向结束已消费 = false;
-        } else 合并词典待项(槽.待处理请求组, *发现.学习请求, std::move(请求者));
+        } else 合并词典待项(槽.待处理请求组, 请求, std::move(请求者));
         状态变化.notify_all();
         return 新建 ? S::已接纳 : S::已在途;
     }
@@ -1205,6 +1210,10 @@ struct 新_自我线程类::实现 final {
         std::vector<词典学习待项> 当前组;
         for (const auto& 待项 : 槽.待处理请求组) {
             for (const auto& 请求者 : 待项.请求者组) {
+                if (待项.请求.分界定向输入) {
+                    if (!整理待提交分界学习(待项.请求,请求者,当前组,true)) return false;
+                    continue;
+                }
                 const auto 读 = 读取当前词典学习发现(请求者.任务, 请求者.候选方法);
                 const auto* 当前 = 读.发现 ? &*读.发现 : nullptr;
                 刷新词典请求者等待(请求者, 当前);
@@ -1383,7 +1392,7 @@ struct 新_自我线程类::实现 final {
     }
 
     std::optional<方法学习发现状态> 读取候选分界学习材料(稳定编码 T,稳定编码 候选需求,稳定编码 M,
-        std::vector<新任务依赖键>& 等待键,bool 记录本次) {
+        std::vector<新任务依赖键>& 等待键,bool 记录本次, std::optional<词典学习待项>& 定向) {
         using S=方法学习发现状态;
         using P=正式信息参数读取状态;
         const auto 方法=方法服务->获取方法(M);
@@ -1454,7 +1463,42 @@ struct 新_自我线程类::实现 final {
                 等待键.push_back({新任务依赖键种类::节点,F.特征节点,{}});
             }
         }
-        const bool 缺材料=等待键.size()!=已有键数;
+        const auto 缺材料末尾=等待键.size();
+        const bool 缺材料=缺材料末尾!=已有键数;
+        if (顺序==1 && 输出槽==有效分界) {
+            const auto 加等待=[&](std::size_t 槽) {
+                const 新任务依赖键 键{新任务依赖键种类::节点,定位[槽].特征节点,{}};
+                if (std::find(等待键.begin()+已有键数,等待键.end(),键)==等待键.end())
+                    等待键.push_back(键);
+            };
+            加等待(候选);
+            加等待(依据);
+            if (!缺材料) {
+                const auto 材料引用=[&](std::size_t 槽) {
+                    const auto& 值=内容[槽].内容.值;
+                    const auto* 节点=值 ? std::get_if<稳定编码>(&*值) : nullptr;
+                    if (!节点 || !有效(*节点)) throw std::logic_error("boundary input reference unavailable");
+                    return *节点;
+                };
+                const auto C=材料引用(候选), B=材料引用(依据);
+                const auto 读取依据=事实.语言服务.读取分界材料(B);
+                using L=新语言分界工程状态;
+                if (读取依据.状态==L::资源失败 || 读取依据.状态==L::前提已变化
+                    || 读取依据.状态==L::未找到 || 读取依据.状态==L::材料未就绪) return S::暂缓;
+                const auto* 定义=读取依据.信息 ? std::get_if<新语言分界依据定义>(&读取依据.信息->定义) : nullptr;
+                if (!定义 || 读取依据.信息->所属范围!=R)
+                    throw std::logic_error("boundary evidence is not owned by the current language range");
+                const auto 主体=D->需求主体存在节点;
+                if (定义->候选材料==C && 初始化结果 && 初始化结果->自我存在==主体) {
+                    新方法学习请求 请求;
+                    请求.方法节点=M;
+                    请求.分界定向输入=新分界定向学习输入{R,分支->节点,主体,C,B};
+                    词典学习请求者 请求者{T,D->节点,M,{R,D->目标},
+                        {等待键.begin()+已有键数,等待键.end()}};
+                    定向=词典学习待项{std::move(请求),{std::move(请求者)}};
+                }
+            }
+        }
         if(记录本次)try {
             std::wostringstream 文;
             文 << L"T=" << T.值 << L"；D=" << D->节点.值 << L"；R=" << R.值 << L"；方法=" << M.值
@@ -1462,11 +1506,51 @@ struct 新_自我线程类::实现 final {
                 << L"；候选F=" << 定位[候选].特征节点.值
                 << L"；候选已知=" << (内容[候选].内容.状态==正式内容值状态::已知)
                 << L"；依据F=" << 定位[依据].特征节点.值
-                << L"；取材=" << (缺材料 ? L"等待正式输入" : L"隔离执行待接入");
-            for(auto i=已有键数;i<等待键.size();++i)文 << L"；缺F=" << 等待键[i].节点.值;
+                << L"；取材=" << (定向 ? L"具备隔离输入" : 缺材料 ? L"等待正式输入" : L"等待适用分支或材料");
+            for(auto i=已有键数;i<缺材料末尾;++i)文 << L"；缺F=" << 等待键[i].节点.值;
             (void)记录运行日志(L"自我线程",L"分界学习取材",文.str());
         }catch(...){}
         return S::等待分界取材;
+    }
+
+    std::optional<方法学习发现状态> 接纳候选分界学习(稳定编码 T, 稳定编码 D, 稳定编码 M,
+        std::vector<新任务依赖键>& 等待键, bool 记录本次) {
+        using S=方法学习发现状态;
+        std::optional<词典学习待项> 定向;
+        const auto 状态=读取候选分界学习材料(T,D,M,等待键,记录本次,定向);
+        if (!定向) return 状态;
+        const auto 接纳=接纳定向学习(定向->请求,std::move(定向->请求者组.front()));
+        return 接纳==S::已接纳 || 接纳==S::已在途 ? S::等待分界取材 : 接纳;
+    }
+
+    bool 整理待提交分界学习(const 新方法学习请求& 原请求, const 词典学习请求者& 原请求者,
+        std::vector<词典学习待项>& 当前组, bool 同输入可重试) {
+        const auto 候选=任务服务->获取当前候选方法材料(原请求者.任务);
+        if (!候选 || 候选->需求节点!=原请求者.需求
+            || std::find(候选->候选方法节点组.begin(),候选->候选方法节点组.end(),原请求者.候选方法)
+                ==候选->候选方法节点组.end()) return true;
+        std::vector<新任务依赖键> 等待键;
+        std::optional<词典学习待项> 定向;
+        const auto 状态=读取候选分界学习材料(原请求者.任务,候选->需求节点,原请求者.候选方法,
+            等待键,false,定向);
+        if (状态==方法学习发现状态::暂缓) return false;
+        if (状态!=方法学习发现状态::已有配对 && 等待键!=原请求者.等待键)
+            刷新词典请求者等待(原请求者,nullptr);
+        if (定向 && (同输入可重试 || 定向->请求!=原请求 || 定向->请求者组.front().目标!=原请求者.目标))
+            合并词典待项(当前组,定向->请求,std::move(定向->请求者组.front()));
+        return true;
+    }
+
+    void 消费分界学习结束(学习占用& 槽) {
+        if (!槽.当前请求 || !槽.当前请求->分界定向输入 || 槽.定向结束已消费) return;
+        if (槽.通知 && !槽.通知->定向结束) throw std::logic_error("boundary completion missing directed outcome");
+        const bool 重试=槽.通知 ? 槽.通知->定向结束->结局==新定向学习结局::需重新组织输入
+            : 槽.需重学 || (槽.异常 && 槽.异常->原因==新学习运行异常原因::资源不足);
+        for (const auto& 请求者 : 槽.请求者组)
+            if (!整理待提交分界学习(*槽.当前请求,请求者,槽.待处理请求组,重试))
+                合并词典待项(槽.待处理请求组,*槽.当前请求,请求者);
+        槽.定向结束已消费=true;
+        槽.需重学=false;
     }
 
     方法学习发现状态 发现候选方法学习(稳定编码 T, 稳定编码 候选需求, 稳定编码 M,
@@ -1475,7 +1559,7 @@ struct 新_自我线程类::实现 final {
             const auto 读 = 读取当前词典学习发现(T, M);
             if (!读.发现) {
                 if(读.状态!=新词典学习发现状态::不涉及)return 方法学习发现状态::无需学习;
-                if(const auto 分界=读取候选分界学习材料(T,候选需求,M,等待键,true))return *分界;
+                if(const auto 分界=接纳候选分界学习(T,候选需求,M,等待键,true))return *分界;
                 return 发现方法学习(M);
             }
             const auto& 当前 = *读.发现;
@@ -1565,10 +1649,13 @@ struct 新_自我线程类::实现 final {
             return false;
         }
         if (项.阶段 == 学习交接阶段::待确认学习) {
-            try { 消费词典学习结束(方法, 项); }
+            try {
+                if (项.当前请求 && 项.当前请求->分界定向输入) 消费分界学习结束(项);
+                else 消费词典学习结束(方法,项);
+            }
             catch (const std::bad_alloc&) { return false; }
             catch (...) {
-                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"收回定向词典学习", L"当前请求者读取或等待刷新发生工程错误。");
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"收回定向学习", L"当前请求者读取或等待刷新发生工程错误。");
             }
             const auto 确认 = 学习线程->确认结果已接收(方法);
             if ((确认 == 新学习操作状态::已完成 || 确认 == 新学习操作状态::无变化) && 项.需重学) {
@@ -2220,7 +2307,7 @@ struct 新_自我线程类::实现 final {
                 for (const auto M : 候选->候选方法节点组) {
                     const auto 读 = 读取当前词典学习发现(任务.节点, M);
                     if (!读.发现) {
-                        if(const auto 分界=读取候选分界学习材料(
+                        if(const auto 分界=接纳候选分界学习(
                             任务.节点,候选->需求节点,M,决议.附加等待依赖键组,false)) {
                             if(*分界==方法学习发现状态::暂缓)return std::nullopt;
                             if(*分界==方法学习发现状态::停止取消)return 出口(__LINE__);

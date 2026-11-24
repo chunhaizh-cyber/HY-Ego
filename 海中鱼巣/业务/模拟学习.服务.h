@@ -26,6 +26,7 @@ class 模拟任务需求来源读取接口;
 class 新_模拟世界类;
 class 词典本能运行服务;
 class 新_词类;
+class 新_语言类;
 class 概念_名称关系类;
 class 词典材料类;
 struct 新学习结束通知 final {
@@ -64,6 +65,7 @@ public:
         std::optional<新字段询问登记配置>);
     void 配置词典学习(std::shared_ptr<词典本能运行服务>, const 新_词类&,
         const 词典材料类&, const 新_特征值类&, 概念_存在类&, const 概念_名称关系类&);
+    void 配置分界学习(const 新_语言类&, const 新_特征值类&);
 private:
     struct 归类样例输入;
     struct 归类样例构造结果;
@@ -75,6 +77,8 @@ private:
     bool 结束隔离样例(const std::shared_ptr<隔离样例责任>&) noexcept;
     void 清理待退出样例();
     新定向学习结束材料 学习词典本能(const 新方法信息&, const 新词典定向学习输入&,
+        const std::function<bool()>&);
+    新定向学习结束材料 学习有效分界(const 新方法信息&, const 新分界定向学习输入&,
         const std::function<bool()>&);
     std::mutex 样例责任锁_;
     std::vector<std::shared_ptr<隔离样例责任>> 样例责任组_;
@@ -105,5 +109,7 @@ private:
     const 新_特征值类* 词典值_=nullptr;
     概念_存在类* 词典概念_=nullptr;
     const 概念_名称关系类* 归类名称_=nullptr;
+    const 新_语言类* 分界语言_=nullptr;
+    const 新_特征值类* 分界特征值_=nullptr;
 };
 } // namespace 海中鱼巣
