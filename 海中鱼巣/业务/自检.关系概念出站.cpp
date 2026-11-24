@@ -1,6 +1,7 @@
 #include "自检.关系概念出站.h"
 #include "初始化.关系概念.h"
 #include "解释.基础语言.h"
+#include "../领域/新_存在类.h"
 #include "../领域/新_需求类.h"
 
 #include <algorithm>
@@ -14,6 +15,42 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
     e.实际验证说明 = std::move(说明);
     r.条目组.push_back(std::move(e));
 }
+
+// 解释合同：已绑定必须带非空完整保护，否则 解释单句含义图 抛内部不一致。
+class 夹具专名绑定 final : public 语言图专名绑定读取接口 {
+public:
+    夹具专名绑定(const 概念_存在类& es, const 新_存在类& 存在)
+        : es_(es), 存在_(存在) {}
+    语言图专名绑定结果 读取实例专名(
+        稳定编码 c, const 解释原文范围&) const override {
+        const auto cp = es_.读取普通存在概念定义保护(c);
+        if (cp.状态 == 正式概念读取状态::前提已变化)
+            return {语言图专名绑定状态::前提已变化, {}, {}};
+        if (cp.状态 == 正式概念读取状态::依赖未就绪)
+            return {语言图专名绑定状态::资源失败, {}, {}};
+        if (cp.状态 != 正式概念读取状态::已读取 || !cp.信息
+            || cp.完整保护组.empty())
+            return {语言图专名绑定状态::非实例专名, {}, {}};
+        if (cp.信息->种类 != 存在概念种类::专属 || !cp.信息->对应存在节点)
+            return {语言图专名绑定状态::非实例专名, {}, {}};
+        auto 保护 = cp.完整保护组;
+        const auto ep = 存在_.读取存在身份保护(*cp.信息->对应存在节点);
+        if (ep.前提已变化)
+            return {语言图专名绑定状态::前提已变化, {}, std::move(保护)};
+        if (ep.状态 == 基础结构操作状态::资源失败)
+            return {语言图专名绑定状态::资源失败, {}, std::move(保护)};
+        if (ep.状态 != 基础结构操作状态::已完成 || !ep.信息
+            || ep.预期节点组.empty())
+            return {语言图专名绑定状态::资源失败, {}, std::move(保护)};
+        保护.insert(
+            保护.end(), ep.预期节点组.begin(), ep.预期节点组.end());
+        return {
+            语言图专名绑定状态::已绑定, ep.信息->存在节点, std::move(保护)};
+    }
+private:
+    const 概念_存在类& es_;
+    const 新_存在类& 存在_;
+};
 } // namespace
 
 关系概念出站自检结果 运行关系概念出站自检(const 关系概念出站自检依赖& d) {
@@ -91,27 +128,14 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
 
         // 入站须在「后天表达知识挂到 composition」之前跑，否则一部分句无法再匹配预置段。
         if (d.存在概念 && d.语言世界 && 属于通过 && !组成句.empty()) {
-            class 夹具专名绑定 final : public 语言图专名绑定读取接口 {
-            public:
-                explicit 夹具专名绑定(const 概念_存在类& es) : es_(es) {}
-                语言图专名绑定结果 读取实例专名(
-                    稳定编码 c, const 解释原文范围&) const override {
-                    const auto info = es_.获取存在概念(c);
-                    if (!info || info->种类 != 存在概念种类::专属
-                        || !info->对应存在节点)
-                        return {语言图专名绑定状态::非实例专名, {}, {}};
-                    return {语言图专名绑定状态::已绑定, info->对应存在节点, {}};
-                }
-            private:
-                const 概念_存在类& es_;
-            };
-            夹具专名绑定 专名(*d.存在概念);
+            夹具专名绑定 专名(*d.存在概念, d.存在);
             关系陈述理解请求 入{
                 组成句, d.中文语言, d.交互场景夹具, {}, {}, &专名};
             const auto 理解 = d.陈述.理解关系陈述(入);
             bool 场景读回 = false, 角色对 = false, 交互衔接 = false;
             std::string 说明 =
                 "状态=" + std::to_string(static_cast<int>(理解.状态));
+            if (!理解.诊断.empty()) 说明 += " 诊=" + 理解.诊断;
             if (理解.状态 == 关系陈述理解状态::已形成场景材料 && 理解.材料) {
                 说明 += " 种子=" + 理解.材料->关系种子键;
                 const auto 读场景 =
@@ -165,10 +189,13 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
                     && 整体存在 == d.正式整体存在;
             }
             记(r, "in.属于同角色不同种子", 属过,
-                理解属.材料 ? ("种子=" + 理解属.材料->关系种子键)
-                            : ("状态="
-                                  + std::to_string(
-                                      static_cast<int>(理解属.状态))));
+                理解属.材料
+                    ? ("种子=" + 理解属.材料->关系种子键)
+                    : ("状态="
+                          + std::to_string(static_cast<int>(理解属.状态))
+                          + (理解属.诊断.empty()
+                                  ? ""
+                                  : (" 诊=" + 理解属.诊断))));
 
             const std::string 反向句 = "夹具装配体是夹具部件的一部分";
             关系陈述理解请求 入反{
@@ -177,6 +204,7 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
             bool 反过 = false;
             std::string 反说 =
                 "状态=" + std::to_string(static_cast<int>(理解反.状态));
+            if (!理解反.诊断.empty()) 反说 += " 诊=" + 理解反.诊断;
             if (理解反.状态 == 关系陈述理解状态::已形成场景材料
                 && 理解反.材料) {
                 std::optional<稳定编码> 部分存在, 整体存在;
@@ -516,21 +544,7 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
 
     // 需要入站：字段引用同义表达（不依赖 composition 后天挂接状态）
     if (d.存在概念 && d.语言世界 && d.正式部分目标需求 && d.正式部分存在) {
-        class 夹具专名绑定2 final : public 语言图专名绑定读取接口 {
-        public:
-            explicit 夹具专名绑定2(const 概念_存在类& es) : es_(es) {}
-            语言图专名绑定结果 读取实例专名(
-                稳定编码 c, const 解释原文范围&) const override {
-                const auto info = es_.获取存在概念(c);
-                if (!info || info->种类 != 存在概念种类::专属
-                    || !info->对应存在节点)
-                    return {语言图专名绑定状态::非实例专名, {}, {}};
-                return {语言图专名绑定状态::已绑定, info->对应存在节点, {}};
-            }
-        private:
-            const 概念_存在类& es_;
-        };
-        夹具专名绑定2 专名(*d.存在概念);
+        夹具专名绑定 专名(*d.存在概念, d.存在);
         关系陈述请求 需要请求{
             "demand.target_existence.need",
             {{"需求", *d.正式部分目标需求}, {"目标", *d.正式部分存在}},
@@ -548,7 +562,10 @@ void 记(关系概念出站自检结果& r, std::string 标识, bool 通过, std
                 理解需.材料
                     ? ("种子=" + 理解需.材料->关系种子键 + " 文=" + 需要句.UTF8正文)
                     : ("状态="
-                          + std::to_string(static_cast<int>(理解需.状态))));
+                          + std::to_string(static_cast<int>(理解需.状态))
+                          + (理解需.诊断.empty()
+                                  ? ""
+                                  : (" 诊=" + 理解需.诊断))));
         } else {
             记(r, "in.需要入站材料", false, "需要出站句未生成：未验证");
         }
