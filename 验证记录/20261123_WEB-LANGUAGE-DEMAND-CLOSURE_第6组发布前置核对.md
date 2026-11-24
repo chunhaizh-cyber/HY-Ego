@@ -509,3 +509,9 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 ### 56C26 普通版命中 I64 归组的不同上位等值候选
 
 发布源码 698566832 的实际普通运行读回前置原话 M34130，原 R37121 的明确分界答复 M40357 已采用，依据为 41161。分界任务 T38422 已完成过条件筹办，最后一次成功读回仍无执行。随后后台因果子需求迁移至待查找方法，任务状态 F45518 的 I64 核心和历史事实已经写入，归组比较在类型根 5574 下命中两个 [2,2] 概念。候选 43793 的直接上位为 5574，候选 28988 的直接上位为 41470，归组按多个等值候选拒绝并终止。正式本轮哪条写入生成第二个等值节点尚无直接证据。已留普通版的原始日志、分界读口和停止线程栈。桌面自动化未能激活错误窗口，已按二进制与 PID 核对后回收试验进程，退出码 −1，本轮无正常退出回执。[发布运行读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-candidate-position-release-20261125-001409/release-web-20261125-001902/last-control-readback.json) · [逻辑错误增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-candidate-position-release-20261125-001409/release-web-20261125-001902/logic-error-delta.log) · [停止线程栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-candidate-position-release-20261125-001409/release-web-20261125-001902/engineering-error-stack.txt) · [实际回收](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-candidate-position-release-20261125-001409/release-web-20261125-001902/recovery.json)
+
+### 56C26 普通版复测在拟用上位无准确候选时终止
+
+源码 51aee29df 的普通 Release/x64 实际启动并通过网页输入前置原话「测试杯甲是一个杯子。它的颜色是白色。」。本次未提交分界答复。00:56:16 错误增量记录 F40106 的归组在 3518 行返回失败，并沿活动记录 40411 报原子核心已发布、归组收尾未完成。3518 行只在同类型根存在多个准确匹配、拟用直接上位下没有匹配时到达。此次没有捕获候选编码及最先产生重复域的写入者。已核实错误窗口和实际二进制。窗口无法自动激活，回收验收进程 PID 26340，出口为 −1，监听端口已移除。本轮未取得正常退出、有效分界、实际词典结果或第 6 组补问。
+
+[发布构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/published-inputs.json) · [进程身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/process.json) · [错误增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/logic-error-delta.log) · [回收回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/recovery.json)
