@@ -365,3 +365,13 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 ### 56C20 发布版普通网页复测
 
 普通 Release/x64 的 249 项输入逐项核同 `c60c4d907d05f327d1c0b57ce7a58305999c5b3b` 发布树。实际前置 M29842/R37678 产生 Q40155/O40249。通过该输出行提交关联答复 M41015，普通控制页独立读回 A41450/I41451、实际发送 40504、11 个完整分段及两个分隔项。依据 41819 写入同一 F37691，实际生成 S42059。原 D38835/T38979 独立读回仍等待的方法条件；管理线程实际唤醒以同源码的上述诊断运行证明。普通网页、浏览器验证脚本、应用全部正常结束，应用 PID 42908 退出 0、无需强停且已回收。本轮仍记录独立模拟方法 25208 的既有材料问题。[发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c20-final-20261124-074147/published-inputs.json) · [普通网页正式回读](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c20-final-20261124-074147/release-web-20261124-075647/answer-formal-readback.json) · [原任务独立读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c20-final-20261124-074147/release-web-20261124-075647/original-task-after-answer.json) · [退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c20-final-20261124-074147/release-web-20261124-075647/exit.json)
+
+## 56C21 从真实素材自动构造隔离样例并发布配对
+
+第 56C21 依主设计 v1.176 §10.104 和计划 v2.135 开工。正式自然语言世界已随网页原文产生候选。模拟学习按分支声明只读取固定原文范围、同一范围的候选和正式依据、结果特征位置、实际自我的本地绑定。样例在运行中自动建立，实际调用本能后读取本地结果和状态，按正式类型及参数位置导出。模拟运行没有改写正式原文范围。
+
+普通 Release/x64 编译链接通过，249 项输入前后无变化。11 份源码随 `a98ede56d778aab4b5643d406234b75383aeb01b` 发布，249 项输入与发布树逐项一致。实际网页原文 M30157 形成 R36206、D37363、T37507。正式问题 Q38683/O38777 的回复 M39543 采用为 A39978/I39979。同一范围候选 36307 和依据 40347 成为本次模拟输入，依据当前值实际写入 F36219 并生成 S40587。[编译](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/release-result.json) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/published-inputs.json) · [网页正式依据读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/release-web-20261124-082937/answer-formal-readback.json)
+
+模拟世界建立本地 R40744、调用 41036、动作 41070。关闭调用后读回本地结果 41084 和状态 41085，隔离样例正常回收。方法所有者向抽象方法 25518 的分支 25586 发布配对 41123，控制页读回该方法配对数由 0 变 1。独立短时观察中同一 T37507 一度转回「待查找方法」，后重新到「待检查条件」。该轮尚未读到 T 的执行实例和正式 R 的有效结果。[样例与配对](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/release-web-20261124-082937/sample-owner-publication-log.txt) · [原任务读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/release-web-20261124-082937/independent-same-task.json)
+
+初版验证脚本误以为日志标题和数据在同一行，读证超时并退出 1。样例与发布由独立日志读取取得。API 正常关闭返回 200，应用 PID 13184 退出 0，进程已回收，无强停。运行日志另有一条此前已经复现的非本分支方法 25208 学习异常。第 6 组原业务问题和同 D 填值仍待验收。[退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c21-integrated-20261124-082755/release-web-20261124-082937/exit.json)
