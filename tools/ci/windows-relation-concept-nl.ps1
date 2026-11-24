@@ -155,7 +155,25 @@ $lines = @(
 $lines | Set-Content -LiteralPath $summaryPath -Encoding UTF8
 Write-Host ($lines -join "`n")
 
+# 失败时把重定向输出与应用日志拷入 artifact，便于 CI 下载核验。
+$appLogSrc = 'D:\海中鱼巣\日志'
+if (Test-Path -LiteralPath $appLogSrc) {
+    $appLogDst = Join-Path $ArtifactRoot 'app-logs'
+    New-Directory $appLogDst | Out-Null
+    Copy-Item -Path (Join-Path $appLogSrc '*') -Destination $appLogDst -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 if ($exit -ne 0) {
+    Write-Host '---- verify-stdout.txt ----' -ForegroundColor Yellow
+    if (Test-Path -LiteralPath $stdoutPath) { Get-Content -LiteralPath $stdoutPath -ErrorAction SilentlyContinue }
+    Write-Host '---- verify-stderr.txt ----' -ForegroundColor Yellow
+    if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -ErrorAction SilentlyContinue }
+    $selfCheck = Join-Path $appLogSrc '关系概念出站自检.txt'
+    if (Test-Path -LiteralPath $selfCheck) {
+        Write-Host '---- 关系概念出站自检.txt ----' -ForegroundColor Yellow
+        Get-Content -LiteralPath $selfCheck -ErrorAction SilentlyContinue
+        Copy-Item -LiteralPath $selfCheck -Destination (Join-Path $ArtifactRoot '关系概念出站自检.txt') -Force -ErrorAction SilentlyContinue
+    }
     throw "verify failed with exit code $exit (see $stdoutPath / $stderrPath / app logs under D:\海中鱼巣\日志)"
 }
 
