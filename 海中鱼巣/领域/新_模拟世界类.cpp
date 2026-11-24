@@ -5041,13 +5041,32 @@ bool 新_模拟世界类::尝试释放有序样例() {
             const auto current=全局基础数据集.查询节点组完整结构(q.删除节点组);
             if(current.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
             本地词典要求(current.状态==基础结构操作状态::已完成,"local dictionary exit graph unavailable");
+            const std::set<稳定编码> 删除字段(q.删除字段关系组.begin(),q.删除字段关系组.end());
+            std::set<稳定编码> 引用目标;
             for(const auto& n:current.节点组) {
                 本地词典要求(n.快照.has_value(),"owned simulation node disappeared before exit");
+                for(const auto& field:n.快照->结构.字段组) {
+                    if(!删除字段.contains(field.编码))continue;
+                    if(const auto* target=std::get_if<稳定编码>(&field.内容))引用目标.insert(*target);
+                }
                 q.预期联合节点组.push_back(*n.快照);
+            }
+            for(const auto node:q.删除节点组)引用目标.erase(node);
+            if(!引用目标.empty()) {
+                // 回执及状态可引用其他所有者的节点；本片段只保护其旧引用端点。
+                auto targets=全局基础数据集.查询节点组完整结构({引用目标.begin(),引用目标.end()});
+                if(targets.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
+                本地词典要求(targets.状态==基础结构操作状态::已完成&&targets.节点组.size()==引用目标.size(),
+                    "local dictionary exit reference targets unavailable");
+                for(auto& n:targets.节点组) {
+                    本地词典要求(n.快照.has_value(),"local dictionary exit reference target missing");
+                    q.预期联合节点组.push_back(std::move(*n.快照));
+                }
             }
             const auto own=全局基础数据集.封存原子追加片段(q);
             if(own.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
-            本地词典要求(own.片段.has_value(),"local dictionary exit fragment invalid");
+            if(!own.片段)throw std::runtime_error("local dictionary exit fragment invalid; status="
+                +std::to_string(static_cast<unsigned>(own.状态)));
             std::vector<基础封存追加片段> other;
             try {
                 for(auto& record:records)other.push_back(s.词典记录->封存查询记录退出(record));

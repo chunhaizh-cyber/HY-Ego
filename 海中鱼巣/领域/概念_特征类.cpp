@@ -2491,6 +2491,7 @@ struct 新消息集合保持退出准备::实现 final {
         const std::set<稳定编码> fields(source.删除字段_.begin(),source.删除字段_.end());
         const std::set<稳定编码> edges(source.删除关系_.begin(),source.删除关系_.end());
         const std::set<稳定编码> distinct(materials.begin(),materials.end());
+        std::set<稳定编码> 旧消息目标;
         基础节点组追加请求 q;
         for(const auto V:distinct) {
             if(!有效(V))return {S::入口拒绝,{}};
@@ -2518,9 +2519,21 @@ struct 新消息集合保持退出准备::实现 final {
                 if(!M||!有效(*M)||!std::binary_search(ids->begin(),ids->end(),M->值)||!held.insert(M->值).second)
                     throw std::logic_error("message retention exit protection corrupt");
                 q.删除字段关系组.push_back(f.编码);
+                if(!distinct.contains(*M))旧消息目标.insert(*M);
             }
             if(held.size()!=ids->size())throw std::logic_error("message retention exit lacks complete protection");
             q.预期联合节点组.push_back(snapshot);
+        }
+        if(!旧消息目标.empty()) {
+            // 解除保持需要保护旧消息端点，消息的删除仍由记录所有者负责。
+            auto targets=全局基础数据集.查询节点组完整结构({旧消息目标.begin(),旧消息目标.end()});
+            if(targets.状态==基础结构操作状态::资源失败)return {S::资源失败,{}};
+            if(targets.状态!=基础结构操作状态::已完成||targets.节点组.size()!=旧消息目标.size())
+                throw std::logic_error("message retention exit targets unavailable");
+            for(auto& n:targets.节点组) {
+                if(!n.快照)return {S::预期不符,{}};
+                q.预期联合节点组.push_back(std::move(*n.快照));
+            }
         }
         const auto sealed=全局基础数据集.封存原子追加片段(q);
         if(!sealed.片段)return {sealed.状态,{}};
