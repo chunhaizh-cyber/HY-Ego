@@ -150,13 +150,28 @@ std::vector<种子包> 解码种子包(
                 要求(t[1] == "en" && 英文 && 有效(*英文));
                 a.语言节点 = *英文;
             }
-            a.含义操作码 = 含义操作码(t[2]);
-            要求(a.含义操作码 != 0);
+            // 「组合」= 多陈述段入口；含义操作由各陈述段提供。
+            if (t[2] == "组合") a.含义操作码 = 0;
+            else {
+                a.含义操作码 = 含义操作码(t[2]);
+                要求(a.含义操作码 != 0);
+            }
             a.预置 = t.size() < 4 || t[3] == "预置";
             d.表达关联组.push_back(std::move(a));
+        } else if (t[0] == "陈述段") {
+            要求(!d.表达关联组.empty());
+            要求(t.size() >= 2);
+            关系表达陈述段 段;
+            段.含义操作码 = 含义操作码(t[1]);
+            要求(段.含义操作码 != 0);
+            d.表达关联组.back().陈述段组.push_back(std::move(段));
         } else if (t[0] == "知识选") {
             要求(!d.表达关联组.empty());
             要求(t.size() >= 2);
+            auto& 表 = d.表达关联组.back();
+            std::string* 尾词目标 = nullptr;
+            if (!表.陈述段组.empty()) 尾词目标 = &表.陈述段组.back().预置知识尾词;
+            else 尾词目标 = &表.预置知识尾词;
             for (std::size_t i = 1; i < t.size(); ++i) {
                 const auto p = t[i].find('=');
                 要求(p != std::string::npos);
@@ -164,10 +179,10 @@ std::vector<种子包> 解码种子包(
                 const auto v = t[i].substr(p + 1);
                 if (k == "尾词") {
                     要求(!v.empty());
-                    d.表达关联组.back().预置知识尾词 = v;
+                    *尾词目标 = v;
                 } else 要求(false);
             }
-            要求(!d.表达关联组.back().预置知识尾词.empty());
+            要求(!尾词目标->empty());
         } else if (t[0] == "槽") {
             要求(!d.表达关联组.empty());
             要求(t.size() >= 2);
@@ -192,15 +207,27 @@ std::vector<种子包> 解码种子包(
                 } else 要求(false);
             }
             要求(槽.参数角色码 != 0 && !槽.端点角色键.empty());
-            d.表达关联组.back().角色槽组.push_back(std::move(槽));
+            auto& 表 = d.表达关联组.back();
+            if (!表.陈述段组.empty()) 表.陈述段组.back().角色槽组.push_back(std::move(槽));
+            else 表.角色槽组.push_back(std::move(槽));
         } else if (t[0] == "结束") {
             要求(t.size() == 1);
             要求(!d.稳定种子键.empty() && d.端点组.size() >= 2
                 && !d.连接.valueless_by_exception());
             要求(d.名称组.size() == 当前->名称词面组.size());
             for (const auto& a : d.表达关联组) {
-                要求(a.角色槽组.size() >= 2);
-                要求(!a.预置知识尾词.empty() || !a.表达知识节点组.empty());
+                if (!a.陈述段组.empty()) {
+                    要求(a.含义操作码 == 0);
+                    for (const auto& 段 : a.陈述段组) {
+                        要求(段.含义操作码 != 0);
+                        要求(段.角色槽组.size() >= 2);
+                        要求(!段.预置知识尾词.empty() || !段.表达知识节点组.empty());
+                    }
+                } else {
+                    要求(a.含义操作码 != 0);
+                    要求(a.角色槽组.size() >= 2);
+                    要求(!a.预置知识尾词.empty() || !a.表达知识节点组.empty());
+                }
             }
             out.push_back(std::move(*当前));
             当前.reset();
@@ -309,7 +336,8 @@ std::vector<种子包> 解码种子包(
             if (it == 读.信息->定义.表达关联组.end()
                 || it->含义操作码 != 期望.含义操作码
                 || it->角色槽组 != 期望.角色槽组
-                || it->预置知识尾词 != 期望.预置知识尾词) {
+                || it->预置知识尾词 != 期望.预置知识尾词
+                || it->陈述段组 != 期望.陈述段组) {
                 out.状态 = 初始化关系概念状态::读回失败;
                 out.诊断 = "表达槽合同漂移:" + p.定义.稳定种子键;
                 return out;
