@@ -55,6 +55,13 @@ namespace 海中鱼巣 {
                 continue;
             }
             启动模式 当前模式{};
+            if (参数 == "--verify-nl-feature-current-value") {
+                if (选项.验证特征当前值语言桥) {
+                    return {启动选项解析状态::重复模式参数, {}, 当前参数索引};
+                }
+                选项.验证特征当前值语言桥 = true;
+                continue;
+            }
             if (参数 == "--headless") {
                 当前模式 = 启动模式::无窗口常驻;
             } else if (参数 == "--runtime-context") {

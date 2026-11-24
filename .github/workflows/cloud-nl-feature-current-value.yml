@@ -1,0 +1,103 @@
+# 聚焦存在—特征—当前值语言桥：MSVC 编译 + --verify-nl-feature-current-value
+# 不迁移 PR#17 smoke 整套 HTTP；不声称用户正式持久库端到端。
+name: cloud-nl-feature-current-value
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/cloud-nl-feature-current-value.yml'
+      - 'tools/ci/windows-nl-feature-current-value.ps1'
+      - '海中鱼巣.vcxproj'
+      - '海中鱼巣.vcxproj.filters'
+      - '海中鱼巣/业务/特征当前值.语言桥.*'
+      - '海中鱼巣/业务/自检.特征当前值语言桥.*'
+      - '海中鱼巣/业务/接收需求认知.服务.cpp'
+      - '海中鱼巣/装配.普通应用.*'
+      - '海中鱼巣/启动.*'
+      - '海中鱼巣/启动选项.数据.h'
+      - '海中鱼巣/程序运行结果.数据.h'
+  push:
+    branches:
+      - 'cursor/nl-feature-current-value-c720'
+    paths:
+      - '.github/workflows/cloud-nl-feature-current-value.yml'
+      - 'tools/ci/windows-nl-feature-current-value.ps1'
+      - '海中鱼巣.vcxproj'
+      - '海中鱼巣.vcxproj.filters'
+      - '海中鱼巣/业务/特征当前值.语言桥.*'
+      - '海中鱼巣/业务/自检.特征当前值语言桥.*'
+      - '海中鱼巣/业务/接收需求认知.服务.cpp'
+      - '海中鱼巣/装配.普通应用.*'
+      - '海中鱼巣/启动.*'
+      - '海中鱼巣/启动选项.数据.h'
+      - '海中鱼巣/程序运行结果.数据.h'
+
+permissions:
+  contents: read
+
+jobs:
+  msvc-nl-feature-current-value:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild (VS2026 / v145 image)
+        uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: x64
+
+      - name: Verify toolset presence
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Write-Host "Image label expectation: windows-2025-vs2026 (VS 2026 / PlatformToolset v145)"
+          msbuild -version
+
+      - name: "Prepare D: contract paths"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP 'hy-ego-droot'
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          $dExisted = Test-Path 'D:\'
+          Write-Host "D: pre-existed=$dExisted"
+          if (-not $dExisted) {
+            subst D: $root
+            if ($LASTEXITCODE -ne 0) { throw "subst D: failed: $LASTEXITCODE" }
+          }
+          New-Item -ItemType Directory -Force -Path 'D:\海中鱼巣\日志' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'D:\TEMP\海中鱼巣' | Out-Null
+
+      - name: Build + verify NL feature-current-value
+        id: verify
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifactRoot = Join-Path $env:RUNNER_TEMP 'hy-ego-nl-feature-current-value\artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          "NL_ARTIFACT_ROOT=$artifactRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & "$env:GITHUB_WORKSPACE\tools\ci\windows-nl-feature-current-value.ps1" `
+            -ArtifactRoot $artifactRoot
+
+      - name: Collect app logs if present
+        if: always()
+        shell: pwsh
+        run: |
+          $src = 'D:\海中鱼巣\日志'
+          $dst = Join-Path $env:NL_ARTIFACT_ROOT 'app-logs'
+          if (Test-Path $src) {
+            New-Item -ItemType Directory -Force -Path $dst | Out-Null
+            Copy-Item -Path (Join-Path $src '*') -Destination $dst -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Upload verify artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nl-feature-current-value-artifacts
+          path: ${{ env.NL_ARTIFACT_ROOT }}
+          if-no-files-found: warn
+          retention-days: 14
