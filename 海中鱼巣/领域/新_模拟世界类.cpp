@@ -722,6 +722,7 @@ public:
         std::visit([&](auto value){record.字段组.push_back({字段组[词典材料],value});},endpoint.材料定位);
         start_=endpoint.后续新节点起点;q.新节点组.push_back(std::move(record));
         q.追加字段组.push_back({read_.N.结构.节点.编码,字段组[词典回执引用],基础组内节点引用{start_}});
+        q.窄关系端点组.push_back(scene_);
         q.追加外部关系组.push_back({scene_,基础组内节点引用{start_},基础外部关系类型::父子});
         fields_=q.追加字段组.size();edges_=q.追加外部关系组.size();return {std::move(q)};
     }
