@@ -1314,9 +1314,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         } catch(const std::length_error&) {
             out.原因="正式分界询问材料资源延后";
         }
+        const bool 有新观察 = out.词条准入.has_value() || out.原因 != work.观察.原因;
         work.观察=out;
         work.下次=std::chrono::steady_clock::now()+std::chrono::milliseconds(500);
-        if(!提交进度())return {};
+        if(!提交进度() || !有新观察)return {};
         保存观察(out);return out;
     }
     if(work.前置==实现::前置阶段::待重入) {
