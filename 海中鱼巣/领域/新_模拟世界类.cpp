@@ -7139,21 +7139,20 @@ const 新本能词条归类回执& 新_模拟世界类::接管本地归类结果
         q.追加字段组.push_back({N.调用节点,字段组[调用阶段成员],基础组内节点引用{J}});
     }
     s.追加进展(q);
-    if(word) {
-        auto prior=std::move(q.预期联合节点组);q.预期联合节点组.clear();
-        补齐隔离追加联合预期(q);q.预期联合节点组.insert(q.预期联合节点组.end(),prior.begin(),prior.end());
-    } else {
-        try { 补齐隔离追加联合预期(q); }
-        catch(const 模拟联合预期变化&) {
-            if(!语言范围)throw;
-            lock.unlock();std::this_thread::yield();continue;
-        }
+    // 定义保护和写入端点可能引用同一个动作概念。合并后交 L1 校验。
+    try { 补齐隔离追加联合预期(q); }
+    catch(const 模拟联合预期变化&) {
+        if(!word&&!语言范围)throw;
+        lock.unlock();std::this_thread::yield();continue;
     }
     s.预留追加(q);
     const auto made=全局基础数据集.原子追加节点组(q);
     if((word||语言范围)&&made.状态==基础节点组追加状态::预期不符){lock.unlock();std::this_thread::yield();continue;}
     if(made.状态==基础节点组追加状态::资源失败)throw std::bad_alloc{};
-    if(made.状态!=基础节点组追加状态::已完成||made.新节点组.size()!=q.新节点组.size())throw std::runtime_error("isolation action publication failed");
+    if(made.状态!=基础节点组追加状态::已完成||made.新节点组.size()!=q.新节点组.size())
+        throw std::runtime_error("isolation action publication failed; status="
+            +std::to_string(static_cast<unsigned>(made.状态))+"; nodes="
+            +std::to_string(made.新节点组.size())+"/"+std::to_string(q.新节点组.size()));
     s.收集追加(made);s.模拟步骤=time;s.本次已进入动作=true;
     if(!word&&!读取本地动作(made.新节点组[A]))throw std::runtime_error("isolation action readback failed");
     return made.新节点组[A];
