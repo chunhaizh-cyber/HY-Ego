@@ -22873,6 +22873,14 @@ std::optional<新需求信息> 新_任务类::读取本次提议需求(稳定编
         批.分支有效=false;return 批;
     } catch(const std::bad_alloc&){throw;}
     catch(const std::length_error&){throw;}
+    catch(const std::exception& 异常) {
+        char 说明[768];
+        const auto D = 批.需求 ? 批.需求->节点.值 : 0;
+        std::snprintf(说明, sizeof 说明, "T=%llu, D=%llu, X=%llu: %s",
+            static_cast<unsigned long long>(T.值), static_cast<unsigned long long>(D),
+            static_cast<unsigned long long>(X ? X->值 : 0), 异常.what());
+        工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备任务场景核验批",L"完整定义与保护读取工程故障",说明);
+    }
     catch(...) {工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"准备任务场景核验批",L"完整定义与保护读取工程故障");}
 }
 void 新_任务类::读取新增成员目标组(新任务本次场景核验批& 批,const std::vector<稳定编码>& ids) const {
