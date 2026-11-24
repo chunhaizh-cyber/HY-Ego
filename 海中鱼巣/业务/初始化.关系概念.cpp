@@ -9,6 +9,8 @@ namespace {
 std::int64_t 含义操作码(const std::string& s) {
     if (s == "组成描述")
         return static_cast<std::int64_t>(新语言知识含义操作::组成描述);
+    if (s == "组织隶属")
+        return static_cast<std::int64_t>(新语言知识含义操作::组织隶属);
     if (s == "概念归类")
         return static_cast<std::int64_t>(新语言知识含义操作::概念归类);
     if (s == "特征描述")
