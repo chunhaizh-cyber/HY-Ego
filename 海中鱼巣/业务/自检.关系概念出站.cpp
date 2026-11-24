@@ -1,5 +1,6 @@
 #include "自检.关系概念出站.h"
 #include "初始化.关系概念.h"
+#include "../领域/新_需求类.h"
 
 #include <algorithm>
 
