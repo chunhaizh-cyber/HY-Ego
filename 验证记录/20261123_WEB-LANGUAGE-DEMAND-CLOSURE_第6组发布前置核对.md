@@ -515,3 +515,11 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 源码 51aee29df 的普通 Release/x64 实际启动并通过网页输入前置原话「测试杯甲是一个杯子。它的颜色是白色。」。本次未提交分界答复。00:56:16 错误增量记录 F40106 的归组在 3518 行返回失败，并沿活动记录 40411 报原子核心已发布、归组收尾未完成。3518 行只在同类型根存在多个准确匹配、拟用直接上位下没有匹配时到达。此次没有捕获候选编码及最先产生重复域的写入者。已核实错误窗口和实际二进制。窗口无法自动激活，回收验收进程 PID 26340，出口为 −1，监听端口已移除。本轮未取得正常退出、有效分界、实际词典结果或第 6 组补问。
 
 [发布构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/published-inputs.json) · [进程身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/process.json) · [错误增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/logic-error-delta.log) · [回收回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-contextual-grouping-release-20261125-004855/release-web-20261125-005113/recovery.json)
+
+### 56C26 标量 I64 建立修复版采用同源分界答复
+
+源码 44558b1a95ae0e6b468ab689bfcc07f6042562df 将标量 I64 的准确域查询和创建放在特征概念所有者已有树锁内。实际 Release/x64 编译链接 0 错误、0 警告。249 项输入与远端提交核同，普通部署使用与上一发布来源摘要相同的 10 份词典文件。运行中超过前次终止时点后，未观察到该归组工程终止。该观察记录一次普通路径结果，未单独触发注入的重复数据或并发专项。
+
+实际普通网页读回前置原话 M34130、范围 R36863/F36880 和归类前的分界 D37694/T37838。Q39351/O39445 显示原文引文，正式发送回执为 39700。实际点击页面「回复」并提交分界数组，接收 M40211 读回答复 40646、对齐材料 40647 和同 R 的依据 41015，状态 41255 指向依据特征 F36876。随后模拟学习发布方法 25730 的配对 41662，控制页独立读回 T37838 候选的条件具备。进程 PID 35888 仍在运行，本次检查尚未读回 T37838 的正式执行、有效分界或词典 Q。第 6 组的业务补问、同 D 写回及退出另取证。
+
+[构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/published-inputs.json) · [构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-result.json) · [词典摘要](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/runtime-dictionary-inputs.json) · [分界采用读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/associated-boundary-reply.json) · [运行增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/runtime-delta.log)
