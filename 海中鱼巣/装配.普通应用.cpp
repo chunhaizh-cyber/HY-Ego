@@ -6,6 +6,7 @@
 #include "业务/内部治理.先天因果初始化服务.h"
 #include "业务/新_外设世界树类.h"
 #include "业务/接收需求认知.服务.h"
+#include "业务/解释.基础语言.h"
 #include "领域/语言含义图.数据.h"
 #include "领域/语言分界.数据.h"
 #include "领域/数据服务.词典材料类.h"
@@ -1554,7 +1555,7 @@ public:
                         [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
             }
         }
-        std::string 词条准入 = "null";
+        std::string 词条准入 = "null", 正式词段解释 = "null";
         if (有效(item.M) && item.词条准入 && item.词条准入->来源.接收消息节点 == item.M) {
             const auto& 证据 = *item.词条准入;
             const auto& 语言 = 当前_.世界事实.语言服务;
@@ -1581,6 +1582,33 @@ public:
                 if (词条齐备)
                     词条准入 = "{\"range\":" + 控制编码(证据.范围) + ",\"effective\":" + 控制编码(定义.有效结果)
                         + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"segments\":" + 分段 + "]}";
+                if (!item.正式词段解释.empty()) {
+                    std::string 句组 = "[";
+                    for (const auto& 句 : item.正式词段解释) {
+                        检查停止();
+                        std::string 缺口组 = "[";
+                        for (const auto& 缺口 : 句.缺口组) {
+                            检查停止();
+                            std::string 相关节点 = "[";
+                            for (const auto 节点 : 缺口.已取得相关节点) {
+                                if (相关节点.size() != 1) 相关节点 += ',';
+                                相关节点 += 控制编码(节点);
+                            }
+                            if (缺口组.size() != 1) 缺口组 += ',';
+                            缺口组 += "{\"kind\":" + 控制计数(static_cast<std::uint64_t>(缺口.种类))
+                                + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
+                                + ",\"nodes\":" + 相关节点 + "]}";
+                        }
+                        if (句组.size() != 1) 句组 += ',';
+                        句组 += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
+                            + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
+                            + ",\"graphStatus\":" + (句.图状态 ? 控制计数(static_cast<std::uint64_t>(*句.图状态)) : "null")
+                            + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
+                            + ",\"gaps\":" + 缺口组 + "]}";
+                    }
+                    正式词段解释 = "{\"source\":" + 控制编码(证据.前置来源) + ",\"range\":" + 控制编码(证据.范围)
+                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"sentences\":" + 句组 + "]}";
+                }
             }
         }
         检查停止();
@@ -1590,7 +1618,8 @@ public:
             +",\"meaning\":"+控制编码(item.U)+",\"demand\":"+控制编码(item.D)
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
-            +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入+"}";
+            +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入
+            +",\"admittedInterpretation\":"+正式词段解释+"}";
         检查停止();
         return JSON;
     }

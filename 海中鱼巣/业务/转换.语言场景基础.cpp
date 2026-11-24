@@ -925,7 +925,7 @@ I 图输入状态(基础语言输入状态 状态) {
     图状态直映(格式失败);图状态直映(引用不可读);图状态直映(额度不足);图状态直映(内部不一致);
     图状态直映(工程未完成);图状态直映(读取漂移);
 #undef 图状态直映
-    case 状态类::世界能力未支持:case 状态类::对象短语未解:return I::结构未支持;
+    case 状态类::正式词段句界冲突:case 状态类::世界能力未支持:case 状态类::对象短语未解:return I::结构未支持;
     case 状态类::世界根不可读:case 状态类::主体不属于世界:return I::引用不可读;
     case 状态类::资源失败:return I::工程未完成;
     }throw std::logic_error("unknown graph interpretation state");
@@ -954,7 +954,8 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     统一解释阶段观察 观察(q);
     观察.记录(L"旧六构式识别前");
 #endif
-    auto result=只读识别六类基础句型(q,lang,words,names,es,fs,instances,依据);
+    auto result=q.正式词段 ? 语言基础统一输入结果{} : 只读识别六类基础句型(q,lang,words,names,es,fs,instances,依据);
+    if (q.正式词段) result.状态=I::缺规则;
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"旧六构式识别后", static_cast<int>(result.状态), result.完整候选组.size());
 #endif
@@ -962,7 +963,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释前");
 #endif
-    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口},lang,words,names,es,fs,instances);
+    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段},lang,words,names,es,fs,instances);
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
 #endif
@@ -995,7 +996,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
         }
         if(!知识.信息)throw std::logic_error("graph knowledge success missing material");
         // 同一旧知识的图适配不是第二个解释。保留原六构式的完整消歧、载荷和后续物化合同。
-        if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);兼容构式&&*兼容构式==图构式(图))continue;
+        if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);!q.正式词段&&兼容构式&&*兼容构式==图构式(图))continue;
         if(图构式(图)==U::行动请求) {
             const bool 已有=std::any_of(新图候选.begin(),新图候选.end(),[&](const auto& 原) {
                 return 原.语言节点==图.语言节点&&原.定义图==图.定义图&&原.根出现编号==图.根出现编号
