@@ -93,7 +93,14 @@ inline unsigned __stdcall 输出致命诊断(void* 参数) noexcept {
                 OutputDebugStringW(L"工程错误日志写入失败；仍将弹窗并终止。\n");
         } catch (...) { OutputDebugStringW(L"工程错误日志输出异常；仍将弹窗并终止。\n"); }
         OutputDebugStringW(文本);
-        (void)MessageBoxW(nullptr, 文本, L"海中鱼巣：代码工程错误", MB_OK | MB_ICONERROR);
+        // CI/无交互：跳过 MessageBox，避免无人点确定导致假超时；日志已写入。
+        const bool 无交互 =
+            GetEnvironmentVariableW(L"CI", nullptr, 0) > 0
+            || GetEnvironmentVariableW(L"HY_EGO_NO_FATAL_UI", nullptr, 0) > 0;
+        if (!无交互) {
+            (void)MessageBoxW(nullptr, 文本, L"海中鱼巣：代码工程错误",
+                MB_OK | MB_ICONERROR);
+        }
     } catch (...) { OutputDebugStringW(L"致命工程诊断失败；立即终止进程。\n"); }
     强制终止();
 }
