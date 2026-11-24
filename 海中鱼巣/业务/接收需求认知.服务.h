@@ -58,6 +58,14 @@ struct 接收词条准入证据 final {
     新接收认知来源键 来源;
     稳定编码 前置来源, 范围, 准入材料;
 };
+enum class 语言场景基础输入状态 : std::uint8_t;
+enum class 基础语言输入状态 : std::uint8_t;
+struct 接收正式词段句解释 final {
+    std::uint64_t 起始标量, 结束标量;
+    语言场景基础输入状态 状态;
+    std::optional<基础语言输入状态> 图状态;
+    std::vector<新前置语言缺口> 缺口组;
+};
 struct 接收需求认知观察 final {
     稳定编码 M;
     std::optional<稳定编码> H,S,U,D;
@@ -70,6 +78,7 @@ struct 接收需求认知观察 final {
     std::optional<新前置语言输入材料> 前置输入等待材料{};
     std::optional<接收分界答复证据> 分界答复{};
     std::optional<接收词条准入证据> 词条准入{};
+    std::vector<接收正式词段句解释> 正式词段解释{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。
