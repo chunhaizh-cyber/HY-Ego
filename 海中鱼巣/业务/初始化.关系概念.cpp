@@ -1,6 +1,7 @@
 #include "初始化.关系概念.h"
 
 #include <algorithm>
+#include <functional>
 #include <sstream>
 #include <stdexcept>
 
@@ -16,6 +17,8 @@ std::int64_t 含义操作码(const std::string& s) {
         return static_cast<std::int64_t>(新语言知识含义操作::概念归类);
     if (s == "特征描述")
         return static_cast<std::int64_t>(新语言知识含义操作::特征描述);
+    if (s == "需求描述")
+        return static_cast<std::int64_t>(新语言知识含义操作::需求描述);
     return 0;
 }
 
@@ -25,6 +28,7 @@ std::int64_t 参数角色码(const std::string& s) {
     if (s == "上级") return static_cast<std::int64_t>(新语言知识参数角色::上级);
     if (s == "下级") return static_cast<std::int64_t>(新语言知识参数角色::下级);
     if (s == "主体") return static_cast<std::int64_t>(新语言知识参数角色::主体);
+    if (s == "目标存在") return static_cast<std::int64_t>(新语言知识参数角色::目标存在);
     return 0;
 }
 
@@ -32,6 +36,49 @@ struct 种子包 final {
     关系概念定义 定义;
     std::vector<std::string> 名称词面组;
 };
+
+关系连接描述 解析连接行(
+    const std::vector<std::string>& t,
+    std::size_t 种类下标,
+    const std::function<void(bool)>& 要求) {
+    要求(t.size() > 种类下标);
+    if (t[种类下标] == "外部边") {
+        关系外部边连接 e;
+        for (std::size_t i = 种类下标 + 1; i < t.size(); ++i) {
+            const auto p = t[i].find('=');
+            要求(p != std::string::npos);
+            const auto k = t[i].substr(0, p);
+            const auto v = t[i].substr(p + 1);
+            if (k == "owner") e.owner标识 = v;
+            else if (k == "边") {
+                要求(v == "父子" || v == "兄弟");
+                e.边类型 = v == "父子" ? 基础外部关系类型::父子
+                                      : 基础外部关系类型::兄弟;
+            } else if (k == "角色") e.角色或顺序 = std::stoll(v);
+            else if (k == "源") e.源角色键 = v;
+            else if (k == "目标") e.目标角色键 = v;
+            else 要求(false);
+        }
+        要求(!e.owner标识.empty() && !e.源角色键.empty() && !e.目标角色键.empty());
+        return e;
+    }
+    要求(t[种类下标] == "字段引用");
+    关系字段引用连接 f;
+    for (std::size_t i = 种类下标 + 1; i < t.size(); ++i) {
+        const auto p = t[i].find('=');
+        要求(p != std::string::npos);
+        const auto k = t[i].substr(0, p);
+        const auto v = t[i].substr(p + 1);
+        if (k == "owner") f.owner标识 = v;
+        else if (k == "字段") f.字段键名 = v;
+        else if (k == "宿主") f.宿主角色键 = v;
+        else if (k == "目标") f.目标角色键 = v;
+        else 要求(false);
+    }
+    要求(!f.owner标识.empty() && !f.字段键名.empty()
+        && !f.宿主角色键.empty() && !f.目标角色键.empty());
+    return f;
+}
 
 std::vector<种子包> 解码种子包(
     const std::string& 文本,
@@ -76,42 +123,10 @@ std::vector<种子包> 解码种子包(
             d.端点组.push_back(std::move(e));
         } else if (t[0] == "连接") {
             要求(t.size() >= 2);
-            if (t[1] == "外部边") {
-                关系外部边连接 e;
-                for (std::size_t i = 2; i < t.size(); ++i) {
-                    const auto p = t[i].find('=');
-                    要求(p != std::string::npos);
-                    const auto k = t[i].substr(0, p);
-                    const auto v = t[i].substr(p + 1);
-                    if (k == "owner") e.owner标识 = v;
-                    else if (k == "边") {
-                        要求(v == "父子" || v == "兄弟");
-                        e.边类型 = v == "父子" ? 基础外部关系类型::父子
-                                              : 基础外部关系类型::兄弟;
-                    } else if (k == "角色") e.角色或顺序 = std::stoll(v);
-                    else if (k == "源") e.源角色键 = v;
-                    else if (k == "目标") e.目标角色键 = v;
-                    else 要求(false);
-                }
-                要求(!e.owner标识.empty() && !e.源角色键.empty() && !e.目标角色键.empty());
-                d.连接 = std::move(e);
-            } else {
-                要求(t[1] == "字段引用");
-                关系字段引用连接 f;
-                for (std::size_t i = 2; i < t.size(); ++i) {
-                    const auto p = t[i].find('=');
-                    要求(p != std::string::npos);
-                    const auto k = t[i].substr(0, p);
-                    const auto v = t[i].substr(p + 1);
-                    if (k == "owner") f.owner标识 = v;
-                    else if (k == "字段") f.字段键名 = v;
-                    else if (k == "宿主") f.宿主角色键 = v;
-                    else if (k == "目标") f.目标角色键 = v;
-                    else 要求(false);
-                }
-                要求(!f.owner标识.empty() && !f.字段键名.empty());
-                d.连接 = std::move(f);
-            }
+            d.连接 = 解析连接行(t, 1, 要求);
+        } else if (t[0] == "附加连接") {
+            要求(t.size() >= 2);
+            d.附加连接组.push_back(解析连接行(t, 1, 要求));
         } else if (t[0] == "名称") {
             要求(t.size() == 3);
             关系概念语言名称 n;
@@ -139,6 +154,20 @@ std::vector<种子包> 解码种子包(
             要求(a.含义操作码 != 0);
             a.预置 = t.size() < 4 || t[3] == "预置";
             d.表达关联组.push_back(std::move(a));
+        } else if (t[0] == "知识选") {
+            要求(!d.表达关联组.empty());
+            要求(t.size() >= 2);
+            for (std::size_t i = 1; i < t.size(); ++i) {
+                const auto p = t[i].find('=');
+                要求(p != std::string::npos);
+                const auto k = t[i].substr(0, p);
+                const auto v = t[i].substr(p + 1);
+                if (k == "尾词") {
+                    要求(!v.empty());
+                    d.表达关联组.back().预置知识尾词 = v;
+                } else 要求(false);
+            }
+            要求(!d.表达关联组.back().预置知识尾词.empty());
         } else if (t[0] == "槽") {
             要求(!d.表达关联组.empty());
             要求(t.size() >= 2);
@@ -154,9 +183,11 @@ std::vector<种子包> 解码种子包(
                     要求(槽.参数角色码 != 0);
                 } else if (k == "投影") {
                     if (v == "端点") 槽.投影 = 关系表达取材投影::端点身份;
-                    else {
-                        要求(v == "需求目标存在");
+                    else if (v == "需求目标存在")
                         槽.投影 = 关系表达取材投影::需求目标存在;
+                    else {
+                        要求(v == "需求主体存在");
+                        槽.投影 = 关系表达取材投影::需求主体存在;
                     }
                 } else 要求(false);
             }
@@ -167,8 +198,10 @@ std::vector<种子包> 解码种子包(
             要求(!d.稳定种子键.empty() && d.端点组.size() >= 2
                 && !d.连接.valueless_by_exception());
             要求(d.名称组.size() == 当前->名称词面组.size());
-            for (const auto& a : d.表达关联组)
+            for (const auto& a : d.表达关联组) {
                 要求(a.角色槽组.size() >= 2);
+                要求(!a.预置知识尾词.empty() || !a.表达知识节点组.empty());
+            }
             out.push_back(std::move(*当前));
             当前.reset();
         } else 要求(false);
@@ -261,12 +294,12 @@ std::vector<种子包> 解码种子包(
             return out;
         }
         if (读.信息->定义.端点组 != p.定义.端点组
-            || 读.信息->定义.连接 != p.定义.连接) {
+            || 读.信息->定义.连接 != p.定义.连接
+            || 读.信息->定义.附加连接组 != p.定义.附加连接组) {
             out.状态 = 初始化关系概念状态::读回失败;
             out.诊断 = "关系概念形状漂移:" + p.定义.稳定种子键;
             return out;
         }
-        // 表达关联可含后天知识节点；读回只核预置含义操作与角色槽合同，不要求知识组全等。
         for (const auto& 期望 : p.定义.表达关联组) {
             const auto it = std::find_if(
                 读.信息->定义.表达关联组.begin(), 读.信息->定义.表达关联组.end(),
@@ -275,7 +308,8 @@ std::vector<种子包> 解码种子包(
                 });
             if (it == 读.信息->定义.表达关联组.end()
                 || it->含义操作码 != 期望.含义操作码
-                || it->角色槽组 != 期望.角色槽组) {
+                || it->角色槽组 != 期望.角色槽组
+                || it->预置知识尾词 != 期望.预置知识尾词) {
                 out.状态 = 初始化关系概念状态::读回失败;
                 out.诊断 = "表达槽合同漂移:" + p.定义.稳定种子键;
                 return out;
