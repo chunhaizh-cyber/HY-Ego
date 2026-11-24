@@ -2977,6 +2977,7 @@ std::optional<新方法信息> 读取方法信息本体(稳定编码 方法节�
         if(!conditionNode.结构){方法读失败行=__LINE__;return std::nullopt;}
         for(const auto& field:conditionNode.结构->字段组)
             if(field.字段节点!=节点类型字段&&field.字段节点!=关系规则字段&&field.字段节点!=参数位置关系字段
+                &&field.字段节点!=内容关系成员字段
                 &&field.字段节点!=条件项字段&&field.字段节点!=初始场景限定字段){方法读失败行=__LINE__;return std::nullopt;}
         const auto c=读取条件(*C,概念服务);
         if(!c||!分支条件有效(*c,信息.参数规格组,概念服务,存在概念服务,引用内容条件校验模式::持久结构)){方法读失败行=__LINE__;return std::nullopt;}
