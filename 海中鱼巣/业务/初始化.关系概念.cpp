@@ -1,5 +1,6 @@
 #include "初始化.关系概念.h"
 
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 
@@ -15,6 +16,15 @@ std::int64_t 含义操作码(const std::string& s) {
         return static_cast<std::int64_t>(新语言知识含义操作::概念归类);
     if (s == "特征描述")
         return static_cast<std::int64_t>(新语言知识含义操作::特征描述);
+    return 0;
+}
+
+std::int64_t 参数角色码(const std::string& s) {
+    if (s == "整体") return static_cast<std::int64_t>(新语言知识参数角色::整体);
+    if (s == "部分") return static_cast<std::int64_t>(新语言知识参数角色::部分);
+    if (s == "上级") return static_cast<std::int64_t>(新语言知识参数角色::上级);
+    if (s == "下级") return static_cast<std::int64_t>(新语言知识参数角色::下级);
+    if (s == "主体") return static_cast<std::int64_t>(新语言知识参数角色::主体);
     return 0;
 }
 
@@ -129,11 +139,36 @@ std::vector<种子包> 解码种子包(
             要求(a.含义操作码 != 0);
             a.预置 = t.size() < 4 || t[3] == "预置";
             d.表达关联组.push_back(std::move(a));
+        } else if (t[0] == "槽") {
+            要求(!d.表达关联组.empty());
+            要求(t.size() >= 2);
+            关系表达角色槽 槽;
+            槽.端点角色键 = t[1];
+            for (std::size_t i = 2; i < t.size(); ++i) {
+                const auto p = t[i].find('=');
+                要求(p != std::string::npos);
+                const auto k = t[i].substr(0, p);
+                const auto v = t[i].substr(p + 1);
+                if (k == "参数") {
+                    槽.参数角色码 = 参数角色码(v);
+                    要求(槽.参数角色码 != 0);
+                } else if (k == "投影") {
+                    if (v == "端点") 槽.投影 = 关系表达取材投影::端点身份;
+                    else {
+                        要求(v == "需求目标存在");
+                        槽.投影 = 关系表达取材投影::需求目标存在;
+                    }
+                } else 要求(false);
+            }
+            要求(槽.参数角色码 != 0 && !槽.端点角色键.empty());
+            d.表达关联组.back().角色槽组.push_back(std::move(槽));
         } else if (t[0] == "结束") {
             要求(t.size() == 1);
             要求(!d.稳定种子键.empty() && d.端点组.size() >= 2
                 && !d.连接.valueless_by_exception());
             要求(d.名称组.size() == 当前->名称词面组.size());
+            for (const auto& a : d.表达关联组)
+                要求(a.角色槽组.size() >= 2);
             out.push_back(std::move(*当前));
             当前.reset();
         } else 要求(false);
@@ -230,6 +265,21 @@ std::vector<种子包> 解码种子包(
             out.状态 = 初始化关系概念状态::读回失败;
             out.诊断 = "关系概念形状漂移:" + p.定义.稳定种子键;
             return out;
+        }
+        // 表达关联可含后天知识节点；读回只核预置含义操作与角色槽合同，不要求知识组全等。
+        for (const auto& 期望 : p.定义.表达关联组) {
+            const auto it = std::find_if(
+                读.信息->定义.表达关联组.begin(), 读.信息->定义.表达关联组.end(),
+                [&](const 关系概念表达关联& a) {
+                    return a.语言节点 == 期望.语言节点;
+                });
+            if (it == 读.信息->定义.表达关联组.end()
+                || it->含义操作码 != 期望.含义操作码
+                || it->角色槽组 != 期望.角色槽组) {
+                out.状态 = 初始化关系概念状态::读回失败;
+                out.诊断 = "表达槽合同漂移:" + p.定义.稳定种子键;
+                return out;
+            }
         }
         out.项组.push_back(*读.信息);
     }
