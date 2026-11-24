@@ -539,3 +539,9 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 代码确认动作概念定义保护含 C，追加动作引用 C 时组装端点再次读入该节点。词条分支在各组内去重后直接拼接，L1 的原子入口拒绝重复联合宿主。这与同一调用的动作发表失败吻合。运行日志没有记录具体 L1 返回码，按现有设计 §10.108 第11项修正后用普通发布版验证。
 
 [查词典错误增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/logic-error-delta.log) · [查词典启动日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/runtime-delta.log) · [进程回收回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/recovery.json)
+
+### 56C26 隔离动作复测和有序筹办场景修复
+
+隔离动作联合保护修复版 9cfc6fc12 以普通网页接收原消息 M31652，形成范围 R37125 及任务 T38426。网页显示 Q39602/O39696；使用实际回复控件提交分界答复 M40361，正式读回同 R 的依据 41165 和依据状态 41405。该依据进入同源定向模拟并发布分界配对 41812。记录时 PID 18468 仍在运行，已保留此会话用于查词典模拟复测。[网页问答读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-action-release-20261125-013828/release-web-20261125-014014/associated-boundary-reply.json)
+
+上一轮候选任务 T46156 和 T48776 的条件核验失败与词条目标的场景归属有关。词条所属语言世界根不在任务的现实场景视图内。源码 fb6a79b86 已将目标场景定位及核验移入使用它的旧角色扩域分支。有序方法继续从执行主体场景取普通存在，从正式词条及信息读口取相应固定参数。真实词条没有改挂场景。Release/x64 实际编译链接通过，249 项输入与发布提交一致，10 份实际词典文件与发布来源摘要一致。本修复尚未进入上述旧版运行。真实查阅 Q 和退出以后续运行现场为准。[源码](../海中鱼巣/领域/新_任务类.cpp#L24257) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-ordered-word-scene-release-20261125-014634/published-inputs.json)
