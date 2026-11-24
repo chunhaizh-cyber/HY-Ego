@@ -4965,19 +4965,43 @@ bool 运行普通应用特征当前值语言桥验证() noexcept {
         }
         const auto 结果 = 运行特征当前值语言桥自检(依赖);
         try {
+            auto utf8到宽 = [](const std::string& s) -> std::wstring {
+                if (s.empty()) return {};
+                const int n = MultiByteToWideChar(CP_UTF8, 0, s.data(),
+                    static_cast<int>(s.size()), nullptr, 0);
+                if (n <= 0) return {};
+                std::wstring w(static_cast<std::size_t>(n), L'\0');
+                if (MultiByteToWideChar(CP_UTF8, 0, s.data(),
+                        static_cast<int>(s.size()), w.data(), n) <= 0)
+                    return {};
+                return w;
+            };
             std::wostringstream 文;
-            文 << L"摘要=";
-            for (char c : 结果.摘要) 文 << static_cast<wchar_t>(static_cast<unsigned char>(c));
-            文 << L"；条目=" << 结果.条目组.size();
+            文 << L"摘要=" << utf8到宽(结果.摘要)
+               << L"；条目=" << 结果.条目组.size();
             for (const auto& 项 : 结果.条目组) {
                 文 << L"\n[" << (项.通过 ? L"通过" : L"失败")
                    << (项.合成夹具 ? L"/合成夹具" : L"/正式装配对象")
-                   << L"] ";
-                for (char c : 项.标识) 文 << static_cast<wchar_t>(static_cast<unsigned char>(c));
-                文 << L" — ";
-                for (char c : 项.说明) 文 << static_cast<wchar_t>(static_cast<unsigned char>(c));
+                   << L"] " << utf8到宽(项.标识)
+                   << L" — " << utf8到宽(项.说明);
             }
             (void)记录运行日志(L"特征当前值语言桥验证", L"自检结果", 文.str());
+            // UTF-8 明文证据：供 CI artifact 直接核验，避免宽日志转码歧义。
+            try {
+                const auto 路径 = 日志目录路径() / L"特征当前值语言桥自检.txt";
+                std::ofstream 出(路径, std::ios::binary | std::ios::trunc);
+                if (出) {
+                    出 << "摘要=" << 结果.摘要
+                       << "；通过=" << 结果.通过数
+                       << "；失败=" << 结果.失败数
+                       << "；条目=" << 结果.条目组.size() << '\n';
+                    for (const auto& 项 : 结果.条目组) {
+                        出 << '[' << (项.通过 ? "通过" : "失败")
+                           << (项.合成夹具 ? "/合成夹具" : "/正式装配对象")
+                           << "] " << 项.标识 << " — " << 项.说明 << '\n';
+                    }
+                }
+            } catch (...) {}
         } catch (...) {}
         return 结果.成功();
     } catch (const std::bad_alloc&) {
