@@ -460,3 +460,12 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 在主工作区从 `f65fd474f` 修复 `新_任务管理线程类::实现::提交非执行筹办裁决内部`。目标范围是仍具等待复核资格的同一检查条件工作。当前裁决通过同一任务和原工作核对且首次接收后，沿既有等待来源登记并定向触发一次复核。复用现有调度扫描、当前目标检查和重新筹办裁决，满足条件时重新安排工作。没有新增入口、公开合同、持久写口或调试切片。已有复核仍检查当前任务定位、执行保护和目标满足状态。旧计划范围和各工作树在制文件原地保留。[筹办裁决入口](../海中鱼巣/线程/新_任务管理线程类.cpp#L5768) · [既有等待复核](../海中鱼巣/线程/新_任务管理线程类.cpp#L1888) · [任务治理合同](../规范/5260_子规范_任务治理详细合同.md#L213)
 
 修复版使用实际项目 Release/x64 编译链接通过，0 错误、0 警告。249 项构建输入前后一致，唯一源码差异是上述任务管理线程。旧诊断的退出回执在会话中断后不可得，本次发布后重新从普通网页验证。[修复版构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-result.json)
+
+
+### 56C24 普通发布版通过同源正式分界和词条准入
+
+源码 `57cdd8893fb71ba8130dbfb44367559619fb8fe8` 的普通 Release/x64 通过编译链接，0 错误、0 警告，249 项构建输入与发布提交核同。实际网页收到前置原话「测试杯甲是一个杯子。它的颜色是白色。」，形成 M30431/R36336 和 D37167/T37311。网页显示并接收 Q38813/O38907 的关联答复，正式读回 A40108/I40109、依据 40477 和状态 S40717。模拟学习消费同 R 的候选及依据，释放隔离样例并发布配对 41285。[构建与发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/published-inputs.json) · [关联答复](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-web-20261124-203159/answer-formal-readback.json) · [模拟样例及配对](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-web-20261124-203159/isolated-boundary-and-pair.json)
+
+同一 T37311 重新查找方法并完成正式执行 X43218，读回 A43449、S43489、评估 44023。动作及固定状态指向同一 R36336/F36353，有效分界为 43472。控制页独立读回同一原 M30431 的准入 43632，逐项核对 11 个连续分段的坐标、九个正式词条及两个不含词条的分隔段。原消息读回阶段为「待按正式词段解释」。本轮观测覆盖普通链路的筹办及执行，没有单独取到旧「需核查」分支的修复后诊断。第 6 组业务原话、同 D 目标值写回和原水温不变在后继验收。[真实执行、有效分界及评估](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-web-20261124-203159/formal-range-result-state.json) · [原消息正式词段读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-web-20261124-203159/formal-original-source-admission.json)
+
+网页正常关闭，浏览器脚本退出 0，应用 PID 31936 正常退出 0 并已回收，无强停。逻辑日志新增 214 字节，来源为后台方法 25209 模拟未取得正式实际结果。[本轮退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c24-recheck-stale-preparation-release-20261124-202204/release-web-20261124-203159/exit.json)
