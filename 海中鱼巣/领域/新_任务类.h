@@ -2373,7 +2373,7 @@ private:
     新任务本次场景核验批 准备本次场景核验批(稳定编码,
         std::optional<稳定编码>,const 新任务本能采用材料*,bool,bool,
         const std::shared_ptr<新方法内容核验上下文>&,bool 仅查找目标 = false) const;
-    void 读取本次场景核验批(新任务本次场景核验批&) const;
+    void 读取本次场景核验批(新任务本次场景核验批&, bool 复核新增成员筹办资格 = true) const;
     void 读取新增成员目标组(新任务本次场景核验批&,const std::vector<稳定编码>&) const;
     void 读取冲突候选目标组(新任务本次场景核验批&) const;
     新需求当前满足结果 读取批需求满足(const 新任务本次场景核验批&,const 新需求信息&) const;
