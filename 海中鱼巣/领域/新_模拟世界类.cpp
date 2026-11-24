@@ -2666,6 +2666,9 @@ struct 模拟语言范围前态 final {
             throw std::logic_error("simulation actor dedicated concept source invalid");
     }
     auto m=s.方法.获取方法(M);
+    const bool 定向分界=语言范围来源 && 语言范围来源->定向输入;
+    if (定向分界 && (!m || m->参数规格组.size()!=正式输入.size()))
+        return {新模拟世界状态::定义前提已变化,{}};
     if(!m||m->参数规格组.size()>正式输入.size()) { 模拟样例拒绝行=__LINE__; return {}; }
     std::optional<模拟语言范围前态> 语言前态;
     std::vector<新模拟有序参数输入> 语言样例输入;
@@ -2687,6 +2690,9 @@ struct 模拟语言范围前态 final {
         const auto 取材=取得模拟语言范围前态(*语言范围来源,*语言前态);
         if (取材!=新模拟世界状态::已完成) return {取材,{}};
         if (const auto& 来源=语言范围来源->定向输入) {
+            if (!std::equal(m->参数规格组.begin(),m->参数规格组.end(),正式输入.begin(),
+                [](const auto& 当前,const auto& 输入){return 当前.有序规格==输入.规格;}))
+                return {新模拟世界状态::定义前提已变化,{}};
             using F=新语言范围特征种类;
             const auto 当前=[&](F 槽){return 语言前态->当前材料[static_cast<std::size_t>(槽)];};
             if (来源->范围!=语言范围来源->范围 || 来源->执行分支!=执行分支
@@ -2763,7 +2769,8 @@ struct 模拟语言范围前态 final {
     }
     {
         const auto 有效声明=s.方法.读取执行分支必要条件(M,执行分支);
-        if(有效声明.状态==新方法执行分支读取状态::前提已变化)
+        if(有效声明.状态==新方法执行分支读取状态::前提已变化
+            || (定向分界 && 有效声明.状态==新方法执行分支读取状态::方法不存在))
             return {新模拟世界状态::定义前提已变化,{}};
         if(有效声明.状态!=新方法执行分支读取状态::已读取) { 模拟样例拒绝行=__LINE__; return {}; }
         if (语言前态) {

@@ -1392,10 +1392,12 @@ struct 新_自我线程类::实现 final {
     }
 
     std::optional<方法学习发现状态> 读取候选分界学习材料(稳定编码 T,稳定编码 候选需求,稳定编码 M,
-        std::vector<新任务依赖键>& 等待键,bool 记录本次, std::optional<词典学习待项>& 定向) {
+        std::vector<新任务依赖键>& 等待键,bool 记录本次, std::optional<词典学习待项>& 定向,
+        bool 保留定向请求=false) {
         using S=方法学习发现状态;
         using P=正式信息参数读取状态;
         const auto 方法=方法服务->获取方法(M);
+        if(!方法 && 保留定向请求)return S::暂缓;
         if(!方法 || !方法->本能函数登记名)return {};
         const auto& 名称=*方法->本能函数登记名;
         const bool 分词=名称==新本能函数登记名_语言片段分词;
@@ -1532,7 +1534,7 @@ struct 新_自我线程类::实现 final {
         std::vector<新任务依赖键> 等待键;
         std::optional<词典学习待项> 定向;
         const auto 状态=读取候选分界学习材料(原请求者.任务,候选->需求节点,原请求者.候选方法,
-            等待键,false,定向);
+            等待键,false,定向,true);
         if (状态==方法学习发现状态::暂缓) return false;
         if (状态!=方法学习发现状态::已有配对 && 等待键!=原请求者.等待键)
             刷新词典请求者等待(原请求者,nullptr);
