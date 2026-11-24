@@ -545,3 +545,9 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 隔离动作联合保护修复版 9cfc6fc12 以普通网页接收原消息 M31652，形成范围 R37125 及任务 T38426。网页显示 Q39602/O39696；使用实际回复控件提交分界答复 M40361，正式读回同 R 的依据 41165 和依据状态 41405。该依据进入同源定向模拟并发布分界配对 41812。记录时 PID 18468 仍在运行，已保留此会话用于查词典模拟复测。[网页问答读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-action-release-20261125-013828/release-web-20261125-014014/associated-boundary-reply.json)
 
 上一轮候选任务 T46156 和 T48776 的条件核验失败与词条目标的场景归属有关。词条所属语言世界根不在任务的现实场景视图内。源码 fb6a79b86 已将目标场景定位及核验移入使用它的旧角色扩域分支。有序方法继续从执行主体场景取普通存在，从正式词条及信息读口取相应固定参数。真实词条没有改挂场景。Release/x64 实际编译链接通过，249 项输入与发布提交一致，10 份实际词典文件与发布来源摘要一致。本修复尚未进入上述旧版运行。真实查阅 Q 和退出以后续运行现场为准。[源码](../海中鱼巣/领域/新_任务类.cpp#L24257) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-ordered-word-scene-release-20261125-014634/published-inputs.json)
+
+### 56C26 旧版正常收束并切换至联合修复发布版
+
+继续观察 9cfc6fc12 的同一网页。原分界 T38426 一次查找方法工作因任务状态变化零发表，又通过工作 201 发布方法候选，原配对已经具备条件。最后读回仍为待检查条件，尚未形成正式执行实例、分界结果和词条准入，未抵达查词典模拟。由于正式查阅还依赖同一任务筹办的场景修正，本轮用网页「结束」正常收束旧版，以联合发布版继续取证。页面显示交互宿主已结束；PID 18468 退出 0，治理线程停止、最终上下文回收已返回，进程和监听端口均已释放。共享日志按两轮记录的起始偏移切开。[旧版运行增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-action-release-20261125-013828/release-web-20261125-014014/runtime-delta.log) · [退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-action-release-20261125-013828/release-web-20261125-014014/exit.json)
+
+随后以普通入口启动源码 fb6a79b86 的精确发布产物，PID 32468。新网页实际收到原前置话语「测试杯甲是一个杯子。它的颜色是白色。」。后续以该会话实际发出的分界问题及同一 W 的归类、查阅任务为准。两个构建的证据各自归属原运行。[转接记录](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-ordered-word-scene-release-20261125-014634/release-web-20261125-020535/ordinary-build-transition.json) · [发布构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-ordered-word-scene-release-20261125-014634/published-inputs.json)
