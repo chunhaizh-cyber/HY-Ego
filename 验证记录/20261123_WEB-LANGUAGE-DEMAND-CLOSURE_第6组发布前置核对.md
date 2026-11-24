@@ -587,3 +587,11 @@ T51301 召回唯一六参数方法 24390，工作 205 已完成条件筹办，�
 bcb490593 普通入口的定向诊断保留原消息 M36698、范围 R37703、关联回复 M40939、正式分界 45585 和准入 45745。「杯子」W45644 对应归类 D46678/T47061，其词典材料子需求 D50603/T50747 于 07:27:54 启动方法 24390 的定向模拟。07:28:13 「退出隔离样例」报 local dictionary exit fragment invalid，栈和源码将拒绝定位在联合提交前模拟世界自身片段的封存。没有同一 W 的普通查阅、正式 Q 或原归类任务后继证据。[运行日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-feature-concept-sync-diag-release-20261125-065928/release-web-20261125-070157/runtime-delta.log) · [错误日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-feature-concept-sync-diag-release-20261125-065928/release-web-20261125-070157/logic-error-delta.log) · [故障栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-feature-concept-sync-diag-release-20261125-065928/release-web-20261125-070157/fatal-thread-stack.txt)
 
 已匹配 PID 40140 的路径、启动时间及二进制摘要。关闭该进程的工程错误窗口后，原进程退出 574，127.0.0.1:54894 监听消失。统一设计第10.108节第15项和统一计划第56C26续修登记两处封存材料补齐。正常关闭及浏览器实际显示和关联回帖仍待正式第6组核对。[进程关闭实测](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-feature-concept-sync-diag-release-20261125-065928/release-web-20261125-070157/fault-process-close.json)
+
+### 56C26 隔离词典退出片段修复发布与普通网页复测
+
+源码 2dc3c6c5b 已随普通推送发布。Release x64 编译链接退出 0，0 错误、0 警告。249 项构建输入的原始摘要和发布 Git blob 全部核同，运行词典目录十份文件亦与既有源材料摘要一致。[编译结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-exit-release-20261125-073912/release-result.json) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-exit-release-20261125-073912/published-inputs.json) · [词典输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-exit-release-20261125-073912/runtime-dictionary-inputs.json)
+
+普通入口 PID 42228 监听回环端口 64273。实际 Edge 页面已提交并读回原话「测试杯甲是一个杯子。它的颜色是白色。」。本证据只确认发布身份、普通启动和网页入站。第 56C26 第15项仍须取得同源归类、模拟退出、配对和实际词典材料，之后再验收第 6 组。[发布进程](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-exit-release-20261125-073912/release-web-20261125-074132/process.json) · [网页入站](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-exit-release-20261125-073912/release-web-20261125-074132/displayed-source.json)
+
+代码知识变更清单仅含新_模拟世界类::尝试释放有序样例、概念_特征类::准备消息集合保持退出。两者增加从现有删除字段取旧目标并调用 L1 查询节点组完整结构的读取边，继续由各自片段交 L1 封存和联合提交。公开类型、删除权限及联合回执次序沿现行合同。已编译和静态核对，功能以本次普通实跑结果为准。
