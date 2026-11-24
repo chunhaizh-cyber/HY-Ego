@@ -523,3 +523,19 @@ Debug/x64 用时 210.49 秒，Release/x64 用时 336.63 秒，两配置 0 错误
 实际普通网页读回前置原话 M34130、范围 R36863/F36880 和归类前的分界 D37694/T37838。Q39351/O39445 显示原文引文，正式发送回执为 39700。实际点击页面「回复」并提交分界数组，接收 M40211 读回答复 40646、对齐材料 40647 和同 R 的依据 41015，状态 41255 指向依据特征 F36876。随后模拟学习发布方法 25730 的配对 41662，控制页独立读回 T37838 候选的条件具备。进程 PID 35888 仍在运行，本次检查尚未读回 T37838 的正式执行、有效分界或词典 Q。第 6 组的业务补问、同 D 写回及退出另取证。
 
 [构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/published-inputs.json) · [构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-result.json) · [词典摘要](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/runtime-dictionary-inputs.json) · [分界采用读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/associated-boundary-reply.json) · [运行增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/runtime-delta.log)
+
+### 56C26 同源有效分界、原句准入和杯子词典任务
+
+普通发布源码 44558b1a9，从前置原话 M34130 及关联分界答复继续实际执行。分界任务 T37838 采用方法 25730，正式执行 X43952，动作 44193，实际状态 44233，评估 44767，任务已完成。原范围 R36863/F36880 取得有效分界 44216，原消息的准入 44376 对应两个句段 [0,10) 和 [10,18)，各自读回角色缺口。「杯子」是原文 [7,9) 的正式词条 W44275。此证据覆盖原消息的准入和逐句解释，整篇含义仍待正式采用。
+
+同一 W 的归类 D45773 由父 D22151、来源 T29110 产生。管理线程正式承接为 T46156，已发布候选 24640 和执行组织 48358。工作 217 的条件核验状态为结构不一致。继续沿本次归类来源正式读回词典材料子需求 D48632，父需求为 D45773，来源任务为 T46156，目标是同一 W44275 的词典材料类型 6528。01:28:12 普通运行的任务管理日志确认 D48632 建立 T48776。此时尚未读回该任务的实际查阅结果 Q。进程 35888 和原网页会话仍在运行。第 6 组的业务补问和同 D 写回尚未进入验收。
+
+[正式分界与词条准入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/formal-range-result-and-admission.json) · [同源归类任务](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/same-source-word-classification-readback.json) · [材料任务身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/same-word-dictionary-task-birth.json)
+
+### 56C26 查词典模拟动作的联合端点错误
+
+同一普通应用继续运行，在 T48776 的同一材料 D48632 召回方法 24390，控制页实际显示学习线程执行该六参数查词典方法。01:32:21 开始模拟，01:32:35 记录工程终止「isolation action publication failed」。错误窗口与日志一致。查词典动作尚未正常发表，本轮无真实查阅 Q。桌面自动化无法激活错误窗口，核对二进制、PID 和启动时间后回收进程 35888，退出码 −1，监听端口已释放。
+
+代码确认动作概念定义保护含 C，追加动作引用 C 时组装端点再次读入该节点。词条分支在各组内去重后直接拼接，L1 的原子入口拒绝重复联合宿主。这与同一调用的动作发表失败吻合。运行日志没有记录具体 L1 返回码，按现有设计 §10.108 第11项修正后用普通发布版验证。
+
+[查词典错误增量](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/logic-error-delta.log) · [查词典启动日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/runtime-delta.log) · [进程回收回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-i64-identity-final-release-20261125-010835/release-web-20261125-011058/recovery.json)
