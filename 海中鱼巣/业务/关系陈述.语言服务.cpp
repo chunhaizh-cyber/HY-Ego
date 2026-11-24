@@ -217,12 +217,37 @@ bool 知识含固定尾词(
     return false;
 }
 
-// 解析一段要消费的根知识：后天节点优先；否则按预置尾词+含义操作在语言知识中解析。
+// 根含义参数签名：须与陈述段角色槽参数集一致，避免「需要」同时命中目标存在句与单值扩展句。
+std::optional<std::set<std::int64_t>> 知识根参数签名(
+    const 新语言知识信息& 知识,
+    新语言知识含义操作 操作) {
+    std::set<std::int64_t> 码;
+    if (知识.定义.目标.含义图) {
+        for (const auto& 节点 : 知识.定义.目标.含义图->节点组) {
+            if (节点.局部编号 != 知识.定义.目标.含义图->根含义编号) continue;
+            if (节点.操作 != 操作) return std::nullopt;
+            for (const auto& p : 节点.参数组)
+                码.insert(static_cast<std::int64_t>(p.参数));
+            return 码;
+        }
+        return std::nullopt;
+    }
+    if (知识.定义.目标.含义组.size() == 1
+        && 知识.定义.目标.含义组.front().操作 == 操作) {
+        for (const auto& p : 知识.定义.目标.含义组.front().参数组)
+            码.insert(static_cast<std::int64_t>(p.参数));
+        return 码;
+    }
+    return std::nullopt;
+}
+
+// 解析一段要消费的根知识：后天节点优先；否则按预置尾词+含义操作+槽参数签名解析。
 // 已挂表达知识节点组时不得静默回退预置尾词/其它模式。
 std::vector<稳定编码> 解析段根知识(
     const std::vector<稳定编码>& 表达知识节点组,
     const std::string& 预置知识尾词,
     新语言知识含义操作 操作,
+    const std::set<std::int64_t>& 期望参数码,
     稳定编码 语言节点,
     const 新_语言类& 语言,
     const 新_词类& 词,
@@ -239,19 +264,9 @@ std::vector<稳定编码> 解析段根知识(
                 诊断 = "表达知识节点不可读";
                 return {};
             }
-            bool 操作匹配 = false;
-            if (读.信息->定义.目标.含义图) {
-                for (const auto& 节点 : 读.信息->定义.目标.含义图->节点组) {
-                    if (节点.局部编号 == 读.信息->定义.目标.含义图->根含义编号
-                        && 节点.操作 == 操作)
-                        操作匹配 = true;
-                }
-            } else if (读.信息->定义.目标.含义组.size() == 1
-                && 读.信息->定义.目标.含义组.front().操作 == 操作) {
-                操作匹配 = true;
-            }
-            if (!操作匹配) {
-                诊断 = "表达知识含义操作与陈述段不一致（不静默换模式）";
+            const auto 签名 = 知识根参数签名(*读.信息, 操作);
+            if (!签名 || *签名 != 期望参数码) {
+                诊断 = "表达知识含义操作/参数与陈述段不一致（不静默换模式）";
                 return {};
             }
         }
@@ -270,18 +285,8 @@ std::vector<稳定编码> 解析段根知识(
     std::vector<稳定编码> 命中;
     for (const auto& 信息 : 候选.信息组) {
         if (信息.定义.目标.目的 != 新语言知识表达目的::陈述) continue;
-        bool 操作匹配 = false;
-        if (信息.定义.目标.含义图) {
-            for (const auto& 节点 : 信息.定义.目标.含义图->节点组) {
-                if (节点.局部编号 == 信息.定义.目标.含义图->根含义编号
-                    && 节点.操作 == 操作)
-                    操作匹配 = true;
-            }
-        } else if (信息.定义.目标.含义组.size() == 1
-            && 信息.定义.目标.含义组.front().操作 == 操作) {
-            操作匹配 = true;
-        }
-        if (!操作匹配) continue;
+        const auto 签名 = 知识根参数签名(信息, 操作);
+        if (!签名 || *签名 != 期望参数码) continue;
         if (知识含固定尾词(信息, 预置知识尾词, 词)) 命中.push_back(信息.节点);
     }
     if (命中.empty()) {
@@ -365,16 +370,10 @@ std::vector<稳定编码> 解析段根知识(
         return out;
     }
     const auto 操作 = static_cast<新语言知识含义操作>(段.含义操作码);
-    auto 允许根知识 = 解析段根知识(
-        段.表达知识节点组, 段.预置知识尾词, 操作, 请求.目标语言节点,
-        语言, 词, 存在概念, out.诊断);
-    if (允许根知识.empty()) {
-        out.状态 = 关系陈述状态::缺语言知识;
-        return out;
-    }
 
     std::set<std::string> 已用端点;
     std::set<std::int64_t> 已用参数;
+    std::set<std::int64_t> 期望参数码;
     std::vector<std::pair<参数, 稳定编码>> 槽材料;
     槽材料.reserve(段.角色槽组.size());
     for (const auto& 槽 : 段.角色槽组) {
@@ -385,6 +384,7 @@ std::vector<稳定编码> 解析段根知识(
             out.诊断 = "表达角色槽重复或空键";
             return out;
         }
+        期望参数码.insert(槽.参数角色码);
         const auto 种类It = 端点种类表.find(槽.端点角色键);
         const auto 绑定It = 请求.端点绑定.find(槽.端点角色键);
         if (种类It == 端点种类表.end() || 绑定It == 请求.端点绑定.end()) {
@@ -402,6 +402,14 @@ std::vector<稳定编码> 解析段根知识(
             return out;
         }
         槽材料.push_back({static_cast<参数>(槽.参数角色码), *存在节点});
+    }
+
+    auto 允许根知识 = 解析段根知识(
+        段.表达知识节点组, 段.预置知识尾词, 操作, 期望参数码,
+        请求.目标语言节点, 语言, 词, 存在概念, out.诊断);
+    if (允许根知识.empty()) {
+        out.状态 = 关系陈述状态::缺语言知识;
+        return out;
     }
 
     return 完成单段成文(
