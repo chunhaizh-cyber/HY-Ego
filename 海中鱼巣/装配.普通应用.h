@@ -8,6 +8,8 @@
 #include "业务/初始化.结构化子概念.h"
 #include "业务/初始化.语言知识.h"
 #include "业务/初始化.指代种子.h"
+#include "业务/初始化.关系概念.h"
+#include "业务/关系陈述.语言服务.h"
 #include "业务/表达.基础语言.h"
 #include "线程/新_自我线程类.h"
 #include "线程/新_任务管理线程类.h"
@@ -77,6 +79,7 @@ struct 普通应用装配结果 final {
     std::optional<初始化结构化子概念结果> 结构化子概念;
     std::optional<初始化语言知识结果> 语言知识;
     std::optional<初始化指代种子结果> 指代种子;
+    std::optional<初始化关系概念结果> 世界关系概念;
     std::optional<稳定编码> 自然语言世界树根节点;
     std::optional<稳定编码> 内部治理世界树根节点;
     std::optional<稳定编码> 第一权限人存在节点;
@@ -201,5 +204,11 @@ void 通知普通应用外设交互场景已建立() noexcept;
 // 纯读不投递消息；确认内容和后续材料投递结果分别返回。
 网页部分服务要求结果 读取普通应用部分服务要求(std::string_view 公开会话标识,
     std::uint64_t 要求编码) noexcept;
+
+// 生产可达：装配后的关系陈述统一入口（世界树正式端点 + 目标语言）。
+关系陈述结果 生成普通应用关系陈述(const 关系陈述请求&) noexcept;
+
+// 装配后功能自检；返回是否全部强制项通过（未验证项不计入强制失败）。
+bool 运行普通应用关系概念出站验证() noexcept;
 
 } // namespace 海中鱼巣
