@@ -1269,7 +1269,7 @@ bool 是规范条件I64区间组(
 bool 是条件包含目标(
     const 新需求目标定义& 目标,
     const 概念_特征类& 特征概念服务,
-    const 概念_二次特征类& 二次特征概念服务) noexcept {
+    const 概念_二次特征类& 二次特征概念服务, bool 支持信息对象引用 = false) noexcept {
     if (目标.目标形式 != 新需求目标形式::值 || 目标.目标变化方向
         || !目标.目标值域概念节点 || !目标.目标比较关系概念节点) return false;
     const auto 关系 = 二次特征概念服务.获取二次特征概念(*目标.目标比较关系概念节点);
@@ -1285,8 +1285,9 @@ bool 是条件包含目标(
     const auto* 存在引用 = std::get_if<特征概念存在引用值域>(&域->值域);
     const bool 概念集合 = std::holds_alternative<特征概念概念集合值域>(域->值域);
     const auto* 信息引用 = std::get_if<特征概念信息引用值域>(&域->值域);
-    const bool 概念引用 = 信息引用 && 信息引用->语义 == 信息引用语义::概念定义;
-    if (概念引用) {
+    const bool 正式信息引用 = 信息引用 && (信息引用->语义 == 信息引用语义::概念定义
+        || (支持信息对象引用 && 信息引用->语义 == 信息引用语义::信息对象));
+    if (正式信息引用) {
         if (域->材料类型 != 特征概念材料物理类型::信息节点引用 || 域->单位
             || 域->比较规则 != 特征概念比较规则::信息引用身份精确
             || 关系->算法 != 二次特征算法::特征材料相似度) return false;
@@ -1315,9 +1316,9 @@ bool 是条件包含目标(
                 != std::optional<稳定编码>{目标.目标特征类型概念节点}) return false;
     }
     return std::all_of(关系->结果域种类组.begin(), 关系->结果域种类组.end(),
-        [集合, 存在集合, 存在引用, 概念集合, 概念引用](auto 种类) {
+        [集合, 存在集合, 存在引用, 概念集合, 正式信息引用](auto 种类) {
             return 种类 == 二次特征结果域种类::包含于参照值域
-                || (!集合 && !存在集合 && !存在引用 && !概念集合 && !概念引用 && 种类 == 二次特征结果域种类::等于);
+                || (!集合 && !存在集合 && !存在引用 && !概念集合 && !正式信息引用 && 种类 == 二次特征结果域种类::等于);
         });
 }
 
@@ -30498,6 +30499,97 @@ std::optional<新任务完成结算信息>
 #else
 #define HY_条件承接未完成诊断(行) do{}while(false)
 #endif
+新任务治理承接结果 新_任务类::承接已确认词条学习子需求(稳定编码 D) noexcept {
+    新任务治理承接结果 out;out.需求节点=D;out.状态=新任务治理承接状态::任务操作未完成;
+    try {
+        const auto demand=需求服务_.获取需求(D);
+        if(!demand){out.状态=新任务治理承接状态::需求不存在;return out;}
+        if(demand->执行域!=新需求执行域::自我执行 || demand->活动状态!=新需求活动状态::活动
+            || demand->来源类型!=新需求来源类型::任务子目标 || !demand->父需求节点 || !demand->来源承接节点
+            || demand->目标.目标形式!=新需求目标形式::值)return out;
+        const auto type=特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::概念名称挂接);
+        if(type.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+        const auto materialType=特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::词典材料);
+        if(materialType.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+        const bool 是归类=type.类型根==std::optional{demand->目标.目标特征类型概念节点}
+            && demand->目标.取值位置==特征取值位置::历史不同值;
+        const bool 是材料=materialType.类型根==std::optional{demand->目标.目标特征类型概念节点}
+            && demand->目标.取值位置==特征取值位置::当前值
+            && demand->目标.目标值域概念节点==materialType.类型根;
+        if(!是归类&&!是材料)return out;
+        if(!是条件包含目标(demand->目标,特征概念服务_,二次特征概念服务_,是材料))return out;
+        const auto parent=需求服务_.获取需求(*demand->父需求节点);
+        if(!parent || parent->活动状态!=新需求活动状态::活动)return out;
+        const auto sourceTask=读取任务服务需求集(*demand->来源承接节点);
+        if(sourceTask.状态==新任务服务需求集状态::资源失败)throw std::bad_alloc{};
+        if(sourceTask.状态!=新任务服务需求集状态::已读取
+            || std::find(sourceTask.服务需求组.begin(),sourceTask.服务需求组.end(),parent->节点)==sourceTask.服务需求组.end())return out;
+        if(是材料 && (parent->目标存在节点!=demand->目标存在节点
+            || parent->目标.目标特征类型概念节点!=type.类型根))return out;
+        const auto sources=需求服务_.读取词典归类需求来源组(D);
+        if(sources.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+        bool 有归类来源=是材料 || (sources.状态==新需求操作状态::已找到
+            &&std::any_of(sources.来源组.begin(),sources.来源组.end(),[&](const auto& x) {
+                return demand->目标存在节点==(x.用途==新词典归类需求来源用途::词条挂接 ? x.词条W : x.词条N);
+            }));
+        if(!有归类来源) {
+            const auto 前置来源=需求服务_.读取前置词条归类需求来源组(D);
+            if(前置来源.状态==新需求操作状态::资源失败)throw std::bad_alloc{};
+            const auto 服务根=需求服务_.查询根需求(新需求根角色::服务);
+            std::optional<稳定编码> 自我;
+            {
+                std::lock_guard lock(新任务互斥);
+                if(自我服务结算配置_)自我=自我服务结算配置_->自我存在节点;
+            }
+            if(前置来源.状态!=新需求操作状态::已找到 || !自我 || 服务根!=demand->父需求节点
+                || demand->目标.目标值域概念节点!=type.类型根
+                || !是前置语言材料父任务(*demand->来源承接节点))return out;
+            有归类来源=std::any_of(前置来源.来源组.begin(),前置来源.来源组.end(),[&](const auto& x) {
+                return x.词条==demand->目标存在节点 && x.输入.自我存在节点==*自我;
+            });
+        }
+        if(!有归类来源)return out;
+        out.当前复核=需求服务_.复核当前满足(D);
+        if(out.当前复核->状态==新需求当前满足状态::资源失败)throw std::bad_alloc{};
+        if(out.当前复核->状态==新需求当前满足状态::已满足){out.状态=新任务治理承接状态::需求当前已满足;return out;}
+        out=建立需求任务关联(D);
+        if(!out.任务 || (out.状态!=新任务治理承接状态::已读回 && out.状态!=新任务治理承接状态::既有终结任务))return out;
+        for(;;) {
+            const auto eligibility=复核任务筹办资格(out.任务->节点);
+            out.当前复核=eligibility.当前满足;
+            if(eligibility.状态==新需求筹办资格状态::资源失败)throw std::bad_alloc{};
+            if(eligibility.状态==新需求筹办资格状态::目标已满足){out.状态=新任务治理承接状态::需求当前已满足;return out;}
+            if(eligibility.状态!=新需求筹办资格状态::允许筹办){out.状态=新任务治理承接状态::任务操作未完成;return out;}
+            std::lock_guard lock(新任务互斥);
+            const auto current=获取任务(out.任务->节点);
+            if(!current){out.状态=新任务治理承接状态::任务操作未完成;return out;}
+            新任务操作状态 moved=新任务操作状态::无变化;
+            if(是终结状态(current->当前状态))
+                moved=重新启用服务任务(current->节点,D,{新任务重启来源种类::承接请求,{}});
+            else if((current->当前状态==新任务状态::已建立 || current->当前状态==新任务状态::等待条件)
+                && !current->方法实例节点 && !current->方法执行组织节点 && !current->最近执行实例节点)
+                moved=迁移任务状态(current->节点,新任务状态::待查找方法,
+                    {新任务状态迁移原因种类::承接条件子需求,{D}});
+            if(moved==新任务操作状态::资源失败)throw std::bad_alloc{};
+            if(moved==新任务操作状态::预期已变化 || moved==新任务操作状态::任务状态不允许)continue;
+            if(moved!=新任务操作状态::已修改 && moved!=新任务操作状态::无变化)
+                throw std::logic_error("word classification task activation failed");
+            auto fresh=读回需求任务(D,current->节点);
+            fresh.写入已尝试=out.写入已尝试;fresh.建立结果=out.建立结果;
+            fresh.当前复核=out.当前复核;
+            if(moved==新任务操作状态::已修改) {
+                fresh.重新启用结果=moved;
+                if(fresh.状态==新任务治理承接状态::已读回 || fresh.状态==新任务治理承接状态::既有终结任务)
+                    fresh.状态=新任务治理承接状态::已重新启用;
+            }
+            return fresh;
+        }
+    } catch(const std::bad_alloc&){out.状态=新任务治理承接状态::资源失败;return out;}
+    catch(const std::length_error&){out.状态=新任务治理承接状态::资源失败;return out;}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"承接词条归类子需求",L"正式来源或任务承接发生工程错误。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"承接词条归类子需求",L"未知工程错误。");}
+}
+
 新任务治理承接结果 新_任务类::承接已确认条件子需求(
     稳定编码 父任务节点,const 新任务已确认条件子需求& 已确认项) noexcept {
     const auto 子需求节点=已确认项.需求节点;
