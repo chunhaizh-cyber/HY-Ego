@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare D: contract paths
+      - name: "Prepare D: contract paths"
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
