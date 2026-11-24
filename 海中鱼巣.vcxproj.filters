@@ -652,6 +652,9 @@
     <ClInclude Include="海中鱼巣\业务\初始化.表达组织知识.h" />
     <ClCompile Include="海中鱼巣\业务\初始化.表达组织知识.cpp" />
     <None Include="初始化材料\表达组织知识种子.txt" />
+    <None Include="初始化材料\世界关系概念种子.txt">
+      <Filter>资源文件</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="海中鱼巣\领域\关系概念.数据.h"><Filter>海中鱼巣\领域</Filter></ClInclude>
