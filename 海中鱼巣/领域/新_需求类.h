@@ -16,6 +16,7 @@
 #include "新_特征类.h"
 #include "概念_二次特征类.h"
 #include "接收认知来源.数据.h"
+#include "前置语言输入.数据.h"
 #include "词典语言.数据.h"
 
 namespace 海中鱼巣 {
@@ -537,6 +538,16 @@ struct 新词典归类需求来源读取结果 final {
     新需求操作状态 状态 = 新需求操作状态::尚未初始化;
     std::vector<新词典归类需求来源> 来源组;
 };
+struct 新前置词条归类需求来源 final {
+    新前置语言输入定位 输入;
+    稳定编码 词条;
+    std::uint64_t 起始标量, 结束标量;
+    friend bool operator==(const 新前置词条归类需求来源&,const 新前置词条归类需求来源&)=default;
+};
+struct 新前置词条归类需求来源读取结果 final {
+    新需求操作状态 状态 = 新需求操作状态::尚未初始化;
+    std::vector<新前置词条归类需求来源> 来源组;
+};
 
 struct 新被认知需求建立请求 final {
     稳定编码 需求主体存在节点;
@@ -1016,6 +1027,8 @@ public:
     bool 是需求节点(稳定编码 节点) const noexcept;
     新词典归类需求来源读取结果 读取词典归类需求来源组(
         稳定编码 需求节点) const noexcept;
+    新前置词条归类需求来源读取结果 读取前置词条归类需求来源组(
+        稳定编码 需求节点) const noexcept;
     // 初始化后schema冻结；不取需求锁。新格式经F公开口取得完整保护，使用共享领域锁。
     特征概念规则状态 校验集合成员需求身份(稳定编码 需求节点) const noexcept;
 
@@ -1024,6 +1037,11 @@ private:
         稳定编码 需求节点, const 新词典归类需求来源&, bool* 已关联 = nullptr) noexcept;
     新需求建立结果 建立或取得词典归类需求已核验(
         const 新普通需求建立请求&, const 新词典归类需求来源&) noexcept;
+    新需求建立结果 建立或取得前置词条归类需求已核验(
+        const 新普通需求建立请求&, const 新前置词条归类需求来源&) noexcept;
+    新需求建立结果 建立或取得词条材料子需求已核验(const 新普通需求建立请求&) noexcept;
+    新需求操作状态 记录前置词条归类需求来源已核验(
+        稳定编码, const 新前置词条归类需求来源&, bool* 已关联) noexcept;
     struct 提议源收集批 final {
         基础只读预期 前提;
         std::set<稳定编码> 需求节点组;
@@ -1163,7 +1181,9 @@ private:
     新需求建立结果 建立或取得组合发布需求内部(const 新普通需求建立请求&,bool,
         const std::vector<基础联合节点快照>& 复合采用保护 = {},
         const 基础只读预期* 源前提 = nullptr,
-        const 新词典归类需求来源* 词典来源 = nullptr) noexcept;
+        const 新词典归类需求来源* 词典来源 = nullptr,
+        const 新前置词条归类需求来源* 前置来源 = nullptr,
+        bool 词条材料条件 = false) noexcept;
 
     新_特征值类& 特征值服务_;
     新_存在类& 存在服务_;

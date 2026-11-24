@@ -154,6 +154,7 @@ struct 语言图静态角色缺口 final {
     新语言知识角色类别 类别;
     std::size_t 起始标量, 结束标量;
     std::optional<稳定编码> 词条;
+    bool 正式普通名称未登记 = false;
     friend bool operator==(const 语言图静态角色缺口&,const 语言图静态角色缺口&)=default;
 };
 struct 语言图解释结果 final {

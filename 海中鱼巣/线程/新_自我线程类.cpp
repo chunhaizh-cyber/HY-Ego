@@ -954,6 +954,12 @@ struct 新_自我线程类::实现 final {
         }
     }
 
+    struct 词条学习承接项 final {
+        新任务承接消息 请求;
+        std::shared_future<新任务承接处理结果> 回执;
+        bool 已完成 = false;
+    };
+    std::map<std::pair<稳定编码, 稳定编码>, 词条学习承接项> 词条材料承接组;
     struct 消息项 final {
         新自我治理消息 消息;
         std::promise<新自我消息处理结果> 承诺;
@@ -994,6 +1000,9 @@ struct 新_自我线程类::实现 final {
         std::optional<新任务前置语言输入请求> 前置请求;
         std::optional<新任务工作请求> 前置工作;
         std::optional<新任务前置语言输入结果> 前置已读回结果;
+        bool 前置筹办传输已释放 = false;
+        bool 前置归类目标已建立 = false;
+        std::map<稳定编码, 词条学习承接项> 前置归类承接组;
         std::optional<稳定编码> 前置分界子需求;
         std::optional<新任务承接消息> 前置分界承接消息;
         std::shared_future<新任务工作处理结果> 前置结果;
@@ -1555,12 +1564,68 @@ struct 新_自我线程类::实现 final {
         槽.需重学=false;
     }
 
+    std::optional<方法学习发现状态> 推进归类所需词典材料(
+        稳定编码 T, 稳定编码 D, 稳定编码 M, std::vector<新任务依赖键>& 等待键) {
+        using S = 方法学习发现状态;
+        const auto 候选 = 任务服务->构造归类学习请求候选(T, M);
+        if (候选.状态==新词典学习发现状态::资源失败) return S::暂缓;
+        if (!候选.发现 || 候选.发现->需求节点!=D) return std::nullopt;
+        const auto 来源 = 需求服务->读取前置词条归类需求来源组(D);
+        if (来源.状态==新需求操作状态::资源失败) return S::暂缓;
+        if (来源.状态!=新需求操作状态::已找到 || 来源.来源组.empty()) return std::nullopt;
+        if (停止源.stop_requested()) return S::停止取消;
+        等待键.insert(等待键.end(), 候选.等待依赖键组.begin(), 候选.等待依赖键组.end());
+        const auto 本次 = std::pair{T, D};
+        if (const auto 待承接=词条材料承接组.find(本次); 待承接!=词条材料承接组.end()) {
+            等待键.push_back({新任务依赖键种类::需求, 待承接->second.请求.需求节点, {}});
+            if (!推进词条学习承接(待承接->second)) return S::暂缓;
+            词条材料承接组.erase(待承接);
+            return S::无需学习;
+        }
+
+        const auto W = 候选.发现->目标词条;
+        const auto 目标 = 组织词条学习目标(先天特征类型槽::词典材料, 特征取值位置::当前值);
+        if (!目标) return S::暂缓;
+        const auto 事实 = 世界树服务->获取事实服务引用();
+        const auto F = 事实.词服务.建立或取得词条特征(W, 目标->目标特征类型概念节点);
+        if (F.状态==新词条特征取得状态::资源失败 || F.状态==新词条特征取得状态::场景未装配)
+            return S::暂缓;
+        if (F.状态==新词条特征取得状态::词条不存在) return S::无需学习;
+        if (!F.特征) throw std::logic_error("dictionary material feature could not be established");
+        const auto 特征 = 事实.特征服务.读取特征完整保护(F.特征->特征节点);
+        if (!特征.信息) return S::暂缓;
+        等待键.push_back({新任务依赖键种类::节点, F.特征->特征节点, {}});
+        if (特征.信息->特征.当前值) return S::无需学习;
+
+        const 新普通需求建立请求 请求{D, W, *目标, 新需求来源类型::任务子目标, T, {}};
+        const auto 出生 = 需求服务->建立或取得词条材料子需求已核验(请求);
+        using R = 新需求操作状态;
+        if (出生.状态==R::资源失败 || 出生.状态==R::前提已变化 || 出生.状态==R::目标内容依赖未就绪)
+            return S::暂缓;
+        if (出生.状态==R::无变化 || 出生.状态==R::需求不存在) return S::无需学习;
+        if (!出生.需求节点 || (出生.状态!=R::已建立 && 出生.状态!=R::已复用))
+            throw std::logic_error("dictionary material child demand rejected");
+        const auto 子D = *出生.需求节点;
+        等待键.push_back({新任务依赖键种类::需求, 子D, {}});
+        const auto 需求 = 需求服务->获取需求(子D);
+        if (!需求 || 需求->活动状态!=新需求活动状态::活动) return S::无需学习;
+        const auto [行, 新增] = 词条材料承接组.try_emplace(本次);
+        if (新增) 行->second.请求 = {取得自动消息编号(), 子D, 新任务承接依据::自我词条学习子需求};
+        if (!推进词条学习承接(行->second)) return S::暂缓;
+        词条材料承接组.erase(行);
+        return S::无需学习;
+    }
+
     方法学习发现状态 发现候选方法学习(稳定编码 T, 稳定编码 候选需求, 稳定编码 M,
         std::vector<新任务依赖键>& 等待键, std::optional<新词典学习处置>& 词典处置) noexcept {
         try {
             const auto 读 = 读取当前词典学习发现(T, M);
             if (!读.发现) {
                 if(读.状态!=新词典学习发现状态::不涉及)return 方法学习发现状态::无需学习;
+                if (const auto 取材=推进归类所需词典材料(T, 候选需求, M, 等待键)) {
+                    词典处置 = 新词典学习处置::条件未具备;
+                    return *取材;
+                }
                 if(const auto 分界=接纳候选分界学习(T,候选需求,M,等待键,true))return *分界;
                 return 发现方法学习(M);
             }
@@ -2309,6 +2374,16 @@ struct 新_自我线程类::实现 final {
                 for (const auto M : 候选->候选方法节点组) {
                     const auto 读 = 读取当前词典学习发现(任务.节点, M);
                     if (!读.发现) {
+                        if (读.状态==新词典学习发现状态::不涉及) {
+                            const auto 取材=推进归类所需词典材料(
+                                任务.节点, 候选->需求节点, M, 决议.附加等待依赖键组);
+                            if (取材) {
+                                if (*取材==方法学习发现状态::暂缓) return std::nullopt;
+                                if (*取材==方法学习发现状态::停止取消) return 出口(__LINE__);
+                                候选仍需材料 = true;
+                                continue;
+                            }
+                        }
                         if(const auto 分界=接纳候选分界学习(
                             任务.节点,候选->需求节点,M,决议.附加等待依赖键组,false)) {
                             if(*分界==方法学习发现状态::暂缓)return std::nullopt;
@@ -2757,6 +2832,97 @@ struct 新_自我线程类::实现 final {
         }
     }
 
+    std::optional<新需求目标定义> 组织词条学习目标(std::uint32_t 槽, 特征取值位置 位置) {
+        const auto 事实 = 世界树服务->获取事实服务引用();
+        const auto 类型 = 事实.特征概念服务.读取当前先天特征类型槽(槽);
+        if (类型.状态 == 特征概念规则状态::资源失败 || !类型.类型根) return {};
+        const auto FT = *类型.类型根;
+        const auto 比较 = 事实.二次特征概念服务.建立或取得默认二次特征概念(
+            二次特征算法::特征材料相似度, 子需求比较输入(FT), FT);
+        if (!比较.概念节点) return {};
+        const auto 关系 = 事实.二次特征概念服务.建立或取得参照结果域概念(
+            *比较.概念节点, 二次特征结果域种类::包含于参照值域);
+        if (!关系.概念节点) return {};
+        新需求目标定义 目标{FT, 新需求目标形式::值, FT, 关系.概念节点};
+        目标.取值位置 = 位置;
+        return 目标;
+    }
+
+    bool 推进词条学习承接(词条学习承接项& 项) {
+        if (项.已完成) return true;
+        if (!项.回执.valid()) {
+            const auto 接收 = 任务管理->提交词条学习子需求(项.请求);
+            using S = 新任务承接接收状态;
+            if (接收.状态==S::已停止接收) return 停止源.stop_requested();
+            if (接收.状态==S::邮箱已满 || 接收.状态==S::尚未启动 || 接收.状态==S::资源失败)
+                return false;
+            if ((接收.状态!=S::已接收 && 接收.状态!=S::精确重复) || !接收.处理结果.valid())
+                throw std::logic_error("word learning acceptance transport rejected");
+            项.回执 = 接收.处理结果;
+        }
+        if (项.回执.wait_for(std::chrono::milliseconds{0})!=std::future_status::ready) return false;
+        const auto 回执 = 项.回执.get();
+        if (回执.原消息 != 项.请求) throw std::logic_error("word learning acceptance source mismatch");
+        using P = 新任务承接处理状态;
+        switch (回执.状态) {
+        case P::已承接:
+        case P::已重新启用:
+        case P::既有终结:
+            if (!回执.承接 || !回执.承接->任务 || 回执.承接->任务->需求节点 != 项.请求.需求节点)
+                throw std::logic_error("word learning task association missing");
+            break;
+        case P::需求当前已满足:
+        case P::停止取消:
+            break;
+        default: {
+            const auto D = 需求服务->获取需求(项.请求.需求节点);
+            const auto 父 = D && D->父需求节点 ? 需求服务->获取需求(*D->父需求节点) : std::nullopt;
+            if (D && 父 && D->活动状态==新需求活动状态::活动 && 父->活动状态==新需求活动状态::活动)
+                throw std::logic_error("active word learning demand not accepted");
+            break;
+        }
+        }
+        项.已完成 = true;
+        return true;
+    }
+
+    bool 推进前置词条归类需求(消息项& 项, const 新任务前置语言输入结果& r) {
+        if (!r.材料 || !r.材料->正式词条准入 || r.材料->普通词条名称缺口组.empty()) return true;
+        if (!项.前置归类目标已建立) {
+            const auto 目标 = 组织词条学习目标(先天特征类型槽::概念名称挂接, 特征取值位置::历史不同值);
+            if (!目标) return false;
+            const auto& 词 = 世界树服务->获取事实服务引用().词服务;
+            for (const auto& 缺口 : r.材料->普通词条名称缺口组) {
+                if (停止源.stop_requested()) return false;
+                const auto F = 词.按类型读取词条特征(缺口.词条, 目标->目标特征类型概念节点);
+                if (F.状态==新词条查询状态::资源失败) return false;
+                if (F.状态==新词条查询状态::未找到) continue;
+                if (!F.特征) throw std::logic_error("admitted word missing its name attachment feature");
+                const auto& 原 = r.原请求;
+                const 新普通需求建立请求 请求{原.父需求节点, 缺口.词条, *目标,
+                    新需求来源类型::任务子目标, 原.父任务节点, {}};
+                const 新前置词条归类需求来源 来源{原.输入, 缺口.词条, 缺口.起始标量, 缺口.结束标量};
+                const auto 出生 = 需求服务->建立或取得前置词条归类需求已核验(请求, 来源);
+                using S = 新需求操作状态;
+                if (出生.状态==S::资源失败 || 出生.状态==S::前提已变化
+                    || 出生.状态==S::目标内容依赖未就绪) return false;
+                if (出生.状态==S::无变化 || 出生.状态==S::需求不存在) continue;
+                if (!出生.需求节点 || (出生.状态!=S::已建立 && 出生.状态!=S::已复用))
+                    throw std::logic_error("formal source word classification demand was rejected");
+                const auto D = *出生.需求节点;
+                const auto 需求 = 需求服务->获取需求(D);
+                if (!需求 || 需求->活动状态!=新需求活动状态::活动) continue;
+                const auto [行, 新加入] = 项.前置归类承接组.try_emplace(D);
+                if (新加入) 行->second.请求 = {取得自动消息编号(), D, 新任务承接依据::自我词条学习子需求};
+            }
+            项.前置归类目标已建立 = true;
+        }
+        bool 已完成 = true;
+        for (auto& [D, 承接] : 项.前置归类承接组)
+            已完成 = 推进词条学习承接(承接) && 已完成;
+        return 已完成;
+    }
+
     std::optional<新自我消息处理结果> 处理前置语言输入材料(消息项& 项) {
         using R=新前置语言读取状态;
         try {
@@ -2765,7 +2931,9 @@ struct 新_自我线程类::实现 final {
             const auto& p=*项.消息.前置语言输入;
             新自我消息处理结果 out;out.原消息=项.消息;
             if(p.自我存在节点!=*初始化结果->自我存在)throw std::logic_error("preunderstanding self identity conflict");
-            if(项.前置已读回结果)return 承接前置分界空缺(项,std::move(out));
+            if(项.前置已读回结果 && 项.前置已读回结果->材料
+                && 项.前置已读回结果->材料->有效分界缺口 && 项.前置筹办传输已释放)
+                return 承接前置分界空缺(项,std::move(out));
             if(!项.前置工作) {
                 if(!项.前置请求) {
                 if(停止源.stop_requested()){out.状态=新自我消息处理状态::停止取消;return out;}
@@ -2791,25 +2959,30 @@ struct 新_自我线程类::实现 final {
                 default:throw std::logic_error("material manager acceptance rejected");
                 }
             }
-            if(项.前置结果.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready)return {};
-            const auto& 原=项.前置结果.get();
-            const auto read=任务管理->读取前置语言输入筹办结果(*项.前置工作);
-            if(!read)return {};
-            if(read->原请求!=*项.前置工作||原.原请求!=read->原请求||!read->前置语言输入||!原.前置语言输入
-                ||*原.前置语言输入!=*read->前置语言输入||read->前置语言输入->原请求!=*项.前置请求)
-                throw std::logic_error("material future and independent result mismatch");
-            const auto& r=*read->前置语言输入;
-            if(r.状态==R::资源失败) {
-                (void)任务管理->确认前置语言输入筹办已读回(*项.前置工作);
-                throw std::logic_error("material resource failure is not a language gap");
+            if (!项.前置已读回结果) {
+                if(项.前置结果.wait_for(std::chrono::milliseconds(0))!=std::future_status::ready)return {};
+                const auto& 原=项.前置结果.get();
+                const auto read=任务管理->读取前置语言输入筹办结果(*项.前置工作);
+                if(!read)return {};
+                if(read->原请求!=*项.前置工作||原.原请求!=read->原请求||!read->前置语言输入||!原.前置语言输入
+                    ||*原.前置语言输入!=*read->前置语言输入||read->前置语言输入->原请求!=*项.前置请求)
+                    throw std::logic_error("material future and independent result mismatch");
+                项.前置已读回结果=*read->前置语言输入;
             }
+            if (!项.前置筹办传输已释放) {
+                const auto 释放=任务管理->确认前置语言输入筹办已读回(*项.前置工作);
+                if(释放!=新任务工作操作状态::已完成&&释放!=新任务工作操作状态::无变化)
+                    throw std::logic_error("material transport release failed");
+                项.前置筹办传输已释放 = true;
+            }
+            const auto& r=*项.前置已读回结果;
+            if(r.状态==R::资源失败)throw std::logic_error("material resource failure is not a language gap");
+            if(停止源.stop_requested()){out.状态=新自我消息处理状态::停止取消;return out;}
+            if(!推进前置词条归类需求(项,r))return {};
+            out.前置语言输入=r;
             const auto ack=接收认知->确认前置输入已筹办(r);
-            // 无论正常、晚到、停用或非成功，已完成future的transport均须释放。
-            const auto released=任务管理->确认前置语言输入筹办已读回(*项.前置工作);
-            if(released!=新任务工作操作状态::已完成&&released!=新任务工作操作状态::无变化)throw std::logic_error("material transport release failed");
             if(ack==接收行动请求交接确认状态::资源失败||ack==接收行动请求交接确认状态::来源冲突)
                 throw std::logic_error("material cognition result acknowledgement failed");
-            out.前置语言输入=r;
             switch(r.状态) {
             case R::已读取:
                 if(!r.材料)throw std::logic_error("read material absent");
@@ -2822,7 +2995,6 @@ struct 新_自我线程类::实现 final {
             }
             if(ack==接收行动请求交接确认状态::输入拒绝)out.状态=新自我消息处理状态::停止取消;
             if(out.状态==新自我消息处理状态::等待材料 && r.材料 && r.材料->有效分界缺口) {
-                项.前置已读回结果=r;
                 return 承接前置分界空缺(项,std::move(out));
             }
             return out;

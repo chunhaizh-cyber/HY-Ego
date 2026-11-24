@@ -29,11 +29,20 @@ struct 新前置有效分界目标 final {
     稳定编码 范围, 特征类型, 特征;
     friend bool operator==(const 新前置有效分界目标&,const 新前置有效分界目标&)=default;
 };
+enum class 新语言知识角色类别 : std::uint8_t;
+struct 新前置普通词条名称缺口 final {
+    稳定编码 词条, 所用知识;
+    新语言知识角色类别 所需类别;
+    std::uint64_t 起始标量, 结束标量;
+    friend bool operator==(const 新前置普通词条名称缺口&,const 新前置普通词条名称缺口&)=default;
+};
 struct 新前置语言输入材料 final {
     新前置语言输入定位 定位;
     std::vector<新前置语言缺口> 缺口组;
     bool 可重入原认知=false;
     std::optional<新前置有效分界目标> 有效分界缺口{};
+    std::optional<稳定编码> 正式词条准入{};
+    std::vector<新前置普通词条名称缺口> 普通词条名称缺口组{};
     friend bool operator==(const 新前置语言输入材料&,const 新前置语言输入材料&)=default;
 };
 enum class 新前置语言读取状态 : std::uint8_t {

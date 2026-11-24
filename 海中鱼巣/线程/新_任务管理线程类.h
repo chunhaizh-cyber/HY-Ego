@@ -52,7 +52,8 @@ enum class 新任务承接依据 : std::uint8_t {
     自我条件子需求 = 5,
     外部服务要求 = 7,
     行动请求 = 8,
-    自我前置分界 = 9
+    自我前置分界 = 9,
+    自我词条学习子需求 = 10
 };
 
 
@@ -430,6 +431,7 @@ public:
     新任务管理操作结果 启动(
         const 新任务管理运行配置& 配置, std::uint64_t 等待毫秒) noexcept;
     新任务承接接收结果 提交消息(const 新任务承接消息& 消息) noexcept;
+    新任务承接接收结果 提交词条学习子需求(const 新任务承接消息& 消息) noexcept;
     新任务管理操作结果 请求停止() noexcept;
     std::stop_token 读取停止令牌() const noexcept;
     新任务管理操作结果 等待停止(std::uint64_t 等待毫秒) noexcept;
@@ -458,6 +460,7 @@ public:
         稳定编码 方法虚拟存在节点) noexcept;
 
 private:
+    新任务承接接收结果 提交承接消息内部(const 新任务承接消息&, bool 词条学习) noexcept;
     friend class 新_自我线程类;
     using 筹办反馈接收函数 = std::function<新任务筹办反馈接收状态(
         const 新任务筹办反馈定位&)>;

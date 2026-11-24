@@ -18,6 +18,7 @@
 #include "业务/服务值结算.本能运行服务.h"
 #include "业务/服务对象.本能运行服务.h"
 #include "业务/词典.本能运行服务.h"
+#include "业务/词条归类.本能运行服务.h"
 #include "业务/词典.语言学习服务.h"
 #include "业务/信息参数.读取服务.h"
 #include "适配/词典.离线数据源.h"
@@ -290,6 +291,20 @@ struct 普通应用上下文 final {
             运行->关闭();
         }
     };
+    struct 词条归类端口清理 final {
+        新_任务类& 任务;
+        std::shared_ptr<词条归类本能运行服务>& 运行;
+        bool 工厂已绑定 = false, 登记已绑定 = false;
+        ~词条归类端口清理() {
+            if (!运行) return;
+            if (工厂已绑定 && !任务.卸载本能词条归类任务参数工厂(*运行))
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"回收词条归类参数工厂", L"最终join后工厂所有者不一致。");
+            if (登记已绑定 && 新_本能函数管理类::关闭词条归类登记端口(*运行) != 新本能函数端口装配状态::已关闭)
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"回收词条归类登记端口", L"最终join后登记端口所有者不一致。");
+            if (!运行->关闭())
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"关闭词条归类运行", L"最终join后仍有未确认的归类回执。");
+        }
+    };
     struct 语言分界端口清理 final {
         std::shared_ptr<语言分界本能运行服务>& 运行;
         bool 已绑定 = false;
@@ -443,6 +458,8 @@ struct 普通应用上下文 final {
     std::shared_ptr<词典本能运行服务> 词典运行;
     std::unique_ptr<词典语言学习服务> 词典语言学习;
     词典端口清理 词典清理;
+    std::shared_ptr<词条归类本能运行服务> 词条归类运行;
+    词条归类端口清理 词条归类清理{任务服务, 词条归类运行};
     std::shared_ptr<进入场景本能运行服务> 进入场景运行;
     std::shared_ptr<语言分界本能运行服务> 语言分界运行;
     语言分界端口清理 语言分界清理{语言分界运行};
@@ -4346,6 +4363,32 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         if (!当前.任务服务.配置本能词典任务参数工厂(*当前.词典运行))
             throw std::logic_error("dictionary task parameter factory binding failed");
         当前.词典清理.工厂已绑定 = true;
+        if (!当前.词条归类运行) {
+            const auto 概念全域 = 当前.世界事实.存在概念服务.建立或取得正式概念身份范围();
+            const auto 挂接类型 = 当前.世界事实.特征概念服务.读取当前先天特征类型槽(先天特征类型槽::概念名称挂接);
+            if (挂接类型.状态==特征概念规则状态::资源失败)
+                throw std::bad_alloc{};
+            if (!概念全域.信息 || !挂接类型.类型根)
+                throw std::logic_error("word classification formal ranges unavailable");
+            当前.词条归类运行 = std::make_shared<词条归类本能运行服务>(
+                新词条归类执行依赖{当前.方法服务, 当前.任务服务, 当前.世界事实.名称关系服务,
+                    当前.世界事实.场景服务, 当前.世界事实.动态服务},
+                新词条归类登记配置{词条范围.信息->节点, *通用存在, 概念全域.信息->节点,
+                    *挂接类型.类型根, *归类概念.信息});
+        }
+        const auto 归类端口 = 新_本能函数管理类::装配词条归类登记端口(当前.词条归类运行);
+        if (归类端口 != 新本能函数端口装配状态::已装配 && 归类端口 != 新本能函数端口装配状态::精确重复)
+            throw std::logic_error("word classification registration port binding failed");
+        当前.词条归类清理.登记已绑定 = true;
+        const auto 归类登记场景 = 当前.方法服务.建立本能登记参数场景({});
+        if (!归类登记场景.参数场景) throw std::logic_error("word classification registration scene unavailable");
+        const auto 归类登记 = 新_本能函数管理类::执行(新本能函数登记名_按归类材料挂接词条, *归类登记场景.参数场景);
+        if (归类登记.结果.状态 != 新本能函数执行状态::已按合同返回
+            || !当前.方法服务.查询本能登记(std::string(新本能函数登记名_按归类材料挂接词条)).方法节点)
+            throw std::logic_error("word classification method registration failed");
+        if (!当前.任务服务.配置本能词条归类任务参数工厂(*当前.词条归类运行))
+            throw std::logic_error("word classification task parameter factory binding failed");
+        当前.词条归类清理.工厂已绑定 = true;
         if (!当前.词典语言学习) {
             const auto 重试毫秒 = (std::min)(当前.配置.资源重试间隔毫秒,
                 static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)() / 2));

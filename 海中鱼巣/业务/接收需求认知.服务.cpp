@@ -830,7 +830,7 @@ struct 接收需求认知服务::实现 final {
     std::optional<稳定编码> 交互者特征类型;
     std::optional<接收分界询问配置> 分界询问配置;
     explicit 实现(认知依赖 d):依赖(d){}
-    新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,std::stop_token);
+    新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,bool,std::stop_token);
     std::optional<新前置有效分界目标> 读取当前分界缺口(const 新前置语言输入材料&) const;
 };
 接收需求认知服务::接收需求认知服务(新_外设世界树类& a,新_自然语言世界树类& b,新_语言类& c,新_词类& e,
@@ -934,7 +934,9 @@ void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexc
         switch(r.状态) {
         case R::已读取:
             w.观察.前置输入等待材料=r.材料;
-            w.前置=r.材料->可重入原认知 ? P::待重入 : P::具名等待;
+            w.前置=P::具名等待;
+            if(r.材料->可重入原认知)
+                w.前置=r.材料->正式词条准入 ? P::待正式词段解释 : P::待重入;
             w.观察.阶段=阶段::前置输入治理等待;w.终结=false;break;
         case R::前提已变化:case R::停止取消:
             w.前置=P::待接纳;w.观察.待交接前置输入=p;w.观察.阶段=阶段::前置输入待治理;break;
@@ -973,7 +975,8 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
     return 新前置有效分界目标{正式.节点,特征.信息->特征类型根,正式.特征节点组[槽]};
 }
 
-新前置语言输入读取结果 接收需求认知服务::实现::读取前置材料内部(const 新前置语言输入定位& p,std::stop_token stop) {
+新前置语言输入读取结果 接收需求认知服务::实现::读取前置材料内部(
+    const 新前置语言输入定位& p,bool 使用正式准入,std::stop_token stop) {
     using R=新前置语言读取状态;
     auto& d=依赖;检查认知停止(stop);
     const auto pre=d.语言.读取前置来源(p.来源,d.外设);
@@ -991,7 +994,32 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
     语言基础统一输入请求 q{p.语言节点,pre.信息->固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
     q.交互上下文=语言图交互上下文{p.来源.接收消息节点,p.来源人类节点,p.自我存在节点,p.现实根场景};
     q.读取静态角色缺口 = true;
+    新前置语言输入材料 out{p};
+    新语言分界调用结果<新语言分界材料信息> 准入读回;
+    const 新语言词条准入定义* 准入定义 = nullptr;
+    if (使用正式准入) {
+        if (!p.正式原文范围) throw std::logic_error("admitted input missing formal range");
+        准入读回 = d.语言.读取当前接收词条准入(*p.正式原文范围, p.前置来源节点);
+        using A = 新语言分界工程状态;
+        switch (准入读回.状态) {
+        case A::已完成: break;
+        case A::资源失败: 资源();
+        case A::未找到:
+        case A::未初始化:
+        case A::材料未就绪:
+        case A::前提已变化: 漂移();
+        default: throw std::logic_error("admitted input read rejected");
+        }
+        if (准入读回.信息)
+            准入定义 = std::get_if<新语言词条准入定义>(&准入读回.信息->定义);
+        if (!准入定义) throw std::logic_error("admitted input missing word attachment");
+        out.正式词条准入 = 准入读回.信息->节点;
+    }
+    bool 句界冲突 = false;
     const auto 解释当前句 = [&](const 解释原文范围* 句段 = nullptr) {
+        const auto 范围 = 句段 ? *句段 : 解释原文范围{
+            static_cast<std::size_t>(p.来源.原文起点), static_cast<std::size_t>(p.来源.原文终点)};
+        if (准入定义) q.正式词段 = 语言图正式词段视图{准入定义, 范围};
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
         const auto 解释诊断号 = 接收解释诊断序号.fetch_add(1, std::memory_order_relaxed) + 1;
         const auto 解释诊断开始 = std::chrono::steady_clock::now();
@@ -1004,13 +1032,18 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
         (void)句段;
 #endif
         if (结果.状态 == 语言场景基础输入状态::读取漂移
-            || (句段 && 结果.状态 == 语言场景基础输入状态::引用不可读)) 漂移();
+            || ((句段 || 准入定义) && 结果.状态 == 语言场景基础输入状态::引用不可读)) 漂移();
         if (结果.状态 == 语言场景基础输入状态::工程未完成 || 结果.状态 == 语言场景基础输入状态::额度不足) 资源();
         if (结果.状态 == 语言场景基础输入状态::内部不一致) throw std::logic_error("input material parse corrupt");
+        if (结果.图解释状态 == 基础语言输入状态::正式词段句界冲突) 句界冲突 = true;
+        for (const auto& 缺口 : 结果.静态角色缺口组) {
+            if (!缺口.正式普通名称未登记 || !缺口.词条) continue;
+            out.普通词条名称缺口组.push_back({*缺口.词条, 缺口.知识节点, 缺口.类别,
+                范围.起始标量 + 缺口.起始标量, 范围.起始标量 + 缺口.结束标量});
+        }
         return 结果;
     };
 
-    新前置语言输入材料 out{p};
     const auto 候选句段 = 投影接收篇章句界(q.固定原文);
     if (!候选句段.empty()) {
         for (const auto& 句段 : 候选句段) {
@@ -1020,7 +1053,10 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
         }
         if (out.缺口组.empty()) out.缺口组.push_back({新前置语言缺口种类::非本入口构式,
             p.来源.原文起点, p.来源.原文终点, {}});
-        out.有效分界缺口=读取当前分界缺口(out);
+        if (!准入定义) out.有效分界缺口=读取当前分界缺口(out);
+        if (准入定义 && (句界冲突
+            || !核对接收篇章句间分隔(pre.信息->固定UTF8原文, 候选句段, *准入定义).empty()))
+            out.普通词条名称缺口组.clear();
         检查认知停止(stop);
         return {R::已读取, std::move(out)};
     }
@@ -1034,6 +1070,10 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
     if (!out.可重入原认知 && (!parsed.静态角色缺口组.empty()
         || parsed.图解释状态 == 基础语言输入状态::多规则待解)) {
         追加句段缺口(parsed, {0, 标量数(q.固定原文)}, out.缺口组);
+    } else if (!out.可重入原认知 && 准入定义) {
+        追加句段缺口(parsed, {0, 标量数(q.固定原文)}, out.缺口组);
+        if (out.缺口组.empty()) out.缺口组.push_back({新前置语言缺口种类::非本入口构式,
+            p.来源.原文起点, p.来源.原文终点, {}});
     } else if (!out.可重入原认知) {
         const auto matched=d.语言.按已登记词条最长匹配(p.语言节点,pre.信息->固定UTF8原文,d.词);
         if(matched.状态==新语言查询状态::资源失败)资源();
@@ -1051,12 +1091,13 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
         }
         out.缺口组.push_back({kind,p.来源.原文起点,p.来源.原文终点,parsed.受阻节点组});
     }
-    out.有效分界缺口=读取当前分界缺口(out);
+    if (!准入定义) out.有效分界缺口=读取当前分界缺口(out);
     检查认知停止(stop);return {R::已读取,std::move(out)};
 }
 新前置语言输入读取结果 接收需求认知服务::读取前置语言输入材料(const 新前置语言输入定位& p,std::stop_token stop) const {
     using R=新前置语言读取状态;using P=实现::前置阶段;
     try {
+        bool 使用正式准入 = false;
         const auto 核工作=[&]() -> R {
             std::lock_guard g(实现_->锁);const auto c=实现_->会话组.find(p.公开宿主会话);
             if(c==实现_->会话组.end()||c->second.封存)return R::来源停用;
@@ -1065,11 +1106,12 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
             const auto i=实现_->进度.find(p.来源.接收消息节点);
             if(i==实现_->进度.end()||i->second.定位!=std::optional{p}||i->second.观察.U||i->second.观察.D)return R::输入不适用;
             if(i->second.前置==P::已停用)return R::来源停用;
+            使用正式准入 = i->second.观察.词条准入.has_value();
             return i->second.前置==P::待筹办 ? R::已读取 : R::前提已变化;
         };
         if(stop.stop_requested())return {R::停止取消,{}};
         const auto before=核工作();if(before!=R::已读取)return {before,{}};
-        auto out=实现_->读取前置材料内部(p,stop);
+        auto out=实现_->读取前置材料内部(p,使用正式准入,stop);
         const auto after=核工作();if(after!=R::已读取)return {after,{}};
         return out;
     }catch(const 推进中断& e){return {e.状态==阶段::停止未完成 ? R::停止取消 : e.状态==阶段::资源延后 ? R::资源失败 : R::前提已变化,{}};}
@@ -1097,7 +1139,7 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
         };
         const auto 前=读取工作状态();
         if(前!=R::已读取)return {前,{}};
-        auto 当前=实现_->读取前置材料内部(p,stop);
+        auto 当前=实现_->读取前置材料内部(p,false,stop);
         const auto 后=读取工作状态();
         return 后==R::已读取 ? std::move(当前) : 新前置语言输入读取结果{后,{}};
     }catch(const 推进中断& e){return {e.状态==阶段::资源延后 ? R::资源失败 : R::前提已变化,{}};}
@@ -1221,7 +1263,11 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             }
         }
         out.待交接前置输入.reset();
-        if (work.定位->正式原文范围) {
+        if (out.词条准入) {
+            out.阶段 = 阶段::前置输入待治理;
+            out.原因 = "按同源正式词段提交当前普通内容词名称缺口";
+            out.待交接前置输入 = work.定位;
+        } else if (work.定位->正式原文范围) {
             步骤 = "采用接收分词候选";
             const auto& p = *work.定位;
             const auto 候选 = d.语言世界.采用接收分词候选(
@@ -1351,6 +1397,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     bool 本次终结=work.终结;
     const bool 正式词段重入 = work.前置 == 实现::前置阶段::待正式词段解释;
     bool 本次取得正式解释 = false;
+    bool 需要普通词条筹办 = false;
     const auto 进入步骤=[&](const char* name){
         步骤=name;
         if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
@@ -1581,6 +1628,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 追加句段缺口(结果, 范围, 证据.缺口组);
                 return 证据;
             };
+            const auto 有普通词条名称缺口 = [](const 语言基础统一输入结果& 结果) {
+                return std::any_of(结果.静态角色缺口组.begin(), 结果.静态角色缺口组.end(),
+                    [](const auto& 缺口) {return 缺口.正式普通名称未登记 && 缺口.词条;});
+            };
             if (!句段组.empty()) {
                 进入步骤("按正式词段逐句解释");
                 std::vector<接收正式词段句解释> 解释组;
@@ -1588,6 +1639,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     检查认知停止(stop);
                     req.固定原文 = 句段.句面原文;
                     const auto 结果 = 解释正式句段(句段.全文范围);
+                    需要普通词条筹办 |= 有普通词条名称缺口(结果);
                     解释组.push_back(记录正式句段(结果, 句段.全文范围));
                 }
                 for (const auto& 冲突 : 核对接收篇章句间分隔(固定来源.固定UTF8原文, 句段组, *准入定义)) {
@@ -1596,6 +1648,9 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                         {{新前置语言缺口种类::语言规则不足, 冲突.起始标量, 冲突.结束标量, {}}}});
                 }
                 std::ranges::sort(解释组, {}, &接收正式词段句解释::起始标量);
+                if (std::ranges::any_of(解释组, [](const auto& 证据) {
+                    return 证据.图状态 == 基础语言输入状态::正式词段句界冲突;
+                })) 需要普通词条筹办 = false;
                 out.正式词段解释 = std::move(解释组);
                 out.词条准入->准入材料 = 准入读回.信息->节点;
                 本次取得正式解释 = true;
@@ -1618,6 +1673,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 out.正式词段解释 = {记录正式句段(parsed, 整句)};
                 out.词条准入->准入材料 = 准入读回.信息->节点;
                 本次取得正式解释 = true;
+                需要普通词条筹办 = 有普通词条名称缺口(parsed);
             }
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
             记录接收解释调用(解释诊断号, m.消息节点, 解释诊断开始, &parsed);
@@ -1730,6 +1786,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     }
     catch(const std::bad_alloc&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进分配资源未完成";}
     catch(const std::length_error&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进材料资源未完成";}
+    if (本次取得正式解释 && 需要普通词条筹办 && !out.U && !out.D && work.定位 && !stop.stop_requested()) {
+        work.前置 = 实现::前置阶段::待接纳;
+        out.阶段 = 阶段::前置输入待治理;
+        out.原因 = "同源正式词段解释取得普通内容词名称缺口，等待筹办确认";
+        out.待交接前置输入 = work.定位;
+        本次终结 = false;
+    }
     const bool 有新正式观察 = 本次取得正式解释
         || (out.U && out.U != work.观察.U) || (out.D && out.D != work.观察.D)
         || (本次终结 && out.D && out.阶段 != work.观察.阶段);
