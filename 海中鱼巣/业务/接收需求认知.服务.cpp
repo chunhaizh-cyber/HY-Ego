@@ -1914,6 +1914,15 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
                     throw std::logic_error("received language scene material was not published");
+                if (std::ranges::any_of(保存.信息->内容.句段组, [](const auto& 句) {
+                        return 句.主体关系 && 句.主体关系->指代概念.has_value();
+                    })) {
+                    const auto 指代 = d.语言.建立接收待消歧指代实例(k, d.语言世界, d.外设);
+                    if (指代.状态 == S::资源失败) 资源();
+                    if (指代.状态 == S::前提已变化 || 指代.状态 == S::未找到) 漂移();
+                    if (指代.状态 != S::已完成)
+                        throw std::logic_error("received reference instance could not be published");
+                }
                 if (const auto& 采用=保存.信息->篇章采用) {
                     if (!out.篇章成文 || out.篇章成文->采用!=采用->节点)
                         out.篇章成文=接收篇章成文观察{采用->节点,接收篇章成文状态::待成文};

@@ -94,12 +94,15 @@ public:
     稳定编码 场景() const noexcept { return 场景_; }
     std::optional<稳定编码> 记录() const noexcept { return 记录_; }
     const 基础只读预期& 绑定预期() const noexcept { return 预期_; }
+    const std::vector<稳定编码>& 指代实例组() const noexcept { return 指代实例组_; }
 
 private:
     friend class 新_场景类;
     稳定编码 场景_{};
     std::optional<稳定编码> 记录_;
     基础只读预期 预期_;
+    std::vector<稳定编码> 指代实例组_;
+    基础只读字段集合预期 指代成员预期_;
 };
 struct 新接收语言解释场景结果 final {
     新来源子场景状态 状态 = 新来源子场景状态::输入不合法;
@@ -593,6 +596,8 @@ private:
     新接收语言解释场景结果 读取接收语言解释场景(
         const 新来源子场景结果&) const;
     bool 合并接收语言解释首次挂接(const 新接收语言解释场景绑定&,
+        基础节点组追加请求&, 基础组内节点引用) const;
+    bool 合并接收指代实例挂接(const 新接收语言解释场景绑定&,
         基础节点组追加请求&, 基础组内节点引用) const;
 public:
     // 每轮写入前取得；F准备期间只消费本轮宿主材料，不再次读取场景。
