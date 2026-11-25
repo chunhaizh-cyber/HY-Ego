@@ -1601,12 +1601,24 @@ public:
                         + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
                         + ",\"nodes\":" + 相关节点 + "]}";
                 }
+                std::string 主体关系 = "null";
+                if (句.主体关系) {
+                    const auto& 关系 = *句.主体关系;
+                    主体关系 = "{\"start\":" + 控制计数(关系.起始标量)
+                        + ",\"end\":" + 控制计数(关系.结束标量)
+                        + ",\"targetStart\":" + 控制计数(关系.对象起始标量)
+                        + ",\"targetEnd\":" + 控制计数(关系.对象结束标量)
+                        + ",\"knowledge\":" + 控制编码(关系.所用构式)
+                        + ",\"pronounConcept\":" + 控制编码(关系.指代概念)
+                        + ",\"confirmed\":" + 控制布尔(关系.已确定) + "}";
+                }
                 if (句组.size() != 1) 句组 += ',';
                 句组 += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
                     + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
                     + ",\"graphStatus\":" + (句.图状态 ? 控制计数(static_cast<std::uint64_t>(*句.图状态)) : "null")
                     + ",\"construction\":" + (句.构式 ? 控制计数(static_cast<std::uint64_t>(*句.构式)) : "null")
                     + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
+                    + ",\"subjectReference\":" + 主体关系
                     + ",\"gaps\":" + 缺口组 + "]}";
             }
             return 句组 + "]";

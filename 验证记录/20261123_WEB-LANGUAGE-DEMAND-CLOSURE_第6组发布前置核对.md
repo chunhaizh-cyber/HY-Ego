@@ -968,3 +968,15 @@ T51584 的工作 300 经同一候选重新完成条件筹办。17:09:13，管理
 按用户裁决和统一设计 §10.129，普通接收使用已有分句和只读解释，未解材料留在原消息工作中重读。对照控制面独立读回同一 M 的前置来源和语言场景。原话 M31540／场景 37928 与换名 M38240／场景 38828 各有两段 [0,10)、[10,18)，两次控制采集身份一致。现有静态规则定位归类、颜色描述的角色及原文缺口，尚未形成正式含义或跨句绑定。已登记招呼「你好」M39015 在场景 39352 返回已保存场景信息及唯一招呼构式。网页最终只有三条用户原话，未出现分界问题，原消息控制读回无 D，运行日志按这些 M 核对无分界任务承接。Release x64 编译零错误、零警告，核同 259 项输入和 10 项词典文件。普通应用、Edge 验收驱动及监听正常回收，应用与脚本均退出 0。此前独立候选的「你好。」超时，其有效 S16 种子仅包含「你好」；并未把带标点例算作已采用。日志增量来自既有另一方法的模拟未形成正式结果。 [构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e1-passive-language-release-20261125-195642/release-result.json) · [原句](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\56e1-passive-language-release-20261125-195642\candidate-web-20261125-201341/original-control.json) · [换名复验](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\56e1-passive-language-release-20261125-195642\candidate-web-20261125-201341/renamed-independent-reread.json) · [招呼读回](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\56e1-passive-language-release-20261125-195642\candidate-web-20261125-201341/greeting-control.json) · [正式页面消息](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\56e1-passive-language-release-20261125-195642\candidate-web-20261125-201341/final-page-messages.json) · [退出记录](D:\TEMP\海中鱼巣\WEB-LANGUAGE-DEMAND-CLOSURE\56e1-passive-language-release-20261125-195642\candidate-web-20261125-201341/exit.json)
 
 用户指定后续网页调试使用 Google Chrome，验收脚本已切换为读取已登记的 Chrome 路径并记录实际浏览器产品版本。上面两次候选属于切换前的 Edge 运行。随后在发布源码对应的同一二进制上使用 Chrome 复验。
+
+#### 56E2 普通篇章的场景内称名和指向观察
+
+按 [计划 v2.176 §56E2](../计划/20261114_DICT-TRUSTED-LEARNING_可信词典到词条与概念学习实施计划_v0.1.md#56e2-普通篇章的场景内称名和指向) 与主设计 §10.130 施工。普通逐句解释使用可唯一读出的陈述构式角色，定位前文称名和第三方指代表达，控制面按同一消息和来源语言场景读回原文范围、构式、指代概念及目标范围。未登记的跨度只作为称名候选，候选指向保留原有对象缺口。前文多对象或不能判断时仍为未决。正式篇章采用和现实事实写入均未进入本片。
+
+实际 Release/x64 编译链接退出 0，0 警告、0 错误，构建前后 259 份受核源码及工程输入散列一致。产物 SHA256 为 `BBDFD68EC168004D0D03C0A837027D2D0E7757E651F02A4073DBD59BCD24C988`。本片没有运行程序或测试，原句的实际共指、正式保存、整篇回读及后续验收均未取得本版证据。[编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e2-scene-reference-final-20261125-213910/release.log) · [构建摘要](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e2-scene-reference-final-20261125-213910/result.json)
+
+代码知识变更清单
+
+- `解释单句含义图` 的唯一静态角色不足结果带上其含义操作。其余候选、正式端点请求和判定不变。
+- `接收篇章主体观察::记录` 及私有读取函数位于接收认知服务实现，仅为普通逐句观察提供同场景的主体引用。读取已有名称所有者视图，未新增事实写入。原推进函数在解释、相同来源场景确认和观察去重中使用该材料。
+- 普通应用控制面句段输出增加 `subjectReference` 及其 `confirmed` 标志。正常消息、场景建立、需求交接和退出合同沿用现有入口。未新增或退出调试切片。上述调用和观察 DTO 待按本记录所属发布提交复核知识条目。
