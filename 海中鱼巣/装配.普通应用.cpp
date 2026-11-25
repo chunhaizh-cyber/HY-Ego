@@ -3875,60 +3875,6 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         观察阶段(L"世界与第一权限人", 1);
 #endif
         初始化普通应用概念名称(当前, 结果, 标准文本, false);
-        {
-            auto& 世界 = 当前.世界事实;
-            auto& 特征概念 = 世界.特征概念服务;
-            const auto 单位身份 = 特征概念.获取先天特征概念();
-            if (!单位身份 || !当前.中文语言节点)
-                throw std::logic_error("temperature unit context unavailable");
-            const auto 中文 = *当前.中文语言节点;
-            const auto 摄氏度 = 单位身份->摄氏度单位;
-            const auto 单位词 = 世界.词服务.建立或取得词条(
-                {中文, 严格UTF8字节精确规范化合同节点, "摄氏度", std::nullopt});
-            if (!单位词.词条节点 || 世界.语言服务.登记计量单位词条(
-                    中文, 摄氏度, *单位词.词条节点, 特征概念, 世界.词服务) != 新语言知识状态::已完成)
-                throw std::logic_error("temperature unit word publication failed");
-            const auto 单位正向 = 世界.语言服务.按词条读取计量单位(中文, *单位词.词条节点);
-            const auto 单位反向 = 世界.语言服务.按计量单位读取词条(中文, 摄氏度);
-            if (单位正向.匹配节点 != 摄氏度 || 单位反向.匹配节点 != 单位词.词条节点)
-                throw std::logic_error("temperature unit word readback differs");
-
-            const auto 温度 = 世界.特征服务.建立或取得先天温度特征类型();
-            if (!温度.信息) throw std::logic_error("temperature feature type unavailable");
-            const auto FT = 温度.信息->节点;
-            using S = 特征概念规则状态;
-            特征概念编码操作结果 概念;
-            do {
-                const auto 已关联 = 特征概念.读取正式I64类型完整域(FT);
-                if (已关联.状态 != S::已完成 && 已关联.状态 != S::值不存在)
-                    throw std::logic_error("temperature feature concept reference unavailable");
-                概念 = 已关联.概念节点
-                    ? 已关联
-                    : 特征概念.建立或取得特征概念强类型(温度.信息->完整域, 世界.特征值服务);
-                if (概念.概念节点)
-                    概念 = 特征概念.关联正式I64特征类型(*概念.概念节点, FT, 世界.特征服务);
-            } while (概念.状态 == S::前提已变化);
-            if (!概念.概念节点) throw std::logic_error("temperature feature concept publication failed");
-            const auto C = *概念.概念节点;
-            const auto 温度词 = 世界.词服务.建立或取得词条(
-                {中文, 严格UTF8字节精确规范化合同节点, "温度", std::nullopt});
-            if (!温度词.词条节点 || !世界.名称关系服务.建立或取得名称关系(C, *温度词.词条节点).名称关系节点)
-                throw std::logic_error("temperature feature concept name publication failed");
-
-            const auto 类型读回 = 世界.特征服务.读取正式I64特征类型(FT);
-            const auto 概念读回 = 特征概念.读取正式I64类型完整域(FT);
-            if (!类型读回.信息 || 类型读回.信息->规范来源 != 温度.信息->规范来源
-                || 类型读回.信息->完整域 != 温度.信息->完整域 || 概念读回.概念节点 != C)
-                throw std::logic_error("temperature feature definition readback differs");
-            try {
-                const auto& 域 = std::get<std::vector<特征概念I64闭区间>>(类型读回.信息->完整域.值域).front();
-                (void)记录运行日志(L"普通应用", L"温度先天特征类型读回",
-                    L"FT=" + std::to_wstring(FT.值) + L"；C=" + std::to_wstring(C.值)
-                    + L"；来源=" + std::to_wstring(类型读回.信息->规范来源.值)
-                    + L"；单位=" + std::to_wstring(摄氏度.值) + L"；单位W=" + std::to_wstring(单位词.词条节点->值)
-                    + L"；下界=" + std::to_wstring(域.下界) + L"；上界=" + std::to_wstring(域.上界));
-            } catch (...) {}
-        }
 #if HY_EGO_STARTUP_TIMING
         观察阶段(L"基础概念名称", 1);
 #endif
