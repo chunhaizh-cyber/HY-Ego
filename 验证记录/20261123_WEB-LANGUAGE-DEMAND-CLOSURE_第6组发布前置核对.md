@@ -890,3 +890,21 @@ PID 40296 资源释放后，56D4 候选按原排队运行，限定特征类型�
 16:46:00，同一诊断进程选定补问任务 T44700 的配对 25396／46749。T44700 服务的 D44343 引用 D43422 的单个「需求目标存在」内容栏。16:48:38 和 16:52:38 的非侵入样本均落在自我线程的执行方向核验，预读全量冲突候选时经新增成员来源等待任务锁。16:53 的参数样本仍指向十六进制 AE9C（44700）。分别取样的任务锁持有者为工作线程 6288 和控制采集线程 AEA0。16:53:59 正式方向回执取得同一采用、零预计变化、完整结果获取方案，执行请求已接收。 [补问任务与单栏定位](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/passive-leaf-44700-control.json) · [前次执行方向栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-condition-thread-sample-164837.txt) · [后次执行方向栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-condition-thread-sample-165238.txt) · [任务参数与锁](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/direction-lock-owner-1654.txt) · [持锁样本一](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/direction-lock-holder-1655.txt) · [持锁样本二](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/direction-lock-holder-resample.txt) · [选择及方向回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/passive-leaf-44700-direction-result.txt)
 
 同一窗口内，T51584 的工作 183 在 16:46:01 完成筹办，方法 24642 此时没有条件结果配对，选择为「无适用结果」。管理线程要求自我处理反馈，其间自我仍在处理 T44700 的方向核验。先消除补问方向中实际不消费的冲突预读，继续观察 T51584 自我处理和学习后的回执。此处没有确定上一个普通发布轮在配对发布后回转的原因。
+
+
+#### 56C26 第24项发布与原诊断继续
+
+第24项随 23e70d445 发布，正式补问叶子的执行方向只跳过该路径未使用的冲突预读。实际 Release x64 编译 0 警告、0 错误。249 项构建输入均与发布提交相符，10 项运行词典文件与既有正式批次摘要相符。普通启动以及实际网页复测排在原诊断 PID 3152、驱动与监听全部释放之后。 [发布输入和产物](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-24-passive-leaf-direction-release-20261125-170018/published-inputs.json) · [词典摘要](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-24-passive-leaf-direction-release-20261125-170018/runtime-dictionary-verified.json) · [串行接续](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-24-passive-leaf-direction-release-20261125-170018/release-run-queue.json)
+
+原诊断 17:00:17 消费 T51584 的首次筹办并登记等待，查词典方法 24642 随后完成模拟学习。控制序列 161 读回同一词条 W47371、同一材料任务 T51584，正式目录已有三条配对。执行实例及词典结果仍沿同一任务与工作回执取证。 [模拟学习与任务里程碑](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/same-word-dictionary-milestones.json)
+
+
+17:04:32，T51584 的等待复核形成「允许重新筹办」（回执枚举值 1）。由同一任务继续核对管理线程接受决议、正式重新筹办和方法采用。 [同任务复核日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-child-51584-learning-wake.txt)
+
+
+17:06:10，重筹办后派出 T51584 的检查工作 282，工作线程返回「任务状态已变化」，未向自我交付反馈。同 T 回到查找方法，工作 289 重新取得同一候选 53484。17:07:45，工作 296 在执行组织增补后继续筹办。17:07:48，工作线程在场景批核同阶段 1「场景批分支有效」返回变化，随后管理线程记录需要反馈为 0。本轮同一个词典任务在已有三条配对后发生了工作线程内的回转。第23项拟复用的自我选择回执在这次失败中尚未形成，后续继续定位批内具体无效来源。 [工作 282、289、296 与场景批证据](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-child-51584-post-learning-reentry.txt)
+
+
+#### 56D7 词典三配对只有一条条件具备
+
+T51584 的工作 300 经同一候选重新完成条件筹办。17:09:13，管理线程正式结果为「匹配不唯一」。三条配对的结果保证均适用于本材料需求。配对 54967 的 10 条条件全部具备。配对 55741 与 56693 各有 1 条词条身份条件明确不具备，其余条件具备。来源方法 24642 的三个配对并列于结果筛选后，未按各自条件排除两个已证不具备的方案。此为同一 T 的实际选择阻断。工作 296 的场景批失败已由同任务工作 300 越过。 [选择与逐条条件证据](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-child-51584-three-pair-selection.txt)
