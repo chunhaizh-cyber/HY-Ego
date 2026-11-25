@@ -374,6 +374,14 @@ struct 适用范围I64子类型信息 final {
     稳定编码 正式特征类型, 整树根;
 };
 
+struct 适用范围I64值域修订请求 final {
+    适用范围I64子类型信息 预期;
+    特征概念值域 预期值域;
+    稳定编码 新定义来源;
+    std::optional<稳定编码> 单位;
+    特征概念值域 新值域;
+};
+
 struct 特征概念查询操作结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::vector<稳定编码> 概念节点组;
@@ -659,6 +667,8 @@ public:
         稳定编码 概念, 稳定编码 直接上位, 稳定编码 适用存在概念, 稳定编码 定义来源,
         const 特征概念值域&, const 新_特征值类&, const 新_存在类&,
         std::span<const 稳定编码> 候选持有者 = {}) noexcept;
+    特征概念编码操作结果 修订适用范围I64子类型值域(
+        const 适用范围I64值域修订请求&, const 新_特征值类&) noexcept;
     // 只定位实例显式采用的最近限定类型；无限定时为整树根。
     std::optional<稳定编码> 读取实例所属特征类型(稳定编码 概念) const noexcept;
     bool 是限定I64子类型(稳定编码 概念) const noexcept;
@@ -816,7 +826,8 @@ private:
 
     稳定编码 建立特征概念内部(const 特征概念定义&, const 新_特征值类&,
         std::optional<稳定编码>);
-    bool 更新特征概念值域内部(稳定编码, const 特征概念值域&, const 新_特征值类&);
+    bool 更新特征概念值域内部(稳定编码, const 特征概念值域&, const 新_特征值类&,
+        const 适用范围I64值域修订请求* = nullptr);
     std::vector<稳定编码> 查询特征概念内部(const 特征概念定义&) const;
     friend class 概念_名称关系类;
     基础片段封存结果 封存建立名称参与(
