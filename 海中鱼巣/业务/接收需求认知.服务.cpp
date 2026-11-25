@@ -7,6 +7,7 @@
 #include "表达.含义网投影.h"
 #include "表达.基础语言.h"
 #include "转换.语言场景共同.h"
+#include "查询.词典候选.h"
 #include "../领域/新_自然语言世界树类.h"
 #include "../领域/新_场景类.h"
 #include "../领域/新_需求类.h"
@@ -358,6 +359,80 @@ struct 认知依赖 final {
     概念_特征类& 特征概念;概念_二次特征类& 二次概念;新_存在类& 存在;
     新_特征值类& 特征值;新_特征类& 特征;新_场景类& 现实场景;新_需求类& 需求;
 };
+bool 取得欠缺的可信词头(认知依赖& d, const std::shared_ptr<const 离线词典数据源>& 词典,
+    稳定编码 语言, const std::string& 原句, const 语言基础统一输入结果& 解释, std::stop_token stop) {
+    if (!词典 || !解释.静态结构 || 解释.静态角色缺口组.empty()) return false;
+    using K = 新语言知识角色种类;
+    const auto 可取词头 = [](const 语言图静态角色缺口& 缺口) {
+        return !缺口.词条 && (缺口.种类 == K::概念引用 || 缺口.种类 == K::特征类型引用);
+    };
+    if (!std::ranges::any_of(解释.静态角色缺口组, 可取词头)) return false;
+
+    const auto 语言信息 = d.语言.获取语言(语言);
+    if (语言信息.状态 == 新语言查询状态::资源失败) 资源();
+    if (语言信息.状态 != 新语言查询状态::已找到 || !语言信息.信息) 漂移();
+    if (语言信息.信息->登记键 != "zh-CN") return false;
+    const auto 批次 = 词典->读取可信批次标识();
+    if (!批次 || 批次->empty()) return false;
+    const auto 原文 = 语言场景转换内部::解码语言场景原文(原句);
+    if (!原文) throw std::logic_error("headword source has invalid UTF8");
+
+    using W = 新词条查询状态;
+    using B = 新词条建立状态;
+    using S = 新语言分界工程状态;
+    bool 应重读 = false;
+    std::set<std::string> 已处理词面;
+    const 词典查询服务 查询{词典};
+    for (const auto& 缺口 : 解释.静态角色缺口组) {
+        检查认知停止(stop);
+        if (!可取词头(缺口)) continue;
+        const auto 词面 = 语言场景转换内部::读取语言场景原文范围(
+            *原文, {缺口.起始标量, 缺口.结束标量});
+        if (!已处理词面.insert(词面).second) continue;
+        const auto 已有 = d.词.按规范化词面查询(语言, 严格UTF8字节精确规范化合同节点, 词面);
+        if (已有.状态 == W::资源失败) 资源();
+        if (已有.状态 == W::已找到 && 已有.信息) { 应重读 = true; continue; }
+        if (已有.状态 != W::未找到) throw std::logic_error("headword vocabulary lookup failed");
+
+        const auto 规范 = 词典->繁简规范化(词面);
+        if (!规范 || *规范 != 词面) continue;
+        const auto 命中 = 查询.查询词义({"zh", 词面});
+        if (命中.状态 == 词典操作状态::未命中 || 命中.状态 == 词典操作状态::未配置) continue;
+        if (命中.状态 == 词典操作状态::资源失败) 资源();
+        if (命中.状态 == 词典操作状态::读取失败)
+            throw 推进中断{阶段::资源延后, "可信词典词头读取失败"};
+        if (命中.状态 != 词典操作状态::已完成 || 命中.义项组.empty() || 命中.包标识.empty())
+            throw std::logic_error("trusted headword evidence unreadable");
+
+        新可信词头来源定义 依据{语言, 严格UTF8字节精确规范化合同节点, *批次,
+            命中.包标识, "zh", 词面, {}};
+        for (const auto& 行 : 命中.义项组) {
+            if (行.词头语种 != 依据.语种 || 行.词面 != 词面 || 行.记录键.empty())
+                throw std::logic_error("trusted headword record differs from exact lookup");
+            依据.记录键组.push_back(行.记录键);
+        }
+        检查认知停止(stop);
+        const auto 来源 = d.语言.建立或取得可信词头来源(std::move(依据));
+        if (来源.状态 == S::资源失败) 资源();
+        if (来源.状态 == S::前提已变化) 漂移();
+        if (来源.状态 == S::输入拒绝) continue;
+        if (来源.状态 != S::已完成 || !来源.信息) throw std::logic_error("trusted headword source missing");
+        const auto 登记 = d.词.建立或取得词条({语言, 严格UTF8字节精确规范化合同节点, 词面, 来源.信息->节点});
+        if (登记.状态 == B::资源失败) 资源();
+        if (登记.状态 == B::依赖已变化 || 登记.状态 == B::依赖不存在) 漂移();
+        if ((登记.状态 != B::已建立 && 登记.状态 != B::已复用) || !登记.词条节点)
+            throw std::logic_error("trusted headword admission failed");
+        const auto 读回 = d.词.按规范化词面查询(语言, 严格UTF8字节精确规范化合同节点, 词面);
+        if (读回.状态 == W::资源失败) 资源();
+        if (读回.状态 == W::未找到) 漂移();
+        if (读回.状态 != W::已找到 || !读回.信息 || 读回.信息->节点 != *登记.词条节点
+            || (登记.状态 == B::已建立 && 读回.信息->创建来源节点 != 来源.信息->节点))
+            throw std::logic_error("trusted headword admission readback differs");
+        应重读 = true;
+    }
+    return 应重读;
+}
+
 struct 专名现场项 final {
     稳定编码 C;解释原文范围 范围;
     std::optional<存在概念信息> 概念;
@@ -1191,6 +1266,7 @@ struct 接收需求认知服务::实现 final {
     std::optional<稳定编码> 上次;
     std::optional<稳定编码> 交互者特征类型;
     std::optional<接收分界询问配置> 分界询问配置;
+    std::shared_ptr<const 离线词典数据源> 可信词头来源;
     explicit 实现(认知依赖 d):依赖(d){}
     新前置语言输入读取结果 读取前置材料内部(const 新前置语言输入定位&,bool,std::stop_token);
     std::optional<新前置有效分界目标> 读取当前分界缺口(const 新前置语言输入材料&) const;
@@ -1210,6 +1286,14 @@ bool 接收需求认知服务::装配被动分界询问(接收分界询问配置
     实现_->分界询问配置=std::move(配置);
     return true;
 }
+bool 接收需求认知服务::装配可信词头来源(std::shared_ptr<const 离线词典数据源> 来源) {
+    if (!来源 || !来源->读取可信批次标识()) return false;
+    std::lock_guard 锁(实现_->锁);
+    if (实现_->可信词头来源) return 实现_->可信词头来源 == 来源;
+    实现_->可信词头来源 = std::move(来源);
+    return true;
+}
+
 接收认知语境接纳状态 接收需求认知服务::登记会话语境(const 接收需求认知会话语境& c){
     using S=接收认知语境接纳状态;
     if(c.公开宿主会话.empty()||!有效(c.现实根)||!有效(c.语言)||(c.已绑定人类&&!有效(*c.已绑定人类))
@@ -1954,13 +2038,23 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             req.交互上下文=语言图交互上下文{m.消息节点,speaker,*context.已绑定自我,context.现实根};
             const auto 句段组 = 投影接收篇章句界(req.固定原文);
             req.读取静态角色缺口 = true;
-            const auto 解释当前句 = [&] {
+            const auto 词头来源 = [&] {
+                std::lock_guard 锁(impl.锁);
+                return impl.可信词头来源;
+            }();
+            const auto 读当前句 = [&] {
                 auto 结果 = 只读解释单句基础语言(req,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
                 using I = 语言场景基础输入状态;
                 if (结果.状态 == I::读取漂移 || 结果.状态 == I::引用不可读) 漂移();
                 if (结果.状态 == I::工程未完成 || 结果.状态 == I::额度不足) 资源();
                 if (结果.状态 == I::内部不一致) throw std::logic_error("received sentence interpretation inconsistent");
                 return 结果;
+            };
+            const auto 解释当前句 = [&] {
+                auto 初读 = 读当前句();
+                if (!正式词段重入 && 取得欠缺的可信词头(d, 词头来源, req.语言节点, req.固定原文, 初读, stop))
+                    return 读当前句();
+                return 初读;
             };
             const auto 确认语言场景 = [&] {
                 检查认知停止(stop);

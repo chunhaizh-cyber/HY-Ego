@@ -87,6 +87,8 @@ struct 接收需求认知观察 final {
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。
+class 离线词典数据源;
+
 class 接收需求认知服务 final : public 新前置语言输入读取接口 {
 public:
     接收需求认知服务(新_外设世界树类&,新_自然语言世界树类&,
@@ -95,6 +97,7 @@ public:
         新_特征值类&,新_特征类&,新_场景类&,新_需求类&);
     ~接收需求认知服务();
     bool 装配被动分界询问(接收分界询问配置);
+    bool 装配可信词头来源(std::shared_ptr<const 离线词典数据源>);
     接收认知语境接纳状态 登记会话语境(const 接收需求认知会话语境&);
     void 封存会话(std::string_view) noexcept;
     std::optional<接收需求认知观察> 推进一次(std::stop_token);
