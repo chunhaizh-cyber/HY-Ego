@@ -6524,23 +6524,32 @@ bool 提交前提已变化(基础节点组追加状态 s) {
     catch (...) { return 非成功(状态::内部错误); }
 }
 
+namespace {
+std::optional<新方法信息> 读取当前方法信息(稳定编码 方法节点,
+    const 概念_特征类& 特征概念服务, const 新方法治理对象读取接口& 治理读取,
+    const 概念_存在类& 存在概念服务) {
+    // 方法节点仍物理存在而一次读不成完整方法：多次基础读取之间遇并发发布（撕裂读取）。每次重读前释放
+    // 方法锁，使同锁发布者得以完成（调用方已持外层递归锁时不会让出外层锁）；有限次数后仍不可读则如实返回空。
+    std::optional<新方法信息> 方法;
+    for (int 重读 = 0; 重读 < 16; ++重读) {
+        if (重读) std::this_thread::yield();
+        std::lock_guard 锁(新方法互斥);
+        if (!结构已分配() || !节点类型为(新方法组织根节点, 方法组织根类型)
+            || !全局基础数据集.查询目标关系(新方法组织根节点, 基础外部关系类型::父子).empty())
+            return std::nullopt;
+        方法 = 读取方法信息本体(方法节点, 特征概念服务, 治理读取, 存在概念服务, false, true);
+        // 不是正式方法（类型或归属不符）属如实结果，不重读。
+        if (方法 || !有效(方法节点) || !全局基础数据集.查询节点(方法节点)
+            || !节点类型为(方法节点, 方法节点类型) || !方法属于根(方法节点)) break;
+    }
+    return 方法;
+}
+} // namespace
+
 std::optional<新方法信息> 新_方法类::获取方法(
     稳定编码 方法节点) const noexcept {
     try {
-        // 方法节点仍物理存在而一次读不成完整方法：多次基础读取之间遇并发发布（撕裂读取）。每次重读前释放
-        // 方法锁，使同锁发布者得以完成（调用方已持外层递归锁时不会让出外层锁）；有限次数后仍不可读则如实返回空。
-        std::optional<新方法信息> 方法;
-        for (int 重读 = 0; 重读 < 16; ++重读) {
-            if (重读) std::this_thread::yield();
-            std::lock_guard 锁(新方法互斥);
-            if (!结构已分配() || !节点类型为(新方法组织根节点, 方法组织根类型)
-                || !全局基础数据集.查询目标关系(新方法组织根节点, 基础外部关系类型::父子).empty())
-                return std::nullopt;
-            方法 = 读取方法信息本体(方法节点, 特征概念服务_, *this, 存在概念服务_, false, true);
-            // 不是正式方法（类型或归属不符）属如实结果，不重读。
-            if (方法 || !有效(方法节点) || !全局基础数据集.查询节点(方法节点)
-                || !节点类型为(方法节点, 方法节点类型) || !方法属于根(方法节点)) break;
-        }
+        auto 方法 = 读取当前方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
 #ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
         if (!方法 && 有效(方法节点) && 节点类型为(方法节点, 方法节点类型) && 方法属于根(方法节点))
             try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法", L"读不成方法",
@@ -9340,6 +9349,40 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
 新存在概念匹配结果 新_方法类::比较模拟存在匹配材料(const 新存在概念匹配材料& m) const noexcept {
     return 存在服务_.比较存在概念匹配材料(m);
 }
+namespace {
+新方法执行分支读取结果 投影执行分支必要条件(
+    const 新方法信息& 方法, std::optional<稳定编码> B) {
+    新方法执行分支读取结果 out;
+    if(方法.执行分支组.empty()) {
+        if(B){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
+    } else {
+        if(!B){out.状态=新方法执行分支读取状态::分支未指定;return out;}
+        const auto it=std::find_if(方法.执行分支组.begin(),方法.执行分支组.end(),[&](const auto& b){return b.节点==*B;});
+        if(it==方法.执行分支组.end()){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
+        out.分支=*it;
+    }
+    out.有效必要条件.条件.关系规则=新方法项关系规则::全部成立;
+    // 规格隐含的存在范围只投影到调用期视图，不回写Vm或历史C/R。
+    for(const auto& p:方法.参数规格组)if(p.有序规格
+        &&是特征持有参数(p.有序规格->信息类型)) {
+        新方法条件项定义 c;c.参数序号=p.有序规格->序号;
+        c.存在概念节点=p.有序规格->范围概念节点;
+        out.有效必要条件.条件.条件项组.push_back(std::move(c));
+    }
+    if(方法.初始必要条件) {
+        合入必要条件(out.有效必要条件,方法.初始必要条件->条件);
+        for(const auto& r:方法.初始必要条件->场景事实限定组)
+            if(std::find(out.有效必要条件.场景事实限定组.begin(),out.有效必要条件.场景事实限定组.end(),r)
+                ==out.有效必要条件.场景事实限定组.end())out.有效必要条件.场景事实限定组.push_back(r);
+    }
+    if(out.分支)合入必要条件(out.有效必要条件,out.分支->定义.必要条件);
+    for(const auto& r:方法.初始模拟关系组)
+        if(std::find(out.有效必要条件.条件.参数关系组.begin(),out.有效必要条件.条件.参数关系组.end(),r)==out.有效必要条件.条件.参数关系组.end())out.有效必要条件.条件.参数关系组.push_back(r);
+    out.状态=新方法执行分支读取状态::已读取;
+    return out;
+}
+} // namespace
+
 新方法执行分支读取结果 新_方法类::读取执行分支必要条件(稳定编码 M,std::optional<稳定编码> B) const noexcept {
     for (;;) {
     try {
@@ -9348,32 +9391,7 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
         if(!节点类型为(M,方法节点类型))return out;
         const auto m=读取方法信息(M,特征概念服务_,*this,存在概念服务_);
         if(!m)throw std::runtime_error("method branch structure unreadable");
-        if(m->执行分支组.empty()) {
-            if(B){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
-        } else {
-            if(!B){out.状态=新方法执行分支读取状态::分支未指定;return out;}
-            const auto it=std::find_if(m->执行分支组.begin(),m->执行分支组.end(),[&](const auto& b){return b.节点==*B;});
-            if(it==m->执行分支组.end()){out.状态=新方法执行分支读取状态::分支不属于方法;return out;}
-            out.分支=*it;
-        }
-        out.有效必要条件.条件.关系规则=新方法项关系规则::全部成立;
-        // 规格隐含的存在范围只投影到调用期视图，不回写Vm或历史C/R。
-        for(const auto& p:m->参数规格组)if(p.有序规格
-            &&是特征持有参数(p.有序规格->信息类型)) {
-            新方法条件项定义 c;c.参数序号=p.有序规格->序号;
-            c.存在概念节点=p.有序规格->范围概念节点;
-            out.有效必要条件.条件.条件项组.push_back(std::move(c));
-        }
-        if(m->初始必要条件) {
-            合入必要条件(out.有效必要条件,m->初始必要条件->条件);
-            for(const auto& r:m->初始必要条件->场景事实限定组)
-                if(std::find(out.有效必要条件.场景事实限定组.begin(),out.有效必要条件.场景事实限定组.end(),r)
-                    ==out.有效必要条件.场景事实限定组.end())out.有效必要条件.场景事实限定组.push_back(r);
-        }
-        if(out.分支)合入必要条件(out.有效必要条件,out.分支->定义.必要条件);
-        for(const auto& r:m->初始模拟关系组)
-            if(std::find(out.有效必要条件.条件.参数关系组.begin(),out.有效必要条件.条件.参数关系组.end(),r)==out.有效必要条件.条件.参数关系组.end())out.有效必要条件.条件.参数关系组.push_back(r);
-        out.状态=新方法执行分支读取状态::已读取;return out;
+        return 投影执行分支必要条件(*m,B);
     } catch (const 引用内容定义前提变化&) {
         // owner锁随本轮局部对象释放后重读当前分支。
     } catch(...) {
@@ -9405,11 +9423,10 @@ std::optional<存在概念信息> 新_方法类::读取模拟存在范围(稳定
     for (;;) {
         try {
             新方法参数特征声明读取结果 out;
-            // 当前方法和定义只读取本轮需要的部分；不维护上一轮声明快照或遍历完整方法图互证。
-            const auto method=获取方法(M);
+            // 保留方法owner读到的正式范围变化，让本入口在释放锁后重新读取。
+            const auto method=读取当前方法信息(M,特征概念服务_,*this,存在概念服务_);
             if(!method)return out;
-            const auto branch=读取执行分支必要条件(M,B);
-            if(branch.状态==新方法执行分支读取状态::前提已变化)throw 引用内容定义前提变化{};
+            const auto branch=投影执行分支必要条件(*method,B);
             if(branch.状态!=新方法执行分支读取状态::已读取)return out;
             const auto spec=std::find_if(method->参数规格组.begin(),method->参数规格组.end(),[&](const auto& x){
                 return x.有序规格&&x.有序规格->序号==position;});

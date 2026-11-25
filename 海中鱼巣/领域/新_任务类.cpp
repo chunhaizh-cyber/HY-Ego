@@ -22633,7 +22633,7 @@ std::optional<新需求信息> 新_任务类::读取本次提议需求(稳定编
                     q.条件范围组.emplace(*c.存在概念节点,读(*c.存在概念节点));
             批.正式参数组.push_back(std::move(q));
         }
-        const auto 采集附属声明=[&](const auto& 项,std::optional<稳定编码> 支){
+        const auto 采集附属声明=[&](const auto& 项,std::optional<稳定编码> 支,稳定编码 配对){
             if(!项.参数序号||!项.特征类型概念节点||项.任务成员变量序号
                 ||项.参数序号>方法.参数规格组.size())return;
             const auto& 规格=方法.参数规格组[项.参数序号-1];
@@ -22644,7 +22644,11 @@ std::optional<新需求信息> 新_任务类::读取本次提议需求(稳定编
             auto 声明=方法服务_.读取存在参数特征声明(方法.节点,支,项.参数序号,*根);
             if(声明.状态==新方法参数特征读取状态::定义前提已变化){批.分支有效=false;return;}
             if(声明.状态!=新方法参数特征读取状态::已读取||!声明.特征定义)
-                throw std::logic_error("正式E+FT条件结果缺少原方法声明");
+                throw std::logic_error("正式E+FT条件结果缺少原方法声明 M="
+                    +std::to_string(方法.节点.值)+" B="+std::to_string(支 ? 支->值 : 0)
+                    +" P="+std::to_string(配对.值)+" 参数="+std::to_string(项.参数序号)
+                    +" FT="+std::to_string(根->值)+" 声明读取状态="
+                    +std::to_string(static_cast<unsigned>(声明.状态)));
             批.附属声明组.push_back({方法.节点,*根,支,项.参数序号,std::move(声明)});
         };
         for(const auto& 对:方法.条件结果组){
@@ -22653,9 +22657,9 @@ std::optional<新需求信息> 新_任务类::读取本次提议需求(稳定编
             else for(const auto 支:对.来源执行分支节点组)来源.push_back(支);
             for(const auto 支:来源){
                 if(批.固定采用&&(批.固定采用->来源方法节点!=方法.节点||批.固定采用->来源配对节点!=对.配对节点||批.固定采用->执行分支节点!=支))continue;
-                for(const auto& 项:对.条件.条件项组)采集附属声明(项,支);
-                for(const auto& 项:对.结果.结果项组)采集附属声明(项,支);
-                for(const auto& 项:对.结果.确认要求.禁止结果项组)采集附属声明(项,支);
+                for(const auto& 项:对.条件.条件项组)采集附属声明(项,支,对.配对节点);
+                for(const auto& 项:对.结果.结果项组)采集附属声明(项,支,对.配对节点);
+                for(const auto& 项:对.结果.确认要求.禁止结果项组)采集附属声明(项,支,对.配对节点);
             }
         }
         for(const auto& 支:方法.执行分支组){
