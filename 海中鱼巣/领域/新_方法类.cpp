@@ -2729,8 +2729,11 @@ bool 初始必要条件形状有效(const 新方法初始必要条件定义& d) 
     return c.存在概念节点&&有效(*c.存在概念节点)&&c==expected&&有效(r.关系概念节点)
         &&r.场景参数序号==1&&r.主体参数序号==2&&r.对象参数序号==3&&r.特征参数序号==4;
 }
+enum class 通用初始概念核验 { 随方法本体读取, 由闭包集中读取 };
+
 std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定编码 vm,
-    const 概念_存在类& concepts,const 概念_特征类& features,bool 核概念=true) {
+    const 概念_存在类& concepts,const 概念_特征类& features,bool 核概念,
+    通用初始概念核验 通用核验) {
     const auto root=读取可选节点字段(vm,初始必要条件字段);
     if(!root)throw std::runtime_error("initial requirements reference damaged");
     if(!有效(*root))return {};
@@ -2760,6 +2763,7 @@ std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定
         const auto rs=全局基础数据集.查询完整节点结构(*root);
         if(!items||items->empty()||!rs.结构||rs.结构->字段组.size()!=items->size()+4)
             throw std::runtime_error("generic initial requirement children or fields");
+        const bool 核通用概念 = 核概念 && 通用核验 == 通用初始概念核验::随方法本体读取;
         for(std::size_t i=0;i<items->size();++i) {
             const auto n=(*items)[i];exactShape(n,初始声明项节点类型);
             const auto ps=全局基础数据集.查询目标字段(n,条件项字段);
@@ -2776,12 +2780,12 @@ std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定
                 throw std::runtime_error("generic initial requirement item shape");
             新方法条件项定义 c;c.参数序号=static_cast<std::uint32_t>(*pos);
             c.特征类型概念节点=ft;c.存在概念节点=existence;
-            if(核概念&&existence) {
+            if(核通用概念&&existence) {
                 std::vector<基础联合节点快照> proof;
                 if(!追加方法持有者概念保护(*existence,concepts,proof))
                     throw std::runtime_error("generic initial requirement formal existence unavailable");
             }
-            if(核概念&&ft) {
+            if(核通用概念&&ft) {
                 const auto proof=features.读取特征概念定义保护(*ft);
                 if(proof.状态!=基础结构操作状态::已完成||proof.前提已变化||!proof.信息||proof.信息->类型根!=*ft
                     ||proof.信息->定义.节点!=*ft||proof.预期节点组.empty())
@@ -2831,7 +2835,7 @@ std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定
 thread_local int 方法读失败行 = 0; // 诊断：本线程最近一次读取方法信息本体返回空的行号
 std::optional<新方法信息> 读取方法信息本体(稳定编码 方法节点, const 概念_特征类& 概念服务,
     const 新方法治理对象读取接口& 治理读取, const 概念_存在类& 存在概念服务, bool 只读旧形状,
-    bool 核初始概念) {
+    bool 核初始概念, 通用初始概念核验 通用核验 = 通用初始概念核验::随方法本体读取) {
     if (!节点类型为(方法节点, 方法节点类型)
         || !方法属于根(方法节点)) {方法读失败行=__LINE__;return std::nullopt;}
     const auto 作用域 = 读取唯一I64字段(方法节点, 方法作用域字段);
@@ -2881,7 +2885,7 @@ std::optional<新方法信息> 读取方法信息本体(稳定编码 方法节�
     const auto 输入方案=读取模拟输入方案(*虚拟存在,概念服务);
     if(!输入方案){方法读失败行=__LINE__;return std::nullopt;}
     信息.初始模拟输入方案组=*输入方案;
-    信息.初始必要条件=读取初始必要条件(*虚拟存在,存在概念服务,概念服务,核初始概念);
+    信息.初始必要条件=读取初始必要条件(*虚拟存在,存在概念服务,概念服务,核初始概念,通用核验);
     信息.登记结果组=读取登记结果组(*虚拟存在,概念服务);
     if (有效(方法行为字段)) {
         const auto 字段组 = 全局基础数据集.查询字段(方法节点, 方法行为字段);
@@ -6605,7 +6609,9 @@ std::optional<新方法信息> 新_方法类::获取方法(
             const auto 节点 = *待读.begin();
             待读.erase(待读.begin());
             if (!已读.insert(节点).second) continue;
-            auto 方法 = 读取方法信息本体(节点, 特征概念服务_, *this, 存在概念服务_, false, true);
+            // 通用初始条件的定义在后续收集保护时核验，前提变化沿本闭包返回。
+            auto 方法 = 读取方法信息本体(节点, 特征概念服务_, *this, 存在概念服务_, false, true,
+                通用初始概念核验::由闭包集中读取);
             if (!方法) 工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__,
                 L"读取方法执行结构闭包", L"正式方法闭包断链或定义损坏");
             for(const auto& 配对:方法->条件结果组)
@@ -6797,7 +6803,8 @@ std::optional<新方法信息> 新_方法类::获取方法(
             if(!联合快照容许变化判定(*b,a,读取组))return 报变化(a,&*b,L"概念证明");
         }
         for(const auto& old:结果.方法组)
-            if(读取方法信息本体(old.节点,特征概念服务_,*this,存在概念服务_,false,true)!=old) {
+            if(读取方法信息本体(old.节点,特征概念服务_,*this,存在概念服务_,false,true,
+                通用初始概念核验::由闭包集中读取)!=old) {
                 const auto 方法快照=std::find_if(结果.完整保护组.begin(),结果.完整保护组.end(),
                     [&](const auto& v){return v.结构.节点.编码==old.节点;});
                 if(方法快照==结果.完整保护组.end())throw std::runtime_error("method execution protection lacks method snapshot");
