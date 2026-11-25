@@ -63,7 +63,8 @@ bool 字段询问本能运行服务::初始化(const 新字段询问登记配置
         要求(!s.已关闭 && s.语言,"field question initialization dependency unavailable");
         if (s.配置) { 要求(*s.配置==c,"field question immutable configuration mismatch");return true; }
         for (const auto id:{c.需求根概念,c.自我范围概念,c.交互者特征类型,c.通用存在概念,c.输出队列类型,c.外设场景标识类型,
-            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型,c.需求目标存在类型,c.需求目标特征类型,c.补问需求概念})
+            c.语言节点,c.第三方指代概念,c.第三方别名关系,c.需求主体类型,c.需求目标存在类型,
+            c.需求目标特征类型,c.补问需求概念,c.需求目标形式类型,c.需求目标值域类型})
             要求(有效(id),"field question configuration identity missing");
         要求(c.支持字段类型组.size()==6,"field question supported slot count invalid");
         std::set<稳定编码> unique;
@@ -381,8 +382,20 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     要求((场景.状态==新来源子场景状态::已建立||场景.状态==新来源子场景状态::已存在)&&场景.信息.has_value(),"outbound language scene publication failed");
     const auto time=UTC时钟适配器{}.读取当前UTC时间证据_v1({});要求(time.成功(),"field question UTC unavailable");
     // R120/R121：被问栏为需求根概念即目标栏问题（答案按需求信息比对），否则载荷栏问题（按值陈述比对）。
-    const 新语言问题定义 def{场景.信息->场景节点,来源,m.外设场景,m.交互者,m.定位.信息节点,m.问题主体,m.被问栏,time.证据->UTC纳秒,
+    新语言问题定义 def{场景.信息->场景节点,来源,m.外设场景,m.交互者,m.定位.信息节点,m.问题主体,m.被问栏,time.证据->UTC纳秒,
         m.被问栏==s.配置->需求根概念 ? 新问题被问种类::目标栏 : 新问题被问种类::载荷栏};
+    if(def.被问种类==新问题被问种类::载荷栏 && m.定位.正式内容路径.size()==1) {
+        const auto 字段=m.定位.正式内容路径.front();
+        if(字段==s.配置->需求目标形式类型 || 字段==s.配置->需求目标值域类型) {
+            const auto 定义=s.特征概念.读取特征概念定义保护(m.被问栏);
+            if(定义.前提已变化 || 定义.状态!=基础结构操作状态::已完成 || !定义.信息)
+                return 前提已变化();
+            const auto& 规格=定义.信息->定义;
+            if(定义.信息->实例所属特征类型==m.被问栏
+                && 规格.材料类型==特征概念材料物理类型::I64标量 && 规格.单位)
+                def.整数短答规格=新问题整数短答规格{字段,*规格.单位};
+        }
+    }
     const auto q=s.语言owner.建立或取得出站问题(def);
     switch(q.状态){
     case 新语言问题建立状态::前提已变化:return 前提已变化();
@@ -392,7 +405,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     要求(q.问题节点.has_value()&&有效(*q.问题节点),"outbound question node missing");
     const auto back=s.语言owner.读取问题(*q.问题节点);
     要求(back&&back->定义.出站来源==来源&&back->定义.被认知需求==def.被认知需求&&back->定义.主体==def.主体
-        &&back->定义.被问栏==def.被问栏,"outbound question readback mismatch");
+        &&back->定义.被问栏==def.被问栏 && back->定义.整数短答规格==def.整数短答规格,
+        "outbound question readback mismatch");
     return {新字段询问问题建立状态::已建立,*q.问题节点};
 }
 std::optional<新字段询问入列读回> 字段询问本能运行服务::提交询问输出(

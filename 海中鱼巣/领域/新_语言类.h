@@ -743,12 +743,17 @@ struct 新语言原文分界被询目标 final {
     std::string 公开会话, 对话框;
     friend bool operator==(const 新语言原文分界被询目标&,const 新语言原文分界被询目标&)=default;
 };
+struct 新问题整数短答规格 final {
+    稳定编码 被问字段, 单位;
+    friend bool operator==(const 新问题整数短答规格&,const 新问题整数短答规格&)=default;
+};
 struct 新语言问题定义 final {
     // 交互者：提问时该交互中的交互者（受话者）；主体待定的值陈述按说话者是否为该交互者比对。
     稳定编码 出站来源场景{}, 出站来源{}, 交互场景{}, 交互者{}, 被认知需求{}, 主体{}, 被问栏{};
     std::int64_t 提问时刻=0; // UTC纳秒；答案须严格晚于此时刻
     新问题被问种类 被问种类=新问题被问种类::载荷栏;
     std::optional<新语言原文分界被询目标> 分界目标;
+    std::optional<新问题整数短答规格> 整数短答规格{};
     friend bool operator==(const 新语言问题定义&,const 新语言问题定义&)=default;
 };
 enum class 新问题答案来源 : std::uint8_t { 消息转换=1, 自我写入, 原文分界回答 };

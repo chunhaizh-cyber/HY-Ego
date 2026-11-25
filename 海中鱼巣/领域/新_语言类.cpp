@@ -6536,7 +6536,9 @@ auto 组织记录字段(新自我写入语言信息& v){return std::tie(v.写入
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.时刻);}
 auto 组织记录字段(新出站正式被询定位& v){return std::tie(v.信息节点,v.特征类型);}
 auto 组织记录字段(新语言原文分界被询目标& v){return std::tie(v.范围,v.特征类型,v.外设场景,v.外设窗口,v.公开会话,v.对话框);}
-auto 组织记录字段(新语言问题定义& v){return std::tie(v.出站来源场景,v.出站来源,v.交互场景,v.交互者,v.被认知需求,v.主体,v.被问栏,v.提问时刻,v.被问种类,v.分界目标);}
+auto 组织记录字段(新问题整数短答规格& v){return std::tie(v.被问字段,v.单位);}
+auto 组织记录字段(新语言问题定义& v){return std::tie(v.出站来源场景,v.出站来源,v.交互场景,v.交互者,
+    v.被认知需求,v.主体,v.被问栏,v.提问时刻,v.被问种类,v.分界目标,v.整数短答规格);}
 auto 组织记录字段(新词典语言词段& v) {
     return std::tie(v.起始标量, v.结束标量, v.规范化词面, v.依据);
 }
@@ -6599,9 +6601,13 @@ struct 组织写入现场 {
         else {
             n=节点(5,order);auto copy=v;std::int64_t i=0;
             const auto 写项=[&](const auto& 项){
-                if constexpr(std::is_same_v<T,新语言问题定义>
-                    &&std::is_same_v<std::decay_t<decltype(项)>,std::optional<新语言原文分界被询目标>>)
-                    if(!项)return;
+                if constexpr(std::is_same_v<T,新语言问题定义>){
+                    using 字段=std::decay_t<decltype(项)>;
+                    if constexpr(std::is_same_v<字段,std::optional<新语言原文分界被询目标>>)
+                        if(!项 && !v.整数短答规格)return;
+                    if constexpr(std::is_same_v<字段,std::optional<新问题整数短答规格>>)
+                        if(!项)return;
+                }
                 子(n,组织键::子项,写(项,i++));
             };
             std::apply([&](const auto&... 项){(写项(项),...);},组织记录字段(copy));
@@ -6662,9 +6668,9 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else {
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
-        if constexpr(std::is_same_v<T,接收语言句段解释>)
+        if constexpr(std::is_same_v<T,接收语言句段解释>||std::is_same_v<T,新语言问题定义>)
             组织要求(children.size()>=字段数-2&&children.size()<=字段数);
-        else if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
+        else if constexpr(std::is_same_v<T,新语言分界词段>
             ||std::is_same_v<T,接收语言主体来源>||std::is_same_v<T,接收语言主体关系>
             ||std::is_same_v<T,新接收语言解释内容>||std::is_same_v<T,新接收场景信息>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
@@ -6841,7 +6847,7 @@ void 核自我写入信息(const 新自我写入语言信息& v){
 void 核问题定义(const 新语言问题定义& v){
     组织要求(有效(v.出站来源场景)&&有效(v.出站来源)&&有效(v.交互场景)&&有效(v.交互者)&&v.提问时刻>0);
     if(v.被问种类==新问题被问种类::原文分界){
-        组织要求(v.分界目标&&!有效(v.被认知需求)&&!有效(v.主体)&&!有效(v.被问栏));
+        组织要求(v.分界目标&&!v.整数短答规格&&!有效(v.被认知需求)&&!有效(v.主体)&&!有效(v.被问栏));
         const auto& 目标=*v.分界目标;
         组织要求(目标.范围==v.出站来源&&有效(目标.特征类型)&&有效(目标.外设场景)
             &&有效(目标.外设窗口)&&!目标.公开会话.empty()&&!目标.对话框.empty());
@@ -6849,6 +6855,9 @@ void 核问题定义(const 新语言问题定义& v){
     }
     组织要求(!v.分界目标&&有效(v.被认知需求)&&有效(v.主体)&&有效(v.被问栏)
         &&(v.被问种类==新问题被问种类::载荷栏||v.被问种类==新问题被问种类::目标栏));
+    if(v.整数短答规格)
+        组织要求(v.被问种类==新问题被问种类::载荷栏&&有效(v.整数短答规格->被问字段)
+            &&有效(v.整数短答规格->单位));
 }
 std::vector<新值陈述信息> 读全部场景信息(组织读取现场& r){
     组织要求(有效(组键(组织键::登记根)));
@@ -6879,12 +6888,30 @@ std::vector<自我写入记录> 读全部自我写入(组织读取现场& r){
     }
     return out;
 }
+bool 明确整数短答与问题一致(const 新语言问题信息& q,const 新接收场景信息& v){
+    const auto& 定义=q.定义;
+    if(v.种类!=新接收场景信息种类::明确整数短答 || !v.回复传输 || !v.准确整数
+        || v.回复传输->关联问题!=q.问题节点 || 定义.被问种类!=新问题被问种类::载荷栏
+        || !定义.整数短答规格 || v.单位!=定义.整数短答规格->单位 || v.交互场景!=定义.交互场景
+        || v.说话者!=定义.交互者 || v.时刻<=定义.提问时刻)
+        return false;
+    const auto& 文=*v.准确整数;
+    std::int64_t 数值=0;
+    const auto 解析=std::from_chars(文.data(),文.data()+文.size(),数值);
+    return 解析.ec==std::errc{} && 解析.ptr==文.data()+文.size();
+}
 // 问题根节点：类型103；场景＝出站来源场景，来源＝出站来源，定义＝被问结构；答案与答案来源成对追加，至多一次。
 std::vector<新语言问题信息> 读全部问题(组织读取现场& r){
     组织要求(有效(组键(组织键::登记根)));
     for(auto k:组织句柄)r.读(k);
     std::set<稳定编码> 场景信息,自我写入;
-    for(const auto& x:读全部场景信息(r))if(x.内容.种类==新接收场景信息种类::值陈述||x.内容.种类==新接收场景信息种类::需求信息)场景信息.insert(x.陈述节点);
+    const auto 已存信息=读全部场景信息(r);
+    std::map<稳定编码,const 新接收场景信息*> 短答;
+    for(const auto& x:已存信息){
+        if(x.内容.种类==新接收场景信息种类::明确整数短答)短答.emplace(x.陈述节点,&x.内容);
+        else if(x.内容.种类==新接收场景信息种类::值陈述||x.内容.种类==新接收场景信息种类::需求信息)
+            场景信息.insert(x.陈述节点);
+    }
     for(const auto& x:读全部自我写入(r))自我写入.insert(x.节点);
     std::vector<新语言问题信息> out;std::set<稳定编码> unique;
     for(const auto& f:r.字段(组键(组织键::登记根),组织键::问题登记)){
@@ -6899,6 +6926,8 @@ std::vector<新语言问题信息> 读全部问题(组织读取现场& r){
             const auto info=std::get<稳定编码>(a.front());
             if(q.定义.被问种类==新问题被问种类::原文分界)
                 组织要求(kind==新问题答案来源::原文分界回答&&r.整数(info,组织键::类型)==分界回答组织类型);
+            else if(const auto 材料=短答.find(info);材料!=短答.end())
+                组织要求(kind==新问题答案来源::消息转换&&明确整数短答与问题一致(q,*材料->second));
             else
                 组织要求((kind==新问题答案来源::消息转换&&场景信息.contains(info))||(kind==新问题答案来源::自我写入&&自我写入.contains(info)));
             q.答案=新问题答案引用{info,kind};
@@ -6926,14 +6955,15 @@ bool 值陈述结构一致(const 新语言问题定义& q,const 新接收场景�
     if(v.主体存在)return 结构一致(q,v.主体存在,v.特征类型,v.时刻);
     return v.交互场景==q.交互场景&&v.说话者==q.交互者&&v.特征类型&&*v.特征类型==q.被问栏&&v.时刻>q.提问时刻;
 }
-新问题答案查询结果 查答案已加锁(组织读取现场& r,const 新语言问题定义& q){
-    if(q.被问种类==新问题被问种类::原文分界)return {};
+新问题答案查询结果 查答案已加锁(组织读取现场& r,const 新语言问题信息& q){
+    const auto& 定义=q.定义;
+    if(定义.被问种类==新问题被问种类::原文分界)return {};
     新问题答案查询结果 out;
     for(const auto& x:读全部场景信息(r))
-        if(值陈述结构一致(q,x.内容))
+        if(明确整数短答与问题一致(q,x.内容)||值陈述结构一致(定义,x.内容))
             out.答案组.push_back({x.陈述节点,新问题答案来源::消息转换});
-    if(q.被问种类==新问题被问种类::载荷栏)for(const auto& x:读全部自我写入(r))
-        if(结构一致(q,x.内容.主体存在,x.内容.特征类型,x.内容.时刻))
+    if(定义.被问种类==新问题被问种类::载荷栏)for(const auto& x:读全部自我写入(r))
+        if(结构一致(定义,x.内容.主体存在,x.内容.特征类型,x.内容.时刻))
             out.答案组.push_back({x.节点,新问题答案来源::自我写入});
     return out;
 }
@@ -6952,7 +6982,7 @@ std::vector<稳定编码> 待通知问题(组织读取现场& r,const 新接收�
 std::mutex 问题答案通知互斥;
 const void* 问题答案通知所有者=nullptr;
 std::function<void(稳定编码)> 问题答案通知;
-void 发出问题答案就绪通知(const std::vector<稳定编码>& 问题组) noexcept {
+void 发出问题答案就绪通知(std::span<const 稳定编码> 问题组) noexcept {
     try {
         std::lock_guard lock(问题答案通知互斥);
         if(问题答案通知)for(const auto q:问题组)问题答案通知(q);
@@ -7859,9 +7889,15 @@ bool 明确回复传输一致(const 新语言明确回复事实& 事实) {
     核接收场景信息(v);
     新接收场景信息保存结果 out;std::vector<稳定编码> 通知组;
     {
-        std::lock_guard lock(新语言互斥);组织读取现场 r;
-        for(const auto& x:读全部场景信息(r))if(x.内容.来源消息==v.来源消息)
-            return {x.内容==v ? S::精确重复 : S::来源冲突,x.陈述节点};
+        std::unique_lock lock(新语言互斥);组织读取现场 r;
+        for(const auto& x:读全部场景信息(r))if(x.内容.来源消息==v.来源消息){
+            const auto 状态=x.内容==v ? S::精确重复 : S::来源冲突;
+            if(状态==S::精确重复&&v.回复传输){
+                lock.unlock();
+                发出问题答案就绪通知({&v.回复传输->关联问题,1});
+            }
+            return {状态,x.陈述节点};
+        }
         组织写入现场 w;const auto root=w.节点(102,0),def=w.写(v);
         w.引用(root,组织键::场景,v.来源场景);w.引用(root,组织键::来源,v.来源消息);w.子(root,组织键::定义,def);
         w.请求.追加字段组.push_back({组键(组织键::登记根),组键(组织键::场景信息登记),基础组内节点引用{root}});
@@ -7880,9 +7916,10 @@ bool 明确回复传输一致(const 新语言明确回复事实& 事实) {
             组织要求(x.陈述节点==p.新节点组[root]&&x.内容==v);out={S::已保存,x.陈述节点};
         }
         组织要求(out.状态==S::已保存);
-        if(v.种类!=新接收场景信息种类::明确整数短答) 通知组=待通知问题(back,v);
+        if(!v.回复传输)通知组=待通知问题(back,v);
     }
-    发出问题答案就绪通知(通知组);
+    if(v.回复传输)发出问题答案就绪通知({&v.回复传输->关联问题,1});
+    else 发出问题答案就绪通知(通知组);
     return out;
 }
 std::optional<新值陈述信息> 新_语言类::按来源消息读取接收场景信息(稳定编码 来源消息) const {
@@ -7966,7 +8003,7 @@ std::vector<新语言问题信息> 新_语言类::查询同结构问题(稳定�
 }
 新问题答案查询结果 新_语言类::查找问题答案(稳定编码 问题节点) const {
     std::lock_guard lock(新语言互斥);组织读取现场 r;
-    for(const auto& q:读全部问题(r))if(q.问题节点==问题节点)return 查答案已加锁(r,q.定义);
+    for(const auto& q:读全部问题(r))if(q.问题节点==问题节点)return 查答案已加锁(r,q);
     throw std::logic_error("问题节点不在语言owner问题登记内");
 }
 新问题答案登记结果 新_语言类::登记问题答案(稳定编码 问题节点,稳定编码 答案信息节点,新问题答案来源 来源种类){
@@ -7979,7 +8016,7 @@ std::vector<新语言问题信息> 新_语言类::查询同结构问题(稳定�
     for(auto& x:读全部问题(r))if(x.问题节点==问题节点)q=std::move(x);
     if(!q)throw std::logic_error("问题节点不在语言owner问题登记内");
     if(q->答案)return {*q->答案==want ? S::精确重复 : S::已有其它答案,q->答案};
-    const auto found=查答案已加锁(r,q->定义);
+    const auto found=查答案已加锁(r,*q);
     if(std::find(found.答案组.begin(),found.答案组.end(),want)==found.答案组.end())return {S::不是该问题的答案,std::nullopt};
     组织写入现场 w;w.引用组.insert(答案信息节点);
     w.请求.追加字段组.push_back({问题节点,组键(组织键::答案),答案信息节点});
@@ -7997,6 +8034,13 @@ std::optional<新问题答案信息> 新_语言类::读取问题答案信息(稳
     组织要求(有效(信息节点));
     std::lock_guard lock(新语言互斥);组织读取现场 r;
     for(const auto& x:读全部场景信息(r))if(x.陈述节点==信息节点){
+        if(x.内容.种类==新接收场景信息种类::明确整数短答){
+            for(const auto& q:读全部问题(r))
+                if(明确整数短答与问题一致(q,x.内容))
+                    return 新问题答案信息{信息节点,新问题答案来源::消息转换,q.定义.主体,q.定义.被问栏,
+                        新值陈述值种类::准确整数,x.内容.准确整数,{},{},x.内容.单位,{},{}};
+            return std::nullopt;
+        }
         if(x.内容.种类==新接收场景信息种类::需求信息){
             const auto& v=x.内容;新问题答案信息 out{信息节点,新问题答案来源::消息转换,v.主体存在,v.特征类型.value_or(稳定编码{})};
             if(v.值种类)out.值种类=*v.值种类;

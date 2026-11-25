@@ -1274,3 +1274,17 @@ Release x64 编译链接退出 0，0 警告、0 错误。259 项构建输入在�
 实际工程 Release x64 编译链接退出 0，0 错误、0 警告。259 项构建输入未变化。产物 SHA256 44564C0A137EB3C0775BCDB5ECE0A86DFE6FA7CA0C2D731EB0D858B2A2D3D3A7。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e25-explicit-integer-reply-release-20261126-050249/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e25-explicit-integer-reply-release-20261126-050249/release.log)
 
 本轮未运行应用、Chrome 或测试。真实来源读回、问题方采用、同 D 的写回及杯中水当前值、正式承接和七组统一验收待取证。
+
+
+#### 56E26 正式问题采用同源整数短答
+
+实施基线 3461f08036543669f757c20a4465490c4a3014ad，统一设计 v1.240 第 10.154 节，统一计划 v2.202，计划 blob ef2279ea6ef7852765a66a56e563c1673379ff19。
+
+- 字段询问运行服务从正式内容路径与 FT 当前定义取得实际字段和单位，为目标形式或目标值域问题写可空的整数短答规格。问题记录按旧普通、旧分界及新增尾字段兼容读取。
+- 问题所有者使用同一判据读候选和登记答案核对 Q、交互场景、说话者、时间、单位及 I64 表示范围。所有匹配候选保留给原冲突判定，独立读回的答案主体和被问栏来自同一 Q。需求所有者继续核实际 FT、单位、当前值域及原 D 写回。
+- 明确短答发布或精确重试后，在语言锁外只发原 Q 就绪键。重试复用既有材料记录。普通值陈述的等待通知沿现行合同。
+- 代码知识变更涉及字段询问运行服务的问题建立，语言所有者的场景保存、答案查询、登记和读回，以及普通应用的字段配置装配。
+
+最终 Release x64 编译链接退出 0，0 错误、0 警告。259 项构建输入未变化。产物 SHA256 DFA75B7C865CADBCE2A31D9AA268422DBAF10DCBA6FD72C1913C6602F80C297C。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e26-question-adopts-integer-final-20261126-052511/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e26-question-adopts-integer-final-20261126-052511/release.log)
+
+本记录只证明该版本的源码和构建。实际业务问题、水温前置、关联短答、同 D 写回、杯中水当前值、正式承接和七组同构建验收仍需普通 Chrome 取证。
