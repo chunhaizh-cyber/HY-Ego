@@ -1211,3 +1211,16 @@ Release x64 编译链接退出 0，0 警告、0 错误。259 项构建输入在�
 - 首轮实际构建退出 1，唯一错误为控制面 C2110 字符串拼接；修正后链接通过，再收紧关系句的完成条件。最终 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入在构建期间无变化。产物 SHA256 673248F3DB21C77542DDFEDEF72FEC30A6E3695EA950777C447A08C0C5CBBC05。[首轮日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e20-web-relation-projection-release-20261126-040046/release.log) · [最终构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e20-web-relation-projection-final-20261126-040911/result.json) · [最终编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e20-web-relation-projection-final-20261126-040911/release.log)
 
 本轮仅取得编译及静态核对证据。共用解析的原始角色定位目前只随无定位冲突的唯一结果交付。多义候选各自的构式与原文范围仍须在语义折叠前保留并传到普通接收；其后接正式关系场景的成文及独立回读。第 6 组的水温事实采用、真实问题关联及同一 D 写回、七组同发布构建的运行验收仍按活动目标推进。
+
+
+#### 56E21 关系候选逐图原文范围
+
+实施基线 577ba49ff91289749b4676ac2cdaefc8b4416a7f，统一设计 v1.234 第 10.149 节，计划 v2.196，计划 blob 466f0f9a0c3296692211a0b74faf4b6396dfbf70。
+
+- 解释单句含义图实现按普通角色观察请求，从合法的单根陈述保留实际含义图和同一图的角色原文定位，再沿现有规则归并完整含义。不同构式、不同范围可同时进入接收材料。
+- 只读统一转换转交该组，替换旧的组成旁路。读取技术失败、快照漂移和资源未完成均清除逐图组。普通接收逐图使用自己的角色位置进行关系投影，仍由原解释所有者保存且可从现有控制页读回。
+- 本轮静态核对了普通请求入口、真实角色定位的成组保存、唯一解释的兼容输出和三处读取失败出口。未知关系端点尚未形成合法含义图时，仍沿原语言缺口记录。词条概念类别需要按实际词条及角色约束单独取证。
+
+最终实际 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入前后无变化，EXE SHA256 4E5B7367B061D449CCF2D06FFC73E2E27E0CDC976F45593B35C4C3C321A5BDC3。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e21-relation-candidate-source-final-20261126-041800/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e21-relation-candidate-source-final-20261126-041800/release.log)
+
+未运行应用、Chrome 或测试。后继从正式保存的关系句段构图成文，再仅用实际生成正文和普通正式语境独立读回。第 6 组的水温事实和业务问答、同 D 写回以及七组同一发布构建验收继续保持。

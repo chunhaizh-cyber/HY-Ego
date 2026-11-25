@@ -968,7 +968,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释前");
 #endif
-    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组,q.待完善概念词用组},lang,words,names,es,fs,instances);
+    auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组,q.待完善概念词用组},lang,words,names,es,fs,instances);
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
 #endif
@@ -978,10 +978,11 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     result.图解释状态=图解释.状态;result.未覆盖范围组=图解释.未覆盖范围组;result.受阻节点组=图解释.受阻节点组;
     const auto 图状态=图输入状态(图解释.状态);
     const auto 清含义=[&](I 状态) {
-        result.状态=状态;result.完整候选组.clear();result.组成图候选组.clear();result.含义.reset();result.构式.reset();
+        result.状态=状态;result.完整候选组.clear();result.陈述候选原文组.clear();result.含义.reset();result.构式.reset();
         result.已取得场景节点.reset();result.已取得对象绑定组.clear();
     };
     if(技术未完成(图状态)){清含义(图状态);return result;}
+    result.陈述候选原文组=std::move(图解释.陈述候选原文组);
     if (result.完整候选组.empty()) {
         result.静态角色缺口组 = 图解释.静态角色缺口组;
         result.词条类型依据组 = 图解释.词条类型依据组;
@@ -1027,10 +1028,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
                     return 引用 && 引用->类别 == K::存在概念 && 引用->节点 == 名称->概念节点;
                 });
             };
-            if (std::ranges::any_of(result.完整候选组, 旧图同义)) {
-                result.组成图候选组.push_back(图);
-                continue;
-            }
+            if (std::ranges::any_of(result.完整候选组, 旧图同义)) continue;
         }
         if(图构式(图)==U::行动请求) {
             const bool 已有=std::any_of(新图候选.begin(),新图候选.end(),[&](const auto& 原) {
@@ -1116,6 +1114,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
             q.读取模式==语言解释读取模式::本次正式有限集完整读取 ? &依据:nullptr);
         if(依据.失败!=读取状态::已完成){
             r.状态=输入映射(依据.失败);r.完整候选组.clear();r.含义.reset();
+            r.陈述候选原文组.clear();
             r.图角色原文定位组.clear();r.静态角色缺口组.clear();r.词条类型依据组.clear();
             r.静态结构.reset();
             return r;
@@ -1125,7 +1124,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
             r.特征概念依据组=std::move(依据.特征概念依据组);
             r.词面查询依据组=std::move(依据.词面查询依据组);r.名称候选依据组=std::move(依据.名称候选依据组);
         }
-        else {r.图角色原文定位组.clear();r.对象绑定保护.clear();}
+        else {r.图角色原文定位组.clear();r.陈述候选原文组.clear();r.对象绑定保护.clear();}
         return r;
     }catch(const std::bad_alloc&){语言基础统一输入结果 r;r.状态=I::工程未完成;return r;}
     catch(const std::length_error&){语言基础统一输入结果 r;r.状态=I::工程未完成;return r;}
