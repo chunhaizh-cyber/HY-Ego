@@ -167,8 +167,11 @@ struct 网页外设运行模块::实现 final {
     }
 
     bool 接收消息(std::string_view 会话, std::string_view 页面,
-        std::uint64_t 序号, std::string_view 正文, std::optional<std::uint64_t> 回应输出编码) noexcept {
+        std::uint64_t 序号, std::string_view 正文, std::optional<std::uint64_t> 回应输出编码,
+        网页接收会话来源读取 读取来源) noexcept {
         try {
+            const auto 来源 = 读取来源 ? 读取来源(会话) : std::optional{网页接收会话来源{}};
+            if (!来源) return false;
             bool 新建 = false;
             {
                 std::lock_guard 锁(互斥);
@@ -179,7 +182,8 @@ struct 网页外设运行模块::实现 final {
                 const auto& 定位 = 建立页面(目标, &新建);
                 const auto 时间 = 取得正式发布时间();
                 const auto 回应输出 = 回应输出编码 ? std::optional{稳定编码{*回应输出编码}} : std::nullopt;
-                const auto 结果 = 世界->更新接收(定位, 序号, 正文, 时间, 回应输出);
+                const auto 结果 = 世界->更新接收(定位, 序号, 正文, 时间,
+                    回应输出, 来源->接纳会话绑定人);
                 if (回应输出 && 结果 == 新外设事实状态::入口拒绝) return false;
                 if (!事实发布完成(结果))
                     throw std::runtime_error("peripheral received fact publication incomplete");
@@ -268,7 +272,7 @@ struct 网页外设运行模块::实现 final {
     }
 }
 
-网页外设运行回调组 网页外设运行模块::取得运行回调() {
+网页外设运行回调组 网页外设运行模块::取得运行回调(网页接收会话来源读取 读取来源) {
     try {
         std::lock_guard 锁(实现_->互斥);
         if (实现_->已关闭) return {};
@@ -279,9 +283,9 @@ struct 网页外设运行模块::实现 final {
         结果.会话开始 = [当前](std::string_view 会话) { return 当前->开始会话(会话); };
         结果.会话结束 = [当前](std::string_view 会话) { 当前->结束会话(会话); };
         结果.确认页面 = [当前](const 网页对话框目标& 目标) { return 当前->确认页面(目标); };
-        结果.接收消息 = [当前](std::string_view 会话, std::string_view 页面,
+        结果.接收消息 = [当前, 读取来源](std::string_view 会话, std::string_view 页面,
             std::uint64_t 序号, std::string_view 正文, std::optional<std::uint64_t> 回应输出) {
-            return 当前->接收消息(会话, 页面, 序号, 正文, 回应输出);
+            return 当前->接收消息(会话, 页面, 序号, 正文, 回应输出, 读取来源);
         };
         结果.发送完成 = [当前](const 网页定向发送事实& 事实) { 当前->发送完成(事实); };
         结果.输出队列.入列 = [当前](const 网页输出入列请求& 请求) {

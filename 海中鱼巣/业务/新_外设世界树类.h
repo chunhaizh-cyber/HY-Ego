@@ -107,7 +107,8 @@ public:
         const 新状态强时间& 发布时间, std::optional<稳定编码> 对应输出 = {}) noexcept;
     新外设事实状态 更新接收(
         const 新外设对话框定位&, std::uint64_t 来源序号, std::string_view 实际UTF8正文,
-        const 新状态强时间& 接收时间, std::optional<稳定编码> 回应输出 = {}) noexcept;
+        const 新状态强时间& 接收时间, std::optional<稳定编码> 回应输出 = {},
+        std::optional<稳定编码> 接纳会话绑定人 = {}) noexcept;
     std::optional<新外设消息信息> 读取消息(稳定编码 消息节点) const noexcept;
     新外设接收记录完整结果 完整读取仍保留的接收记录() const noexcept;
     新外设消息保护结果 读取消息保护(稳定编码 消息节点) const noexcept;
@@ -139,7 +140,8 @@ private:
         std::optional<稳定编码> 关联问题={});
     新外设对话框定位 补齐消息集合(const 新外设对话框定位&);
     新外设事实状态 记录消息(const 新外设对话框定位&, 新外设消息方向,
-        std::uint64_t, std::string_view, const 新状态强时间&, std::optional<稳定编码> 关联输出);
+        std::uint64_t, std::string_view, const 新状态强时间&, std::optional<稳定编码> 关联输出,
+        std::optional<稳定编码> 接纳会话绑定人 = {});
     std::vector<稳定编码> 读取消息成员(稳定编码 特征节点) const;
     std::vector<新外设消息信息> 读取输出队列材料成员(
         const 新外设对话框定位&, 稳定编码 材料节点) const;

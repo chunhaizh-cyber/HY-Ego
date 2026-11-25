@@ -1554,6 +1554,7 @@ public:
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
+        std::optional<稳定编码> 接纳绑定人;
         if(有效(item.M)) {
             检查停止();
             const auto m=当前_.外设世界树.读取消息保护(item.M);
@@ -1562,7 +1563,7 @@ public:
                 item.M={};item.H.reset();item.S.reset();item.U.reset();item.D.reset();
                 item.受请求者.reset();item.需求来源.reset();item.待交接请求.reset();
                 item.原因+="；当前正式消息读回暂不可用";
-            }
+            } else 接纳绑定人 = m.消息->接纳会话绑定人;
         }
         if(item.U) {
             检查停止();
@@ -2009,6 +2010,7 @@ public:
         }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
+            +",\"admissionBoundPerson\":"+控制编码(接纳绑定人)
             +",\"speaker\":"+控制编码(item.H)+",\"scene\":"+控制编码(item.S)
             +",\"meaning\":"+控制编码(item.U)+",\"demand\":"+控制编码(item.D)
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
@@ -6199,7 +6201,13 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
         if (!上下文)
             throw std::runtime_error("peripheral module context unavailable");
         // 只在组合时取得闭包；闭包独立保活适配状态，不借用普通上下文。
-        return 上下文->网页外设模块.取得运行回调();
+        return 上下文->网页外设模块.取得运行回调([](std::string_view 会话)
+            -> std::optional<网页接收会话来源> {
+            std::lock_guard 读取锁(上下文锁);
+            if (!上下文 || !上下文->活跃网页会话标识 || *上下文->活跃网页会话标识 != 会话)
+                return std::nullopt;
+            return 网页接收会话来源{上下文->网页会话绑定人类};
+        });
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得网页外设模块回调",
             L"外设模块未就绪或回调分配失败，不能伪装空外设。");
