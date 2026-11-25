@@ -58,6 +58,17 @@ struct 接收词条准入证据 final {
     新接收认知来源键 来源;
     稳定编码 前置来源, 范围, 准入材料;
 };
+enum class 接收篇章成文状态 : std::uint8_t {
+    形状未支持=1, 成文受阻, 回读句界不一致, 回读未唯一, 回读含义不一致, 已成文且独立回读, 待成文
+};
+enum class 基础表达状态 : std::uint8_t;
+struct 接收篇章成文观察 final {
+    稳定编码 采用;
+    接收篇章成文状态 状态=接收篇章成文状态::形状未支持;
+    std::optional<基础表达状态> 成文状态{};
+    std::string UTF8正文;
+    std::vector<接收语言句段解释> 独立回读句段;
+};
 struct 接收需求认知观察 final {
     稳定编码 M;
     std::optional<稳定编码> H,S,U,D;
@@ -72,6 +83,7 @@ struct 接收需求认知观察 final {
     std::optional<接收词条准入证据> 词条准入{};
     std::vector<接收语言句段解释> 句段解释{};
     std::optional<新接收认知来源键> 被动解释来源{};
+    std::optional<接收篇章成文观察> 篇章成文{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。

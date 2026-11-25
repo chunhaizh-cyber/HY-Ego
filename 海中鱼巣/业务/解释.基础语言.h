@@ -29,6 +29,7 @@ struct 接收篇章句段候选 final {
     解释原文范围 全文范围;
     std::string 句面原文;
 };
+bool 是单根普通静态陈述图知识(const 新语言知识定义&);
 std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文);
 std::vector<解释原文范围> 核对接收篇章句间分隔(const std::string& 固定原文,
     const std::vector<接收篇章句段候选>& 句段组, const 新语言词条准入定义&);

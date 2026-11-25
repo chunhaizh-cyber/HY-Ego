@@ -1759,7 +1759,7 @@ public:
         }
         检查停止();
         std::string 被动句段解释 = "null";
-        if (item.S && item.被动解释来源 && item.被动解释来源->接收消息节点 == item.M && !item.句段解释.empty()) {
+        if (item.S && item.被动解释来源 && item.被动解释来源->接收消息节点 == item.M) {
             const auto 正式 = 当前_.世界事实.语言服务.读取接收语言解释(*item.被动解释来源,
                 当前_.自然语言世界树, 当前_.外设世界树);
             const bool 已保存 = 正式.信息 && 正式.信息->内容.来源场景 == *item.S;
@@ -1775,9 +1775,19 @@ public:
                 std::string 采用JSON="null";
                 if (已保存 && 正式.信息->篇章采用) {
                     const auto& 采用=*正式.信息->篇章采用;
+                    std::string 成文JSON="null";
+                    if (item.篇章成文 && item.篇章成文->采用==采用.节点) {
+                        const auto& 成文=*item.篇章成文;
+                        成文JSON="{\"status\":"+控制计数(static_cast<std::uint64_t>(成文.状态))
+                            +",\"generationStatus\":"+(成文.成文状态
+                                ? 控制计数(static_cast<std::uint64_t>(*成文.成文状态)) : "null")
+                            +",\"text\":"+字符串(成文.UTF8正文)
+                            +",\"readback\":"+句组JSON(成文.独立回读句段)+"}";
+                    }
                     采用JSON="{\"id\":"+控制编码(采用.节点)+",\"speaker\":"+控制编码(采用.说话者)
                         +",\"sentences\":"+句组JSON(采用.内容.句段组)
-                        +",\"meaning\":"+接收候选含义JSON(采用.内容.含义候选)+"}";
+                        +",\"meaning\":"+接收候选含义JSON(采用.内容.含义候选)
+                        +",\"roundTrip\":"+成文JSON+"}";
                 }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")

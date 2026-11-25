@@ -948,6 +948,10 @@ O 图表达输出状态(基础表达状态 状态) {
 }
 } // namespace
 
+bool 语言图结构语义一致(const 语言图含义材料& 左,const 语言图含义材料& 右) {
+    return 左.语言节点==右.语言节点 && 图词面语义键(左)==图词面语义键(右);
+}
+
 static 语言基础统一输入结果 只读解释单句基础语言实现(const 语言基础统一输入请求& q,
     const 新_语言类& lang,const 新_词类& words,const 概念_名称关系类& names,
     const 概念_存在类& es,const 概念_特征类& fs,const 新_存在类& instances,解释读取依据* 依据){
@@ -1271,7 +1275,7 @@ O 统一输出核验(const 语言基础统一输出请求&q,const std::string&te
         const auto 回读=解释单句含义图(回读请求,lang,words,names,es,fs,instances,正式读取);
         if(回读.状态!=基础语言输入状态::已形成唯一含义){result.状态=输出映射(图输入状态(回读.状态));return result;}
         if(回读.完整候选组.size()!=1)throw std::logic_error("graph readback success has no unique material");
-        if(图词面语义键(*图)!=图词面语义键(回读.完整候选组[0])){result.状态=O::回读含义不一致;return result;}
+        if(!语言图结构语义一致(*图,回读.完整候选组[0])){result.状态=O::回读含义不一致;return result;}
         result.状态=O::已生成且唯一回读;result.文本=表达.文本;result.构式=图构式(*图);result.所用知识节点组=表达.已用知识节点组;
         for(const auto& 对齐:表达.对齐组)result.输出对齐组.push_back({{对齐.起始标量,对齐.结束标量},对齐.结构项路径,对齐.词条节点,对齐.名称关系节点,{},{},{}});
         return result;

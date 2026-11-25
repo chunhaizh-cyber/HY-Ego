@@ -4,6 +4,8 @@
 #include "新_世界树类.h"
 #include "../适配/适配器.UTC时钟.h"
 #include "转换.语言场景基础.h"
+#include "表达.含义网投影.h"
+#include "表达.基础语言.h"
 #include "转换.语言场景共同.h"
 #include "../领域/新_自然语言世界树类.h"
 #include "../领域/新_场景类.h"
@@ -339,6 +341,106 @@ public:
     mutable std::vector<专名现场项> 项目;
 private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
 };
+接收篇章成文观察 从采用篇章成文并独立回读(认知依赖& d, const 新接收篇章采用信息& 采用,
+    const 语言图交互上下文& 交互, std::stop_token 停止) {
+    using S=接收篇章成文状态;
+    using B=基础表达状态;
+    using I=语言场景基础输入状态;
+    接收篇章成文观察 结果{采用.节点};
+    const auto& 采用内容=采用.内容;
+    const auto& 网=采用内容.含义候选;
+    if (!网 || 网->顶层项组.size()!=1) return 结果;
+    const auto& 顶=网->顶层项组.front();
+    if (顶.表达用途!=新表达用途::陈述) return 结果;
+    const auto 取项=[&](std::int64_t 编号) {
+        return std::ranges::find(网->内容项组,编号,&新含义内容项::编号);
+    };
+    const auto 根=取项(顶.内容引用);
+    if (根==网->内容项组.end()) return 结果;
+    std::vector<std::int64_t> 内容顺序{根->编号};
+    if (const auto* 组合=std::get_if<新篇章组合>(&根->内容)) {
+        if (组合->种类!=新篇章组合种类::文本顺序) return 结果;
+        内容顺序=组合->有序子项组;
+    }
+
+    std::vector<语言图含义材料> 原含义;
+    std::vector<解释原文范围> 成文范围;
+    std::string 全文;
+    std::size_t 标量=0;
+    for (const auto 编号 : 内容顺序) {
+        检查认知停止(停止);
+        const auto 项=取项(编号);
+        if (项==网->内容项组.end() || !std::holds_alternative<新静态含义单元>(项->内容)) return 结果;
+        新语言含义网 单元网;
+        单元网.顶层项组.push_back({{},顶.表达用途,编号});
+        单元网.内容项组.push_back(*项);
+        auto 投影=含义网投影旧图(单元网,{采用内容.语言节点});
+        if (!投影.图 || 投影.图->定义图.节点组.size()!=1) return 结果;
+
+        const auto& 定义=投影.图->定义图.节点组.front();
+        基础表达请求 请求{};
+        请求.语言节点=采用内容.语言节点;
+        请求.目的=新语言知识表达目的::陈述;
+        请求.操作=定义.操作;
+        请求.作用域=定义.作用域;
+        请求.含义图=std::move(投影.图);
+        请求.成文说话者=采用.说话者;
+        请求.成文受话者=交互.受话者E;
+        请求.允许根知识节点组=项->所用知识组;
+        const auto 成文=生成基础语言表达(请求,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+        if (成文.状态==B::读取漂移 || 成文.状态==B::引用不可读) 漂移();
+        if (成文.状态==B::工程未完成 || 成文.状态==B::额度不足) 资源();
+        if (成文.状态==B::内部不一致) throw std::logic_error("adopted statement generation inconsistent");
+        if (成文.状态!=B::已生成 || 成文.文本.empty()) {
+            结果.状态=S::成文受阻;
+            结果.成文状态=成文.状态;
+            return 结果;
+        }
+        if (!全文.empty()) {
+            全文+='\n';
+            ++标量;
+        }
+        const auto 末=标量+static_cast<std::size_t>(标量数(成文.文本));
+        成文范围.push_back({标量,末});
+        标量=末;
+        全文+=成文.文本;
+        原含义.push_back(std::move(*请求.含义图));
+    }
+    结果.UTF8正文=std::move(全文);
+
+    auto 句段组=投影接收篇章句界(结果.UTF8正文);
+    if (原含义.size()==1 && 句段组.empty()) 句段组.push_back({{0,标量},结果.UTF8正文});
+    if (句段组.size()!=成文范围.size()) {
+        结果.状态=S::回读句界不一致;
+        return 结果;
+    }
+    接收专名读取器 专名(d,交互.现实范围根,停止);
+    语言基础统一输入请求 回读{采用内容.语言节点,{}, {},0,0,0,0,0,&专名,语言解释读取模式::本次正式有限集完整读取};
+    回读.交互上下文=语言图交互上下文{交互.接收消息M,采用.说话者,交互.受话者E,交互.现实范围根};
+    回读.读取静态角色缺口=true;
+    bool 唯一=true;
+    bool 一致=true;
+    for (std::size_t i=0;i<句段组.size();++i) {
+        检查认知停止(停止);
+        const auto& 句=句段组[i];
+        if (句.全文范围.起始标量!=成文范围[i].起始标量 || 句.全文范围.结束标量!=成文范围[i].结束标量) {
+            结果.状态=S::回读句界不一致;
+            return 结果;
+        }
+        回读.固定原文=句.句面原文;
+        const auto 实际=只读解释单句基础语言(回读,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+        if (实际.状态==I::读取漂移 || 实际.状态==I::引用不可读) 漂移();
+        if (实际.状态==I::工程未完成 || 实际.状态==I::额度不足) 资源();
+        if (实际.状态==I::内部不一致) throw std::logic_error("adopted statement independent readback inconsistent");
+        结果.独立回读句段.push_back(记录句段解释(实际,句.全文范围));
+        const auto* 实际图=实际.含义 ? std::get_if<语言图含义材料>(&*实际.含义) : nullptr;
+        if (实际.状态!=I::已形成值式图 || !实际图 || !实际.静态结构) 唯一=false;
+        else if (!语言图结构语义一致(原含义[i],*实际图)) 一致=false;
+    }
+    结果.状态=!唯一 ? S::回读未唯一 : 一致 ? S::已成文且独立回读 : S::回读含义不一致;
+    return 结果;
+}
+
 新语言解释资源保护结果 读资源(认知依赖& d,稳定编码 l,std::stop_token stop){
     检查认知停止(stop);
     auto r=d.语言.读取解释资源保护(l,d.词,d.存在概念);
@@ -1549,6 +1651,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     const bool 正式词段重入 = work.前置 == 实现::前置阶段::待正式词段解释;
     bool 本次取得正式解释 = false;
     bool 需要普通词条筹办 = false;
+    std::optional<语言图交互上下文> 篇章成文语境;
     const auto 进入步骤=[&](const char* name){
         步骤=name;
         if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
@@ -1603,6 +1706,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }
         const auto speaker=*work.说话者;
         out.H=speaker;
+        篇章成文语境=语言图交互上下文{m.消息节点,speaker,*context.已绑定自我,context.现实根};
+        if (out.阶段==阶段::已保存场景信息 && out.篇章成文
+            && out.篇章成文->状态==接收篇章成文状态::待成文)
+            throw 推进中断{阶段::已保存场景信息,"固定篇章已采用，继续反向成文"};
         if (分界配置 && m.回应消息节点) {
             进入步骤("接收正式分界答复");
             if (处理接收分界答复(d,*分界配置,m,speaker,out,stop,[&]{return 会话仍活跃(m);}))
@@ -1765,7 +1872,12 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
                     throw std::logic_error("received language scene material was not published");
-                return 保存.信息->篇章采用.has_value();
+                if (const auto& 采用=保存.信息->篇章采用) {
+                    if (!out.篇章成文 || out.篇章成文->采用!=采用->节点)
+                        out.篇章成文=接收篇章成文观察{采用->节点,接收篇章成文状态::待成文};
+                    return true;
+                }
+                return false;
             };
             if (!正式词段重入 && !句段组.empty()) {
                 进入步骤("自然语言场景逐句解释");
@@ -1780,8 +1892,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     主体观察.记录(解释, req.语言节点, d.名称, 句);
                 }
                 确认语言场景();
-                const bool 已采用=保存解释材料(解释组);
                 out.句段解释 = std::move(解释组);
+                const bool 已采用=保存解释材料(out.句段解释);
                 if (已采用) throw 推进中断{阶段::已保存场景信息,"已读回同源正式篇章采用"};
                 throw 推进中断{阶段::语言解释待完善, "已保存原文句段解释材料，等待篇章含义"};
             }
@@ -1979,6 +2091,33 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
     }
     catch(const std::bad_alloc&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进分配资源未完成";}
     catch(const std::length_error&){out.阶段=阶段::资源延后;out.待交接请求.reset();本次终结=false;out.原因="认知推进材料资源未完成";}
+    if (本次终结 && out.阶段==阶段::已保存场景信息 && out.被动解释来源 && 篇章成文语境
+        && out.篇章成文 && out.篇章成文->状态==接收篇章成文状态::待成文) {
+        const auto 等待成文=[&](const char* 原因) {
+            本次终结=false;
+            out.原因=原因;
+        };
+        try {
+            检查认知停止(stop);
+            using L=新语言分界工程状态;
+            const auto 正式=d.语言.读取接收语言解释(*out.被动解释来源,d.语言世界,d.外设);
+            if (正式.状态==L::资源失败) 资源();
+            if (正式.状态==L::前提已变化 || 正式.状态==L::未找到) 漂移();
+            if (正式.状态!=L::已完成 || !正式.信息 || !正式.信息->篇章采用
+                || 正式.信息->篇章采用->节点!=out.篇章成文->采用)
+                throw std::logic_error("adopted statement source changed during generation");
+            out.篇章成文=从采用篇章成文并独立回读(d,*正式.信息->篇章采用,*篇章成文语境,stop);
+            if (out.篇章成文->状态==接收篇章成文状态::已成文且独立回读)
+                out.原因="固定篇章已成文并独立回读一致";
+        } catch (const 推进中断& e) {
+            等待成文(e.状态==阶段::停止未完成 ? "已保留正式篇章，停止本次成文"
+                : "已保留正式篇章，等待重新读取成文材料");
+        } catch (const std::bad_alloc&) {
+            等待成文("已保留正式篇章，等待成文资源");
+        } catch (const std::length_error&) {
+            等待成文("已保留正式篇章，等待成文资源");
+        }
+    }
     if (本次取得正式解释 && 需要普通词条筹办 && !out.U && !out.D && work.定位 && !stop.stop_requested()) {
         work.前置 = 实现::前置阶段::待接纳;
         out.阶段 = 阶段::前置输入待治理;
