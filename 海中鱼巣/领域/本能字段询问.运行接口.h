@@ -104,6 +104,8 @@ public:
     virtual ~新字段询问登记端口()=default;
     virtual std::optional<新字段询问登记配置> 读取登记材料() const noexcept=0;
     virtual 新方法建立结果 确保方法登记(const 新方法知识建立请求&) noexcept=0;
+    // 独立键 builtin.demand.info.ask.v1；与 确保方法登记(field.ask) 并存，非别名。
+    virtual 新方法建立结果 确保需求信息询问方法登记(const 新方法知识建立请求&) noexcept=0;
     // 只读：按出站来源读取问题及其答案情况，不写入。
     virtual 新字段询问答案读回 读取执行问题答案(稳定编码 出站来源) const noexcept=0;
     // 结果检测：找到答案且问题尚无答案时按查得来源登记第一条答案（7240 §5.5 第4项）；返回登记后的情况。
