@@ -104,9 +104,15 @@ struct 新接收语言解释内容 final {
     std::optional<新语言含义网> 含义候选{};
     friend bool operator==(const 新接收语言解释内容&,const 新接收语言解释内容&)=default;
 };
+struct 新接收篇章指代目标 final {
+    std::int64_t 内容项;
+    稳定编码 实例;
+    新绑定指称 采用时目标;
+};
 struct 新接收篇章采用信息 final {
     稳定编码 节点, 说话者;
     新接收语言解释内容 内容;
+    std::vector<新接收篇章指代目标> 指代目标组{};
 };
 struct 新接收语言解释信息 final {
     稳定编码 记录节点;

@@ -95,6 +95,7 @@ public:
     std::optional<稳定编码> 记录() const noexcept { return 记录_; }
     const 基础只读预期& 绑定预期() const noexcept { return 预期_; }
     const std::vector<稳定编码>& 指代实例组() const noexcept { return 指代实例组_; }
+    const 基础只读字段集合预期& 指代成员预期() const noexcept { return 指代成员预期_; }
 
 private:
     friend class 新_场景类;

@@ -423,6 +423,12 @@ private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
         新语言含义网 单元网;
         单元网.顶层项组.push_back({{},顶.表达用途,编号});
         单元网.内容项组.push_back(*项);
+        auto& 主体 = std::get<新静态含义单元>(单元网.内容项组.front().内容).主体;
+        if (const auto* 指代 = std::get_if<新指代实例引用>(&主体)) {
+            const auto 固定 = std::ranges::find(采用.指代目标组, 编号, &新接收篇章指代目标::内容项);
+            if (!指代->节点 || 固定 == 采用.指代目标组.end() || 固定->实例 != *指代->节点) return 结果;
+            主体 = 固定->采用时目标;
+        }
         auto 投影=含义网投影旧图(单元网,{采用内容.语言节点});
         if (!投影.图 || 投影.图->定义图.节点组.size()!=1) return 结果;
 
@@ -1914,7 +1920,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             const auto 保存解释材料 = [&](const std::vector<接收语言句段解释>& 解释组) {
                 检查认知停止(stop);
                 using S = 新语言分界工程状态;
-                const auto 保存 = d.语言.保存接收语言解释(k,
+                auto 保存 = d.语言.保存接收语言解释(k,
                     {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组},
                     speaker,d.语言世界,d.外设);
                 if (保存.状态 == S::资源失败) 资源();
@@ -1929,6 +1935,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     if (指代.状态 == S::前提已变化 || 指代.状态 == S::未找到) 漂移();
                     if (指代.状态 != S::已完成 && 指代.状态 != S::材料未就绪)
                         throw std::logic_error("received reference instance could not be published");
+                    if (指代.状态 == S::已完成 && !保存.信息->篇章采用) {
+                        保存 = d.语言.采用当前接收指代篇章(k, speaker, d.语言世界, d.外设);
+                        if (保存.状态 == S::资源失败) 资源();
+                        if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
+                        if (保存.状态 != S::已完成 || !保存.信息)
+                            throw std::logic_error("received reference adoption could not be published");
+                    }
                 }
                 if (const auto& 采用=保存.信息->篇章采用) {
                     if (!out.篇章成文 || out.篇章成文->采用!=采用->节点)

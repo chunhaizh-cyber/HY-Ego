@@ -1490,6 +1490,9 @@ public:
                 return "{\"kind\":\"bound\",\"category\":"+控制计数(static_cast<std::uint64_t>(绑定->类别))
                     +",\"node\":"+控制编码(绑定->节点)+",\"rangeConcept\":"
                     +控制编码(有效(绑定->范围概念) ? std::optional{绑定->范围概念} : std::nullopt)+"}";
+            if (const auto* 指代=std::get_if<新指代实例引用>(&指称))
+                return "{\"kind\":\"reference\",\"instance\":"+控制编码(指代->节点)+",\"localId\":"
+                    +(指代->网内编号 ? 控制计数(static_cast<std::uint64_t>(*指代->网内编号)) : "null")+"}";
             if (const auto* 局部=std::get_if<新匿名表达对象>(&指称))
                 return "{\"kind\":\"local\",\"localId\":"+控制计数(局部->网内编号)
                     +",\"rangeConcept\":"+控制编码(局部->范围概念)+"}";
@@ -1795,10 +1798,19 @@ public:
                             +",\"text\":"+字符串(成文.UTF8正文)
                             +",\"readback\":"+句组JSON(成文.独立回读句段)+"}";
                     }
+                    std::string 固定指代组 = "[";
+                    for (const auto& 指代 : 采用.指代目标组) {
+                        检查停止();
+                        if (固定指代组.size() > 1) 固定指代组 += ',';
+                        固定指代组 += "{\"item\":"+控制计数(static_cast<std::uint64_t>(指代.内容项))
+                            +",\"instance\":"+控制编码(指代.实例)
+                            +",\"target\":"+控制编码(指代.采用时目标.节点)+"}";
+                    }
+                    固定指代组 += ']';
                     采用JSON="{\"id\":"+控制编码(采用.节点)+",\"speaker\":"+控制编码(采用.说话者)
                         +",\"sentences\":"+句组JSON(采用.内容.句段组)
                         +",\"meaning\":"+接收候选含义JSON(采用.内容.含义候选)
-                        +",\"roundTrip\":"+成文JSON+"}";
+                        +",\"referenceTargets\":"+固定指代组+",\"roundTrip\":"+成文JSON+"}";
                 }
                 std::string 指代实例JSON = "null";
                 if (已保存) {
