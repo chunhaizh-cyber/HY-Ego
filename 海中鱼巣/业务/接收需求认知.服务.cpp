@@ -412,8 +412,36 @@ public:
     mutable std::vector<专名现场项> 项目;
 private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
 };
+std::vector<语言场景局部称名> 读取同源局部称名(认知依赖& d,
+    const 新接收认知来源键& 来源, std::stop_token 停止) {
+    using L = 新语言分界工程状态;
+    using S = 新来源子场景状态;
+    检查认知停止(停止);
+    const auto 成员 = d.语言世界.读取接收局部对象组(来源.接收消息节点);
+    if (成员.状态 == S::资源失败) 资源();
+    if (成员.状态 == S::前提已变化 || 成员.状态 == S::未建立) 漂移();
+    if (成员.状态 != S::已存在) throw std::logic_error("adopted statement scene unreadable");
+    if (成员.对象组.empty()) return {};
+    const auto 固定 = d.语言.读取前置来源(来源, d.外设);
+    if (固定.状态 == L::资源失败) 资源();
+    if (固定.状态 == L::前提已变化 || 固定.状态 == L::未找到 || 固定.状态 == L::材料未就绪) 漂移();
+    if (固定.状态 != L::已完成 || !固定.信息) throw std::logic_error("adopted statement text unreadable");
+
+    using namespace 语言场景转换内部;
+    const auto 原文 = 解码语言场景原文(固定.信息->固定UTF8原文);
+    if (!原文) throw std::logic_error("adopted statement source is not UTF-8");
+    std::vector<语言场景局部称名> 结果;
+    for (const auto& 对象 : 成员.对象组) {
+        检查认知停止(停止);
+        if (对象.声明.前置来源 != 固定.信息->节点) continue;
+        结果.push_back({对象.存在, 读取语言场景原文范围(*原文,
+            {对象.声明.起始标量, 对象.声明.结束标量})});
+    }
+    return 结果;
+}
+
 接收篇章成文观察 从采用篇章成文并独立回读(认知依赖& d, const 新接收篇章采用信息& 采用,
-    const 语言图交互上下文& 交互, std::stop_token 停止) {
+    const 新接收认知来源键& 来源, const 语言图交互上下文& 交互, std::stop_token 停止) {
     using S=接收篇章成文状态;
     using B=基础表达状态;
     using I=语言场景基础输入状态;
@@ -434,6 +462,7 @@ private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
         内容顺序=组合->有序子项组;
     }
 
+    const auto 成文称名 = 读取同源局部称名(d, 来源, 停止);
     std::vector<语言图含义材料> 原含义;
     std::vector<解释原文范围> 成文范围;
     std::string 全文;
@@ -464,6 +493,7 @@ private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
         请求.成文说话者=采用.说话者;
         请求.成文受话者=交互.受话者E;
         请求.允许根知识节点组=项->所用知识组;
+        请求.局部称名组 = 成文称名;
         const auto 成文=生成基础语言表达(请求,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
         if (成文.状态==B::读取漂移 || 成文.状态==B::引用不可读) 漂移();
         if (成文.状态==B::工程未完成 || 成文.状态==B::额度不足) 资源();
@@ -495,6 +525,8 @@ private:认知依赖& d_;稳定编码 root_;std::stop_token stop_;
     语言基础统一输入请求 回读{采用内容.语言节点,{}, {},0,0,0,0,0,&专名,语言解释读取模式::本次正式有限集完整读取};
     回读.交互上下文=语言图交互上下文{交互.接收消息M,采用.说话者,交互.受话者E,交互.现实范围根};
     回读.读取静态角色缺口=true;
+    const auto 回读称名 = 读取同源局部称名(d, 来源, 停止);
+    回读.局部称名组 = 回读称名;
     bool 唯一=true;
     bool 一致=true;
     for (std::size_t i=0;i<句段组.size();++i) {
@@ -2201,7 +2233,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if (正式.状态!=L::已完成 || !正式.信息 || !正式.信息->篇章采用
                 || 正式.信息->篇章采用->节点!=out.篇章成文->采用)
                 throw std::logic_error("adopted statement source changed during generation");
-            out.篇章成文=从采用篇章成文并独立回读(d,*正式.信息->篇章采用,*篇章成文语境,stop);
+            out.篇章成文=从采用篇章成文并独立回读(d,*正式.信息->篇章采用,
+                *out.被动解释来源,*篇章成文语境,stop);
             if (out.篇章成文->状态==接收篇章成文状态::已成文且独立回读)
                 out.原因="固定篇章已成文并独立回读一致";
         } catch (const 推进中断& e) {

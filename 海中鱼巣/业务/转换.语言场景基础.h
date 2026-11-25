@@ -140,6 +140,7 @@ struct 语言基础统一输入请求 final {
     std::optional<语言图交互上下文> 交互上下文{};
     bool 读取静态角色缺口=false;
     std::optional<语言图正式词段视图> 正式词段{};
+    std::span<const 语言场景局部称名> 局部称名组{};
 };
 struct 语言基础统一输入结果 final {
     语言场景基础输入状态 状态 = 语言场景基础输入状态::输入拒绝;

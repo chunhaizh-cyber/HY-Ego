@@ -4,6 +4,7 @@
 #include "语言含义网.数据.h"
 #include <cstdint>
 #include <optional>
+#include <span>
 #include <stop_token>
 #include <string>
 #include <variant>
@@ -43,6 +44,11 @@ struct 新语言词条类型依据 final {
 enum class 新语言知识含义操作 : std::uint8_t;
 enum class 新语言知识参数角色 : std::uint8_t;
 
+// 本次语境从正式场景声明及固定原文取得的称名。
+struct 语言场景局部称名 final {
+    稳定编码 存在节点;
+    std::string 词面;
+};
 struct 语言图引用值 final {
     新语言知识角色类别 类别=static_cast<新语言知识角色类别>(1);
     稳定编码 节点{};
