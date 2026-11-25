@@ -1584,9 +1584,9 @@ public:
                         [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
             }
         }
-        const auto 句组JSON = [&] {
+        const auto 句组JSON = [&](const std::vector<接收语言句段解释>& 句段组) {
             std::string 句组 = "[";
-            for (const auto& 句 : item.句段解释) {
+            for (const auto& 句 : 句段组) {
                 检查停止();
                 std::string 缺口组 = "[";
                 for (const auto& 缺口 : 句.缺口组) {
@@ -1668,18 +1668,30 @@ public:
                         + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"segments\":" + 分段 + "]}";
                 if (!item.句段解释.empty()) {
                     正式词段解释 = "{\"source\":" + 控制编码(证据.前置来源) + ",\"range\":" + 控制编码(证据.范围)
-                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"sentences\":" + 句组JSON() + "}";
+                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"sentences\":" + 句组JSON(item.句段解释) + "}";
                 }
             }
         }
         检查停止();
         std::string 被动句段解释 = "null";
         if (item.S && item.被动解释来源 && item.被动解释来源->接收消息节点 == item.M && !item.句段解释.empty()) {
-            const auto 来源 = 当前_.世界事实.语言服务.读取前置来源(*item.被动解释来源, 当前_.外设世界树);
-            const auto 场景 = 当前_.自然语言世界树.读取接收来源场景(item.M);
-            if (来源.信息 && 场景.信息 && 场景.信息->场景节点 == *item.S)
-                被动句段解释 = "{\"source\":" + 控制编码(来源.信息->节点) + ",\"scene\":" + 控制编码(item.S)
-                    + ",\"sentences\":" + 句组JSON() + "}";
+            const auto 正式 = 当前_.世界事实.语言服务.读取接收语言解释(*item.被动解释来源,
+                当前_.自然语言世界树, 当前_.外设世界树);
+            const bool 已保存 = 正式.信息 && 正式.信息->内容.来源场景 == *item.S;
+            稳定编码 前置来源{};
+            if (已保存) {
+                前置来源=正式.信息->内容.前置来源;
+            } else {
+                const auto 来源 = 当前_.世界事实.语言服务.读取前置来源(*item.被动解释来源, 当前_.外设世界树);
+                const auto 场景 = 当前_.自然语言世界树.读取接收来源场景(item.M);
+                if (来源.信息 && 场景.信息 && 场景.信息->场景节点 == *item.S) 前置来源=来源.信息->节点;
+            }
+            if (有效(前置来源)) {
+                被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
+                    + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
+                    + ",\"sentences\":" + 句组JSON(item.句段解释)
+                    + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null") + "}";
+            }
         }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)

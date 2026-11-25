@@ -58,27 +58,6 @@ struct 接收词条准入证据 final {
     新接收认知来源键 来源;
     稳定编码 前置来源, 范围, 准入材料;
 };
-enum class 语言场景基础输入状态 : std::uint8_t;
-enum class 基础语言输入状态 : std::uint8_t;
-enum class 语言基础统一构式 : std::uint8_t;
-// 在同一来源场景内用首次称名范围标识对象。
-struct 接收语言主体关系 final {
-    std::uint64_t 起始标量, 结束标量, 对象起始标量, 对象结束标量;
-    稳定编码 所用构式;
-    std::optional<稳定编码> 指代概念;
-    bool 已确定;
-    friend bool operator==(const 接收语言主体关系&,const 接收语言主体关系&)=default;
-};
-struct 接收语言句段解释 final {
-    std::uint64_t 起始标量, 结束标量;
-    语言场景基础输入状态 状态;
-    std::optional<基础语言输入状态> 图状态;
-    std::vector<新前置语言缺口> 缺口组;
-    std::optional<语言基础统一构式> 构式{};
-    std::optional<接收语言主体关系> 主体关系{};
-    std::vector<新语言词条类型依据> 词条类型依据组{};
-    friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
-};
 struct 接收需求认知观察 final {
     稳定编码 M;
     std::optional<稳定编码> H,S,U,D;

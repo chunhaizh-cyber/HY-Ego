@@ -1748,6 +1748,17 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 out.S = s.信息->场景节点;
                 out.被动解释来源 = k;
             };
+            const auto 保存解释材料 = [&](const std::vector<接收语言句段解释>& 解释组) {
+                检查认知停止(stop);
+                using S = 新语言分界工程状态;
+                const auto 保存 = d.语言.保存接收语言解释(k,
+                    {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组},
+                    d.语言世界,d.外设);
+                if (保存.状态 == S::资源失败) 资源();
+                if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
+                if (保存.状态 != S::已完成 || !保存.信息)
+                    throw std::logic_error("received language scene material was not published");
+            };
             if (!正式词段重入 && !句段组.empty()) {
                 进入步骤("自然语言场景逐句解释");
                 std::vector<接收语言句段解释> 解释组;
@@ -1761,8 +1772,9 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     主体观察.记录(解释, req.语言节点, d.名称, 句);
                 }
                 确认语言场景();
+                保存解释材料(解释组);
                 out.句段解释 = std::move(解释组);
-                throw 推进中断{阶段::语言解释待完善, "已解释原文句段，等待篇章含义材料"};
+                throw 推进中断{阶段::语言解释待完善, "已保存原文句段解释材料，等待篇章含义"};
             }
             新语言分界调用结果<新语言分界材料信息> 准入读回;
             const 新语言词条准入定义* 准入定义 = nullptr;
@@ -1839,6 +1851,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             } else if (parsed.状态 != 语言场景基础输入状态::输入拒绝) {
                 确认语言场景();
                 out.句段解释 = {记录句段解释(parsed, 整句)};
+                if (!parsed.含义 && parsed.完整候选组.empty()) 保存解释材料(out.句段解释);
             }
 #ifdef HY_EGO_DEBUG_LOG_RECEIVED_DEMAND_PARSE
             记录接收解释调用(解释诊断号, m.消息节点, 解释诊断开始, &parsed);

@@ -38,6 +38,38 @@ struct 新语言词条类型依据 final {
     std::vector<稳定编码> 构式依据组;
     friend bool operator==(const 新语言词条类型依据&,const 新语言词条类型依据&)=default;
 };
+enum class 语言场景基础输入状态 : std::uint8_t;
+enum class 基础语言输入状态 : std::uint8_t;
+enum class 语言基础统一构式 : std::uint8_t;
+// 在同一来源场景内用首次称名范围标识对象。
+struct 接收语言主体关系 final {
+    std::uint64_t 起始标量, 结束标量, 对象起始标量, 对象结束标量;
+    稳定编码 所用构式;
+    std::optional<稳定编码> 指代概念;
+    bool 已确定;
+    friend bool operator==(const 接收语言主体关系&,const 接收语言主体关系&)=default;
+};
+struct 接收语言句段解释 final {
+    std::uint64_t 起始标量, 结束标量;
+    语言场景基础输入状态 状态;
+    std::optional<基础语言输入状态> 图状态;
+    std::vector<新前置语言缺口> 缺口组;
+    std::optional<语言基础统一构式> 构式{};
+    std::optional<接收语言主体关系> 主体关系{};
+    std::vector<新语言词条类型依据> 词条类型依据组{};
+    friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
+};
+
+struct 新接收语言解释内容 final {
+    稳定编码 来源场景, 前置来源, 语言节点;
+    std::uint64_t 原文起点, 原文终点;
+    std::vector<接收语言句段解释> 句段组;
+    friend bool operator==(const 新接收语言解释内容&,const 新接收语言解释内容&)=default;
+};
+struct 新接收语言解释信息 final {
+    稳定编码 记录节点;
+    新接收语言解释内容 内容;
+};
 struct 新前置普通词条名称缺口 final {
     稳定编码 词条, 所用知识;
     新语言知识角色类别 所需类别;

@@ -163,6 +163,9 @@ public:
         新_语言类&, const 新语言分界依据采用请求&, std::stop_token);
     新来源子场景结果 建立或取得词典来源场景(稳定编码 材料Q) noexcept;
     新来源子场景结果 读取接收来源场景(稳定编码 消息节点) const noexcept;
+    新接收语言解释场景结果 读取接收语言解释场景(稳定编码 消息节点) const;
+    bool 合并接收语言解释首次挂接(const 新接收语言解释场景绑定&,
+        基础节点组追加请求&, 基础组内节点引用) const;
     std::optional<新自然语言场景信息> 获取场景(
         稳定编码 场景节点) const noexcept;
     std::vector<稳定编码> 查询全部场景() const noexcept;

@@ -89,6 +89,22 @@ struct 新来源子场景结果 final {
     std::vector<基础联合节点快照> 完整保护;
 };
 
+class 新接收语言解释场景绑定 final {
+public:
+    稳定编码 场景() const noexcept { return 场景_; }
+    std::optional<稳定编码> 记录() const noexcept { return 记录_; }
+
+private:
+    friend class 新_场景类;
+    稳定编码 场景_{};
+    std::optional<稳定编码> 记录_;
+    基础只读预期 预期_;
+};
+struct 新接收语言解释场景结果 final {
+    新来源子场景状态 状态 = 新来源子场景状态::输入不合法;
+    std::optional<新接收语言解释场景绑定> 绑定;
+};
+
 enum class 新场景操作状态 : std::uint8_t {
     已完成 = 1,
     无变化 = 2,
@@ -573,6 +589,10 @@ private:
         稳定编码, std::vector<基础联合节点快照>*) const noexcept;
     friend class 新_词类;
     friend class 新_自然语言世界树类;
+    新接收语言解释场景结果 读取接收语言解释场景(
+        const 新来源子场景结果&) const;
+    bool 合并接收语言解释首次挂接(const 新接收语言解释场景绑定&,
+        基础节点组追加请求&, 基础组内节点引用) const;
 public:
     // 每轮写入前取得；F准备期间只消费本轮宿主材料，不再次读取场景。
     新场景状态参与绑定 取得场景状态参与绑定(稳定编码 场景);

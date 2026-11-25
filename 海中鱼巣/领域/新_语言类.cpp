@@ -6,6 +6,7 @@
 #include "新_特征值类.h"
 #include "新_存在类.h"
 #include "新_场景类.h"
+#include "新_自然语言世界树类.h"
 #include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
 
@@ -6485,6 +6486,21 @@ auto 组织记录字段(新语言含义网& v){(void)v;return std::tie(v.身份,
 auto 组织记录字段(新组织取材步骤& v){(void)v;return std::tie(v.编号,v.算子,v.输出角色);}
 auto 组织记录字段(新表达需求类型& v){(void)v;return std::tie(v.用途,v.对象种类);}
 auto 组织记录字段(新表达组织知识定义& v){(void)v;return std::tie(v.适用类型,v.适用条件组,v.取材步骤组,v.含义网模板,v.缺材处理);}
+auto 组织记录字段(新前置语言缺口& v){
+    return std::tie(v.种类,v.起始标量,v.结束标量,v.已取得相关节点);
+}
+auto 组织记录字段(新语言词条类型依据& v){
+    return std::tie(v.起始标量,v.结束标量,v.词条,v.所需类别,v.构式依据组);
+}
+auto 组织记录字段(接收语言主体关系& v){
+    return std::tie(v.起始标量,v.结束标量,v.对象起始标量,v.对象结束标量,v.所用构式,v.指代概念,v.已确定);
+}
+auto 组织记录字段(接收语言句段解释& v){
+    return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组);
+}
+auto 组织记录字段(新接收语言解释内容& v){
+    return std::tie(v.来源场景,v.前置来源,v.语言节点,v.原文起点,v.原文终点,v.句段组);
+}
 auto 组织记录字段(新接收场景信息& v){return std::tie(v.种类,v.来源消息,v.来源场景,v.交互场景,v.说话者,v.主体存在,v.主体概念,v.特征类型,
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.招呼操作,v.目标存在,v.原文起点,v.原文终点,v.时刻);}
 auto 组织记录字段(新自我写入语言信息& v){return std::tie(v.写入来源,v.来源场景,v.自我,v.主体存在,v.特征类型,
@@ -6540,7 +6556,7 @@ struct 组织写入现场 {
     void 子(std::size_t n,组织键 k,std::size_t child){请求.新节点组[n].字段组.push_back({组键(k),基础组内节点引用{child}});}
     template<class T> std::size_t 写(const T& v,std::int64_t order=0){
         std::size_t n=0;
-        if constexpr(std::is_enum_v<T>){n=节点(2,order);值(n,static_cast<std::int64_t>(v));}
+        if constexpr(std::is_enum_v<T> || std::is_same_v<T,bool>){n=节点(2,order);值(n,static_cast<std::int64_t>(v));}
         else if constexpr(std::is_same_v<T,std::int64_t>){n=节点(1,order);值(n,v);}
         else if constexpr(std::is_same_v<T,std::uint64_t>){
             n=节点(9,order);
@@ -6594,6 +6610,12 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
         else if constexpr(std::is_same_v<T,新语言分界段用途>)
             组织要求(原值>=1&&原值<=static_cast<std::int64_t>(新语言分界段用途::分隔));
         v=static_cast<T>(原值);
+    }
+    else if constexpr(std::is_same_v<T,bool>){
+        组织要求(tag==2&&children.empty());
+        const auto 值=r.整数(id,组织键::值);
+        组织要求(值==0||值==1);
+        v=值!=0;
     }
     else if constexpr(std::is_same_v<T,std::int64_t>){组织要求(tag==1&&children.empty());v=r.整数(id,组织键::值);}
     else if constexpr(std::is_same_v<T,std::uint64_t>){
@@ -6897,6 +6919,153 @@ void 发出问题答案就绪通知(const std::vector<稳定编码>& 问题组) 
     }
 }
 } // namespace
+namespace {
+constexpr std::int64_t 接收语言解释记录类型=112;
+
+新语言分界工程状态 接收语言解释场景状态(const 新接收语言解释场景结果& 结果) {
+    using S = 新语言分界工程状态;
+    switch (结果.状态) {
+    case 新来源子场景状态::已存在:
+        组织要求(结果.绑定.has_value());
+        return S::已完成;
+    case 新来源子场景状态::未建立: return S::未找到;
+    case 新来源子场景状态::前提已变化: return S::前提已变化;
+    case 新来源子场景状态::资源失败: return S::资源失败;
+    default: return S::输入拒绝;
+    }
+}
+
+bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, const 新语言前置来源信息& 来源,
+    const 新接收语言解释场景绑定& 场景) {
+    if (内容.来源场景 != 场景.场景() || 内容.前置来源 != 来源.节点 || !有效(内容.语言节点)
+        || 内容.原文起点 != 来源.来源.原文起点 || 内容.原文终点 != 来源.来源.原文终点
+        || 内容.句段组.empty()) return false;
+    auto 前段末 = 内容.原文起点;
+    std::map<std::pair<std::uint64_t,std::uint64_t>,bool> 已称名;
+    for (const auto& 句 : 内容.句段组) {
+        if (句.起始标量 < 前段末 || 句.起始标量 >= 句.结束标量 || 句.结束标量 > 内容.原文终点)
+            return false;
+        前段末 = 句.结束标量;
+        const auto 在段内 = [&](std::uint64_t 起, std::uint64_t 末) {
+            return 句.起始标量 <= 起 && 起 < 末 && 末 <= 句.结束标量;
+        };
+        for (const auto& 缺口 : 句.缺口组) {
+            if (!在段内(缺口.起始标量,缺口.结束标量)
+                || 缺口.种类 < 新前置语言缺口种类::词面未登记 || 缺口.种类 > 新前置语言缺口种类::角色原文待确认)
+                return false;
+        }
+        for (const auto& 依据 : 句.词条类型依据组) {
+            using C=新语言知识角色类别;
+            if (!在段内(依据.起始标量,依据.结束标量) || !有效(依据.词条) || 依据.构式依据组.empty()
+                || (依据.所需类别!=C::存在概念 && 依据.所需类别!=C::特征概念 && 依据.所需类别!=C::正式特征类型))
+                return false;
+        }
+        if (句.主体关系) {
+            const auto& 关系 = *句.主体关系;
+            if (!在段内(关系.起始标量,关系.结束标量) || !有效(关系.所用构式)) return false;
+            const auto 对象范围 = std::pair{关系.对象起始标量,关系.对象结束标量};
+            if (关系.指代概念) {
+                const auto 前文=已称名.find(对象范围);
+                if (!有效(*关系.指代概念) || 前文==已称名.end()
+                    || (关系.已确定 && !前文->second)) return false;
+            } else {
+                if (对象范围 != std::pair{关系.起始标量,关系.结束标量}) return false;
+                已称名.emplace(对象范围,关系.已确定);
+            }
+        }
+    }
+    return true;
+}
+
+新接收语言解释信息 读接收语言解释记录(组织读取现场& 读, 稳定编码 记录,
+    const 新语言前置来源信息& 来源, const 新接收语言解释场景绑定& 场景) {
+    组织要求(读.整数(记录,组织键::类型)==接收语言解释记录类型
+        && 读.引用(记录,组织键::场景)==场景.场景()
+        && 读.引用(记录,组织键::来源)==来源.节点);
+    std::set<稳定编码> 路径;
+    auto 内容=组织读值<新接收语言解释内容>(读,读.引用(记录,组织键::定义),路径);
+    组织要求(接收语言解释内容有效(内容,来源,场景));
+    return {记录,std::move(内容)};
+}
+} // namespace
+
+新语言分界调用结果<新接收语言解释信息> 新_语言类::保存接收语言解释(
+    const 新接收认知来源键& 来源键, const 新接收语言解释内容& 内容,
+    const 新_自然语言世界树类& 世界, const 新语言分界消息读取接口& 消息读取) {
+    using S = 新语言分界工程状态;
+    try {
+        const auto 来源=读取前置来源(来源键,消息读取);
+        if (来源.状态!=S::已完成 || !来源.信息) return {来源.状态,{},{}};
+        const auto 场景结果=世界.读取接收语言解释场景(来源键.接收消息节点);
+        const auto 场景状态=接收语言解释场景状态(场景结果);
+        if (场景状态!=S::已完成) return {场景状态,{},{}};
+        const auto& 场景=*场景结果.绑定;
+        if (!接收语言解释内容有效(内容,*来源.信息,场景) || !是语言节点(内容.语言节点))
+            return {S::输入拒绝,{},{}};
+
+        std::lock_guard 锁(新语言互斥);
+        if (!有效(组织句柄.front())) return {S::未初始化,{},{}};
+        组织读取现场 读;
+        const auto 记录=场景.记录();
+        if (记录) {
+            auto 已有=读接收语言解释记录(读,*记录,*来源.信息,场景);
+            if (已有.内容.语言节点!=内容.语言节点) return {S::输入拒绝,{},{}};
+            if (已有.内容==内容) return {S::已完成,std::move(已有),{}};
+        }
+
+        组织写入现场 写;
+        const auto 定义=写.写(内容);
+        std::optional<std::size_t> 新记录;
+        if (记录) {
+            写.请求.当前字段赋值组.push_back(
+                {*记录,组键(组织键::定义),基础组内节点引用{定义}});
+            写.请求.追加字段组.push_back(
+                {*记录,组键(组织键::子项),基础组内节点引用{定义}});
+        } else {
+            新记录=写.节点(接收语言解释记录类型,0);
+            写.引用(*新记录,组织键::场景,内容.来源场景);
+            写.引用(*新记录,组织键::来源,内容.前置来源);
+            写.子(*新记录,组织键::定义,定义);
+            写.子(*新记录,组织键::子项,定义);
+            组织要求(世界.合并接收语言解释首次挂接(场景,写.请求,基础组内节点引用{*新记录}));
+        }
+        if (记录) 写.请求.预期联合节点组.push_back(读.读(*记录));
+        // 新解释引用只在 L1 发布时核对仍然可读，失败后按同一消息重读。
+        for (const auto 引用 : 写.引用组) 写.请求.只读预期.节点组.push_back({引用});
+        新接收语言解释信息 成果{{},内容};
+        const auto 发布=全局基础数据集.原子追加节点组(写.请求);
+        using L1=基础节点组追加状态;
+        if (发布.状态==L1::预期不符 || 发布.状态==L1::节点不存在 || 发布.状态==L1::引用不存在)
+            return {S::前提已变化,{},{}};
+        if (发布.状态==L1::资源失败) return {S::资源失败,{},{}};
+        组织要求(发布.状态==L1::已完成 && 发布.新节点组.size()==写.请求.新节点组.size());
+        const auto 节点=记录 ? *记录 : 发布.新节点组[*新记录];
+        成果.记录节点=节点;
+        return {S::已完成,std::move(成果),节点};
+    } catch (const std::bad_alloc&) { return {S::资源失败,{},{}}; }
+      catch (const std::length_error&) { return {S::资源失败,{},{}}; }
+}
+
+新语言分界调用结果<新接收语言解释信息> 新_语言类::读取接收语言解释(
+    const 新接收认知来源键& 来源键, const 新_自然语言世界树类& 世界,
+    const 新语言分界消息读取接口& 消息读取) const {
+    using S=新语言分界工程状态;
+    try {
+        const auto 来源=读取前置来源(来源键,消息读取);
+        if (来源.状态!=S::已完成 || !来源.信息) return {来源.状态,{},{}};
+        const auto 场景=世界.读取接收语言解释场景(来源键.接收消息节点);
+        const auto 状态=接收语言解释场景状态(场景);
+        if (状态!=S::已完成) return {状态,{},{}};
+        const auto 记录=场景.绑定->记录();
+        if (!记录) return {S::未找到,{},{}};
+        std::lock_guard 锁(新语言互斥);
+        if (!有效(组织句柄.front())) return {S::未初始化,{},{}};
+        组织读取现场 读;
+        return {S::已完成,读接收语言解释记录(读,*记录,*来源.信息,*场景.绑定),{}};
+    } catch (const std::bad_alloc&) { return {S::资源失败,{},{}}; }
+      catch (const std::length_error&) { return {S::资源失败,{},{}}; }
+}
+
 新接收场景信息保存结果 新_语言类::建立或取得接收场景信息(const 新接收场景信息& v){
     using S=新接收场景信息保存状态;
     核接收场景信息(v);
