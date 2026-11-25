@@ -73,6 +73,7 @@ enum class 基础语言输入状态 : std::uint8_t;
 enum class 语言基础统一构式 : std::uint8_t;
 struct 接收语言主体来源 final {
     std::optional<稳定编码> 词条, 名称关系, 已绑定存在;
+    std::vector<稳定编码> 已证冲突候选{};
     friend bool operator==(const 接收语言主体来源&,const 接收语言主体来源&)=default;
 };
 // 在同一来源场景内用首次称名范围标识对象。
@@ -117,6 +118,7 @@ struct 新接收指代实例信息 final {
     接收语言主体关系 出现;
     std::optional<稳定编码> 当前目标;
     bool 当前适用 = false;
+    std::optional<稳定编码> 当前依据;
 };
 struct 新前置普通词条名称缺口 final {
     稳定编码 词条, 所用知识;

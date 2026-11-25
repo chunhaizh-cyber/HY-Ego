@@ -199,7 +199,8 @@ public:
         }
         if (!前文可判_ || !首个称名_ || 多个前文对象_) {
             句.主体关系=接收语言主体关系{起,末,0,0,主体->知识节点,指代->概念.节点,false,
-                接收语言主体来源{指代->词条.节点,指代->节点,{}}};
+                接收语言主体来源{指代->词条.节点,指代->节点,{},正式前文候选_.size() == 2
+                    ? 正式前文候选_ : std::vector<稳定编码>{}}};
             前文可判_=false;
             return;
         }
@@ -216,6 +217,11 @@ public:
 
 private:
     void 记入前文(const 接收语言主体关系& 出现) {
+        if (出现.来源 && 出现.来源->已绑定存在 && 正式前文候选_.size() < 2) {
+            const auto E = *出现.来源->已绑定存在;
+            if (std::ranges::find(正式前文候选_, E) == 正式前文候选_.end())
+                正式前文候选_.push_back(E);
+        }
         if (!首个称名_) {
             首个称名_=出现;
             return;
@@ -281,6 +287,7 @@ private:
 
     bool 前文可判_ = true;
     bool 多个前文对象_ = false;
+    std::vector<稳定编码> 正式前文候选_;
     std::optional<接收语言主体关系> 首个称名_;
 };
 
@@ -1917,10 +1924,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (std::ranges::any_of(保存.信息->内容.句段组, [](const auto& 句) {
                         return 句.主体关系 && 句.主体关系->指代概念.has_value();
                     })) {
-                    const auto 指代 = d.语言.建立接收待消歧指代实例(k, d.语言世界, d.外设);
+                    const auto 指代 = d.语言世界.同步接收指代实例(d.语言, k, d.外设);
                     if (指代.状态 == S::资源失败) 资源();
                     if (指代.状态 == S::前提已变化 || 指代.状态 == S::未找到) 漂移();
-                    if (指代.状态 != S::已完成)
+                    if (指代.状态 != S::已完成 && 指代.状态 != S::材料未就绪)
                         throw std::logic_error("received reference instance could not be published");
                 }
                 if (const auto& 采用=保存.信息->篇章采用) {

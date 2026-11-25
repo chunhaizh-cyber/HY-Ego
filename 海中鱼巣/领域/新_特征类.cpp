@@ -4789,18 +4789,22 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
 }
 
 新特征直接引用值读取结果 新_特征类::读取特征直接引用当前值(
-    稳定编码 F, 稳定编码 所需概念) const {
+    稳定编码 F, 稳定编码 所需概念, 稳定编码 同批节点) const {
     using S = 新特征类型读取状态;
     try {
         std::lock_guard 锁(新特征互斥);
         if (!结构已初始化()) return {};
-        const auto 读取 = 全局基础数据集.查询完整节点结构(F);
-        if (读取.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}};
-        if (读取.状态 == 基础结构操作状态::节点不存在) return {S::特征不存在, {}, {}};
-        if (读取.状态 != 基础结构操作状态::已完成 || !读取.结构)
-            throw std::logic_error("feature direct reference structure is missing");
+        auto 读取 = 全局基础数据集.查询节点组完整结构({F, 同批节点});
+        if (读取.状态 == 基础结构操作状态::资源失败) return {S::资源失败, {}, {}, {}};
+        if (读取.状态 == 基础结构操作状态::节点不存在) return {S::特征不存在, {}, {}, {}};
+        if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 2)
+            throw std::logic_error("feature direct reference batch is missing");
+        const auto 特征项 = std::ranges::find(读取.节点组, F, &基础联合节点读取项::查询节点);
+        const auto 同批项 = std::ranges::find(读取.节点组, 同批节点, &基础联合节点读取项::查询节点);
+        if (特征项 == 读取.节点组.end() || 同批项 == 读取.节点组.end()
+            || !特征项->快照 || !同批项->快照) return {S::特征不存在, {}, {}, {}};
         std::optional<稳定编码> 节点类型, 概念, 当前引用;
-        for (const auto& 字段 : 读取.结构->字段组) {
+        for (const auto& 字段 : 特征项->快照->结构.字段组) {
             std::optional<稳定编码>* 目标 = nullptr;
             if (字段.字段节点 == 节点类型字段) 目标 = &节点类型;
             else if (字段.字段节点 == 特征概念字段) 目标 = &概念;
@@ -4811,10 +4815,10 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
                 throw std::logic_error("feature direct reference field is invalid");
             *目标 = *引用;
         }
-        if (节点类型 != 特征节点类型 || 概念 != 所需概念) return {S::特征不存在, {}, {}};
-        return {S::已读取, 概念, 当前引用};
-    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
-      catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+        if (节点类型 != 特征节点类型 || 概念 != 所需概念) return {S::特征不存在, {}, {}, {}};
+        return {S::已读取, 概念, 当前引用, std::move(同批项->快照->结构)};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}, {}}; }
+      catch (const std::length_error&) { return {S::资源失败, {}, {}, {}}; }
 }
 
 新特征类型读取结果 新_特征类::读取当前特征类型(稳定编码 F) const noexcept {
@@ -7197,8 +7201,16 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
             const bool 概念集合=C->比较规则==特征概念比较规则::概念集合身份判等;
             const auto 信息范围 = 读取信息对象范围投影(*C);
             const bool 信息对象 = 信息范围 && 是具名信息对象范围(信息范围->形状);
+            bool 指代存在引用 = false;
+            if (信息范围 && 信息范围->形状 == 新信息引用范围形状::正式信息身份) {
+                const auto 槽 = 特征概念服务_.读取当前先天特征类型槽(先天特征类型槽::指代消解结果);
+                if (槽.状态 == 特征概念规则状态::资源失败) return {S::资源失败, {}};
+                if (槽.状态 == 特征概念规则状态::前提已变化) return {S::预期已变化, {}};
+                指代存在引用 = 槽.类型根 && *槽.类型根 == 读取.信息->特征类型根;
+            }
             if (q.计入本次实际采用 && ((!信息对象 && !概念引用) || !q.新当前值)) return {S::入口拒绝, {}};
-            if (C->材料类型 != 特征概念材料物理类型::I64标量 && !概念引用 && !概念集合 && !信息对象)
+            if (C->材料类型 != 特征概念材料物理类型::I64标量
+                && !概念引用 && !概念集合 && !信息对象 && !指代存在引用)
                 return {S::材料类型不相容, {}};
             if (概念集合 && q.新当前值 && 原.当前值 && q.新当前值 != 原.当前值) {
                 const auto 比较 = 特征概念服务_.执行比较规则(
@@ -7216,7 +7228,7 @@ bool 新_特征类::是特征节点(稳定编码 节点) const noexcept {
             }
             if (q.新当前值 && (q.新当前值 != 原.当前值 || q.计入本次实际采用)) {
                 auto core = 准备顶层准确值更新(q.特征节点, *q.新当前值, 概念集合,
-                    nullptr, false, false, nullptr, 概念引用, 信息对象);
+                    nullptr, 指代存在引用, false, nullptr, 概念引用, 信息对象);
                 if (core.状态 != S::已准备) return {core.状态, {}};
                 if (!core.准备) 特征联合更新故障(L"组设置核心准备成功却无凭据");
                 core.准备->实现_->候选类型根 = 读取.信息->特征类型根;

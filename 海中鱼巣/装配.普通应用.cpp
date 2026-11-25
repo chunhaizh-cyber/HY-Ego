@@ -1675,6 +1675,12 @@ public:
                 if (句.主体关系) {
                     const auto& 关系 = *句.主体关系;
                     const bool 有目标范围=关系.对象起始标量<关系.对象结束标量;
+                    std::string 冲突候选 = "[";
+                    if (关系.来源) for (const auto E : 关系.来源->已证冲突候选) {
+                        if (冲突候选.size() > 1) 冲突候选 += ',';
+                        冲突候选 += 控制编码(E);
+                    }
+                    冲突候选 += ']';
                     主体关系 = "{\"start\":" + 控制计数(关系.起始标量)
                         + ",\"end\":" + 控制计数(关系.结束标量)
                         + ",\"targetStart\":" + (有目标范围 ? 控制计数(关系.对象起始标量) : "null")
@@ -1684,6 +1690,7 @@ public:
                         + ",\"word\":" + 控制编码(关系.来源 ? 关系.来源->词条 : std::nullopt)
                         + ",\"nameRelation\":" + 控制编码(关系.来源 ? 关系.来源->名称关系 : std::nullopt)
                         + ",\"boundExistence\":" + 控制编码(关系.来源 ? 关系.来源->已绑定存在 : std::nullopt)
+                        + ",\"conflictingCandidates\":" + 冲突候选
                         + ",\"confirmed\":" + 控制布尔(关系.已确定) + "}";
                 }
                 std::string 静态结构 = "null";
@@ -1799,8 +1806,28 @@ public:
                         *item.被动解释来源, 当前_.自然语言世界树, 当前_.外设世界树);
                     if (实例组.信息) {
                         指代实例JSON = "[";
+                        const auto 场景状态组 = 实例组.信息->empty() ? std::vector<稳定编码>{}
+                            : 当前_.世界事实.场景服务.查询状态列表(*item.S);
                         for (const auto& P : *实例组.信息) {
                             检查停止();
+                            std::string 状态组 = "[";
+                            for (const auto S : 当前_.世界事实.状态服务.按实例特征查询状态(P.消解结果特征)) {
+                                检查停止();
+                                if (std::ranges::find(场景状态组, S) == 场景状态组.end()) continue;
+                                const auto 状态 = 当前_.世界事实.状态服务.获取状态(S);
+                                if (!状态 || 状态->被描述存在节点 != P.节点) continue;
+                                std::optional<稳定编码> 固定目标;
+                                if (状态->固定准确值) {
+                                    if (const auto* 引用 = std::get_if<稳定编码>(&*状态->固定准确值))
+                                        固定目标 = *引用;
+                                }
+                                if (状态组.size() > 1) 状态组 += ',';
+                                状态组 += "{\"id\":" + 控制编码(S)
+                                    + ",\"holder\":" + 控制编码(状态->被描述存在节点)
+                                    + ",\"feature\":" + 控制编码(状态->来源实例特征节点)
+                                    + ",\"target\":" + 控制编码(固定目标) + "}";
+                            }
+                            状态组 += ']';
                             if (指代实例JSON.size() > 1) 指代实例JSON += ',';
                             指代实例JSON += "{\"id\":" + 控制编码(P.节点)
                                 + ",\"source\":" + 控制编码(P.前置来源)
@@ -1815,6 +1842,8 @@ public:
                                 + ",\"resultFeature\":" + 控制编码(P.消解结果特征)
                                 + ",\"featureType\":" + 控制编码(P.特征类型)
                                 + ",\"currentTarget\":" + 控制编码(P.当前目标)
+                                + ",\"currentEvidence\":" + 控制编码(P.当前依据)
+                                + ",\"states\":" + 状态组
                                 + ",\"appliesToCurrent\":" + 控制布尔(P.当前适用) + "}";
                         }
                         指代实例JSON += ']';
