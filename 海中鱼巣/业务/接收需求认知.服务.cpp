@@ -157,6 +157,7 @@ public:
             using C=新语言知识角色类别;
             using P=新语言知识参数角色;
             const auto& 结构=*句.静态结构;
+            if (结构.操作 == 新语言知识含义操作::特征子类型定义) return;
             const auto 项=std::ranges::find(结构.角色组,P::主体,&接收语言已解释角色::参数);
             const auto* 引用=项!=结构.角色组.end() && 项->值 ? std::get_if<语言图引用值>(&*项->值) : nullptr;
             if (引用 && 引用->类别==C::存在) {
@@ -391,7 +392,9 @@ void 记录待完善谓项概念(认知依赖& d, const 新语言前置来源信
         const bool 特征描述 = 角色.操作 == O::特征描述
             && ((角色.参数 == P::特征类型 && 角色.种类 == K::特征类型引用 && 角色.类别 == C::正式特征类型)
                 || (角色.参数 == P::特征值 && 角色.种类 == K::概念引用 && 角色.类别 == C::特征概念));
-        if (!存在归类 && !特征描述) continue;
+        const bool 子类型 = 角色.操作 == O::特征子类型定义 && 角色.参数 == P::主体
+            && 角色.种类 == K::概念引用 && 角色.类别 == C::特征概念;
+        if (!存在归类 && !特征描述 && !子类型) continue;
         const auto 开始 = 句.起始标量 + 角色.起始标量;
         const auto 结束 = 句.起始标量 + 角色.结束标量;
         const auto 缺口 = std::ranges::find_if(句.缺口组, [&](const auto& 项) {
@@ -414,7 +417,7 @@ void 记录待完善谓项概念(认知依赖& d, const 新语言前置来源信
         case N::资源失败: case N::读取未完成: case N::工程未完成: 资源();
         default: throw std::logic_error("pending concept source name lookup inconsistent");
         }
-        if (特征描述) {
+        if (特征描述 || 子类型) {
             using F = 特征概念规则状态;
             const auto 身份 = d.特征概念.建立或取得待完善特征概念(来源.节点, *角色.词条,
                 待完善特征概念原文用法{角色.知识节点, 开始, 结束});
@@ -422,6 +425,7 @@ void 记录待完善谓项概念(认知依赖& d, const 新语言前置来源信
             case F::已完成: case F::无变化:
                 if (!身份.信息) throw std::logic_error("pending feature concept receipt missing");
                 缺口->已取得相关节点.push_back(身份.信息->节点);
+                if (子类型) 谓项->值 = 语言图引用值{C::特征概念, 身份.信息->节点, {}, {}};
                 break;
             case F::入口拒绝: break;
             case F::前提已变化: 漂移();

@@ -709,6 +709,7 @@ U 图构式(const 语言图含义材料& 图) {
     if(根->操作==M::特征方向描述)return U::目标方向;
     if(根->操作==M::组成描述)return U::S05组成;
     if(根->操作==M::组织隶属)return U::组织隶属;
+    if(根->操作==M::特征子类型定义)return U::特征子类型定义;
     if(根->操作==M::概念归类) {
         const auto 主体=std::find_if(根->参数组.begin(),根->参数组.end(),[](const auto& 参数){return 参数.参数==P::主体;});
         if(主体==根->参数组.end())throw std::logic_error("classification graph subject missing");
@@ -1117,8 +1118,11 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
             }
             if((result.状态==I::对象待绑定)!=有未决对象)throw std::logic_error("graph binding state does not match object material");
         }
-        if (result.状态 == I::已形成值式图 || result.状态 == I::对象待绑定)
+        if (result.状态 == I::已形成值式图 || result.状态 == I::对象待绑定) {
             result.静态结构 = 图解释.静态结构;
+            if (result.静态结构 && result.静态结构->操作 == M::特征子类型定义)
+                result.静态角色缺口组 = std::move(图解释.静态角色缺口组);
+        }
         if(result.状态==I::已形成值式图) {
             const auto& 图=新图候选[0];
             result.含义=图;
