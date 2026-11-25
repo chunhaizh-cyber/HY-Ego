@@ -25793,6 +25793,29 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
         }
         std::erase_if(适用组,[&](const auto& x){const auto p=选中分支.find(x.配对->方法节点);return p!=选中分支.end()&&p->second!=任务执行组织存储::配对执行分支(x.配对->配对);});
         if (适用组.empty()) { 结果.状态 = 新任务方法选择状态::无适用结果; return 结果; }
+        if (适用组.size() > 1) {
+            using 条件状态 = 新任务方法条件项核验状态;
+            const auto 读取配对条件状态 = [](const 适用项& 候选) -> std::optional<条件状态> {
+                const auto& 配对 = 候选.配对->配对;
+                const auto 分支 = 任务执行组织存储::配对执行分支(配对);
+                const auto& 核验组 = 候选.筹办->条件结果组;
+                const auto 核验 = std::find_if(核验组.begin(), 核验组.end(), [&](const auto& 项) {
+                    return 项.配对节点 == 配对.配对节点 && 项.执行分支节点 == 分支;
+                });
+                return 核验 == 核验组.end() ? std::nullopt : std::optional{核验->状态};
+            };
+            bool 有条件具备 = false;
+            const bool 条件均已确定 = std::all_of(适用组.begin(), 适用组.end(), [&](const auto& 候选) {
+                const auto 状态 = 读取配对条件状态(候选);
+                有条件具备 = 有条件具备 || 状态 == 条件状态::具备;
+                return 状态 == 条件状态::具备 || 状态 == 条件状态::不具备;
+            });
+            if (条件均已确定 && 有条件具备) {
+                std::erase_if(适用组, [&](const auto& 候选) {
+                    return 读取配对条件状态(候选) == 条件状态::不具备;
+                });
+            }
+        }
         if (适用组.size() != 1) { 结果.状态 = 新任务方法选择状态::匹配不唯一; return 结果; }
         const auto& 最优 = 适用组.front();
         const auto& 配对 = 最优.配对->配对;
