@@ -1772,11 +1772,19 @@ public:
                 if (来源.信息 && 场景.信息 && 场景.信息->场景节点 == *item.S) 前置来源=来源.信息->节点;
             }
             if (有效(前置来源)) {
+                std::string 采用JSON="null";
+                if (已保存 && 正式.信息->篇章采用) {
+                    const auto& 采用=*正式.信息->篇章采用;
+                    采用JSON="{\"id\":"+控制编码(采用.节点)+",\"speaker\":"+控制编码(采用.说话者)
+                        +",\"sentences\":"+句组JSON(采用.内容.句段组)
+                        +",\"meaning\":"+接收候选含义JSON(采用.内容.含义候选)+"}";
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
                     + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null")
-                    + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null") + "}";
+                    + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
+                    + ",\"adoptedMeaning\":" + 采用JSON + "}";
             }
         }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)

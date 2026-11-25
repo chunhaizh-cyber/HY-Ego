@@ -93,6 +93,7 @@ class 新接收语言解释场景绑定 final {
 public:
     稳定编码 场景() const noexcept { return 场景_; }
     std::optional<稳定编码> 记录() const noexcept { return 记录_; }
+    const 基础只读预期& 绑定预期() const noexcept { return 预期_; }
 
 private:
     friend class 新_场景类;
