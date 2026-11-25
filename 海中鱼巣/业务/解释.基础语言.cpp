@@ -427,6 +427,40 @@ bool 对象证据技术未完成(基础现实对象短语候选状态 状态) no
 }
 
 } // namespace
+void 合并词条类别共识(std::optional<std::vector<新语言词条类型依据>>& 共识,
+    std::vector<新语言词条类型依据> 本候选) {
+    const auto 同一词用=[](const auto& 左,const auto& 右) {
+        return 左.起始标量==右.起始标量 && 左.结束标量==右.结束标量 && 左.词条==右.词条;
+    };
+    const auto 加构式=[](auto& 已有,const auto& 新组) {
+        for (const auto 构式 : 新组)
+            if (std::ranges::find(已有,构式)==已有.end()) 已有.push_back(构式);
+    };
+    std::vector<新语言词条类型依据> 一致项;
+    for (const auto& 项 : 本候选) {
+        if (std::ranges::any_of(本候选,[&](const auto& 其它) {
+            return 同一词用(项,其它) && 项.所需类别!=其它.所需类别;
+        })) continue;
+        const auto 同项=std::ranges::find_if(一致项,[&](const auto& 其它) { return 同一词用(项,其它); });
+        if (同项==一致项.end()) 一致项.push_back(项);
+        else 加构式(同项->构式依据组,项.构式依据组);
+    }
+    if (!共识) {
+        共识=std::move(一致项);
+        return;
+    }
+    std::vector<新语言词条类型依据> 交集;
+    for (auto& 项 : *共识) {
+        const auto 同类=std::ranges::find_if(一致项,[&](const auto& 其它) {
+            return 同一词用(项,其它) && 项.所需类别==其它.所需类别;
+        });
+        if (同类==一致项.end()) continue;
+        加构式(项.构式依据组,同类->构式依据组);
+        交集.push_back(std::move(项));
+    }
+    共识=std::move(交集);
+}
+
 bool 是单根普通静态陈述图知识(const 新语言知识定义& 定义) {
     if (定义.目标.目的 != 新语言知识表达目的::陈述 || !定义.目标.含义图
         || 定义.目标.含义图->节点组.size() != 1 || !定义.目标.适用条件组.empty()) return false;
@@ -4830,6 +4864,44 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         std::optional<图短语结果> 唯一静态角色不足;
         bool 静态角色不足多义 = false;
         std::optional<std::vector<新语言词条类型依据>> 共识;
+        const auto 记录已解词用=[&](std::vector<新语言词条类型依据>& 词用,稳定编码 构式,
+            const 新语言知识角色定义& 角色,const 语言图绑定值& 绑定,std::size_t 起,std::size_t 末) {
+            using C=新语言知识角色类别;
+            using K=新语言知识角色种类;
+            const auto* 引用=std::get_if<语言图引用值>(&绑定);
+            if (!引用 || 起>=末 || 末>长度) return;
+            if (!引用->选用名称关系) {
+                if (角色.种类!=K::概念引用 || 引用->类别!=C::存在概念 || 请求.待完善概念词用组.empty())
+                    return;
+                const auto 词=词查询保护.find(片段(起,末));
+                if (词!=词查询保护.end() && 词->second
+                    && std::ranges::any_of(请求.待完善概念词用组,[&](const auto& 项) {
+                        return 项.概念节点==引用->节点 && 项.词条==词->second->节点
+                            && 项.构式==构式 && 项.角色编号==角色.局部编号;
+                    })) 词用.push_back({起,末,词->second->节点,C::存在概念,{构式}});
+                return;
+            }
+            const auto 名称位置=名称保护.find(*引用->选用名称关系);
+            if (名称位置==名称保护.end()) return;
+            const auto& 普通=名称位置->second;
+            const auto 词位置=词保护.find(普通.名称关系.词条节点);
+            if (词位置==词保护.end() || 词位置->second.规范化词面!=片段(起,末)) return;
+            const auto 概念=普通.名称关系.概念节点;
+            std::optional<C> 类别;
+            if (角色.种类==K::领域对象引用 && std::holds_alternative<存在概念信息>(普通.目标概念)
+                && ((引用->类别==C::存在概念 && 引用->节点==概念)
+                    || (引用->类别==C::存在 && 引用->来源概念==概念))) 类别=C::存在概念;
+            else if (角色.种类==K::概念引用 && 引用->节点==概念) {
+                if (引用->类别==C::存在概念 && std::holds_alternative<存在概念信息>(普通.目标概念))
+                    类别=C::存在概念;
+                if (引用->类别==C::特征概念 && std::holds_alternative<特征概念信息>(普通.目标概念))
+                    类别=C::特征概念;
+            } else if (角色.种类==K::特征类型引用 && 引用->节点==概念
+                && std::holds_alternative<特征概念信息>(普通.目标概念)
+                && (引用->类别==C::正式特征类型 || 引用->类别==C::I64标量特征类型))
+                类别=C::正式特征类型;
+            if (类别) 词用.push_back({起,末,词位置->second.节点,*类别,{构式}});
+        };
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
         观察.记录(L"全部根解析与装配前", -1, 根知识.size());
 #endif
@@ -4989,6 +5061,22 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 }
             }
             if(合法) {
+                if (请求.读取静态角色缺口) {
+                    std::vector<新语言词条类型依据> 本构式依据;
+                    for (const auto& 出现 : 材料.出现组) {
+                        const auto& 角色组=定义表.at(出现.定义含义编号)->角色组;
+                        for (const auto& 绑定 : 出现.角色组) {
+                            const auto 定位=std::ranges::find_if(本候选定位,[&](const auto& 项) {
+                                return 项.出现编号==出现.出现编号 && 项.角色编号==绑定.角色编号;
+                            });
+                            if (定位==本候选定位.end()) continue;
+                            const auto 角色=std::ranges::find(角色组,绑定.角色编号,&新语言知识角色定义::局部编号);
+                            if (角色!=角色组.end()) 记录已解词用(本构式依据,出现.所用知识节点,*角色,
+                                绑定.值,定位->原文起点,定位->原文终点);
+                        }
+                    }
+                    合并词条类别共识(共识,std::move(本构式依据));
+                }
                 if (请求.读取静态角色缺口 && 材料.出现组.size()==1
                     && 材料.出现组.front().有效作用域==新语言知识作用域::普通陈述
                     && 知识.定义.目标.目的==新语言知识表达目的::陈述) {
@@ -5012,7 +5100,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             观察.记录(L"单根解析与装配后", -1, 结果.完整候选组.size(), 身份);
 #endif
         }
-        if (结果.完整候选组.empty() && 请求.读取静态角色缺口
+        const bool 无完整图=结果.完整候选组.empty();
+        if (请求.读取静态角色缺口 && (无完整图 || (共识 && !共识->empty()))
             && 请求.对象绑定组.empty() && 请求.正式信息绑定组.empty()) {
             for (const auto 身份 : 根知识) {
                 const auto& 定义 = 知识表.at(身份)->定义;
@@ -5023,7 +5112,15 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
 
                 const auto& 根 = 定义.目标.含义图->节点组.front();
                 for (auto& 候选 : 不足组) {
+                    if (候选.静态角色缺口组.empty()) continue;
                     std::vector<新语言词条类型依据> 本构式依据;
+                    for (const auto& 角色 : 根.角色组) {
+                        const 角色键 键{根.局部编号,角色.局部编号};
+                        const auto 范围=候选.角色范围.find(键);
+                        const auto 绑定=候选.值组.find(键);
+                        if (范围!=候选.角色范围.end() && 绑定!=候选.值组.end())
+                            记录已解词用(本构式依据,身份,角色,绑定->second,范围->second.first,范围->second.second);
+                    }
                     for (const auto& 缺口 : 候选.静态角色缺口组) {
                         if (!缺口.词条) continue;
                         const auto 名称位置 = 名称集合保护.find(*缺口.词条);
@@ -5038,24 +5135,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                         }
                     }
 
-                    if (!共识) {
-                        共识 = std::move(本构式依据);
-                    } else {
-                        std::erase_if(*共识, [&](const auto& 原依据) {
-                            const auto 同类 = std::find_if(本构式依据.begin(), 本构式依据.end(),
-                                [&](const auto& 新依据) {
-                                    return 原依据.起始标量 == 新依据.起始标量
-                                        && 原依据.结束标量 == 新依据.结束标量
-                                        && 原依据.词条 == 新依据.词条
-                                        && 原依据.所需类别 == 新依据.所需类别;
-                                });
-                            return 同类 == 本构式依据.end();
-                        });
-                        for (auto& 依据 : *共识) {
-                            if (依据.构式依据组.back() != 身份) 依据.构式依据组.push_back(身份);
-                        }
-                    }
-
+                    合并词条类别共识(共识,std::move(本构式依据));
+                    if (!无完整图) continue;
                     if (唯一静态角色不足 || 静态角色不足多义) {
                         静态角色不足多义 = true;
                         唯一静态角色不足.reset();
@@ -5070,7 +5151,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                     静态角色不足多义 = true;
                     break;
                 }
-                if (静态角色不足多义 && 共识 && 共识->empty()) break;
+                if ((!无完整图 || 静态角色不足多义) && 共识 && 共识->empty()) break;
             }
         }
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
@@ -5219,6 +5300,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             if (共识) 结果.词条类型依据组 = std::move(*共识);
             return 结果;
         }
+        if (共识) 结果.词条类型依据组=std::move(*共识);
         bool 待绑=false;for(const auto& 图:结果.完整候选组)for(const auto& 出现:图.出现组) {
             const auto 定义=std::find_if(图.定义图.节点组.begin(),图.定义图.节点组.end(),[&](const auto& 节点){return 节点.局部编号==出现.定义含义编号;});
             for(const auto& 角色:出现.角色组)if(const auto* 引用=std::get_if<语言图引用值>(&角色.值);引用&&引用->类别==新语言知识角色类别::存在概念) {
@@ -5263,19 +5345,6 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                         const auto 绑定 = std::ranges::find(出现.角色组, 参数.规则角色, &语言图角色绑定::角色编号);
                         if (范围 == 结果.图角色原文定位组.end() || 绑定 == 出现.角色组.end()) continue;
                         if (auto 值 = 接收静态角色值(&绑定->值)) {
-                            if (!请求.待完善概念词用组.empty() && 参数.参数 == 新语言知识参数角色::归类概念) {
-                                const auto* 局部 = std::get_if<语言图引用值>(&*值);
-                                const auto 词 = 词查询保护.find(片段(范围->原文起点, 范围->原文终点));
-                                if (局部 && 局部->类别 == 新语言知识角色类别::存在概念
-                                    && !局部->选用名称关系 && 词 != 词查询保护.end() && 词->second
-                                    && std::ranges::any_of(请求.待完善概念词用组, [&](const auto& 项) {
-                                        return 项.概念节点 == 局部->节点 && 项.词条 == 词->second->节点
-                                            && 项.构式 == 出现.所用知识节点 && 项.角色编号 == 参数.规则角色;
-                                    })) {
-                                    结果.词条类型依据组.push_back({范围->原文起点, 范围->原文终点,
-                                        词->second->节点, 局部->类别, {出现.所用知识节点}});
-                                }
-                            }
                             结构.角色组.push_back({参数.规则角色, 参数.参数,
                                 范围->原文起点, 范围->原文终点, std::move(值)});
                         }
@@ -5295,6 +5364,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
     }
     结果.完整候选组.clear();
     结果.陈述候选原文组.clear();
+    结果.词条类型依据组.clear();
     结果.未覆盖范围组={{0,长度}};
     return 结果;
 }
