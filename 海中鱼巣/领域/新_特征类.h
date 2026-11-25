@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstdint>
 #include <memory>
@@ -526,6 +526,8 @@ public:
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
     新特征建立结果 建立并挂接空信息引用特征(
         稳定编码 特征概念, const 新空特征持有参与接口&) noexcept;
+    新特征建立结果 建立并挂接待完善空特征(
+        稳定编码 特征概念, const 新空特征持有参与接口&) noexcept;
     新特征建立结果 建立特征强类型(
         稳定编码 特征概念节点,
         std::optional<新特征准确值> 实际值 = std::nullopt) noexcept;
@@ -663,6 +665,11 @@ public:
         稳定编码 右概念节点) const noexcept;
 
 private:
+    friend class 概念_特征类;
+    static 特征概念规则状态 附入待完善实例补全字段(
+        基础节点组追加请求&, const 基础联合节点快照& 概念, std::optional<稳定编码> 单位,
+        稳定编码 整树根, 稳定编码 适用存在概念, std::span<const 稳定编码> 候选持有者,
+        const 新_存在类&, const 概念_特征类&, std::int64_t& 实例数);
     struct 普通存在引用完整读取批;
     std::optional<新信息引用范围投影> 读取信息对象范围投影(const 特征概念信息&) const;
     新特征信息 读取信息对象引用实例(稳定编码, const 特征概念信息&) const;

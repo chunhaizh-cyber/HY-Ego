@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstddef>
 #include <cstdint>
@@ -15,6 +15,7 @@ namespace 海中鱼巣 {
 
 class 概念_名称关系类;
 class 概念_特征类;
+class 新_存在类;
 class 新_特征类;
 class 新消息待发表凭据;
 class 新_模拟世界类;
@@ -311,6 +312,7 @@ enum class 正式概念读取状态 : std::uint8_t { 已读取=1, 非本提供�
 struct 正式概念身份保护 final {
     稳定编码 概念节点;
     std::vector<基础联合节点快照> 完整保护组;
+    bool 定义待完善 = false;
 };
 struct 正式概念身份读取结果 final {
     正式概念读取状态 状态 = 正式概念读取状态::非本提供者概念;
@@ -349,6 +351,22 @@ struct 特征概念编码操作结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::optional<稳定编码> 概念节点;
 };
+struct 待完善特征概念信息 final {
+    稳定编码 节点, 采用来源, 来源词条;
+    bool 已完善 = false;
+    std::vector<稳定编码> 名称关系;
+};
+struct 待完善特征概念结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<待完善特征概念信息> 信息;
+    std::optional<基础联合节点快照> 节点快照;
+};
+
+struct 适用范围I64子类型信息 final {
+    稳定编码 概念, 直接上位, 适用存在概念, 定义来源;
+    稳定编码 正式特征类型, 整树根;
+};
+
 struct 特征概念查询操作结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::vector<稳定编码> 概念节点组;
@@ -621,6 +639,18 @@ public:
     特征类别根读取结果 读取特征类别根概念保护() const noexcept;
     特征分类关系保护结果 读取特征分类关系保护(稳定编码) const noexcept;
     正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
+    待完善特征概念结果 建立或取得待完善特征概念(稳定编码 采用来源, 稳定编码 来源词条) noexcept;
+    待完善特征概念结果 按来源读取待完善特征概念(稳定编码 采用来源) const noexcept;
+    待完善特征概念结果 按节点读取待完善特征概念(稳定编码 概念) const noexcept;
+    bool 是待完善特征概念节点(稳定编码 概念) const noexcept;
+    std::optional<适用范围I64子类型信息> 读取适用范围I64子类型(稳定编码 概念) const noexcept;
+    特征概念编码操作结果 完善适用范围I64子类型(
+        稳定编码 概念, 稳定编码 直接上位, 稳定编码 适用存在概念, 稳定编码 定义来源,
+        const 特征概念值域&, const 新_特征值类&, const 新_存在类&,
+        std::span<const 稳定编码> 候选持有者 = {}) noexcept;
+    // 只定位实例显式采用的最近限定类型；无限定时为整树根。
+    std::optional<稳定编码> 读取实例所属特征类型(稳定编码 概念) const noexcept;
+    bool 是限定I64子类型(稳定编码 概念) const noexcept;
     先天特征类型槽结果 建立或取得先天特征类型槽(const 先天特征类型槽请求&, const 新_特征值类&,
         std::span<const 正式概念身份读取接口* const>) noexcept;
     先天特征类型槽结果 读取先天特征类型槽(std::uint32_t 语义序号) const noexcept;

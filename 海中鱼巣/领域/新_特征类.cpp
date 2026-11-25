@@ -1,5 +1,6 @@
-﻿#include "新_特征类.h"
+#include "新_特征类.h"
 #include "概念_存在类.h"
+#include "新_存在类.h"
 #include "../核心/容错检查.h"
 #include "../核心/日志系统.h"
 
@@ -935,7 +936,8 @@ std::optional<稳定编码> 查找最具体的历史包含概念(
         }
         for (const auto& 关系 : 全局基础数据集.查询源关系(
             当前.节点, 基础外部关系类型::父子)) {
-            待查.push_back({关系.目标节点, 当前.深度 + 1});
+            if (!特征概念服务.是限定I64子类型(关系.目标节点))
+                待查.push_back({关系.目标节点, 当前.深度 + 1});
         }
     }
     return 最佳 ? std::optional<稳定编码>{最佳->节点} : std::nullopt;
@@ -1017,12 +1019,13 @@ bool 整理变化概念的兄弟层级(
     const auto 父关系 = 全局基础数据集.查询目标关系(
         当前概念, 基础外部关系类型::父子);
     if (!当前信息 || 父关系.size() != 1) return false;
+    if (特征概念服务.是限定I64子类型(当前概念)) return true;
     const auto 父节点 = 父关系.front().源节点;
     std::vector<稳定编码> 包含当前的兄弟;
     std::vector<基础外部关系> 当前包含的兄弟;
     for (const auto& 关系 : 全局基础数据集.查询源关系(
         父节点, 基础外部关系类型::父子)) {
-        if (关系.目标节点 == 当前概念) continue;
+        if (关系.目标节点 == 当前概念 || 特征概念服务.是限定I64子类型(关系.目标节点)) continue;
         const auto 兄弟 = 特征概念服务.获取特征概念(关系.目标节点);
         if (!兄弟 || 兄弟->材料类型 != 当前信息->材料类型
             || 兄弟->单位 != 当前信息->单位) {
@@ -1092,6 +1095,14 @@ bool 同步实例所属概念(
     if (!当前信息 || 定位.状态 != 特征概念规则状态::已完成
         || !定位.特征类型根) {
         return 记录同步失败(__LINE__);
+    }
+    const auto 实例类型 = 特征概念服务.读取实例所属特征类型(当前概念);
+    if (!实例类型) return 记录同步失败(__LINE__);
+    if (*实例类型 != *定位.特征类型根) {
+        // 适用范围由正式定义决定。准确历史变化不改写限定类型或适用范围。
+        const auto 最具体 = 查找最具体的历史包含概念(
+            *实例类型, 记录组, 特征值服务, 特征概念服务).value_or(*实例类型);
+        return 切换实例所属概念(特征节点, 最具体, 特征概念服务) || 记录同步失败(__LINE__);
     }
     const auto 当前对历史 = 特征概念服务.比较值域(
         *定位.特征类型根, 当前信息->值域, 历史值域);
@@ -3328,6 +3339,147 @@ bool 新_特征类::初始化() noexcept {
     } catch (...) { 特征联合更新故障(L"空特征及持有共同建立异常"); }
 }
 
+新特征建立结果 新_特征类::建立并挂接待完善空特征(
+    稳定编码 C, const 新空特征持有参与接口& 持有) noexcept {
+    using W = 新特征写入状态;
+    using R = 特征概念规则状态;
+    using A = 基础节点组追加状态;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        if (!结构已初始化()) return {W::入口拒绝};
+        const auto 概念 = 特征概念服务_.按节点读取待完善特征概念(C);
+        if (概念.状态 == R::前提已变化) return {W::前提已变化};
+        if (概念.状态 == R::资源失败) return {W::资源失败};
+        if (!概念.信息 || !概念.节点快照) {
+            if (概念.状态 == R::值不存在) return {W::概念不存在};
+            if (概念.状态 == R::读取接口未装配 || 概念.状态 == R::入口拒绝)
+                return {W::入口拒绝};
+            return {W::结构不一致};
+        }
+
+        auto 请求 = 持有.构造空特征持有(基础组内节点引用{0});
+        if (!请求.新节点组.empty()) return {W::结构不一致};
+        const auto 是持有写入 = [](const auto& 字段) {
+            const auto* 引用 = std::get_if<基础组内节点引用>(&字段.内容);
+            return 引用 && 引用->索引 == 0;
+        };
+        const auto& 字段组 = 请求.追加字段组;
+        const auto 位置 = std::find_if(字段组.begin(), 字段组.end(), 是持有写入);
+        if (位置 == 字段组.end() || std::any_of(std::next(位置), 字段组.end(), 是持有写入))
+            return {W::入口拒绝};
+
+        std::optional<稳定编码> 既有;
+        for (const auto& 项 : 全局基础数据集.查询字段(位置->所属节点, 位置->字段节点)) {
+            const auto* F = std::get_if<稳定编码>(&项.内容);
+            if (!F || !有效(*F) || 读取唯一节点字段(*F, 节点类型字段) != 特征节点类型)
+                return {W::结构不一致};
+            if (读取唯一节点字段(*F, 特征概念字段) != C) continue;
+            if (既有) return {W::结构不一致};
+            既有 = *F;
+        }
+        if (既有) return {W::无变化, 既有};
+        if (概念.信息->已完善) return {W::前提已变化};
+
+        请求.新节点组.push_back({{{节点类型字段, 特征节点类型}, {特征概念字段, C}}});
+        请求.预期联合节点组.push_back(*概念.节点快照);
+        for (const auto n : {节点类型字段, 特征节点类型, 特征概念字段, C}) {
+            if (std::none_of(请求.只读预期.节点组.begin(), 请求.只读预期.节点组.end(),
+                [&](const auto& 项) { return 项.编码 == n; })) 请求.只读预期.节点组.push_back({n});
+        }
+        const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+        if (发布.状态 == A::资源失败) return {W::资源失败};
+        if (发布.状态 == A::预期不符 || 发布.状态 == A::节点不存在 || 发布.状态 == A::引用不存在)
+            return {W::前提已变化};
+        if (发布.状态 != A::已完成) return {W::结构不一致};
+        if (发布.新节点组.size() != 1)
+            特征联合更新故障(L"待完善空实例发布回执缺少唯一F。");
+        return {W::已完成, 发布.新节点组.front()};
+    } catch (const std::bad_alloc&) {
+        return {W::资源失败};
+    } catch (const std::length_error&) {
+        return {W::资源失败};
+    } catch (...) {
+        return {W::结构不一致};
+    }
+}
+
+特征概念规则状态 新_特征类::附入待完善实例补全字段(
+    基础节点组追加请求& 请求, const 基础联合节点快照& 概念,
+    std::optional<稳定编码> 单位, 稳定编码 整树根, 稳定编码 适用,
+    std::span<const 稳定编码> 候选持有者, const 新_存在类& 存在服务,
+    const 概念_特征类& 概念服务, std::int64_t& 实例数) {
+    using S = 特征概念规则状态;
+    using D = 新存在顶层特征定位状态;
+    using R = 基础结构操作状态;
+    const auto 合并 = [&](const std::vector<基础联合节点快照>& 组) {
+        for (const auto& 项 : 组) {
+            const auto 是否已有 = std::find_if(请求.预期联合节点组.begin(), 请求.预期联合节点组.end(),
+                [&](const auto& 原) { return 原.结构.节点 == 项.结构.节点; });
+            if (是否已有 == 请求.预期联合节点组.end()) 请求.预期联合节点组.push_back(项);
+            else if (!联合快照相等(*是否已有, 项)) return false;
+        }
+        return true;
+    };
+    std::set<稳定编码> 未绑定;
+    for (const auto& 引用 : 概念.入向字段组) {
+        if (引用.字段节点 == 特征概念字段 && !未绑定.insert(引用.所属节点).second)
+            return S::内部不一致;
+    }
+    if (未绑定.empty()) return S::已完成;
+    const auto 总组 = 未绑定;
+    const std::set<稳定编码> 持有者(候选持有者.begin(), 候选持有者.end());
+    for (const auto E : 持有者) {
+        const auto 定位 = 存在服务.读取存在顶层特征定位保护(E);
+        if (定位.状态 == D::资源失败) return S::资源失败;
+        if (定位.状态 == D::前提已变化) return S::前提已变化;
+        if (定位.状态 == D::依赖未就绪) return S::读取接口未装配;
+        if (!定位.信息) continue;
+        const auto& 顶层 = 定位.信息->顶层特征节点组;
+        const auto 在此持有 = std::find_if(顶层.begin(), 顶层.end(), [&](auto F) { return 总组.contains(F); });
+        if (在此持有 == 顶层.end()) continue;
+        if (!未绑定.erase(*在此持有) || std::any_of(std::next(在此持有), 顶层.end(),
+                [&](auto F) { return 总组.contains(F); })) return S::入口拒绝;
+        const auto 归属 = 存在服务.比较存在与概念信息(E, 适用, true);
+        if (归属.状态 != S::已完成) return 归属.状态;
+        if (归属.归属 != 特征成员概念归属::属于) return S::成员归属未知;
+        if (!合并(定位.完整保护) || !合并(归属.依据保护)) return S::前提已变化;
+
+        const auto 批 = 全局基础数据集.查询节点组完整结构(顶层);
+        if (批.状态 == R::资源失败) return S::资源失败;
+        if (批.状态 != R::已完成 || 批.节点组.size() != 顶层.size()) return S::前提已变化;
+        for (const auto& 行 : 批.节点组) {
+            if (!行.快照 || !合并({*行.快照})) return S::前提已变化;
+            const auto& 属性 = 行.快照->结构.字段组;
+            const auto 读 = [&](稳定编码 字段) -> std::optional<稳定编码> {
+                const auto it = std::find_if(属性.begin(), 属性.end(), [&](const auto& f) { return f.字段节点 == 字段; });
+                const auto* n = it == 属性.end() ? nullptr : std::get_if<稳定编码>(&it->内容);
+                return n ? std::optional{*n} : std::nullopt;
+            };
+            const auto C = 读(特征概念字段);
+            if (读(节点类型字段) != 特征节点类型 || !C) return S::内部不一致;
+            if (行.查询节点 == *在此持有) {
+                if (*C != 概念.结构.节点.编码 || 属性.size() != 2) return S::前提已变化;
+                if (单位) 请求.追加字段组.push_back({行.查询节点, 实例单位字段, *单位});
+                continue;
+            }
+            const auto 同类 = 概念服务.比较单特征概念(*C, 整树根);
+            if (同类.状态 == S::成员归属未知 || 同类.状态 == S::前提已变化 || 同类.状态 == S::资源失败)
+                return 同类.状态;
+            if (同类.状态 == S::已完成) {
+                if (同类.特征类型根 == 整树根) return S::入口拒绝;
+            } else if (!概念服务.是待完善特征概念节点(*C)) {
+                return S::前提已变化;
+            }
+        }
+    }
+    if (!未绑定.empty()) return S::成员归属未知;
+    if (总组.size() > static_cast<std::size_t>((std::numeric_limits<std::int64_t>::max)()))
+        return S::资源失败;
+    实例数 = static_cast<std::int64_t>(总组.size());
+    if (单位) 请求.只读预期.节点组.push_back({实例单位字段});
+    return S::已完成;
+}
+
 新特征建立结果 新_特征类::建立特征强类型(
     稳定编码 特征概念节点,
     std::optional<新特征准确值> 实际值) noexcept {
@@ -3443,7 +3595,7 @@ bool 新_特征类::初始化() noexcept {
                 }
             }
             const auto 查找结果 = 特征概念服务_.查找值对应的最具体概念(
-                *类型定位.特征类型根, *实际值,
+                特征概念服务_.读取实例所属特征类型(特征概念节点).value_or(*类型定位.特征类型根), *实际值,
                 概念信息->单位, 特征值服务_);
             if (查找结果.状态 == 特征概念查找状态::已找到
                 && 查找结果.概念节点) {
@@ -4301,9 +4453,13 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         if (!结构仍存在() || !节点仍存在(特征节点)) return std::nullopt;
         const auto 类型 = 读取唯一节点字段(特征节点, 节点类型字段);
         const auto 概念 = 读取唯一节点字段(特征节点, 特征概念字段);
-        if (!类型 || *类型 != 特征节点类型 || !概念
-            || !特征概念服务_.是特征概念节点(*概念)) {
-            return std::nullopt;
+        if (!类型 || *类型 != 特征节点类型 || !概念) return std::nullopt;
+        if (!特征概念服务_.是特征概念节点(*概念)) {
+            if (本次批 || !特征概念服务_.是待完善特征概念节点(*概念)) return std::nullopt;
+            新特征信息 空实例{};
+            空实例.节点 = 特征节点;
+            空实例.特征概念节点 = *概念;
+            return 空实例;
         }
         const auto 概念信息 = 特征概念服务_.获取特征概念(*概念);
         if (!概念信息) return std::nullopt;
@@ -4588,9 +4744,13 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         const auto 定位 = 特征概念服务_.比较单特征概念(*概念, *概念);
         if (定位.状态 == 特征概念规则状态::资源失败) return {S::资源失败, {}};
         if (定位.状态 != 特征概念规则状态::已完成 || !定位.特征类型根
-            || 定位.关系 != 单特征概念关系::同一)
+            || 定位.关系 != 单特征概念关系::同一) {
+            if (特征概念服务_.是待完善特征概念节点(*概念)) return {S::依赖未就绪, {}};
             特征联合更新故障(L"特征类型定位的概念链不可读");
-        return {S::已读取, 定位.特征类型根};
+        }
+        const auto 当前类型 = 特征概念服务_.读取实例所属特征类型(*概念);
+        if (!当前类型) return {S::依赖未就绪, {}};
+        return {S::已读取, 当前类型};
     } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
     catch (const std::length_error&) { return {S::资源失败, {}}; }
     catch (...) { 特征联合更新故障(L"读取当前特征类型发生工程异常"); }
@@ -4673,9 +4833,12 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         if (定义.状态 != 基础结构操作状态::已完成 || !定义.信息
             || 定义.信息->定义.节点 != *概念 || !有效(定义.信息->类型根) || 定义.预期节点组.empty()) {
             if (!复核联合快照({首})) return {S::前提已变化, {}, {}};
+            if (特征概念服务_.是待完善特征概念节点(*概念)) return {S::依赖未就绪, {}, {}};
             特征联合更新故障(L"特征头缺少正式概念定义及类型根保护");
         }
-        头.特征类型根 = 定义.信息->类型根;
+        const auto 当前类型 = 特征概念服务_.读取实例所属特征类型(*概念);
+        if (!当前类型) return {S::前提已变化, {}, {}};
+        头.特征类型根 = *当前类型;
         if (!合并(定义.预期节点组)) return {S::前提已变化, {}, {}};
         std::vector<基础联合节点快照> 完整;
         完整.reserve(保护.size());
@@ -4707,6 +4870,8 @@ std::optional<新特征信息> 新_特征类::获取特征可抛内部(
         if (!首批.节点组.front().快照) return {S::特征不存在, {}};
         const auto 概念节点 = 读取唯一节点字段(F, 特征概念字段);
         const auto 初始定义 = 概念节点 ? 特征概念服务_.获取特征概念(*概念节点) : std::nullopt;
+        if (!初始定义 && 概念节点 && 特征概念服务_.是待完善特征概念节点(*概念节点))
+            return {S::依赖未就绪, {}};
         if (初始定义 && 是信息存在引用形状(*初始定义)) {
             const auto 范围 = 读取信息对象范围投影(*初始定义);
             if (范围 && 是具名信息对象范围(范围->形状))
@@ -5191,12 +5356,18 @@ struct 新特征清理准备::实现 final {
         for (const auto n : 特征集)
             if (联合更新占用表.contains(n)) return {S::联合更新占用, {}};
         私有集 = 特征集;
+        std::set<稳定编码> 待完善实例集;
         for (const auto n : 特征集) {
             const auto f = 获取特征(n);
             const auto h = 读取历史值命中记录(n);
             if (!f || !h) return {S::结构不一致, {}};
             const auto d = 特征概念服务_.获取特征概念(f->特征概念节点);
-            if (!d) return {S::结构不一致, {}};
+            if (!d) {
+                if (!特征概念服务_.是待完善特征概念节点(f->特征概念节点) || !h->empty())
+                    return {S::结构不一致, {}};
+                待完善实例集.insert(n);
+                continue;
+            }
             for (const auto& x : *h) {
                 if (!特征集.contains(x.所属特征)) return {S::仍被外部引用, {}};
                 私有集.insert(x.记录节点);
@@ -5224,6 +5395,8 @@ struct 新特征清理准备::实现 final {
         for (const auto& x : b.节点组) {
             if (!x.快照) return {S::结构不一致, {}};
             const auto& snap = *x.快照;
+            if (待完善实例集.contains(x.查询节点) && snap.结构.字段组.size() != 2)
+                return {S::结构不一致, {}};
             const auto type = 读取唯一节点字段(x.查询节点, 节点类型字段);
             if (!type) return {S::结构不一致, {}};
             for (const auto& f : snap.结构.字段组) {
@@ -5296,6 +5469,9 @@ bool 新_特征类::删除特征(稳定编码 特征节点) noexcept {
         const auto 特征 = 获取特征(特征节点);
         if (!特征) return false;
         const auto definition = 特征概念服务_.获取特征概念(特征->特征概念节点);
+        const bool 待完善 = !definition
+            && 特征概念服务_.是待完善特征概念节点(特征->特征概念节点);
+        if (!definition && !待完善) return false;
         std::optional<新特征清理准备> 空信息引用清理保护;
         const bool 信息存在引用 = definition && 是信息存在引用形状(*definition);
         if (definition && definition->材料类型 == 特征概念材料物理类型::信息节点引用 && !信息存在引用) {
@@ -5307,11 +5483,11 @@ bool 新_特征类::删除特征(稳定编码 特征节点) noexcept {
                 特征联合更新故障(L"空信息引用实例退出前闭包准备发生工程故障");
             空信息引用清理保护 = std::move(准备.准备);
         }
-        if (definition && (definition->材料类型 == 特征概念材料物理类型::需求节点引用 || 信息存在引用)) {
+        if (待完善 || definition->材料类型 == 特征概念材料物理类型::需求节点引用 || 信息存在引用) {
             auto p = 准备特征组清理({特征节点}, {});
             if (p.状态 != 新特征清理准备状态::已准备 || !p.准备) return false;
             auto* plan = p.准备->实现_.get();
-            if (!plan) 特征联合更新故障(L"需求特征退出缺少准备");
+            if (!plan) 特征联合更新故障(L"特征退出缺少清理准备");
             std::vector<稳定编码> fields, relations;
             for (const auto& snap : plan->预期) {
                 for (const auto& f : snap.结构.字段组) fields.push_back(f.编码);
@@ -5321,8 +5497,8 @@ bool 新_特征类::删除特征(稳定编码 特征节点) noexcept {
             relations.erase(std::unique(relations.begin(), relations.end()), relations.end());
             if (全局基础数据集.原子删除节点结构(plan->节点, fields, relations)
                 != 基础结构操作状态::已完成) return false;
-            if (!特征概念服务_.减少当前实例引用(特征->特征概念节点))
-                特征联合更新故障(L"需求特征已退出但概念引用减少失败");
+            if (!待完善 && !特征概念服务_.减少当前实例引用(特征->特征概念节点))
+                特征联合更新故障(L"特征已退出但概念引用减少失败");
             plan->状态 = 新特征清理准备::实现::阶段::已完成;
             return true;
         }
