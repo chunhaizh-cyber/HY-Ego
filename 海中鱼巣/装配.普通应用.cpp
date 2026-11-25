@@ -1861,12 +1861,29 @@ public:
                         指代实例JSON += ']';
                     }
                 }
+                std::string 局部对象JSON = "null";
+                const auto 局部 = 当前_.自然语言世界树.读取接收局部对象组(item.M);
+                if (局部.状态 == 新来源子场景状态::已存在) {
+                    局部对象JSON = "[";
+                    for (const auto& 对象 : 局部.对象组) {
+                        检查停止();
+                        if (对象.场景 != *item.S || 对象.声明.前置来源 != 前置来源) continue;
+                        if (局部对象JSON.size() > 1) 局部对象JSON += ',';
+                        局部对象JSON += "{\"existence\":" + 控制编码(对象.存在)
+                            + ",\"specificConcept\":" + 控制编码(对象.专属概念)
+                            + ",\"construction\":" + 控制编码(对象.声明.构式)
+                            + ",\"start\":" + 控制计数(对象.声明.起始标量)
+                            + ",\"end\":" + 控制计数(对象.声明.结束标量) + "}";
+                    }
+                    局部对象JSON += ']';
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
                     + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null")
                     + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
-                    + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON + "}";
+                    + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
+                    + ",\"localObjects\":" + 局部对象JSON + "}";
             }
         }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
