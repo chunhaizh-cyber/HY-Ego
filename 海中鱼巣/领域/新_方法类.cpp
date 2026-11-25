@@ -2787,7 +2787,8 @@ std::optional<新方法初始必要条件定义> 读取初始必要条件(稳定
             }
             if(核通用概念&&ft) {
                 const auto proof=features.读取特征概念定义保护(*ft);
-                if(proof.状态!=基础结构操作状态::已完成||proof.前提已变化||!proof.信息||proof.信息->类型根!=*ft
+                if (proof.前提已变化) throw 引用内容定义前提变化{};
+                if(proof.状态!=基础结构操作状态::已完成||!proof.信息||proof.信息->类型根!=*ft
                     ||proof.信息->定义.节点!=*ft||proof.预期节点组.empty())
                     throw std::runtime_error("generic initial requirement formal feature unavailable");
             }
@@ -6552,33 +6553,38 @@ std::optional<新方法信息> 读取当前方法信息(稳定编码 方法节�
 
 std::optional<新方法信息> 新_方法类::获取方法(
     稳定编码 方法节点) const noexcept {
-    try {
-        auto 方法 = 读取当前方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
-#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-        if (!方法 && 有效(方法节点) && 节点类型为(方法节点, 方法节点类型) && 方法属于根(方法节点))
-            try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法", L"读不成方法",
-                L"方法=" + std::to_wstring(方法节点.值) + L"；返回行=" + std::to_wstring(方法读失败行)); } catch (...) {}
-#endif
-        std::lock_guard 锁(新方法互斥);
-        if (方法) for (const auto& 参数 : 方法->参数规格组) {
-            if (参数.有序规格 && 是特征持有参数(参数.有序规格->信息类型)
-                && !方法持有者范围有效(*参数.有序规格,存在概念服务_))
-                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取有序方法参数", L"存在参数范围不是可读取的正式存在概念。");
-        }
-        return 方法;
-    }
-#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
-    catch (const std::exception& 异常) {
+    for (;;) {
         try {
-            const std::string w=异常.what();
-            (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法",L"读回异常",
-                L"方法="+std::to_wstring(方法节点.值)+L"；what="+std::wstring(w.begin(),w.end()));
-        } catch(...) {}
-        return std::nullopt;
-    }
+            auto 方法 = 读取当前方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+            if (!方法 && 有效(方法节点) && 节点类型为(方法节点, 方法节点类型) && 方法属于根(方法节点))
+                try { (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法", L"读不成方法",
+                    L"方法=" + std::to_wstring(方法节点.值) + L"；返回行=" + std::to_wstring(方法读失败行)); } catch (...) {}
 #endif
-    catch (...) {
-        return std::nullopt;
+            std::lock_guard 锁(新方法互斥);
+            if (方法) for (const auto& 参数 : 方法->参数规格组) {
+                if (参数.有序规格 && 是特征持有参数(参数.有序规格->信息类型)
+                    && !方法持有者范围有效(*参数.有序规格,存在概念服务_))
+                    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取有序方法参数", L"存在参数范围不是可读取的正式存在概念。");
+            }
+            return 方法;
+        } catch (const 引用内容定义前提变化&) {
+            // 本次读取的保护已失效。退出读锁后，以同一方法身份重新取得当前材料。
+            std::this_thread::yield();
+        }
+#ifdef HY_EGO_DEBUG_LOG_SIMULATION_PROGRESS
+        catch (const std::exception& 异常) {
+            try {
+                const std::string w=异常.what();
+                (void)调试日志<调试切片::SIMULATION_PROGRESS>(L"获取方法",L"读回异常",
+                    L"方法="+std::to_wstring(方法节点.值)+L"；what="+std::wstring(w.begin(),w.end()));
+            } catch(...) {}
+            return std::nullopt;
+        }
+#endif
+        catch (...) {
+            return std::nullopt;
+        }
     }
 }
 
@@ -9081,7 +9087,8 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
     const auto 收束 = 读取唯一I64字段(调用, 直接调用收束字段);
     const auto 动作 = 读取可选节点字段(调用, 直接调用动作字段);
     const auto 参数节点组 = 读取多节点字段(调用, 直接调用参数字段, 特征概念服务_);
-    const auto 方法信息 = 方法 ? 获取方法(*方法) : std::nullopt;
+    const auto 方法信息 = 方法 ? 读取当前方法信息(*方法, 特征概念服务_, *this, 存在概念服务_)
+        : std::nullopt;
     if (!方法 || !现实 || !外设 || !收束 || !动作 || !参数节点组
         || !方法信息 || !参数规格有效(方法信息->参数规格组, 特征概念服务_)
         || (*收束 != 0 && *收束 != 1)
@@ -9159,7 +9166,7 @@ std::optional<新方法直接调用身份> 新_方法类::读取直接调用身�
     try {
     std::unique_lock 锁(新方法互斥);
     确保直接调用结构();
-    const auto 方法 = 获取方法(方法节点);
+    const auto 方法 = 读取当前方法信息(方法节点, 特征概念服务_, *this, 存在概念服务_);
     if (!方法 || 方法->实现方式 != 新方法实现方式::本能
         || 方法->启用状态 != 新方法启用状态::启用
         || !有效(现实场景) || !有效(外设场景)
