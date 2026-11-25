@@ -654,6 +654,101 @@ std::vector<语言场景待完善概念词用> 读取接收待完善概念词用
     return 词用组;
 }
 
+struct 接收待完善特征角色 final {
+    新语言知识参数角色 参数;
+    const 新前置语言缺口* 缺口;
+    语言场景待完善概念词用 词用;
+};
+
+std::vector<接收待完善特征角色> 读取接收待完善特征角色(认知依赖& d,
+    稳定编码 前置来源, const 接收语言句段解释& 句) {
+    using P = 新语言知识参数角色;
+    using C = 新语言知识角色类别;
+    using S = 特征概念规则状态;
+    std::vector<接收待完善特征角色> 结果;
+    if (!句.静态结构 || 句.静态结构->操作 != 新语言知识含义操作::特征描述) return 结果;
+    const auto& 结构 = *句.静态结构;
+    for (const auto& 角色 : 结构.角色组) {
+        if (角色.值 || (角色.参数 != P::特征类型 && 角色.参数 != P::特征值)) continue;
+        const auto 类别 = 角色.参数 == P::特征类型 ? C::正式特征类型 : C::特征概念;
+        const auto 同范围 = [&](const auto& 项) {
+            return 项.起始标量 == 角色.起始标量 && 项.结束标量 == 角色.结束标量;
+        };
+        const auto 依据 = std::ranges::find_if(句.词条类型依据组, [&](const auto& 项) {
+            return 同范围(项) && 项.所需类别 == 类别 && 项.构式依据组 == std::vector{结构.所用构式};
+        });
+        if (依据 == 句.词条类型依据组.end()) continue;
+        const auto 缺口 = std::ranges::find_if(句.缺口组, [&](const auto& 项) {
+            return 同范围(项) && 项.种类 == 新前置语言缺口种类::名称材料不足
+                && std::ranges::find(项.已取得相关节点, 依据->词条) != 项.已取得相关节点.end();
+        });
+        if (缺口 == 句.缺口组.end()) continue;
+        std::optional<稳定编码> 概念;
+        for (const auto 节点 : 缺口->已取得相关节点) {
+            if (节点 == 结构.所用构式 || 节点 == 依据->词条) continue;
+            const auto 读取 = d.特征概念.按节点读取待完善特征概念(节点);
+            if (读取.状态 == S::资源失败) 资源();
+            if (读取.状态 == S::前提已变化) 漂移();
+            if (读取.状态 == S::值不存在) continue;
+            if (读取.状态 != S::已完成 || !读取.信息)
+                throw std::logic_error("saved pending feature role unavailable");
+            const auto& 信息 = *读取.信息;
+            if (信息.采用来源 != 前置来源 || 信息.来源词条 != 依据->词条 || !信息.原文用法
+                || 信息.原文用法->构式 != 结构.所用构式
+                || 信息.原文用法->起始标量 != 角色.起始标量 || 信息.原文用法->结束标量 != 角色.结束标量) continue;
+            if (信息.已完善) 漂移();
+            if (概念 && *概念 != 节点) return {};
+            概念 = 节点;
+        }
+        if (概念) 结果.push_back({角色.参数, &*缺口,
+            {*概念, 依据->词条, 结构.所用构式, 角色.角色编号}});
+    }
+    return 结果;
+}
+
+bool 核待完善特征陈述回读(const 接收语言句段解释& 原句, const 新静态含义单元& 原含义,
+    const std::vector<接收待完善特征角色>& 同源角色组, 接收语言句段解释& 回读) {
+    using P = 新语言知识参数角色;
+    using C = 新语言知识角色类别;
+    if (!原句.静态结构 || !回读.静态结构 || 回读.静态结构->所用构式 != 原句.静态结构->所用构式
+        || 回读.静态结构->操作 != 原句.静态结构->操作
+        || 回读.静态结构->角色组.size() != 原句.静态结构->角色组.size()
+        || 回读.缺口组.size() != 同源角色组.size()) return false;
+    const auto* 对象 = std::get_if<新绑定指称>(&原含义.主体);
+    if (!对象) return false;
+    for (const auto& 原角色 : 原句.静态结构->角色组) {
+        const auto 现角色 = std::ranges::find(回读.静态结构->角色组, 原角色.参数, &接收语言已解释角色::参数);
+        if (现角色 == 回读.静态结构->角色组.end() || 现角色->角色编号 != 原角色.角色编号) return false;
+        if (原角色.参数 == P::主体) {
+            const auto* 引用 = 现角色->值 ? std::get_if<语言图引用值>(&*现角色->值) : nullptr;
+            if (!引用 || 引用->类别 != C::存在 || 引用->节点 != 对象->节点) return false;
+            continue;
+        }
+        if (原角色.值) {
+            const auto* 原引用 = std::get_if<语言图引用值>(&*原角色.值);
+            const auto* 现引用 = 现角色->值 ? std::get_if<语言图引用值>(&*现角色->值) : nullptr;
+            if (!原引用 || !现引用 || 原引用->类别 != 现引用->类别 || 原引用->节点 != 现引用->节点) return false;
+            continue;
+        }
+        const auto 同源 = std::ranges::find(同源角色组, 原角色.参数, &接收待完善特征角色::参数);
+        if (同源 == 同源角色组.end() || 现角色->值) return false;
+        const auto 类别 = 原角色.参数 == P::特征类型 ? C::正式特征类型 : C::特征概念;
+        const auto 同范围 = [&](const auto& 项) {
+            return 项.起始标量 == 现角色->起始标量 && 项.结束标量 == 现角色->结束标量;
+        };
+        const auto 依据 = std::ranges::find_if(回读.词条类型依据组, [&](const auto& 项) {
+            return 同范围(项) && 项.所需类别 == 类别 && 项.构式依据组 == std::vector{同源->词用.构式};
+        });
+        if (依据 == 回读.词条类型依据组.end() || 依据->词条 != 同源->词用.词条) return false;
+        const auto 缺口 = std::ranges::find_if(回读.缺口组, [&](const auto& 项) {
+            return 同范围(项) && 项.种类 == 新前置语言缺口种类::名称材料不足;
+        });
+        if (缺口 == 回读.缺口组.end()) return false;
+        缺口->已取得相关节点.push_back(同源->词用.概念节点);
+    }
+    return true;
+}
+
 const 接收语言关系候选* 读取可成文关系(const 接收语言句段解释& 句) {
     using C=新语言知识角色类别;
     if (句.状态!=语言场景基础输入状态::已形成值式图
@@ -743,14 +838,18 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
     };
     if (!内容.含义候选) return 完成本次观察();
     const auto 成文词用 = 读取接收待完善概念词用组(d, 内容, stop);
-    if (成文词用.empty()) return 完成本次观察();
 
     const auto 成文称名 = 读取同源局部称名(d, 来源, stop);
     for (const auto& 句 : 内容.句段组) {
         检查认知停止(stop);
-        if (句.缺口组.size() != 1) continue;
         const auto 谓项 = 读取接收待完善谓项(d, 内容.前置来源, 句);
-        if (!谓项 || 谓项->缺口 != &句.缺口组.front()) continue;
+        const bool 存在归类 = 谓项 && 句.缺口组.size() == 1 && 谓项->缺口 == &句.缺口组.front();
+        const auto 特征角色组 = 读取接收待完善特征角色(d, 内容.前置来源, 句);
+        const bool 特征陈述 = !特征角色组.empty() && 句.缺口组.size() == 特征角色组.size()
+            && std::ranges::all_of(句.缺口组, [&](const auto& 缺口) {
+                return std::ranges::find(特征角色组, &缺口, &接收待完善特征角色::缺口) != 特征角色组.end();
+            });
+        if (!存在归类 && !特征陈述) continue;
         const 新含义原文范围 范围{static_cast<std::int64_t>(句.起始标量),
             static_cast<std::int64_t>(句.结束标量 - 句.起始标量)};
         const auto& 原网 = *内容.含义候选;
@@ -759,13 +858,30 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
         });
         if (项 == 原网.内容项组.end()) continue;
         const auto* 单元 = std::get_if<新静态含义单元>(&项->内容);
-        if (!单元 || !std::holds_alternative<新绑定指称>(单元->主体)
-            || !std::holds_alternative<新概念归属谓项>(单元->谓项)) continue;
-
-        auto& 输出 = 结果.句段组.emplace_back(句.起始标量, 句.结束标量);
+        if (!单元 || !std::holds_alternative<新绑定指称>(单元->主体)) continue;
         新语言含义网 单句;
         单句.顶层项组.push_back({{}, 新表达用途::陈述, 项->编号});
         单句.内容项组.push_back(*项);
+        std::vector<语言场景待完善概念词用> 特征词用组;
+        if (特征陈述) {
+            using P = 新语言知识参数角色;
+            auto& 临时单元 = std::get<新静态含义单元>(单句.内容项组.front().内容);
+            auto* 特征 = std::get_if<新特征值谓项>(&临时单元.谓项);
+            if (!特征) continue;
+            for (const auto& 角色 : 特征角色组) {
+                const auto& 词用 = 角色.词用;
+                if (角色.参数 == P::特征类型)
+                    特征->特征类型 = 新绑定指称{新指称类别::特征类型, 词用.概念节点, {}};
+                else
+                    特征->值 = 新表达概念条件{词用.概念节点};
+                特征词用组.push_back(词用);
+            }
+            if (!std::holds_alternative<新表达概念条件>(特征->值)) continue;
+        } else if (!std::holds_alternative<新概念归属谓项>(单元->谓项)) {
+            continue;
+        }
+
+        auto& 输出 = 结果.句段组.emplace_back(句.起始标量, 句.结束标量);
         auto 投影 = 含义网投影旧图(单句, {内容.语言节点});
         if (!投影.图 || 投影.图->定义图.节点组.size() != 1) continue;
         const auto& 定义 = 投影.图->定义图.节点组.front();
@@ -779,7 +895,7 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
         请求.成文受话者 = 交互.受话者E;
         请求.允许根知识节点组 = 项->所用知识组;
         请求.局部称名组 = 成文称名;
-        请求.待完善概念词用组 = 成文词用;
+        请求.待完善概念词用组 = 特征陈述 ? 特征词用组 : 成文词用;
         const auto 成文 = 生成基础语言表达(请求,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
         if (成文.状态 == B::读取漂移) 漂移();
         if (成文.状态 == B::工程未完成 || 成文.状态 == B::额度不足) 资源();
@@ -795,7 +911,8 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
             throw std::logic_error("partial statement context unavailable");
         if (当前.信息->记录节点 != 正式.记录节点 || 当前.信息->内容 != 内容) 漂移();
         const auto 回读称名 = 读取同源局部称名(d, 来源, stop);
-        const auto 回读词用 = 读取接收待完善概念词用组(d, 当前.信息->内容, stop);
+        const auto 回读词用 = 特征陈述 ? std::vector<语言场景待完善概念词用>{}
+            : 读取接收待完善概念词用组(d, 当前.信息->内容, stop);
         接收专名读取器 专名(d,交互.现实范围根,stop);
         语言基础统一输入请求 回读{内容.语言节点, 输出.UTF8正文, {},0,0,0,0,0,
             &专名, 语言解释读取模式::本次正式有限集完整读取};
@@ -808,6 +925,19 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
         if (实际.状态 == I::工程未完成 || 实际.状态 == I::额度不足) 资源();
         if (实际.状态 == I::内部不一致) throw std::logic_error("partial statement independent readback inconsistent");
         输出.独立回读.push_back(记录句段解释(实际,{0,static_cast<std::size_t>(标量数(输出.UTF8正文))}));
+        if (特征陈述) {
+            const auto 同源句 = std::ranges::find(当前.信息->内容.句段组, 句.起始标量,
+                &接收语言句段解释::起始标量);
+            if (同源句 == 当前.信息->内容.句段组.end()) 漂移();
+            const auto 同源词用 = 读取接收待完善特征角色(d, 当前.信息->内容.前置来源, *同源句);
+            if (!实际.静态结构) 输出.状态 = S::回读未唯一;
+            else if (std::ranges::equal(同源词用, 特征角色组, {}, &接收待完善特征角色::词用,
+                    &接收待完善特征角色::词用)
+                && 核待完善特征陈述回读(*同源句, *单元, 同源词用, 输出.独立回读.back()))
+                输出.状态 = S::已成文且独立回读;
+            else 输出.状态 = S::回读含义不一致;
+            continue;
+        }
         const auto* 实际图 = 实际.含义 ? std::get_if<语言图含义材料>(&*实际.含义) : nullptr;
         if (实际.状态 != I::已形成值式图 || !实际图 || !实际.静态结构) {
             输出.状态 = S::回读未唯一;
