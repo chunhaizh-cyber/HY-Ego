@@ -1627,6 +1627,35 @@ public:
                         + ",\"pronounConcept\":" + 控制编码(关系.指代概念)
                         + ",\"confirmed\":" + 控制布尔(关系.已确定) + "}";
                 }
+                std::string 静态结构 = "null";
+                if (句.静态结构) {
+                    const auto& 结构 = *句.静态结构;
+                    std::string 角色组 = "[";
+                    for (const auto& 角色 : 结构.角色组) {
+                        检查停止();
+                        std::string 值 = "null";
+                        if (角色.值) {
+                            if (const auto* 引用 = std::get_if<语言图引用值>(&*角色.值)) {
+                                值 = "{\"node\":" + 控制编码(引用->节点)
+                                    + ",\"category\":" + 控制计数(static_cast<std::uint64_t>(引用->类别))
+                                    + ",\"sourceConcept\":" + 控制编码(引用->来源概念)
+                                    + ",\"chosenName\":" + 控制编码(引用->选用名称关系) + "}";
+                            } else {
+                                const auto& 整数 = std::get<语言图整数值>(*角色.值);
+                                值 = "{\"integer\":" + 字符串(整数.规范十进制)
+                                    + ",\"unit\":" + 控制编码(整数.单位) + "}";
+                            }
+                        }
+                        if (角色组.size() != 1) 角色组 += ',';
+                        角色组 += "{\"role\":" + 控制JSON字符串(std::to_string(角色.角色编号))
+                            + ",\"parameter\":" + 控制计数(static_cast<std::uint64_t>(角色.参数))
+                            + ",\"start\":" + 控制计数(角色.起始标量) + ",\"end\":" + 控制计数(角色.结束标量)
+                            + ",\"value\":" + 值 + "}";
+                    }
+                    静态结构 = "{\"knowledge\":" + 控制编码(结构.所用构式)
+                        + ",\"operation\":" + 控制计数(static_cast<std::uint64_t>(结构.操作))
+                        + ",\"roles\":" + 角色组 + "]}";
+                }
                 if (句组.size() != 1) 句组 += ',';
                 句组 += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
                     + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
@@ -1634,6 +1663,7 @@ public:
                     + ",\"construction\":" + (句.构式 ? 控制计数(static_cast<std::uint64_t>(*句.构式)) : "null")
                     + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
                     + ",\"subjectReference\":" + 主体关系
+                    + ",\"staticStructure\":" + 静态结构
                     + ",\"termTypeEvidence\":" + 类型依据组 + "]"
                     + ",\"gaps\":" + 缺口组 + "]}";
             }

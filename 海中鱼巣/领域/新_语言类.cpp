@@ -6495,8 +6495,20 @@ auto 组织记录字段(新语言词条类型依据& v){
 auto 组织记录字段(接收语言主体关系& v){
     return std::tie(v.起始标量,v.结束标量,v.对象起始标量,v.对象结束标量,v.所用构式,v.指代概念,v.已确定);
 }
+auto 组织记录字段(语言图引用值& v){
+    return std::tie(v.类别,v.节点,v.来源概念,v.选用名称关系);
+}
+auto 组织记录字段(语言图整数值& v){
+    return std::tie(v.规范十进制,v.单位);
+}
+auto 组织记录字段(接收语言已解释角色& v){
+    return std::tie(v.角色编号,v.参数,v.起始标量,v.结束标量,v.值);
+}
+auto 组织记录字段(接收语言静态结构& v){
+    return std::tie(v.所用构式,v.操作,v.角色组);
+}
 auto 组织记录字段(接收语言句段解释& v){
-    return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组);
+    return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组,v.静态结构);
 }
 auto 组织记录字段(新接收语言解释内容& v){
     return std::tie(v.来源场景,v.前置来源,v.语言节点,v.原文起点,v.原文终点,v.句段组);
@@ -6633,7 +6645,8 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else {
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
-        if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>)
+        if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
+            ||std::is_same_v<T,接收语言句段解释>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
         else 组织要求(children.size()==字段数);
         std::size_t i=0;
@@ -6959,6 +6972,31 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
             if (!在段内(依据.起始标量,依据.结束标量) || !有效(依据.词条) || 依据.构式依据组.empty()
                 || (依据.所需类别!=C::存在概念 && 依据.所需类别!=C::特征概念 && 依据.所需类别!=C::正式特征类型))
                 return false;
+        }
+        if (句.静态结构) {
+            const auto& 结构 = *句.静态结构;
+            using O=新语言知识含义操作;
+            if (!有效(结构.所用构式) || 结构.角色组.empty()
+                || (结构.操作!=O::概念归类 && 结构.操作!=O::特征描述))
+                return false;
+            std::set<std::int64_t> 角色编号;
+            for (const auto& 角色 : 结构.角色组) {
+                using P=新语言知识参数角色;
+                if (!在段内(角色.起始标量,角色.结束标量) || !角色编号.insert(角色.角色编号).second
+                    || 角色.参数<P::主体 || 角色.参数>P::下级)
+                    return false;
+                if (!角色.值) continue;
+                if (const auto* 引用=std::get_if<语言图引用值>(&*角色.值)) {
+                    using C=新语言知识角色类别;
+                    if (引用->类别<C::存在 || 引用->类别>C::查询存在 || !有效(引用->节点)
+                        || (引用->来源概念 && !有效(*引用->来源概念))
+                        || (引用->选用名称关系 && !有效(*引用->选用名称关系)))
+                        return false;
+                } else {
+                    const auto& 整数=std::get<语言图整数值>(*角色.值);
+                    if (整数.规范十进制.empty() || (整数.单位 && !有效(*整数.单位))) return false;
+                }
+            }
         }
         if (句.主体关系) {
             const auto& 关系 = *句.主体关系;

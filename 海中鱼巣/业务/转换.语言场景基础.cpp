@@ -981,6 +981,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     if (result.完整候选组.empty()) {
         result.静态角色缺口组 = 图解释.静态角色缺口组;
         result.词条类型依据组 = 图解释.词条类型依据组;
+        if (图解释.状态 == 基础语言输入状态::静态角色待取材) result.静态结构 = 图解释.静态结构;
     }
     if(!图解释.完整候选组.empty()&&图解释.状态!=基础语言输入状态::已形成唯一含义
         &&图解释.状态!=基础语言输入状态::主体待绑定&&图解释.状态!=基础语言输入状态::概念多义待解
@@ -1034,6 +1035,8 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
             }
             if((result.状态==I::对象待绑定)!=有未决对象)throw std::logic_error("graph binding state does not match object material");
         }
+        if (result.状态 == I::已形成值式图 || result.状态 == I::对象待绑定)
+            result.静态结构 = 图解释.静态结构;
         if(result.状态==I::已形成值式图) {
             const auto& 图=新图候选[0];
             result.含义=图;
@@ -1084,6 +1087,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
         if(依据.失败!=读取状态::已完成){
             r.状态=输入映射(依据.失败);r.完整候选组.clear();r.含义.reset();
             r.图角色原文定位组.clear();r.静态角色缺口组.clear();r.词条类型依据组.clear();
+            r.静态结构.reset();
             return r;
         }
         if(!技术未完成(r.状态)) {

@@ -185,6 +185,7 @@ struct 语言图解释结果 final {
     std::vector<语言图静态角色缺口> 静态角色缺口组;
     std::vector<语言图限定主体绑定> 限定主体绑定组;
     std::vector<新语言词条类型依据> 词条类型依据组;
+    std::optional<接收语言静态结构> 静态结构;
 };
 语言图解释结果 解释单句含义图(
     const 语言图解释请求&,const 新_语言类&,const 新_词类&,

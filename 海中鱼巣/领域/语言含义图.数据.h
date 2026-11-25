@@ -6,22 +6,12 @@
 #include "概念_名称关系类.h"
 #include "概念_特征类.h"
 #include "接收认知来源.数据.h"
+#include "前置语言输入.数据.h"
 #include <utility>
 #include <variant>
 
 namespace 海中鱼巣 {
 
-struct 语言图引用值 final {
-    新语言知识角色类别 类别=新语言知识角色类别::存在;
-    稳定编码 节点{};
-    std::optional<稳定编码> 来源概念,选用名称关系;
-    friend bool operator==(const 语言图引用值&,const 语言图引用值&)=default;
-};
-struct 语言图整数值 final {
-    std::string 规范十进制;
-    std::optional<稳定编码> 单位;
-    friend bool operator==(const 语言图整数值&,const 语言图整数值&)=default;
-};
 struct 语言图子出现引用 final {
     std::int64_t 出现编号=0;
     friend bool operator==(const 语言图子出现引用&,const 语言图子出现引用&)=default;

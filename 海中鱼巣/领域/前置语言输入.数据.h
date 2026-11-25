@@ -5,6 +5,7 @@
 #include <optional>
 #include <stop_token>
 #include <string>
+#include <variant>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -38,6 +39,34 @@ struct 新语言词条类型依据 final {
     std::vector<稳定编码> 构式依据组;
     friend bool operator==(const 新语言词条类型依据&,const 新语言词条类型依据&)=default;
 };
+enum class 新语言知识含义操作 : std::uint8_t;
+enum class 新语言知识参数角色 : std::uint8_t;
+
+struct 语言图引用值 final {
+    新语言知识角色类别 类别=static_cast<新语言知识角色类别>(1);
+    稳定编码 节点{};
+    std::optional<稳定编码> 来源概念,选用名称关系;
+    friend bool operator==(const 语言图引用值&,const 语言图引用值&)=default;
+};
+struct 语言图整数值 final {
+    std::string 规范十进制;
+    std::optional<稳定编码> 单位;
+    friend bool operator==(const 语言图整数值&,const 语言图整数值&)=default;
+};
+struct 接收语言已解释角色 final {
+    std::int64_t 角色编号;
+    新语言知识参数角色 参数;
+    std::uint64_t 起始标量, 结束标量;
+    std::optional<std::variant<语言图引用值, 语言图整数值>> 值;
+    friend bool operator==(const 接收语言已解释角色&,const 接收语言已解释角色&)=default;
+};
+struct 接收语言静态结构 final {
+    稳定编码 所用构式;
+    新语言知识含义操作 操作;
+    std::vector<接收语言已解释角色> 角色组;
+    friend bool operator==(const 接收语言静态结构&,const 接收语言静态结构&)=default;
+};
+
 enum class 语言场景基础输入状态 : std::uint8_t;
 enum class 基础语言输入状态 : std::uint8_t;
 enum class 语言基础统一构式 : std::uint8_t;
@@ -57,6 +86,7 @@ struct 接收语言句段解释 final {
     std::optional<语言基础统一构式> 构式{};
     std::optional<接收语言主体关系> 主体关系{};
     std::vector<新语言词条类型依据> 词条类型依据组{};
+    std::optional<接收语言静态结构> 静态结构{};
     friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
 };
 

@@ -4080,6 +4080,13 @@ bool 解释静态陈述图知识(const 新语言知识定义& 定义) {
         && 根.作用域 == 新语言知识作用域::普通陈述
         && (根.操作 == 新语言知识含义操作::概念归类 || 根.操作 == 新语言知识含义操作::特征描述);
 }
+std::optional<std::variant<语言图引用值, 语言图整数值>> 接收静态角色值(const 语言图绑定值* 值) {
+    if (!值) return {};
+    if (const auto* 引用 = std::get_if<语言图引用值>(值)) return *引用;
+    if (const auto* 整数 = std::get_if<语言图整数值>(值)) return *整数;
+    return {};
+}
+
 std::optional<新语言知识角色类别> 单一词条概念类别(const 新语言知识角色定义& 角色) {
     using C = 新语言知识角色类别;
     using K = 新语言知识角色种类;
@@ -5001,6 +5008,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 if (静态分支截断) {
                     // 余下分支尚未核对，无法证明同一原文位置的类别共识。
                     共识.reset();
+                    唯一静态角色不足.reset();
+                    静态角色不足多义 = true;
                     break;
                 }
                 if (静态角色不足多义 && 共识 && 共识->empty()) break;
@@ -5111,19 +5120,39 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
         观察.记录(L"其余读取保护复核后");
 #endif
-        std::set<std::string> 已有语义;std::vector<语言图含义材料> 去重候选;
+        std::map<std::string,std::size_t> 已有语义;
+        bool 同义来源多义 = false;
+        std::vector<语言图含义材料> 去重候选;
         for(auto& 图:结果.完整候选组) {
             if(解释行动请求图(图)) {
                 if(std::none_of(去重候选.begin(),去重候选.end(),[&](const auto& 已有){return 解释请求候选相同(图,已有);}))去重候选.push_back(std::move(图));
-            }else if(已有语义.insert(解释图语义键(图)).second)去重候选.push_back(std::move(图));
+            } else {
+                const auto [位置, 新增] = 已有语义.try_emplace(解释图语义键(图), 去重候选.size());
+                if (新增) 去重候选.push_back(std::move(图));
+                else if (请求.读取静态角色缺口 && 图.出现组 != 去重候选[位置->second].出现组)
+                    同义来源多义 = true;
+            }
         }
         结果.完整候选组=std::move(去重候选);
         if (结果.完整候选组.empty()) {
             if (唯一静态角色不足) {
                 结果.状态 = 状态类::静态角色待取材;
+                const auto& 候选 = *唯一静态角色不足;
+                const auto 知识 = 候选.静态角色缺口组.front().知识节点;
+                const auto& 根 = 知识表.at(知识)->定义.目标.含义图->节点组.front();
+                接收语言静态结构 结构{知识, 根.操作, {}};
+                for (const auto& 参数 : 根.参数组) {
+                    const 角色键 键{根.局部编号, 参数.规则角色};
+                    const auto 范围 = 候选.角色范围.find(键);
+                    if (范围 == 候选.角色范围.end()) continue;
+                    const auto 值 = 候选.值组.find(键);
+                    结构.角色组.push_back({参数.规则角色, 参数.参数, 范围->second.first,
+                        范围->second.second, 接收静态角色值(值 == 候选.值组.end() ? nullptr : &值->second)});
+                }
                 结果.静态角色缺口组 = std::move(唯一静态角色不足->静态角色缺口组);
                 for (const auto& 缺口 : 结果.静态角色缺口组)
                     结果.未覆盖范围组.push_back({缺口.起始标量, 缺口.结束标量});
+                if (!结构.角色组.empty()) 结果.静态结构 = std::move(结构);
             } else {
                 结果.状态 = 静态角色不足多义 ? 状态类::多规则待解
                     : 请求.对象绑定组.empty() ? 状态类::缺规则 : 状态类::输入拒绝;
@@ -5161,6 +5190,28 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 结果.图角色原文定位组=std::move(候选定位.at(键));
                 if(结果.状态==状态类::已形成唯一含义)
                     结果.限定主体绑定组=std::move(限定绑定按语义.at(键));
+            }
+
+            if (请求.读取静态角色缺口 && !同义来源多义 && 图.出现组.size() == 1
+                && (结果.状态 == 状态类::已形成唯一含义 || 结果.状态 == 状态类::主体待绑定)) {
+                const auto& 出现 = 图.出现组.front();
+                if (解释静态陈述图知识(知识表.at(出现.所用知识节点)->定义)) {
+                    const auto& 根 = 图.定义图.节点组.front();
+                    接收语言静态结构 结构{出现.所用知识节点, 根.操作, {}};
+                    for (const auto& 参数 : 根.参数组) {
+                        const auto 范围 = std::ranges::find_if(结果.图角色原文定位组, [&](const auto& 项) {
+                            return 项.出现编号 == 出现.出现编号 && 项.角色编号 == 参数.规则角色;
+                        });
+                        const auto 绑定 = std::ranges::find(出现.角色组, 参数.规则角色, &语言图角色绑定::角色编号);
+                        if (范围 == 结果.图角色原文定位组.end() || 绑定 == 出现.角色组.end()) continue;
+                        if (auto 值 = 接收静态角色值(&绑定->值)) {
+                            结构.角色组.push_back({参数.规则角色, 参数.参数,
+                                范围->原文起点, 范围->原文终点, std::move(值)});
+                        }
+                    }
+                    if (!结构.角色组.empty() && 结构.角色组.size() == 根.参数组.size())
+                        结果.静态结构 = std::move(结构);
+                }
             }
         }
         return 结果;
