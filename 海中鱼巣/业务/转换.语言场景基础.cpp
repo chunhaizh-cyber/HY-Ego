@@ -1033,6 +1033,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
         if(result.状态==I::已形成值式图) {
             const auto& 图=新图候选[0];
             result.含义=图;
+            result.限定主体绑定组=图解释.限定主体绑定组;
         }
         return result;
     }

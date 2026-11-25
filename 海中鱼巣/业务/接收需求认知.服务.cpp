@@ -339,7 +339,26 @@ public:
             }
             const auto scope=读范围(d_,context_.现实根,stop_);
             if(!同范围(scope.范围,scope_.范围))漂移();并保护(out.完整保护,scope.完整保护);
-            const auto roles=读取认知图角色(std::get<语言图含义材料>(*parsed_.含义));
+            const auto& 图=std::get<语言图含义材料>(*parsed_.含义);
+            for(const auto& 绑定:parsed_.限定主体绑定组) {
+                检查认知停止(stop_);
+                const auto& 出现=找认知图出现(图,绑定.出现编号);
+                const auto 角色=std::ranges::find(出现.角色组,绑定.主体角色编号,
+                    [](const auto& 项){return 项.角色编号;});
+                const auto* 主体=角色==出现.角色组.end() ? nullptr : std::get_if<语言图引用值>(&角色->值);
+                if(!主体||主体->类别!=新语言知识角色类别::存在||主体->节点!=绑定.实际存在)
+                    throw std::logic_error("qualified feature subject lost its adopted graph role");
+                const auto 当前=定位语言图限定主体(绑定.原称名存在,绑定.特征类型,
+                    d_.存在,d_.特征概念,true);
+                using R=基础语言输入状态;
+                if(当前.状态==R::资源失败)资源();
+                if(当前.状态==R::内部不一致)
+                    throw std::logic_error("qualified feature subject has inconsistent source");
+                if(当前.状态!=R::已形成唯一含义 || 当前.适用概念!=绑定.适用存在概念
+                    || 当前.实际主体!=绑定.实际存在)漂移();
+                并保护(out.完整保护,当前.保护);
+            }
+            const auto roles=读取认知图角色(图);
             if(roles.主体!=speaker_)漂移();
             if(roles.受请求者) {
                 if(roles.受请求者!=context_.已绑定自我)漂移();

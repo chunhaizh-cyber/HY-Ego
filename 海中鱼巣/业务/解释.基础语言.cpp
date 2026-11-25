@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <array>
 #include <functional>
+#include <iterator>
 #include <limits>
 #include <map>
 #include <new>
@@ -4274,7 +4275,9 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         };
         const auto 片段=[&](std::size_t 起,std::size_t 末){return 请求.固定原文.substr(原文->字节边界[起],原文->字节边界[末]-原文->字节边界[起]);};
         std::map<稳定编码,普通名称候选读回> 名称保护;std::map<稳定编码,新词条信息> 词保护;
-        std::map<稳定编码,特征概念信息> 特征保护;std::map<稳定编码,新存在信息> 存在保护;
+        std::map<稳定编码,特征概念信息> 特征保护;
+        std::set<稳定编码> 已识别限定特征类型;
+        std::map<稳定编码,新存在信息> 存在保护;
         const auto 核特征依据状态=[&]() {
             if(!依据||依据->失败==采集状态::已完成)return;
             if(依据->失败==采集状态::读取漂移)throw 状态类::读取漂移;
@@ -4438,6 +4441,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                     const auto& 允许=角色.必要约束组.front().允许类别组;
                     if(定义.信息->类型根==概念节点
                         || 特征概念.读取实例所属特征类型(概念节点)==概念节点) {
+                        if(定义.信息->类型根!=概念节点)已识别限定特征类型.insert(概念节点);
                         if(std::find(允许.begin(),允许.end(),新语言知识角色类别::I64标量特征类型)!=允许.end()
                             &&定义.信息->定义.材料类型==特征概念材料物理类型::I64标量)
                             候选.push_back(语言图引用值{新语言知识角色类别::I64标量特征类型,概念节点,概念节点,身份});
@@ -4735,8 +4739,10 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             匹配(匹配,0,起,{});return 成果;
         };
         std::map<std::string,std::vector<语言图角色原文定位>> 候选定位;
-        std::vector<std::pair<语言图含义材料,std::vector<语言图角色原文定位>>> 请求候选定位;
-        bool 定位冲突=false;
+        std::vector<std::tuple<语言图含义材料,std::vector<语言图角色原文定位>,
+            std::vector<语言图限定主体绑定>>> 请求候选定位;
+        bool 定位冲突=false, 限定主体多义=false;
+        std::map<std::string,std::vector<语言图限定主体绑定>> 限定绑定按语义;
         std::optional<图短语结果> 唯一静态角色不足;
         bool 静态角色不足多义 = false;
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
@@ -4751,6 +4757,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             std::map<std::int64_t,const 新语言图含义节点*> 定义表;for(const auto& 节点:材料.定义图.节点组)定义表.emplace(节点.局部编号,&节点);
             bool 合法=true;std::int64_t 次号=0;
             std::vector<语言图角色原文定位> 本候选定位;
+            std::vector<语言图限定主体绑定> 本候选限定绑定;
+            bool 本候选限定主体多义=false;
             for(const auto& 要求绑定:请求.对象绑定组) {
                 bool 已使用=false;
                 for(const auto& [角色,范围]:已解析.角色范围)if(范围==std::pair{要求绑定.原文范围.起始标量,要求绑定.原文范围.结束标量}) {
@@ -4805,6 +4813,40 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                         if(绑定.角色编号==项.规则角色)return std::get_if<语言图引用值>(&绑定.值);
                     return nullptr;
                 };
+                using Op = 新语言知识含义操作;
+                if(合法 && (定义.操作==Op::特征描述 || 定义.操作==Op::特征区间描述
+                    || 定义.操作==Op::特征方向描述)) {
+                    const auto* FT = 取引用(新语言知识参数角色::特征类型);
+                    if(FT && 已识别限定特征类型.contains(FT->节点)) {
+                        const auto 主体参数 = std::ranges::find(定义.参数组,
+                            新语言知识参数角色::主体, &新语言知识角色参数::参数);
+                        if(主体参数!=定义.参数组.end()) {
+                            const auto 角色 = std::ranges::find(定义.角色组, 主体参数->规则角色,
+                                [](const auto& 项){return 项.局部编号;});
+                            if(角色!=定义.角色组.end() && 角色->种类==新语言知识角色种类::领域对象引用) {
+                                const auto 绑定 = std::ranges::find(出现.角色组, 主体参数->规则角色,
+                                    [](const auto& 项){return 项.角色编号;});
+                                auto* 主体 = 绑定==出现.角色组.end() ? nullptr
+                                    : std::get_if<语言图引用值>(&绑定->值);
+                                if(主体 && 主体->类别==新语言知识角色类别::存在) {
+                                    const auto 原称名=主体->节点;
+                                    const auto 定位=定位语言图限定主体(原称名,FT->节点,存在,特征概念,false);
+                                    if(定位.状态==状态类::已形成唯一含义) {
+                                        if(!定位.适用概念||!定位.实际主体)throw 状态类::内部不一致;
+                                        本候选限定绑定.push_back({出现编号,主体参数->规则角色,
+                                            原称名,FT->节点,*定位.适用概念,*定位.实际主体});
+                                        if(原称名!=*定位.实际主体)
+                                            *主体={新语言知识角色类别::存在,*定位.实际主体,{},{}};
+                                    } else if(定位.状态==状态类::主体待绑定 || 定位.状态==状态类::概念多义待解) {
+                                        if(!定位.适用概念)throw 状态类::内部不一致;
+                                        本候选限定主体多义 |= 定位.状态==状态类::概念多义待解;
+                                        *主体={新语言知识角色类别::存在概念,*定位.适用概念,*定位.适用概念,{}};
+                                    } else throw 定位.状态;
+                                }
+                            }
+                        }
+                    }
+                }
                 if(定义.操作==新语言知识含义操作::特征描述&&!定义.特征值分支) {
                     const auto* D=取引用(新语言知识参数角色::主体);const auto* FT=取引用(新语言知识参数角色::特征类型);
                     if(!D||!FT||D->类别!=新语言知识角色类别::正式信息节点||!D->来源概念)合法=false;
@@ -4862,12 +4904,15 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 }
             }
             if(合法) {
+                限定主体多义 |= 本候选限定主体多义;
                 if(解释行动请求图(材料)) {
-                    请求候选定位.emplace_back(材料,本候选定位);
+                    请求候选定位.emplace_back(材料,std::move(本候选定位),std::move(本候选限定绑定));
                     结果.完整候选组.push_back(std::move(材料));continue;
                 }
-                const auto key=解释图语义键(材料);
-                const auto [位置,新增]=候选定位.emplace(key,本候选定位);
+                const auto 键=解释图语义键(材料);
+                const auto [限定位置, 限定新增]=限定绑定按语义.try_emplace(键,本候选限定绑定);
+                if(!限定新增 && 限定位置->second!=本候选限定绑定)定位冲突=true;
+                const auto [位置,新增]=候选定位.emplace(键,本候选定位);
                 if(!新增&&(位置->second.size()!=本候选定位.size()
                     ||!std::equal(位置->second.begin(),位置->second.end(),本候选定位.begin(),[](const auto&a,const auto&b){return a.出现编号==b.出现编号&&a.角色编号==b.角色编号&&a.原文起点==b.原文起点&&a.原文终点==b.原文终点;})))定位冲突=true;
                 结果.完整候选组.push_back(std::move(材料));
@@ -5023,19 +5068,104 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 if(角色定义->种类==新语言知识角色种类::领域对象引用)待绑=true;
             }
         }
-        结果.状态=结果.完整候选组.size()>1||定位冲突 ? 状态类::概念多义待解 : 待绑 ? 状态类::主体待绑定 : 状态类::已形成唯一含义;
+        结果.状态=结果.完整候选组.size()>1||定位冲突||限定主体多义 ? 状态类::概念多义待解
+            : 待绑 ? 状态类::主体待绑定 : 状态类::已形成唯一含义;
         if(结果.完整候选组.size()==1&&!定位冲突) {
             const auto& 图=结果.完整候选组.front();
             if(解释行动请求图(图)) {
-                const auto 定位=std::find_if(请求候选定位.begin(),请求候选定位.end(),[&](const auto& 已有){return 解释请求候选相同(图,已有.first);});
+                const auto 同请求=[&](const auto& 已有){return 解释请求候选相同(图,std::get<0>(已有));};
+                const auto 定位=std::find_if(请求候选定位.begin(),请求候选定位.end(),同请求);
                 if(定位==请求候选定位.end())throw std::logic_error("action request full candidate lost source alignment");
-                结果.图角色原文定位组=定位->second;
-            }else 结果.图角色原文定位组=候选定位.at(解释图语义键(图));
+                结果.图角色原文定位组=std::move(std::get<1>(*定位));
+                if(结果.状态==状态类::已形成唯一含义) {
+                    const auto& 选择=std::get<2>(*定位);
+                    const bool 依据歧义=std::any_of(std::next(定位),请求候选定位.end(),[&](const auto& 其他){
+                        return 同请求(其他)&&std::get<2>(其他)!=选择;
+                    });
+                    if(依据歧义)结果.状态=状态类::概念多义待解;
+                    else 结果.限定主体绑定组=std::move(std::get<2>(*定位));
+                }
+            } else {
+                const auto 键=解释图语义键(图);
+                结果.图角色原文定位组=std::move(候选定位.at(键));
+                if(结果.状态==状态类::已形成唯一含义)
+                    结果.限定主体绑定组=std::move(限定绑定按语义.at(键));
+            }
         }
         return 结果;
     }catch(状态类 状态){结果.状态=状态;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
     catch(const std::bad_alloc&){结果.状态=状态类::资源失败;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
     catch(const std::length_error&){结果.状态=状态类::资源失败;结果.完整候选组.clear();结果.未覆盖范围组={{0,长度}};return 结果;}
+}
+
+语言图限定主体定位结果 定位语言图限定主体(稳定编码 E, 稳定编码 FT,
+    const 新_存在类& 存在, const 概念_特征类& 特征概念, bool 需要保护) {
+    using S = 基础语言输入状态;
+    using S1 = 基础结构操作状态;
+    using M = 特征成员概念归属;
+    using R = 特征概念规则状态;
+
+    try {
+        const auto 限定 = 特征概念.读取适用范围I64子类型(FT);
+        if (!限定) return {S::读取漂移};
+        const auto A = 限定->适用存在概念;
+        语言图限定主体定位结果 结果{S::主体待绑定, A};
+        if (需要保护) {
+            auto 定义 = 特征概念.读取特征概念定义保护(FT);
+            if (定义.状态 == S1::资源失败) return {S::资源失败};
+            if (定义.前提已变化 || 定义.状态 == S1::节点不存在 || 定义.状态 == S1::引用不存在)
+                return {S::读取漂移};
+            if (定义.状态 != S1::已完成 || !定义.信息 || 定义.预期节点组.empty())
+                return {S::内部不一致};
+            结果.保护 = std::move(定义.预期节点组);
+        }
+        const auto 读归属 = [&](稳定编码 对象) {
+            auto r = 存在.比较存在与概念信息(对象, A, 需要保护);
+            if (r.状态 == R::资源失败) throw S::资源失败;
+            if (r.状态 == R::前提已变化 || r.状态 == R::入口拒绝) throw S::读取漂移;
+            if (r.状态 != R::已完成) throw S::内部不一致;
+            if (需要保护)
+                结果.保护.insert(结果.保护.end(), std::make_move_iterator(r.依据保护.begin()),
+                    std::make_move_iterator(r.依据保护.end()));
+            if (r.归属 != M::属于 || r.路径 != 存在概念归属路径::定义匹配)
+                return r.归属;
+            // 只接受该次正式比较实际使用的非空定义，避免把稍后读到的定义当作本次依据。
+            const auto* 材料 = r.采集 && r.采集->材料 ? &*r.采集->材料 : nullptr;
+            return 材料 && !材料->必需特征组.empty() ? M::属于 : M::未知;
+        };
+        if (读归属(E) == M::属于) {
+            结果.实际主体 = E;
+            结果.状态 = S::已形成唯一含义;
+            return 结果;
+        }
+
+        auto 组成 = 存在.读取存在直接组成保护(E);
+        if (组成.状态 == S1::资源失败) return {S::资源失败};
+        if (组成.前提已变化 || 组成.状态 == S1::节点不存在) return {S::读取漂移};
+        if (组成.状态 != S1::已完成) return {S::内部不一致};
+        if (需要保护)
+            结果.保护.insert(结果.保护.end(), std::make_move_iterator(组成.预期节点组.begin()),
+                std::make_move_iterator(组成.预期节点组.end()));
+        std::optional<稳定编码> 候选;
+        bool 尚有未定 = false;
+        for (const auto 子 : 组成.子存在组) {
+            const auto 归属 = 读归属(子);
+            if (归属 == M::未知) 尚有未定 = true;
+            if (归属 != M::属于) continue;
+            if (候选) {
+                结果.状态 = S::概念多义待解;
+                return 结果;
+            }
+            候选 = 子;
+        }
+        if (候选 && !尚有未定) {
+            结果.实际主体 = 候选;
+            结果.状态 = S::已形成唯一含义;
+        }
+        return 结果;
+    } catch (S 状态) { return {状态}; }
+    catch (const std::bad_alloc&) { return {S::资源失败}; }
+    catch (const std::length_error&) { return {S::资源失败}; }
 }
 
 语言图解释结果 解释单句含义图(const 语言图解释请求& 请求,const 新_语言类& 语言,const 新_词类& 词,

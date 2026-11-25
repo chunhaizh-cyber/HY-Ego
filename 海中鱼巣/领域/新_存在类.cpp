@@ -1738,6 +1738,30 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     }
 }
 
+新存在直接组成保护结果 新_存在类::读取存在直接组成保护(稳定编码 父) const noexcept {
+    using S = 基础结构操作状态;
+    try {
+        auto 身份 = 读取存在身份保护(父);
+        if (身份.状态 != S::已完成 || 身份.前提已变化)
+            return {身份.状态, {}, {}, 身份.前提已变化};
+        if (!身份.信息 || 身份.预期节点组.size() != 1)
+            return {S::内部不一致};
+        std::vector<稳定编码> 子存在;
+        for (const auto& 边 : 身份.预期节点组.front().出向外部关系组) {
+            if (边.类型 != 基础外部关系类型::父子 || 边.角色或顺序 != 存在组成子存在关系角色)
+                continue;
+            if (边.源节点 != 父 || !有效(边.目标节点) || 边.目标节点 == 父)
+                return {S::内部不一致};
+            子存在.push_back(边.目标节点);
+        }
+        std::sort(子存在.begin(), 子存在.end());
+        if (std::adjacent_find(子存在.begin(), 子存在.end()) != 子存在.end())
+            return {S::内部不一致};
+        return {S::已完成, std::move(子存在), std::move(身份.预期节点组)};
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+    catch (const std::length_error&) { return {S::资源失败}; }
+}
+
 新存在顶层特征定位结果 新_存在类::读取存在顶层特征定位保护(稳定编码 节点) const noexcept {
     using 状态 = 新存在顶层特征定位状态;
     try {

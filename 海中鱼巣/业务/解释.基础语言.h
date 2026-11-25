@@ -157,6 +157,19 @@ struct 语言图静态角色缺口 final {
     bool 正式普通名称未登记 = false;
     friend bool operator==(const 语言图静态角色缺口&,const 语言图静态角色缺口&)=default;
 };
+struct 语言图限定主体绑定 final {
+    std::int64_t 出现编号, 主体角色编号;
+    稳定编码 原称名存在, 特征类型, 适用存在概念, 实际存在;
+    friend bool operator==(const 语言图限定主体绑定&, const 语言图限定主体绑定&) = default;
+};
+struct 语言图限定主体定位结果 final {
+    基础语言输入状态 状态 = 基础语言输入状态::输入拒绝;
+    std::optional<稳定编码> 适用概念;
+    std::optional<稳定编码> 实际主体;
+    std::vector<基础联合节点快照> 保护;
+};
+语言图限定主体定位结果 定位语言图限定主体(稳定编码 原称名存在, 稳定编码 特征类型,
+    const 新_存在类&, const 概念_特征类&, bool 需要保护);
 struct 语言图解释结果 final {
     基础语言输入状态 状态=基础语言输入状态::输入拒绝;
     std::vector<语言图含义材料> 完整候选组;
@@ -168,6 +181,7 @@ struct 语言图解释结果 final {
     std::vector<语言词面查询依据> 词面查询依据组;
     std::vector<语言名称候选读取依据> 名称候选依据组;
     std::vector<语言图静态角色缺口> 静态角色缺口组;
+    std::vector<语言图限定主体绑定> 限定主体绑定组;
 };
 语言图解释结果 解释单句含义图(
     const 语言图解释请求&,const 新_语言类&,const 新_词类&,
