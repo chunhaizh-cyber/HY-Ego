@@ -1210,28 +1210,40 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
     }
 }
 
-新外设接收记录完整结果 新_外设世界树类::完整读取仍保留的接收记录() const noexcept {
+新外设接收记录完整结果 新_外设世界树类::读取场景当前及指定接收记录(
+    std::span<const std::string> 活跃会话, std::span<const 稳定编码> 续办消息) const noexcept {
     try {
         std::lock_guard 锁(外设互斥);
         if (!有效(消息根)) return {};
-        const auto 根 = 读取消息快照(消息根);
+        const auto 根 = 场景_.获取场景(外设根);
+        if (!根) throw std::logic_error("peripheral scene root unavailable during inbound read");
         新外设接收记录完整结果 结果;
         std::set<稳定编码> 已读;
         std::set<std::tuple<std::string, std::string, std::uint64_t>> 来源组;
-        for (const auto& 字段 : 根.结构.字段组) {
-            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
-            if (字段.字段节点 != 消息字段[10] || !节点 || !已读.insert(*节点).second)
-                throw std::logic_error("retained peripheral message registry corrupt");
-            const auto 消息 = 读取正式消息(*节点);
-            if (!消息) throw std::logic_error("retained peripheral message missing");
-            if (消息->来源.方向 != 新外设消息方向::接收) continue;
-            if (!来源组.emplace(消息->来源.公开宿主会话, 消息->来源.对话框标识,
-                    消息->来源.来源序号).second)
-                throw std::logic_error("retained inbound message source duplicated");
-            结果.消息组.push_back(*消息);
+        const auto 添加 = [&](新外设消息信息 消息) {
+            if (!已读.insert(消息.消息节点).second
+                || !来源组.emplace(消息.来源.公开宿主会话, 消息.来源.对话框标识, 消息.来源.来源序号).second)
+                throw std::logic_error("scene inbound message source duplicated");
+            结果.消息组.push_back(std::move(消息));
+        };
+        for (const auto 场景 : 根->直接子场景组) {
+            const auto 身份 = 读取场景来源身份(场景);
+            if (身份.种类 != 场景来源身份::类别::网页) continue;
+            auto 会话 = 读取文本特征(读取类型特征(身份.场景->特征节点组, 类型[0]));
+            if (std::ranges::find(活跃会话, 会话) == 活跃会话.end()) continue;
+            const auto 定位 = 读取窗口定位(场景);
+            if (!定位.接收消息特征) continue;
+            auto 对话框 = 读取文本特征(读取类型特征(身份.场景->特征节点组, 类型[1]));
+            for (auto& 消息 : 读取窗口消息_已加锁({定位, std::move(会话), std::move(对话框)}, 新外设消息方向::接收))
+                添加(std::move(消息));
         }
-        if (!消息快照相同(根, 读取消息快照(消息根)))
-            throw std::logic_error("retained message registry changed under peripheral lock");
+        for (const auto M : 续办消息) {
+            if (已读.contains(M)) continue;
+            auto 消息 = 读取正式消息(M);
+            if (!消息 || 消息->来源.方向 != 新外设消息方向::接收
+                || std::ranges::find(活跃会话, 消息->来源.公开宿主会话) == 活跃会话.end()) continue;
+            添加(std::move(*消息));
+        }
         std::sort(结果.消息组.begin(), 结果.消息组.end(), [](const auto& 左, const auto& 右) {
             return std::tie(左.来源.公开宿主会话, 左.来源.对话框标识,
                        左.来源.来源序号, 左.消息节点)
@@ -1245,11 +1257,11 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
     } catch (const std::length_error&) {
         return {新外设事实状态::资源失败, {}};
     } catch (const std::exception& 异常) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完整读取保留的接收记录",
-            L"正式消息登记或内容损坏，不交付部分记录。", 异常.what());
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取场景当前及指定接收记录",
+            L"正式窗口集合或消息内容读取失败。", 异常.what());
     } catch (...) {
-        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"完整读取保留的接收记录",
-            L"完整消息读取发生未知工程异常。");
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取场景当前及指定接收记录",
+            L"正式窗口集合或消息内容读取发生未知工程异常。");
     }
 }
 
@@ -1333,6 +1345,23 @@ std::optional<新外设消息信息> 新_外设世界树类::查找消息(const 
     }
 }
 
+std::vector<新外设消息信息> 新_外设世界树类::读取窗口消息_已加锁(
+    const 新外设对话框来源& 来源, 新外设消息方向 方向) const {
+    const auto& 定位 = 来源.定位;
+    const auto 特征 = 方向 == 新外设消息方向::接收 ? 定位.接收消息特征 : 定位.发送消息特征;
+    if (!特征) throw std::runtime_error("peripheral message feature not initialized");
+    std::vector<新外设消息信息> 结果;
+    for (const auto 成员 : 读取消息成员(*特征)) {
+        auto 消息 = 读取正式消息(成员);
+        if (!消息 || 消息->窗口节点 != 定位.窗口节点 || 消息->场景节点 != 定位.场景节点
+            || 消息->来源.方向 != 方向 || 消息->来源.公开宿主会话 != 来源.公开宿主会话
+            || 消息->来源.对话框标识 != 来源.对话框标识)
+            throw std::runtime_error("peripheral message collection crosses source");
+        结果.push_back(std::move(*消息));
+    }
+    return 结果;
+}
+
 std::vector<新外设消息信息> 新_外设世界树类::读取当前消息(
     稳定编码 窗口, 新外设消息方向 方向) const noexcept {
     try {
@@ -1342,18 +1371,7 @@ std::vector<新外设消息信息> 新_外设世界树类::读取当前消息(
         const auto 定位 = 读取窗口定位(来源->定位.场景节点);
         if (定位 != 来源->定位 || (方向 != 新外设消息方向::接收 && 方向 != 新外设消息方向::发送))
             throw std::runtime_error("peripheral message query location/direction invalid");
-        const auto 特征 = 方向 == 新外设消息方向::接收 ? 定位.接收消息特征 : 定位.发送消息特征;
-        if (!特征) throw std::runtime_error("peripheral message feature not initialized");
-        std::vector<新外设消息信息> 结果;
-        for (const auto 成员 : 读取消息成员(*特征)) {
-            const auto 消息 = 读取正式消息(成员);
-            if (!消息 || 消息->窗口节点 != 窗口 || 消息->场景节点 != 定位.场景节点
-                || 消息->来源.方向 != 方向 || 消息->来源.公开宿主会话 != 来源->公开宿主会话
-                || 消息->来源.对话框标识 != 来源->对话框标识)
-                throw std::runtime_error("peripheral message collection crosses source");
-            结果.push_back(*消息);
-        }
-        return 结果;
+        return 读取窗口消息_已加锁(*来源, 方向);
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取当前外设消息", L"当前集合不完整，不返回部分或伪空集合。");
     }

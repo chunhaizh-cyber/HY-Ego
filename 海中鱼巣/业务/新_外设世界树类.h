@@ -3,6 +3,7 @@
 #include "新_世界树类.h"
 #include "../领域/消息交互.数据.h"
 #include "../领域/语言分界.数据.h"
+#include <span>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -110,7 +111,8 @@ public:
         const 新状态强时间& 接收时间, std::optional<稳定编码> 回应输出 = {},
         std::optional<稳定编码> 接纳会话绑定人 = {}) noexcept;
     std::optional<新外设消息信息> 读取消息(稳定编码 消息节点) const noexcept;
-    新外设接收记录完整结果 完整读取仍保留的接收记录() const noexcept;
+    新外设接收记录完整结果 读取场景当前及指定接收记录(
+        std::span<const std::string> 活跃会话, std::span<const 稳定编码> 续办消息) const noexcept;
     新外设消息保护结果 读取消息保护(稳定编码 消息节点) const noexcept;
     新分界消息读取结果 读取分界消息正文(稳定编码 消息节点) const override;
     std::optional<新外设消息信息> 查找消息(const 新外设消息来源键&) const noexcept;
@@ -143,6 +145,8 @@ private:
         std::uint64_t, std::string_view, const 新状态强时间&, std::optional<稳定编码> 关联输出,
         std::optional<稳定编码> 接纳会话绑定人 = {});
     std::vector<稳定编码> 读取消息成员(稳定编码 特征节点) const;
+    std::vector<新外设消息信息> 读取窗口消息_已加锁(
+        const 新外设对话框来源&, 新外设消息方向) const;
     std::vector<新外设消息信息> 读取输出队列材料成员(
         const 新外设对话框定位&, 稳定编码 材料节点) const;
     std::vector<新外设消息信息> 读取输出队列成员(const 新外设对话框定位&) const;

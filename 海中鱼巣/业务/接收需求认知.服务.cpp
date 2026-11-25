@@ -1724,10 +1724,12 @@ bool 处理接收分界答复(认知依赖& d,const 接收分界询问配置& �
 
 struct 接收需求认知服务::实现 final {
     认知依赖 依赖;
+    using 接收来源顺序 = std::tuple<std::string,std::string,std::uint64_t,稳定编码>;
     struct 会话 final {接收需求认知会话语境 语境;bool 封存=false;};
     enum class 前置阶段 {无,待接纳,待筹办,具名等待,待正式词段解释,待重入,已停用};
     struct 调度 final {
         接收需求认知观察 观察;bool 终结=false;std::chrono::steady_clock::time_point 下次{};bool 行动请求已交接=false;
+        std::string 公开宿主会话;
         前置阶段 前置=前置阶段::无;
         std::optional<新前置语言输入定位> 定位;
         std::optional<新任务前置语言输入结果> 已确认结果;
@@ -1740,7 +1742,7 @@ struct 接收需求认知服务::实现 final {
     std::map<std::string,会话,std::less<>> 会话组;
     std::map<稳定编码,调度> 进度;
     std::optional<接收需求认知观察> 最近;
-    std::optional<稳定编码> 上次;
+    std::optional<接收来源顺序> 上次;
     std::optional<稳定编码> 交互者特征类型;
     std::optional<接收分界询问配置> 分界询问配置;
     std::shared_ptr<const 离线词典数据源> 可信词头来源;
@@ -1786,7 +1788,7 @@ bool 接收需求认知服务::装配可信词头来源(std::shared_ptr<const �
 }
 void 接收需求认知服务::封存会话(std::string_view c) noexcept {
     try {std::lock_guard g(实现_->锁);const auto it=实现_->会话组.find(c);if(it!=实现_->会话组.end())it->second.封存=true;
-        for(auto& [M,项]:实现_->进度)if(项.定位&&项.定位->公开宿主会话==c) {
+        for(auto& [M,项]:实现_->进度)if(项.公开宿主会话==c) {
             项.前置=实现::前置阶段::已停用;项.观察.待交接前置输入.reset();
         }}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"封存接收认知会话",L"接收认知会话封存发生工程异常。");}
@@ -2097,57 +2099,83 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         }
         return {};
     }
-    const auto records=d.外设.完整读取仍保留的接收记录();
+    const auto now=std::chrono::steady_clock::now();
+    const auto 已到处理时间 = [&](const 实现::调度& 工作) {
+        if (工作.前置 == 实现::前置阶段::待筹办 || 工作.前置 == 实现::前置阶段::已停用 || 工作.下次 > now)
+            return false;
+        if (工作.前置 == 实现::前置阶段::具名等待)
+            return impl.分界询问配置 && !工作.观察.词条准入 && 工作.观察.前置输入等待材料
+                && 工作.观察.前置输入等待材料->有效分界缺口;
+        return !工作.终结 || (工作.观察.阶段 == 阶段::已读回行动请求 && !工作.行动请求已交接);
+    };
+    const auto 会话仍活跃_已加锁 = [&](std::string_view 会话) {
+        const auto it=impl.会话组.find(会话);
+        return it!=impl.会话组.end()&&!it->second.封存;
+    };
+    std::vector<std::string> 活跃会话;
+    std::vector<稳定编码> 续办消息;
+    std::optional<实现::接收来源顺序> 上次;
+    {
+        std::lock_guard 锁(impl.锁);
+        for (const auto& [键, 会话] : impl.会话组)
+            if (!会话.封存) 活跃会话.push_back(键);
+        for (const auto& [M, 工作] : impl.进度)
+            if (已到处理时间(工作) && 会话仍活跃_已加锁(工作.公开宿主会话)) 续办消息.push_back(M);
+        上次=impl.上次;
+    }
+    if (活跃会话.empty()) return {};
+    const auto records=d.外设.读取场景当前及指定接收记录(活跃会话, 续办消息);
     if(records.状态==新外设事实状态::资源失败){
         接收需求认知观察 out{{},{},{},{},{},阶段::资源延后,"接收记录完整读取资源未完成"};
         保存观察(out);return out;
     }
-    if(records.状态!=新外设事实状态::已完成)throw std::logic_error("retained receive record enumeration failed");
+    if(records.状态!=新外设事实状态::已完成)throw std::logic_error("scene inbound record enumeration failed");
     if(stop.stop_requested())return {};
     const 新外设消息信息* chosen=nullptr;
-    const auto now=std::chrono::steady_clock::now();
     // 公平轮转，不让单条反复前提变化阻挡后续真实M。
-    // 已登记且未封存会话上的M优先：旧会话残留不得长期挡住当前入站认知（§8.2 真实M公平）。
-    const auto eligible=[&](const auto& m){std::lock_guard g(impl.锁);const auto it=impl.进度.find(m.消息节点);
-        if(it!=impl.进度.end()){
-            const auto& 工作=it->second;
-            if(工作.前置==实现::前置阶段::待筹办||工作.前置==实现::前置阶段::已停用)return false;
-            if(工作.前置==实现::前置阶段::具名等待)
-                return impl.分界询问配置 && !工作.观察.词条准入 && 工作.观察.前置输入等待材料
-                    && 工作.观察.前置输入等待材料->有效分界缺口 && 工作.下次<=now;
-        }
-        return it==impl.进度.end()
-        ||((!it->second.终结||(it->second.观察.阶段==阶段::已读回行动请求&&!it->second.行动请求已交接))&&it->second.下次<=now);};
     const auto 会话仍活跃=[&](const auto& m){
-        std::lock_guard g(impl.锁);const auto it=impl.会话组.find(m.来源.公开宿主会话);
-        return it!=impl.会话组.end()&&!it->second.封存;};
+        std::lock_guard g(impl.锁);return 会话仍活跃_已加锁(m.来源.公开宿主会话);};
+    const auto 来源顺序 = [](const 新外设消息信息& m) {
+        return std::tie(m.来源.公开宿主会话,m.来源.对话框标识,m.来源.来源序号,m.消息节点);
+    };
     std::size_t start=0;
-    std::optional<稳定编码> 上次;{std::lock_guard g(impl.锁);上次=impl.上次;}
-    if(上次){const auto prev=std::find_if(records.消息组.begin(),records.消息组.end(),[&](const auto& m){return m.消息节点==*上次;});
-        if(prev!=records.消息组.end())start=static_cast<std::size_t>(prev-records.消息组.begin())+1;}
-    const auto 轮转选取=[&](bool 仅活跃会话){
-        for(std::size_t i=0;i<records.消息组.size();++i){
+    if (上次) {
+        const auto 下一=std::upper_bound(records.消息组.begin(),records.消息组.end(),*上次,
+            [&](const auto& 上次顺序,const auto& m){return 上次顺序<来源顺序(m);});
+        start=static_cast<std::size_t>(下一-records.消息组.begin());
+    }
+    实现::调度 work;
+    std::optional<接收分界询问配置> 分界配置;
+    {
+        std::lock_guard 锁(impl.锁);
+        for (std::size_t i=0; i<records.消息组.size(); ++i) {
             const auto& m=records.消息组[(start+i)%records.消息组.size()];
-            if(!eligible(m))continue;
-            if(仅活跃会话&&!会话仍活跃(m))continue;
-            return &m;}
-        return static_cast<const 新外设消息信息*>(nullptr);};
-    chosen=轮转选取(true);
-    if(!chosen)chosen=轮转选取(false);
+            if (!会话仍活跃_已加锁(m.来源.公开宿主会话)) continue;
+            auto it=impl.进度.find(m.消息节点);
+            if (it!=impl.进度.end() && !已到处理时间(it->second)) continue;
+            if (it==impl.进度.end()) {
+                实现::调度 初始;
+                初始.公开宿主会话=m.来源.公开宿主会话;
+                it=impl.进度.emplace(m.消息节点,std::move(初始)).first;
+            }
+            chosen=&m;
+            impl.上次=实现::接收来源顺序(来源顺序(m));
+            work=it->second;
+            分界配置=impl.分界询问配置;
+            break;
+        }
+    }
     if(!chosen){
-        try{std::wostringstream t;t<<L"保留接收条数="<<records.消息组.size()<<L"；本拍无合格M";
+        try{std::wostringstream t;t<<L"接收候选条数="<<records.消息组.size()<<L"；本拍无合格M";
             (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"接收需求认知",L"推进一次",t.str());}catch(...){}
         return {};}
     const auto& m=*chosen;本次消息=m.消息节点;
-    实现::调度 work;
-    std::optional<接收分界询问配置> 分界配置;
-    {std::lock_guard g(impl.锁);impl.上次=m.消息节点;work=impl.进度[m.消息节点];分界配置=impl.分界询问配置;}
     const auto 原阶段=work.前置;const auto 原定位=work.定位;const auto 原交接=work.行动请求已交接;
     const auto 提交进度=[&]() {
         std::lock_guard g(impl.锁);auto& actual=impl.进度.at(m.消息节点);
         if(actual.前置!=原阶段||actual.定位!=原定位||actual.行动请求已交接!=原交接)return false;
         const auto c=impl.会话组.find(m.来源.公开宿主会话);
-        if(c!=impl.会话组.end()&&c->second.封存&&work.定位){actual.前置=实现::前置阶段::已停用;actual.观察.待交接前置输入.reset();return false;}
+        if(c!=impl.会话组.end()&&c->second.封存){actual.前置=实现::前置阶段::已停用;actual.观察.待交接前置输入.reset();return false;}
         actual=work;return true;
     };
     auto out=work.观察;out.M=m.消息节点;
