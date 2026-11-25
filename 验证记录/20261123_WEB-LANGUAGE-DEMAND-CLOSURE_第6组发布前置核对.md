@@ -609,3 +609,11 @@ bcb490593 普通入口的定向诊断保留原消息 M36698、范围 R37703、�
 诊断构建沿发布源码 2dc3c6c5b 的249项输入，打开现有调度、参数绑定、工作线程等记录。实际网页取得 M30232/R36863/Q39351/O39445 的关联答复和依据41015。方法25730的分词样例退出并发表配对41662。08:17:21，T37930/D37786 的场景核验读取报「正式E+FT条件结果缺少原方法声明」。随后同进程另一轮读取为同一T选中方法并发出动作。这些证据说明该声明读取故障会偶发，具体出错的声明来源和读取状态仍待取证。[错误原件](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-boundary-stall-diagnostic-20261125-080345/diagnostic-web-20261125-081006/latest-engineering-fault.log) · [已发布分词配对](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-boundary-stall-diagnostic-20261125-080345/diagnostic-web-20261125-081006/isolated-boundary-and-pair.json) · [同任务执行轨迹](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-boundary-stall-diagnostic-20261125-080345/diagnostic-web-20261125-081006/range-action-after-error.log)
 
 保全线程栈后，从专属工程错误窗口结束 PID 29504。退出码574，监听端口63231释放。该轮不可作为正常退出或第15项词典退出的证据。[故障栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-boundary-stall-diagnostic-20261125-080345/diagnostic-web-20261125-081006/fatal-thread-stack.txt) · [工程退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-boundary-stall-diagnostic-20261125-080345/diagnostic-web-20261125-081006/fault-process-close.json)
+
+#### 分界声明读取修复发布
+
+a94e032d8 保留方法所有者读取到的具名范围变化，声明读口在释放锁后重读。方法及执行分支从同一读取结果投影。原公共可选读取语义和真实未声明的拒绝保留。异常摘要带方法、配对、执行分支、参数位置、特征类型根及状态。第16项只证明已确认的状态丢失路径得到修补，先前偶发故障的具体返回分支仍未经直接捕获。
+
+Release x64 正式工程编译链接退出0，0错误、0警告。249项构建输入均与远端发布树核同，10份运行词典数据摘要一致。普通入口 PID 18776 已启动并监听本机，继续原话、同源分界及词典任务的正式网页复测。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-result.json) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/published-inputs.json) · [复测进程](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/process.json)
+
+知识变更涉及方法所有者的获取方法、读取执行分支必要条件、读取存在参数特征声明及任务所有者的准备本次场景核验批。新增两个内部共用函数，用于读取当前方法和从已读方法投影执行分支。原公开签名和原子发表合同沿用。
