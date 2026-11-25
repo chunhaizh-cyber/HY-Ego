@@ -617,3 +617,11 @@ a94e032d8 保留方法所有者读取到的具名范围变化，声明读口在�
 Release x64 正式工程编译链接退出0，0错误、0警告。249项构建输入均与远端发布树核同，10份运行词典数据摘要一致。普通入口 PID 18776 已启动并监听本机，继续原话、同源分界及词典任务的正式网页复测。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-result.json) · [发布输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/published-inputs.json) · [复测进程](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/process.json)
 
 知识变更涉及方法所有者的获取方法、读取执行分支必要条件、读取存在参数特征声明及任务所有者的准备本次场景核验批。新增两个内部共用函数，用于读取当前方法和从已读方法投影执行分支。原公开签名和原子发表合同沿用。
+
+#### 发布版恢复同一原文并承接词典材料任务
+
+正式发布版 a94e032d8 的真实网页对原消息 M30232 实显分界问题 Q39862/O39956。关联答复形成同一 R37155 的依据41852与状态42092。任务 T38548 实际产生执行 X44346、动作44577、状态44617和评估45151，可读回有效分界44600。同一原文随后取得连续正式词段并恢复逐句解释。[网页实显](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/visible-formal-question-39956.png) · [正式执行与状态](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/formal-range-result-state.json) · [同原文准入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/formal-original-source-admission.json) · [逐句解释](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/same-source-admitted-interpretation.json)
+
+同源「杯子」W44658 的归类 D45579 已承接 T45962。其材料子需求 D48271 已承接 T48415。控制快照58早期独立读回查词典方法24390配对数为0。本段只确认上述生产进展，继续接同 W 的定向模拟、配对读回和实际词典结果。[词条及子需求](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/word-dictionary-progression.json) · [查词典初始配对数](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/before-dictionary-method-catalog.json)
+
+另已只读核对第6组温度前置。当前主线已有毫米单位身份，尚无摄氏度词条双向桥、正式温度 I64 类型建立及单位装配。历史联合工作树的 CONV-INPUT §8.2.9、§8.2.12、§8.2.16 分别保留计量单位桥、已批准首版温度、正式水温子域裁决。可先从特征类、特征概念类、语言类三组头源及普通装配做最小发布适配，再核对数＋量消费者、正式子域、组成与关联短答。相关历史计划尚未登记到当前主线索引。本项调查只定位后继前置，实际词典查阅仍是本轮最先取证的缺口。
