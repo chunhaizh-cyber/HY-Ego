@@ -1096,7 +1096,7 @@ private:
     新接收认知需求读取结果 查询接收认知来源需求已加锁(const 新接收认知来源键&,
         const std::vector<基础联合节点快照>& 来源保护) const;
     接收认知来源保护结果 读取接收认知需求来源保护(const 新_语言类&,const 新_特征类&,
-        const 新接收认知来源&,稳定编码,const 新部分服务要求目标&) const;
+        const 新接收认知来源&,稳定编码,const 新部分服务要求目标&,bool 已发表) const;
     新需求建立结果 建立待完善被认知需求内部(const 新待完善被认知需求建立请求&,
         const std::optional<新接收认知来源>&,
         const std::vector<基础联合节点快照>&,

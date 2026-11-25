@@ -418,9 +418,14 @@ std::int64_t 读I64(const std::string& s){
     if(r.前提已变化)漂移();if(r.状态==基础结构操作状态::资源失败)资源();
     if(r.状态!=基础结构操作状态::已完成||!r.信息)throw std::logic_error("adopted target FT unreadable");
     const auto& def=r.信息->定义;
-    if(r.信息->实例所属特征类型!=p.目标特征类型||def.材料类型!=特征概念材料物理类型::I64标量||(!p.方向&&def.单位!=p.单位))
+    if (r.信息->实例所属特征类型 != p.目标特征类型)
+        throw 推进中断{阶段::D映射受阻,"目标不是正式实例特征类型"};
+    新部分服务要求目标 out;
+    out.目标存在节点 = p.目标存在;
+    out.目标特征类型概念节点 = p.目标特征类型;
+    if (!p.方向 && !p.准确整数 && !p.区间下界 && !p.区间上界) return out;
+    if (def.材料类型 != 特征概念材料物理类型::I64标量 || (!p.方向 && def.单位 != p.单位))
         throw 推进中断{阶段::D映射受阻,"目标FT类型或单位暂不能精确映射"};
-    新部分服务要求目标 out;out.目标存在节点=p.目标存在;out.目标特征类型概念节点=p.目标特征类型;
     if(p.方向){out.目标形式=新需求目标形式::变化方向;out.目标变化方向=*p.方向==新语言知识特征方向::增加 ? 新需求变化方向::增加 : 新需求变化方向::减少;return out;}
     const auto lo=读I64(p.准确整数 ? *p.准确整数 : *p.区间下界),hi=p.准确整数 ? lo : 读I64(*p.区间上界);
     const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
@@ -521,6 +526,7 @@ std::optional<提取的需求信息> 提取需求信息(const 语言基础统一
     if(const auto* ft=std::get_if<语言图引用值>(&找认知图参数(*g,o,P::特征类型));ft&&有效(ft->节点))out.特征类型=ft->节点;
     switch(def.操作) {
     case M::特征描述:
+        if (!def.特征值分支) break;
         if(const auto* n=std::get_if<语言图整数值>(&找认知图参数(*g,o,P::特征值))) {
             out.值种类=K::准确整数;out.准确整数=n->规范十进制;out.单位=n->单位;
         }
@@ -1576,8 +1582,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     if(verified.状态==新需求操作状态::资源失败)资源();if(verified.状态==新需求操作状态::前提已变化)漂移();
                     if(verified.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                     if(verified.状态!=新需求操作状态::已找到||!verified.信息||verified.信息->节点!=*out.D
-                        ||verified.信息->首次接收认知来源!=std::optional{source}
-                        ||verified.信息->已知目标!=std::optional{target})
+                        ||verified.信息->首次接收认知来源!=std::optional{source})
                         throw std::logic_error("same-source demand final readback missing");
                     if(out.受请求者) {
                         进入步骤("复核正式行动请求与需求来源");
