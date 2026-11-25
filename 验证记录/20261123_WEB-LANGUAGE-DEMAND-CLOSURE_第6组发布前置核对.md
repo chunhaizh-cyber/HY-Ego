@@ -1315,3 +1315,16 @@ Release x64 编译链接退出 0，0 警告、0 错误。259 项构建输入在�
 实际 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入前后无变化。产物 SHA256 574A2C02BEB2738DBD3AD96030968966C5F42547BEEB5051CAF43A0197A148A1。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e28-revise-subtype-source-release-20261126-060018/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e28-revise-subtype-source-release-20261126-060018/release.log)
 
 本轮未运行普通应用、Chrome 或测试。杯中水组成及 20℃ 初值、业务值问题、同 D 写回、任务承接和七组统一验收保持活动。
+
+
+#### 56E29 正式入站解释的不可变定义来源
+
+实施基线 f441ab1bd69d19b96f02de83fe5db31a9af47668，统一设计 v1.243 第 10.157 节，统一计划 v2.205，计划 blob b0451b8d063de963df69b43bf7231a1677dee302。
+
+- 正式语言解释读回返回本次实际定义节点。普通控制读口在保留记录节点的同时增加 `definitionNode`，用于区分稳定容器与实际内容。
+- 新入口按指定定义逆向确认正式接收容器及历史子项，再读取同一入站记录、固定原文和语义角色。外设正式消息单次读取用于前置来源核对和回传上行序号。世界和消息读取位于语言锁外。原定义能以历史子项读取，不依赖容器的当前定义指针。
+- 有效正式词段重入识别到限定子类型时，保存到同源场景并沿原角色建立或取得待完善概念。有句间冲突时保留缺口，子类型自身的语言缺口留待正式材料。混排保存时保留同一原文位置的既有普通句段，避免用正式词段重入的部分解释覆盖已保存对象或指代。代码知识变更涉及语言定义反查、正式接收重入及普通观察投影。
+
+实际 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入前后无变化。产物 SHA256 6D1B4BDEE89FC8ED85E96B75EA8058831D854E9AD244791190CD022BA995B7F7。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e29-immutable-language-source-final-20261126-062419/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e29-immutable-language-source-final-20261126-062419/release.log)
+
+本轮未运行普通应用、Chrome 或测试。正式采用方仍须核对实际可信来源，取得正式的适用存在概念和同一子类型身份，再按同会话上行顺序交 56E28 写入。第 6 组同 D 及七组统一验收保持活动。

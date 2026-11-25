@@ -1985,6 +1985,7 @@ public:
                 }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
+                    + ",\"definitionNode\":" + (已保存 ? 控制编码(正式.信息->解释定义节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
                     + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组, 前置来源) : "null")
                     + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
