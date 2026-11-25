@@ -6512,8 +6512,18 @@ auto 组织记录字段(接收语言已解释角色& v){
 auto 组织记录字段(接收语言静态结构& v){
     return std::tie(v.所用构式,v.操作,v.角色组);
 }
+auto 组织记录字段(接收语言关系端点& v){
+    return std::tie(v.角色键,v.参数,v.起始标量,v.结束标量,v.指称);
+}
+auto 组织记录字段(接收语言关系候选& v){
+    return std::tie(v.关系概念,v.所用构式,v.种子键,v.源角色键,v.目标角色键,v.端点组);
+}
+auto 组织记录字段(接收语言关系观察& v){
+    return std::tie(v.读取未完成,v.候选组);
+}
 auto 组织记录字段(接收语言句段解释& v){
-    return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组,v.静态结构);
+    return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组,
+        v.静态结构,v.关系观察);
 }
 auto 组织记录字段(新接收语言解释内容& v){
     return std::tie(v.来源场景,v.前置来源,v.语言节点,v.原文起点,v.原文终点,v.句段组,v.含义候选);
@@ -6650,9 +6660,10 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
     else {
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
-        if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
+        if constexpr(std::is_same_v<T,接收语言句段解释>)
+            组织要求(children.size()>=字段数-2&&children.size()<=字段数);
+        else if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
             ||std::is_same_v<T,接收语言主体来源>||std::is_same_v<T,接收语言主体关系>
-            ||std::is_same_v<T,接收语言句段解释>
             ||std::is_same_v<T,新接收语言解释内容>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
         else 组织要求(children.size()==字段数);
@@ -7088,6 +7099,16 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
             if (!在段内(缺口.起始标量,缺口.结束标量)
                 || 缺口.种类 < 新前置语言缺口种类::词面未登记 || 缺口.种类 > 新前置语言缺口种类::角色原文待确认)
                 return false;
+        }
+        if (句.关系观察) for (const auto& 候选 : 句.关系观察->候选组) {
+            if (!有效(候选.关系概念) || !有效(候选.所用构式) || 候选.种子键.empty()
+                || 候选.源角色键.empty() || 候选.目标角色键.empty() || 候选.端点组.size()<2)
+                return false;
+            for (const auto& 端点 : 候选.端点组) {
+                if (端点.角色键.empty()
+                    || ((端点.起始标量 || 端点.结束标量) && !在段内(端点.起始标量,端点.结束标量))
+                    || (端点.指称 && !有效(端点.指称->节点))) return false;
+            }
         }
         for (const auto& 依据 : 句.词条类型依据组) {
             using C=新语言知识角色类别;

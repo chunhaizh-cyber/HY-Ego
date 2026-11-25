@@ -884,6 +884,92 @@ std::optional<稳定编码> 图角色来源概念(
 
 } // namespace
 
+接收语言关系观察 关系陈述语言服务::投影接收陈述(const 语言图含义材料& 图,
+    std::span<const 语言图角色原文定位> 定位组, 解释原文范围 句段) const {
+    接收语言关系观察 结果;
+    const auto 根 = std::ranges::find(图.出现组, 图.根出现编号, &语言图含义出现::出现编号);
+    if (句段.起始标量 >= 句段.结束标量 || 根 == 图.出现组.end()
+        || 根->有效作用域 != 新语言知识作用域::普通陈述) return 结果;
+    const auto 定义 = std::ranges::find_if(图.定义图.节点组, [&](const auto& 节点) {
+        return 节点.局部编号 == 根->定义含义编号;
+    });
+    if (定义 == 图.定义图.节点组.end()) return 结果;
+
+    const auto 知识 = 语言_.获取语言知识(根->所用知识节点, 词_, 存在概念_);
+    if (知识.状态 != 新语言知识状态::已完成 || !知识.信息) return {true, {}};
+    if (知识.信息->定义.目标.目的 != 新语言知识表达目的::陈述) return 结果;
+    const auto 签名 = 知识根参数签名(*知识.信息, 定义->操作);
+    if (!签名) return 结果;
+
+    const auto 目录 = 关系_.列出全部();
+    if (目录.状态 != 关系概念操作状态::已读取) return {true, {}};
+    for (const auto& 信息 : 目录.信息组) {
+        const auto& 登记 = 信息.定义;
+        for (const auto& 关联 : 登记.表达关联组) {
+            if (关联.语言节点 != 图.语言节点 || 关联.陈述段组.size() > 1) continue;
+            const auto 段 = 关联.陈述段组.empty()
+                ? 关系表达陈述段{关联.含义操作码, 关联.预置知识尾词, 关联.表达知识节点组, 关联.角色槽组}
+                : 关联.陈述段组.front();
+            if (段.含义操作码 != static_cast<std::int64_t>(定义->操作) || 段.角色槽组.size() < 2)
+                continue;
+            std::set<std::int64_t> 参数组;
+            for (const auto& 槽 : 段.角色槽组)
+                参数组.insert(槽.参数角色码);
+            if (参数组 != *签名 || 参数组.size() != 段.角色槽组.size()) continue;
+            if (std::ranges::any_of(段.角色槽组, [&](const auto& 槽) {
+                    const auto 端点 = std::ranges::find(登记.端点组, 槽.端点角色键, &关系端点约束::角色键);
+                    return 槽.投影 != 关系表达取材投影::端点身份 || 端点 == 登记.端点组.end()
+                        || 端点->对象种类 != 关系端点对象种类::存在;
+                })) continue;
+            const bool 知识命中 = 段.表达知识节点组.empty()
+                ? 知识含固定尾词(*知识.信息, 段.预置知识尾词, 词_)
+                : std::ranges::find(段.表达知识节点组, 根->所用知识节点) != 段.表达知识节点组.end();
+            if (!知识命中) continue;
+
+            接收语言关系候选 候选{信息.节点, 根->所用知识节点, 登记.稳定种子键};
+            if (const auto* 边 = std::get_if<关系外部边连接>(&登记.连接)) {
+                候选.源角色键 = 边->源角色键;
+                候选.目标角色键 = 边->目标角色键;
+            } else {
+                const auto& 字段 = std::get<关系字段引用连接>(登记.连接);
+                候选.源角色键 = 字段.宿主角色键;
+                候选.目标角色键 = 字段.目标角色键;
+            }
+            for (const auto& 槽 : 段.角色槽组) {
+                const auto 参数 = static_cast<新语言知识参数角色>(槽.参数角色码);
+                const auto 项 = std::ranges::find_if(定义->参数组, [&](const auto& 参数项) {
+                    return 参数项.参数 == 参数;
+                });
+                if (项 == 定义->参数组.end()) break;
+                接收语言关系端点 端点{槽.端点角色键, 参数};
+                const auto 绑定 = std::ranges::find(根->角色组, 项->规则角色, &语言图角色绑定::角色编号);
+                if (绑定 != 根->角色组.end())
+                    if (const auto* 值 = std::get_if<语言图引用值>(&绑定->值);
+                        值 && (值->类别 == 类别::存在 || 值->类别 == 类别::存在概念))
+                        端点.指称 = *值;
+                const auto 定位 = std::ranges::find_if(定位组, [&](const auto& 位置) {
+                    return 位置.出现编号 == 根->出现编号 && 位置.角色编号 == 项->规则角色;
+                });
+                if (定位 != 定位组.end() && 定位->原文起点 < 定位->原文终点
+                    && 定位->原文终点 <= 句段.结束标量 - 句段.起始标量) {
+                    端点.起始标量 = 句段.起始标量 + 定位->原文起点;
+                    端点.结束标量 = 句段.起始标量 + 定位->原文终点;
+                }
+                候选.端点组.push_back(std::move(端点));
+            }
+            if (候选.端点组.size() != 段.角色槽组.size()) continue;
+            const auto 含角色 = [&](const std::string& 键) {
+                return std::ranges::find(候选.端点组, 键, &接收语言关系端点::角色键) != 候选.端点组.end();
+            };
+            if (!含角色(候选.源角色键) || !含角色(候选.目标角色键)) continue;
+            std::ranges::sort(候选.端点组, {}, &接收语言关系端点::角色键);
+            if (std::ranges::find(结果.候选组, 候选) == 结果.候选组.end())
+                结果.候选组.push_back(std::move(候选));
+        }
+    }
+    return 结果;
+}
+
 关系陈述理解结果 关系陈述语言服务::理解关系陈述(
     const 关系陈述理解请求& 请求) {
     关系陈述理解结果 out;

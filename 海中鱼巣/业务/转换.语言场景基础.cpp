@@ -978,7 +978,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     result.图解释状态=图解释.状态;result.未覆盖范围组=图解释.未覆盖范围组;result.受阻节点组=图解释.受阻节点组;
     const auto 图状态=图输入状态(图解释.状态);
     const auto 清含义=[&](I 状态) {
-        result.状态=状态;result.完整候选组.clear();result.含义.reset();result.构式.reset();
+        result.状态=状态;result.完整候选组.clear();result.组成图候选组.clear();result.含义.reset();result.构式.reset();
         result.已取得场景节点.reset();result.已取得对象绑定组.clear();
     };
     if(技术未完成(图状态)){清含义(图状态);return result;}
@@ -1005,7 +1005,33 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
         }
         if(!知识.信息)throw std::logic_error("graph knowledge success missing material");
         // 同一旧知识的图适配不是第二个解释。保留原六构式的完整消歧、载荷和后续物化合同。
-        if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);!q.正式词段&&兼容构式&&*兼容构式==图构式(图))continue;
+        if(const auto 兼容构式=知识构式(*知识.信息,q.语言节点);!q.正式词段&&兼容构式&&*兼容构式==图构式(图)) {
+            if (*兼容构式 != U::S05组成) continue;
+            const auto 定义 = std::ranges::find_if(图.定义图.节点组, [&](const auto& 节点) {
+                return 节点.局部编号 == 根->定义含义编号;
+            });
+            const auto 旧图同义 = [&](const auto& 候选) {
+                const auto* 旧 = std::get_if<语言场景基础候选>(&候选);
+                if (!旧 || 旧->构式 != F::S05组成 || 旧->所用知识节点 != 根->所用知识节点
+                    || 定义 == 图.定义图.节点组.end()) return false;
+                return std::ranges::all_of(旧->出现组, [&](const auto& 出现) {
+                    const auto* 名称 = std::get_if<语言场景基础命名出现>(&出现);
+                    if (!名称) return false;
+                    using P = 新语言知识参数角色;
+                    const auto 参数 = 名称->角色 == 语言场景基础角色::整体 ? P::整体 : P::部分;
+                    const auto 项 = std::ranges::find(定义->参数组, 参数, &新语言知识角色参数::参数);
+                    if (项 == 定义->参数组.end()) return false;
+                    const auto 绑定 = std::ranges::find(根->角色组, 项->规则角色, &语言图角色绑定::角色编号);
+                    if (绑定 == 根->角色组.end()) return false;
+                    const auto* 引用 = std::get_if<语言图引用值>(&绑定->值);
+                    return 引用 && 引用->类别 == K::存在概念 && 引用->节点 == 名称->概念节点;
+                });
+            };
+            if (std::ranges::any_of(result.完整候选组, 旧图同义)) {
+                result.组成图候选组.push_back(图);
+                continue;
+            }
+        }
         if(图构式(图)==U::行动请求) {
             const bool 已有=std::any_of(新图候选.begin(),新图候选.end(),[&](const auto& 原) {
                 return 原.语言节点==图.语言节点&&原.定义图==图.定义图&&原.根出现编号==图.根出现编号
@@ -1058,7 +1084,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     if(result.状态!=I::已形成且读回)return result;
     const auto again=只读识别六类基础句型(q,lang,words,names,es,fs,instances,依据);
     if(again.状态!=I::已形成且读回||result.完整候选组.size()!=1||again.完整候选组.size()!=1
-        ||!统一候选相同(result.完整候选组[0],again.完整候选组[0])){result.状态=I::读取漂移;result.完整候选组.clear();return result;}
+        ||!统一候选相同(result.完整候选组[0],again.完整候选组[0])){清含义(I::读取漂移);return result;}
     const auto selected=result.完整候选组[0];result.构式=候选构式(selected);
     if(std::holds_alternative<语言场景归类候选>(selected)
         ||std::holds_alternative<语言场景基础候选>(selected)) {

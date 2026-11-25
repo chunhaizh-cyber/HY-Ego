@@ -98,6 +98,25 @@ struct 接收语言主体关系 final {
     std::optional<接收语言主体来源> 来源{};
     friend bool operator==(const 接收语言主体关系&,const 接收语言主体关系&)=default;
 };
+// 来自语句的关系材料，包括尚未绑定的角色。
+struct 接收语言关系端点 final {
+    std::string 角色键;
+    新语言知识参数角色 参数;
+    std::uint64_t 起始标量=0, 结束标量=0;
+    std::optional<语言图引用值> 指称;
+    friend bool operator==(const 接收语言关系端点&,const 接收语言关系端点&)=default;
+};
+struct 接收语言关系候选 final {
+    稳定编码 关系概念, 所用构式;
+    std::string 种子键, 源角色键, 目标角色键;
+    std::vector<接收语言关系端点> 端点组;
+    friend bool operator==(const 接收语言关系候选&,const 接收语言关系候选&)=default;
+};
+struct 接收语言关系观察 final {
+    bool 读取未完成=false;
+    std::vector<接收语言关系候选> 候选组;
+    friend bool operator==(const 接收语言关系观察&,const 接收语言关系观察&)=default;
+};
 struct 接收语言句段解释 final {
     std::uint64_t 起始标量, 结束标量;
     语言场景基础输入状态 状态;
@@ -107,6 +126,7 @@ struct 接收语言句段解释 final {
     std::optional<接收语言主体关系> 主体关系{};
     std::vector<新语言词条类型依据> 词条类型依据组{};
     std::optional<接收语言静态结构> 静态结构{};
+    std::optional<接收语言关系观察> 关系观察{};
     friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
 };
 
