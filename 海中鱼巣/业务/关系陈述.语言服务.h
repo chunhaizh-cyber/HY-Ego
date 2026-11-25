@@ -19,6 +19,7 @@ class 概念_特征类;
 class 新_存在类;
 class 新_需求类;
 class 新_自然语言世界树类;
+struct 基础表达结果;
 
 enum class 关系陈述状态 : std::uint8_t {
     已生成且唯一回读 = 1,
@@ -105,6 +106,8 @@ public:
 
     接收语言关系观察 投影接收陈述(const 语言图含义材料&,
         std::span<const 语言图角色原文定位>, 解释原文范围) const;
+    基础表达结果 生成接收关系陈述(稳定编码 语言节点, const 接收语言关系候选&,
+        const 语言图交互上下文&, std::span<const 语言场景局部称名>) const;
 
 private:
     关系概念类& 关系_;
