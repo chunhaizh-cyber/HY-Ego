@@ -633,3 +633,14 @@ Release x64 正式工程编译链接退出0，0错误、0警告。249项构建�
 同一「杯子」W44658 的材料任务 T48415 从检查条件返回过状态变化，重筹办时以工作174复用正式候选材料50100。末次独立观察仍是「条件不具备」，无缺口项、无已执行方法、无实际 X。观察窗口内尚无该 W 的普通查阅 Q。后继用既有调度和参数绑定明细核对每条配对与实际 W/F 及来源条件的匹配，保留真实不足与短时快照重读的区别。[末次同任务读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/word-dictionary-progression.json) · [筹办线程采样](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/dictionary-planning-thread-snapshot.txt) · [观察结束原因](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/browser-error.json)
 
 正式网页结束，Edge 退出0，应用报告网页宿主返回后未在收束窗口退出。验证程序最终只回收 PID18776，应用退出码 -1，监听已释放。尚无本轮正常退出及剩余样例责任全部回收证据。下次运行在正式关闭后若仍等待，将在强制回收前取应用线程栈。[关闭和进程退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-declaration-read-release-20261125-083218/release-web-20261125-083403/exit.json)
+
+
+#### 诊断构建重现正式分界及同词条归类承接
+
+诊断进程 43556 的构建源为 9af2c72b0，应用工程及初始化材料与已发布实现同源，另启用现有诊断开关。网页从原话 M30232 得到分界问题 Q39376、出站 O39470，控制关联答复后，原任务 T38071／D37927 实际执行 X43062、动作 43414、状态 43454，评估 44089。原消息经 R36863、有效分界 43437 进入准入 43597。同一准入恢复两句解释并读回「杯子」W43496 的缺名位置。两句均仍有语义缺口，当前阶段记录的是恢复解释及缺口。 [构建进程](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/process.json) · [网页关联答复](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/displayed-answer.json) · [正式分界执行](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/same-task-effective-boundary.json) · [原消息恢复](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/same-source-admitted-interpretation.json)
+
+09:25:00 独立读取控制快照 83，确认 W43496 的归类 D44403 已承接 T44786，候选为归类本能 24640。该次任务只读结果为待检查条件，最近工作 175 记任务状态变化，条件读取列位置 1 和 3 材料未到。同一快照未包含该 D 的材料子需求，查词典方法 24390 的配对数为 0。随后仍沿 T44786 观察新筹办和实际材料取得。 [独立任务读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/independent-cup-dictionary-092500.json)
+
+控制快照 90 进一步读回同一 W43496 的词典材料子需求 D47262，来源任务是原归类 T44786，材料任务为 T47406。读取时任务状态为「待查找方法」。后继以同一 T 的当前筹办和实际 Q 为判断依据。 [同词材料任务](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/cup-dictionary-material-task-snapshot-90.json)
+
+补充核对温度迁移前置。主线的固定先天类型槽建立入口拒绝带单位的定义，现有毫米是计量单位身份。历史候选调用的规范规格来源登记、正式 I64 特征类型读取、完整域关联及计量单位词条双向入口均需逐项迁移或闭合等价主线入口。程序集成须先提供摄氏度身份，再按已批准规格建立独立 FT、关联完整域和名称。温度 FT 与同名完整域 C 各自读回，水温后继复用正式子值域入口。 [主线固定槽入口](../海中鱼巣/领域/概念_特征类.cpp#L6268) · [历史温度核对](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/case06-temperature-provider-preflight.md)
