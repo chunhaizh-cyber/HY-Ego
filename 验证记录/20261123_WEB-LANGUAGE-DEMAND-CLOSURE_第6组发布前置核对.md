@@ -699,3 +699,12 @@ ed6efd5fa 的实际 Release x64 正式工程编译链接通过，0 错误、0 �
 c1d1252ef 的普通网页复测 PID 37520 已收束。应用退出码 -1，回收 True，强制回收 True，页面已关闭 True，浏览器正常退出 True，驱动退出码 1，逻辑错误日志增加 214 字节。结束记录未附带 T47707 实际查阅并产生 Q 的证据。 [前一轮退出证据](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-web-20261125-101634/exit.json)
 
 56D2 已发布为 0ac5d90301b6aff006b86bf472db903e1b5e3088。Release x64 的 249 项输入及产物与发布树核同。正式普通入口退出码 0，监听已释放。该运行核对启动、正式温度提供者和退出，整数语义的成文与解释仍待真实网页验证。 [发布构建](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d2-unit-language-release-20261125-102332/published-inputs.json) · [普通退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d2-unit-language-release-20261125-102332/temperature-web-20261125-111205/exit.json)
+
+
+复测驱动误报定位。旧驱动的词典观察局部变量遮蔽了前一阶段的同名变量。每次任务读取成功后，驱动先保存内存中的最近任务，再因访问尚未初始化的变量抛出 ReferenceError，外层等待把异常留到期限结束才报告。因此旧驱动的超时不能用来判断原分界任务失败。收束文件再次读回 T38507 已完成，执行 X43359，同一词条的材料阶段以独立控制快照为准。下一轮驱动副本已消除遮蔽，ReferenceError 直接报告，node --check 通过，运行仍待正式发布构建。 [原驱动错误](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-web-20261125-101634/browser-error.json) · [原分界任务收束读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-web-20261125-101634/last-same-task-readback.json) · [修正的驱动副本](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/browser-range-input-evidence-56c26-18.mjs)
+
+关闭后，网页宿主已正常返回，应用仍存活。关闭采样主线程在等待 join，多条任务、管理和界面采集线程仍未结束。本轮驱动最终以进程已强制回收、退出 −1 结束。后继继续按真实关闭验证应用线程与资源回收。 [关闭后线程采样](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-web-20261125-101634/shutdown-thread-snapshot.txt)
+
+#### 56C26 第18项发布与普通入口复测
+
+第18项随 cb5eb684a056549f5caf69c61e676a60023c9885 发布。Release x64 编译 0 错误、0 警告，249 项构建输入和正式发布树与产物核同。候选及发布产物普通启动并正式关闭，发布运行退出 0，无新增逻辑错误，监听已释放。用同一发布产物及修正驱动启动真实浏览器复测，应用 PID 42472 已读回页面原话，仍在运行。查词典的实际方法采用、同一词条材料 Q、归类与原文恢复，以及有实际任务的关闭仍待本轮。 [正式发布](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-18-read-only-preload-release-20261125-111226/published-inputs.json) · [启动及关闭](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-18-read-only-preload-release-20261125-111226/temperature-web-20261125-111358/exit.json) · [普通网页复测身份](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-18-read-only-preload-release-20261125-111226/release-web-20261125-111408/process.json)
