@@ -6493,8 +6493,11 @@ auto 组织记录字段(新前置语言缺口& v){
 auto 组织记录字段(新语言词条类型依据& v){
     return std::tie(v.起始标量,v.结束标量,v.词条,v.所需类别,v.构式依据组);
 }
+auto 组织记录字段(接收语言主体来源& v){
+    return std::tie(v.词条,v.名称关系,v.已绑定存在);
+}
 auto 组织记录字段(接收语言主体关系& v){
-    return std::tie(v.起始标量,v.结束标量,v.对象起始标量,v.对象结束标量,v.所用构式,v.指代概念,v.已确定);
+    return std::tie(v.起始标量,v.结束标量,v.对象起始标量,v.对象结束标量,v.所用构式,v.指代概念,v.已确定,v.来源);
 }
 auto 组织记录字段(语言图引用值& v){
     return std::tie(v.类别,v.节点,v.来源概念,v.选用名称关系);
@@ -6647,7 +6650,8 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
         if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
-            ||std::is_same_v<T,接收语言句段解释>||std::is_same_v<T,新接收语言解释内容>)
+            ||std::is_same_v<T,接收语言主体关系>||std::is_same_v<T,接收语言句段解释>
+            ||std::is_same_v<T,新接收语言解释内容>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
         else 组织要求(children.size()==字段数);
         std::size_t i=0;
@@ -6982,7 +6986,7 @@ std::optional<新语言含义网> 组织接收静态含义(const 新接收语言
 
     新语言含义网 网;
     网.所属语言场景=内容.来源场景;
-    std::map<std::uint64_t,新匿名表达对象> 已称名对象;
+    std::map<std::uint64_t,新表达指称> 已称名对象;
     std::vector<std::size_t> 字节边界;
     const auto 称名原文=[&](std::uint64_t 起,std::uint64_t 末) {
         if (字节边界.empty()) {
@@ -7006,6 +7010,9 @@ std::optional<新语言含义网> 组织接收静态含义(const 新接收语言
         单元.主体=新明确未知{};
         if (主体 && 主体->类别==C::存在) {
             单元.主体=新绑定指称{新指称类别::存在,主体->节点,主体->来源概念.value_or(稳定编码{})};
+            if (句.主体关系 && !句.主体关系->指代概念 && 句.主体关系->来源
+                && 句.主体关系->来源->已绑定存在==主体->节点)
+                已称名对象.emplace(句.主体关系->对象起始标量,单元.主体);
         } else if (主体角色 && 句.主体关系 && 句.主体关系->已确定
             && 句.主体关系->所用构式==结构.所用构式
             && 句.主体关系->起始标量==主体角色->起始标量 && 句.主体关系->结束标量==主体角色->结束标量) {
@@ -7056,7 +7063,7 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
         || 内容.原文起点 != 来源.来源.原文起点 || 内容.原文终点 != 来源.来源.原文终点
         || 内容.句段组.empty()) return false;
     auto 前段末 = 内容.原文起点;
-    std::map<std::pair<std::uint64_t,std::uint64_t>,bool> 已称名;
+    std::map<std::pair<std::uint64_t,std::uint64_t>,const 接收语言主体关系*> 已称名;
     for (const auto& 句 : 内容.句段组) {
         if (句.起始标量 < 前段末 || 句.起始标量 >= 句.结束标量 || 句.结束标量 > 内容.原文终点)
             return false;
@@ -7104,14 +7111,39 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
         if (句.主体关系) {
             const auto& 关系 = *句.主体关系;
             if (!在段内(关系.起始标量,关系.结束标量) || !有效(关系.所用构式)) return false;
+            if (关系.来源) {
+                const auto& 依据=*关系.来源;
+                if ((依据.词条 && !有效(*依据.词条)) || (依据.已绑定存在 && !有效(*依据.已绑定存在))
+                    || (依据.名称关系 && (!依据.词条 || !有效(*依据.名称关系)))
+                    || (关系.指代概念 && !依据.名称关系) || (依据.已绑定存在 && !关系.已确定))
+                    return false;
+            }
+            const auto 绑定存在=关系.来源 ? 关系.来源->已绑定存在 : std::nullopt;
             const auto 对象范围 = std::pair{关系.对象起始标量,关系.对象结束标量};
             if (关系.指代概念) {
+                if (!有效(*关系.指代概念)) return false;
+                // 空半开范围表示仅取得出现依据，尚无唯一目标。
+                if (关系.对象起始标量==0 && 关系.对象结束标量==0) {
+                    if (关系.已确定 || 绑定存在 || !关系.来源 || !关系.来源->名称关系) return false;
+                    continue;
+                }
                 const auto 前文=已称名.find(对象范围);
-                if (!有效(*关系.指代概念) || 前文==已称名.end()
-                    || (关系.已确定 && !前文->second)) return false;
+                if (前文==已称名.end()
+                    || (关系.已确定 && !前文->second->已确定)) return false;
+                const auto& 前文来源=前文->second->来源;
+                if (绑定存在!=(前文来源 ? 前文来源->已绑定存在 : std::nullopt)) return false;
             } else {
                 if (对象范围 != std::pair{关系.起始标量,关系.结束标量}) return false;
-                已称名.emplace(对象范围,关系.已确定);
+                if (绑定存在) {
+                    using P=新语言知识参数角色;
+                    using C=新语言知识角色类别;
+                    if (!句.静态结构 || 句.静态结构->所用构式!=关系.所用构式) return false;
+                    const auto* 角色=取静态角色(*句.静态结构,P::主体);
+                    const auto* 引用=静态角色值<语言图引用值>(角色);
+                    if (!引用 || 引用->类别!=C::存在 || 引用->节点!=*绑定存在
+                        || 角色->起始标量!=关系.起始标量 || 角色->结束标量!=关系.结束标量) return false;
+                }
+                已称名.emplace(对象范围,&关系);
             }
         }
     }

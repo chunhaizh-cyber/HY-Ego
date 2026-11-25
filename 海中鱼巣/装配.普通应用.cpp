@@ -1674,12 +1674,16 @@ public:
                 std::string 主体关系 = "null";
                 if (句.主体关系) {
                     const auto& 关系 = *句.主体关系;
+                    const bool 有目标范围=关系.对象起始标量<关系.对象结束标量;
                     主体关系 = "{\"start\":" + 控制计数(关系.起始标量)
                         + ",\"end\":" + 控制计数(关系.结束标量)
-                        + ",\"targetStart\":" + 控制计数(关系.对象起始标量)
-                        + ",\"targetEnd\":" + 控制计数(关系.对象结束标量)
+                        + ",\"targetStart\":" + (有目标范围 ? 控制计数(关系.对象起始标量) : "null")
+                        + ",\"targetEnd\":" + (有目标范围 ? 控制计数(关系.对象结束标量) : "null")
                         + ",\"knowledge\":" + 控制编码(关系.所用构式)
                         + ",\"pronounConcept\":" + 控制编码(关系.指代概念)
+                        + ",\"word\":" + 控制编码(关系.来源 ? 关系.来源->词条 : std::nullopt)
+                        + ",\"nameRelation\":" + 控制编码(关系.来源 ? 关系.来源->名称关系 : std::nullopt)
+                        + ",\"boundExistence\":" + 控制编码(关系.来源 ? 关系.来源->已绑定存在 : std::nullopt)
                         + ",\"confirmed\":" + 控制布尔(关系.已确定) + "}";
                 }
                 std::string 静态结构 = "null";

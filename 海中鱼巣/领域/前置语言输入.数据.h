@@ -71,12 +71,17 @@ struct 接收语言静态结构 final {
 enum class 语言场景基础输入状态 : std::uint8_t;
 enum class 基础语言输入状态 : std::uint8_t;
 enum class 语言基础统一构式 : std::uint8_t;
+struct 接收语言主体来源 final {
+    std::optional<稳定编码> 词条, 名称关系, 已绑定存在;
+    friend bool operator==(const 接收语言主体来源&,const 接收语言主体来源&)=default;
+};
 // 在同一来源场景内用首次称名范围标识对象。
 struct 接收语言主体关系 final {
     std::uint64_t 起始标量, 结束标量, 对象起始标量, 对象结束标量;
     稳定编码 所用构式;
     std::optional<稳定编码> 指代概念;
     bool 已确定;
+    std::optional<接收语言主体来源> 来源{};
     friend bool operator==(const 接收语言主体关系&,const 接收语言主体关系&)=default;
 };
 struct 接收语言句段解释 final {
