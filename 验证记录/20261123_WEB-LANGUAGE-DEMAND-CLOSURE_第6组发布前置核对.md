@@ -654,3 +654,9 @@ Release x64 正式工程编译链接退出0，0错误、0警告。249项构建�
 #### 56D1 温度提供者首次发布的启动回归与回撤
 
 ed6efd5fa 的实际 Release x64 正式工程编译链接通过，0 错误、0 警告，249 项构建输入与发布树完全相同，10 份词典文件与正式批次核同。普通入口 PID 29700 在温度 FT 建立阶段退出 1，未开放监听。对同一产物在本地调试器读取提供者的 L1 追加返回值，状态为 2「入口拒绝」。对照 L1 的选择器形状规则，写入遗漏登记宿主及字段键的只读节点身份，另一处完整域关联有同类缺口。修复前用 5036fa775 回撤原七文件，已核同其完整树与 8fe6d7ad1。 [编译产物](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/release-result.json) · [远端输入核同](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/published-inputs.json) · [L1 实际状态](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/temperature-provider-l1-append-status.txt)
+
+#### 56D1 与 56C26 第17项通过普通启动及关闭复测
+
+发布源码 c1d1252ef 已按 56D1 与 56C26 第17项接通温度提供者和关闭修复。候选和发布的同一 Release x64 产物普通启动均通过。正式读回温度 FT1374、完整域 C1383、规格来源 1373、摄氏度单位 62 和中文词条 1361。整数值域从 −273℃ 至 I64 上界。正式网页关闭返回 200，自我与任务管理均完成回收，发布运行退出 0，监听已释放。 [Release x64 编译](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-result.json) · [发布树与 249 项构建输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/published-inputs.json) · [正式类型读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/temperature-web-20261125-101603/temperature-provider-readback.json) · [发布运行退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/temperature-web-20261125-101603/exit.json)
+
+另以同一发布产物在真实 Edge 重放杯子前置原文，PID 37520 已启动并显示输入。该轮继续核对实际词典 Q、归类恢复及有任务运行的关闭。温度正式子类型、量值消费者及第 6 组业务问题、同 D 答复继续沿计划和目标验收。 [新一轮发布复测](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-56c26-17-release-20261125-100940/release-web-20261125-101634/process.json)
