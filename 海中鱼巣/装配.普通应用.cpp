@@ -1,4 +1,4 @@
-﻿#include "装配.普通应用.h"
+#include "装配.普通应用.h"
 #include "业务/初始化.表达组织知识.h"
 #include "领域/世界挂接.全局根.h"
 #include "装配.网页外设.h"
@@ -1490,9 +1490,9 @@ public:
             return "{\"stage\":\"未处理\",\"reason\":\"尚无接收认知观察\",\"message\":null,\"speaker\":null,\"scene\":null,\"meaning\":null,\"demand\":null}";
         }
         auto item=*last;
-        static constexpr std::array<const char*,19> names{"未处理","已采用U","已建立D","已读回","非支持输入",
+        static constexpr std::array<const char*,20> names{"未处理","已采用U","已建立D","已读回","非支持输入",
             "对象未决","非本次人类需求","D映射拒绝","D映射受阻","前提变化","资源延后","停止未完成","已读回行动请求",
-            "前置输入待治理","前置输入治理等待","已回答写回","已保存场景信息","已采用分界答复","分界答复不适用"};
+            "前置输入待治理","前置输入治理等待","已回答写回","已保存场景信息","已采用分界答复","分界答复不适用","语言解释待完善"};
         const auto n=static_cast<std::size_t>(item.阶段);
         if(n<1||n>names.size())throw std::logic_error("received cognition observation stage invalid");
         检查停止();
@@ -1584,6 +1584,33 @@ public:
                         [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
             }
         }
+        const auto 句组JSON = [&] {
+            std::string 句组 = "[";
+            for (const auto& 句 : item.句段解释) {
+                检查停止();
+                std::string 缺口组 = "[";
+                for (const auto& 缺口 : 句.缺口组) {
+                    检查停止();
+                    std::string 相关节点 = "[";
+                    for (const auto 节点 : 缺口.已取得相关节点) {
+                        if (相关节点.size() != 1) 相关节点 += ',';
+                        相关节点 += 控制编码(节点);
+                    }
+                    if (缺口组.size() != 1) 缺口组 += ',';
+                    缺口组 += "{\"kind\":" + 控制计数(static_cast<std::uint64_t>(缺口.种类))
+                        + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
+                        + ",\"nodes\":" + 相关节点 + "]}";
+                }
+                if (句组.size() != 1) 句组 += ',';
+                句组 += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
+                    + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
+                    + ",\"graphStatus\":" + (句.图状态 ? 控制计数(static_cast<std::uint64_t>(*句.图状态)) : "null")
+                    + ",\"construction\":" + (句.构式 ? 控制计数(static_cast<std::uint64_t>(*句.构式)) : "null")
+                    + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
+                    + ",\"gaps\":" + 缺口组 + "]}";
+            }
+            return 句组 + "]";
+        };
         std::string 词条准入 = "null", 正式词段解释 = "null";
         if (有效(item.M) && item.词条准入 && item.词条准入->来源.接收消息节点 == item.M) {
             const auto& 证据 = *item.词条准入;
@@ -1611,36 +1638,21 @@ public:
                 if (词条齐备)
                     词条准入 = "{\"range\":" + 控制编码(证据.范围) + ",\"effective\":" + 控制编码(定义.有效结果)
                         + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"segments\":" + 分段 + "]}";
-                if (!item.正式词段解释.empty()) {
-                    std::string 句组 = "[";
-                    for (const auto& 句 : item.正式词段解释) {
-                        检查停止();
-                        std::string 缺口组 = "[";
-                        for (const auto& 缺口 : 句.缺口组) {
-                            检查停止();
-                            std::string 相关节点 = "[";
-                            for (const auto 节点 : 缺口.已取得相关节点) {
-                                if (相关节点.size() != 1) 相关节点 += ',';
-                                相关节点 += 控制编码(节点);
-                            }
-                            if (缺口组.size() != 1) 缺口组 += ',';
-                            缺口组 += "{\"kind\":" + 控制计数(static_cast<std::uint64_t>(缺口.种类))
-                                + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
-                                + ",\"nodes\":" + 相关节点 + "]}";
-                        }
-                        if (句组.size() != 1) 句组 += ',';
-                        句组 += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
-                            + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
-                            + ",\"graphStatus\":" + (句.图状态 ? 控制计数(static_cast<std::uint64_t>(*句.图状态)) : "null")
-                            + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
-                            + ",\"gaps\":" + 缺口组 + "]}";
-                    }
+                if (!item.句段解释.empty()) {
                     正式词段解释 = "{\"source\":" + 控制编码(证据.前置来源) + ",\"range\":" + 控制编码(证据.范围)
-                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"sentences\":" + 句组 + "]}";
+                        + ",\"admission\":" + 控制编码(准入.信息->节点) + ",\"sentences\":" + 句组JSON() + "}";
                 }
             }
         }
         检查停止();
+        std::string 被动句段解释 = "null";
+        if (item.S && item.被动解释来源 && item.被动解释来源->接收消息节点 == item.M && !item.句段解释.empty()) {
+            const auto 来源 = 当前_.世界事实.语言服务.读取前置来源(*item.被动解释来源, 当前_.外设世界树);
+            const auto 场景 = 当前_.自然语言世界树.读取接收来源场景(item.M);
+            if (来源.信息 && 场景.信息 && 场景.信息->场景节点 == *item.S)
+                被动句段解释 = "{\"source\":" + 控制编码(来源.信息->节点) + ",\"scene\":" + 控制编码(item.S)
+                    + ",\"sentences\":" + 句组JSON() + "}";
+        }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
             +",\"speaker\":"+控制编码(item.H)+",\"scene\":"+控制编码(item.S)
@@ -1648,7 +1660,7 @@ public:
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
             +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入
-            +",\"admittedInterpretation\":"+正式词段解释+"}";
+            +",\"admittedInterpretation\":"+正式词段解释+",\"languageInterpretation\":"+被动句段解释+"}";
         检查停止();
         return JSON;
     }

@@ -46,7 +46,7 @@ enum class 接收需求认知阶段 : std::uint8_t {
     // 已退役（ASK-READ-SCENE v0.4 §3.3 第5项不做问答匹配写回）；保留编号，不再产生。
     已回答写回,
     // ASK-READ-SCENE v0.4 §3.3：值类构式或招呼已在接收来源场景中保存为场景信息；不建立需求，消息到此结束。
-    已保存场景信息, 已采用分界答复, 分界答复不适用
+    已保存场景信息, 已采用分界答复, 分界答复不适用, 语言解释待完善
 };
 enum class 接收行动请求交接确认状态 : std::uint8_t {
     已确认=1,精确重复,来源冲突,输入拒绝,资源失败
@@ -60,11 +60,14 @@ struct 接收词条准入证据 final {
 };
 enum class 语言场景基础输入状态 : std::uint8_t;
 enum class 基础语言输入状态 : std::uint8_t;
-struct 接收正式词段句解释 final {
+enum class 语言基础统一构式 : std::uint8_t;
+struct 接收语言句段解释 final {
     std::uint64_t 起始标量, 结束标量;
     语言场景基础输入状态 状态;
     std::optional<基础语言输入状态> 图状态;
     std::vector<新前置语言缺口> 缺口组;
+    std::optional<语言基础统一构式> 构式{};
+    friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
 };
 struct 接收需求认知观察 final {
     稳定编码 M;
@@ -78,7 +81,8 @@ struct 接收需求认知观察 final {
     std::optional<新前置语言输入材料> 前置输入等待材料{};
     std::optional<接收分界答复证据> 分界答复{};
     std::optional<接收词条准入证据> 词条准入{};
-    std::vector<接收正式词段句解释> 正式词段解释{};
+    std::vector<接收语言句段解释> 句段解释{};
+    std::optional<新接收认知来源键> 被动解释来源{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。
