@@ -1870,6 +1870,7 @@ public:
                         if (对象.场景 != *item.S || 对象.声明.前置来源 != 前置来源) continue;
                         if (局部对象JSON.size() > 1) 局部对象JSON += ',';
                         局部对象JSON += "{\"existence\":" + 控制编码(对象.存在)
+                            + ",\"conceptReference\":" + 控制编码(对象.当前概念)
                             + ",\"specificConcept\":" + 控制编码(对象.专属概念)
                             + ",\"construction\":" + 控制编码(对象.声明.构式)
                             + ",\"start\":" + 控制计数(对象.声明.起始标量)

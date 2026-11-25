@@ -1188,12 +1188,15 @@ bool 新_场景类::合并接收指代实例挂接(const 新接收语言解释�
                 || std::count_if(入向.begin(), 入向.end(), [](const auto& 字段) {
                     return 字段.字段节点 == 成员存在字段;
                 }) != 1) return {S::前提已变化, {}};
-            const auto 身份 = 存在服务_.读取存在身份保护(项.查询节点);
-            if (身份.状态 == L1::资源失败) return {S::资源失败, {}};
-            if (身份.状态 == L1::节点不存在 || 身份.前提已变化) return {S::前提已变化, {}};
-            if (身份.状态 != L1::已完成 || !身份.信息)
+            const auto 身份 = 存在服务_.读取存在集合成员身份(项.查询节点);
+            using E = 特征概念规则状态;
+            if (身份.状态 == E::资源失败) return {S::资源失败, {}};
+            if (身份.状态 == E::值不存在 || 身份.状态 == E::前提已变化 || 身份.状态 == E::读取接口未装配)
+                return {S::前提已变化, {}};
+            if (身份.状态 != E::已完成 || 身份.存在节点 != 项.查询节点 || !身份.当前概念引用)
                 治理场景工程失败("published local object has no formal existence identity");
-            结果.对象组.push_back({场景, 项.查询节点, 身份.信息->专属存在概念节点, 声明});
+            结果.对象组.push_back({场景, 项.查询节点, *身份.当前概念引用,
+                身份.引用存在根 ? std::nullopt : 身份.当前概念引用, 声明});
         }
         return 结果;
     } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
@@ -1204,31 +1207,9 @@ bool 新_场景类::合并接收指代实例挂接(const 新接收语言解释�
     const 新来源子场景结果& 来源, const 新接收局部对象声明& 声明) {
     using S = 新来源子场景状态;
     using L1 = 基础节点组追加状态;
-    using Q = 基础结构操作状态;
+    using E = 新存在操作状态;
     if (!有效(声明.前置来源) || !有效(声明.构式) || 声明.起始标量 >= 声明.结束标量) return {};
     std::lock_guard 锁(新场景互斥);
-    稳定编码 候选{};
-    bool 已初始化 = false, 已发表 = false;
-    std::vector<基础联合节点快照> 撤销预期;
-    const auto 回收未公开候选 = [&] {
-        if (!有效(候选) || 已发表) return;
-        if (已初始化) {
-            if (撤销预期.empty()) return;
-            try { 核验场景候选未被消费(撤销预期); }
-            catch (const std::runtime_error&) { return; }
-            if (存在服务_.清理存在节点内容(候选) == 新存在操作状态::已完成)
-                (void)全局基础数据集.删除节点(候选);
-        } else {
-            const auto 节点 = 全局基础数据集.查询节点组完整结构({候选});
-            if (节点.状态 != Q::已完成 || 节点.节点组.size() != 1 || !节点.节点组.front().快照) return;
-            const auto& 快照 = *节点.节点组.front().快照;
-            // 初始化失败可能已留下结构；只删除可确认的裸节点。
-            if (快照.结构.字段组.empty() && 快照.入向字段组.empty()
-                && 快照.出向外部关系组.empty() && 快照.入向外部关系组.empty())
-                (void)全局基础数据集.删除节点(候选);
-        }
-        候选 = {};
-    };
     try {
         const auto 当前组 = 读取接收局部对象组(来源);
         if (当前组.状态 != S::已存在) return {当前组.状态, {}};
@@ -1244,60 +1225,40 @@ bool 新_场景类::合并接收指代实例挂接(const 新接收语言解释�
         const auto 快照 = std::ranges::find_if(来源.完整保护, [场景](const auto& 项) {
             return 项.结构.节点.编码 == 场景;
         });
-        候选 = 全局基础数据集.新建节点();
-        if (!有效(候选)) return {S::资源失败, {}};
-        const auto 建立 = 存在服务_.初始化存在节点(候选, {}, true, std::nullopt);
-        if (建立.状态 != 新存在操作状态::已完成 || !建立.专属存在概念节点) {
-            回收未公开候选();
-            return {建立.状态 == 新存在操作状态::前提已变化 ? S::前提已变化 : S::资源失败, {}};
-        }
-        已初始化 = true;
-        const auto 专属 = *建立.专属存在概念节点;
-        const auto 候选批 = 全局基础数据集.查询节点组完整结构({候选, 专属});
-        if (候选批.状态 == Q::资源失败) return {S::资源失败, {}};
-        const auto E = std::ranges::find(候选批.节点组, 候选, &基础联合节点读取项::查询节点);
-        const auto C = std::ranges::find(候选批.节点组, 专属, &基础联合节点读取项::查询节点);
-        if (候选批.状态 != Q::已完成 || E == 候选批.节点组.end() || !E->快照
-            || C == 候选批.节点组.end() || !C->快照)
-            治理场景工程失败("private local object cleanup preparation is missing");
-        if (!E->快照->入向外部关系组.empty() || !E->快照->出向外部关系组.empty()
-            || !C->快照->出向外部关系组.empty()
-            || std::ranges::any_of(E->快照->入向字段组, [专属](const auto& 字段) { return 字段.所属节点 != 专属; })
-            || std::ranges::any_of(C->快照->入向字段组, [候选](const auto& 字段) { return 字段.所属节点 != 候选; }))
-            return {S::前提已变化, {}};
-        撤销预期 = {*E->快照, *C->快照};
+        if (快照 == 来源.完整保护.end())
+            治理场景工程失败("received local object scene snapshot is missing");
+
         基础节点组追加请求 请求;
-        请求.预期联合节点组 = {*快照, 撤销预期.front(), 撤销预期.back()};
+        请求.预期联合节点组 = {*快照};
+        请求.新节点组.push_back({{
+            {局部对象来源字段, 声明.前置来源},
+            {局部对象构式字段, 声明.构式},
+            {局部对象范围字段, 基础值{std::vector<std::uint64_t>{声明.起始标量, 声明.结束标量}}}}});
+        const 基础组内节点引用 对象{0};
+        const auto 准备 = 存在服务_.准备零特征存在追加(请求, 对象);
+        if (准备 == E::前提已变化) return {S::前提已变化, {}};
+        if (准备 != E::已完成) 治理场景工程失败("local object existence preparation failed");
         for (const auto 节点 : {声明.前置来源, 声明.构式, 局部对象来源字段,
                 局部对象构式字段, 局部对象范围字段, 成员存在字段})
             请求.只读预期.节点组.push_back({节点});
-        请求.追加字段组 = {{场景, 成员存在字段, 候选},
-            {候选, 局部对象来源字段, 声明.前置来源},
-            {候选, 局部对象构式字段, 声明.构式},
-            {候选, 局部对象范围字段, 基础值{std::vector<std::uint64_t>{声明.起始标量, 声明.结束标量}}}};
+        请求.追加字段组.push_back({场景, 成员存在字段, 对象});
+
         const auto 写入 = 全局基础数据集.原子追加节点组(请求);
-        if (写入.状态 != L1::已完成) {
-            回收未公开候选();
-            if (写入.状态 == L1::资源失败) return {S::资源失败, {}};
-            if (写入.状态 == L1::预期不符 || 写入.状态 == L1::节点不存在 || 写入.状态 == L1::引用不存在)
-                return {S::前提已变化, {}};
+        if (写入.状态 == L1::资源失败) return {S::资源失败, {}};
+        if (写入.状态 == L1::预期不符 || 写入.状态 == L1::节点不存在 || 写入.状态 == L1::引用不存在)
+            return {S::前提已变化, {}};
+        if (写入.状态 != L1::已完成 || 写入.新节点组.size() != 1 || !有效(写入.新节点组.front()))
             治理场景工程失败("local object publication rejected valid request");
-        }
-        已发表 = true;
+
         const auto 重读来源 = 读取来源子场景(来源.信息->父场景节点, 来源.信息->来源节点);
         const auto 读回 = 读取接收局部对象组(重读来源);
         if (读回.状态 == S::资源失败 || 读回.状态 == S::前提已变化) return {读回.状态, {}};
         const auto 项 = std::ranges::find_if(读回.对象组, 匹配);
-        if (读回.状态 != S::已存在 || 项 == 读回.对象组.end() || 项->存在 != 候选)
+        if (读回.状态 != S::已存在 || 项 == 读回.对象组.end() || 项->存在 != 写入.新节点组.front())
             治理场景工程失败("published local object cannot be read back");
         return {S::已建立, *项};
-    } catch (const std::bad_alloc&) {
-        回收未公开候选();
-        return {S::资源失败, {}};
-    } catch (const std::length_error&) {
-        回收未公开候选();
-        return {S::资源失败, {}};
-    }
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}}; }
+      catch (const std::length_error&) { return {S::资源失败, {}}; }
 }
 
 新来源子场景结果 新_场景类::建立或取得来源子场景(
