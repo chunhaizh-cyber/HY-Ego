@@ -1,6 +1,7 @@
 #pragma once
 
 #include "接收认知来源.数据.h"
+#include "语言含义网.数据.h"
 #include <cstdint>
 #include <optional>
 #include <stop_token>
@@ -94,6 +95,7 @@ struct 新接收语言解释内容 final {
     稳定编码 来源场景, 前置来源, 语言节点;
     std::uint64_t 原文起点, 原文终点;
     std::vector<接收语言句段解释> 句段组;
+    std::optional<新语言含义网> 含义候选{};
     friend bool operator==(const 新接收语言解释内容&,const 新接收语言解释内容&)=default;
 };
 struct 新接收语言解释信息 final {

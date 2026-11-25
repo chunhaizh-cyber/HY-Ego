@@ -1482,6 +1482,61 @@ public:
         检查停止();
         return 结果;
     }
+    std::string 接收候选含义JSON(const std::optional<新语言含义网>& 候选) {
+        if (!候选) return "null";
+        const auto& 网=*候选;
+        const auto 指称JSON=[&](const 新表达指称& 指称) -> std::string {
+            if (const auto* 绑定=std::get_if<新绑定指称>(&指称))
+                return "{\"kind\":\"bound\",\"category\":"+控制计数(static_cast<std::uint64_t>(绑定->类别))
+                    +",\"node\":"+控制编码(绑定->节点)+",\"rangeConcept\":"
+                    +控制编码(有效(绑定->范围概念) ? std::optional{绑定->范围概念} : std::nullopt)+"}";
+            if (const auto* 局部=std::get_if<新匿名表达对象>(&指称))
+                return "{\"kind\":\"local\",\"localId\":"+控制计数(局部->网内编号)
+                    +",\"rangeConcept\":"+控制编码(局部->范围概念)+"}";
+            if (const auto* 名称=std::get_if<新名称描述指称>(&指称))
+                return "{\"kind\":\"name\",\"text\":"+字符串(名称->名称)+"}";
+            return "{\"kind\":\"unknown\"}";
+        };
+        std::string 内容组="[";
+        for (const auto& 项 : 网.内容项组) {
+            检查停止();
+            std::string 内容;
+            if (const auto* 静态=std::get_if<新静态含义单元>(&项.内容)) {
+                const auto& 来源=项.原文范围组.front();
+                内容="\"start\":"+控制计数(来源.起始)+",\"end\":"+控制计数(来源.起始+来源.长度)
+                    +",\"knowledge\":"+控制编码(项.所用知识组.front())+",\"subject\":"+指称JSON(静态->主体);
+                if (const auto* 归类=std::get_if<新概念归属谓项>(&静态->谓项)) {
+                    内容+=",\"kind\":\"membership\",\"concept\":"+指称JSON(归类->概念);
+                } else if (const auto* 特征=std::get_if<新特征值谓项>(&静态->谓项)) {
+                    std::string 值="{\"kind\":\"unknown\"}";
+                    if (const auto* 概念=std::get_if<新表达概念条件>(&特征->值)) {
+                        值="{\"kind\":\"conceptCondition\",\"node\":"+控制编码(概念->概念)+"}";
+                    } else if (const auto* 数=std::get_if<新类型化表达值>(&特征->值)) {
+                        if (const auto* 整数=std::get_if<std::int64_t>(&数->准确值))
+                            值="{\"kind\":\"integer\",\"value\":"+字符串(std::to_string(*整数))
+                                +",\"type\":"+控制编码(数->类型)+",\"unit\":"
+                                +控制编码(有效(数->单位) ? std::optional{数->单位} : std::nullopt)+"}";
+                    }
+                    内容+=",\"kind\":\"featureValue\",\"feature\":"+指称JSON(特征->特征类型)+",\"value\":"+值;
+                }
+            } else if (const auto* 顺序=std::get_if<新篇章组合>(&项.内容)) {
+                std::string 子项="[";
+                for (const auto 子编号 : 顺序->有序子项组) {
+                    检查停止();
+                    if (子项.size()!=1) 子项+=',';
+                    子项+=控制计数(子编号);
+                }
+                内容="\"kind\":\"textOrder\",\"items\":"+子项+"]";
+            }
+            if (内容组.size()!=1) 内容组+=',';
+            内容组+="{\"id\":"+控制计数(项.编号)+","+内容+"}";
+        }
+        const auto& 顶=网.顶层项组.front();
+        return "{\"scene\":"+控制编码(网.所属语言场景)+",\"root\":"+控制计数(顶.内容引用)
+            +",\"purpose\":"+控制计数(static_cast<std::uint64_t>(顶.表达用途))
+            +",\"items\":"+内容组+"]}";
+    }
+
     std::string 接收认知材料() {
         检查停止();
         const auto last=当前_.接收认知.读取最近观察();
@@ -1720,7 +1775,8 @@ public:
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
-                    + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null") + "}";
+                    + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null")
+                    + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null") + "}";
             }
         }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)

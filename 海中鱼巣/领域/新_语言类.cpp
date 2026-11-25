@@ -14,6 +14,7 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <charconv>
 #include <cwchar>
 #include <initializer_list>
 #include <limits>
@@ -6511,7 +6512,7 @@ auto 组织记录字段(接收语言句段解释& v){
     return std::tie(v.起始标量,v.结束标量,v.状态,v.图状态,v.缺口组,v.构式,v.主体关系,v.词条类型依据组,v.静态结构);
 }
 auto 组织记录字段(新接收语言解释内容& v){
-    return std::tie(v.来源场景,v.前置来源,v.语言节点,v.原文起点,v.原文终点,v.句段组);
+    return std::tie(v.来源场景,v.前置来源,v.语言节点,v.原文起点,v.原文终点,v.句段组,v.含义候选);
 }
 auto 组织记录字段(新接收场景信息& v){return std::tie(v.种类,v.来源消息,v.来源场景,v.交互场景,v.说话者,v.主体存在,v.主体概念,v.特征类型,
     v.值种类,v.准确整数,v.区间下界,v.区间上界,v.单位,v.特征概念,v.方向,v.招呼操作,v.目标存在,v.原文起点,v.原文终点,v.时刻);}
@@ -6646,7 +6647,7 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
         组织要求(tag==5);auto fs=组织记录字段(v);
         constexpr auto 字段数=std::tuple_size_v<decltype(fs)>;
         if constexpr(std::is_same_v<T,新语言问题定义>||std::is_same_v<T,新语言分界词段>
-            ||std::is_same_v<T,接收语言句段解释>)
+            ||std::is_same_v<T,接收语言句段解释>||std::is_same_v<T,新接收语言解释内容>)
             组织要求(children.size()==字段数||children.size()==字段数-1);
         else 组织要求(children.size()==字段数);
         std::size_t i=0;
@@ -6948,6 +6949,106 @@ constexpr std::int64_t 接收语言解释记录类型=112;
     }
 }
 
+const 接收语言已解释角色* 取静态角色(const 接收语言静态结构& 结构, 新语言知识参数角色 参数) {
+    const auto 项=std::ranges::find(结构.角色组, 参数, &接收语言已解释角色::参数);
+    return 项==结构.角色组.end() ? nullptr : &*项;
+}
+
+template<class T>
+const T* 静态角色值(const 接收语言已解释角色* 角色) {
+    return 角色 && 角色->值 ? std::get_if<T>(&*角色->值) : nullptr;
+}
+
+新表达特征值 静态特征值(const 语言图引用值* 类型, const 接收语言已解释角色* 角色) {
+    using C=新语言知识角色类别;
+    if (const auto* 概念=静态角色值<语言图引用值>(角色); 概念 && 概念->类别==C::特征概念)
+        return 新表达概念条件{概念->节点};
+    if (const auto* 数=静态角色值<语言图整数值>(角色); 数 && 类型 && 类型->类别==C::I64标量特征类型) {
+        std::int64_t 准确值=0;
+        const auto& 文=数->规范十进制;
+        const auto 解析=std::from_chars(文.data(),文.data()+文.size(),准确值);
+        if (解析.ec==std::errc{} && 解析.ptr==文.data()+文.size())
+            return 新类型化表达值{类型->节点,数->单位.value_or(稳定编码{}),准确值};
+    }
+    return 新表达指称{新明确未知{}};
+}
+
+std::optional<新语言含义网> 组织接收静态含义(const 新接收语言解释内容& 内容, const std::string& 固定原文) {
+    using C=新语言知识角色类别;
+    using P=新语言知识参数角色;
+    using O=新语言知识含义操作;
+    if (!std::in_range<std::int64_t>(内容.原文终点)) return {};
+
+    新语言含义网 网;
+    网.所属语言场景=内容.来源场景;
+    std::map<std::uint64_t,新匿名表达对象> 已称名对象;
+    std::vector<std::size_t> 字节边界;
+    const auto 称名原文=[&](std::uint64_t 起,std::uint64_t 末) {
+        if (字节边界.empty()) {
+            字节边界.push_back(0);
+            for (std::size_t 位置=0;位置<固定原文.size();) {
+                (void)读取已校验码点(固定原文,位置);
+                字节边界.push_back(位置);
+            }
+        }
+        if (末>=字节边界.size()) return std::string{};
+        return 固定原文.substr(字节边界[起],字节边界[末]-字节边界[起]);
+    };
+
+    for (const auto& 句 : 内容.句段组) {
+        if (!句.静态结构) continue;
+        const auto& 结构=*句.静态结构;
+        const auto* 主体角色=取静态角色(结构,P::主体);
+        const auto* 主体=静态角色值<语言图引用值>(主体角色);
+        const auto* 归类=静态角色值<语言图引用值>(取静态角色(结构,P::归类概念));
+        新静态含义单元 单元;
+        单元.主体=新明确未知{};
+        if (主体 && 主体->类别==C::存在) {
+            单元.主体=新绑定指称{新指称类别::存在,主体->节点,主体->来源概念.value_or(稳定编码{})};
+        } else if (主体角色 && 句.主体关系 && 句.主体关系->已确定
+            && 句.主体关系->所用构式==结构.所用构式
+            && 句.主体关系->起始标量==主体角色->起始标量 && 句.主体关系->结束标量==主体角色->结束标量) {
+            const auto& 关系=*句.主体关系;
+            if (关系.指代概念) {
+                const auto 前文=已称名对象.find(关系.对象起始标量);
+                if (前文!=已称名对象.end()) 单元.主体=前文->second;
+            } else if (归类 && 归类->类别==C::存在概念) {
+                const 新匿名表达对象 对象{static_cast<std::int64_t>(关系.对象起始标量),归类->节点};
+                已称名对象.emplace(关系.对象起始标量,对象);
+                单元.主体=对象;
+            } else if (auto 名称=称名原文(关系.起始标量,关系.结束标量); !名称.empty()) {
+                单元.主体=新名称描述指称{std::move(名称),{}};
+            }
+        }
+
+        if (结构.操作==O::概念归类) {
+            新概念归属谓项 谓项{新明确未知{}};
+            if (归类 && 归类->类别==C::存在概念)
+                谓项.概念=新绑定指称{新指称类别::概念,归类->节点,{}};
+            单元.谓项=std::move(谓项);
+        } else {
+            const auto* 类型=静态角色值<语言图引用值>(取静态角色(结构,P::特征类型));
+            新特征值谓项 谓项{新明确未知{},静态特征值(类型,取静态角色(结构,P::特征值))};
+            if (类型 && (类型->类别==C::正式特征类型 || 类型->类别==C::I64标量特征类型))
+                谓项.特征类型=新绑定指称{新指称类别::特征类型,类型->节点,{}};
+            单元.谓项=std::move(谓项);
+        }
+        const auto 编号=static_cast<std::int64_t>(网.内容项组.size());
+        网.内容项组.push_back({编号,std::move(单元),
+            {{static_cast<std::int64_t>(句.起始标量),static_cast<std::int64_t>(句.结束标量-句.起始标量)}},
+            {结构.所用构式},{}});
+    }
+    if (网.内容项组.empty()) return {};
+    if (网.内容项组.size()>1) {
+        新篇章组合 顺序;
+        for (const auto& 项 : 网.内容项组) 顺序.有序子项组.push_back(项.编号);
+        网.内容项组.push_back({static_cast<std::int64_t>(网.内容项组.size()),std::move(顺序),{},{},{}});
+    }
+    网.顶层项组.push_back({{},新表达用途::陈述,网.内容项组.back().编号});
+    核验含义网结构(网);
+    return 网;
+}
+
 bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, const 新语言前置来源信息& 来源,
     const 新接收语言解释场景绑定& 场景) {
     if (内容.来源场景 != 场景.场景() || 内容.前置来源 != 来源.节点 || !有效(内容.语言节点)
@@ -6980,10 +7081,11 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
                 || (结构.操作!=O::概念归类 && 结构.操作!=O::特征描述))
                 return false;
             std::set<std::int64_t> 角色编号;
+            std::set<新语言知识参数角色> 参数组;
             for (const auto& 角色 : 结构.角色组) {
                 using P=新语言知识参数角色;
                 if (!在段内(角色.起始标量,角色.结束标量) || !角色编号.insert(角色.角色编号).second
-                    || 角色.参数<P::主体 || 角色.参数>P::下级)
+                    || 角色.参数<P::主体 || 角色.参数>P::下级 || !参数组.insert(角色.参数).second)
                     return false;
                 if (!角色.值) continue;
                 if (const auto* 引用=std::get_if<语言图引用值>(&*角色.值)) {
@@ -7023,12 +7125,43 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
     std::set<稳定编码> 路径;
     auto 内容=组织读值<新接收语言解释内容>(读,读.引用(记录,组织键::定义),路径);
     组织要求(接收语言解释内容有效(内容,来源,场景));
+    if (内容.含义候选) {
+        const auto& 网=*内容.含义候选;
+        组织要求(!网.身份 && 网.所属语言场景==场景.场景() && std::in_range<std::int64_t>(内容.原文终点));
+        核验含义网结构(网);
+        const auto& 顶=网.顶层项组.front();
+        组织要求(顶.表达用途==新表达用途::陈述 && !顶.语言出现编号);
+        const 新篇章组合* 文本顺序=nullptr;
+        std::vector<std::int64_t> 静态项顺序;
+        auto 句=内容.句段组.begin();
+        for (const auto& 项 : 网.内容项组) {
+            if (const auto* 顺序=std::get_if<新篇章组合>(&项.内容)) {
+                组织要求(!文本顺序 && 顺序->种类==新篇章组合种类::文本顺序 && 项.编号==顶.内容引用);
+                文本顺序=顺序;
+                continue;
+            }
+            const auto* 静态=std::get_if<新静态含义单元>(&项.内容);
+            组织要求(静态 && 项.原文范围组.size()==1 && 项.所用知识组.size()==1
+                && (std::holds_alternative<新概念归属谓项>(静态->谓项)
+                    || std::holds_alternative<新特征值谓项>(静态->谓项)));
+            句=std::find_if(句,内容.句段组.end(),[](const auto& 数据){return 数据.静态结构.has_value();});
+            组织要求(句!=内容.句段组.end()
+                && 项.原文范围组.front()==新含义原文范围{static_cast<std::int64_t>(句->起始标量),
+                    static_cast<std::int64_t>(句->结束标量-句->起始标量)}
+                && 项.所用知识组.front()==句->静态结构->所用构式);
+            静态项顺序.push_back(项.编号);
+            ++句;
+        }
+        组织要求(std::none_of(句,内容.句段组.end(),[](const auto& 数据){return 数据.静态结构.has_value();}));
+        if (文本顺序) 组织要求(文本顺序->有序子项组==静态项顺序);
+        else 组织要求(静态项顺序.size()==1 && 静态项顺序.front()==顶.内容引用);
+    }
     return {记录,std::move(内容)};
 }
 } // namespace
 
 新语言分界调用结果<新接收语言解释信息> 新_语言类::保存接收语言解释(
-    const 新接收认知来源键& 来源键, const 新接收语言解释内容& 内容,
+    const 新接收认知来源键& 来源键, const 新接收语言解释内容& 请求内容,
     const 新_自然语言世界树类& 世界, const 新语言分界消息读取接口& 消息读取) {
     using S = 新语言分界工程状态;
     try {
@@ -7038,8 +7171,10 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
         const auto 场景状态=接收语言解释场景状态(场景结果);
         if (场景状态!=S::已完成) return {场景状态,{},{}};
         const auto& 场景=*场景结果.绑定;
-        if (!接收语言解释内容有效(内容,*来源.信息,场景) || !是语言节点(内容.语言节点))
+        if (!接收语言解释内容有效(请求内容,*来源.信息,场景) || !是语言节点(请求内容.语言节点))
             return {S::输入拒绝,{},{}};
+        auto 内容=请求内容;
+        内容.含义候选=组织接收静态含义(内容,来源.信息->固定UTF8原文);
 
         std::lock_guard 锁(新语言互斥);
         if (!有效(组织句柄.front())) return {S::未初始化,{},{}};
