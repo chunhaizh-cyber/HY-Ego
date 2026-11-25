@@ -179,6 +179,13 @@ struct 语言图限定主体定位结果 final {
 void 合并词条类别共识(std::optional<std::vector<新语言词条类型依据>>&,
     std::vector<新语言词条类型依据>);
 
+struct 明确整数短答解释结果 final {
+    基础语言输入状态 状态=基础语言输入状态::结构未支持;
+    std::optional<语言图整数值> 值;
+};
+明确整数短答解释结果 解释明确整数短答(const std::string&,稳定编码,
+    const 新_语言类&,const 新_词类&);
+
 struct 带原文定位的语言图候选 final {
     语言图含义材料 含义;
     std::vector<语言图角色原文定位> 角色定位组;

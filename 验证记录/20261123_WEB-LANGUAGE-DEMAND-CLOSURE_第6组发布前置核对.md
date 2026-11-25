@@ -1261,3 +1261,16 @@ Release x64 编译链接退出 0，0 警告、0 错误。259 项构建输入在�
 - 首轮编译的两处 C2039 来自可选回执旧式成员访问。改为取实际回执，并处理出站正文复制阶段的资源失败。最终 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入在构建期间无变化。EXE SHA256 1A8890EDD96ECA06668DF6B1D1AC90CE1687218CAA2C3C309EA1B497800590FE。[首轮编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-release-20261126-044516/release.log) · [最终构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-final-20261126-045146/result.json) · [最终编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-final-20261126-045146/release.log)
 
 后继从实际网页被回复的 O 和同一正式发送回执确定明确回复范围。自然语言输入可保存短答值、正式单位及明确回复材料；问题方按实收语境、正式被问栏和适配类型决定答案，限定同一 Q，随后由父任务改同一个 D。原话的水温事实、具体业务问句、实际回复、同 D 的 40℃ 与当前水温、正式承接和七组同构建运行仍待逐项取证。本轮未运行应用或 Chrome。
+
+
+#### 56E25 明确整数短答与正式回复传输
+
+实施基线 b2c85c6fe00f1b30407032414c3c8066f869ff5b，统一设计 v1.239 第 10.153 节，统一计划 v2.201，计划 blob 2b7c86ae667ee118d846c28f73f9e703f9e0a482。
+
+- 共用正式回复读口取得实际 M、被明确回复的 O 和同一输出的实际发送回执。原文分界答复保持原有分派优先级。整数短答复用普通含义解释的十进制切分及规范化，经正式语言单位读口取单位。
+- 语言所有者复用按接收来源场景、按 M 唯一的保存及读取。用三条正式消息快照作 L1 发布前提。追加短答种类及传输定位，旧记录兼容。控制面 explicitIntegerReply 按原 M 从正式所有者获取场景、记录节点、原 Q、O、发送身份、整数值与单位。
+- 材料尚无主体和特征类型，不进入原值陈述及答案扫描。问题方后继应按原 Q、实际被问字段、说话者、场景、时序及单位决定，父任务仍沿需求所有者写入同一 D。
+
+实际工程 Release x64 编译链接退出 0，0 错误、0 警告。259 项构建输入未变化。产物 SHA256 44564C0A137EB3C0775BCDB5ECE0A86DFE6FA7CA0C2D731EB0D858B2A2D3D3A7。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e25-explicit-integer-reply-release-20261126-050249/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e25-explicit-integer-reply-release-20261126-050249/release.log)
+
+本轮未运行应用、Chrome 或测试。真实来源读回、问题方采用、同 D 的写回及杯中水当前值、正式承接和七组统一验收待取证。

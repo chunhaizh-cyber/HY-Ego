@@ -82,7 +82,7 @@ struct 新语言分界词段 final {
     新语言分界段用途 用途 = 新语言分界段用途::词面;
     friend bool operator==(const 新语言分界词段&, const 新语言分界词段&) = default;
 };
-struct 新语言分界回复事实 final {
+struct 新语言明确回复事实 final {
     新外设消息信息 回复, 输出, 实际发送;
     稳定编码 说话者;
     std::vector<基础联合节点快照> 正式消息保护;

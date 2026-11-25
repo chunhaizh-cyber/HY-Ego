@@ -1993,6 +1993,19 @@ public:
                     + ",\"localObjects\":" + 局部对象JSON + "}";
             }
         }
+        std::string 短答JSON="null";
+        if(有效(item.M) && item.阶段==接收需求认知阶段::已保存场景信息){
+            检查停止();
+            const auto 信息=当前_.世界事实.语言服务.按来源消息读取接收场景信息(item.M);
+            if(信息 && 信息->内容.种类==新接收场景信息种类::明确整数短答){
+                const auto& 值=信息->内容;
+                const auto& 传输=*值.回复传输;
+                短答JSON="{\"record\":"+控制编码(信息->陈述节点)+",\"sourceScene\":"+控制编码(值.来源场景)
+                    +",\"message\":"+控制编码(值.来源消息)+",\"question\":"+控制编码(传输.关联问题)
+                    +",\"output\":"+控制编码(传输.输出消息)+",\"send\":"+控制编码(传输.实际发送)
+                    +",\"integer\":"+字符串(*值.准确整数)+",\"unit\":"+控制编码(值.单位)+"}";
+            }
+        }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
             +",\"speaker\":"+控制编码(item.H)+",\"scene\":"+控制编码(item.S)
@@ -2000,7 +2013,8 @@ public:
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
             +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入
-            +",\"admittedInterpretation\":"+正式词段解释+",\"languageInterpretation\":"+被动句段解释+"}";
+            +",\"admittedInterpretation\":"+正式词段解释+",\"languageInterpretation\":"+被动句段解释
+            +",\"explicitIntegerReply\":"+短答JSON+"}";
         检查停止();
         return JSON;
     }

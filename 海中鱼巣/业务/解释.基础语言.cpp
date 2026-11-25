@@ -4115,6 +4115,16 @@ bool 解释图整数(std::string& 原文) {
     if(起==原文.size()||!std::all_of(原文.begin()+起,原文.end(),[](char 字){return 字>='0'&&字<='9';}))return false;
     const auto 非零=原文.find_first_not_of('0',起);原文=非零==std::string::npos ? "0" : (负 ? "-" : "")+原文.substr(非零);return true;
 }
+std::optional<std::pair<std::string,std::size_t>> 切分图整数(const std::string& 文本,
+    const 原文标量& 原文,std::size_t 起,std::size_t 末) {
+    auto 数字末=起;
+    if (数字末<末 && 原文.码点[数字末]==U'-') ++数字末;
+    while (数字末<末 && 原文.码点[数字末]>=U'0' && 原文.码点[数字末]<=U'9') ++数字末;
+    auto 数字=文本.substr(原文.字节边界[起],原文.字节边界[数字末]-原文.字节边界[起]);
+    if (!解释图整数(数字)) return {};
+    return std::pair{std::move(数字),数字末};
+}
+
 std::optional<std::variant<语言图引用值, 语言图整数值>> 接收静态角色值(const 语言图绑定值* 值) {
     if (!值) return {};
     if (const auto* 引用 = std::get_if<语言图引用值>(值)) return *引用;
@@ -4387,12 +4397,9 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             std::vector<语言图绑定值> 候选;
             std::optional<std::string> 准确整数;
             if (角色.种类 == 新语言知识角色种类::准确值) {
-                auto 数字末 = 起;
-                if (数字末 < 末 && 原文->码点[数字末] == U'-') ++数字末;
-                while (数字末 < 末 && 原文->码点[数字末] >= U'0' && 原文->码点[数字末] <= U'9')
-                    ++数字末;
-                auto 数字 = 片段(起, 数字末);
-                if (!解释图整数(数字) || !连续词面(起, 数字末)) return 候选;
+                auto 切分=切分图整数(请求.固定原文,*原文,起,末);
+                if (!切分 || !连续词面(起,切分->second)) return 候选;
+                auto [数字,数字末]=std::move(*切分);
                 if (数字末 == 末) {
                     候选.push_back(语言图整数值{std::move(数字), {}});
                     return 候选;
@@ -5437,6 +5444,47 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
     } catch (S 状态) { return {状态}; }
     catch (const std::bad_alloc&) { return {S::资源失败}; }
     catch (const std::length_error&) { return {S::资源失败}; }
+}
+
+明确整数短答解释结果 解释明确整数短答(const std::string& 文本,稳定编码 语言节点,
+    const 新_语言类& 语言,const 新_词类& 词) {
+    using S=基础语言输入状态;
+    try {
+        const auto 原文=解码标准UTF8(文本);
+        if(!原文 || !有效(语言节点)) return {};
+        const auto 空白=[](std::uint32_t 字) {
+            return 字==U' ' || 字==U'\t' || 字==U'\r' || 字==U'\n' || 字==0x3000;
+        };
+        std::size_t 起=0,末=原文->码点.size();
+        while(起<末 && 空白(原文->码点[起])) ++起;
+        while(起<末 && 空白(原文->码点[末-1])) --末;
+        if(起<末 && (原文->码点[末-1]==0x3002 || 原文->码点[末-1]==U'.')) --末;
+        while(起<末 && 空白(原文->码点[末-1])) --末;
+        if(起>=末) return {};
+        auto 切分=切分图整数(文本,*原文,起,末);
+        if(!切分) return {};
+        auto [数字,单位起]=std::move(*切分);
+        while(单位起<末 && 空白(原文->码点[单位起])) ++单位起;
+        if(单位起==末) return {};
+        const auto 单位词面=文本.substr(原文->字节边界[单位起],原文->字节边界[末]-原文->字节边界[单位起]);
+        const auto 词条=词.按规范化词面查询(语言节点,严格UTF8字节精确规范化合同节点,单位词面);
+        if(词条.状态==新词条查询状态::资源失败) return {S::资源失败,{}};
+        if(词条.状态==新词条查询状态::未找到) return {};
+        if(词条.状态==新词条查询状态::结构不一致) return {S::内部不一致,{}};
+        if(词条.状态!=新词条查询状态::已找到 || !词条.信息) return {S::引用不可读,{}};
+        const auto 单位=语言.按词条读取计量单位(语言节点,词条.信息->节点);
+        switch(单位.状态) {
+        case 新语言知识状态::已完成:
+            if(!单位.匹配节点) return {S::内部不一致,{}};
+            return {S::已形成唯一含义,语言图整数值{std::move(数字),单位.匹配节点}};
+        case 新语言知识状态::未找到:return {};
+        case 新语言知识状态::读取漂移:return {S::读取漂移,{}};
+        case 新语言知识状态::工程未完成:return {S::资源失败,{}};
+        case 新语言知识状态::内部不一致:return {S::内部不一致,{}};
+        default:return {S::引用不可读,{}};
+        }
+    } catch(const std::bad_alloc&) { return {S::资源失败,{}};}
+      catch(const std::length_error&) { return {S::资源失败,{}};}
 }
 
 语言图解释结果 解释单句含义图(const 语言图解释请求& 请求,const 新_语言类& 语言,const 新_词类& 词,
