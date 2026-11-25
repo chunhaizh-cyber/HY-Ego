@@ -857,3 +857,13 @@ PID 40296 资源释放后，56D4 候选按原排队运行，限定特征类型�
 序列 158 的工作 310 再次召回同一候选 51431，序列 162 的工作 316 再次完成条件筹办，方法总体条件具备。当前正式快照仍未读回配对采用、X 或正式词典材料。 [第三次工作流转](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/same-word-dictionary-milestones.json)
 
 诊断构建沿原发布源码 1699e6d5d 的 249 项输入，复用现有筹办与绑定诊断配置。首次额外启用状态前提宏时缺少其跨文件符号，链接失败。移除该宏后，Release x64 编译链接为 0 错误、0 警告，输入、运行种子与 10 项词典文件摘要一致。以独立目录保存产物。已排程在当前普通应用正常结束且同一任务没有 X、没有 Q 的明确材料等待超时后接续诊断。 [诊断构建核同](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-inputs.json) [接续条件](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-run-queue.json)
+
+#### 56D7 正式筹办回转的诊断分界
+
+普通轮序列 168 再次读到 T50671 回到查找方法。序列 172 的工作 336 重新召回同一方法，序列 178 的工作 344 再次完成条件筹办。 序列 188 的检查工作 365 又报任务状态已变化，同 T50671 回到查找方法。同一普通页的后台采集额外调用全量任务调度读取。16:12:40 的调用栈采到采集线程在该入口等任务锁，序列 175 的分项快照记录本轮全量控制采集约 41 秒。因此控制页允许暂不可用或滞后，正式 X 和任务状态仍以对应任务回执确认。该采样不足以解释原任务为何回到查找方法。 [任务里程碑](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/same-word-dictionary-milestones.json) [控制采集窗口](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/control-task-read-diagnostics-161446.json) [只读线程样本](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/repeat-conditional-task-stack-161240.txt)
+
+现行源码确认任务服务在条件筹办中已经选择方法与配对。管理线程通过任务服务独立读回筹办材料，自我随后又调用同一服务重选一次。重选返回任务状态变化时，管理线程会登记等待复核。执行方向读取前提变化也可以通往同一等待出口。诊断以同一 T 和工作编号对齐管理线程独立选择、自我裁决、方向核验和等待放行。若正式日志确认回转发生在自我重选，首选复用现有任务所有者在独立筹办中取得的完整本能采用材料，保留消息身份、采纳方向和实际动作前核验。若证据指向执行方向或更早的工作线程结果，按该断点处理。以上是同一计划内的候选修正，尚未变更 DTO 或业务源码。 [任务服务选择](../海中鱼巣/领域/新_任务类.cpp#L23562) [管理线程独立筹办](../海中鱼巣/线程/新_任务管理线程类.cpp#L3596) [自我分类时重选](../海中鱼巣/线程/新_自我线程类.cpp#L3909)
+
+#### 56D7 普通轮正常退出与同源码诊断接续
+
+正式 PID 23760 的浏览器等待 W45622、D50527、T50671 的正式查阅材料 Q 超时。期间任务完成多轮条件筹办，又回到方法查找，预期的选定配对、实际 X 及 Q 未取得控制读回。页面和浏览器正常结束，应用退出 0、未强制回收，原监听 52739 已释放。浏览器取证脚本退出 1，表明本轮材料断言未通过。当前同源码的诊断 PID 3152 已通过普通装配启动，于 16:23:02 接续，继续按其本轮真实编号核对筹办和执行。原第 6 组的正式业务问题、同 D 写回与当前水温独立读回仍未验收。 [正式进程退出](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/exit.json) [浏览器超时](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/browser-error.json) [诊断进程](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/process.json)
