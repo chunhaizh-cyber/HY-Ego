@@ -13,6 +13,7 @@
 #include "../领域/概念_存在类.h"
 #include "../领域/概念_特征类.h"
 #include "../领域/新_存在类.h"
+#include "../领域/前置语言输入.数据.h"
 #include "表达.基础语言.h"
 
 namespace 海中鱼巣 {
@@ -183,6 +184,7 @@ struct 语言图解释结果 final {
     std::vector<语言名称候选读取依据> 名称候选依据组;
     std::vector<语言图静态角色缺口> 静态角色缺口组;
     std::vector<语言图限定主体绑定> 限定主体绑定组;
+    std::vector<新语言词条类型依据> 词条类型依据组;
 };
 语言图解释结果 解释单句含义图(
     const 语言图解释请求&,const 新_语言类&,const 新_词类&,

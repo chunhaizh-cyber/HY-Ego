@@ -30,6 +30,14 @@ struct 新前置有效分界目标 final {
     friend bool operator==(const 新前置有效分界目标&,const 新前置有效分界目标&)=default;
 };
 enum class 新语言知识角色类别 : std::uint8_t;
+// 来源范围内的构式类别依据，不表示已经建立概念或名称关系。
+struct 新语言词条类型依据 final {
+    std::uint64_t 起始标量, 结束标量;
+    稳定编码 词条;
+    新语言知识角色类别 所需类别;
+    std::vector<稳定编码> 构式依据组;
+    friend bool operator==(const 新语言词条类型依据&,const 新语言词条类型依据&)=default;
+};
 struct 新前置普通词条名称缺口 final {
     稳定编码 词条, 所用知识;
     新语言知识角色类别 所需类别;

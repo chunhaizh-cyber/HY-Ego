@@ -76,6 +76,7 @@ struct 接收语言句段解释 final {
     std::vector<新前置语言缺口> 缺口组;
     std::optional<语言基础统一构式> 构式{};
     std::optional<接收语言主体关系> 主体关系{};
+    std::vector<新语言词条类型依据> 词条类型依据组{};
     friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
 };
 struct 接收需求认知观察 final {

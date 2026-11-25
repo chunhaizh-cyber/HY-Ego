@@ -1601,6 +1601,21 @@ public:
                         + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
                         + ",\"nodes\":" + 相关节点 + "]}";
                 }
+                std::string 类型依据组 = "[";
+                for (const auto& 依据 : 句.词条类型依据组) {
+                    检查停止();
+                    std::string 构式组 = "[";
+                    for (const auto 构式 : 依据.构式依据组) {
+                        if (构式组.size() != 1) 构式组 += ',';
+                        构式组 += 控制编码(构式);
+                    }
+                    if (类型依据组.size() != 1) 类型依据组 += ',';
+                    类型依据组 += "{\"start\":" + 控制计数(依据.起始标量)
+                        + ",\"end\":" + 控制计数(依据.结束标量)
+                        + ",\"word\":" + 控制编码(依据.词条)
+                        + ",\"category\":" + 控制计数(static_cast<std::uint64_t>(依据.所需类别))
+                        + ",\"knowledge\":" + 构式组 + "]}";
+                }
                 std::string 主体关系 = "null";
                 if (句.主体关系) {
                     const auto& 关系 = *句.主体关系;
@@ -1619,6 +1634,7 @@ public:
                     + ",\"construction\":" + (句.构式 ? 控制计数(static_cast<std::uint64_t>(*句.构式)) : "null")
                     + ",\"boundaryConflict\":" + 控制布尔(句.图状态 == 基础语言输入状态::正式词段句界冲突)
                     + ",\"subjectReference\":" + 主体关系
+                    + ",\"termTypeEvidence\":" + 类型依据组 + "]"
                     + ",\"gaps\":" + 缺口组 + "]}";
             }
             return 句组 + "]";

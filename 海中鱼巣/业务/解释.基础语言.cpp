@@ -4080,6 +4080,25 @@ bool 解释静态陈述图知识(const 新语言知识定义& 定义) {
         && 根.作用域 == 新语言知识作用域::普通陈述
         && (根.操作 == 新语言知识含义操作::概念归类 || 根.操作 == 新语言知识含义操作::特征描述);
 }
+std::optional<新语言知识角色类别> 单一词条概念类别(const 新语言知识角色定义& 角色) {
+    using C = 新语言知识角色类别;
+    using K = 新语言知识角色种类;
+    if (角色.必要约束组.size() != 1) return {};
+    std::optional<C> 所需;
+    for (auto 类别 : 角色.必要约束组.front().允许类别组) {
+        if (角色.种类 == K::特征类型引用
+            && (类别 == C::正式特征类型 || 类别 == C::I64标量特征类型)) {
+            类别 = C::正式特征类型;
+        } else if (角色.种类 != K::概念引用
+            || (类别 != C::存在概念 && 类别 != C::特征概念)) {
+            return {};
+        }
+        if (所需 && *所需 != 类别) return {};
+        所需 = 类别;
+    }
+    return 所需;
+}
+
 bool 解释招呼图知识(const 新语言知识定义& 定义) {
     if(定义.目标.目的!=新语言知识表达目的::招呼||!定义.目标.含义图||定义.目标.含义图->节点组.size()!=1)return false;
     const auto& 根=定义.目标.含义图->节点组.front();
@@ -4458,6 +4477,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
             return 候选;
         };
         std::set<std::tuple<稳定编码,std::size_t,std::size_t>> 活动;
+        bool 静态分支截断 = false;
         const auto 解析=[&](auto&& 自身,稳定编码 知识编号,std::size_t 起,std::size_t 末,std::vector<std::int64_t> 路径, bool 允许角色不足)->std::vector<图短语结果> {
             std::vector<图短语结果> 成果;if(!知识表.contains(知识编号)||起>=末||!活动.emplace(知识编号,起,末).second)return 成果;
             struct 离域清理 final {decltype(活动)& 集合;std::tuple<稳定编码,std::size_t,std::size_t> 键;~离域清理(){集合.erase(键);}} 离域{活动,{知识编号,起,末}};
@@ -4515,7 +4535,10 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 return 片段(端,端+词面->码点.size())==已读->second.规范化词面;
             };
             const auto 匹配=[&](auto&& 步进,std::size_t 项位置,std::size_t 游标,图短语结果 当前)->void {
-                if (允许角色不足 && 成果.size() >= 2) return;
+                if (允许角色不足 && 成果.size() >= 2) {
+                    静态分支截断 = true;
+                    return;
+                }
                 if (项位置 == 项组.size()) {
                     if (游标 != 末 || (允许角色不足 && !可保留角色不足(当前))) return;
                     if (允许角色不足 && std::any_of(成果.begin(), 成果.end(), [&](const auto& 已取) {
@@ -4746,6 +4769,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         std::map<std::string,std::vector<语言图限定主体绑定>> 限定绑定按语义;
         std::optional<图短语结果> 唯一静态角色不足;
         bool 静态角色不足多义 = false;
+        std::optional<std::vector<新语言词条类型依据>> 共识;
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
         观察.记录(L"全部根解析与装配前", -1, 根知识.size());
 #endif
@@ -4926,15 +4950,60 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         if (结果.完整候选组.empty() && 请求.读取静态角色缺口
             && 请求.对象绑定组.empty() && 请求.正式信息绑定组.empty()) {
             for (const auto 身份 : 根知识) {
-                if (!解释静态陈述图知识(知识表.at(身份)->定义)) continue;
+                const auto& 定义 = 知识表.at(身份)->定义;
+                if (!解释静态陈述图知识(定义)) continue;
+                静态分支截断 = false;
                 auto 不足组 = 解析(解析, 身份, 0, 长度, {}, true);
                 if (不足组.empty()) continue;
-                if (不足组.size() > 1 || 唯一静态角色不足) {
-                    静态角色不足多义 = true;
-                    唯一静态角色不足.reset();
+
+                const auto& 根 = 定义.目标.含义图->节点组.front();
+                for (auto& 候选 : 不足组) {
+                    std::vector<新语言词条类型依据> 本构式依据;
+                    for (const auto& 缺口 : 候选.静态角色缺口组) {
+                        if (!缺口.词条) continue;
+                        const auto 名称位置 = 名称集合保护.find(*缺口.词条);
+                        if (名称位置 == 名称集合保护.end()
+                            || 名称位置->second.first != 概念名称关系查询状态::未找到) continue;
+                        const auto 角色 = std::find_if(根.角色组.begin(), 根.角色组.end(),
+                            [&](const auto& 项) { return 项.局部编号 == 缺口.角色.角色编号; });
+                        if (角色 == 根.角色组.end()) continue;
+                        if (const auto 类别 = 单一词条概念类别(*角色)) {
+                            本构式依据.push_back({缺口.起始标量, 缺口.结束标量,
+                                *缺口.词条, *类别, {身份}});
+                        }
+                    }
+
+                    if (!共识) {
+                        共识 = std::move(本构式依据);
+                    } else {
+                        std::erase_if(*共识, [&](const auto& 原依据) {
+                            const auto 同类 = std::find_if(本构式依据.begin(), 本构式依据.end(),
+                                [&](const auto& 新依据) {
+                                    return 原依据.起始标量 == 新依据.起始标量
+                                        && 原依据.结束标量 == 新依据.结束标量
+                                        && 原依据.词条 == 新依据.词条
+                                        && 原依据.所需类别 == 新依据.所需类别;
+                                });
+                            return 同类 == 本构式依据.end();
+                        });
+                        for (auto& 依据 : *共识) {
+                            if (依据.构式依据组.back() != 身份) 依据.构式依据组.push_back(身份);
+                        }
+                    }
+
+                    if (唯一静态角色不足 || 静态角色不足多义) {
+                        静态角色不足多义 = true;
+                        唯一静态角色不足.reset();
+                    } else {
+                        唯一静态角色不足 = std::move(候选);
+                    }
+                }
+                if (静态分支截断) {
+                    // 余下分支尚未核对，无法证明同一原文位置的类别共识。
+                    共识.reset();
                     break;
                 }
-                唯一静态角色不足 = std::move(不足组.front());
+                if (静态角色不足多义 && 共识 && 共识->empty()) break;
             }
         }
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
@@ -5060,6 +5129,7 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                     : 请求.对象绑定组.empty() ? 状态类::缺规则 : 状态类::输入拒绝;
                 结果.未覆盖范围组.push_back({0, 长度});
             }
+            if (共识) 结果.词条类型依据组 = std::move(*共识);
             return 结果;
         }
         bool 待绑=false;for(const auto& 图:结果.完整候选组)for(const auto& 出现:图.出现组) {
@@ -5179,7 +5249,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         r.状态=依据.失败==采集状态::读取漂移 ? 基础语言输入状态::读取漂移:
             依据.失败==采集状态::工程未完成 ? 基础语言输入状态::资源失败:
             依据.失败==采集状态::内部不一致 ? 基础语言输入状态::内部不一致:基础语言输入状态::引用不可读;
-        r.完整候选组.clear();r.图角色原文定位组.clear();r.对象绑定保护.clear();r.静态角色缺口组.clear();return r;
+        r.完整候选组.clear();r.图角色原文定位组.clear();r.对象绑定保护.clear();
+        r.静态角色缺口组.clear();r.词条类型依据组.clear();return r;
     }
     if(r.状态!=基础语言输入状态::资源失败&&r.状态!=基础语言输入状态::工程未完成
         &&r.状态!=基础语言输入状态::内部不一致&&r.状态!=基础语言输入状态::读取漂移) {
