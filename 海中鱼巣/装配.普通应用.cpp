@@ -1642,22 +1642,41 @@ public:
                         [](const auto& 项){return 项.用途==新语言分界段用途::分隔;}))+"}";
             }
         }
-        const auto 句组JSON = [&](const std::vector<接收语言句段解释>& 句段组) {
+        const auto 句组JSON = [&](const std::vector<接收语言句段解释>& 句段组,
+            std::optional<稳定编码> 正式前置来源 = {}) {
             std::string 句组 = "[";
             for (const auto& 句 : 句段组) {
                 检查停止();
                 std::string 缺口组 = "[";
                 for (const auto& 缺口 : 句.缺口组) {
                     检查停止();
-                    std::string 相关节点 = "[";
+                    std::string 相关节点 = "[", 待读概念 = "[";
                     for (const auto 节点 : 缺口.已取得相关节点) {
                         if (相关节点.size() != 1) 相关节点 += ',';
                         相关节点 += 控制编码(节点);
+                        if (!正式前置来源 || 缺口.种类 != 新前置语言缺口种类::名称材料不足) continue;
+                        检查停止();
+                        const auto 读取 = 当前_.世界事实.存在概念服务.读取待完善存在概念(节点);
+                        if (读取.状态 != 待完善存在概念状态::已读取 || !读取.信息) continue;
+                        const auto& 概念 = *读取.信息;
+                        const auto& 来源 = 概念.来源;
+                        if (来源.前置来源 != *正式前置来源
+                            || 来源.起始标量 != 缺口.起始标量 || 来源.结束标量 != 缺口.结束标量) continue;
+                        if (待读概念.size() != 1) 待读概念 += ',';
+                        待读概念 += "{\"id\":" + 控制编码(概念.节点)
+                            + ",\"root\":" + 控制编码(概念.所属存在根)
+                            + ",\"source\":" + 控制编码(来源.前置来源)
+                            + ",\"word\":" + 控制编码(来源.词条)
+                            + ",\"construction\":" + 控制编码(来源.构式)
+                            + ",\"start\":" + 控制计数(来源.起始标量)
+                            + ",\"end\":" + 控制计数(来源.结束标量) + "}";
                     }
                     if (缺口组.size() != 1) 缺口组 += ',';
                     缺口组 += "{\"kind\":" + 控制计数(static_cast<std::uint64_t>(缺口.种类))
                         + ",\"start\":" + 控制计数(缺口.起始标量) + ",\"end\":" + 控制计数(缺口.结束标量)
-                        + ",\"nodes\":" + 相关节点 + "]}";
+                        + ",\"nodes\":" + 相关节点 + "]";
+                    if (正式前置来源) 缺口组 += ",\"pendingExistenceConcepts\":" + 待读概念 + "]";
+                    缺口组 += '}';
                 }
                 std::string 类型依据组 = "[";
                 for (const auto& 依据 : 句.词条类型依据组) {
@@ -1904,7 +1923,7 @@ public:
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
-                    + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组) : "null")
+                    + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组, 前置来源) : "null")
                     + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
                     + ",\"localObjects\":" + 局部对象JSON + "}";

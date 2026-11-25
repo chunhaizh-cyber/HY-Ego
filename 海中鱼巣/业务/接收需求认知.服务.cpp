@@ -359,6 +359,54 @@ struct 认知依赖 final {
     概念_特征类& 特征概念;概念_二次特征类& 二次概念;新_存在类& 存在;
     新_特征值类& 特征值;新_特征类& 特征;新_场景类& 现实场景;新_需求类& 需求;
 };
+void 记录待完善存在归类概念(认知依赖& d, const 新语言前置来源信息& 来源,
+    const 语言基础统一输入结果& 解释, 接收语言句段解释& 句, std::stop_token stop) {
+    using O = 新语言知识含义操作;
+    using P = 新语言知识参数角色;
+    using K = 新语言知识角色种类;
+    using C = 新语言知识角色类别;
+    using N = 概念名称关系查询状态;
+    using S = 待完善存在概念状态;
+    if (!句.静态结构 || 句.静态结构->操作 != O::概念归类) return;
+
+    for (const auto& 角色 : 解释.静态角色缺口组) {
+        if (角色.知识节点 != 句.静态结构->所用构式 || 角色.操作 != O::概念归类
+            || 角色.参数 != P::归类概念 || 角色.种类 != K::概念引用
+            || 角色.类别 != C::存在概念 || !角色.词条) continue;
+        const auto 开始 = 句.起始标量 + 角色.起始标量;
+        const auto 结束 = 句.起始标量 + 角色.结束标量;
+        const auto 缺口 = std::ranges::find_if(句.缺口组, [&](const auto& 项) {
+            return 项.种类 == 新前置语言缺口种类::名称材料不足
+                && 项.起始标量 == 开始 && 项.结束标量 == 结束
+                && std::ranges::find(项.已取得相关节点, 角色.知识节点) != 项.已取得相关节点.end()
+                && std::ranges::find(项.已取得相关节点, *角色.词条) != 项.已取得相关节点.end();
+        });
+        if (缺口 == 句.缺口组.end()) continue;
+
+        检查认知停止(stop);
+        const auto 名称 = d.名称.读取词条名称候选保护(*角色.词条);
+        switch (名称.状态) {
+        case N::已找到: continue;
+        case N::未找到: break;
+        case N::依赖不存在: case N::依赖已变化: case N::读取漂移: 漂移();
+        case N::资源失败: case N::读取未完成: case N::工程未完成: 资源();
+        default: throw std::logic_error("pending concept source name lookup inconsistent");
+        }
+        const auto 身份 = d.存在概念.建立或取得待完善存在概念(
+            {来源.节点, *角色.词条, 角色.知识节点, 开始, 结束});
+        switch (身份.状态) {
+        case S::已建立: case S::已复用:
+            if (!身份.信息) throw std::logic_error("pending existence concept receipt missing");
+            缺口->已取得相关节点.push_back(身份.信息->节点);
+            break;
+        case S::入口拒绝: break;
+        case S::前提已变化: 漂移();
+        case S::资源失败: case S::依赖未就绪: 资源();
+        default: throw std::logic_error("pending existence concept publication inconsistent");
+        }
+    }
+}
+
 bool 取得欠缺的可信词头(认知依赖& d, const std::shared_ptr<const 离线词典数据源>& 词典,
     稳定编码 语言, const std::string& 原句, const 语言基础统一输入结果& 解释, std::stop_token stop) {
     if (!词典 || !解释.静态结构 || 解释.静态角色缺口组.empty()) return false;
@@ -2109,6 +2157,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     req.固定原文 = 句段.句面原文;
                     const auto 解释 = 解释当前句();
                     auto& 句 = 解释组.emplace_back(记录句段解释(解释, 句段.全文范围));
+                    记录待完善存在归类概念(d, 固定来源, 解释, 句, stop);
                     主体观察.记录(解释, req.语言节点, d.名称, d.语言世界, 固定来源, 句);
                 }
                 out.句段解释 = std::move(解释组);
@@ -2192,6 +2241,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             } else if (parsed.状态 != 语言场景基础输入状态::输入拒绝) {
                 确认语言场景();
                 out.句段解释 = {记录句段解释(parsed, 整句)};
+                记录待完善存在归类概念(d, 固定来源, parsed, out.句段解释.front(), stop);
                 接收篇章主体观察 主体观察;
                 主体观察.记录(parsed, req.语言节点, d.名称, d.语言世界, 固定来源, out.句段解释.front());
                 if (parsed.静态结构 || (!parsed.含义 && parsed.完整候选组.empty()))

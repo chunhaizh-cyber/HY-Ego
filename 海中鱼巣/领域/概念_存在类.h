@@ -277,6 +277,28 @@ struct 存在概念信息 final {
         const 存在概念信息&) = default;
 };
 
+enum class 待完善存在概念状态 : std::uint8_t {
+    已建立 = 1, 已复用, 已读取, 未找到, 入口拒绝,
+    依赖未就绪, 前提已变化, 结构不一致, 资源失败
+};
+
+struct 待完善存在概念来源 final {
+    稳定编码 前置来源, 词条, 构式;
+    std::size_t 起始标量, 结束标量;
+    friend bool operator==(const 待完善存在概念来源&, const 待完善存在概念来源&) = default;
+};
+
+struct 待完善存在概念信息 final {
+    稳定编码 节点, 所属存在根;
+    待完善存在概念来源 来源;
+};
+
+struct 待完善存在概念结果 final {
+    待完善存在概念状态 状态;
+    std::optional<待完善存在概念信息> 信息;
+    std::vector<基础联合节点快照> 完整保护组;
+};
+
 struct 普通存在概念定义保护结果 final {
     正式概念读取状态 状态=正式概念读取状态::非本提供者概念;
     std::optional<存在概念信息> 信息;
@@ -567,6 +589,10 @@ public:
     // 调用者负责名称关系与按名称复用；本入口每次建立一个新的抽象概念。
     存在概念建立结果 建立先天类别存在概念(
         const std::vector<稳定编码>& 具体特征概念组) noexcept;
+
+    待完善存在概念结果 建立或取得待完善存在概念(
+        const 待完善存在概念来源& 来源) noexcept;
+    待完善存在概念结果 读取待完善存在概念(稳定编码 节点) const noexcept;
 
     std::optional<存在概念信息> 获取存在概念(
         稳定编码 概念节点) const noexcept;
