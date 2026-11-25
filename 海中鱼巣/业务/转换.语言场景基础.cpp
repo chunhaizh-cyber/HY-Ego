@@ -968,7 +968,7 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释前");
 #endif
-    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组},lang,words,names,es,fs,instances);
+    const auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组,q.待完善概念词用组},lang,words,names,es,fs,instances);
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
 #endif

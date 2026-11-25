@@ -45,6 +45,13 @@ enum class 新语言知识含义操作 : std::uint8_t;
 enum class 新语言知识参数角色 : std::uint8_t;
 
 // 本次语境从正式场景声明及固定原文取得的称名。
+struct 语言场景待完善概念词用 final {
+    稳定编码 概念节点, 词条, 构式;
+    std::int64_t 角色编号;
+    friend bool operator==(const 语言场景待完善概念词用&,
+        const 语言场景待完善概念词用&) = default;
+};
+
 struct 语言场景局部称名 final {
     稳定编码 存在节点;
     std::string 词面;

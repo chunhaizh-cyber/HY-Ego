@@ -1920,11 +1920,29 @@ public:
                     }
                     局部对象JSON += ']';
                 }
+                std::string 部分成文JSON = "null";
+                if (已保存 && item.部分成文 && item.部分成文->解释记录 == 正式.信息->记录节点
+                    && item.句段解释 == 正式.信息->内容.句段组) {
+                    部分成文JSON = "[";
+                    for (const auto& 句 : item.部分成文->句段组) {
+                        检查停止();
+                        if (部分成文JSON.size() > 1) 部分成文JSON += ',';
+                        部分成文JSON += "{\"start\":" + 控制计数(句.原文起点)
+                            + ",\"end\":" + 控制计数(句.原文终点)
+                            + ",\"status\":" + 控制计数(static_cast<std::uint64_t>(句.状态))
+                            + ",\"generationStatus\":" + (句.成文状态
+                                ? 控制计数(static_cast<std::uint64_t>(*句.成文状态)) : "null")
+                            + ",\"text\":" + 控制JSON字符串(句.UTF8正文)
+                            + ",\"readback\":" + 句组JSON(句.独立回读) + "}";
+                    }
+                    部分成文JSON += ']';
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"sentences\":" + 句组JSON(item.句段解释)
                     + ",\"savedSentences\":" + (已保存 ? 句组JSON(正式.信息->内容.句段组, 前置来源) : "null")
                     + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
+                    + ",\"partialRoundTrips\":" + 部分成文JSON
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
                     + ",\"localObjects\":" + 局部对象JSON + "}";
             }
