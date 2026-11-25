@@ -1572,8 +1572,8 @@ void 新_模拟世界类::设置字段询问语言(std::shared_ptr<const 新字�
     // 模拟学习不构成真实交互；不在任何世界建立语言留档。
     return 新出站表达留档状态::模拟不留档;
 }
-新字段询问入列读回 新_模拟世界类::提交询问输出(const 方法参数场景&,
-    const 新字段询问材料&,稳定编码,std::string_view) {
+std::optional<新字段询问入列读回> 新_模拟世界类::提交询问输出(const 方法参数场景&,
+    const 新字段询问材料&,稳定编码,稳定编码,std::string_view) {
     throw std::logic_error("simulation field question cannot reach output submission");
 }
 新_模拟世界类::~新_模拟世界类() {

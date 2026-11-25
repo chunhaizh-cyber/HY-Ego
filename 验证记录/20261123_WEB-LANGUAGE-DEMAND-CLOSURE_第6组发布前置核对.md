@@ -1250,3 +1250,14 @@ Release x64 编译链接退出 0，0 警告、0 错误。259 项构建输入在�
 修正待完善归类绕过交集后，实际工程最终 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入无变化。EXE SHA256 F4F575658D4B36071FDED0B6B8E1C66E41E37575E3A6F92099563470DD5E428A。[最终构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e23-term-category-evidence-final-20261126-044014/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e23-term-category-evidence-final-20261126-044014/release.log)
 
 本轮未启动应用或 Chrome。多义词的实际正式挂接、替换句对照、候选未决和补材后的同 M 重读须跟真实运行核对。既有接收终结条件尚不专门监听句内类别未决。第 6 组实际业务补问的正式出站还需传递 Q，并以相关输出 O、实际发送及原答复身份完成关联。
+
+
+#### 56E24 正式补问的外设输出关联
+
+实施基线 96d04c3135fc2a4dea9a9058cc5b06484d2e246e，统一设计 v1.238 第 10.152 节，统一计划 v2.200，计划 blob 65b7a594bc2253458321b4b93b1d5cf22371a124。
+
+- 指定需求字段询问和需求信息询问都把语言所有者返回的本次问题 Q 交给共用运行口。运行口以实际窗口、正文和动作提交输出，按外设现有问题关联保存 O。
+- 本次真正入列须有外设返回的 O、同一正式问题及实际入列状态与动态。窗口暂不可取、资源不足或复用原输出但无本次回执，保持现行的动作结果未知；自建直接调用身份照常收束。既有模拟仅条件路径保持，接口同步传正式问题。
+- 首轮编译的两处 C2039 来自可选回执旧式成员访问。改为取实际回执，并处理出站正文复制阶段的资源失败。最终 Release x64 编译链接退出 0，0 错误、0 警告，259 项输入在构建期间无变化。EXE SHA256 1A8890EDD96ECA06668DF6B1D1AC90CE1687218CAA2C3C309EA1B497800590FE。[首轮编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-release-20261126-044516/release.log) · [最终构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-final-20261126-045146/result.json) · [最终编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e24-formal-question-output-final-20261126-045146/release.log)
+
+后继从实际网页被回复的 O 和同一正式发送回执确定明确回复范围。自然语言输入可保存短答值、正式单位及明确回复材料；问题方按实收语境、正式被问栏和适配类型决定答案，限定同一 Q，随后由父任务改同一个 D。原话的水温事实、具体业务问句、实际回复、同 D 的 40℃ 与当前水温、正式承接和七组同构建运行仍待逐项取证。本轮未运行应用或 Chrome。

@@ -395,8 +395,8 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         &&back->定义.被问栏==def.被问栏,"outbound question readback mismatch");
     return {新字段询问问题建立状态::已建立,*q.问题节点};
 }
-新字段询问入列读回 字段询问本能运行服务::提交询问输出(const 方法参数场景& scene,
-    const 新字段询问材料& m,稳定编码 action,std::string_view text) {
+std::optional<新字段询问入列读回> 字段询问本能运行服务::提交询问输出(
+    const 方法参数场景& scene,const 新字段询问材料& m,稳定编码 action,稳定编码 问题,std::string_view text) {
     auto& s=*实现_;实现::租约 lease(s);
     auto expected=新_本能函数管理类::读取本次执行实例(scene);
     if (!expected) expected=新_本能函数管理类::读取本次直接调用(scene);
@@ -409,13 +409,37 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     要求(expected && a && a->动作来源节点==expected
         && a->主题存在节点==m.自我 && a->动作定义节点==scene.方法节点()
         && a->动作目标存在节点==m.窗口副本 && a->动作目标特征节点.has_value(),"field question explicit action mismatch");
-    const auto w=s.外设.读取对话框来源(m.窗口);要求(w.has_value(),"field question window disappeared after action");
-    const auto r=s.外设.提交输出({w->定位,std::string(text),action,m.窗口副本});
-    要求(r.状态==新外设输出队列状态::已入列 && r.消息 && r.入列状态 && r.入列动态,"field question queue publication incomplete");
-    std::optional<稳定编码> own;
-    { std::lock_guard lock(s.锁);const auto i=s.自建调用.find(action);if(i!=s.自建调用.end()){own=i->second;s.自建调用.erase(i);} }
-    if (own) s.方法.收束直接调用身份(*own);
-    return {r.消息->消息节点,*r.入列状态,*r.入列动态,r.消息->来源.来源序号};
+    要求(有效(问题),"field question output question identity missing");
+    const auto 收束本次调用=[&] {
+        std::optional<稳定编码> own;
+        {
+            std::lock_guard lock(s.锁);
+            const auto i=s.自建调用.find(action);
+            if(i!=s.自建调用.end()){own=i->second;s.自建调用.erase(i);}
+        }
+        if(own) s.方法.收束直接调用身份(*own);
+    };
+    const auto w=s.外设.读取对话框来源(m.窗口);
+    if(!w){
+        收束本次调用();
+        return {};
+    }
+    std::string 正文;
+    try {
+        正文.assign(text);
+    } catch (const std::bad_alloc&) {
+        收束本次调用();
+        return {};
+    } catch (const std::length_error&) {
+        收束本次调用();
+        return {};
+    }
+    const auto r=s.外设.提交输出({w->定位,std::move(正文),action,m.窗口副本,问题});
+    收束本次调用();
+    if(r.状态!=新外设输出队列状态::已入列) return {};
+    要求(r.消息 && r.消息->关联问题==问题 && r.入列状态 && r.入列动态,
+        "field question queue publication incomplete");
+    return 新字段询问入列读回{r.消息->消息节点,*r.入列状态,*r.入列动态,r.消息->来源.来源序号};
 }
 新本能函数本次条件结果对 执行指定需求字段询问核心(
     const 方法参数场景& 场景,新本能字段询问运行接口& 操作) {
@@ -519,12 +543,13 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         if (question.状态==新字段询问问题建立状态::前提已变化) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
         if (question.状态!=新字段询问问题建立状态::已建立 || !有效(question.问题节点))
             throw std::logic_error("field question establishment status undefined");
-        const auto receipt=p->提交询问输出(场景,f,action,text.UTF8正文);
-        if (!有效(receipt.消息节点)||!有效(receipt.入列状态)||!有效(receipt.入列动态)||receipt.提交序号==0)
+        const auto receipt=p->提交询问输出(场景,f,action,question.问题节点,text.UTF8正文);
+        if (!receipt) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
+        if (!有效(receipt->消息节点)||!有效(receipt->入列状态)||!有效(receipt->入列动态)||receipt->提交序号==0)
             throw std::logic_error("field question output receipt incomplete");
         新本能字段询问返回材料 out;out.原因=新本能字段询问原因::已入列;
         out.正式定位=f.定位;out.已读取字段=f.字段内容;
-        out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt.消息节点,action,receipt.入列状态,receipt.入列动态,receipt.提交序号};
+        out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt->消息节点,action,receipt->入列状态,receipt->入列动态,receipt->提交序号};
         out.问题节点=question.问题节点;
         r.结果.字段询问=std::move(out);
         // ASK-READ-SCENE v0.5 §3.2（5380 §3.6）：问话入列后进入“动作已发出、等待结果”（等待中）。
@@ -535,7 +560,7 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         // 外设输出队列新增问话属顺带、不入结果组（5380 §3.6），且入列状态描述外设窗口（外设场景），
         // 不是本次动作作用对象（内部交互窗口副本）的结果目标，故不作为本次已形成状态记入X；
         // 入列事实仍随已提交输出回执返回，入列动态只用于依赖唤醒。
-        r.结果.已形成动态节点组={receipt.入列动态};
+        r.结果.已形成动态节点组={receipt->入列动态};
         r.结果.建议观察特征节点组={f.输出特征};
         return r;
 }
@@ -634,18 +659,19 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
     if (question.状态==新字段询问问题建立状态::前提已变化) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
     if (question.状态!=新字段询问问题建立状态::已建立 || !有效(question.问题节点))
         throw std::logic_error("demand-info ask establishment status undefined");
-    const auto receipt=p->提交询问输出(场景,f,action,text.UTF8正文);
-    if (!有效(receipt.消息节点)||!有效(receipt.入列状态)||!有效(receipt.入列动态)||receipt.提交序号==0)
+    const auto receipt=p->提交询问输出(场景,f,action,question.问题节点,text.UTF8正文);
+    if (!receipt) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
+    if (!有效(receipt->消息节点)||!有效(receipt->入列状态)||!有效(receipt->入列动态)||receipt->提交序号==0)
         throw std::logic_error("demand-info ask output receipt incomplete");
     新本能字段询问返回材料 out;out.原因=新本能字段询问原因::已入列;
     out.正式定位=f.定位;out.已读取字段=f.字段内容;
-    out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt.消息节点,action,receipt.入列状态,receipt.入列动态,receipt.提交序号};
+    out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt->消息节点,action,receipt->入列状态,receipt->入列动态,receipt->提交序号};
     out.问题节点=question.问题节点;
     r.结果.字段询问=std::move(out);
     r.结果.状态=新本能函数执行状态::异步已受理;
     r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
     r.结果.结果取得状态=新本能函数结果取得状态::待取得;
-    r.结果.已形成动态节点组={receipt.入列动态};
+    r.结果.已形成动态节点组={receipt->入列动态};
     r.结果.建议观察特征节点组={f.输出特征};
     return r;
 }

@@ -40,8 +40,8 @@ public:
     新出站表达留档状态 留档出站具体表达(const 方法参数场景&,
         const 新字段询问材料&,稳定编码,const 新字段询问文字结果&) override;
     新字段询问问题建立读回 建立出站问题(const 方法参数场景&,const 新字段询问材料&,稳定编码) override;
-    新字段询问入列读回 提交询问输出(const 方法参数场景&,
-        const 新字段询问材料&,稳定编码,std::string_view) override;
+    std::optional<新字段询问入列读回> 提交询问输出(const 方法参数场景&,
+        const 新字段询问材料&,稳定编码,稳定编码,std::string_view) override;
 
 private:
     struct 实现;

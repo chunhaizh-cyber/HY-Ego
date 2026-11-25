@@ -218,8 +218,8 @@ public:
     稳定编码 建立输出动作(const 方法参数场景&,const 新字段询问材料&) override;
     新出站表达留档状态 留档出站具体表达(const 方法参数场景&,
         const 新字段询问材料&,稳定编码,const 新字段询问文字结果&) override;
-    新字段询问入列读回 提交询问输出(const 方法参数场景&,
-        const 新字段询问材料&,稳定编码,std::string_view) override;
+    std::optional<新字段询问入列读回> 提交询问输出(const 方法参数场景&,
+        const 新字段询问材料&,稳定编码,稳定编码,std::string_view) override;
     稳定编码 建立参数动作(const 方法参数场景&,const 新模拟参数动作请求&);
     新隔离提交结果 提交本地输出队列(const 方法参数场景&,const 新模拟队列提交请求&);
     新_模拟世界类(const 新_模拟世界类&) = delete;
