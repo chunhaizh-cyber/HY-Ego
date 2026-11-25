@@ -839,3 +839,21 @@ PID 40296 资源释放后，56D4 候选按原排队运行，限定特征类型�
 #### 56D7 同源词典材料子任务已承接
 
 普通 PID 23760 上，序列 105 的 T46905 正式条件读取显示缺少材料。15:40:13 的承接日志取得 D50527／T50671。控制序列 111 和 112 均读回 D50527 以归类 D46522 为父需求、T46905 为来源，目标是同一 W45622 的材料特征 FT6615。序列 112 独立读回 T50671 召回查词典方法 24642，工作 207 已做条件检查，当时方法配对数为零。继续取证正式学习配对、任务再次筹办、执行 X 和材料 Q。 [同源材料子需求与任务](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/same-word-dictionary-milestones.json)
+
+#### 56D7 查词典配对与同任务重入
+
+同一普通发布进程中，方法 24642 于 15:45:00 开始实际模拟学习，15:45:10 完成并由自我线程接收。正式方法目录从序列 130 的一条配对增加到序列 135 的三条。序列 137 显示原材料任务 T50671 已回到「待查找方法」，仍关联 D50527、W45622。此时未读回选中配对、真实执行 X 或查阅材料 Q。 [首次配对读回](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/dictionary-pair-first-observed.json) [同任务筹办](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/same-word-dictionary-milestones.json)
+
+15:48:19 的非侵入线程样本显示，一次全量调度准备从读取方法执行结构闭包进入词条身份范围概念保护，并等待存在概念锁。取样未定位该调用对应的任务，不能据此认定 T50671 阻塞在该锁或据此修改任务状态。继续按同任务工作编号和执行回执取证。 [线程样本](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/dictionary-condition-unicode-stack-154819.txt)
+
+#### 56D7 配对发布后原词典任务完成条件筹办
+
+普通发布序列 143 首次读回原 T50671 重新召回方法的工作 278，沿同一候选 51431 精确复用。控制页同时读到方法 24642 的总体条件具备。序列 147 另取得工作 285 的正式检查条件回执，状态为已完成条件筹办。控制页仍列出配对 52619 和 53924 的第一位参数对象缺口，方法总判定为条件具备。两条工作回执和条件视图分别保存，采用配对、执行 X 和状态中实际材料 Q 尚须运行读回。 [同一任务的召回和条件筹办](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/material-task-50671-post-learning-preparation.json)
+
+#### 56D7 条件筹办后同任务回转
+
+正式普通运行控制序列 154 仍指向原词条 W45622、词典材料 D50527 和 T50671。继工作 285 完成条件筹办后，新的「检查条件」工作 302 返回「任务状态已变化」，原任务读回「待查找方法」，没有实际执行 X。普通控制回执没有给出具体变化来源。现有代码可由组织交付、任务词条特征落实、场景批读取或选择条件变化形成同一结果，需用原任务编码和工作编号定位下层回执。原普通进程仍在运行。 [两轮正式工作回执](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/material-task-50671-condition-return-302.json)
+
+序列 158 的工作 310 再次召回同一候选 51431，序列 162 的工作 316 再次完成条件筹办，方法总体条件具备。当前正式快照仍未读回配对采用、X 或正式词典材料。 [第三次工作流转](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-scoped-demand-speaker-release-20261125-152438/release-web-20261125-152613/same-word-dictionary-milestones.json)
+
+诊断构建沿原发布源码 1699e6d5d 的 249 项输入，复用现有筹办与绑定诊断配置。首次额外启用状态前提宏时缺少其跨文件符号，链接失败。移除该宏后，Release x64 编译链接为 0 错误、0 警告，输入、运行种子与 10 项词典文件摘要一致。以独立目录保存产物。已排程在当前普通应用正常结束且同一任务没有 X、没有 Q 的明确材料等待超时后接续诊断。 [诊断构建核同](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-inputs.json) [接续条件](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-run-queue.json)
