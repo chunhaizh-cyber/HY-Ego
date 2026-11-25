@@ -1372,3 +1372,14 @@ Release x64 编译链接退出 0，0 错误、0 警告，约 52 秒。259 项输
 Release x64 编译链接退出 0，0 错误、0 警告，用时 1:25.62。259 项构建输入前后无变化，相对实施基线仅三份计划内源码。产物 SHA256 `EE3BE630A5C289F97CF3DAAB70EEAC96D18D8BDCECCDF0DDCC20EC5C1C5B8C29`。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e33-scene-inbox-20261126/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e33-scene-inbox-20261126/release.log)
 
 本轮为源码和构建证据。普通 Chrome 待具名指令验证同窗多条与跨窗取材，窗口移除前后两类还需按正式外设所有者入口取证。第 1 组与第 6 组仍需在同一正式发布构建验收。
+
+### 56E34 不可变解释的精确句段来源读取
+
+施工基线 `c9deed82e9c094bbf8649e72e896a65a61691099`。统一设计 v1.248 第 10.162 节，实施计划 v2.210，blob `fceb170802ac321ed00bb804ea14425f01c9719f`。
+
+- 新增公开只读入口 `新_语言类::读取接收语言解释句段来源(稳定编码, std::uint64_t, std::uint64_t, const 新_自然语言世界树类&, const 新语言分界消息读取接口&) const`。复用解释定义逆查，按整个已存范围读出该句、固定正文片段、原 M、前置来源和语言场景。空或倒序范围为输入拒绝，合法范围未命中为未找到，原来源状态透传。
+- `截取已校验UTF8标量范围(const std::string&, std::uint64_t, std::uint64_t)` 为同源码内辅助函数。新读口和既有 `新_语言类::读取材料范围原文` 共用它，按正式来源的 Unicode 标量范围截取。两个读口继续只读，所有权及锁边界沿原实现。新增用途卡登记新读口，更新原范围读口的直接调用边。调试切片无变化。
+
+Release x64 编译及链接退出 0，0 错误、0 警告，259 项构建输入前后无变化。相对上片只有两份计划内源码变化。产物 SHA256 `044AE3A33DEAFD76EF161AA4D0EBA757BC5F6140991C5B94F68D244773FA99DF`。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e34-exact-sentence-20261126/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e34-exact-sentence-20261126/release.log)
+
+本片发布语言只读能力。运行未触发，生产采用方尚未调用该精确句段读口。下一片按原消息所属场景提供说话者及待就绪时的部分解释，再接正式采用和普通 Chrome 验收。

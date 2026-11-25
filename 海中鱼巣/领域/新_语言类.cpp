@@ -54,6 +54,20 @@ std::uint32_t 读取已校验码点(const std::string& 文本,
     return 码点;
 }
 
+// 正式来源已严格校验 UTF-8；范围由调用方从正式记录取得。
+std::string 截取已校验UTF8标量范围(const std::string& 文本,
+    std::uint64_t 起始标量, std::uint64_t 结束标量) {
+    std::size_t 字节位置 = 0;
+    std::size_t 起始字节 = 0;
+    for (std::uint64_t 位置 = 0; 位置 < 结束标量; ++位置) {
+        if (位置 == 起始标量) 起始字节 = 字节位置;
+        if (字节位置 >= 文本.size())
+            throw std::logic_error("fixed text does not cover its scalar range");
+        (void)读取已校验码点(文本, 字节位置);
+    }
+    return 文本.substr(起始字节, 字节位置 - 起始字节);
+}
+
 struct 本次词面匹配节点 final {
     std::map<std::uint32_t, std::size_t> 后继;
     std::optional<稳定编码> 词条节点;
@@ -7719,6 +7733,28 @@ void 核接收指代来源(组织读取现场& 读, 稳定编码 P, const 新语
       catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
 }
 
+新语言分界调用结果<新接收语言解释句段来源信息> 新_语言类::读取接收语言解释句段来源(
+    稳定编码 定义, std::uint64_t 起始标量, std::uint64_t 结束标量,
+    const 新_自然语言世界树类& 世界, const 新语言分界消息读取接口& 消息读取) const {
+    using S = 新语言分界工程状态;
+    if (起始标量 >= 结束标量) return {S::输入拒绝, {}, {}};
+    try {
+        auto 读取 = 读取接收语言解释定义来源(定义, 世界, 消息读取);
+        if (读取.状态 != S::已完成) return {读取.状态, {}, {}};
+        组织要求(读取.信息.has_value());
+        auto& 来源 = *读取.信息;
+        const auto 句 = std::ranges::find_if(来源.内容.句段组, [&](const auto& 项) {
+            return 项.起始标量 == 起始标量 && 项.结束标量 == 结束标量;
+        });
+        if (句 == 来源.内容.句段组.end()) return {S::未找到, {}, {}};
+        auto 原句 = 截取已校验UTF8标量范围(来源.前置来源.固定UTF8原文, 起始标量, 结束标量);
+        return {S::已完成, 新接收语言解释句段来源信息{
+            来源.记录节点, 来源.解释定义节点, 来源.内容.来源场景, std::move(来源.前置来源),
+            std::move(来源.接收消息), std::move(*句), std::move(原句)}, {}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+      catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+}
+
 新语言分界工程状态 新_语言类::配置指代消解结果(稳定编码 类型, 新_特征类& 特征) {
     using S = 新语言分界工程状态;
     if (!有效(类型)) return S::输入拒绝;
@@ -9672,16 +9708,7 @@ std::optional<稳定编码> 读取分界槽当前引用(const 新_特征类& 特
                 throw std::logic_error("fixed boundary text material is not UTF8 text");
             auto 文本 = std::get<std::string>(std::move(正文.信息->材料));
 
-            // 前置来源发表时已严格核验 UTF8，V 的正文保持不变。
-            std::size_t 字节位置 = 0;
-            std::size_t 起始字节 = 0;
-            for (std::uint64_t 位置 = 0; 位置 < 范围.定位.结束标量; ++位置) {
-                if (位置 == 范围.定位.起始标量) 起始字节 = 字节位置;
-                if (字节位置 >= 文本.size())
-                    throw std::logic_error("fixed boundary text does not cover its range");
-                (void)读取已校验码点(文本, 字节位置);
-            }
-            auto 区间文本 = 文本.substr(起始字节, 字节位置 - 起始字节);
+            auto 区间文本 = 截取已校验UTF8标量范围(文本, 范围.定位.起始标量, 范围.定位.结束标量);
             结果.信息 = 新语言范围原文信息{std::move(范围), 来源.正文材料,
                 std::move(文本), std::move(区间文本)};
             结果.状态 = 分界状态::已完成;
