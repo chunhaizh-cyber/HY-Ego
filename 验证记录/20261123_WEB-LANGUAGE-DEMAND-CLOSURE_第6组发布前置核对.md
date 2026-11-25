@@ -908,3 +908,8 @@ PID 40296 资源释放后，56D4 候选按原排队运行，限定特征类型�
 #### 56D7 词典三配对只有一条条件具备
 
 T51584 的工作 300 经同一候选重新完成条件筹办。17:09:13，管理线程正式结果为「匹配不唯一」。三条配对的结果保证均适用于本材料需求。配对 54967 的 10 条条件全部具备。配对 55741 与 56693 各有 1 条词条身份条件明确不具备，其余条件具备。来源方法 24642 的三个配对并列于结果筛选后，未按各自条件排除两个已证不具备的方案。此为同一 T 的实际选择阻断。工作 296 的场景批失败已由同任务工作 300 越过。 [选择与逐条条件证据](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d7-dictionary-post-condition-retry-20261125-160802/diagnostic-web-20261125-162302/dictionary-child-51584-three-pair-selection.txt)
+
+
+#### 56C26 第25项发布并排程联合复测
+
+第25项随 725787188 发布。对同一结果优先级、既有执行分支筛选后仍并列的配对，只有在所有配对条件都确定为具备或不具备且至少一条具备时，才排除明确不具备者。正式 Release x64 0 错误、0 警告，249 项构建输入和 10 项运行词典文件均已核同。联合发布产物包含第24、25项，由仍在等待的下一轮排程消费，运行证据待取得。 [发布树及产物](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-25-pair-condition-release-20261125-171318/published-inputs.json) · [词典摘要](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-25-pair-condition-release-20261125-171318/runtime-dictionary-verified.json) · [联合正式复测接续](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-25-pair-condition-release-20261125-171318/release-run-queue.json)
