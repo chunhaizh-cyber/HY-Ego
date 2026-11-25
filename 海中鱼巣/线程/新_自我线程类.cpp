@@ -1154,8 +1154,14 @@ struct 新_自我线程类::实现 final {
         else 组.push_back({请求, {std::move(请求者)}});
     }
 
+    static bool 是词条定向学习请求(const 新方法学习请求& 请求) {
+        return !请求.分界定向输入 && (请求.定向输入.has_value() != 请求.归类定向输入.has_value());
+    }
+
     新词典学习发现结果 读取当前词典学习发现(稳定编码 T, 稳定编码 M) const {
         auto 结果 = 任务服务->查询词条材料定向学习发现(T, M);
+        if (结果.状态 == 新词典学习发现状态::不涉及)
+            结果 = 任务服务->查询词条归类定向学习发现(T, M);
         if (结果.状态 == 新词典学习发现状态::资源失败) throw std::bad_alloc{};
         if (结果.状态 == 新词典学习发现状态::结构依赖未就绪) {
             (void)结构依赖未就绪已停止(L"词典学习发现", static_cast<int>(结果.状态), T.值);
@@ -1191,11 +1197,20 @@ struct 新_自我线程类::实现 final {
     方法学习发现状态 接纳词典学习发现(稳定编码 候选, const 新词典学习发现& 发现) {
         using S = 方法学习发现状态;
         if (发现.处置 != 新词典学习处置::可提交学习) return S::无需学习;
-        if (!发现.学习请求 || !发现.学习请求->定向输入)
-            throw std::logic_error("dictionary discovery missing full learning request");
-        词典学习请求者 请求者{发现.任务节点, 发现.需求节点, 候选, 发现.当前目标, 发现.等待依赖键组};
-        if (词典输入已未命中(*发现.学习请求, 请求者)) return S::已处理仍无配对;
-        return 接纳定向学习(*发现.学习请求,std::move(请求者));
+        if (发现.学习请求组.empty()) throw std::logic_error("word discovery missing directed requests");
+        bool 新接纳 = false;
+        bool 已在途 = false;
+        for (const auto& 请求 : 发现.学习请求组) {
+            if (!是词条定向学习请求(请求))
+                throw std::logic_error("word discovery has ambiguous input kind");
+            词典学习请求者 请求者{发现.任务节点, 发现.需求节点, 候选, 发现.当前目标, 发现.等待依赖键组};
+            if (请求.定向输入 && 词典输入已未命中(请求, 请求者)) continue;
+            const auto 接纳 = 接纳定向学习(请求, std::move(请求者));
+            if (接纳 == S::暂缓 || 接纳 == S::停止取消) return 接纳;
+            新接纳 |= 接纳 == S::已接纳;
+            已在途 |= 接纳 == S::已在途;
+        }
+        return 新接纳 ? S::已接纳 : 已在途 ? S::已在途 : S::已处理仍无配对;
     }
 
     方法学习发现状态 接纳定向学习(const 新方法学习请求& 请求, 词典学习请求者 请求者) {
@@ -1217,23 +1232,29 @@ struct 新_自我线程类::实现 final {
     bool 准备下一词典学习(稳定编码 方法, 学习占用& 槽) {
         // 本函数只更新主循环持有的局部槽，不向map旧槽重新挂接后继。
         std::vector<词典学习待项> 当前组;
+        std::set<std::pair<稳定编码, 稳定编码>> 已重读词条请求者;
         for (const auto& 待项 : 槽.待处理请求组) {
             for (const auto& 请求者 : 待项.请求者组) {
                 if (待项.请求.分界定向输入) {
                     if (!整理待提交分界学习(待项.请求,请求者,当前组,true)) return false;
                     continue;
                 }
+                if (!已重读词条请求者.emplace(请求者.任务, 请求者.候选方法).second) continue;
                 const auto 读 = 读取当前词典学习发现(请求者.任务, 请求者.候选方法);
                 const auto* 当前 = 读.发现 ? &*读.发现 : nullptr;
                 刷新词典请求者等待(请求者, 当前);
                 if (!当前 || 当前->处置 != 新词典学习处置::可提交学习
                     || 当前->方法节点 != 方法) continue;
-                if (!当前->学习请求 || !当前->学习请求->定向输入)
-                    throw std::logic_error("dictionary pending discovery missing input");
-                词典学习请求者 新请求者{当前->任务节点, 当前->需求节点, 请求者.候选方法,
-                    当前->当前目标, 当前->等待依赖键组};
-                if (!词典输入已未命中(*当前->学习请求, 新请求者))
-                    合并词典待项(当前组, *当前->学习请求, std::move(新请求者));
+                if (当前->学习请求组.empty())
+                    throw std::logic_error("pending word discovery missing directed requests");
+                for (const auto& 请求 : 当前->学习请求组) {
+                    if (!是词条定向学习请求(请求))
+                        throw std::logic_error("pending word discovery has ambiguous input kind");
+                    词典学习请求者 新请求者{当前->任务节点, 当前->需求节点, 请求者.候选方法,
+                        当前->当前目标, 当前->等待依赖键组};
+                    if (!请求.定向输入 || !词典输入已未命中(请求, 新请求者))
+                        合并词典待项(当前组, 请求, std::move(新请求者));
+                }
             }
         }
         槽.待处理请求组 = std::move(当前组);
@@ -1261,7 +1282,8 @@ struct 新_自我线程类::实现 final {
     }
 
     void 消费词典学习结束(稳定编码 方法, 学习占用& 槽) {
-        if (!槽.当前请求 || !槽.当前请求->定向输入 || 槽.定向结束已消费) return;
+        if (!槽.当前请求 || !是词条定向学习请求(*槽.当前请求) || 槽.定向结束已消费) return;
+        const bool 归类 = 槽.当前请求->归类定向输入.has_value();
         if (槽.通知 && !槽.通知->定向结束)
             throw std::logic_error("dictionary completion missing directed outcome");
         const auto 结局 = 槽.通知 ? 槽.通知->定向结束->结局 : 新定向学习结局::需重新组织输入;
@@ -1269,9 +1291,11 @@ struct 新_自我线程类::实现 final {
         if (槽.通知) {
             switch (结局) {
             case 新定向学习结局::需重新组织输入:
+                允许当前输入续办 = true;
+                break;
             case 新定向学习结局::条件未具备:
             case 新定向学习结局::请求已无需要:
-                允许当前输入续办 = true;
+                允许当前输入续办 = !归类;
                 break;
             case 新定向学习结局::已完成学习:
             case 新定向学习结局::已被现有知识覆盖:
@@ -1283,25 +1307,29 @@ struct 新_自我线程类::实现 final {
         } else {
             允许当前输入续办 = 槽.需重学 || (槽.异常 && 槽.异常->原因 == 新学习运行异常原因::资源不足);
         }
+        const bool 归类知识已可用 = 归类 && (结局 == 新定向学习结局::已完成学习
+            || 结局 == 新定向学习结局::已被现有知识覆盖 || 结局 == 新定向学习结局::已有空结果配对);
         for (const auto& 请求者 : 槽.请求者组) {
-            if (结局 == 新定向学习结局::正式未命中
+            if (!归类 && 结局 == 新定向学习结局::正式未命中
                 && !词典输入已未命中(*槽.当前请求, 请求者)) {
                 std::lock_guard 锁(状态互斥);
                 词典未命中组.push_back({*槽.当前请求, 请求者});
             }
             const auto 读 = 读取当前词典学习发现(请求者.任务, 请求者.候选方法);
             const auto* 当前 = 读.发现 ? &*读.发现 : nullptr;
-            刷新词典请求者等待(请求者, 当前);
+            刷新词典请求者等待(请求者, 归类知识已可用 ? nullptr : 当前);
             if (!当前 || 当前->处置 != 新词典学习处置::可提交学习 || 当前->方法节点 != 方法) continue;
-            if (!当前->学习请求 || !当前->学习请求->定向输入)
-                throw std::logic_error("dictionary completion discovery missing input");
-            词典学习请求者 新请求者{当前->任务节点, 当前->需求节点, 请求者.候选方法,
-                当前->当前目标, 当前->等待依赖键组};
-            // 重组须重读完整F/Q等实时材料，联合引用未变也可能需要重新准备。
-            // 当前仍缺条件时不排队；覆盖、空R及同输入未命中沿原等待/选择收束。
-            if ((允许当前输入续办 || *当前->学习请求 != *槽.当前请求 || 当前->当前目标 != 请求者.目标)
-                && !词典输入已未命中(*当前->学习请求, 新请求者))
-                合并词典待项(槽.待处理请求组, *当前->学习请求, std::move(新请求者));
+            if (当前->学习请求组.empty())
+                throw std::logic_error("word completion discovery missing directed requests");
+            for (const auto& 请求 : 当前->学习请求组) {
+                if (!是词条定向学习请求(请求))
+                    throw std::logic_error("word completion discovery has ambiguous input kind");
+                词典学习请求者 新请求者{当前->任务节点, 当前->需求节点, 请求者.候选方法,
+                    当前->当前目标, 当前->等待依赖键组};
+                if ((允许当前输入续办 || 请求 != *槽.当前请求 || 当前->当前目标 != 请求者.目标)
+                    && (!请求.定向输入 || !词典输入已未命中(请求, 新请求者)))
+                    合并词典待项(槽.待处理请求组, 请求, std::move(新请求者));
+            }
         }
         槽.定向结束已消费 = true;
         槽.需重学 = false;
@@ -1323,7 +1351,8 @@ struct 新_自我线程类::实现 final {
             if (!方法->本能函数登记名 || 方法->本能函数登记名->empty())
                 throw std::logic_error("正式本能方法缺少登记名");
             if (*方法->本能函数登记名==新本能函数登记名_语言片段分词
-                || *方法->本能函数登记名==新本能函数登记名_未登记片段建立或取得词条)
+                || *方法->本能函数登记名==新本能函数登记名_未登记片段建立或取得词条
+                || *方法->本能函数登记名==新本能函数登记名_按归类材料挂接词条)
                 return S::无需学习;
             const auto 事实 = 世界树服务->获取事实服务引用();
             const auto 词典类型 = 事实.特征概念服务.读取当前先天特征类型槽(先天特征类型槽::词典材料);
@@ -1564,17 +1593,12 @@ struct 新_自我线程类::实现 final {
         槽.需重学=false;
     }
 
-    std::optional<方法学习发现状态> 推进归类所需词典材料(
-        稳定编码 T, 稳定编码 D, 稳定编码 M, std::vector<新任务依赖键>& 等待键) {
+    方法学习发现状态 推进归类所需词典材料(
+        const 新词典学习发现& 归类, std::vector<新任务依赖键>& 等待键) {
         using S = 方法学习发现状态;
-        const auto 候选 = 任务服务->构造归类学习请求候选(T, M);
-        if (候选.状态==新词典学习发现状态::资源失败) return S::暂缓;
-        if (!候选.发现 || 候选.发现->需求节点!=D) return std::nullopt;
-        const auto 来源 = 需求服务->读取前置词条归类需求来源组(D);
-        if (来源.状态==新需求操作状态::资源失败) return S::暂缓;
-        if (来源.状态!=新需求操作状态::已找到 || 来源.来源组.empty()) return std::nullopt;
+        const auto T = 归类.任务节点;
+        const auto D = 归类.需求节点;
         if (停止源.stop_requested()) return S::停止取消;
-        等待键.insert(等待键.end(), 候选.等待依赖键组.begin(), 候选.等待依赖键组.end());
         const auto 本次 = std::pair{T, D};
         if (const auto 待承接=词条材料承接组.find(本次); 待承接!=词条材料承接组.end()) {
             等待键.push_back({新任务依赖键种类::需求, 待承接->second.请求.需求节点, {}});
@@ -1583,7 +1607,7 @@ struct 新_自我线程类::实现 final {
             return S::无需学习;
         }
 
-        const auto W = 候选.发现->目标词条;
+        const auto W = 归类.当前目标.目标存在节点;
         const auto 目标 = 组织词条学习目标(先天特征类型槽::词典材料, 特征取值位置::当前值);
         if (!目标) return S::暂缓;
         const auto 事实 = 世界树服务->获取事实服务引用();
@@ -1592,10 +1616,10 @@ struct 新_自我线程类::实现 final {
             return S::暂缓;
         if (F.状态==新词条特征取得状态::词条不存在) return S::无需学习;
         if (!F.特征) throw std::logic_error("dictionary material feature could not be established");
-        const auto 特征 = 事实.特征服务.读取特征完整保护(F.特征->特征节点);
-        if (!特征.信息) return S::暂缓;
+        const auto 特征 = 事实.特征服务.获取特征(F.特征->特征节点);
+        if (!特征) return S::暂缓;
         等待键.push_back({新任务依赖键种类::节点, F.特征->特征节点, {}});
-        if (特征.信息->特征.当前值) return S::无需学习;
+        if (特征->当前值) return S::无需学习;
 
         const 新普通需求建立请求 请求{D, W, *目标, 新需求来源类型::任务子目标, T, {}};
         const auto 出生 = 需求服务->建立或取得词条材料子需求已核验(请求);
@@ -1622,16 +1646,14 @@ struct 新_自我线程类::实现 final {
             const auto 读 = 读取当前词典学习发现(T, M);
             if (!读.发现) {
                 if(读.状态!=新词典学习发现状态::不涉及)return 方法学习发现状态::无需学习;
-                if (const auto 取材=推进归类所需词典材料(T, 候选需求, M, 等待键)) {
-                    词典处置 = 新词典学习处置::条件未具备;
-                    return *取材;
-                }
                 if(const auto 分界=接纳候选分界学习(T,候选需求,M,等待键,true))return *分界;
                 return 发现方法学习(M);
             }
             const auto& 当前 = *读.发现;
             词典处置 = 当前.处置;
             等待键.insert(等待键.end(), 当前.等待依赖键组.begin(), 当前.等待依赖键组.end());
+            if (当前.需目标自身材料)
+                return 推进归类所需词典材料(当前, 等待键);
             return 接纳词典学习发现(M, 当前);
         } catch (const std::bad_alloc&) { return 方法学习发现状态::暂缓; }
         catch (...) {
@@ -1826,7 +1848,7 @@ struct 新_自我线程类::实现 final {
         return {};
     }
 
-    void 关联词典归类来源(const 新词典语言交付& 交付,
+    std::optional<稳定编码> 关联词典归类来源(const 新词典语言交付& 交付,
         const 新词典语言材料组信息& 材料组) {
         const auto 事实 = 世界树服务->获取事实服务引用();
         const auto 类型 = 事实.特征概念服务.读取当前先天特征类型槽(先天特征类型槽::概念名称挂接);
@@ -1834,7 +1856,8 @@ struct 新_自我线程类::实现 final {
         if (类型.状态 != 特征概念规则状态::已完成 || !类型.类型根)
             throw std::logic_error("dictionary classification feature type is unavailable");
         const auto D = 定位词典归类需求(交付, *类型.类型根);
-        if (!D) return;
+        if (!D) return {};
+        bool 已记录 = false;
         for (const auto& 行 : 材料组.行组) {
             const auto& 定义 = 行.定义;
             if (定义.状态 != 新词典语言理解状态::已识别结构
@@ -1843,10 +1866,12 @@ struct 新_自我线程类::实现 final {
                 交付.材料Q, 材料组.节点, 行.节点, 交付.词条, *定义.词条N};
             const auto 记录 = 需求服务->记录词典归类需求来源已核验(*D, 来源);
             if (记录 == 新需求操作状态::资源失败) throw std::bad_alloc{};
-            if (记录 == 新需求操作状态::需求不存在) return;
+            if (记录 == 新需求操作状态::需求不存在) return {};
             if (记录 != 新需求操作状态::已修改 && 记录 != 新需求操作状态::无变化)
                 throw std::logic_error("dictionary classification source association failed");
+            已记录 = true;
         }
+        return 已记录 ? 任务服务->查询需求任务(*D) : std::nullopt;
     }
 
     std::optional<std::chrono::steady_clock::time_point> 下一词典语言推进时点() const noexcept {
@@ -1867,17 +1892,21 @@ struct 新_自我线程类::实现 final {
                 词典交付重试时点.reset();
                 return;
             }
-            关联词典归类来源(交付, *材料组);
+            const auto 归类任务 = 关联词典归类来源(交付, *材料组);
             bool 有归类主张 = false;
             for (const auto& 当前 : 材料组->行组) {
                 if (当前.定义.状态 == 新词典语言理解状态::已识别结构 && 当前.定义.词条N)
                     有归类主张 = true;
             }
             if (有归类主张 && 任务管理) {
-                const auto 刷新 = 任务管理->请求词典等待依赖刷新(交付.任务);
-                if (刷新.状态 == 新任务管理操作状态::资源失败) throw std::bad_alloc{};
-                if (刷新.状态 != 新任务管理操作状态::已完成 && 刷新.状态 != 新任务管理操作状态::无变化
-                    && !停止源.stop_requested()) throw std::logic_error("词典语言材料等待刷新失败");
+                const auto 刷新等待 = [&](稳定编码 T) {
+                    const auto 刷新 = 任务管理->请求词典等待依赖刷新(T);
+                    if (刷新.状态 == 新任务管理操作状态::资源失败) throw std::bad_alloc{};
+                    if (刷新.状态 != 新任务管理操作状态::已完成 && 刷新.状态 != 新任务管理操作状态::无变化
+                        && !停止源.stop_requested()) throw std::logic_error("词典语言材料等待刷新失败");
+                };
+                if (归类任务 && *归类任务 != 交付.任务) 刷新等待(*归类任务);
+                刷新等待(交付.任务);
             }
             待关联词典交付.reset();
             词典交付重试时点.reset();
@@ -2374,16 +2403,6 @@ struct 新_自我线程类::实现 final {
                 for (const auto M : 候选->候选方法节点组) {
                     const auto 读 = 读取当前词典学习发现(任务.节点, M);
                     if (!读.发现) {
-                        if (读.状态==新词典学习发现状态::不涉及) {
-                            const auto 取材=推进归类所需词典材料(
-                                任务.节点, 候选->需求节点, M, 决议.附加等待依赖键组);
-                            if (取材) {
-                                if (*取材==方法学习发现状态::暂缓) return std::nullopt;
-                                if (*取材==方法学习发现状态::停止取消) return 出口(__LINE__);
-                                候选仍需材料 = true;
-                                continue;
-                            }
-                        }
                         if(const auto 分界=接纳候选分界学习(
                             任务.节点,候选->需求节点,M,决议.附加等待依赖键组,false)) {
                             if(*分界==方法学习发现状态::暂缓)return std::nullopt;
@@ -2396,8 +2415,11 @@ struct 新_自我线程类::实现 final {
                     const auto& 当前发现 = *读.发现;
                     决议.附加等待依赖键组.insert(决议.附加等待依赖键组.end(),
                         当前发现.等待依赖键组.begin(), 当前发现.等待依赖键组.end());
-                    const auto 接纳 = 接纳词典学习发现(M, 当前发现);
+                    const auto 接纳 = 当前发现.需目标自身材料
+                        ? 推进归类所需词典材料(当前发现, 决议.附加等待依赖键组)
+                        : 接纳词典学习发现(M, 当前发现);
                     if (接纳 == 方法学习发现状态::暂缓) return std::nullopt;
+                    if (接纳 == 方法学习发现状态::停止取消) return 出口(__LINE__);
                     候选仍需材料 |= 当前发现.处置 == 新词典学习处置::条件未具备
                         || 当前发现.处置 == 新词典学习处置::可提交学习;
                     词典已有知识 |= 当前发现.处置 == 新词典学习处置::已有覆盖知识

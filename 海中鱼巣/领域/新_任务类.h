@@ -1410,7 +1410,8 @@ struct 新词典学习发现 final {
     稳定编码 任务节点, 需求节点, 方法节点;
     新需求完整目标 当前目标;
     新词典学习处置 处置 = 新词典学习处置::条件未具备;
-    std::optional<新方法学习请求> 学习请求;
+    std::vector<新方法学习请求> 学习请求组;
+    bool 需目标自身材料 = false;
     std::vector<稳定编码> 适用配对节点组;
     std::vector<新词典学习缺口> 缺口组;
     std::vector<新任务依赖键> 等待依赖键组;
@@ -1907,6 +1908,7 @@ public:
     // 唯一选中后将所需条件写入任务采用材料并重新核验，不覆盖抽象方法或组织原始定义。
     新任务方法选择结果 选择任务方法结果(稳定编码 任务节点) const noexcept;
     新词典学习发现结果 查询词条材料定向学习发现(稳定编码 T, 稳定编码 M) const noexcept;
+    新词典学习发现结果 查询词条归类定向学习发现(稳定编码 T, 稳定编码 M) const noexcept;
     新归类学习来源发现结果 读取当前归类学习来源(稳定编码 T) const noexcept;
     新归类学习请求候选结果 构造归类学习请求候选(稳定编码 T,稳定编码 M) const noexcept;
     新任务条件子需求提议 提议任务条件子需求(
@@ -2414,6 +2416,17 @@ private:
     void 按补问答案写入被认知需求(稳定编码 父任务, 稳定编码 父需求) noexcept;
     // 仅消费self已确认且manager已读回的子D；不创建需求、不重启终结T。
     新任务治理承接结果 承接已确认词条学习子需求(稳定编码 D) noexcept;
+    struct 词条定向覆盖结果 final {
+        新词典学习处置 处置 = 新词典学习处置::可提交学习;
+        std::vector<稳定编码> 配对组;
+        新词典学习发现状态 状态 = 新词典学习发现状态::已读取;
+    };
+    std::optional<bool> 求值词条定向学习条件(const 新方法条件定义&,
+        const std::vector<新方法有序参数引用>&, const std::vector<新方法参数角色绑定>&,
+        const 新词条特征信息&, const 正式信息参数投影* = nullptr,
+        const 新词典归类信息概念组* = nullptr) const;
+    词条定向覆盖结果 判定词条定向学习覆盖(const 新方法信息&, const 新需求目标定义&,
+        const std::function<std::optional<bool>(const 新方法条件定义&)>&) const;
     新任务治理承接结果 承接已确认条件子需求(
         稳定编码 父任务节点,const 新任务已确认条件子需求&) noexcept;
 

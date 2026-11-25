@@ -22087,6 +22087,185 @@ bool 筹办普通概念当前可读(概念_存在类& 概念,稳定编码 C) {
     }
 }
 
+std::optional<bool> 新_任务类::求值词条定向学习条件(const 新方法条件定义& 条件,
+    const std::vector<新方法有序参数引用>& refs,const std::vector<新方法参数角色绑定>& bindings,
+    const 新词条特征信息& word,const 正式信息参数投影* 归类材料,
+    const 新词典归类信息概念组* 归类范围) const {
+    const auto 读条件特征 = [&](const 新方法条件项定义& c) -> std::optional<新特征信息> {
+        if(!c.参数序号 || c.参数序号>refs.size())throw std::logic_error("dictionary condition parameter unavailable");
+        const auto& ref=refs[c.参数序号-1];
+        if(ref.信息类型==新方法参数信息类型::特征)return 特征服务_.获取特征(ref.信息节点);
+        std::vector<稳定编码> fields;
+        if(ref.信息类型==新方法参数信息类型::词条)fields=词条特征节点组(word);
+        else {
+            const auto e=存在服务_.获取存在(ref.信息节点);
+            if(!e)return {};
+            fields=e->特征节点组;
+        }
+        for(const auto F:fields) {
+            const auto type=特征服务_.读取当前特征类型(F);
+            if(type.状态==新特征类型读取状态::资源失败)throw std::bad_alloc{};
+            if(type.特征类型根==c.特征类型概念节点)return 特征服务_.获取特征(F);
+        }
+        return {};
+    };
+    const auto 判条件项 = [&](const 新方法条件项定义& c) -> std::optional<bool> {
+        if(归类材料 && c.参数序号 && c.参数序号<=refs.size()
+            && refs[c.参数序号-1].信息节点==归类材料->信息节点) {
+            if(!归类范围 || c.任务成员变量序号 || c.特征类型概念节点 || c.特征值域概念节点
+                || c.精确数值域 || c.二次特征概念节点 || c.状态或动态概念节点 || c.特征前态限定)
+                throw std::logic_error("classification formal content condition shape unsupported");
+            auto 声明=c.引用内容条件.value_or(新方法引用内容条件{});
+            声明.作用点=新方法内容作用点::参数自身;
+            if(!c.引用内容条件)声明.要求概念节点=c.存在概念节点.value_or(归类范围->材料范围);
+            const auto actual=求值归类参数内容(*归类材料,声明,*归类范围,存在概念服务_,词条读取_);
+            if(actual.状态==正式内容符合状态::资源失败)throw std::bad_alloc{};
+            if(actual.状态==正式内容符合状态::未支持)
+                throw std::logic_error("classification formal condition unsupported");
+            if(actual.状态==正式内容符合状态::符合)return true;
+            if(actual.状态==正式内容符合状态::不符合)return false;
+            return {};
+        }
+        if(!c.参数序号 || c.参数序号>refs.size() || c.任务成员变量序号
+            || c.引用内容条件 || c.二次特征概念节点 || c.状态或动态概念节点)
+            throw std::logic_error("dictionary directed condition shape unsupported");
+        const auto& ref=refs[c.参数序号-1];
+        if(c.存在概念节点) {
+            if(ref.信息类型==新方法参数信息类型::词条) {
+                if(!任务词条符合范围(存在概念服务_,词条读取_,*c.存在概念节点,ref.信息节点))return false;
+            } else {
+                const auto match=核验参数类型归属(存在服务_,存在概念服务_,ref.信息节点,*c.存在概念节点);
+                if(match==新存在概念匹配状态::材料不足)return {};
+                if(match!=新存在概念匹配状态::匹配)return false;
+            }
+        }
+        if(!c.特征类型概念节点 && !c.特征值域概念节点 && !c.精确数值域 && !c.特征前态限定)return true;
+        const auto actual=读条件特征(c);
+        if(!actual)return {};
+        if(c.特征类型概念节点 && 取得特征概念类型根(特征概念服务_,actual->特征概念节点)!=c.特征类型概念节点)return false;
+        if(c.特征前态限定) {
+            const auto& p=*c.特征前态限定;
+            if((p.当前值状态==新方法当前值状态::已知)!=actual->当前值.has_value())return false;
+            if(p.历史不同值数量 && *p.历史不同值数量!=actual->历史不同值.size())return false;
+        }
+        if (c.取值位置 == 特征取值位置::历史不同值) {
+            if (!c.特征值域概念节点 || c.精确数值域 || c.特征前态限定)
+                throw std::logic_error("dictionary historical condition shape unsupported");
+            const auto source = 特征服务_.捕获特征匹配定义(actual->特征概念节点);
+            const auto target = 特征服务_.捕获特征匹配定义(*c.特征值域概念节点);
+            if (!source || !target) return {};
+            const auto compared = 特征服务_.比较捕获特征历史值域(*actual, *source, *target);
+            if (compared.状态 == 新特征比较状态::资源失败) throw std::bad_alloc{};
+            if (compared.状态 != 新特征比较状态::已完成 || !compared.关系编码) return {};
+            return *compared.关系编码 == static_cast<std::int64_t>(特征概念值域关系::相等)
+                || *compared.关系编码 == static_cast<std::int64_t>(特征概念值域关系::右包含左);
+        }
+        if(c.精确数值域) {
+            if(!actual->当前值)return {};
+            const auto* value=std::get_if<std::int64_t>(&*actual->当前值);
+            if(!value)throw std::logic_error("dictionary I64 condition on non-I64 value");
+            return 准确I64落在任务值域(特征服务_,特征概念服务_,actual->特征概念节点,
+                actual->实例单位,*value,{},c.精确数值域);
+        }
+        if(c.特征值域概念节点) {
+            for(;;) {
+                const auto snapshot=特征服务_.捕获特征匹配实例(actual->节点);
+                if(!snapshot || !snapshot->当前值)return {};
+                const auto target=特征服务_.捕获特征匹配定义(*c.特征值域概念节点);
+                if(!target)throw std::logic_error("dictionary condition range unavailable");
+                const auto compared=特征服务_.比较捕获特征值域(*snapshot,*target);
+                if(compared.状态==新特征比较状态::前提已变化)continue;
+                if(compared.状态==新特征比较状态::资源失败)throw std::bad_alloc{};
+                if(compared.状态==新特征比较状态::材料不足 || compared.状态==新特征比较状态::值不存在
+                    || compared.状态==新特征比较状态::特征不存在)return {};
+                if(compared.状态!=新特征比较状态::已完成 || !compared.关系编码)
+                    throw std::logic_error("dictionary condition value-domain comparison unavailable");
+                return *compared.关系编码==static_cast<std::int64_t>(特征概念值域关系::相等)
+                    || *compared.关系编码==static_cast<std::int64_t>(特征概念值域关系::右包含左);
+            }
+        }
+        return true;
+    };
+    const auto& c=条件;
+    std::vector<std::optional<bool>> values;
+    for(const auto& item:c.条件项组)values.push_back(判条件项(item));
+    for(const auto& r:c.参数关系组) {
+        if(归类材料 && r.种类==新方法参数关系种类::内容引用参数 && r.左参数序号
+            && r.左参数序号<=refs.size() && refs[r.左参数序号-1].信息节点==归类材料->信息节点) {
+            if(!归类范围 || !r.右参数序号 || r.右参数序号>refs.size()
+                || r.左正式内容路径!=std::vector<稳定编码>{归类范围->目标词条FT})
+                throw std::logic_error("classification content relation shape unsupported");
+            const auto item=std::find_if(归类材料->直接内容组.begin(),归类材料->直接内容组.end(),
+                [&](const auto& x){return x.特征类型==归类范围->目标词条FT;});
+            std::optional<bool> matched;
+            if(item!=归类材料->直接内容组.end() && item->内容.状态==正式内容值状态::已知 && item->内容.值)
+                matched=item->内容.种类==正式内容值种类::词条引用
+                    && refs[r.右参数序号-1].信息类型==新方法参数信息类型::词条
+                    && std::get<稳定编码>(*item->内容.值)==refs[r.右参数序号-1].信息节点;
+            values.push_back(matched);
+        } else values.push_back(核验参数位置关系(bindings,r,存在服务_,场景服务_,特征服务_,特征值服务_,特征概念服务_,&需求服务_));
+    }
+    if(!c.场景事实限定组.empty())throw std::logic_error("dictionary directed scene condition unsupported");
+    const bool anyTrue=std::any_of(values.begin(),values.end(),[](auto x){return x==true;});
+    const bool anyFalse=std::any_of(values.begin(),values.end(),[](auto x){return x==false;});
+    const bool unknown=std::any_of(values.begin(),values.end(),[](auto x){return !x;});
+    if(c.关系规则==新方法项关系规则::任一成立) {
+        if(anyTrue)return true;
+        return unknown ? std::nullopt : std::optional{false};
+    }
+    if(c.关系规则!=新方法项关系规则::全部成立 && c.关系规则!=新方法项关系规则::单项)
+        throw std::logic_error("dictionary condition combination unsupported");
+    if(anyFalse)return false;
+    return unknown ? std::nullopt : std::optional{true};
+}
+
+新_任务类::词条定向覆盖结果 新_任务类::判定词条定向学习覆盖(const 新方法信息& method,
+    const 新需求目标定义& 目标,
+    const std::function<std::optional<bool>(const 新方法条件定义&)>& 判条件) const {
+    using S = 新词典学习发现状态;
+    const auto FT=目标.目标特征类型概念节点;
+    if(method.执行分支组.size()!=1)return {新词典学习处置::条件未具备,{},S::结构依赖未就绪};
+    auto necessary=方法服务_.读取执行分支必要条件(method.节点,method.执行分支组.front().节点);
+    while(necessary.状态==新方法执行分支读取状态::前提已变化)
+        necessary=方法服务_.读取执行分支必要条件(method.节点,method.执行分支组.front().节点);
+    if(necessary.状态!=新方法执行分支读取状态::已读取)return {新词典学习处置::条件未具备,{},S::不涉及};
+    if(判条件(necessary.有效必要条件.条件)!=true) {
+        return {新词典学习处置::条件未具备, {}};
+    }
+    std::vector<稳定编码> coveredPairs,emptyPairs;
+    bool unknownPair=false;
+    for(const auto& pair:method.条件结果组) {
+        const bool empty=任务执行组织存储::配对结果为空(pair.结果);
+        const auto condition=empty
+            ? 任务执行组织存储::尝试执行核验条件(pair,&necessary.有效必要条件) : pair.条件;
+        const auto matched=判条件(condition);
+        if(!matched) {unknownPair=true;continue;}
+        if(!*matched)continue;
+        if(empty) {
+            emptyPairs.push_back(pair.配对节点);continue;
+        }
+        if(pair.结果.关系规则==新方法项关系规则::任一成立)continue;
+        for(const auto& result:pair.结果.结果项组) {
+            if(result.参数序号!=2 || result.任务成员变量序号 || !result.特征类型概念节点
+                || 取得特征概念类型根(特征概念服务_,*result.特征类型概念节点)!=std::optional{FT}
+                || !result.特征值域概念节点 || result.变化方向概念节点 || result.状态或动态概念节点)continue;
+            if(pair.结果.关系规则==新方法项关系规则::主要结果及允许副作用 && !result.主要结果)continue;
+            const auto domain=特征概念服务_.获取特征概念(*result.特征值域概念节点);
+            if(!domain)throw std::logic_error("dictionary learned result range unavailable");
+            if (result.取值位置 != 目标.取值位置) continue;
+            const auto guarantee=结果域保证满足需求(特征概念服务_,二次特征概念服务_,目标,*domain);
+            if(!guarantee)return {新词典学习处置::条件未具备,{},S::结构依赖未就绪};
+            if(*guarantee) {coveredPairs.push_back(pair.配对节点);break;}
+        }
+    }
+    if(!coveredPairs.empty())return {新词典学习处置::已有覆盖知识,std::move(coveredPairs)};
+    if(!emptyPairs.empty())return {新词典学习处置::已有空结果配对,std::move(emptyPairs)};
+    if(unknownPair) {
+        return {新词典学习处置::条件未具备, {}};
+    }
+    return {};
+}
+
 新词典学习发现结果 新_任务类::查询词条材料定向学习发现(稳定编码 T,稳定编码 M) const noexcept {
     using S=新词典学习发现状态;
     using A=新词典学习处置;
@@ -22196,147 +22375,20 @@ bool 筹办普通概念当前可读(概念_存在类& 概念,稳定编码 C) {
             b.有序引用=refs[i];b.世界场景节点=i<2 ? word->所属自然语言场景 : origin.当前场景;
             bindings.push_back(std::move(b));
         }
-        const auto 读条件特征 = [&](const 新方法条件项定义& c) -> std::optional<新特征信息> {
-            if(!c.参数序号 || c.参数序号>refs.size())throw std::logic_error("dictionary condition parameter unavailable");
-            const auto& ref=refs[c.参数序号-1];
-            if(ref.信息类型==新方法参数信息类型::特征)return 特征服务_.获取特征(ref.信息节点);
-            std::vector<稳定编码> fields;
-            if(ref.信息类型==新方法参数信息类型::词条)fields=词条特征节点组(*word);
-            else {
-                const auto e=存在服务_.获取存在(ref.信息节点);
-                if(!e)return {};
-                fields=e->特征节点组;
-            }
-            for(const auto F:fields) {
-                const auto type=特征服务_.读取当前特征类型(F);
-                if(type.状态==新特征类型读取状态::资源失败)throw std::bad_alloc{};
-                if(type.特征类型根==c.特征类型概念节点)return 特征服务_.获取特征(F);
-            }
-            return {};
+        const auto 判条件 = [&](const 新方法条件定义& c) {
+            return 求值词条定向学习条件(c, refs, bindings, *word);
         };
-        const auto 判条件项 = [&](const 新方法条件项定义& c) -> std::optional<bool> {
-            if(!c.参数序号 || c.参数序号>refs.size() || c.任务成员变量序号
-                || c.引用内容条件 || c.二次特征概念节点 || c.状态或动态概念节点)
-                throw std::logic_error("dictionary directed condition shape unsupported");
-            const auto& ref=refs[c.参数序号-1];
-            if(c.存在概念节点) {
-                if(ref.信息类型==新方法参数信息类型::词条) {
-                    if(!任务词条符合范围(存在概念服务_,词条读取_,*c.存在概念节点,ref.信息节点))return false;
-                } else {
-                    const auto match=核验参数类型归属(存在服务_,存在概念服务_,ref.信息节点,*c.存在概念节点);
-                    if(match==新存在概念匹配状态::材料不足)return {};
-                    if(match!=新存在概念匹配状态::匹配)return false;
-                }
-            }
-            if(!c.特征类型概念节点 && !c.特征值域概念节点 && !c.精确数值域 && !c.特征前态限定)return true;
-            const auto actual=读条件特征(c);
-            if(!actual)return {};
-            if(c.特征类型概念节点 && 取得特征概念类型根(特征概念服务_,actual->特征概念节点)!=c.特征类型概念节点)return false;
-            if(c.特征前态限定) {
-                const auto& p=*c.特征前态限定;
-                if((p.当前值状态==新方法当前值状态::已知)!=actual->当前值.has_value())return false;
-                if(p.历史不同值数量 && *p.历史不同值数量!=actual->历史不同值.size())return false;
-            }
-            if (c.取值位置 == 特征取值位置::历史不同值) {
-                if (!c.特征值域概念节点 || c.精确数值域 || c.特征前态限定)
-                    throw std::logic_error("dictionary historical condition shape unsupported");
-                const auto source = 特征服务_.捕获特征匹配定义(actual->特征概念节点);
-                const auto target = 特征服务_.捕获特征匹配定义(*c.特征值域概念节点);
-                if (!source || !target) return {};
-                const auto compared = 特征服务_.比较捕获特征历史值域(*actual, *source, *target);
-                if (compared.状态 == 新特征比较状态::资源失败) throw std::bad_alloc{};
-                if (compared.状态 != 新特征比较状态::已完成 || !compared.关系编码) return {};
-                return *compared.关系编码 == static_cast<std::int64_t>(特征概念值域关系::相等)
-                    || *compared.关系编码 == static_cast<std::int64_t>(特征概念值域关系::右包含左);
-            }
-            if(c.精确数值域) {
-                if(!actual->当前值)return {};
-                const auto* value=std::get_if<std::int64_t>(&*actual->当前值);
-                if(!value)throw std::logic_error("dictionary I64 condition on non-I64 value");
-                return 准确I64落在任务值域(特征服务_,特征概念服务_,actual->特征概念节点,
-                    actual->实例单位,*value,{},c.精确数值域);
-            }
-            if(c.特征值域概念节点) {
-                for(;;) {
-                    const auto snapshot=特征服务_.捕获特征匹配实例(actual->节点);
-                    if(!snapshot || !snapshot->当前值)return {};
-                    const auto target=特征服务_.捕获特征匹配定义(*c.特征值域概念节点);
-                    if(!target)throw std::logic_error("dictionary condition range unavailable");
-                    const auto compared=特征服务_.比较捕获特征值域(*snapshot,*target);
-                    if(compared.状态==新特征比较状态::前提已变化)continue;
-                    if(compared.状态==新特征比较状态::资源失败)throw std::bad_alloc{};
-                    if(compared.状态==新特征比较状态::材料不足 || compared.状态==新特征比较状态::值不存在
-                        || compared.状态==新特征比较状态::特征不存在)return {};
-                    if(compared.状态!=新特征比较状态::已完成 || !compared.关系编码)
-                        throw std::logic_error("dictionary condition value-domain comparison unavailable");
-                    return *compared.关系编码==static_cast<std::int64_t>(特征概念值域关系::相等)
-                        || *compared.关系编码==static_cast<std::int64_t>(特征概念值域关系::右包含左);
-                }
-            }
-            return true;
-        };
-        const auto 判条件 = [&](const 新方法条件定义& c) -> std::optional<bool> {
-            std::vector<std::optional<bool>> values;
-            for(const auto& item:c.条件项组)values.push_back(判条件项(item));
-            for(const auto& r:c.参数关系组)
-                values.push_back(核验参数位置关系(bindings,r,存在服务_,场景服务_,特征服务_,特征值服务_,特征概念服务_,&需求服务_));
-            if(!c.场景事实限定组.empty())throw std::logic_error("dictionary directed scene condition unsupported");
-            const bool anyTrue=std::any_of(values.begin(),values.end(),[](auto x){return x==true;});
-            const bool anyFalse=std::any_of(values.begin(),values.end(),[](auto x){return x==false;});
-            const bool unknown=std::any_of(values.begin(),values.end(),[](auto x){return !x;});
-            if(c.关系规则==新方法项关系规则::任一成立) {
-                if(anyTrue)return true;
-                return unknown ? std::nullopt : std::optional{false};
-            }
-            if(c.关系规则!=新方法项关系规则::全部成立 && c.关系规则!=新方法项关系规则::单项)
-                throw std::logic_error("dictionary condition combination unsupported");
-            if(anyFalse)return false;
-            return unknown ? std::nullopt : std::optional{true};
-        };
-        if(method->执行分支组.size()!=1)return {S::结构依赖未就绪,{}};
-        auto necessary=方法服务_.读取执行分支必要条件(method->节点,method->执行分支组.front().节点);
-        while(necessary.状态==新方法执行分支读取状态::前提已变化)
-            necessary=方法服务_.读取执行分支必要条件(method->节点,method->执行分支组.front().节点);
-        if(necessary.状态!=新方法执行分支读取状态::已读取)return {};
-        if(判条件(necessary.有效必要条件.条件)!=true) {
-            out.缺口组.push_back({新词典学习缺口种类::方法条件未具备,0,{},{},{}});
-            return 返回(A::条件未具备);
-        }
-        std::vector<稳定编码> coveredPairs,emptyPairs;
-        bool unknownPair=false;
-        for(const auto& pair:method->条件结果组) {
-            const bool empty=任务执行组织存储::配对结果为空(pair.结果);
-            const auto condition=empty
-                ? 任务执行组织存储::尝试执行核验条件(pair,&necessary.有效必要条件) : pair.条件;
-            const auto matched=判条件(condition);
-            if(!matched) {unknownPair=true;continue;}
-            if(!*matched)continue;
-            if(empty) {
-                emptyPairs.push_back(pair.配对节点);continue;
-            }
-            if(pair.结果.关系规则==新方法项关系规则::任一成立)continue;
-            for(const auto& result:pair.结果.结果项组) {
-                if(result.参数序号!=2 || result.任务成员变量序号 || !result.特征类型概念节点
-                    || 取得特征概念类型根(特征概念服务_,*result.特征类型概念节点)!=std::optional{FT}
-                    || !result.特征值域概念节点 || result.变化方向概念节点 || result.状态或动态概念节点)continue;
-                if(pair.结果.关系规则==新方法项关系规则::主要结果及允许副作用 && !result.主要结果)continue;
-                const auto domain=特征概念服务_.获取特征概念(*result.特征值域概念节点);
-                if(!domain)throw std::logic_error("dictionary learned result range unavailable");
-                if (result.取值位置 != demand->目标.取值位置) continue;
-                const auto guarantee=结果域保证满足需求(特征概念服务_,二次特征概念服务_,demand->目标,*domain);
-                if(!guarantee)return {S::结构依赖未就绪,{}};
-                if(*guarantee) {coveredPairs.push_back(pair.配对节点);break;}
-            }
-        }
-        if(!coveredPairs.empty()) {out.适用配对节点组=std::move(coveredPairs);return 返回(A::已有覆盖知识);}
-        if(!emptyPairs.empty()) {out.适用配对节点组=std::move(emptyPairs);return 返回(A::已有空结果配对);}
-        if(unknownPair) {
-            out.缺口组.push_back({新词典学习缺口种类::方法条件未具备,0,{},{},{}});
-            return 返回(A::条件未具备);
+        auto 覆盖 = 判定词条定向学习覆盖(*method, demand->目标, 判条件);
+        if (覆盖.状态 != S::已读取) return {覆盖.状态, {}};
+        out.适用配对节点组 = std::move(覆盖.配对组);
+        if (覆盖.处置 != A::可提交学习) {
+            if (覆盖.处置 == A::条件未具备)
+                out.缺口组.push_back({新词典学习缺口种类::方法条件未具备,0,{},{},{}});
+            return 返回(覆盖.处置);
         }
         新词典定向学习输入 directed{refs,word->词条.语言节点,word->词条.规范化合同节点,
             word->词条.规范化词面,origin.可信批次标识,origin.来源场景标识};
-        out.学习请求=新方法学习请求{method->节点,std::move(directed)};
+        out.学习请求组.push_back(新方法学习请求{method->节点,std::move(directed)});
         return 返回(A::可提交学习);
     } catch(const std::bad_alloc&) {return {S::资源失败,{}};}
     catch(const std::exception& e) {
@@ -22344,6 +22396,96 @@ bool 筹办普通概念当前可读(概念_存在类& 概念,稳定编码 C) {
     } catch(...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"词条材料定向学习发现",L"当前正式材料读取或求值未知故障。");
     }
+}
+
+新词典学习发现结果 新_任务类::查询词条归类定向学习发现(稳定编码 T,稳定编码 M) const noexcept {
+    using S=新词典学习发现状态;
+    using A=新词典学习处置;
+    for(;;)try {
+        const auto candidates=构造归类学习请求候选(T,M);
+        if(candidates.状态!=S::已读取 || !candidates.发现)return {candidates.状态,{}};
+        auto method=方法服务_.获取方法(M);
+        std::set<稳定编码> 已读;
+        while (method && method->来源方法节点) {
+            if (!已读.insert(method->节点).second)
+                throw std::logic_error("cyclic classification candidate source method");
+            method=方法服务_.获取方法(*method->来源方法节点);
+        }
+        if (!method) return {};
+        const auto& source=*candidates.发现;
+        新词典学习发现 out;
+        out.任务节点=T;out.需求节点=source.需求节点;out.方法节点=method->节点;
+        out.当前目标=source.当前目标;out.等待依赖键组=candidates.等待依赖键组;
+        out.缺口组=candidates.缺口组;
+        if (source.来源组.empty()) {
+            const auto 前置 = 需求服务_.读取前置词条归类需求来源组(source.需求节点);
+            if (前置.状态 == 新需求操作状态::资源失败) return {S::资源失败, {}};
+            if (前置.状态 == 新需求操作状态::需求不存在) return {S::需求不存在, {}};
+            if (前置.状态 == 新需求操作状态::前提已变化) continue;
+            if (前置.状态 != 新需求操作状态::已找到 || 前置.来源组.empty()) return {};
+        }
+        const auto current=需求服务_.复核当前满足(source.需求节点);
+        if (current.状态 == 新需求当前满足状态::资源失败) return {S::资源失败, {}};
+        if (current.状态 == 新需求当前满足状态::需求不存在) return {S::需求不存在, {}};
+        if (current.状态 == 新需求当前满足状态::目标引用前提已变化) continue;
+        if(current.状态==新需求当前满足状态::已满足) {
+            out.处置=A::目标当前满足;return {S::已读取,std::move(out)};
+        }
+        const auto 有自身材料 = std::ranges::any_of(candidates.候选组, [&](const auto& item) {
+            return item.实际材料目标 == std::optional{source.目标词条}
+                && item.材料状态 != 新归类学习材料状态::材料已退出
+                && item.材料状态 != 新归类学习材料状态::目标不相符;
+        });
+        out.需目标自身材料 = !有自身材料;
+        if (std::ranges::none_of(candidates.候选组, [](const auto& item) {
+                return item.材料状态 == 新归类学习材料状态::已明确 && item.请求;
+            })) return {S::已读取, std::move(out)};
+        const auto word=读取任务词条(词条读取_,source.目标词条);
+        if(!word)return {S::需求不存在,{}};
+        const auto config=存在概念服务_.读取词典归类信息概念();
+        if(config.状态==正式结构操作状态::前提已变化)continue;
+        if(config.状态!=正式结构操作状态::已读取 || !config.信息)return {S::结构依赖未就绪,{}};
+        const 正式信息参数读取接口* reader=nullptr;
+        {std::lock_guard lock(新任务互斥);reader=正式信息读取_;}
+        if(!reader)return {S::结构依赖未就绪,{}};
+        bool 有覆盖=false,有空配对=false;
+        for(const auto& candidate:candidates.候选组) {
+            if(candidate.材料状态!=新归类学习材料状态::已明确 || !candidate.请求
+                || !candidate.请求->归类定向输入)continue;
+            const auto& refs=candidate.请求->归类定向输入->参数组;
+            if(refs.size()!=4)throw std::logic_error("classification discovery has incomplete actual parameters");
+            正式信息参数读取结果 material;
+            do {material=reader->读取正式信息参数保护(refs[2].信息节点,config.信息->材料范围);}
+            while(material.状态==正式信息参数读取状态::前提已变化);
+            if(material.状态==正式信息参数读取状态::资源失败)throw std::bad_alloc{};
+            if(material.状态==正式信息参数读取状态::依赖未就绪)return {S::结构依赖未就绪,{}};
+            if(material.状态!=正式信息参数读取状态::已读取 || !material.信息)continue;
+            std::vector<新方法参数角色绑定> bindings;
+            for(const auto& ref:refs) {
+                新方法参数角色绑定 b;b.有序引用=ref;bindings.push_back(std::move(b));
+            }
+            const auto evaluate=[&](const 新方法条件定义& c) {
+                return 求值词条定向学习条件(c,refs,bindings,*word,&*material.信息,&*config.信息);
+            };
+            const auto coverage=判定词条定向学习覆盖(*method,source.当前目标.目标,evaluate);
+            if (coverage.状态 == S::不涉及) continue;
+            if (coverage.状态 != S::已读取) return {coverage.状态, {}};
+            out.适用配对节点组.insert(out.适用配对节点组.end(),coverage.配对组.begin(),coverage.配对组.end());
+            有覆盖|=coverage.处置==A::已有覆盖知识;
+            有空配对|=coverage.处置==A::已有空结果配对;
+            if(coverage.处置==A::可提交学习
+                && std::find(out.学习请求组.begin(),out.学习请求组.end(),*candidate.请求)==out.学习请求组.end())
+                out.学习请求组.push_back(*candidate.请求);
+        }
+        out.处置=!out.学习请求组.empty() ? A::可提交学习 : 有覆盖 ? A::已有覆盖知识
+            : 有空配对 ? A::已有空结果配对 : A::条件未具备;
+        std::sort(out.适用配对节点组.begin(),out.适用配对节点组.end());
+        out.适用配对节点组.erase(std::unique(out.适用配对节点组.begin(),out.适用配对节点组.end()),out.适用配对节点组.end());
+        return {S::已读取,std::move(out)};
+    }catch(const std::bad_alloc&){return {S::资源失败,{}};}
+    catch(const std::length_error&){return {S::资源失败,{}};}
+    catch(const std::exception& e){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"词条归类定向学习发现",L"当前归类来源或条件求值故障。",e.what());}
+    catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"词条归类定向学习发现",L"当前归类来源或条件求值未知故障。");}
 }
 
 void 新_任务类::配置场景事实读取(const 新方法场景事实读取接口& 读取,
