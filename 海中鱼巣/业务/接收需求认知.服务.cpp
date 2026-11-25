@@ -359,7 +359,7 @@ struct 认知依赖 final {
     概念_特征类& 特征概念;概念_二次特征类& 二次概念;新_存在类& 存在;
     新_特征值类& 特征值;新_特征类& 特征;新_场景类& 现实场景;新_需求类& 需求;
 };
-void 记录待完善存在归类概念(认知依赖& d, const 新语言前置来源信息& 来源,
+void 记录待完善谓项概念(认知依赖& d, const 新语言前置来源信息& 来源,
     const 语言基础统一输入结果& 解释, 接收语言句段解释& 句, std::stop_token stop) {
     using O = 新语言知识含义操作;
     using P = 新语言知识参数角色;
@@ -367,12 +367,17 @@ void 记录待完善存在归类概念(认知依赖& d, const 新语言前置来
     using C = 新语言知识角色类别;
     using N = 概念名称关系查询状态;
     using S = 待完善存在概念状态;
-    if (!句.静态结构 || 句.静态结构->操作 != O::概念归类) return;
+    if (!句.静态结构) return;
+    auto& 结构 = *句.静态结构;
 
     for (const auto& 角色 : 解释.静态角色缺口组) {
-        if (角色.知识节点 != 句.静态结构->所用构式 || 角色.操作 != O::概念归类
-            || 角色.参数 != P::归类概念 || 角色.种类 != K::概念引用
-            || 角色.类别 != C::存在概念 || !角色.词条) continue;
+        if (角色.知识节点 != 结构.所用构式 || 角色.操作 != 结构.操作 || !角色.词条) continue;
+        const bool 存在归类 = 角色.操作 == O::概念归类 && 角色.参数 == P::归类概念
+            && 角色.种类 == K::概念引用 && 角色.类别 == C::存在概念;
+        const bool 特征描述 = 角色.操作 == O::特征描述
+            && ((角色.参数 == P::特征类型 && 角色.种类 == K::特征类型引用 && 角色.类别 == C::正式特征类型)
+                || (角色.参数 == P::特征值 && 角色.种类 == K::概念引用 && 角色.类别 == C::特征概念));
+        if (!存在归类 && !特征描述) continue;
         const auto 开始 = 句.起始标量 + 角色.起始标量;
         const auto 结束 = 句.起始标量 + 角色.结束标量;
         const auto 缺口 = std::ranges::find_if(句.缺口组, [&](const auto& 项) {
@@ -382,9 +387,9 @@ void 记录待完善存在归类概念(认知依赖& d, const 新语言前置来
                 && std::ranges::find(项.已取得相关节点, *角色.词条) != 项.已取得相关节点.end();
         });
         if (缺口 == 句.缺口组.end()) continue;
-        const auto 归类 = std::ranges::find(句.静态结构->角色组, P::归类概念, &接收语言已解释角色::参数);
-        if (归类 == 句.静态结构->角色组.end() || 归类->值 || 归类->角色编号 != 角色.角色.角色编号
-            || 归类->起始标量 != 开始 || 归类->结束标量 != 结束) continue;
+        const auto 谓项 = std::ranges::find(结构.角色组, 角色.参数, &接收语言已解释角色::参数);
+        if (谓项 == 结构.角色组.end() || 谓项->值 || 谓项->角色编号 != 角色.角色.角色编号
+            || 谓项->起始标量 != 开始 || 谓项->结束标量 != 结束) continue;
 
         检查认知停止(stop);
         const auto 名称 = d.名称.读取词条名称候选保护(*角色.词条);
@@ -395,13 +400,29 @@ void 记录待完善存在归类概念(认知依赖& d, const 新语言前置来
         case N::资源失败: case N::读取未完成: case N::工程未完成: 资源();
         default: throw std::logic_error("pending concept source name lookup inconsistent");
         }
+        if (特征描述) {
+            using F = 特征概念规则状态;
+            const auto 身份 = d.特征概念.建立或取得待完善特征概念(来源.节点, *角色.词条,
+                待完善特征概念原文用法{角色.知识节点, 开始, 结束});
+            switch (身份.状态) {
+            case F::已完成: case F::无变化:
+                if (!身份.信息) throw std::logic_error("pending feature concept receipt missing");
+                缺口->已取得相关节点.push_back(身份.信息->节点);
+                break;
+            case F::入口拒绝: break;
+            case F::前提已变化: 漂移();
+            case F::资源失败: case F::读取接口未装配: 资源();
+            default: throw std::logic_error("pending feature concept publication inconsistent");
+            }
+            continue;
+        }
         const auto 身份 = d.存在概念.建立或取得待完善存在概念(
             {来源.节点, *角色.词条, 角色.知识节点, 开始, 结束});
         switch (身份.状态) {
         case S::已建立: case S::已复用:
             if (!身份.信息) throw std::logic_error("pending existence concept receipt missing");
             缺口->已取得相关节点.push_back(身份.信息->节点);
-            归类->值 = 语言图引用值{C::存在概念, 身份.信息->节点, {}, {}};
+            谓项->值 = 语言图引用值{C::存在概念, 身份.信息->节点, {}, {}};
             break;
         case S::入口拒绝: break;
         case S::前提已变化: 漂移();
@@ -2302,7 +2323,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     req.固定原文 = 句段.句面原文;
                     const auto 解释 = 解释当前句();
                     auto& 句 = 解释组.emplace_back(记录句段解释(解释, 句段.全文范围));
-                    记录待完善存在归类概念(d, 固定来源, 解释, 句, stop);
+                    记录待完善谓项概念(d, 固定来源, 解释, 句, stop);
                     主体观察.记录(解释, req.语言节点, d.名称, d.语言世界, 固定来源, 句);
                 }
                 out.句段解释 = std::move(解释组);
@@ -2386,7 +2407,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             } else if (parsed.状态 != 语言场景基础输入状态::输入拒绝) {
                 确认语言场景();
                 out.句段解释 = {记录句段解释(parsed, 整句)};
-                记录待完善存在归类概念(d, 固定来源, parsed, out.句段解释.front(), stop);
+                记录待完善谓项概念(d, 固定来源, parsed, out.句段解释.front(), stop);
                 接收篇章主体观察 主体观察;
                 主体观察.记录(parsed, req.语言节点, d.名称, d.语言世界, 固定来源, out.句段解释.front());
                 if (parsed.静态结构 || (!parsed.含义 && parsed.完整候选组.empty()))

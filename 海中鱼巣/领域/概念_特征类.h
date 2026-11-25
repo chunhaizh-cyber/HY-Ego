@@ -351,10 +351,17 @@ struct 特征概念编码操作结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::optional<稳定编码> 概念节点;
 };
+struct 待完善特征概念原文用法 final {
+    稳定编码 构式;
+    std::uint64_t 起始标量, 结束标量;
+    friend bool operator==(const 待完善特征概念原文用法&, const 待完善特征概念原文用法&) = default;
+};
+
 struct 待完善特征概念信息 final {
     稳定编码 节点, 采用来源, 来源词条;
     bool 已完善 = false;
     std::vector<稳定编码> 名称关系;
+    std::optional<待完善特征概念原文用法> 原文用法;
 };
 struct 待完善特征概念结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
@@ -642,7 +649,8 @@ public:
     特征类别根读取结果 读取特征类别根概念保护() const noexcept;
     特征分类关系保护结果 读取特征分类关系保护(稳定编码) const noexcept;
     正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept override;
-    待完善特征概念结果 建立或取得待完善特征概念(稳定编码 采用来源, 稳定编码 来源词条) noexcept;
+    待完善特征概念结果 建立或取得待完善特征概念(稳定编码 采用来源, 稳定编码 来源词条,
+        std::optional<待完善特征概念原文用法> 原文用法 = {}) noexcept;
     待完善特征概念结果 按来源读取待完善特征概念(稳定编码 采用来源) const noexcept;
     待完善特征概念结果 按节点读取待完善特征概念(稳定编码 概念) const noexcept;
     bool 是待完善特征概念节点(稳定编码 概念) const noexcept;
