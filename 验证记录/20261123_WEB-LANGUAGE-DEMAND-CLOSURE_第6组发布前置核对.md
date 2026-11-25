@@ -644,3 +644,13 @@ Release x64 正式工程编译链接退出0，0错误、0警告。249项构建�
 控制快照 90 进一步读回同一 W43496 的词典材料子需求 D47262，来源任务是原归类 T44786，材料任务为 T47406。读取时任务状态为「待查找方法」。后继以同一 T 的当前筹办和实际 Q 为判断依据。 [同词材料任务](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/cup-dictionary-material-task-snapshot-90.json)
 
 补充核对温度迁移前置。主线的固定先天类型槽建立入口拒绝带单位的定义，现有毫米是计量单位身份。历史候选调用的规范规格来源登记、正式 I64 特征类型读取、完整域关联及计量单位词条双向入口均需逐项迁移或闭合等价主线入口。程序集成须先提供摄氏度身份，再按已批准规格建立独立 FT、关联完整域和名称。温度 FT 与同名完整域 C 各自读回，水温后继复用正式子值域入口。 [主线固定槽入口](../海中鱼巣/领域/概念_特征类.cpp#L6268) · [历史温度核对](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/case06-temperature-provider-preflight.md)
+
+#### 定向词典学习进展与正式关闭线程取证
+
+同一杯子材料任务 T47406 的旧筹办已重做，六项实际绑定形成，方法 24390 配对数为 0。09:51:12 控制快照显示自我持有待提交定向输入「杯子」，其中 W43496／F47258 和来源、主体、批次、场景定位六项均已读回。09:52:23 方法 24390 实际启动模拟，09:52:47 记录模拟结束。09:54:16 控制快照的正式方法目录区块读回该方法有 3 个配对；任务区块暂不可用。该轮尚无 T47406 实际 X/A/S/Q。 [六参数核验](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/cup-material-task-47406-binding-observation.log) · [自我待提交输入](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/independent-feedback-095112.json) · [方法目录回读](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/independent-dictionary-after-learning-095416.json)
+
+到观察期限后浏览器正常关闭，应用监听释放。09:57:14 关闭后线程栈只剩主线程和自我工作线程。后者仍在条件变量上等工作。09:58:37 治理回收正式报自我内部错误、管理线程成功，随后最终回收未返回，诊断进程被强制回收为 −1。继续沿同一正常关闭路径验证停止转交。 [观察期限](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/browser-error.json) · [关闭后线程栈](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/shutdown-thread-snapshot.txt) · [退出结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56c26-dictionary-consumption-diagnostic-20261125-090827/diagnostic-web-20261125-091205/exit.json)
+
+#### 56D1 温度提供者首次发布的启动回归与回撤
+
+ed6efd5fa 的实际 Release x64 正式工程编译链接通过，0 错误、0 警告，249 项构建输入与发布树完全相同，10 份词典文件与正式批次核同。普通入口 PID 29700 在温度 FT 建立阶段退出 1，未开放监听。对同一产物在本地调试器读取提供者的 L1 追加返回值，状态为 2「入口拒绝」。对照 L1 的选择器形状规则，写入遗漏登记宿主及字段键的只读节点身份，另一处完整域关联有同类缺口。修复前用 5036fa775 回撤原七文件，已核同其完整树与 8fe6d7ad1。 [编译产物](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/release-result.json) · [远端输入核同](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/published-inputs.json) · [L1 实际状态](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56d1-temperature-provider-20261125-093737/temperature-provider-l1-append-status.txt)
