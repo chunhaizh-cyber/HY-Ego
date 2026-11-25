@@ -18,6 +18,8 @@ inline constexpr std::string_view 新本能函数登记名_语言片段分词 = 
 inline constexpr std::string_view 新本能函数登记名_未登记片段建立或取得词条 = "builtin.language.word.admit.v1";
 inline constexpr std::string_view 新本能函数登记名_查词典 = "builtin.dictionary.lookup.v1";
 inline constexpr std::string_view 新本能函数登记名_询问指定需求字段 = "builtin.demand.field.ask.v1";
+// 独立候选：关系概念+表达知识驱动的需求信息询问（t234u）；与 field.ask.v1 并存，非别名。
+inline constexpr std::string_view 新本能函数登记名_询问需求信息 = "builtin.demand.info.ask.v1";
 inline constexpr std::string_view 新本能函数登记名_获取交互者 =
     "builtin.interactor.acquire.v1";
 // v5（5380 §3.4）：6参数，在当前交互场景中确认交互者为服务对象；v4 已删除（AGENTS §5）。

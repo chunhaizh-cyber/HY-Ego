@@ -1,4 +1,7 @@
 #include "字段询问.本能运行服务.h"
+#include "关系陈述.语言服务.h"
+#include "正式表达需求.h"
+#include "表达.组织.h"
 #include "../领域/新_语言类.h"
 #include "../领域/新_自然语言世界树类.h"
 #include "新_世界树类.h"
@@ -37,6 +40,7 @@ struct 字段询问本能运行服务::实现 final {
     新_存在类& 存在;新_特征类& 特征;新_动态类& 动态;概念_存在类& 存在概念;概念_特征类& 特征概念;
     新_语言类& 语言owner;新_自然语言世界树类& 语言世界;
     std::shared_ptr<const 新字段询问语言接口> 语言;
+    std::shared_ptr<const 关系陈述语言服务> 关系陈述;
     mutable std::mutex 锁;mutable std::condition_variable 空闲;
     mutable std::size_t 活动=0;bool 已关闭=false;
     std::optional<新字段询问登记配置> 配置;
@@ -83,6 +87,20 @@ std::optional<新字段询问登记配置> 字段询问本能运行服务::读�
         要求(q.条件结果组.empty(),"field question registration must not preset condition-result pairs");
         return s.方法.确保本能方法登记(std::string(新本能函数登记名_询问指定需求字段),q);
     } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"字段询问登记",L"字段询问方法登记错误。"); }
+}
+新方法建立结果 字段询问本能运行服务::确保需求信息询问方法登记(const 新方法知识建立请求& q) noexcept {
+    try {
+        auto& s=*实现_;实现::租约 lease(s);
+        要求(q.条件结果组.empty(),"demand-info ask registration must not preset condition-result pairs");
+        return s.方法.确保本能方法登记(std::string(新本能函数登记名_询问需求信息),q);
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"需求信息询问登记",L"需求信息询问方法登记错误。"); }
+}
+void 字段询问本能运行服务::配置关系陈述语言(std::shared_ptr<const 关系陈述语言服务> v) noexcept {
+    try {
+        auto& s=*实现_;std::lock_guard lock(s.锁);
+        要求(!s.已关闭,"field question runtime closed");
+        s.关系陈述=std::move(v);
+    } catch (...) { 工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"配置关系陈述语言",L"关系陈述接线工程错误。"); }
 }
 namespace {
 新字段询问答案来源 映射答案来源(新问题答案来源 v) {
@@ -181,6 +199,109 @@ namespace {
 }
 新字段询问文字结果 字段询问本能运行服务::生成询问文字(const 新正式字段询问目标& target) const {
     auto& s=*实现_;实现::租约 lease(s);return s.语言->生成字段询问(target,s.需求);
+}
+新字段询问文字结果 字段询问本能运行服务::生成需求信息询问文字(const 新字段询问材料& m) const {
+    auto& s=*实现_;实现::租约 lease(s);
+    新字段询问文字结果 out;
+    if (!s.关系陈述 || !s.配置) {
+        out.状态 = 新字段询问文字状态::缺知识;
+        return out;
+    }
+    // 本轮仅接线目标存在缺口 → demand.target_existence.need 提问；其它字段明确范围未支持。
+    if (!m.表达上下文.目标栏问题
+        || m.定位.正式内容路径.size() != 1
+        || m.定位.正式内容路径.front() != s.配置->需求目标存在类型) {
+        out.状态 = 新字段询问文字状态::范围未支持;
+        return out;
+    }
+    关系陈述请求 请求;
+    请求.关系种子键 = "demand.target_existence.need";
+    请求.端点绑定.emplace("需求", m.定位.信息节点);
+    请求.目标语言节点 = s.配置->语言节点;
+    请求.说话者 = m.自我;
+    请求.受话者 = m.交互者;
+    请求.表达目的 = 新语言知识表达目的::提问;
+    请求.待询端点角色 = std::string("目标");
+    // 查询变量内容范围＝通用存在（与字段询问目标栏「什么」同口径）。
+    请求.待询内容范围概念 = s.配置->通用存在概念;
+    const auto 句 = s.关系陈述->生成关系陈述(请求);
+    if (句.状态 != 关系陈述状态::已生成且唯一回读)
+        (void)记录运行日志(L"需求信息询问", L"关系陈述提问",
+            L"关系状态=" + std::to_wstring(static_cast<int>(句.状态))
+                + L"；诊断字节=" + std::to_wstring(句.诊断.size()));
+    switch (句.状态) {
+    case 关系陈述状态::已生成且唯一回读:
+        break;
+    case 关系陈述状态::缺语言知识:
+        out.状态 = 新字段询问文字状态::缺知识;
+        return out;
+    case 关系陈述状态::缺名称:
+        out.状态 = 新字段询问文字状态::缺名称;
+        return out;
+    case 关系陈述状态::多义:
+        out.状态 = 新字段询问文字状态::多义;
+        return out;
+    case 关系陈述状态::前提已变化:
+        out.状态 = 新字段询问文字状态::前提已变化;
+        return out;
+    case 关系陈述状态::范围未支持:
+    case 关系陈述状态::端点不合法:
+    case 关系陈述状态::关系不成立:
+    case 关系陈述状态::方向或角色错误:
+    case 关系陈述状态::缺关系概念:
+    case 关系陈述状态::输入拒绝:
+        out.状态 = 新字段询问文字状态::范围未支持;
+        return out;
+    default:
+        out.状态 = 新字段询问文字状态::缺知识;
+        return out;
+    }
+    // 成句正文走关系陈述；留档所需含义网/组织知识仍走既有目标栏组织器（与字段询问共用留档合同）。
+    // 成文夹具不齐时（仅成句读回）允许无组织知识返回；正式执行材料齐备时组织失败映射为对应文字状态。
+    out.UTF8正文 = 句.UTF8正文;
+    out.所用知识节点组 = 句.所用知识节点组;
+    const bool 成文齐备 = 有效(m.表达上下文.被询内容.信息节点)
+        && 有效(m.表达上下文.需求范围概念)
+        && 有效(m.表达上下文.说话者)
+        && 有效(m.表达上下文.受询者)
+        && 有效(m.表达上下文.交互窗口)
+        && 有效(m.表达上下文.交互作用域)
+        && 有效(m.表达上下文.第三方指代概念)
+        && 有效(m.表达上下文.选用指代名称关系)
+        && 有效(m.表达上下文.问题主体);
+    if (成文齐备) {
+        const auto 组织 = 组织具体表达结构(
+            从字段询问目标形成表达需求(m.表达上下文),
+            s.语言owner, s.需求, s.存在概念, s.特征概念);
+        if (组织.状态 != 新表达结构组织状态::已组织)
+            (void)记录运行日志(L"需求信息询问", L"组织含义网",
+                L"组织状态=" + std::to_wstring(static_cast<int>(组织.状态)));
+        switch (组织.状态) {
+        case 新表达结构组织状态::已组织:
+            out.含义网 = 组织.含义网;
+            out.所用组织知识节点 = 组织.所用组织知识节点;
+            break;
+        case 新表达结构组织状态::缺组织知识:
+        case 新表达结构组织状态::多规则待选:
+            out.状态 = 新字段询问文字状态::缺知识;
+            return out;
+        case 新表达结构组织状态::缺材:
+        case 新表达结构组织状态::范围未支持:
+            out.状态 = 新字段询问文字状态::范围未支持;
+            return out;
+        case 新表达结构组织状态::条件不成立:
+        case 新表达结构组织状态::前提已变化:
+            out.状态 = 新字段询问文字状态::前提已变化;
+            return out;
+        default:
+            out.状态 = 新字段询问文字状态::缺知识;
+            return out;
+        }
+        if (!有效(out.所用组织知识节点))
+            throw std::logic_error("demand-info ask organized meaning missing knowledge");
+    }
+    out.状态 = 新字段询问文字状态::已生成且唯一回读;
+    return out;
 }
 bool 字段询问本能运行服务::已请求停止() const noexcept {
     std::lock_guard lock(实现_->锁);return 实现_->已关闭 || 新_本能函数管理类::本次停止已请求();
@@ -417,6 +538,116 @@ bool 字段询问本能运行服务::已请求停止() const noexcept {
         r.结果.已形成动态节点组={receipt.入列动态};
         r.结果.建议观察特征节点组={f.输出特征};
         return r;
+}
+
+新本能函数本次条件结果对 执行询问需求信息核心(
+    const 方法参数场景& 场景,字段询问本能运行服务& 操作) {
+    // 与字段询问共用材料读回/留档/入列链；成句改走关系陈述提问，不调用生成字段询问。
+    新本能函数本次条件结果对 r;
+    r.条件.执行分支节点=场景.执行分支节点();
+    auto* p=&操作;
+    const auto capture=[&] {
+        r.条件.参数角色组.clear();
+        for (const auto& b:场景.全部角色绑定()) {
+            新本能函数条件角色材料 c;c.有序引用=b.有序引用;c.世界场景节点=b.世界场景节点;
+            if (b.有序引用 && b.有序引用->序号==4) {
+                const auto feature=场景.读取绑定特征(b.有序引用->信息节点);
+                if (!feature) throw std::logic_error("output feature disappeared before action");
+                c.实际特征组.push_back({feature->节点,feature->当前值});
+            }
+            r.条件.参数角色组.push_back(std::move(c));
+        }
+    };
+    const auto material=p->读取询问材料(场景);
+    if (场景.用途()!=新方法参数场景用途::模拟)
+        (void)记录运行日志(L"需求信息询问",L"读取询问材料",
+            L"材料状态="+std::to_wstring(static_cast<int>(material.状态)));
+    if (material.材料) capture();
+    auto publishRead=[&](const 新字段询问材料读回& read) {
+        新本能字段询问返回材料 v;
+        if (read.材料) { v.正式定位=read.材料->定位; v.已读取字段=read.材料->字段内容; }
+        switch (read.状态) {
+        case 新字段询问材料状态::字段已有值:v.原因=新本能字段询问原因::字段已有值;break;
+        case 新字段询问材料状态::字段不适用:v.原因=新本能字段询问原因::字段不适用;break;
+        case 新字段询问材料状态::前提已变化:v.原因=新本能字段询问原因::前提已变化;break;
+        case 新字段询问材料状态::问题已有答案:v.原因=新本能字段询问原因::问题已有答案;
+            if (read.材料) v.问题节点=read.材料->已答问题;
+            break;
+        default:v.原因=新本能字段询问原因::定位未支持;break;
+        }
+        r.结果.字段询问=std::move(v);
+        if (read.状态==新字段询问材料状态::字段已有值 || read.状态==新字段询问材料状态::字段不适用
+            || read.状态==新字段询问材料状态::问题已有答案) {
+            要求(r.结果.动作阶段==新本能函数动作阶段::未进入动作,"demand-info ask goal judgment after action");
+            r.结果.状态=新本能函数执行状态::目标已满足;
+            r.结果.结果取得状态=新本能函数结果取得状态::未取得;
+        }
+    };
+    if (material.状态!=新字段询问材料状态::已取得) { publishRead(material); return r; }
+    if (!material.材料) throw std::logic_error("demand-info ask material missing");
+    const auto& m=*material.材料;
+    // 内存问句路径：关系陈述提问 DTO 级材料，不新增正式D或任务。
+    const auto text=p->生成需求信息询问文字(m);
+    if (场景.用途()!=新方法参数场景用途::模拟)
+        (void)记录运行日志(L"需求信息询问",L"生成需求信息询问文字",
+            L"文字状态="+std::to_wstring(static_cast<int>(text.状态)));
+    if (text.状态!=新字段询问文字状态::已生成且唯一回读) {
+        新本能字段询问返回材料 v; v.正式定位=m.定位;v.已读取字段=m.字段内容;
+        switch (text.状态) {
+        case 新字段询问文字状态::缺知识:v.原因=新本能字段询问原因::缺语言知识;break;
+        case 新字段询问文字状态::缺名称:v.原因=新本能字段询问原因::缺名称;break;
+        case 新字段询问文字状态::缺指称:v.原因=新本能字段询问原因::缺指称;break;
+        case 新字段询问文字状态::多义:v.原因=新本能字段询问原因::多义;break;
+        case 新字段询问文字状态::前提已变化:v.原因=新本能字段询问原因::前提已变化;break;
+        default:v.原因=新本能字段询问原因::定位未支持;break;
+        }
+        r.结果.字段询问=std::move(v);return r;
+    }
+    if (text.UTF8正文.empty()) throw std::logic_error("generated demand-info question is empty");
+    const auto fresh=p->读取询问材料(场景);
+    if (fresh.状态!=新字段询问材料状态::已取得) { publishRead(fresh);return r; }
+    if (!fresh.材料) throw std::logic_error("demand-info ask recheck missing");
+    const auto& f=*fresh.材料;
+    if (f.定位.信息节点!=m.定位.信息节点 || f.定位.正式内容路径!=m.定位.正式内容路径
+        || f.自我!=m.自我 || f.交互者!=m.交互者 || f.窗口!=m.窗口 || f.输出特征!=m.输出特征
+        || f.问题主体!=m.问题主体 || f.被问栏!=m.被问栏) {
+        publishRead({新字段询问材料状态::前提已变化,{}});return r;
+    }
+    if (p->已请求停止()) return r;
+    capture();
+    if (新_本能函数管理类::读取本次执行实例(场景))
+        新_本能函数管理类::标记本次动作入口(场景);
+    const auto action=p->建立输出动作(场景,f);
+    if (!有效(action)) throw std::logic_error("demand-info ask action was not published");
+    r.结果.动作动态节点=action;r.结果.动作阶段=新本能函数动作阶段::已进入动作;
+    r.结果.状态=新本能函数执行状态::动作结果未知;
+    r.结果.结果取得状态=新本能函数结果取得状态::部分取得;
+    const auto archive=p->留档出站具体表达(场景,f,action,text);
+    switch(archive){
+    case 新出站表达留档状态::前提已变化:
+        publishRead({新字段询问材料状态::前提已变化,{}});return r;
+    case 新出站表达留档状态::已留档:
+    case 新出站表达留档状态::模拟不留档:break;
+    default:throw std::logic_error("demand-info ask archive status undefined");
+    }
+    const auto question=p->建立出站问题(场景,f,action);
+    if (question.状态==新字段询问问题建立状态::前提已变化) { publishRead({新字段询问材料状态::前提已变化,{}});return r; }
+    if (question.状态!=新字段询问问题建立状态::已建立 || !有效(question.问题节点))
+        throw std::logic_error("demand-info ask establishment status undefined");
+    const auto receipt=p->提交询问输出(场景,f,action,text.UTF8正文);
+    if (!有效(receipt.消息节点)||!有效(receipt.入列状态)||!有效(receipt.入列动态)||receipt.提交序号==0)
+        throw std::logic_error("demand-info ask output receipt incomplete");
+    新本能字段询问返回材料 out;out.原因=新本能字段询问原因::已入列;
+    out.正式定位=f.定位;out.已读取字段=f.字段内容;
+    out.已提交输出=新本能已提交输出结果{f.窗口,f.输出特征,receipt.消息节点,action,receipt.入列状态,receipt.入列动态,receipt.提交序号};
+    out.问题节点=question.问题节点;
+    r.结果.字段询问=std::move(out);
+    r.结果.状态=新本能函数执行状态::异步已受理;
+    r.结果.动作阶段=新本能函数动作阶段::已按函数合同返回;
+    r.结果.结果取得状态=新本能函数结果取得状态::待取得;
+    r.结果.已形成动态节点组={receipt.入列动态};
+    r.结果.建议观察特征节点组={f.输出特征};
+    return r;
 }
 
 } // namespace 海中鱼巣

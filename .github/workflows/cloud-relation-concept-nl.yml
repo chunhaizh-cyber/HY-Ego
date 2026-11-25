@@ -1,0 +1,101 @@
+# 世界树关系概念出站：MSVC 编译 + --verify-relation-concept-nl
+# 不启治理外发；不声称用户正式持久库端到端。
+name: cloud-relation-concept-nl
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/cloud-relation-concept-nl.yml'
+      - 'tools/ci/windows-relation-concept-nl.ps1'
+      - '海中鱼巣.vcxproj'
+      - '海中鱼巣.vcxproj.filters'
+      - '海中鱼巣/领域/关系概念*'
+      - '海中鱼巣/业务/初始化.关系概念.*'
+      - '海中鱼巣/业务/关系陈述.语言服务.*'
+      - '海中鱼巣/业务/自检.关系概念出站.*'
+      - '海中鱼巣/业务/字段询问.本能运行服务.*'
+      - '海中鱼巣/领域/新_本能函数*'
+      - '海中鱼巣/领域/本能字段询问.运行接口.*'
+      - '海中鱼巣/装配.普通应用.*'
+      - '海中鱼巣/启动.*'
+      - '海中鱼巣/启动选项.数据.h'
+      - '海中鱼巣/程序运行结果.数据.h'
+      - '初始化材料/世界关系概念种子.txt'
+  push:
+    branches:
+      - 'cursor/relation-concept-nl-outbound-c720'
+      - 'cursor/relation-nl-bidirectional-c720'
+      - 'cursor/pr19-main-compat-c720'
+      - 'cursor/ask-demand-info-instinct-c720'
+    paths:
+      - '.github/workflows/cloud-relation-concept-nl.yml'
+      - 'tools/ci/windows-relation-concept-nl.ps1'
+      - '海中鱼巣.vcxproj'
+      - '海中鱼巣.vcxproj.filters'
+      - '海中鱼巣/领域/关系概念*'
+      - '海中鱼巣/业务/初始化.关系概念.*'
+      - '海中鱼巣/业务/关系陈述.语言服务.*'
+      - '海中鱼巣/业务/自检.关系概念出站.*'
+      - '海中鱼巣/业务/字段询问.本能运行服务.*'
+      - '海中鱼巣/领域/新_本能函数*'
+      - '海中鱼巣/领域/本能字段询问.运行接口.*'
+      - '海中鱼巣/装配.普通应用.*'
+      - '海中鱼巣/启动.*'
+      - '海中鱼巣/启动选项.数据.h'
+      - '海中鱼巣/程序运行结果.数据.h'
+      - '初始化材料/世界关系概念种子.txt'
+
+permissions:
+  contents: read
+
+jobs:
+  msvc-relation-concept-nl:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: "Prepare D: contract paths"
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $root = Join-Path $env:RUNNER_TEMP 'hy-ego-droot'
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          if (-not (Test-Path 'D:\')) {
+            subst D: $root
+            if ($LASTEXITCODE -ne 0) { throw "subst D: failed: $LASTEXITCODE" }
+          }
+          New-Item -ItemType Directory -Force -Path 'D:\海中鱼巣\日志' | Out-Null
+          New-Item -ItemType Directory -Force -Path 'D:\TEMP\海中鱼巣' | Out-Null
+
+      - name: MSVC build + relation-concept verify
+        id: verify
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $artifactRoot = Join-Path $env:RUNNER_TEMP 'hy-ego-relation-concept-nl\artifacts'
+          New-Item -ItemType Directory -Force -Path $artifactRoot | Out-Null
+          "RC_ARTIFACT_ROOT=$artifactRoot" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          & "$env:GITHUB_WORKSPACE\tools\ci\windows-relation-concept-nl.ps1" `
+            -ArtifactRoot $artifactRoot
+
+      - name: Collect app logs if present
+        if: always()
+        shell: pwsh
+        run: |
+          $src = 'D:\海中鱼巣\日志'
+          $dst = Join-Path $env:RC_ARTIFACT_ROOT 'app-logs'
+          if (Test-Path $src) {
+            New-Item -ItemType Directory -Force -Path $dst | Out-Null
+            Copy-Item -Path (Join-Path $src '*') -Destination $dst -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+      - name: Upload verify artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relation-concept-nl-artifacts
+          path: ${{ env.RC_ARTIFACT_ROOT }}
+          if-no-files-found: warn
+          retention-days: 14
