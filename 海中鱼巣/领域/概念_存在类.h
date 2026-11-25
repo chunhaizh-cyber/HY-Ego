@@ -291,6 +291,7 @@ struct 待完善存在概念来源 final {
 struct 待完善存在概念信息 final {
     稳定编码 节点, 所属存在根;
     待完善存在概念来源 来源;
+    std::vector<稳定编码> 名称关系;
 };
 
 struct 待完善存在概念结果 final {

@@ -1220,9 +1220,16 @@ bool 概念_存在类::撤销未绑定专属存在概念(
 
         待完善存在概念信息 信息{节点, *根, {*L, *W, *构式,
             static_cast<std::size_t>(*起点), static_cast<std::size_t>(*终点)}};
+        std::set<稳定编码> 已读名称;
+        for (const auto& 字段 : 结构.字段组) {
+            if (字段.字段节点 != 名称关系字段) continue;
+            const auto* 名称 = std::get_if<稳定编码>(&字段.内容);
+            if (!名称 || !有效(*名称) || !已读名称.insert(*名称).second) return {S::结构不一致};
+            信息.名称关系.push_back(*名称);
+        }
         std::vector<基础联合节点快照> 保护;
         保护.push_back(std::move(*快照));
-        return {S::已读取, 信息, std::move(保护)};
+        return {S::已读取, std::move(信息), std::move(保护)};
     } catch (const std::bad_alloc&) {
         return {S::资源失败};
     } catch (const std::length_error&) {

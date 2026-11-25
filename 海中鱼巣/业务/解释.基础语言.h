@@ -55,9 +55,13 @@ struct 待完善特征名称目标 final {
     稳定编码 节点;
     friend bool operator==(const 待完善特征名称目标&, const 待完善特征名称目标&) = default;
 };
+struct 待完善存在名称目标 final {
+    稳定编码 节点;
+    friend bool operator==(const 待完善存在名称目标&, const 待完善存在名称目标&) = default;
+};
 struct 普通名称候选读回 final {
     概念名称关系信息 名称关系;
-    std::variant<存在概念信息, 特征概念信息, 正式结构概念信息, 待完善特征名称目标> 目标概念;
+    std::variant<存在概念信息, 特征概念信息, 正式结构概念信息, 待完善特征名称目标, 待完善存在名称目标> 目标概念;
 };
 using 语言名称候选读回 = std::variant<普通名称候选读回, 指代名称关系信息>;
 

@@ -122,6 +122,12 @@ std::optional<概念类别> 识别概念类别(
         if(根.状态==正式概念读取状态::已读取&&根.信息&&根.信息->节点==概念节点)
             return 概念类别::特征类别根;
         if(根.状态==正式概念读取状态::前提已变化)return std::nullopt;
+        using S = 待完善存在概念状态;
+        const auto 待完善 = 存在概念服务.读取待完善存在概念(概念节点);
+        if (待完善.状态 == S::资源失败) throw std::bad_alloc{};
+        if (待完善.状态 == S::结构不一致) throw std::logic_error("pending existence name target invalid");
+        if (待完善.状态 == S::已读取 && 待完善.信息) return 概念类别::存在;
+        if (待完善.状态 == S::前提已变化) return std::nullopt;
     }
     const auto 正式定义 = 读取名称用正式定义(概念节点,存在概念服务,上下文);
     if (!是特征 && !是存在 && (正式定义.状态 == 正式结构操作状态::前提已变化
@@ -172,6 +178,13 @@ bool 概念持有关系(
         if (!待完善.信息 || 待完善.信息->已完善) return false;
         关系组 = 待完善.信息->名称关系;
     } else {
+        using S = 待完善存在概念状态;
+        const auto 待完善 = 存在概念服务.读取待完善存在概念(信息.概念节点);
+        if (待完善.状态 == S::资源失败) throw std::bad_alloc{};
+        if (待完善.状态 == S::结构不一致) throw std::logic_error("pending existence name holder invalid");
+        if (待完善.状态 == S::前提已变化) return false;
+        if (待完善.状态 == S::已读取 && 待完善.信息)
+            return std::count(待完善.信息->名称关系.begin(), 待完善.信息->名称关系.end(), 信息.节点) == 1;
         const auto 根=特征概念服务.读取特征类别根概念保护();
         if(根.状态==正式概念读取状态::前提已变化)return false;
         if(根.状态==正式概念读取状态::已读取&&根.信息&&根.信息->节点==信息.概念节点)
@@ -199,6 +212,11 @@ bool 名称端点读取期间变化(
         && 概念持有关系(*再读, 特征概念服务, 存在概念服务, 动态概念服务, 上下文))
         return true;
     if (特征概念服务.是特征概念节点(概念节点) || 存在概念服务.是存在概念节点(概念节点)) return false;
+    using S = 待完善存在概念状态;
+    const auto 待完善 = 存在概念服务.读取待完善存在概念(概念节点);
+    if (待完善.状态 == S::资源失败) throw std::bad_alloc{};
+    if (待完善.状态 == S::前提已变化) return true;
+    if (待完善.状态 == S::已读取) return false;
     const auto 根=特征概念服务.读取特征类别根概念保护();
     if(根.状态==正式概念读取状态::前提已变化)return true;
     if(根.状态==正式概念读取状态::已读取&&根.信息&&根.信息->节点==概念节点)return false;
@@ -998,6 +1016,18 @@ void 核普通名称概念保护(const 概念名称关系信息& 项,
             throw std::logic_error("name formal endpoint receipt invalid");
         核持有(结构.信息->名称关系);
         并名称保护(保护, 结构.完整保护组);
+        return;
+    }
+    using S = 待完善存在概念状态;
+    const auto 待完善 = 存在服务.读取待完善存在概念(项.概念节点);
+    if (待完善.状态 == S::资源失败) throw 概念名称关系查询状态::资源失败;
+    if (待完善.状态 == S::前提已变化) throw 概念名称关系查询状态::读取漂移;
+    if (待完善.状态 == S::依赖未就绪) throw 概念名称关系查询状态::读取未完成;
+    if (待完善.状态 == S::结构不一致) throw std::logic_error("pending existence name protection invalid");
+    if (待完善.状态 == S::已读取) {
+        if (!待完善.信息) throw std::logic_error("pending existence name protection missing");
+        核持有(待完善.信息->名称关系);
+        并名称保护(保护, 待完善.完整保护组);
         return;
     }
     throw std::logic_error("name ordinary concept endpoint unrecognized");
