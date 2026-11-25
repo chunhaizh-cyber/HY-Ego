@@ -6037,6 +6037,7 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         std::lock_guard 锁(特征概念树互斥);
         std::set<稳定编码> 编码组;
         std::map<稳定编码, 基础联合节点快照> 枚举;
+        std::vector<稳定编码> 路径;
         稳定编码 根{};
         auto 当前 = 节点;
         for (;;) {
@@ -6047,6 +6048,7 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
                 return {基础结构操作状态::节点不存在, {}, {}, false};
             const auto& s = *b.节点组.front().快照;
             枚举.emplace(当前, s);
+            路径.push_back(当前);
             std::vector<稳定编码> 父;
             for (const auto& r : s.入向外部关系组)
                 if (r.类型 == 基础外部关系类型::父子) 父.push_back(r.源节点);
@@ -6206,8 +6208,19 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
                 }
             }
         }
+        auto 实例类型 = 根;
+        if (有效(正式I64类型关联字段) && 有效(子类型适用存在概念字段)
+            && !字段组(根, 正式I64类型关联字段).empty()) {
+            for (const auto 祖先 : 路径) {
+                if (字段组(祖先, 子类型适用存在概念字段).empty()) continue;
+                const auto 适用 = std::get<稳定编码>(单项(祖先, 子类型适用存在概念字段));
+                if (!有效(适用)) throw std::logic_error("invalid applicable existence concept");
+                实例类型 = 祖先;
+                break;
+            }
+        }
         out.信息 = 特征概念定义保护信息{{节点, 规范->材料类型, 规范->值域, 规范->单位,
-            规范->比较规则, 规范->聚合规则, 规范->名称关系, 命中}, 根};
+            规范->比较规则, 规范->聚合规则, 规范->名称关系, 命中}, 根, 实例类型};
         out.状态 = 基础结构操作状态::已完成;
         return out;
     } catch (const std::bad_alloc&) { return {基础结构操作状态::资源失败, {}, {}, false}; }

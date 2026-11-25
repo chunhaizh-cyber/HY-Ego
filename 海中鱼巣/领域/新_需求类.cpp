@@ -98,13 +98,13 @@ bool 词条目标特征类型有效(const 概念_特征类& 特征, 稳定编码
     return false;
 }
 
-template<class 根解析器>
-bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定编码 FT,稳定编码 域,根解析器&& 读取根) {
+template<class 类型读取器>
+bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定编码 FT,稳定编码 域,类型读取器&& 读取类型) {
     if(比较.参照特征概念节点!=std::optional{域})return false;
     bool exact=false;
     for(const auto& input:比较.输入定义组)if(input.来源种类==二次特征输入来源种类::特征准确值) {
         if(!input.特征类型概念节点)return false;
-        const auto root=读取根(*input.特征类型概念节点);if(!root||*root!=FT)return false;exact=true;
+        const auto 类型=读取类型(*input.特征类型概念节点);if(!类型||*类型!=FT)return false;exact=true;
     }return exact;
 }
 }
@@ -130,7 +130,7 @@ bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定�
         }return true;
     };
     const auto f=fc.读取特征概念定义保护(t.目标特征类型概念节点);
-    if(!merge(f)||f.信息->类型根!=t.目标特征类型概念节点)return result;
+    if(!merge(f)||f.信息->实例所属特征类型!=t.目标特征类型概念节点)return result;
     if(t.目标形式==新需求目标形式::变化方向) {
         if(t.目标值域概念节点||t.目标比较关系概念节点||!t.目标变化方向
             ||(*t.目标变化方向!=新需求变化方向::增加&&*t.目标变化方向!=新需求变化方向::减少))return result;
@@ -138,9 +138,9 @@ bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定�
         if(t.目标变化方向||!t.目标值域概念节点||!t.目标比较关系概念节点)return result;
         const auto d=fc.读取特征概念定义保护(*t.目标值域概念节点);
         const auto b=rc.读取二次特征定义保护(*t.目标比较关系概念节点);
-        if(!merge(d)||!merge(b)||d.信息->类型根!=f.信息->类型根
+        if(!merge(d)||!merge(b)||d.信息->实例所属特征类型!=f.信息->实例所属特征类型
             ||b.信息->参照特征概念节点!=t.目标值域概念节点)return result;
-        std::map<稳定编码,稳定编码> inputRoots;
+        std::map<稳定编码,稳定编码> 输入类型;
         for(const auto& i:b.信息->输入定义组) {
             if(!i.特征类型概念节点) {
                 if(i.来源种类==二次特征输入来源种类::特征准确值)return result;
@@ -148,10 +148,10 @@ bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定�
             }
             const auto in=fc.读取特征概念定义保护(*i.特征类型概念节点);
             if(!merge(in))return result;
-            inputRoots.emplace(*i.特征类型概念节点,in.信息->类型根);
+            输入类型.emplace(*i.特征类型概念节点,in.信息->实例所属特征类型);
         }
-        if(!比较关系适用纯判据(*b.信息,f.信息->类型根,*t.目标值域概念节点,[&](稳定编码 C)->std::optional<稳定编码> {
-            const auto it=inputRoots.find(C);return it==inputRoots.end()?std::nullopt:std::optional{it->second};
+        if(!比较关系适用纯判据(*b.信息,f.信息->实例所属特征类型,*t.目标值域概念节点,[&](稳定编码 C)->std::optional<稳定编码> {
+            const auto it=输入类型.find(C);return it==输入类型.end()?std::nullopt:std::optional{it->second};
         }))return result;
         if(!merge(fc.读取特征概念定义保护(b.信息->输出特征概念.节点)))return result;
     } else return result;
@@ -1492,11 +1492,11 @@ std::optional<稳定编码> 取得特征类型根(
 
 bool 比较关系适用于目标(
     const 二次特征概念信息& 比较关系,
-    稳定编码 特征类型根,
+    稳定编码 特征类型,
     稳定编码 目标值域,
     const 概念_特征类& 特征概念服务) {
-    return 比较关系适用纯判据(比较关系,特征类型根,目标值域,[&](稳定编码 C) {
-        return 取得特征类型根(C,特征概念服务);
+    return 比较关系适用纯判据(比较关系,特征类型,目标值域,[&](稳定编码 C) {
+        return 特征概念服务.读取实例所属特征类型(C);
     });
 }
 
@@ -2090,7 +2090,7 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             if(r.状态==基础结构操作状态::资源失败)return 结束(W::资源失败);
             if(r.状态!=基础结构操作状态::已完成||!r.信息)throw std::logic_error("demand target FT unreadable");
             const auto& def=r.信息->定义;
-            if(r.信息->类型根!=FT||def.材料类型!=特征概念材料物理类型::I64标量||def.单位!=v.单位)
+            if(r.信息->实例所属特征类型!=FT||def.材料类型!=特征概念材料物理类型::I64标量||def.单位!=v.单位)
                 return 结束(W::答案不可用,L"目标特征类型不是同单位I64标量");
             bool ok1=true,ok2=true;
             const auto lo=答案整数(v.准确整数 ? *v.准确整数 : *v.区间下界,ok1);
@@ -3291,8 +3291,7 @@ thread_local int 服务取得出生失败行 = 0;
                 结果.状态 = 新需求操作状态::比较关系不合法;
                 return 结果;
             }
-            const auto 类型根 = 取得特征类型根(
-                *请求.目标.目标值域概念节点, 特征概念服务_);
+            const auto 类型根 = 特征概念服务_.读取实例所属特征类型(*请求.目标.目标值域概念节点);
             if (!类型根 || *类型根 != 请求.目标.目标特征类型概念节点) {
                 结果.状态 = 新需求操作状态::目标值域不合法;
                 return 结果;
@@ -5546,11 +5545,11 @@ bool 加需求存在保护(稳定编码 id,新_存在类& E,std::vector<基础�
         }
         if(目标.目标特征类型概念节点) {
             const auto& 类型定义=采特征(*目标.目标特征类型概念节点);
-            要求稳定结构(类型定义.类型根==*目标.目标特征类型概念节点);
+            要求稳定结构(类型定义.实例所属特征类型==*目标.目标特征类型概念节点);
         }
         if(目标.目标值域概念节点) {
             const auto& 域=采特征(*目标.目标值域概念节点);
-            if(目标.目标特征类型概念节点)要求稳定结构(域.类型根==*目标.目标特征类型概念节点);
+            if(目标.目标特征类型概念节点)要求稳定结构(域.实例所属特征类型==*目标.目标特征类型概念节点);
         }
         if(目标.目标比较关系概念节点) {
             const auto& 比较=采二次(*目标.目标比较关系概念节点);
@@ -5558,11 +5557,11 @@ bool 加需求存在保护(稳定编码 id,新_存在类& E,std::vector<基础�
             if(目标.目标特征类型概念节点)for(const auto& 输入:比较.输入定义组)
                 if(输入.来源种类==二次特征输入来源种类::特征准确值)
                     要求稳定结构(输入.特征类型概念节点
-                        &&特征组.at(*输入.特征类型概念节点).类型根==*目标.目标特征类型概念节点);
+                        &&特征组.at(*输入.特征类型概念节点).实例所属特征类型==*目标.目标特征类型概念节点);
             if(需求.完整目标)要求稳定结构(比较关系适用纯判据(比较,*目标.目标特征类型概念节点,
                 *目标.目标值域概念节点,[&](稳定编码 概念节点)->std::optional<稳定编码> {
                     const auto 位置=特征组.find(概念节点);
-                    return 位置==特征组.end()?std::nullopt:std::optional{位置->second.类型根};
+                    return 位置==特征组.end()?std::nullopt:std::optional{位置->second.实例所属特征类型};
                 }));
         }
         语义.状态=需求.完整目标 ? 正式引用概念语义状态::完整 : 正式引用概念语义状态::部分;
@@ -5595,7 +5594,7 @@ bool 加需求存在保护(稳定编码 id,新_存在类& E,std::vector<基础�
             return S::目标特征类型不合法;
         }
     }
-    const auto feature=[&](稳定编码 C,bool root)->std::optional<稳定编码> {
+    const auto feature=[&](稳定编码 C,bool 需要类型身份)->std::optional<稳定编码> {
         const auto p=F.读取特征概念定义保护(C);
         if(p.前提已变化)throw 新需求目标定义核验状态::前提已变化;
         if(p.状态==基础结构操作状态::资源失败)throw std::bad_alloc{};
@@ -5603,8 +5602,8 @@ bool 加需求存在保护(稳定编码 id,新_存在类& E,std::vector<基础�
         if(p.状态!=基础结构操作状态::已完成)throw std::runtime_error("partial demand feature definition read failed");
         if(!p.信息)throw std::runtime_error("partial demand feature definition projection missing");
         if(!并需求保护(protect,p.预期节点组))throw 新需求目标定义核验状态::前提已变化;
-        if(root&&p.信息->类型根!=C)return {};
-        return p.信息->类型根;
+        if(需要类型身份&&p.信息->实例所属特征类型!=C)return {};
+        return p.信息->实例所属特征类型;
     };
     if(t.目标特征类型概念节点&&!feature(*t.目标特征类型概念节点,true))return S::目标特征类型不合法;
     if(t.目标值域概念节点){const auto root=feature(*t.目标值域概念节点,false);
@@ -6457,7 +6456,7 @@ void 新_需求类::装配接收认知语言读取接口(const 新_语言类* �
                 if(r.状态!=基础结构操作状态::已完成&&r.状态!=基础结构操作状态::节点不存在&&r.状态!=基础结构操作状态::入口拒绝)
                     throw std::runtime_error("内容特征范围定义reader工程失败");
                 if(r.状态==基础结构操作状态::已完成&&!r.信息)throw std::runtime_error("内容特征范围成功缺定义");
-                return {r.信息&&(p!=基础概念原语::合法FT根||r.信息->类型根==节点) ? F::符合 : F::不符合,r.预期节点组};
+                return {r.信息&&(p!=基础概念原语::合法FT根||r.信息->实例所属特征类型==节点) ? F::符合 : F::不符合,r.预期节点组};
             }
             if(p==基础概念原语::合法比较关系) {
                 const auto r=二次特征概念服务_.读取二次特征定义保护(节点);
@@ -6826,7 +6825,7 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
             if(!并需求保护(protect,r.预期节点组))throw 新需求目标定义核验状态::前提已变化;
             return true;
         };
-        if(!add(FT)||FT.信息->类型根!=p.目标特征类型)return {S::目标特征类型不合法,{}};
+        if(!add(FT)||FT.信息->实例所属特征类型!=p.目标特征类型)return {S::目标特征类型不合法,{}};
         const auto& ft=FT.信息->定义;
         if(ft.材料类型!=特征概念材料物理类型::I64标量)return {S::目标特征类型不合法,{}};
         if(p.方向) {
@@ -6843,7 +6842,7 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
             const auto& domain=D.信息->定义;
             const auto* intervals=std::get_if<std::vector<特征概念I64闭区间>>(&domain.值域);
             if(domain.材料类型!=ft.材料类型
-                ||D.信息->类型根!=p.目标特征类型||domain.单位!=ft.单位||p.单位!=ft.单位
+                ||D.信息->实例所属特征类型!=p.目标特征类型||domain.单位!=ft.单位||p.单位!=ft.单位
                 ||domain.比较规则!=ft.比较规则||domain.聚合规则!=ft.聚合规则
                 ||!intervals||intervals->size()!=1)return {S::目标值域不合法,{}};
             const auto range=特征概念服务_.比较值域(ft.材料类型,domain.值域,ft.值域);
@@ -7116,7 +7115,7 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
         if (!特征概念服务_.是特征概念节点(请求.目标.目标特征类型概念节点))
             return {S::目标特征类型不合法, {}, {}};
         if (请求.目标.目标形式 == 新需求目标形式::值) {
-            const auto 类型根 = 取得特征类型根(*请求.目标.目标值域概念节点, 特征概念服务_);
+            const auto 类型根 = 特征概念服务_.读取实例所属特征类型(*请求.目标.目标值域概念节点);
             if (!类型根 || *类型根 != 请求.目标.目标特征类型概念节点) return {S::目标值域不合法, {}, {}};
             const auto 比较 = 二次特征概念服务_.获取二次特征概念(*请求.目标.目标比较关系概念节点);
             if (!比较 || !比较关系适用于目标(*比较, *类型根, *请求.目标.目标值域概念节点, 特征概念服务_))
@@ -8097,7 +8096,7 @@ struct 新_需求类::筹办保护收集批 final {
     bool 比较适用(const 二次特征概念信息& comparison,稳定编码 FT,稳定编码 domain,const 概念_特征类& fc) {
         std::map<稳定编码,稳定编码> roots;
         for(const auto& input:comparison.输入定义组)if(input.特征类型概念节点)
-            roots.emplace(*input.特征类型概念节点,特征定义(fc,*input.特征类型概念节点).类型根);
+            roots.emplace(*input.特征类型概念节点,特征定义(fc,*input.特征类型概念节点).实例所属特征类型);
         return 比较关系适用纯判据(comparison,FT,domain,[&](稳定编码 C)->std::optional<稳定编码>{
             const auto it=roots.find(C);return it==roots.end() ? std::nullopt : std::optional{it->second};
         });
@@ -8816,8 +8815,8 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
             批->合并(def.完整保护);
             if(def.状态!=新需求目标定义核验状态::已完成)return r;
         }
-        const auto 根 = 批 ? std::optional{批->特征定义(特征概念服务_,d.目标.目标特征类型概念节点).类型根}
-            : 取得特征类型根(d.目标.目标特征类型概念节点,特征概念服务_);
+        const auto 根 = 批 ? std::optional{批->特征定义(特征概念服务_,d.目标.目标特征类型概念节点).实例所属特征类型}
+            : 特征概念服务_.读取实例所属特征类型(d.目标.目标特征类型概念节点);
         if (!根 || *根 != d.目标.目标特征类型概念节点) return r;
         基础节点组追加请求 保护;
         const auto 加身份 = [&](稳定编码 n, const 正式概念身份读取接口& owner) {
@@ -8831,8 +8830,8 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
         };
         if (!加身份(*根, 特征概念服务_)) return r;
         if (d.目标.目标形式 == 新需求目标形式::值) {
-            const auto 域根 = 批 ? std::optional{批->特征定义(特征概念服务_,*d.目标.目标值域概念节点).类型根}
-                : 取得特征类型根(*d.目标.目标值域概念节点,特征概念服务_);
+            const auto 域根 = 批 ? std::optional{批->特征定义(特征概念服务_,*d.目标.目标值域概念节点).实例所属特征类型}
+                : 特征概念服务_.读取实例所属特征类型(*d.目标.目标值域概念节点);
             const auto 比较 = 批 ? std::optional{批->二次定义(二次特征概念服务_,特征概念服务_,*d.目标.目标比较关系概念节点)}
                 : 二次特征概念服务_.获取二次特征概念(*d.目标.目标比较关系概念节点);
             if (!域根 || *域根 != *根 || !比较 || !(批
@@ -9225,8 +9224,7 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
                 结果.状态 = 新需求当前满足状态::结构不一致;
                 return 结果;
             }
-            const auto 类型根 = 取得特征类型根(
-                特征->特征概念节点, 特征概念服务_);
+            const auto 类型根 = 特征概念服务_.读取实例所属特征类型(特征->特征概念节点);
             if (类型根 && *类型根 == 需求->目标.目标特征类型概念节点) {
                 if (实际特征) {
                     结果.状态 = 新需求当前满足状态::结构不一致;
@@ -9270,11 +9268,11 @@ void 新_需求类::追加筹办存在值域归属保护(稳定编码 E,稳定�
             return 结果;
         }
         const auto 实际根 = 批
-            ? std::optional{批->特征定义(特征概念服务_,特征->特征概念节点).类型根}
-            : 取得特征类型根(特征->特征概念节点,特征概念服务_);
+            ? std::optional{批->特征定义(特征概念服务_,特征->特征概念节点).实例所属特征类型}
+            : 特征概念服务_.读取实例所属特征类型(特征->特征概念节点);
         const auto 目标根 = 批
-            ? std::optional{批->特征定义(特征概念服务_,*需求->目标.目标值域概念节点).类型根}
-            : 取得特征类型根(*需求->目标.目标值域概念节点,特征概念服务_);
+            ? std::optional{批->特征定义(特征概念服务_,*需求->目标.目标值域概念节点).实例所属特征类型}
+            : 特征概念服务_.读取实例所属特征类型(*需求->目标.目标值域概念节点);
         if (!实际根 || !目标根 || *实际根 != *目标根
             || *目标根 != 需求->目标.目标特征类型概念节点) {
             结果.状态 = 新需求当前满足状态::结构不一致;
@@ -9897,7 +9895,7 @@ bool 新_需求类::是需求节点(稳定编码 节点) const noexcept {
                 const auto r = 特征概念服务_.读取特征概念定义保护(节点);
                 if (r.前提已变化) return {F::前提已变化, {}};
                 if (r.状态 == 基础结构操作状态::资源失败) return {F::资源失败, {}};
-                return {r.信息 && (p != 基础概念原语::合法FT根 || r.信息->类型根 == 节点) ? F::符合 : F::不符合, r.预期节点组};
+                return {r.信息 && (p != 基础概念原语::合法FT根 || r.信息->实例所属特征类型 == 节点) ? F::符合 : F::不符合, r.预期节点组};
             }
             if (p == 基础概念原语::合法比较关系) {
                 const auto r = 二次特征概念服务_.读取二次特征定义保护(节点);
