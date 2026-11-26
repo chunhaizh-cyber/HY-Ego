@@ -290,9 +290,15 @@ struct 新出站正式被询定位 final {
     稳定编码 信息节点{}, 特征类型{};
     friend bool operator==(const 新出站正式被询定位&,const 新出站正式被询定位&)=default;
 };
+struct 新出站整数所求规格 final {
+    稳定编码 目标存在, 特征类型, 单位, 待完善字段, 规范来源;
+    std::int64_t 下界=0, 上界=0;
+    friend bool operator==(const 新出站整数所求规格&,const 新出站整数所求规格&)=default;
+};
 struct 新出站具体表达信息 final {
     稳定编码 节点{},场景{},所用组织知识{},来源{}; 新语言含义网 含义网; std::string 候选话语原文;
     std::optional<新出站正式被询定位> 正式被询定位;
+    std::optional<新出站整数所求规格> 整数所求;
 };
 // CONV-INPUT 最小切片：出站具体表达中对某受话者就需求D某字段的填项询问（按登记顺序）。
 struct 新出站字段询问 final {

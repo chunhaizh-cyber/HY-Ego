@@ -175,6 +175,7 @@ struct 新正式消息角色材料 final {
     std::optional<稳定编码> 事实, 说话者, 受话者;
     基础只读预期 证据预期;
     std::optional<新外设消息信息> 对应待发输出{};
+    std::optional<稳定编码> 内部交互场景{};
 };
 
 struct 新接收指代材料 final {

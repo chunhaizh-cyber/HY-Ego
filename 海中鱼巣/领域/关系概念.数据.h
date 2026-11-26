@@ -14,7 +14,9 @@ enum class 关系连接种类 : std::uint8_t { 外部边 = 1, 字段引用 = 2 }
 
 enum class 关系端点对象种类 : std::uint8_t {
     存在 = 1,
-    需求 = 2
+    需求 = 2,
+    语言所求项 = 3,
+    语言答复 = 4
 };
 
 struct 关系端点约束 final {

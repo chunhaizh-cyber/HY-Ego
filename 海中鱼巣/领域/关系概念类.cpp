@@ -214,7 +214,9 @@ bool 写连接字段(稳定编码 节点, const 关系连接描述& 连接) {
         const auto 序 = 读唯一整数(子, 端点序号字段);
         const auto 角色键 = 读唯一字符串(子, 端点角色键字段);
         const auto 种类码 = 读唯一整数(子, 端点对象种类字段);
-        if (!序 || !角色键 || !种类码) return {S::结构不一致, {}};
+        if (!序 || !角色键 || !种类码 || *种类码 < 1
+            || *种类码 > static_cast<std::int64_t>(关系端点对象种类::语言答复))
+            return {S::结构不一致, {}};
         关系端点约束 c;
         c.角色键 = *角色键;
         c.对象种类 = static_cast<关系端点对象种类>(*种类码);
@@ -369,7 +371,9 @@ bool 关系概念类::已装配() const noexcept {
         if (请求.稳定种子键.empty() || 请求.端点组.size() < 2) return {S::输入不合法, {}};
         std::set<std::string> 角色;
         for (const auto& e : 请求.端点组) {
-            if (e.角色键.empty() || !角色.insert(e.角色键).second) return {S::输入不合法, {}};
+            if (e.角色键.empty() || !角色.insert(e.角色键).second
+                || e.对象种类 < 关系端点对象种类::存在 || e.对象种类 > 关系端点对象种类::语言答复)
+                return {S::输入不合法, {}};
         }
         const auto 连接角色合法 = [&](const 关系连接描述& 连) -> bool {
             if (const auto* 边 = std::get_if<关系外部边连接>(&连)) {
