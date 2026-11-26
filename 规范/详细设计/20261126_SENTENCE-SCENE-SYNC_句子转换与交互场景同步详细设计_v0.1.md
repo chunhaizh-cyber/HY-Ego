@@ -3,7 +3,7 @@
 - 版本：v0.2，2026-11-26 已裁决的目标设计；实现按具名计划
 - 基线：main / origin/main d244a9bda88d8b5bff16f7566680ecf92988c2b6
 - 拟归档：规范/详细设计/20261126_SENTENCE-SCENE-SYNC_句子转换与交互场景同步详细设计_v0.1.md
-- 配套：[7241 子规范](../7241_子规范_句子转换与交互场景同步.md)、[首片特征值保护提供者计划](../../计划/20261126_SENTENCE-SCENE-SYNC-VALUE-PROVIDER_特征值正式保护读取实施计划_v0.1.md)
+- 配套：[7241 子规范](../7241_子规范_句子转换与交互场景同步.md)、[首片特征值保护提供者计划](https://github.com/chunhaizh-cyber/HY-Ego/blob/e4c71f798ea0db85c74c13705d0509fb92bf5995/%E8%AE%A1%E5%88%92/20261126_SENTENCE-SCENE-SYNC-VALUE-PROVIDER_%E7%89%B9%E5%BE%81%E5%80%BC%E6%AD%A3%E5%BC%8F%E4%BF%9D%E6%8A%A4%E8%AF%BB%E5%8F%96%E5%AE%9E%E6%96%BD%E8%AE%A1%E5%88%92_v0.1.md)
 
 ## 1. 当前入口、能力及缺口
 
