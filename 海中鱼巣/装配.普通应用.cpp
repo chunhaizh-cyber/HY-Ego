@@ -4505,6 +4505,7 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         观察阶段(L"世界与第一权限人", 1);
 #endif
         初始化普通应用概念名称(当前, 结果, 标准文本, false);
+        稳定编码 温度FT;
         {
             auto& 世界 = 当前.世界事实;
             auto& 特征概念 = 世界.特征概念服务;
@@ -4526,6 +4527,7 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             const auto 温度 = 世界.特征服务.建立或取得先天温度特征类型();
             if (!温度.信息) throw std::logic_error("temperature feature type unavailable");
             const auto FT = 温度.信息->节点;
+            温度FT = FT;
             using S = 特征概念规则状态;
             特征概念编码操作结果 概念;
             do {
@@ -4583,6 +4585,35 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
         }
         结果.人类存在概念节点 = 当前.人类存在概念节点;
         const auto 存在语义根=初始化存在语义根(当前);
+        {
+            auto& 世界 = 当前.世界事实;
+            auto& 二次 = 世界.二次特征概念服务;
+            const auto 建立 = 二次.建立或取得语言温度比较方向(
+                温度FT, 世界.特征服务, 世界.存在概念服务, 世界.特征值服务);
+            if (!建立.概念节点)
+                throw std::logic_error("language temperature direction type unavailable");
+            const auto 读回 = 二次.读取二次特征定义保护(*建立.概念节点);
+            if (读回.状态 != 基础结构操作状态::已完成 || 读回.前提已变化
+                || !读回.信息 || 读回.预期节点组.empty()
+                || 读回.信息->二次特征类型根节点 != *建立.概念节点
+                || 读回.信息->算法 != 二次特征算法::语言温度比较方向
+                || 读回.信息->语言适用范围 != 语言比较适用范围{温度FT, 存在语义根})
+                throw std::logic_error("language temperature direction type readback differs");
+            std::wstring 方向;
+            const auto& 成员 = std::get<std::vector<稳定编码>>(读回.信息->输出特征概念.值域);
+            for (const auto 节点 : 成员) {
+                const auto 实料 = 世界.特征值服务.获取特征值(节点);
+                if (!实料 || !std::holds_alternative<std::string>(实料->材料))
+                    throw std::logic_error("language direction member unavailable");
+                const auto& 符号 = std::get<std::string>(实料->材料);
+                方向 += L"；" + std::wstring(符号.begin(), 符号.end()) + L"=" + std::to_wstring(节点.值);
+            }
+            try {
+                (void)记录运行日志(L"普通应用", L"温度比较方向类型读回",
+                    L"C=" + std::to_wstring(建立.概念节点->值) + L"；FT=" + std::to_wstring(温度FT.值)
+                    + L"；适用存在根=" + std::to_wstring(存在语义根.值) + L"；左=参照；右=主体" + 方向);
+            } catch (...) {}
+        }
         (void)初始化特征类别根(当前);
         结果.登录名特征概念节点 = 当前.登录名特征概念节点;
         结果.姓名特征概念节点 = 当前.姓名特征概念节点;
