@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 #include <span>
+#include <utility>
 
 #include "../核心/基础数据集.h"
 #include "新_特征值类.h"
@@ -323,11 +324,30 @@ public:
     virtual ~正式概念身份读取接口() = default;
     virtual 正式概念身份读取结果 读取正式概念身份保护(稳定编码) const noexcept = 0;
 };
-struct 先天特征类型槽请求 final { std::uint32_t 语义序号; 特征概念定义 定义; };
+class 正式指代关系特征类型信息 final {
+public:
+    稳定编码 节点() const noexcept { return 节点_; }
+    稳定编码 内容范围() const noexcept { return 内容范围_; }
+    const 基础只读预期& 窄预期() const noexcept { return 窄预期_; }
+
+private:
+    正式指代关系特征类型信息(稳定编码 节点, 稳定编码 内容范围, 基础只读预期 预期)
+        : 节点_(节点), 内容范围_(内容范围), 窄预期_(std::move(预期)) {}
+    稳定编码 节点_, 内容范围_;
+    基础只读预期 窄预期_;
+    friend class 新_特征类;
+};
+
+struct 先天特征类型槽请求 final {
+    std::uint32_t 语义序号;
+    特征概念定义 定义;
+    std::optional<正式指代关系特征类型信息> 指代正式类型{};
+};
 struct 先天特征类型槽结果 final {
     特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
     std::optional<稳定编码> 类型根;
     std::vector<基础联合节点快照> 完整保护组;
+    std::optional<稳定编码> 指代正式类型{};
 };
 namespace 先天特征类型槽 {
 inline constexpr std::uint32_t 需求主体=1001, 需求执行域=1002, 需求目标存在=1003, 需求目标FT=1004,
@@ -344,7 +364,7 @@ inline constexpr std::uint32_t 有序参数规格=1301, 方法运行次数=1302,
     父条件=1403, 配对结果=1404, 结果项=1405;
 inline constexpr std::uint32_t 概念名称挂接=1501, 词典材料=1502, 词典来源批次=1503,
     归类目标词条=1504, 归类采用概念=1505,
-    分词候选材料=1506, 分界依据=1507, 有效分界结果=1508, 词条准入结果=1509, 指代消解结果=1510;
+    分词候选材料=1506, 分界依据=1507, 有效分界结果=1508, 词条准入结果=1509, 指代消解结果=1510, 指代关系=1511;
 }
 
 struct 特征概念编码操作结果 final {
@@ -819,6 +839,7 @@ public:
 
 private:
     friend class 新_特征类;
+    基础片段封存结果 封存新增指代关系实例计数(稳定编码 概念, std::size_t 数量) const;
     // 只供信息引用型空F出生：本owner计数与调用者封存的空实例共同发布。
     基础片段组合结果 联合发布新增空实例引用(
         稳定编码 特征概念,

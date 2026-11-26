@@ -110,11 +110,15 @@ struct 现实交互指代项 final {
     std::optional<稳定编码> 解释依据{};
     std::optional<std::int64_t> 采用内容项{};
     bool 已确认现实目标 = false;
+    std::optional<新接收指代关系值> 类型化值{};
+    std::vector<新接收指代作用域段> 作用域{};
+    std::string 原词面{};
 };
 struct 现实交互指代材料 final {
     稳定编码 现实交互场景, 接收消息, 语言场景;
     std::optional<稳定编码> 篇章采用;
     std::vector<现实交互指代项> 指代组;
+    std::optional<新接收指代调用状态> 类型化读回状态{};
 };
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。

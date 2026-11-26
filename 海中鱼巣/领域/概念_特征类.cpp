@@ -81,7 +81,7 @@ const 特征消息成员读取接口* 消息成员读取器 = nullptr;
 稳定编码 比较规则字段{};
 稳定编码 聚合规则字段{};
 稳定编码 名称关系字段{};
-稳定编码 正式I64类型关联字段{};
+稳定编码 正式I64类型关联字段{}, 指代正式类型关联字段{};
 稳定编码 待完善特征概念节点类型{};
 稳定编码 待完善特征概念登记字段{};
 稳定编码 待完善特征概念来源字段{};
@@ -3027,7 +3027,7 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
             && 建立(单位字段)
             && 建立(比较规则字段)
             && 建立(聚合规则字段)
-            && 建立(名称关系字段) && 建立(正式I64类型关联字段)
+            && 建立(名称关系字段) && 建立(正式I64类型关联字段) && 建立(指代正式类型关联字段)
             && 建立(待完善特征概念节点类型)
             && 建立(待完善特征概念登记字段)
             && 建立(待完善特征概念来源字段)
@@ -3058,7 +3058,7 @@ bool 概念_特征类::初始化(const 新_特征值类& 特征值服务) noexce
             待完善特征概念节点类型, 待完善特征概念登记字段, 待完善特征概念来源字段,
             待完善特征概念词条字段, 待完善特征概念构式字段, 待完善特征概念原文范围字段,
             子类型适用存在概念字段, 子类型定义来源字段,
-            聚合规则字段, 名称关系字段, 正式I64类型关联字段, 当前引用实例数字段};
+            聚合规则字段, 名称关系字段, 正式I64类型关联字段, 指代正式类型关联字段, 当前引用实例数字段};
         if (std::set<稳定编码>(schema.begin(), schema.end()).size() != schema.size())
             信息引用定义故障(L"特征概念schema身份发生重叠。");
 
@@ -4842,6 +4842,38 @@ bool 概念_特征类::更新特征概念值域内部(
     }
 }
 
+基础片段封存结果 概念_特征类::封存新增指代关系实例计数(
+    稳定编码 C, std::size_t 数量) const {
+    using A = 基础节点组追加状态;
+    if (!有效(C) || !数量 || 数量 > static_cast<std::uint64_t>((std::numeric_limits<std::int64_t>::max)()))
+        return {A::入口拒绝, {}};
+    std::lock_guard 锁(特征概念树互斥);
+    const auto 槽 = 读取先天特征类型槽(先天特征类型槽::指代关系);
+    const auto 取 = 槽.状态;
+    if (取 == 特征概念规则状态::资源失败) return {A::资源失败, {}};
+    if (取 == 特征概念规则状态::前提已变化) return {A::预期不符, {}};
+    if (取 != 特征概念规则状态::已完成 || 槽.类型根 != C || !槽.指代正式类型)
+        return {A::入口拒绝, {}};
+    const auto 找到 = std::find_if(槽.完整保护组.begin(), 槽.完整保护组.end(), [&](const auto& 快照) {
+        return 快照.结构.节点.编码 == C;
+    });
+    if (找到 == 槽.完整保护组.end()) return {A::内部不一致, {}};
+    const 基础字段关系* 计数 = nullptr;
+    for (const auto& 字段 : 找到->结构.字段组) {
+        if (字段.字段节点 != 当前引用实例数字段) continue;
+        if (计数) return {A::内部不一致, {}};
+        计数 = &字段;
+    }
+    const auto* 原值 = 计数 ? std::get_if<基础值>(&计数->内容) : nullptr;
+    const auto* 记数 = 原值 ? std::get_if<std::int64_t>(&原值->材料) : nullptr;
+    if (!记数 || *记数 < 0 || *记数 > (std::numeric_limits<std::int64_t>::max)() - static_cast<std::int64_t>(数量))
+        return {A::内部不一致, {}};
+    基础节点组追加请求 请求;
+    请求.预期联合节点组 = 槽.完整保护组;
+    请求.替换字段组.push_back({计数->编码, 基础值{*记数 + static_cast<std::int64_t>(数量)}});
+    return 全局基础数据集.封存原子追加片段(请求);
+}
+
 基础片段组合结果 概念_特征类::联合发布新增空实例引用(
     稳定编码 特征概念,
     const 基础封存追加片段& 空实例片段) noexcept {
@@ -6376,6 +6408,7 @@ bool 是固定先天槽(std::uint32_t n) noexcept {
         || n == 先天特征类型槽::分词候选材料 || n == 先天特征类型槽::分界依据
         || n == 先天特征类型槽::有效分界结果 || n == 先天特征类型槽::词条准入结果
         || n == 先天特征类型槽::指代消解结果
+        || n == 先天特征类型槽::指代关系
         || n == 先天特征类型槽::需求目标取值位置;
 }
 bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
@@ -6408,7 +6441,7 @@ bool 固定槽定义相容(std::uint32_t n, const 特征概念定义& d) {
             && intervals && *intervals == std::vector<特征概念I64闭区间>{*expected};
     }
     const auto* r = std::get_if<特征概念信息引用值域>(&d.值域);
-    if (n == 指代消解结果)
+    if (n == 指代消解结果 || n == 指代关系)
         return d.材料类型 == 特征概念材料物理类型::信息节点引用
             && r && r->语义 == 信息引用语义::信息对象
             && d.比较规则 == 特征概念比较规则::信息引用身份精确
@@ -6797,7 +6830,21 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
         const auto now = 信息定义快照(特征概念树);
         if (!now || !信息定义快照相同(*root, *now)) return {S::前提已变化, {}, {}};
         if(!信息定义保护仍相同(protections))return {S::前提已变化,{},{}};
-        return {S::已完成, found, std::move(protections)};
+        std::optional<稳定编码> 正式指代FT;
+        if (number == 先天特征类型槽::指代关系) {
+            const auto C = std::find_if(protections.begin(), protections.end(), [&](const auto& 快照) {
+                return 快照.结构.节点.编码 == *found;
+            });
+            if (C == protections.end()) 信息引用定义故障(L"指代关系完整域根缺少保护。");
+            for (const auto& f : C->结构.字段组) {
+                if (f.字段节点 != 指代正式类型关联字段) continue;
+                const auto* n = std::get_if<稳定编码>(&f.内容);
+                if (!n || !有效(*n) || 正式指代FT) 信息引用定义故障(L"指代关系正式类型绑定损坏。");
+                正式指代FT = *n;
+            }
+            if (!正式指代FT) 信息引用定义故障(L"指代关系完整域根缺少正式类型。");
+        }
+        return {S::已完成, found, std::move(protections), 正式指代FT};
     } catch (...) { 信息引用定义故障(L"读取先天FT槽工程异常。"); }
 }
 
@@ -6817,6 +6864,12 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
                     && !(input.语义序号 == 先天特征类型槽::引用内容需求
                         && normalized->材料类型 == 特征概念材料物理类型::需求节点引用)))) return {};
         if (!固定槽定义相容(input.语义序号, *normalized)) return {};
+        const bool 指代槽 = input.语义序号 == 先天特征类型槽::指代关系;
+        if (指代槽 != input.指代正式类型.has_value()) return {};
+        if (指代槽) {
+            const auto* 域 = std::get_if<特征概念信息引用值域>(&normalized->值域);
+            if (!域 || 域->内容概念 != input.指代正式类型->内容范围()) return {};
+        }
         // 全部外部身份在取得本owner写锁之前采集；span及reader不存入任何字段或成员。
         std::vector<基础联合节点快照> external;
         if (const auto* domain = std::get_if<特征概念信息引用值域>(&normalized->值域)) {
@@ -6845,6 +6898,12 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
             const auto d = 获取特征概念(*old.类型根);
             if (!d) 信息引用定义故障(L"先天槽正式定义不可读。");
             if (!结构定义相同(转为定义(*d), *normalized, &values)) return {};
+            if (指代槽) {
+                if (old.指代正式类型 != input.指代正式类型->节点()) return {};
+                const auto 核验 = 全局基础数据集.核验只读预期(input.指代正式类型->窄预期());
+                if (核验 == 基础节点组追加状态::资源失败) return {S::资源失败, {}, {}};
+                if (核验 != 基础节点组追加状态::已完成) return {S::前提已变化, {}, {}};
+            }
             auto out = old;
             if (!合并正式定义保护(out.完整保护组, external)) return {S::前提已变化, {}, {}};
             if(!信息定义保护仍相同(out.完整保护组))return {S::前提已变化,{},{}};
@@ -6879,6 +6938,11 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
             const auto s = 信息定义快照(name); if (!s) return {};
             if (!合并正式定义保护(请求.预期联合节点组, {*s})) return {S::前提已变化, {}, {}};
             ft.字段组.push_back({名称关系字段, name});
+        }
+        if (指代槽) {
+            请求.只读预期 = input.指代正式类型->窄预期();
+            请求.只读预期.节点组.push_back({指代正式类型关联字段});
+            ft.字段组.push_back({指代正式类型关联字段, input.指代正式类型->节点()});
         }
         请求.新节点组.push_back(std::move(ft));
         请求.新节点组.push_back({{{节点类型字段, 先天类型槽记录类型},

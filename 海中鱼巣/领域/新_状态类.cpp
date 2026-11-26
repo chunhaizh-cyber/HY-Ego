@@ -238,6 +238,45 @@ bool 新_状态类::初始化() noexcept {
     return 绑定;
 }
 
+基础节点组追加状态 新_状态类::准备指代关系状态组(
+    const 新特征状态构造绑定& 绑定, 新指代关系初建准备& 准备, const 新状态强时间& 时间) const {
+    using A = 基础节点组追加状态;
+    if (绑定.owner_ != this || !准备.owner_ || 准备.状态已准备_
+        || 准备.提交已尝试_ || 准备.业务片段_
+        || 时间.语义 != 新状态时间语义::实例绝对UTC || 时间.纳秒 < 0) return A::入口拒绝;
+    try {
+        // 本步骤只写本次追加请求。失败时不会污染原准备材料。
+        auto 请求 = 准备.请求_;
+        std::vector<基础组内节点引用> 状态组;
+        const auto& k = 绑定.字段_;
+        for (const auto& 项 : 准备.项组_) {
+            if (!项.值已改变) continue;
+            状态组.push_back(基础组内节点引用{请求.新节点组.size()});
+            const auto 端点 = [](const auto& x) -> 基础组内字段内容 { return x; };
+            基础组内新节点 状态{{{k[0], k[1]},
+                {k[2], std::visit(端点, 项.宿主)}, {k[3], std::visit(端点, 项.特征)}, {k[4], 准备.概念_},
+                {k[6], 编码强时间(时间)}, {k[7], 基础值{std::int64_t{1}}}}};
+            if (项.值) {
+                状态.字段组.push_back({k[5], *项.值});
+                请求.只读预期.节点组.push_back({*项.值});
+            }
+            请求.新节点组.push_back(std::move(状态));
+        }
+        if (!状态组.empty()) {
+            for (const auto f : k) 请求.只读预期.节点组.push_back({f});
+            请求.只读预期.节点组.push_back({准备.概念_});
+        }
+        准备.请求_ = std::move(请求);
+        准备.状态槽组_ = std::move(状态组);
+        准备.状态已准备_ = true;
+        return A::已完成;
+    } catch (const std::bad_alloc&) {
+        return A::资源失败;
+    } catch (const std::length_error&) {
+        return A::资源失败;
+    }
+}
+
 新特征状态参与材料 新_状态类::准备特征状态(
     const 新特征状态构造绑定& 绑定, const 新特征当前值候选& 候选,
     const std::variant<稳定编码, 基础组内节点引用>& 持有者,

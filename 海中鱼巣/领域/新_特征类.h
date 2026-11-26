@@ -479,6 +479,69 @@ struct 正式I64特征类型结果 final {
     std::optional<正式I64特征类型信息> 信息;
 };
 
+// 经原所有者验证的引用保护；它只携带发布预期，不代表已经建立引用。
+class 新指代目标保护 final {
+public:
+    稳定编码 目标() const noexcept { return 目标_; }
+    const std::vector<稳定编码>& 成员() const noexcept { return 成员_; }
+    const std::vector<基础联合节点快照>& 联合预期() const noexcept { return 联合预期_; }
+    const 基础只读预期& 材料预期() const noexcept { return 材料预期_; }
+private:
+    新指代目标保护() = default;
+    稳定编码 目标_{};
+    std::vector<稳定编码> 成员_;
+    std::vector<基础联合节点快照> 联合预期_;
+    基础只读预期 材料预期_;
+    friend class 指代目标保护读取服务;
+};
+
+struct 新指代关系初建项 final {
+    基础组内节点引用 宿主;
+    稳定编码 宿主持有键;
+    std::optional<新指代目标保护> 值;
+};
+
+struct 新指代关系更新项 final {
+    稳定编码 宿主, 特征, 宿主持有键;
+    std::optional<新指代目标保护> 值;
+};
+
+class 新指代关系初建准备 final {
+public:
+    新指代关系初建准备(新指代关系初建准备&&) noexcept = default;
+    新指代关系初建准备& operator=(新指代关系初建准备&&) noexcept = default;
+    新指代关系初建准备(const 新指代关系初建准备&) = delete;
+    新指代关系初建准备& operator=(const 新指代关系初建准备&) = delete;
+private:
+    新指代关系初建准备() = default;
+    struct 项 final {
+        std::variant<稳定编码, 基础组内节点引用> 宿主, 特征;
+        std::optional<稳定编码> 值;
+        bool 值已改变 = false;
+    };
+    const 新_特征类* owner_ = nullptr;
+    稳定编码 概念_{};
+    基础节点组追加请求 请求_;
+    std::vector<项> 项组_;
+    std::vector<基础组内节点引用> 状态槽组_;
+    std::optional<基础封存追加片段> 计数片段_, 业务片段_;
+    bool 状态已准备_ = false;
+    bool 提交已尝试_ = false;
+    friend class 新_特征类;
+    friend class 新_状态类;
+    friend class 新_场景类;
+};
+
+struct 新指代关系初建准备结果 final {
+    基础节点组追加状态 状态 = 基础节点组追加状态::入口拒绝;
+    std::optional<新指代关系初建准备> 准备;
+};
+
+struct 正式指代关系特征类型结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<正式指代关系特征类型信息> 信息;
+};
+
 class 新_特征类 final {
 public:
     bool 装配正式概念引用读取接口(const 概念_存在类* 范围读取,
@@ -565,6 +628,13 @@ public:
     // 读取正式引用型F当前字段，不展开目标或核对历史。
     新特征直接引用值读取结果 读取特征直接引用当前值(
         稳定编码 特征节点, 稳定编码 所需概念, 稳定编码 同批节点, bool 供联合发布 = false) const;
+    正式指代关系特征类型结果 建立或取得正式指代关系特征类型(稳定编码 内容范围);
+    正式指代关系特征类型结果 读取正式指代关系特征类型(稳定编码) const;
+    新指代关系初建准备结果 准备指代关系实例初建组(
+        稳定编码 概念, 基础节点组追加请求, const std::vector<新指代关系初建项>&);
+    基础节点组追加状态 准备指代关系当前值组(
+        新指代关系初建准备&, const std::vector<新指代关系更新项>&);
+    基础片段组合结果 提交指代关系初建组(新指代关系初建准备&);
     正式I64特征类型结果 建立或取得先天温度特征类型() noexcept;
     正式I64特征类型结果 读取正式I64特征类型(稳定编码 FT) const noexcept;
 

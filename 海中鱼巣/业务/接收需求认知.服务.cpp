@@ -1833,6 +1833,30 @@ std::optional<接收需求认知观察> 接收需求认知服务::读取最近�
         };
 
         现实交互指代材料 材料{*现实场景, 来源.接收消息节点, 解释.信息->内容.来源场景, 篇章采用, {}};
+        using T = 新接收指代调用状态;
+        const auto 类型化 = 篇章采用
+            ? d.语言.读取指定接收指代采用(来源, *篇章采用, d.语言世界, d.外设)
+            : d.语言.读取当前接收指代关系组(来源, d.语言世界, d.外设);
+        if (类型化.状态 != T::未找到) {
+            材料.类型化读回状态 = 类型化.状态;
+            if (类型化.状态 != T::已完成) return {S::未支持, std::move(材料), {}};
+            if (!类型化.信息) throw std::logic_error("typed interaction reference missing");
+            for (const auto& 项 : *类型化.信息) {
+                现实交互指代项 指代{项.特征, {},
+                    std::pair{项.出现.范围.起始标量, 项.出现.范围.结束标量},
+                    项.解释定义, 项.采用内容项, false, 项.值, 项.出现.作用域, 项.原词面};
+                if (项.值) {
+                    if (const auto* 直接 = std::get_if<新接收指代直接目标>(&*项.值)) {
+                        if (const auto* 目标 = std::get_if<新绑定指称>(直接)) {
+                            指代.目标 = *目标;
+                            指代.已确认现实目标 = 属于现实世界(*目标);
+                        }
+                    }
+                }
+                材料.指代组.push_back(std::move(指代));
+            }
+            return {S::已完成, std::move(材料), {}};
+        }
         if (篇章采用) {
             const auto& 已采用 = 解释.信息->篇章采用;
             if (!已采用 || 已采用->节点 != *篇章采用) return {S::未找到, {}, {}};
@@ -2655,29 +2679,33 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             };
             const auto 保存解释材料 = [&](const std::vector<接收语言句段解释>& 解释组) {
                 检查认知停止(stop);
-                using S = 新语言分界工程状态;
-                auto 保存 = d.语言.保存接收语言解释(k,
-                    {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组},
+                using S = 新接收指代调用状态;
+                std::vector<新接收指代材料> 指代材料;
+                for (const auto& 句 : 解释组) {
+                    if (!句.主体关系 || !句.主体关系->指代概念 || !句.主体关系->来源) continue;
+                    const auto& 关系 = *句.主体关系;
+                    新接收指代材料 出现{{k, {关系.起始标量, 关系.结束标量}, {}},
+                        {句.起始标量, 句.结束标量}, "主体", {}, {}};
+                    if (关系.来源->已绑定存在)
+                        出现.值 = 新接收指代关系值{新接收指代直接目标{
+                            新绑定指称{新指称类别::存在, *关系.来源->已绑定存在}}};
+                    指代材料.push_back(std::move(出现));
+                }
+                auto 保存 = d.语言.保存接收语言解释及指代关系(k,
+                    {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组}, 指代材料,
                     speaker,d.语言世界,d.外设);
                 if (保存.状态 == S::资源失败) 资源();
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
-                    throw std::logic_error("received language scene material was not published");
-                if (std::ranges::any_of(保存.信息->内容.句段组, [](const auto& 句) {
-                        return 句.主体关系 && 句.主体关系->指代概念.has_value();
-                    })) {
-                    const auto 指代 = d.语言世界.同步接收指代实例(d.语言, k, d.外设);
-                    if (指代.状态 == S::资源失败) 资源();
-                    if (指代.状态 == S::前提已变化 || 指代.状态 == S::未找到) 漂移();
-                    if (指代.状态 != S::已完成 && 指代.状态 != S::材料未就绪)
-                        throw std::logic_error("received reference instance could not be published");
-                    if (指代.状态 == S::已完成 && !保存.信息->篇章采用) {
-                        保存 = d.语言.采用当前接收指代篇章(k, speaker, d.语言世界, d.外设);
-                        if (保存.状态 == S::资源失败) 资源();
-                        if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
-                        if (保存.状态 != S::已完成 || !保存.信息)
-                            throw std::logic_error("received reference adoption could not be published");
-                    }
+                    throw std::logic_error("received typed language scene material was not published");
+                if (!保存.信息->篇章采用) {
+                    auto 采用 = d.语言.采用当前接收指代关系篇章(k, speaker,
+                        保存.信息->解释定义节点, d.语言世界, d.外设);
+                    if (采用.状态 == S::资源失败) 资源();
+                    if (采用.状态 == S::前提已变化 || 采用.状态 == S::未找到) 漂移();
+                    if (采用.状态 == S::已完成 && 采用.信息) 保存 = std::move(采用);
+                    else if (采用.状态 != S::材料未就绪)
+                        throw std::logic_error("received typed reference adoption could not be published");
                 }
                 if (const auto& 采用=保存.信息->篇章采用) {
                     out.部分成文.reset();

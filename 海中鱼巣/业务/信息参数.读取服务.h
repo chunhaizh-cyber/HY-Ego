@@ -3,12 +3,26 @@
 #include <array>
 #include "../领域/概念_存在类.h"
 #include "../领域/信息内容.数据.h"
+#include "../领域/前置语言输入.数据.h"
+#include "../领域/新_特征类.h"
 
 namespace 海中鱼巣 {
 class 新_需求类;
 class 新_语言类;
 
-class 新_特征类;
+class 新_存在类;
+
+class 指代目标保护读取服务 final {
+public:
+    指代目标保护读取服务(const 新_存在类&, const 新_需求类&, const 新_特征值类&,
+        std::span<const 正式概念身份读取接口* const>);
+    新接收指代调用结果<新指代目标保护> 读取指代目标保护(const 新接收指代关系值&) const;
+private:
+    const 新_存在类& 存在_;
+    const 新_需求类& 需求_;
+    const 新_特征值类& 特征值_;
+    std::vector<const 正式概念身份读取接口*> 概念_;
+};
 
 class 稳定信息对象身份组合读取服务 final : public 新信息对象身份读取接口 {
 public:

@@ -130,6 +130,66 @@ struct 接收语言句段解释 final {
     friend bool operator==(const 接收语言句段解释&,const 接收语言句段解释&)=default;
 };
 
+struct 新接收指代作用域段 final {
+    std::uint64_t 起始标量, 结束标量;
+    friend bool operator==(const 新接收指代作用域段&, const 新接收指代作用域段&) = default;
+};
+
+struct 新接收指代出现键 final {
+    新接收认知来源键 来源;
+    新接收指代作用域段 范围;
+    std::vector<新接收指代作用域段> 作用域;
+    friend bool operator==(const 新接收指代出现键&, const 新接收指代出现键&) = default;
+};
+
+struct 新指代特征值引用 final {
+    稳定编码 节点;
+    friend bool operator==(const 新指代特征值引用&, const 新指代特征值引用&) = default;
+};
+
+using 新接收指代直接目标 = std::variant<新绑定指称, 新指代特征值引用>;
+
+struct 新接收指代集合值 final {
+    稳定编码 材料节点;
+    std::vector<稳定编码> 成员;
+    friend bool operator==(const 新接收指代集合值&, const 新接收指代集合值&) = default;
+};
+
+using 新接收指代关系值 = std::variant<新接收指代直接目标, 新接收指代集合值>;
+
+enum class 新接收指代调用状态 : std::uint8_t {
+    已完成 = 1, 输入拒绝, 未找到, 材料未就绪, 目标保护未装配,
+    引用失效, 前提已变化, 资源失败, 发布未知, 结构不一致
+};
+
+template<class T>
+struct 新接收指代调用结果 final {
+    新接收指代调用状态 状态 = 新接收指代调用状态::输入拒绝;
+    std::optional<T> 信息;
+    std::optional<新接收指代出现键> 失效位置;
+};
+
+struct 新接收指代材料 final {
+    新接收指代出现键 出现;
+    新接收指代作用域段 句段范围;
+    std::string 角色;
+    std::optional<稳定编码> 本作用域说话者;
+    std::optional<新接收指代关系值> 值;
+    friend bool operator==(const 新接收指代材料&, const 新接收指代材料&) = default;
+};
+
+struct 新接收指代读回项 final {
+    新接收指代出现键 出现;
+    新接收指代作用域段 句段范围;
+    稳定编码 特征;
+    稳定编码 解释定义;
+    std::string 原词面;
+    std::optional<新接收指代关系值> 值;
+    std::optional<稳定编码> 采用;
+    std::optional<std::int64_t> 采用内容项;
+    std::string 角色;
+};
+
 struct 新接收语言解释内容 final {
     稳定编码 来源场景, 前置来源, 语言节点;
     std::uint64_t 原文起点, 原文终点;
