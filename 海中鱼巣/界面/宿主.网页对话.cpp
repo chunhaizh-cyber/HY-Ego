@@ -37,6 +37,7 @@ struct 网页对话框事实回调组 final {
     std::function<bool(const 网页对话框目标&)> 确认页面;
     std::function<void(const 网页定向发送事实&)> 发送完成;
     std::function<void(const 网页定向发送事实&)> 发送后投影;
+    decltype(网页外设运行回调组::交互确认) 交互确认;
 };
 
 constexpr std::size_t 最大请求头字节数 = 64U * 1024U;
@@ -947,6 +948,8 @@ body{display:block;background:#0e1520}main{width:min(1760px,96vw);margin:20px au
 <section class="panel"><h2>需求与任务</h2><div id="control-tree" class="panel-body tree"><p class="muted">尚无快照</p></div></section>
 <section class="panel"><h2 id="detail-title">选中项详情</h2><div id="control-detail" class="panel-body detail"><p class="muted">选择需求或任务，查看目标、筹办和执行材料。</p></div></section>
 <div class="stack interaction-column"><section class="panel"><h2>当前窗口交互</h2>
+<button type="button" class="secondary" id="interaction-confirm" disabled>确认本次交互</button>
+<span id="interaction-confirm-status" aria-live="polite"></span>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
 <form id="form"><div id="reply-selection" hidden><span id="reply-selection-text" aria-live="polite"></span> <button type="button" class="secondary" id="cancel-reply">取消回复</button></div><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
 <section id="output-control" style="padding:14px;border-top:1px solid #304157">
@@ -990,6 +993,29 @@ const input=document.getElementById('input');
 const form=document.getElementById('form');
 const status=document.getElementById('status');
 const dialogueId=globalThis.crypto?.randomUUID?.();
+const interactionConfirm=document.getElementById('interaction-confirm');
+const interactionConfirmStatus=document.getElementById('interaction-confirm-status');
+let interactionConfirming=false,interactionConfirmed=false;
+function renderInteractionConfirm(){
+  interactionConfirm.disabled=!dialogueId||!outputReady||outputClosed||interactionConfirming||interactionConfirmed;
+}
+interactionConfirm.addEventListener('click',async()=>{
+  if(interactionConfirm.disabled)return;
+  interactionConfirming=true;
+  renderInteractionConfirm();
+  try {
+    const response=await fetch(base+'/api/interaction/confirmation',{method:'POST',headers:{'X-HY-Dialogue-Id':dialogueId}});
+    const fact=await response.json();
+    if(!response.ok||!['已记录','已复用'].includes(fact.status)||!fact.confirmation)throw new Error();
+    interactionConfirmed=true;
+    interactionConfirmStatus.textContent='已记录本次确认';
+  } catch {
+    interactionConfirmStatus.textContent='未取得确认回执，请重试';
+  } finally {
+    interactionConfirming=false;
+    renderInteractionConfirm();
+  }
+});
 const outputForm=document.getElementById('output-form'),outputInput=document.getElementById('output-input');
 const outputButton=document.getElementById('output-submit'),outputReceipts=document.getElementById('output-receipts');
 const outputStatus=document.getElementById('output-status'),outputUnknownConfirm=document.getElementById('output-unknown-confirm');
@@ -1089,7 +1115,7 @@ tree.append(controlNode('h3','自我需求树','section-label'));const roots=con
 controlDetail();controlLearning(snapshot);controlMethodDirectory(snapshot);controlTimeline(snapshot);}
 function controlRetainSections(snapshot){const retain=(block,previous)=>{if(block?.status==='已取得'){block.lastSuccessfulAt=snapshot.readCompletedAt;}else if(block&&Array.isArray(previous?.items)){block.items=previous.items;block.retained=true;block.lastSuccessfulAt=previous.lastSuccessfulAt||controlSnapshot.readCompletedAt;for(const key of ['thread','queuedCount','runningCount','awaitingAcknowledgementCount','latestEvidenceAt','root'])if(key in previous)block[key]=previous[key];block.reason=(block.reason||'本次读取未完成')+'；本区块保留上次成功材料，采集于 '+block.lastSuccessfulAt;}};for(const key of ['demands','tasks','timeline','methodCatalog','missingMethods'])retain(snapshot[key],controlSnapshot?.[key]);retain(snapshot.learning?.workSnapshot,controlSnapshot?.learning?.workSnapshot);return snapshot;}
 async function controlRefresh(){if(controlRefreshing||controlClosed)return;controlRefreshing=true;const abort=new AbortController();controlAbort=abort;const timer=setTimeout(()=>abort.abort(),4000);try{const response=await fetch(base+'/api/control',{cache:'no-store',signal:abort.signal});if(!response.ok)throw new Error('HTTP '+response.status);const data=await response.json();if(typeof data.status!=='string'||typeof data.sequence!=='string'||typeof data.ageMs!=='string')throw new Error('快照结构不一致');controlStatus.textContent='控制快照：'+data.status+' · #'+data.sequence+' · 距采集 '+data.ageMs+' ms'+(data.collecting?' · 正在采集':'')+(data.stale?' · 快照已陈旧':'');controlStatus.className=data.stale||data.status==='采集失败'?'warning':'';if(data.snapshot!==null)controlRender(controlRetainSections(data.snapshot));}catch(error){controlStatus.textContent='控制快照读取失败：'+(error.name==='AbortError'?'请求超时':error.message)+'；保留上次显示，不影响消息交互';controlStatus.className='warning';}finally{clearTimeout(timer);if(controlAbort===abort)controlAbort=null;controlRefreshing=false;if(!controlClosed)setTimeout(controlRefresh,2000);}}
-window.addEventListener('pagehide',()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();});
+window.addEventListener('pagehide',()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;renderInteractionConfirm();outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();});
 controlRefresh();
 const replySelectionBox=document.getElementById('reply-selection');
 const replySelectionText=document.getElementById('reply-selection-text');
@@ -1134,7 +1160,7 @@ function render(items){
     messages.scrollTop=messages.scrollHeight;
 }
 let refreshing=false;
-async function refresh(){if(refreshing||outputClosed)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);outputReady=true;renderOutputReceipts();status.textContent='本机服务可访问';await outputRefreshStates();}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
+async function refresh(){if(refreshing||outputClosed)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);outputReady=true;renderInteractionConfirm();renderOutputReceipts();status.textContent='本机服务可访问';await outputRefreshStates();}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
 async function poll(){if(outputClosed)return;await refresh();if(!outputClosed)setTimeout(poll,750);}
 form.addEventListener('submit',async event=>{
     event.preventDefault();
@@ -1161,7 +1187,7 @@ form.addEventListener('submit',async event=>{
     }
 });
 input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();form.requestSubmit();}});
-document.getElementById('close').addEventListener('click',async()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();try{await fetch(base+'/api/close',{method:'POST'});}finally{const ended=controlNode('main');ended.append(controlNode('h1','交互宿主已结束'),controlNode('p','现在可以关闭此页面。'));document.body.replaceChildren(ended);}});
+document.getElementById('close').addEventListener('click',async()=>{controlClosed=true;controlAbort?.abort();outputClosed=true;outputReady=false;renderInteractionConfirm();outputSubmitAbort?.abort();outputStateAbort?.abort();renderOutputReceipts();try{await fetch(base+'/api/close',{method:'POST'});}finally{const ended=controlNode('main');ended.append(controlNode('h1','交互宿主已结束'),controlNode('p','现在可以关闭此页面。'));document.body.replaceChildren(ended);}});
 )HTML";
     页面 += R"HTML(
 const serviceForm=document.getElementById('service-form');
@@ -1409,6 +1435,43 @@ std::string 构造控制输出JSON(const 网页定向发送结果& 结果, bool 
 }
 
 // 不持宿主/队列锁调用正式提交或查询；不创建页面、不生成发送事实。
+bool 处理交互确认请求(SOCKET 客户端, const HTTP请求& 请求, std::string_view 基础路径,
+    std::string_view 会话, std::string_view 页面Origin, const 网页对话框事实回调组& 回调) {
+    if (请求.目标 != std::string(基础路径) + "/api/interaction/confirmation") return false;
+    const auto 回应 = [&](std::string_view HTTP状态, std::string_view 状态,
+        const 网页交互确认结果& 事实 = {}) {
+        std::string JSON = "{\"status\":\"" + std::string(状态) + "\"";
+        if (事实.确认) JSON += ",\"confirmation\":\"" + std::to_string(事实.确认)
+            + "\",\"scene\":\"" + std::to_string(事实.场景)
+            + "\",\"window\":\"" + std::to_string(事实.窗口)
+            + "\",\"confirmedAtNs\":\"" + std::to_string(事实.确认UTC纳秒) + "\"";
+        JSON += '}';
+        (void)发送响应(客户端,HTTP状态,"application/json;charset=utf-8",JSON);
+        return true;
+    };
+    const bool 提交 = 请求.方法 == "POST";
+    if ((!提交 && 请求.方法 != "GET") || !请求.正文.empty() || 请求.控制安全头无效
+        || !请求.对话框标识 || !请求.主机) return 回应("400 Bad Request","请求无效");
+    if (!页面Origin.starts_with("http://127.0.0.1:"))
+        throw std::logic_error("interaction confirmation trusted origin unavailable");
+    if (*请求.主机 != 页面Origin.substr(7)
+        || (请求.来源 && *请求.来源 != 页面Origin) || (提交 && !请求.来源))
+        return 回应("403 Forbidden","来源拒绝");
+    if (!回调.交互确认) return 回应("503 Service Unavailable","暂不可用");
+    const auto 事实 = 回调.交互确认({std::string(会话),*请求.对话框标识},提交);
+    using S = 网页交互确认状态;
+    switch (事实.状态) {
+    case S::已记录: return 回应("201 Created","已记录",事实);
+    case S::已读取: return 回应("200 OK","已读取",事实);
+    case S::已复用: return 回应("200 OK","已复用",事实);
+    case S::未确认: return 回应("200 OK","未确认");
+    case S::目标无效: return 回应("404 Not Found","目标无效");
+    case S::暂不可用: return 回应("503 Service Unavailable","暂不可用");
+    case S::结构错误: return 回应("500 Internal Server Error","结构错误");
+    }
+    throw std::logic_error("unknown interaction confirmation status");
+}
+
 bool 处理控制台输出请求(SOCKET 客户端, const HTTP请求& 请求,
     std::string_view 基础路径, std::string_view 公开会话标识, std::string_view 页面Origin) {
     const std::string 提交路径 = std::string(基础路径) + "/api/control/output";
@@ -1489,6 +1552,7 @@ bool 处理请求(SOCKET 客户端,
         return true;
     }
 
+    if (处理交互确认请求(客户端,请求,基础路径,会话标识,页面Origin,对话框事实)) return true;
     if (处理控制台输出请求(客户端, 请求, 基础路径, 会话标识, 页面Origin)) return true;
     const std::string 消息路径 = std::string(基础路径) + "/api/messages";
     const std::string 取件路径 = std::string(基础路径) + "/api/outbound";
@@ -1847,11 +1911,11 @@ bool 释放网页对话框出站占用(const 网页对话框目标& 目标,
     try {
         const auto& 输出队列 = 外设.输出队列;
         const auto& 消息接收 = 外设.接收消息;
-        const 网页对话框事实回调组 对话框事实{外设.确认页面, 外设.发送完成, 外设.发送后投影};
+        const 网页对话框事实回调组 对话框事实{外设.确认页面, 外设.发送完成, 外设.发送后投影, 外设.交互确认};
         if (!输出队列.入列 || !输出队列.领取 || !输出队列.取消 || !输出队列.清空)
             return {网页对话宿主状态::内部错误};
         if (!外设.会话开始 || !外设.会话结束 || !消息接收
-            || !对话框事实.确认页面 || !对话框事实.发送完成)
+            || !对话框事实.确认页面 || !对话框事实.发送完成 || !对话框事实.交互确认)
             return {网页对话宿主状态::会话绑定失败};
         const bool 有服务输入 = 服务输入.会话开始 || 服务输入.会话结束
             || 服务输入.查询目标提示 || 服务输入.预览 || 服务输入.读取预览 || 服务输入.确认;

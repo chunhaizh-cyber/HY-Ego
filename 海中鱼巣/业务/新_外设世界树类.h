@@ -77,6 +77,12 @@ struct 新外设交互场景读取 final {
     新外设对话框来源 来源;
     std::optional<稳定编码> 交互者节点;
 };
+struct 新外设网页交互确认结果 final {
+    新外设事实状态 状态 = 新外设事实状态::入口拒绝;
+    std::optional<稳定编码> 确认, 场景, 窗口;
+    std::int64_t 确认UTC纳秒 = 0;
+};
+
 struct 新外设对话框建立结果 final {
     新外设事实状态 状态 = 新外设事实状态::入口拒绝;
     std::optional<新外设对话框定位> 定位;
@@ -98,6 +104,10 @@ public:
     新外设对话框建立结果 查找对话框场景(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
     std::optional<新外设对话框来源> 读取对话框来源(稳定编码 窗口节点) const noexcept;
+    新外设网页交互确认结果 明确确认本次网页交互(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) noexcept;
+    新外设网页交互确认结果 读取本次网页交互确认(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
     // 外设根下全部外设交互场景；只读，供自我线程补建现实交互场景。
     std::vector<稳定编码> 列出交互场景() const noexcept;
     // 按外设场景稳定编码读取；不是外设根下的外设交互场景时为空（编码可能已不存在）。

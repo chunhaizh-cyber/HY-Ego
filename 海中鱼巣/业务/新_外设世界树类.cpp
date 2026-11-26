@@ -33,6 +33,9 @@ constexpr std::size_t 输出关联问题字段 = 14;
 constexpr std::size_t 接纳会话绑定人字段 = 15;
 std::array<稳定编码, 16> 消息字段{};
 稳定编码 消息根{};
+enum class 交互确认键 : std::size_t { 窗口确认, 场景, 窗口, 会话, 对话框, 时间, 数量 };
+std::array<稳定编码, static_cast<std::size_t>(交互确认键::数量)> 交互确认字段{};
+稳定编码 确认字段(交互确认键 键) { return 交互确认字段[static_cast<std::size_t>(键)]; }
 const 新_特征值类* 消息值服务 = nullptr;
 std::mutex 外设互斥;
 
@@ -151,6 +154,40 @@ std::optional<新外设消息信息> 读取正式消息(
     if (保护) 保护->insert(保护->end(), 快照.begin(), 快照.end());
     return 结果;
 }
+新外设网页交互确认结果 读取窗口确认(
+    const 新外设对话框定位& 定位, std::string_view 会话, std::string_view 对话框,
+    const 基础联合节点快照& 窗口) {
+    using S = 新外设事实状态;
+    using K = 交互确认键;
+    const auto 查字段 = [](const auto& 字段组, K 键) -> const 基础字段内容* {
+        const 基础字段内容* 值 = nullptr;
+        for (const auto& 字段 : 字段组) {
+            if (字段.字段节点 != 确认字段(键)) continue;
+            if (值) throw std::logic_error("duplicate peripheral interaction confirmation field");
+            值 = &字段.内容;
+        }
+        return 值;
+    };
+    if (窗口.结构.节点.编码 != 定位.窗口节点)
+        throw std::logic_error("peripheral confirmation window identity mismatch");
+    const auto* 确认引用 = 查字段(窗口.结构.字段组,K::窗口确认);
+    if (!确认引用) return {S::未找到};
+    const auto ID = std::get<稳定编码>(*确认引用);
+    const auto 确认 = 读取消息快照(ID);
+    const auto 取 = [&](K 键) -> const 基础字段内容& {
+        if (const auto* 值 = 查字段(确认.结构.字段组,键)) return *值;
+        throw std::logic_error("missing peripheral interaction confirmation field");
+    };
+    const auto 时间 = std::get<std::int64_t>(std::get<基础值>(取(K::时间)).材料);
+    if (确认.结构.字段组.size()!=5 || 时间<=0
+        || std::get<稳定编码>(取(K::场景))!=定位.场景节点
+        || std::get<稳定编码>(取(K::窗口))!=定位.窗口节点
+        || std::get<std::string>(std::get<基础值>(取(K::会话)).材料)!=会话
+        || std::get<std::string>(std::get<基础值>(取(K::对话框)).材料)!=对话框)
+        throw std::logic_error("peripheral interaction confirmation source mismatch");
+    return {S::已完成,ID,定位.场景节点,定位.窗口节点,时间};
+}
+
 class 外设消息身份读取器 final : public 特征消息成员读取接口 {
 public:
     特征消息成员读取结果 读取消息集合成员身份(稳定编码 节点) const noexcept override {
@@ -255,6 +292,10 @@ bool 更新完成(新外设事实状态 状态) {
         for (auto& 字段 : 消息字段) {
             if (!有效(字段)) 字段 = 全局基础数据集.新建节点();
             if (!有效(字段)) throw std::runtime_error("peripheral message schema allocation failed");
+        }
+        for (auto& 字段 : 交互确认字段) {
+            if (!有效(字段)) 字段 = 全局基础数据集.新建节点();
+            if (!有效(字段)) return {新世界初始化状态::资源失败, {}, {}};
         }
         if (!有效(消息根)) 消息根 = 全局基础数据集.新建节点();
         if (!有效(消息根)) throw std::runtime_error("peripheral message root allocation failed");
@@ -758,6 +799,68 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
         return {命中 ? 新外设事实状态::已完成 : 新外设事实状态::未找到, 命中};
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"查询外设对话框", L"正式定位或窗口结构不完整，不伪装未找到。");
+    }
+}
+
+新外设网页交互确认结果 新_外设世界树类::读取本次网页交互确认(
+    std::string_view 会话, std::string_view 对话框) const noexcept {
+    using S = 新外设事实状态;
+    if (会话.empty() || 对话框.empty()) return {S::入口拒绝};
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return {S::未初始化};
+        const auto 定位 = 查找正式窗口(会话,对话框);
+        if (!定位) return {S::未找到};
+        return 读取窗口确认(*定位,会话,对话框,读取消息快照(定位->窗口节点));
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (...) {
+        return {S::结构不一致};
+    }
+}
+
+新外设网页交互确认结果 新_外设世界树类::明确确认本次网页交互(
+    std::string_view 会话, std::string_view 对话框) noexcept {
+    using S = 新外设事实状态;
+    using B = 基础节点组追加状态;
+    using K = 交互确认键;
+    if (会话.empty() || 对话框.empty()) return {S::入口拒绝};
+    try {
+        std::lock_guard 锁(外设互斥);
+        if (!有效(外设根)) return {S::未初始化};
+        const auto 定位 = 查找正式窗口(会话,对话框);
+        if (!定位) return {S::未找到};
+        const auto 窗口 = 读取消息快照(定位->窗口节点);
+        auto 已有 = 读取窗口确认(*定位,会话,对话框,窗口);
+        if (已有.状态 == S::已完成) {
+            已有.状态 = S::无变化;
+            return 已有;
+        }
+        const auto 时间 = 当前强时间();
+        基础节点组追加请求 请求;
+        请求.预期联合节点组 = {窗口,读取消息快照(定位->场景节点)};
+        for (const auto 字段 : 交互确认字段) 请求.只读预期.节点组.push_back({字段});
+        请求.新节点组.push_back({{
+            {确认字段(K::场景),定位->场景节点},
+            {确认字段(K::窗口),定位->窗口节点},
+            {确认字段(K::会话),基础值{std::string(会话)}},
+            {确认字段(K::对话框),基础值{std::string(对话框)}},
+            {确认字段(K::时间),基础值{时间.纳秒}}
+        }});
+        请求.追加字段组.push_back({定位->窗口节点,确认字段(K::窗口确认),基础组内节点引用{0}});
+        const auto 发布 = 全局基础数据集.原子追加节点组(请求);
+        if (发布.状态 == B::资源失败) return {S::资源失败};
+        if (发布.状态 == B::预期不符 || 发布.状态 == B::节点不存在 || 发布.状态 == B::引用不存在)
+            return {S::未就绪};
+        if (发布.状态 != B::已完成 || 发布.新节点组.size()!=1) return {S::结构不一致};
+        const auto 回读 = 读取窗口确认(*定位,会话,对话框,读取消息快照(定位->窗口节点));
+        if (回读.状态!=S::已完成 || 回读.确认!=发布.新节点组.front() || 回读.确认UTC纳秒!=时间.纳秒)
+            return {S::结构不一致};
+        return 回读;
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (...) {
+        return {S::结构不一致};
     }
 }
 

@@ -249,6 +249,12 @@ struct 网页输出队列回调组 final {
     std::function<网页输出队列回执(const 网页对话框目标&, std::uint64_t)> 取消;
     std::function<网页输出队列回执(const 网页对话框目标&)> 清空;
 };
+enum class 网页交互确认状态 : std::uint8_t { 已记录, 已读取, 已复用, 未确认, 目标无效, 暂不可用, 结构错误 };
+struct 网页交互确认结果 final {
+    网页交互确认状态 状态 = 网页交互确认状态::目标无效;
+    std::uint64_t 确认 = 0, 场景 = 0, 窗口 = 0;
+    std::int64_t 确认UTC纳秒 = 0;
+};
 // 完整网页外设控制域；业务服务及自我/任务状态不参与外设事实准入。
 // 闭包保活适配状态，外层必须在world销毁前关闭模块并收束宿主。
 struct 网页外设运行回调组 final {
@@ -260,6 +266,7 @@ struct 网页外设运行回调组 final {
     std::function<void(const 网页定向发送事实&)> 发送完成;
     网页输出队列回调组 输出队列;
     std::function<void(const 网页定向发送事实&)> 发送后投影;
+    std::function<网页交互确认结果(const 网页对话框目标&, bool)> 交互确认;
 };
 网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
 网页定向发送结果 查询网页对话框发送(
