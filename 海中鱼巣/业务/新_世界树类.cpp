@@ -1,4 +1,5 @@
 #include "新_世界树类.h"
+#include "../领域/消息交互.数据.h"
 #include "../核心/容错检查.h"
 #include "../领域/世界挂接.全局根.h"
 #include "../适配/适配器.UTC时钟.h"
@@ -1577,6 +1578,161 @@ std::optional<稳定编码> 新_世界树类::读取自我原场景() const noex
         return 新场景操作状态::已完成;
     } catch (...) {
         return 新场景操作状态::资源失败;
+    }
+}
+
+namespace {
+bool 原消息角色来源有效(const 新原消息角色来源& 来源) {
+    return 有效(来源.M) && 有效(来源.外设场景) && 有效(来源.外设窗口) && 有效(来源.外设正文)
+        && (来源.方向 == 新外设消息方向::接收 || 来源.方向 == 新外设消息方向::发送);
+}
+
+std::vector<std::uint64_t> 原消息角色来源材料(const 新原消息角色来源& 来源) {
+    return {来源.M.值, 来源.外设场景.值, 来源.外设窗口.值, 来源.外设正文.值,
+        static_cast<std::uint64_t>(来源.方向)};
+}
+
+新原消息角色状态 转角色发布状态(基础节点组追加状态 状态) {
+    using S = 新原消息角色状态;
+    using B = 基础节点组追加状态;
+    switch (状态) {
+    case B::已完成: return S::已完成;
+    case B::预期不符: case B::节点不存在: case B::引用不存在: return S::前提已变化;
+    case B::资源失败: return S::资源失败;
+    default: return S::结构不一致;
+    }
+}
+}
+
+新原消息角色状态 新_世界树类::配置原消息角色事实(稳定编码 标识类型) noexcept {
+    using S = 新原消息角色状态;
+    try {
+        std::lock_guard 锁(新世界树互斥);
+        if (!已初始化_ || !参与自我类型_ || !参与交互者类型_ || !有效(标识类型))
+            return S::输入拒绝;
+        if (角色外设场景标识类型_)
+            return *角色外设场景标识类型_ == 标识类型 ? S::已完成 : S::输入拒绝;
+        const auto 键 = 全局基础数据集.原子建立节点组(
+            std::vector<基础组内新节点>(原消息角色字段_.size()));
+        if (键.状态 == 基础结构操作状态::资源失败) return S::资源失败;
+        if (键.状态 != 基础结构操作状态::已完成 || 键.节点组.size() != 原消息角色字段_.size())
+            return S::结构不一致;
+        std::ranges::copy(键.节点组, 原消息角色字段_.begin());
+        角色外设场景标识类型_ = 标识类型;
+        return S::已完成;
+    } catch (...) {
+        return S::资源失败;
+    }
+}
+
+新原消息角色准备结果 新_世界树类::准备原消息场景角色事实(const 新原消息角色来源& 来源) const noexcept {
+    using S = 新原消息角色状态;
+    try {
+        if (!原消息角色来源有效(来源)) return {S::输入拒绝};
+        std::lock_guard 锁(新世界树互斥);
+        if (!角色外设场景标识类型_) return {S::未配置};
+        const auto 副本 = 查找现实交互场景(来源.外设场景, *角色外设场景标识类型_);
+        if (副本.状态 == 新场景操作状态::存在不存在) return {S::未找到};
+        if (副本.状态 == 新场景操作状态::资源失败) return {S::资源失败};
+        if (副本.状态 != 新场景操作状态::无变化 || !副本.存在节点) return {S::结构不一致};
+        const auto 场景 = 场景服务_.查询所属场景(*副本.存在节点);
+        if (!场景 || !参与自我类型_ || !参与交互者类型_) return {S::结构不一致};
+        const auto 取端 = [&](稳定编码 类型, bool 自我端) -> std::optional<稳定编码> {
+            const auto F = 查找顶层特征已加锁(*场景, 类型);
+            if (!F) return {};
+            const auto 角色 = 特征服务_.获取特征(*F);
+            if (!角色) throw S::结构不一致;
+            if (!角色->当前值) return {};
+            const auto* E = std::get_if<稳定编码>(&*角色->当前值);
+            if (!E || !有效(*E) || !存在服务_.获取存在(*E)) throw S::结构不一致;
+            if (自我端 && 自我节点_ != *E) throw S::结构不一致;
+            return 场景服务_.查询所属场景(*E) == 场景 ? std::optional{*E} : std::nullopt;
+        };
+        const auto 自我 = 取端(*参与自我类型_, true);
+        const auto 对方 = 取端(*参与交互者类型_, false);
+        if (对方 && (对方 == 自我 || 对方 == 自我节点_)) return {S::结构不一致};
+        const bool 入站 = 来源.方向 == 新外设消息方向::接收;
+        新原消息场景角色事实 事实{{}, *场景, *副本.存在节点, 入站 ? 对方 : 自我, 入站 ? 自我 : 对方};
+        const auto& 键 = 原消息角色字段_;
+        基础节点组追加请求 请求;
+        基础组内新节点 记录{{{键[1], 基础值{原消息角色来源材料(来源)}},
+            {键[2], 事实.场景}, {键[3], 事实.窗口副本}}};
+        if (事实.说话者) 记录.字段组.push_back({键[4], *事实.说话者});
+        if (事实.受话者) 记录.字段组.push_back({键[5], *事实.受话者});
+        请求.新节点组.push_back(std::move(记录));
+        for (const auto k : 键) 请求.只读预期.节点组.push_back({k});
+        for (const auto n : {世界树根场景_, 事实.场景, 事实.窗口副本})
+            请求.只读预期.节点组.push_back({n});
+        if (事实.说话者) 请求.只读预期.节点组.push_back({*事实.说话者});
+        if (事实.受话者) 请求.只读预期.节点组.push_back({*事实.受话者});
+        请求.当前追加字段键组.push_back({世界树根场景_, 键[0]});
+        请求.追加字段组.push_back({世界树根场景_, 键[0], 基础组内节点引用{0}});
+        auto 封存 = 全局基础数据集.封存原子追加片段(请求);
+        if (封存.状态 != 基础节点组追加状态::已完成) return {转角色发布状态(封存.状态)};
+        if (!封存.片段) return {S::结构不一致};
+        return {S::已完成, 事实, std::move(封存.片段)};
+    } catch (S 状态) {
+        return {状态};
+    } catch (...) {
+        return {S::资源失败};
+    }
+}
+
+新原消息角色读取结果 新_世界树类::读取原消息场景角色事实(const 新原消息角色来源& 来源) const noexcept {
+    using S = 新原消息角色状态;
+    using B = 基础结构操作状态;
+    try {
+        if (!原消息角色来源有效(来源)) return {S::输入拒绝};
+        std::lock_guard 锁(新世界树互斥);
+        if (!角色外设场景标识类型_) return {S::未配置};
+        const auto& 键 = 原消息角色字段_;
+        const auto 根 = 全局基础数据集.查询节点组完整结构({世界树根场景_});
+        if (根.状态 == B::资源失败) return {S::资源失败};
+        if (根.状态 != B::已完成 || 根.节点组.size() != 1 || !根.节点组.front().快照)
+            return {S::结构不一致};
+        std::set<稳定编码> 记录节点;
+        for (const auto& f : 根.节点组.front().快照->结构.字段组) {
+            if (f.字段节点 != 键[0]) continue;
+            const auto* n = std::get_if<稳定编码>(&f.内容);
+            if (!n || !有效(*n) || !记录节点.insert(*n).second) return {S::结构不一致};
+        }
+        if (记录节点.empty()) return {S::未找到};
+        const auto 批 = 全局基础数据集.查询节点组完整结构({记录节点.begin(), 记录节点.end()});
+        if (批.状态 == B::资源失败) return {S::资源失败};
+        if (批.状态 != B::已完成 || 批.节点组.size() != 记录节点.size()) return {S::结构不一致};
+        std::optional<新原消息场景角色事实> 结果;
+        for (const auto& item : 批.节点组) {
+            if (!item.快照) return {S::结构不一致};
+            const auto& fields = item.快照->结构.字段组;
+            const auto 来源项 = std::ranges::find(fields, 键[1], &基础字段关系::字段节点);
+            if (来源项 == fields.end() || std::ranges::count(fields, 键[1], &基础字段关系::字段节点) != 1)
+                return {S::结构不一致};
+            const auto* 值 = std::get_if<基础值>(&来源项->内容);
+            const auto* 材料 = 值 ? std::get_if<std::vector<std::uint64_t>>(&值->材料) : nullptr;
+            if (!材料 || 材料->size() != 5) return {S::结构不一致};
+            if (材料->front() != 来源.M.值) continue;
+            if (*材料 != 原消息角色来源材料(来源)) return {S::前提已变化};
+            if (结果) return {S::结构不一致};
+            const auto 引用 = [&](稳定编码 k) -> std::optional<稳定编码> {
+                const auto f = std::ranges::find(fields, k, &基础字段关系::字段节点);
+                if (f == fields.end()) return {};
+                const auto* n = std::get_if<稳定编码>(&f->内容);
+                if (!n || !有效(*n) || std::ranges::count(fields, k, &基础字段关系::字段节点) != 1)
+                    throw S::结构不一致;
+                return *n;
+            };
+            const auto 场景 = 引用(键[2]);
+            const auto 窗口 = 引用(键[3]);
+            const auto 说话者 = 引用(键[4]);
+            const auto 受话者 = 引用(键[5]);
+            if (!场景 || !窗口 || (说话者 && 说话者 == 受话者)) return {S::结构不一致};
+            结果 = 新原消息场景角色事实{item.查询节点, *场景, *窗口, 说话者, 受话者};
+        }
+        return 结果 ? 新原消息角色读取结果{S::已完成, 结果} : 新原消息角色读取结果{S::未找到};
+    } catch (S 状态) {
+        return {状态};
+    } catch (...) {
+        return {S::资源失败};
     }
 }
 

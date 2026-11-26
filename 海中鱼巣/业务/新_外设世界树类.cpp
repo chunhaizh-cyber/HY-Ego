@@ -996,6 +996,15 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     const auto 正文材料 = 服务_.特征值服务.保存或取得特征值(材料物理类型::UTF8字符串, std::string(正文));
     const auto 裸节点 = 全局基础数据集.新建节点();
     if (!有效(正文材料) || !有效(裸节点)) throw std::runtime_error("peripheral message allocation failed");
+    const 新原消息角色来源 角色来源{裸节点, 定位.场景节点, 定位.窗口节点, 正文材料, 方向};
+    const auto 角色 = 世界_.准备原消息场景角色事实(角色来源);
+    using 角色状态 = 新原消息角色状态;
+    if (角色.状态 != 角色状态::已完成 && 角色.状态 != 角色状态::未找到 && 角色.状态 != 角色状态::未配置)
+        throw std::runtime_error("peripheral original message role preparation failed");
+    if ((角色.状态 == 角色状态::已完成) != (角色.事实.has_value() && 角色.片段.has_value()))
+        throw std::runtime_error("peripheral original message role preparation inconsistent");
+    std::vector<基础封存追加片段> 角色片段;
+    if (角色.片段) 角色片段.push_back(*角色.片段);
     成员.push_back(裸节点);
     std::sort(成员.begin(), 成员.end());
     std::vector<std::uint64_t> 编码组;
@@ -1056,7 +1065,7 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
     if (准备.状态 != 新特征I64准备状态::已准备 || !准备.准备)
         throw std::runtime_error("peripheral message feature preparation failed");
     // 从取得F占用到完成S/D不重新读取/调用宿主；定位及来源快照也参与唯一CAS。
-    const auto 提交 = 服务_.特征服务.提交顶层引用集合更新(*准备.准备, {});
+    const auto 提交 = 服务_.特征服务.提交顶层引用集合更新(*准备.准备, 角色片段);
     if (提交.状态 != 基础节点组追加状态::已完成) {
         服务_.特征服务.取消顶层引用集合更新(*准备.准备);
         // 零发布已证明，仍只按原来源读回；不重新发送或分配第二业务事件。
@@ -1077,6 +1086,18 @@ void 新_外设世界树类::完成消息集合变化(const 新外设对话框�
         || !同关联(*正式) || 读取消息成员(特征节点) != 成员)
         throw std::runtime_error("peripheral message publication readback failed");
     服务_.特征服务.结束顶层引用集合更新(*准备.准备);
+    if (角色.片段) {
+        const auto 回执 = std::ranges::find_if(提交.附加片段回执组, [&](const auto& item) {
+            return item.对应片段(*角色.片段);
+        });
+        if (回执 == 提交.附加片段回执组.end() || 回执->新节点组().size() != 1)
+            throw std::runtime_error("peripheral original message role receipt missing");
+        const auto 回读 = 世界_.读取原消息场景角色事实(角色来源);
+        if (回读.状态 != 角色状态::已完成 || !回读.事实 || 回读.事实->事实节点 != 回执->新节点组().front()
+            || 回读.事实->场景 != 角色.事实->场景 || 回读.事实->窗口副本 != 角色.事实->窗口副本
+            || 回读.事实->说话者 != 角色.事实->说话者 || 回读.事实->受话者 != 角色.事实->受话者)
+            throw std::runtime_error("peripheral original message role readback inconsistent");
+    }
     return 新外设事实状态::已完成;
 }
 
