@@ -2617,7 +2617,36 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             q.正式人称 = 本次人称;
             q.读取静态角色缺口 = true;
             auto 句段 = 投影接收篇章句界(q.固定原文);
-            const bool 读取同文候选 = !句段.empty() && 可读取无上下文外层共指(q.固定原文);
+            const bool 已证普通外层 = 可读取无上下文外层共指(q.固定原文);
+            const bool 读取同文候选 = !句段.empty() && 已证普通外层;
+            const auto 词头来源 = [&] {
+                std::lock_guard 锁(impl.锁);
+                return impl.可信词头来源;
+            }();
+            const auto 读当前句 = [&] {
+                auto 图 = 只读解释单句基础语言(q,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+                using I = 语言场景基础输入状态;
+                if (图.状态 == I::读取漂移 || 图.状态 == I::引用不可读) 漂移();
+                if (图.状态 == I::工程未完成 || 图.状态 == I::额度不足) 资源();
+                if (图.状态 == I::内部不一致) throw std::logic_error("passive receive person interpretation inconsistent");
+                return 图;
+            };
+            const auto 可取存在归类 = [&](const 语言基础统一输入结果& 图) {
+                using O = 新语言知识含义操作;
+                using P = 新语言知识参数角色;
+                using K = 新语言知识角色种类;
+                using C = 新语言知识角色类别;
+                if (!已证普通外层 || 图.图解释状态 != 基础语言输入状态::静态角色待取材
+                    || !图.静态结构 || 图.静态结构->操作 != O::概念归类)
+                    return false;
+                const auto& 结构 = *图.静态结构;
+                const auto 主体 = std::ranges::find(结构.角色组, P::主体, &接收语言已解释角色::参数);
+                if (主体 == 结构.角色组.end() || 主体->值) return false;
+                return std::ranges::count_if(图.静态角色缺口组, [&](const auto& 项) {
+                    return 项.知识节点 == 结构.所用构式 && 项.操作 == 结构.操作
+                        && 项.参数 == P::归类概念 && 项.种类 == K::概念引用 && 项.类别 == C::存在概念;
+                }) == 1;
+            };
             接收篇章主体观察 主体观察;
             if (句段.empty()) 句段.push_back({{static_cast<std::size_t>(k.原文起点),
                 static_cast<std::size_t>(k.原文终点)},q.固定原文});
@@ -2626,12 +2655,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             for (const auto& 句 : 句段) {
                 检查认知停止(stop);
                 q.固定原文 = 句.句面原文;
-                auto 图 = 只读解释单句基础语言(q,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
-                using I = 语言场景基础输入状态;
-                if (图.状态 == I::读取漂移 || 图.状态 == I::引用不可读) 漂移();
-                if (图.状态 == I::工程未完成 || 图.状态 == I::额度不足) 资源();
-                if (图.状态 == I::内部不一致) throw std::logic_error("passive receive person interpretation inconsistent");
+                auto 图 = 读当前句();
+                if (可取存在归类(图)
+                    && 取得欠缺的可信词头(d, 词头来源, q.语言节点, q.固定原文, 图, stop))
+                    图 = 读当前句();
                 auto& 证据 = out.句段解释.emplace_back(记录句段解释(图,句.全文范围,d.关系陈述));
+                if (可取存在归类(图))
+                    记录待完善谓项概念(d, 固定来源, 图, 证据, stop);
                 if (读取同文候选) 主体观察.记录未绑定候选(图, q.语言节点, d.名称, 证据);
                 auto 项 = 投影原消息人称(图,k,句.全文范围);
                 指代.insert(指代.end(),std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
