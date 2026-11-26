@@ -6678,12 +6678,12 @@ struct 组织写入现场 {
         请求.预期联合节点组=现场.保护();return true;
     }
 };
-template<class T> T 组织读值(组织读取现场&,稳定编码,std::set<稳定编码>&);
+template<class T> T 组织读值(组织读取现场&,稳定编码,std::set<稳定编码>&,std::size_t 已核根扩展数=0);
 template<std::size_t I=0,class T> void 组织读变体(T& v,std::size_t index,组织读取现场& r,稳定编码 child,std::set<稳定编码>& path){
     if constexpr(I<std::variant_size_v<T>){if(I==index)v=组织读值<std::variant_alternative_t<I,T>>(r,child,path);else 组织读变体<I+1>(v,index,r,child,path);}
     else 组织要求(false);
 }
-template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<稳定编码>& path){
+template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<稳定编码>& path,std::size_t 已核根扩展数){
     组织要求(path.insert(id).second);T v{};std::vector<稳定编码> children;
     for(const auto& f:r.字段(id,组织键::子项))children.push_back(std::get<稳定编码>(f));
     std::sort(children.begin(),children.end(),[&](auto a,auto b){return r.整数(a,组织键::序号)<r.整数(b,组织键::序号);});
@@ -6740,7 +6740,7 @@ template<class T> T 组织读值(组织读取现场& r,稳定编码 id,std::set<
         std::apply([&](auto&... 项){(读项(项),...);},fs);
     }
     const auto scalars=r.字段(id,组织键::值).size(),refs=r.字段(id,组织键::引用).size();
-    std::size_t 扩展字段数=0;
+    std::size_t 扩展字段数=已核根扩展数;
     if constexpr(std::is_same_v<T,新疑问代词实例>) {
         const auto 当前=r.字段(id,组织键::有效答复);
         const auto 历史=r.字段(id,组织键::答复历史);
@@ -7369,8 +7369,24 @@ bool 具备接收篇章采用材料(const 新接收语言解释内容& 内容,co
 
 新接收语言解释内容 读接收语言解释定义(组织读取现场& 读, 稳定编码 定义,
     const 新语言前置来源信息& 来源, const 新接收语言解释场景绑定& 场景) {
+    const auto 格式 = 读.字段(定义, 组织键::指代关系格式);
+    const auto 绑定组 = 读.字段(定义, 组织键::指代关系组);
+    if (格式.empty()) {
+        组织要求(绑定组.empty());
+    } else {
+        组织要求(格式.size() == 1 && 格式.front() == 基础字段内容{基础值{std::int64_t{1}}});
+        std::set<稳定编码> 已核绑定;
+        for (const auto& 绑定 : 绑定组) {
+            const auto* B = std::get_if<稳定编码>(&绑定);
+            组织要求(B && 有效(*B) && 已核绑定.insert(*B).second);
+            组织要求(读.整数(*B, 组织键::类型) == 接收指代绑定事实类型);
+            核接收指代来源(读, 读.引用(*B, 组织键::指代实例归属), 来源, 场景);
+        }
+    }
+
+    // 格式及绑定是定义根的正式扩展，嵌套字段仍按通用结构严格读取。
     std::set<稳定编码> 路径;
-    auto 内容=组织读值<新接收语言解释内容>(读,定义,路径);
+    auto 内容 = 组织读值<新接收语言解释内容>(读, 定义, 路径, 格式.size() + 绑定组.size());
     组织要求(接收语言解释内容有效(内容,来源,场景));
     if (内容.含义候选) {
         const auto& 网=*内容.含义候选;
@@ -7907,13 +7923,13 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
 } // namespace
 
 新接收指代调用状态 新_语言类::配置指代关系(稳定编码 概念, 新_特征类& 特征,
-    新_特征值类& 特征值, 新_场景类& 场景, 新_状态类& 状态,
+    新_特征值类& 特征值, 新_状态类& 状态,
     std::function<新接收指代调用结果<新指代目标保护>(const 新接收指代关系值&)> 取保护) {
     using S = 新接收指代调用状态;
     if (!有效(概念) || !取保护) return S::输入拒绝;
     std::lock_guard 锁(新语言互斥);
     if (!有效(组织句柄.front()) || 指代关系参与者_) return S::输入拒绝;
-    指代关系参与者_.emplace(指代关系参与者{概念, &特征, &特征值, &场景, &状态, std::move(取保护)});
+    指代关系参与者_.emplace(指代关系参与者{概念, &特征, &特征值, &状态, std::move(取保护)});
     return S::已完成;
 }
 
@@ -8036,7 +8052,7 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
 
 新接收指代调用结果<新接收语言解释信息> 新_语言类::保存接收语言解释及指代关系(
     const 新接收认知来源键& 键, const 新接收语言解释内容& 请求内容, std::span<const 新接收指代材料> 材料,
-    稳定编码, const 新_自然语言世界树类& 世界, const 新语言分界消息读取接口& 消息读取) {
+    稳定编码, 新_自然语言世界树类& 世界, const 新语言分界消息读取接口& 消息读取) {
     using S = 新接收指代调用状态;
     const auto 前置 = 读取前置来源(键,消息读取);
     if (前置.状态 != 新语言分界工程状态::已完成 || !前置.信息) return {转指代状态(前置.状态)};
@@ -8048,7 +8064,7 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
 新接收指代调用结果<新接收语言解释信息> 新_语言类::保存已核消息解释及指代关系(
     const 新语言前置来源信息& 前置, const 新接收语言解释内容& 请求内容,
     std::span<const 新接收指代材料> 材料, const std::optional<新正式消息角色材料>& 角色证据,
-    新外设消息方向 方向, const 新_自然语言世界树类& 世界) {
+    新外设消息方向 方向, 新_自然语言世界树类& 世界) {
     using S = 新接收指代调用状态;
     using A = 基础节点组追加状态;
     try {
@@ -8215,7 +8231,7 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
             写.请求.只读预期.节点组.push_back({组键(组织键::指代关系格式)});
         }
         const auto 状态绑定 = 服务->状态->取得特征状态构造绑定();
-        const auto 场景绑定 = 服务->场景->取得场景状态参与绑定(场景.场景());
+        const auto 场景绑定 = 世界.取得消息解释状态参与绑定(场景);
         auto 准备 = 服务->特征->准备指代关系实例初建组(服务->概念, std::move(写.请求), 首建);
         if (准备.状态 != A::已完成) return {转指代发布状态(准备.状态)};
         if (!准备.准备) return {S::结构不一致};
@@ -8223,7 +8239,7 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
         if (结果 != A::已完成) return {转指代发布状态(结果)};
         结果 = 服务->状态->准备指代关系状态组(状态绑定, *准备.准备, 取得分界当前UTC());
         if (结果 != A::已完成) return {转指代发布状态(结果)};
-        结果 = 服务->场景->封存指代关系状态组挂接(场景绑定, *准备.准备);
+        结果 = 世界.封存消息解释指代状态挂接(场景绑定, *准备.准备);
         if (结果 != A::已完成) return {转指代发布状态(结果)};
         const auto 发布 = 服务->特征->提交指代关系初建组(*准备.准备);
         if (发布.状态 != A::已完成) return {转指代发布状态(发布.状态)};
@@ -8291,10 +8307,8 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
             } else {
                 定义 = 读.引用(R, 组织键::定义);
             }
-            const auto 格式 = 读.字段(定义, 组织键::指代关系格式);
-            if (格式.empty()) return {S::未找到};
-            if (格式.size() != 1 || 读.整数(定义, 组织键::指代关系格式) != 1) return {S::结构不一致};
             内容 = 读接收语言解释定义(读, 定义, 前置, 场景);
+            if (读.字段(定义, 组织键::指代关系格式).empty()) return {S::未找到};
             项组 = 读接收指代关系组(读, 定义, 前置.节点, 场景.场景());
             预期 = 场景.绑定预期();
             if (方向 == 新外设消息方向::发送) static_cast<void>(读.读(前置.节点));
@@ -8304,8 +8318,10 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
                 std::map<稳定编码, std::vector<基础字段关系>> 按键;
                 for (const auto& f : 快照.结构.字段组) 按键[f.字段节点].push_back(f);
                 if (节点 == R && 指定采用) 按键.erase(组键(组织键::定义));
-                for (auto& [字段, 字段组] : 按键)
+                for (auto& [字段, 字段组] : 按键) {
+                    预期.节点组.push_back({字段});
                     预期.字段集合组.push_back({节点, 字段, {}, std::move(字段组)});
+                }
             }
         }
         if (!项组.empty() && !服务) return {S::目标保护未装配};
