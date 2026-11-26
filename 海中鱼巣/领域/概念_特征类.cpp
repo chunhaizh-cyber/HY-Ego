@@ -2084,7 +2084,63 @@ std::optional<基础联合节点快照> 信息定义快照(稳定编码 n) {
         信息引用定义故障(L"定义完整快照读取工程故障。");
     return std::move(q.节点组.front().快照);
 }
-std::optional<特征概念信息> 读取信息引用材料定义(稳定编码 n) {
+bool 合并正式定义保护(std::vector<基础联合节点快照>&, const std::vector<基础联合节点快照>&);
+
+bool 核指代槽正式类型(const 基础联合节点快照& 概念, 稳定编码 FT, 稳定编码 范围,
+    std::vector<基础联合节点快照>* 保护) {
+    const auto 根 = 信息定义快照(特征概念树);
+    if (!根) 信息引用定义故障(L"指代关系所属特征概念树丢失。");
+    std::optional<基础联合节点快照> 槽;
+    std::vector<基础联合节点快照> 登记保护{*根};
+    const auto 序号 = static_cast<std::int64_t>(先天特征类型槽::指代关系);
+    for (const auto& 登记 : 根->结构.字段组) {
+        if (登记.字段节点 != 先天类型槽字段) continue;
+        const auto* 节点 = std::get_if<稳定编码>(&登记.内容);
+        if (!节点 || !有效(*节点)) 信息引用定义故障(L"先天槽登记引用损坏。");
+        const auto 候选 = 信息定义快照(*节点);
+        if (!候选 || !合并正式定义保护(登记保护,{*候选})) return false;
+        const auto& 字段 = 候选->结构.字段组;
+        const auto 含 = [&](稳定编码 键, const 基础字段内容& 内容) {
+            return std::ranges::count_if(字段,[&](const auto& f) {
+                return f.字段节点 == 键 && f.内容 == 内容;
+            }) == 1;
+        };
+        const auto 命中 = std::ranges::any_of(字段,[&](const auto& f) {
+            return f.字段节点 == 先天类型槽序号字段 && f.内容 == 基础字段内容{基础值{序号}};
+        });
+        if (!命中) continue;
+        if (槽 || 字段.size() != 3 || !含(节点类型字段,先天类型槽记录类型)
+            || !含(先天类型槽序号字段,基础值{序号})
+            || !含(先天类型槽根字段,概念.结构.节点.编码))
+            信息引用定义故障(L"正式FT绑定仅属于唯一登记的指代关系槽根。");
+        槽 = 候选;
+    }
+    if (!槽) 信息引用定义故障(L"携带正式FT绑定的信息引用定义无指代关系槽。");
+
+    using S = 特征概念规则状态;
+    const auto 正式 = 新_特征类::读取正式指代关系特征类型(FT);
+    if (正式.状态 == S::资源失败) throw std::bad_alloc{};
+    if (正式.状态 == S::前提已变化) return false;
+    if (正式.状态 != S::已完成 || !正式.信息 || 正式.信息->内容范围() != 范围)
+        信息引用定义故障(L"指代关系所绑定的正式FT身份或内容范围不一致。");
+
+    auto 本次 = std::move(登记保护);
+    if (!合并正式定义保护(本次,{概念})) return false;
+    const auto& 窄预期 = 正式.信息->窄预期();
+    for (const auto& 端点 : 窄预期.节点组) {
+        const auto 快照 = 信息定义快照(端点.编码);
+        if (!快照 || !合并正式定义保护(本次,{*快照})) return false;
+    }
+    const auto 键 = 信息定义快照(指代正式类型关联字段);
+    if (!键 || !合并正式定义保护(本次,{*键})) return false;
+    const auto 复核 = 全局基础数据集.核验只读预期(窄预期);
+    if (复核 == 基础节点组追加状态::资源失败) throw std::bad_alloc{};
+    if (复核 != 基础节点组追加状态::已完成 || !信息定义保护仍相同(本次)) return false;
+    return !保护 || 合并正式定义保护(*保护,本次);
+}
+
+std::optional<特征概念信息> 读取信息引用材料定义(稳定编码 n,
+    std::vector<基础联合节点快照>* 保护 = nullptr) {
     const auto s = 信息定义快照(n); if (!s) return {};
     const auto ref = [&](稳定编码 key) {
         std::optional<稳定编码> v;
@@ -2116,16 +2172,23 @@ std::optional<特征概念信息> 读取信息引用材料定义(稳定编码 n)
     特征概念信息 out{n, 特征概念材料物理类型::信息节点引用,
         特征概念信息引用值域{static_cast<信息引用语义>(semantics), content}, {},
         特征概念比较规则::信息引用身份精确, 特征概念聚合规则::不自动聚合, {}, count};
+    std::optional<稳定编码> 指代FT;
     for (const auto& f : s->结构.字段组) {
         if (f.字段节点 == 名称关系字段) {
             const auto* p = std::get_if<稳定编码>(&f.内容);
             if (!p || !有效(*p) || !信息定义快照(*p)) 信息引用定义故障(L"信息引用名称端点损坏。");
             out.名称关系.push_back(*p);
+        } else if (f.字段节点 == 指代正式类型关联字段) {
+            const auto* FT = std::get_if<稳定编码>(&f.内容);
+            if (!FT || !有效(*FT) || 指代FT || semantics != static_cast<std::int64_t>(信息引用语义::信息对象))
+                信息引用定义故障(L"指代关系正式FT引用形状不合法。");
+            指代FT = *FT;
         } else if (f.字段节点 != 节点类型字段 && f.字段节点 != 材料类型字段
             && f.字段节点 != 比较规则字段 && f.字段节点 != 聚合规则字段 && f.字段节点 != 当前引用实例数字段
             && f.字段节点 != 信息引用语义字段 && f.字段节点 != 信息引用内容概念字段)
             信息引用定义故障(L"信息引用定义存在非法混合字段。");
     }
+    if (指代FT && !核指代槽正式类型(*s,*指代FT,content,保护)) return {};
     std::sort(out.名称关系.begin(), out.名称关系.end());
     if (std::adjacent_find(out.名称关系.begin(), out.名称关系.end()) != out.名称关系.end())
         信息引用定义故障(L"信息引用定义名称重复。");
@@ -6352,8 +6415,8 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         const auto 规范 = 规范化定义(d);
         if (!规范 || 命中 < 0) throw std::logic_error("invalid feature definition");
         if (d.材料类型 == 特征概念材料物理类型::信息节点引用) {
-            const auto strict = 读取信息引用材料定义(节点);
-            if (!strict) 信息引用定义故障(L"信息引用正式定义读取缺失。");
+            const auto strict = 读取信息引用材料定义(节点,&out.预期节点组);
+            if (!strict) return {基础结构操作状态::已完成, {}, {}, true};
             if (转为定义(*strict) != *规范 || strict->当前引用实例数量 != 命中)
                 return {基础结构操作状态::已完成, {}, {}, true};
         }
