@@ -506,7 +506,6 @@ bool 是单根普通静态陈述图知识(const 新语言知识定义& 定义) {
             || 根.操作 == 新语言知识含义操作::特征有序大于);
 }
 
-namespace {
 const 新语言图含义节点* 当前特征值问图子节点(const 新语言知识定义& 定义) {
     using O = 新语言知识含义操作;
     using P = 新语言知识参数角色;
@@ -528,6 +527,7 @@ const 新语言图含义节点* 当前特征值问图子节点(const 新语言�
     return &*子;
 }
 
+namespace {
 std::uint32_t 引号闭合符(std::uint32_t 字) {
     switch (字) {
     case 0x201C: return 0x201D;

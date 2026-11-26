@@ -877,6 +877,124 @@ void 追加正式关系成文观察(认知依赖& d, const 新接收语言解释
     }
 }
 
+std::optional<接收部分成文句段> 从接收当前值问句部分成文(认知依赖& d,
+    const 新接收语言解释信息& 正式, const 新接收认知来源键& 来源,
+    const std::optional<语言图交互上下文>& 交互, std::stop_token stop, const char*& 步骤) {
+    using P = 新语言知识参数角色;
+    using O = 新语言知识含义操作;
+    using W = 新语言知识表达方式;
+    using K = 新语言知识状态;
+    using L = 新语言分界工程状态;
+    using G = 新前置语言缺口种类;
+    using C = 新语言知识角色类别;
+    using S = 接收篇章成文状态;
+    const auto& 内容 = 正式.内容;
+    if (内容.句段组.size() != 1 || 内容.原文起点 != 0 || !来源.根出现路径.empty()) return {};
+    const auto& 句 = 内容.句段组.front();
+    if (!句.静态结构 || 句.静态结构->操作 != O::信息请求 || 句.静态结构->角色组.size() != 3
+        || 句.起始标量 != 0 || 句.结束标量 != 内容.原文终点) return {};
+    const auto& 结构 = *句.静态结构;
+    const auto 取角色 = [&](P 参数) {
+        return std::ranges::find(结构.角色组, 参数, &接收语言已解释角色::参数);
+    };
+    const auto 主体 = 取角色(P::主体), 类型 = 取角色(P::特征类型), 待求 = 取角色(P::特征值);
+    if (主体 == 结构.角色组.end() || 类型 == 结构.角色组.end() || 待求 == 结构.角色组.end()
+        || 主体->值 || !类型->值 || 待求->值) return {};
+    const auto* 类型值 = std::get_if<语言图引用值>(&*类型->值);
+    if (!类型值 || !类型值->选用名称关系
+        || (类型值->类别 != C::特征概念 && 类型值->类别 != C::正式特征类型)) return {};
+    const auto 同范围 = [](const auto& 缺口, const auto& 角色) {
+        return 缺口.起始标量 == 角色.起始标量 && 缺口.结束标量 == 角色.结束标量;
+    };
+    if (std::ranges::count_if(句.缺口组,[&](const auto& 缺口) {
+            return 缺口.种类 == G::对象未唯一绑定 && 同范围(缺口,*主体);
+        }) != 1
+        || std::ranges::any_of(句.缺口组,[&](const auto& 缺口) {
+            return !(缺口.种类 == G::对象未唯一绑定 && 同范围(缺口,*主体))
+                && !(缺口.种类 == G::名称材料不足 && 同范围(缺口,*类型));
+        })) return {};
+
+    步骤 = "读取部分问句构式和正式词用";
+    const auto 知识 = d.语言.获取语言知识(结构.所用构式, d.词, d.存在概念);
+    if (知识.状态 == K::读取漂移 || 知识.状态 == K::未找到 || 知识.状态 == K::引用不可读) 漂移();
+    if (知识.状态 == K::工程未完成 || 知识.状态 == K::额度不足) 资源();
+    if (知识.状态 != K::已完成 || !知识.信息) throw std::logic_error("saved question knowledge unavailable");
+    const auto& 定义 = 知识.信息->定义;
+    const auto* 子图 = 当前特征值问图子节点(定义);
+    if (!子图) return {};
+    const auto 固定 = d.语言.读取前置来源(来源,d.外设);
+    if (固定.状态 == L::资源失败) 资源();
+    if (固定.状态 == L::前提已变化 || 固定.状态 == L::未找到 || 固定.状态 == L::材料未就绪) 漂移();
+    if (固定.状态 != L::已完成 || !固定.信息 || 固定.信息->节点 != 内容.前置来源)
+        throw std::logic_error("saved question source unavailable");
+    const auto& 原文 = 固定.信息->固定UTF8原文;
+    if (!可读取无上下文外层共指(原文) || 标量数(原文) != 句.结束标量) return {};
+    const auto 解码 = 语言场景转换内部::解码语言场景原文(原文);
+    if (!解码) throw std::logic_error("saved question source is not UTF-8");
+    const auto 未决词面 = 语言场景转换内部::读取语言场景原文范围(*解码,
+        {static_cast<std::size_t>(主体->起始标量),static_cast<std::size_t>(主体->结束标量)});
+    using N = 概念名称关系查询状态;
+    const auto 名称 = d.名称.获取名称关系(*类型值->选用名称关系);
+    if (名称.状态 == N::工程未完成 || 名称.状态 == N::读取未完成 || 名称.状态 == N::资源失败) 资源();
+    if (名称.状态 == N::结构不一致 || 名称.状态 == N::输入不合法)
+        throw std::logic_error("saved question feature name inconsistent");
+    if (名称.状态 != N::已找到 || !名称.信息 || 名称.信息->概念节点 != 类型值->节点) 漂移();
+
+    接收部分成文句段 输出(句.起始标量,句.结束标量);
+    const auto 加词 = [&](稳定编码 节点) {
+        using T = 新词条查询状态;
+        const auto 词条 = d.词.获取词条(节点);
+        if (词条.状态 == T::资源失败) 资源();
+        if (词条.状态 == T::结构不一致) throw std::logic_error("saved question word inconsistent");
+        if (词条.状态 != T::已找到 || !词条.信息 || 词条.信息->语言节点 != 内容.语言节点) 漂移();
+        输出.UTF8正文 += 词条.信息->规范化词面;
+    };
+    for (const auto& 项 : 定义.结构.有序项组) {
+        检查认知停止(stop);
+        if (const auto* 固定词 = std::get_if<新语言知识固定词项>(&项.载荷)) {
+            加词(固定词->词条节点);
+            continue;
+        }
+        const auto* 角色 = std::get_if<新语言知识图角色表达项>(&项.载荷);
+        if (!角色 || 角色->角色.含义编号 != 子图->局部编号) return {};
+        if (角色->角色.角色编号 == 主体->角色编号 && 角色->方式 == W::明确对象描述)
+            输出.UTF8正文 += 未决词面;
+        else if (角色->角色.角色编号 == 类型->角色编号 && 角色->方式 == W::名称表达)
+            加词(名称.信息->词条节点);
+        else if (角色->角色.角色编号 == 待求->角色编号 && 角色->方式 == W::查询变量词面 && 角色->查询词条节点)
+            加词(*角色->查询词条节点);
+        else return {};
+    }
+    if (输出.UTF8正文.empty()) return {};
+    输出.成文状态 = 基础表达状态::已生成;
+
+    步骤 = "独立读回部分当前值问句";
+    std::optional<接收专名读取器> 专名;
+    if (交互) 专名.emplace(d,交互->现实范围根,stop);
+    语言基础统一输入请求 回读{内容.语言节点,输出.UTF8正文,{},0,0,0,0,0,
+        专名 ? &*专名 : nullptr,语言解释读取模式::本次正式有限集完整读取};
+    回读.交互上下文 = 交互;
+    回读.读取静态角色缺口 = true;
+    const auto 实际 = 只读解释单句基础语言(回读,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+    using I = 语言场景基础输入状态;
+    if (实际.状态 == I::读取漂移 || 实际.状态 == I::引用不可读) 漂移();
+    if (实际.状态 == I::工程未完成 || 实际.状态 == I::额度不足) 资源();
+    if (实际.状态 == I::内部不一致) throw std::logic_error("partial question independent readback inconsistent");
+    const auto& 回读证据 = 输出.独立回读.emplace_back(记录句段解释(实际,
+        {0,static_cast<std::size_t>(标量数(输出.UTF8正文))}));
+    const auto 当前 = d.语言.读取接收语言解释(来源,d.语言世界,d.外设);
+    if (当前.状态 == L::资源失败) 资源();
+    if (当前.状态 == L::未找到 || 当前.状态 == L::前提已变化) 漂移();
+    if (当前.状态 != L::已完成 || !当前.信息) throw std::logic_error("partial question context unavailable");
+    if (当前.信息->记录节点 != 正式.记录节点 || 当前.信息->解释定义节点 != 正式.解释定义节点
+        || 当前.信息->内容 != 内容 || 当前.信息->篇章采用) 漂移();
+    输出.状态 = !回读证据.静态结构 ? S::回读未唯一
+        : 回读证据.静态结构 == 句.静态结构 && 回读证据.缺口组 == 句.缺口组
+            && 回读证据.结束标量 == 句.结束标量 && !实际.含义
+        ? S::已成文且独立回读 : S::回读含义不一致;
+    return 输出;
+}
+
 std::optional<接收部分成文观察> 从接收部分含义成文并独立回读(认知依赖& d,
     const 新接收语言解释信息& 正式, const 新接收认知来源键& 来源,
     const std::optional<语言图交互上下文>& 交互, std::stop_token stop, const char*& 步骤) {
@@ -894,7 +1012,11 @@ std::optional<接收部分成文观察> 从接收部分含义成文并独立回�
         std::ranges::sort(结果.句段组,{},&接收部分成文句段::原文起点);
         return std::move(结果);
     };
-    if (!内容.含义候选) return 完成本次观察();
+    if (!内容.含义候选) {
+        if (auto 问句 = 从接收当前值问句部分成文(d,正式,来源,交互,stop,步骤))
+            结果.句段组.push_back(std::move(*问句));
+        return 完成本次观察();
+    }
     const auto 成文词用 = 读取接收待完善概念词用组(d, 内容, stop);
 
     const auto 成文称名 = 交互 ? 读取同源局部称名(d, 来源, stop) : std::vector<语言场景局部称名>{};
@@ -2777,8 +2899,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (方向 == A::预期不符 || 方向 == A::节点不存在 || 方向 == A::引用不存在) 漂移();
                 if (方向 != A::已完成)
                     throw std::logic_error("received comparison scene direction unpublished");
-                out.部分成文 = 从接收部分含义成文并独立回读(d, *保存.信息, k, std::nullopt, stop, 步骤);
             }
+            const auto& 正式句段 = 保存.信息->内容.句段组;
+            const bool 外层单句信息请求 = 已证普通外层 && 正式句段.size() == 1
+                && 正式句段.front().静态结构
+                && 正式句段.front().静态结构->操作 == 新语言知识含义操作::信息请求;
+            if (读取同文候选 || 外层单句信息请求)
+                out.部分成文 = 从接收部分含义成文并独立回读(d, *保存.信息, k, std::nullopt, stop, 步骤);
             throw 推进中断{阶段::语言解释待完善,"已保存同源被动解释及确定的一端，角色不足时保留原消息"};
         }
         if (!context.已绑定自我)
