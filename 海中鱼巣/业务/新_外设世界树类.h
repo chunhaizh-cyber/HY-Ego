@@ -83,6 +83,11 @@ struct 新外设网页交互确认结果 final {
     std::int64_t 确认UTC纳秒 = 0;
 };
 
+struct 新外设网页临时场景来源结果 final {
+    新外设网页交互确认结果 确认;
+    std::optional<稳定编码> 本窗外设对端;
+};
+
 struct 新外设对话框建立结果 final {
     新外设事实状态 状态 = 新外设事实状态::入口拒绝;
     std::optional<新外设对话框定位> 定位;
@@ -107,6 +112,8 @@ public:
     新外设网页交互确认结果 明确确认本次网页交互(
         std::string_view 公开宿主会话, std::string_view 对话框标识) noexcept;
     新外设网页交互确认结果 读取本次网页交互确认(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
+    新外设网页临时场景来源结果 读取已确认临时场景来源(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const noexcept;
     // 外设根下全部外设交互场景；只读，供自我线程补建现实交互场景。
     std::vector<稳定编码> 列出交互场景() const noexcept;
@@ -175,6 +182,8 @@ private:
     // 按角色区分成员：窗口是唯一持有接收数量特征的成员；其余至多一个成员为交互者。
     std::pair<稳定编码, std::optional<稳定编码>> 区分窗口与交互者(const 新场景信息& 场景材料) const;
     std::optional<新外设对话框定位> 查找正式窗口(
+        std::string_view 公开宿主会话, std::string_view 对话框标识) const;
+    新外设网页交互确认结果 读取本次网页交互确认已加锁(
         std::string_view 公开宿主会话, std::string_view 对话框标识) const;
     稳定编码 读取类型特征(const std::vector<稳定编码>& 特征组, 稳定编码 类型根) const;
     std::string 读取文本特征(稳定编码 特征) const;

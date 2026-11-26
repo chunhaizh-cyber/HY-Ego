@@ -808,14 +808,44 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
     if (会话.empty() || 对话框.empty()) return {S::入口拒绝};
     try {
         std::lock_guard 锁(外设互斥);
-        if (!有效(外设根)) return {S::未初始化};
-        const auto 定位 = 查找正式窗口(会话,对话框);
-        if (!定位) return {S::未找到};
-        return 读取窗口确认(*定位,会话,对话框,读取消息快照(定位->窗口节点));
+        return 读取本次网页交互确认已加锁(会话, 对话框);
     } catch (const std::bad_alloc&) {
         return {S::资源失败};
     } catch (...) {
         return {S::结构不一致};
+    }
+}
+
+新外设网页交互确认结果 新_外设世界树类::读取本次网页交互确认已加锁(
+    std::string_view 会话, std::string_view 对话框) const {
+    using S = 新外设事实状态;
+    if (!有效(外设根)) return {S::未初始化};
+    const auto 定位 = 查找正式窗口(会话, 对话框);
+    if (!定位) return {S::未找到};
+    return 读取窗口确认(*定位, 会话, 对话框, 读取消息快照(定位->窗口节点));
+}
+
+新外设网页临时场景来源结果 新_外设世界树类::读取已确认临时场景来源(
+    std::string_view 会话, std::string_view 对话框) const noexcept {
+    using S = 新外设事实状态;
+    if (会话.empty() || 对话框.empty()) return {{S::入口拒绝}, {}};
+    try {
+        std::lock_guard 锁(外设互斥);
+        const auto 确认 = 读取本次网页交互确认已加锁(会话, 对话框);
+        if (确认.状态 != S::已完成) return {确认, {}};
+        if (!确认.确认 || !确认.场景 || !确认.窗口) return {{S::结构不一致}, {}};
+
+        const auto 场景材料 = 场景_.获取场景(*确认.场景);
+        if (!场景材料) return {{S::结构不一致}, {}};
+        const auto [窗口, 对端] = 区分窗口与交互者(*场景材料);
+        if (窗口 != *确认.窗口) return {{S::结构不一致}, {}};
+        if (!对端) return {{S::未就绪}, {}};
+        if (场景_.查询所属场景(*对端) != 确认.场景) return {{S::结构不一致}, {}};
+        return {确认, 对端};
+    } catch (const std::bad_alloc&) {
+        return {{S::资源失败}, {}};
+    } catch (...) {
+        return {{S::结构不一致}, {}};
     }
 }
 
