@@ -4769,6 +4769,31 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
                 if (N == M || N == m.正文材料节点) 固定节点(快照);
             }
             if (!已核M || !已核正文) return {S::结构不一致};
+            if (方向 == 新外设消息方向::发送 && m.对应输出消息节点) {
+                const auto 输出 = 当前.外设世界树.读取消息保护(*m.对应输出消息节点);
+                if (输出.状态 == 新外设事实状态::资源失败) return {S::资源失败};
+                if (输出.状态 != 新外设事实状态::已完成 || !输出.消息) return {S::前提已变化};
+                const auto& O = *输出.消息;
+                auto 预期来源 = m.来源;
+                预期来源.方向 = 新外设消息方向::输出;
+                if (O.消息节点 != *m.对应输出消息节点 || O.来源 != 预期来源
+                    || O.场景节点 != m.场景节点 || O.窗口节点 != m.窗口节点
+                    || O.UTF8正文 != m.UTF8正文 || O.正式记录时间.纳秒 > m.正式记录时间.纳秒)
+                    return {S::结构不一致};
+                const auto O快照 = std::ranges::find_if(输出.完整保护,[&](const auto& 项) {
+                    return 项.结构.节点.编码 == O.消息节点;
+                });
+                if (O快照 == 输出.完整保护.end()) return {S::结构不一致};
+                固定节点(*O快照);
+                if (O.正文材料节点 != m.正文材料节点) {
+                    const auto 正文快照 = std::ranges::find_if(输出.完整保护,[&](const auto& 项) {
+                        return 项.结构.节点.编码 == O.正文材料节点;
+                    });
+                    if (正文快照 == 输出.完整保护.end()) return {S::结构不一致};
+                    固定节点(*正文快照);
+                }
+                材料.对应待发输出 = O;
+            }
             if (场景角色.事实) {
                 const auto& F = *场景角色.事实;
                 材料.事实 = F.事实节点;
@@ -6360,6 +6385,11 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
             if (!M || M->对应输出消息节点 != 稳定编码{事实.正式输出消息编码} || M->UTF8正文 != 事实.UTF8正文)
                 throw std::logic_error("actual send source does not match transport receipt");
             auto& 所有者 = 当前.世界事实.语言服务;
+            const auto 原提问 = 所有者.同步正式发送原提问(M->消息节点);
+            using 问 = 新正式发送原提问状态;
+            if (原提问.状态 != 问::已完成 && 原提问.状态 != 问::未找到
+                && 原提问.状态 != 问::范围未支持 && 原提问.状态 != 问::前提已变化)
+                throw std::logic_error("actual sent question source linkage did not complete");
             const auto 角色 = 所有者.读取正式消息角色(M->消息节点,新外设消息方向::发送);
             if (角色.状态 != 新接收指代调用状态::已完成 || !角色.信息)
                 throw std::logic_error("formal send role source unavailable");

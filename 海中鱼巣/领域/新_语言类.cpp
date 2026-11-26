@@ -6476,7 +6476,7 @@ namespace {
 // 局部编号/顺序是直接值，未把稳定编码藏入文本或整数向量。
 enum class 组织键 : std::size_t { 登记根,类型,序号,值,引用,子项,知识登记,出站登记,场景,来源,组织知识,原文,含义网,定义,场景信息登记,自我写入登记,问题登记,答案,答案来源,词典材料登记,词典材料组登记,词典归类解读,出站被询定位,采用篇章,篇章说话者,指代消解结果,指代当前依据,
     词头来源语言,词头规范化,词头批次,词头原包,词头语种,词头记录键,
-    指代关系组,指代关系F,指代实例归属,指代值分支,指代成员保护,指代关系格式,原消息角色依据,正式发送原文登记,总数 };
+    指代关系组,指代关系F,指代实例归属,指代值分支,指代成员保护,指代关系格式,原消息角色依据,正式发送原文登记,已发原提问证据,总数 };
 std::array<稳定编码,static_cast<std::size_t>(组织键::总数)> 组织句柄{};
 稳定编码 组键(组织键 k){return 组织句柄[static_cast<std::size_t>(k)];}
 void 组织要求(bool ok){if(!ok)throw std::logic_error("表达组织知识或出站含义记录结构不一致");}
@@ -8786,6 +8786,207 @@ std::vector<新值陈述信息> 新_语言类::查询值陈述(稳定编码 交�
     }
     组织要求(false);return {};
 }
+namespace {
+using 原提问状态 = 新正式发送原提问状态;
+
+std::optional<新正式提问所求项> 取原提问所求项(const 新出站具体表达信息& 原文, std::uint64_t 长度) {
+    bool 已到句末 = false;
+    for (std::size_t i = 0; i < 原文.候选话语原文.size();) {
+        const auto 字 = 读取已校验码点(原文.候选话语原文,i);
+        if (字 == 0x20 || 字 == 0x09 || 字 == 0x3000) continue;
+        if (字 == 0x0a || 字 == 0x0d || 字 == U'!' || 字 == U'?' || 字 == U'.' || 字 == 0x3002
+            || 字 == 0xff01 || 字 == 0xff1f) {
+            已到句末 = true;
+        } else if (已到句末) return {};
+    }
+    const auto& 网 = 原文.含义网;
+    if (网.顶层项组.size() != 1 || 网.顶层项组.front().表达用途 != 新表达用途::疑问)
+        return {};
+    const auto& 顶 = 网.顶层项组.front();
+    const auto 按编号 = [&](std::int64_t 编号) {
+        return std::ranges::find(网.内容项组,编号,&新含义内容项::编号);
+    };
+    const auto 根 = 按编号(顶.内容引用);
+    const auto* 询问 = 根 == 网.内容项组.end() ? nullptr : std::get_if<新内容算子>(&根->内容);
+    if (!询问 || 根->编号 < 0 || 询问->种类 != 新内容算子种类::态度
+        || 询问->态度种类 != 新态度种类::询问 || 询问->确认范围 != 新确认范围::填项内容
+        || 询问->内容引用组.size() != 1 || 网.内容项组.size() != 2) return {};
+    if (!根->原文范围组.empty() && 根->原文范围组 != std::vector<新含义原文范围>{
+        {0,static_cast<std::int64_t>(长度)}}) return {};
+    const auto 人 = [&](std::string_view 名称) -> std::optional<稳定编码> {
+        const auto 项 = std::ranges::find_if(询问->角色组,[&](const auto& 角色) { return 角色.名称 == 名称; });
+        if (项 == 询问->角色组.end()) return {};
+        const auto* 绑定 = std::get_if<新绑定指称>(&项->指称);
+        if (!绑定 || 绑定->类别 != 新指称类别::存在 || !有效(绑定->节点)) return {};
+        return 绑定->节点;
+    };
+    const auto 询问者 = 人("询问者"), 受询者 = 人("受询者");
+    if (!询问者 || !受询者 || 询问者 == 受询者) return {};
+    const auto 内容 = 按编号(询问->内容引用组.front());
+    if (内容 == 网.内容项组.end() || 内容 == 根 || 内容->编号 < 0) return {};
+    const auto 有疑问角色 = [](const auto& 角色组) {
+        return std::ranges::any_of(角色组,[](const auto& r) {
+            return std::holds_alternative<新疑问代词实例>(r.指称);
+        });
+    };
+    if (有疑问角色(询问->角色组) || 有疑问角色(根->角色映射) || 有疑问角色(内容->角色映射)) return {};
+    const 新疑问代词实例* 待求 = nullptr;
+    std::optional<稳定编码> 特征类型;
+    auto 角色 = 新正式所求项角色::目标存在;
+    if (const auto* 静态 = std::get_if<新静态含义单元>(&内容->内容)) {
+        const auto 是疑问 = [](const auto& 指称) { return std::holds_alternative<新疑问代词实例>(指称); };
+        if (是疑问(静态->主体) || (静态->时间 && 是疑问(*静态->时间))
+            || (静态->范围 && 是疑问(*静态->范围))) return {};
+        const auto* 谓项 = std::get_if<新特征值谓项>(&静态->谓项);
+        const auto* 被问特征 = 谓项 ? std::get_if<新绑定指称>(&谓项->特征类型) : nullptr;
+        const auto* 指称 = 谓项 ? std::get_if<新表达指称>(&谓项->值) : nullptr;
+        if (!被问特征 || 被问特征->类别 != 新指称类别::特征类型 || !有效(被问特征->节点)) return {};
+        if (指称) 待求 = std::get_if<新疑问代词实例>(指称);
+        特征类型 = 被问特征->节点;
+        角色 = 新正式所求项角色::特征载荷;
+    } else if (const auto* 需要 = std::get_if<新内容算子>(&内容->内容)) {
+        if (需要->种类 != 新内容算子种类::态度 || 需要->态度种类 != 新态度种类::需要) return {};
+        for (const auto& r : 需要->角色组) {
+            const auto* 实例 = std::get_if<新疑问代词实例>(&r.指称);
+            if (!实例) continue;
+            if (r.名称 != "目标存在" || 待求) return {};
+            待求 = 实例;
+        }
+    }
+    if (!待求 || 待求->网内编号 < 0 || 待求->询问内容 != 根->编号
+        || !有效(待求->待求类型概念) || 待求->类型取材步骤) return {};
+    return 新正式提问所求项{根->编号,内容->编号,待求->网内编号,待求->待求类型概念,*询问者,*受询者,角色,特征类型};
+}
+
+std::vector<std::uint64_t> 编码原提问证据(const 新外设消息信息& Send,稳定编码 O,
+    std::uint64_t 长度,const 新正式提问所求项& 项) {
+    return {Send.消息节点.值,Send.场景节点.值,Send.窗口节点.值,O.值,
+        static_cast<std::uint64_t>(Send.来源.方向),static_cast<std::uint64_t>(Send.正式记录时间.纳秒),
+        0,长度,static_cast<std::uint64_t>(项.询问内容编号),static_cast<std::uint64_t>(项.被询内容编号),
+        static_cast<std::uint64_t>(项.待求编号)};
+}
+
+std::optional<std::vector<std::uint64_t>> 读原提问证据(组织读取现场& 读,稳定编码 节点) {
+    const auto 字段 = 读.字段(节点,组织键::已发原提问证据);
+    if (字段.empty()) return {};
+    组织要求(字段.size() == 1);
+    const auto& 数值 = std::get<std::vector<std::uint64_t>>(std::get<基础值>(字段.front()).材料);
+    组织要求(数值.size() == 11 && 数值[0] && 数值[1] && 数值[2] && 数值[3]
+        && 数值[4] == static_cast<std::uint64_t>(新外设消息方向::发送)
+        && std::in_range<std::int64_t>(数值[5]) && 数值[6] == 0 && 数值[7]
+        && std::in_range<std::int64_t>(数值[7]));
+    return 数值;
+}
+
+新正式发送原提问结果 回读原提问(组织读取现场& 读,稳定编码 M) {
+    std::optional<新正式发送原提问信息> 结果;
+    for (const auto& 字段 : 读.字段(组键(组织键::登记根),组织键::出站登记)) {
+        const auto 节点 = std::get<稳定编码>(字段);
+        const auto 证据 = 读原提问证据(读,节点);
+        if (!证据 || 证据->front() != M.值) continue;
+        if (结果) return {原提问状态::结构不一致};
+        auto 原文 = 读出站(读,读.引用(节点,组织键::场景));
+        if (!原文 || 原文->节点 != 节点) return {原提问状态::结构不一致};
+        const auto& 值 = *证据;
+        if (!新_语言类::严格UTF8字节串有效(原文->候选话语原文)) return {原提问状态::结构不一致};
+        const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(原文->候选话语原文,
+            [](unsigned char 字节) { return (字节 & 0xc0u) != 0x80u; }));
+        auto 项 = 取原提问所求项(*原文,长度);
+        if (!项 || 长度 != 值[7] || !std::cmp_equal(项->询问内容编号,值[8])
+            || !std::cmp_equal(项->被询内容编号,值[9]) || !std::cmp_equal(项->待求编号,值[10]))
+            return {原提问状态::结构不一致};
+        结果 = 新正式发送原提问信息{M,稳定编码{值[1]},稳定编码{值[2]},稳定编码{值[3]},
+            static_cast<std::int64_t>(值[5]),{值[6],值[7]},std::move(*原文),*项};
+    }
+    return 结果 ? 新正式发送原提问结果{原提问状态::已完成,std::move(结果)}
+        : 新正式发送原提问结果{原提问状态::未找到};
+}
+}
+
+新正式发送原提问结果 新_语言类::读取正式发送原提问(稳定编码 M) const {
+    using S = 新正式发送原提问状态;
+    if (!有效(M)) return {S::输入拒绝};
+    try {
+        std::lock_guard 锁(新语言互斥);
+        组织读取现场 读;
+        return 回读原提问(读,M);
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+      catch (const std::length_error&) { return {S::资源失败}; }
+      catch (const std::logic_error&) { return {S::结构不一致}; }
+      catch (const std::bad_variant_access&) { return {S::结构不一致}; }
+}
+
+新正式发送原提问结果 新_语言类::同步正式发送原提问(稳定编码 M) {
+    using S = 新正式发送原提问状态;
+    using R = 新接收指代调用状态;
+    using A = 基础节点组追加状态;
+    try {
+        auto 材料 = 读取正式消息角色(M,新外设消息方向::发送);
+        switch (材料.状态) {
+        case R::已完成: break;
+        case R::未找到: return {S::未找到};
+        case R::输入拒绝: return {S::输入拒绝};
+        case R::前提已变化: return {S::前提已变化};
+        case R::资源失败: return {S::资源失败};
+        default: return {S::结构不一致};
+        }
+        const auto& Send = 材料.信息->消息;
+        const auto& O = 材料.信息->对应待发输出;
+        if (!O || !O->关联问题) return {S::未找到};
+        if (Send.对应输出消息节点 != O->消息节点 || O->来源.方向 != 新外设消息方向::输出
+            || Send.场景节点 != O->场景节点 || Send.窗口节点 != O->窗口节点
+            || Send.来源.来源序号 != O->来源.来源序号 || Send.UTF8正文 != O->UTF8正文
+            || Send.正式记录时间.纳秒 < O->正式记录时间.纳秒)
+            return {S::结构不一致};
+        const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(Send.UTF8正文,
+            [](unsigned char 字节) { return (字节 & 0xc0u) != 0x80u; }));
+        if (!长度 || !std::in_range<std::int64_t>(长度)) return {S::范围未支持};
+        std::lock_guard 锁(新语言互斥);
+        组织读取现场 读;
+        std::optional<新语言问题信息> 运输定位;
+        for (const auto& q : 读全部问题(读))
+            if (q.问题节点 == O->关联问题) 运输定位 = q;
+        if (!运输定位 || 运输定位->定义.交互场景 != Send.场景节点
+            || 运输定位->定义.提问时刻 > Send.正式记录时间.纳秒)
+            return {S::前提已变化};
+        const auto 原文 = 读出站(读,运输定位->定义.出站来源场景);
+        if (!原文 || 原文->来源 != 运输定位->定义.出站来源 || 原文->候选话语原文 != Send.UTF8正文)
+            return {S::前提已变化};
+        const auto 所求 = 取原提问所求项(*原文,长度);
+        if (!所求) return {S::范围未支持};
+        if ((材料.信息->说话者 && 材料.信息->说话者 != 所求->询问者)
+            || (材料.信息->受话者 && 材料.信息->受话者 != 所求->受询者))
+            return {S::前提已变化};
+        const auto 编码 = 编码原提问证据(Send,O->消息节点,长度,*所求);
+        auto 现行 = 回读原提问(读,M);
+        if (现行.状态 == S::已完成) {
+            if (!现行.信息 || 现行.信息->原提问.节点 != 原文->节点
+                || 读原提问证据(读,原文->节点) != 编码) return {S::前提已变化};
+            return 现行;
+        }
+        if (现行.状态 != S::未找到) return 现行;
+        if (读原提问证据(读,原文->节点)) return {S::前提已变化};
+        组织写入现场 写;
+        const auto 已发键 = 组键(组织键::已发原提问证据);
+        写.请求.追加字段组.push_back({原文->节点,已发键,基础值{编码}});
+        写.保护(读);
+        写.请求.只读预期.节点组.push_back({已发键});
+        合入指代只读字段(写.请求.只读预期,材料.信息->证据预期);
+        const auto 发布 = 全局基础数据集.原子追加节点组(写.请求);
+        if (发布.状态 == A::预期不符) return {S::前提已变化};
+        if (发布.状态 == A::资源失败) return {S::资源失败};
+        if (发布.状态 != A::已完成) return {S::结构不一致};
+        组织读取现场 最新;
+        auto 回读 = 回读原提问(最新,M);
+        if (回读.状态 != S::已完成 || !回读.信息 || 回读.信息->原提问.节点 != 原文->节点)
+            return {S::结构不一致};
+        return 回读;
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+      catch (const std::length_error&) { return {S::资源失败}; }
+      catch (const std::logic_error&) { return {S::结构不一致}; }
+      catch (const std::bad_variant_access&) { return {S::结构不一致}; }
+}
+
 std::optional<新语言问题信息> 新_语言类::读取问题(稳定编码 问题节点) const {
     std::lock_guard lock(新语言互斥);组织读取现场 r;
     for(auto& q:读全部问题(r))if(q.问题节点==问题节点)return std::move(q);
