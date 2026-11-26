@@ -710,6 +710,7 @@ U 图构式(const 语言图含义材料& 图) {
     if(根->操作==M::组成描述)return U::S05组成;
     if(根->操作==M::组织隶属)return U::组织隶属;
     if(根->操作==M::特征子类型定义)return U::特征子类型定义;
+    if (根->操作 == M::特征有序大于) return U::特征有序大于;
     if(根->操作==M::概念归类) {
         const auto 主体=std::find_if(根->参数组.begin(),根->参数组.end(),[](const auto& 参数){return 参数.参数==P::主体;});
         if(主体==根->参数组.end())throw std::logic_error("classification graph subject missing");
