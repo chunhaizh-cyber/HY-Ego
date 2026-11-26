@@ -144,6 +144,15 @@ struct 语言图正式词段视图 final {
     const 新语言词条准入定义* 准入定义;
     解释原文范围 原文句段;
 };
+struct 语言图原消息人称 final {
+    std::optional<稳定编码> 说话者, 受话者;
+};
+struct 语言图原消息人称出现 final {
+    解释原文范围 范围;
+    bool 是说话者;
+    std::vector<新接收指代作用域段> 作用域;
+};
+
 struct 语言图解释请求 final {
     稳定编码 语言节点{};
     std::string 固定原文;
@@ -157,6 +166,7 @@ struct 语言图解释请求 final {
     std::optional<语言图正式词段视图> 正式词段{};
     std::span<const 语言场景局部称名> 局部称名组{};
     std::span<const 语言场景待完善概念词用> 待完善概念词用组{};
+    std::optional<语言图原消息人称> 正式人称{};
 };
 struct 语言图静态角色缺口 final {
     稳定编码 知识节点;
@@ -214,6 +224,7 @@ struct 语言图解释结果 final {
     std::optional<接收语言静态结构> 静态结构;
     // 按本次合法解释收集，保留语义归并前的实际构式与角色位置。
     std::vector<带原文定位的语言图候选> 陈述候选原文组{};
+    std::vector<语言图原消息人称出现> 原消息人称组{};
 };
 语言图解释结果 解释单句含义图(
     const 语言图解释请求&,const 新_语言类&,const 新_词类&,

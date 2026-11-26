@@ -7,6 +7,7 @@
 #include "业务/新_外设世界树类.h"
 #include "业务/接收需求认知.服务.h"
 #include "业务/解释.基础语言.h"
+#include "业务/转换.语言场景基础.h"
 #include "领域/语言含义图.数据.h"
 #include "领域/语言分界.数据.h"
 #include "领域/数据服务.词典材料类.h"
@@ -4738,6 +4739,52 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             }
             break;
         }
+        if (当前.世界事实.语言服务.配置正式消息角色读取([&当前](稳定编码 M, 新外设消息方向 方向)
+            -> 新接收指代调用结果<新正式消息角色材料> {
+            using S = 新接收指代调用状态;
+            using R = 新原消息角色状态;
+            const auto 正式 = 当前.外设世界树.读取消息保护(M);
+            if (正式.状态 == 新外设事实状态::资源失败) return {S::资源失败};
+            if (正式.状态 == 新外设事实状态::未找到) return {S::未找到};
+            if (正式.状态 != 新外设事实状态::已完成 || !正式.消息) return {S::结构不一致};
+            const auto& m = *正式.消息;
+            if (m.消息节点 != M || m.来源.方向 != 方向) return {S::输入拒绝};
+            const auto 场景角色 = 当前.世界树.读取原消息场景角色事实(
+                {M,m.场景节点,m.窗口节点,m.正文材料节点,方向});
+            if (场景角色.状态 == R::资源失败) return {S::资源失败};
+            if (场景角色.状态 == R::前提已变化) return {S::前提已变化};
+            if (场景角色.状态 != R::已完成 && 场景角色.状态 != R::未找到)
+                return {S::结构不一致};
+            新正式消息角色材料 材料{m};
+            const auto 固定节点 = [&](const 基础联合节点快照& 快照) {
+                const auto N = 快照.结构.节点.编码;
+                材料.证据预期.节点组.push_back({N});
+                材料.证据预期.字段集合组.push_back({N,std::nullopt,{},快照.结构.字段组});
+            };
+            bool 已核M = false, 已核正文 = false;
+            for (const auto& 快照 : 正式.完整保护) {
+                const auto N = 快照.结构.节点.编码;
+                if (N == M) 已核M = true;
+                if (N == m.正文材料节点) 已核正文 = true;
+                if (N == M || N == m.正文材料节点) 固定节点(快照);
+            }
+            if (!已核M || !已核正文) return {S::结构不一致};
+            if (场景角色.事实) {
+                const auto& F = *场景角色.事实;
+                材料.事实 = F.事实节点;
+                材料.说话者 = F.说话者;
+                材料.受话者 = F.受话者;
+                const auto 证据 = 全局基础数据集.查询节点组完整结构({F.事实节点});
+                if (证据.状态 == 基础结构操作状态::资源失败) return {S::资源失败};
+                if (证据.状态 != 基础结构操作状态::已完成 || 证据.节点组.size() != 1
+                    || !证据.节点组.front().快照) return {S::前提已变化};
+                固定节点(*证据.节点组.front().快照);
+            } else if (场景角色.状态 == R::已完成) return {S::结构不一致};
+            return {S::已完成,std::move(材料)};
+        }) != 新接收指代调用状态::已完成) {
+            结果.状态 = 普通应用装配状态::本能函数端口装配失败;
+            return 结果;
+        }
         // 世界树关系概念（出站语义基础）：幂等建立/取得，不覆盖后天表达关联。
         if (!当前.中文语言节点)
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"关系概念装配", L"缺少正式中文身份。");
@@ -6297,13 +6344,53 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
         if (!上下文)
             throw std::runtime_error("peripheral module context unavailable");
         // 只在组合时取得闭包；闭包独立保活适配状态，不借用普通上下文。
-        return 上下文->网页外设模块.取得运行回调([](std::string_view 会话)
+        auto 回调 = 上下文->网页外设模块.取得运行回调([](std::string_view 会话)
             -> std::optional<网页接收会话来源> {
             std::lock_guard 读取锁(上下文锁);
             if (!上下文 || !上下文->活跃网页会话标识 || *上下文->活跃网页会话标识 != 会话)
                 return std::nullopt;
             return 网页接收会话来源{上下文->网页会话绑定人类};
         });
+        回调.发送后投影 = [](const 网页定向发送事实& 事实) {
+            std::lock_guard 读取锁(上下文锁);
+            if (!上下文 || !上下文->中文语言节点) throw std::logic_error("formal send language context missing");
+            auto& 当前 = *上下文;
+            const auto M = 当前.外设世界树.查找消息({事实.目标.公开会话标识,事实.目标.对话框标识,
+                新外设消息方向::发送,事实.提交序号});
+            if (!M || M->对应输出消息节点 != 稳定编码{事实.正式输出消息编码} || M->UTF8正文 != 事实.UTF8正文)
+                throw std::logic_error("actual send source does not match transport receipt");
+            auto& 所有者 = 当前.世界事实.语言服务;
+            const auto 角色 = 所有者.读取正式消息角色(M->消息节点,新外设消息方向::发送);
+            if (角色.状态 != 新接收指代调用状态::已完成 || !角色.信息)
+                throw std::logic_error("formal send role source unavailable");
+            const auto 末 = static_cast<std::size_t>(std::ranges::count_if(M->UTF8正文,
+                [](unsigned char 字节) { return (字节 & 0xc0u) != 0x80u; }));
+            const 新接收认知来源键 来源{M->消息节点,0,末,{}};
+            auto 分句 = 投影接收篇章句界(M->UTF8正文);
+            if (分句.empty()) 分句.push_back({{0,末},M->UTF8正文});
+            std::vector<接收语言句段解释> 句段;
+            std::vector<新接收指代材料> 指代;
+            for (const auto& 句 : 分句) {
+                语言基础统一输入请求 请求{*当前.中文语言节点,句.句面原文,{},0,0,0,0,0,nullptr,
+                    语言解释读取模式::本次正式有限集完整读取};
+                请求.正式人称 = 语言图原消息人称{角色.信息->说话者,角色.信息->受话者};
+                const auto 图 = 只读解释单句基础语言(请求,所有者,当前.世界事实.词服务,
+                    当前.世界事实.名称关系服务,当前.世界事实.存在概念服务,
+                    当前.世界事实.特征概念服务,当前.世界事实.存在服务);
+                using I = 语言场景基础输入状态;
+                if (图.状态 == I::读取漂移 || 图.状态 == I::引用不可读 || 图.状态 == I::工程未完成
+                    || 图.状态 == I::额度不足 || 图.状态 == I::内部不一致)
+                    throw std::logic_error("formal send person analysis did not complete");
+                句段.push_back({句.全文范围.起始标量,句.全文范围.结束标量,图.状态,图.图解释状态,{}});
+                auto 项 = 投影原消息人称(图,来源,句.全文范围);
+                指代.insert(指代.end(),std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
+            }
+            const auto 同步 = 所有者.保存正式发送解释及指代关系(M->消息节点,*当前.中文语言节点,
+                句段,指代,当前.自然语言世界树);
+            if (同步.状态 != 新接收指代调用状态::已完成 || !同步.信息)
+                throw std::logic_error("formal send language role projection unpublished");
+        };
+        return 回调;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"取得网页外设模块回调",
             L"外设模块未就绪或回调分配失败，不能伪装空外设。");

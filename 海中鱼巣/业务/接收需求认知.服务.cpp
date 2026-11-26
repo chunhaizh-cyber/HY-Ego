@@ -25,6 +25,7 @@
 #include <charconv>
 #include <chrono>
 #include <functional>
+#include <iterator>
 #include <map>
 #include <mutex>
 #include <stdexcept>
@@ -1310,23 +1311,6 @@ std::int64_t 读I64(const std::string& s){
     检查认知停止(stop);
     return out;
 }
-// ASK-READ-SCENE v0.4 §3.3 第4项：说话者＝窗口当前交互者，即自我的交互者特征当前值。
-// 交互者尚未确定是合法等待（保留进度重试）；读取不到自我或特征结构属工程故障。
-稳定编码 读取当前交互者(认知依赖& d,稳定编码 自我,稳定编码 交互者类型){
-    const auto E=d.存在.获取存在(自我);
-    if(!E)throw std::logic_error("received cognition self existence unreadable");
-    for(const auto f:E->特征节点组){
-        const auto F=d.特征.获取特征(f);
-        if(!F)throw std::logic_error("received cognition self feature unreadable");
-        if(d.特征概念.比较单特征概念(F->特征概念节点,F->特征概念节点).特征类型根!=std::optional{交互者类型})continue;
-        if(!F->当前值)break;
-        const auto* v=std::get_if<稳定编码>(&*F->当前值);
-        if(!v||!有效(*v))throw std::logic_error("self interactor feature value is not an existence");
-        return *v;
-    }
-    throw 推进中断{阶段::资源延后,"自我当前交互者尚未确定，保留原认知进度等待重试"};
-}
-// ASK-READ-SCENE v0.4 §3.3 第1、2项：值类构式与招呼只取出“对方说了什么”，保存为场景信息；
 // 来源、场景、说话者和时刻由调用方填写。不是值类构式或招呼时返回空，由原路径处理。
 // R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在语言转换阶段即从唯一图含义取出需求信息——需求主体、
 // 目标存在、目标特征类型，话中带出的值或方向；能确定的记、不能确定的记未知。不依赖被认知需求能否建立、
@@ -2013,6 +1997,14 @@ std::optional<新前置有效分界目标> 接收需求认知服务::实现::读
         ||m.消息->UTF8正文!=pre.信息->固定UTF8原文)return {R::输入不适用,{}};
     接收专名读取器 names(d,p.现实根场景,stop);
     语言基础统一输入请求 q{p.语言节点,pre.信息->固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
+    using S = 新接收指代调用状态;
+    const auto 角色 = d.语言.读取正式消息角色(p.来源.接收消息节点,新外设消息方向::接收);
+    if (角色.状态 == S::资源失败) 资源();
+    if (角色.状态 == S::前提已变化) 漂移();
+    if (角色.状态 != S::已完成 || !角色.信息) throw std::logic_error("retained formal role unavailable");
+    if (角色.信息->说话者 != p.来源人类节点 || 角色.信息->受话者 != p.自我存在节点)
+        return {R::输入不适用,{}};
+    q.正式人称 = 语言图原消息人称{角色.信息->说话者,角色.信息->受话者};
     q.交互上下文=语言图交互上下文{p.来源.接收消息节点,p.来源人类节点,p.自我存在节点,p.现实根场景};
     q.读取静态角色缺口 = true;
     新前置语言输入材料 out{p};
@@ -2460,7 +2452,6 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         接收需求认知会话语境 context;
         {std::lock_guard g(impl.锁);const auto it=impl.会话组.find(m.来源.公开宿主会话);
             if(it==impl.会话组.end()||it->second.封存)throw 推进中断{阶段::非本次人类需求,"消息未接入活动正式会话语境，保留原始接收事实"};context=it->second.语境;}
-        if(!context.已绑定自我)throw 推进中断{阶段::非本次人类需求,"会话缺少正式自我，不能确定当前交互者"};
         const 新接收认知来源键 请求键{m.消息节点,0,标量数(m.UTF8正文),{}};
         进入步骤("建立或取得正式原文来源");
         const auto pre = 正式词段重入 ? d.语言.读取前置来源(请求键,d.外设)
@@ -2490,18 +2481,71 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         进入步骤("读取同源语言采用");
         auto adopted=d.语言.读取接收采用含义(k,d.特征);
         if(adopted.状态==新语言含义采用状态::资源失败)资源();if(adopted.状态==新语言含义采用状态::前提已变化)漂移();
-        // §3.3 第4项：说话者＝当前交互者。已采用的同源含义以其记录的说话者为准；否则沿用本消息已确定的说话者，
-        // 首次处理时读取自我的交互者特征当前值。
-        if(adopted.状态==新语言含义采用状态::已采用&&adopted.信息)work.说话者=adopted.信息->说话者节点;
-        else if(!work.说话者) {
-            进入步骤("读取当前交互者");
-            std::optional<稳定编码> 类型;{std::lock_guard g(impl.锁);类型=impl.交互者特征类型;}
-            if(!类型)throw std::logic_error("received cognition interactor feature type not configured");
-            work.说话者=读取当前交互者(d,*context.已绑定自我,*类型);
+        using 角色状态 = 新接收指代调用状态;
+        const auto 角色 = d.语言.读取正式消息角色(m.消息节点,新外设消息方向::接收);
+        if (角色.状态 == 角色状态::资源失败) 资源();
+        if (角色.状态 == 角色状态::前提已变化) 漂移();
+        if (角色.状态 != 角色状态::已完成 || !角色.信息)
+            throw std::logic_error("formal receive person roles unreadable");
+        const auto 本次人称 = 语言图原消息人称{角色.信息->说话者,角色.信息->受话者};
+        const bool 历史采用 = adopted.状态==新语言含义采用状态::已采用 && adopted.信息;
+        if (!历史采用 && (!本次人称.说话者 || !本次人称.受话者 || 本次人称.受话者 != context.已绑定自我)) {
+            进入步骤("被动保存单端或未决角色");
+            const auto 场景 = d.语言世界.建立或取得接收来源场景(m.消息节点);
+            if (场景.状态 == 新来源子场景状态::资源失败) 资源();
+            if (!场景.信息) 漂移();
+            out.S = 场景.信息->场景节点;
+            out.被动解释来源 = k;
+            out.H = 本次人称.说话者;
+            接收专名读取器 names(d,context.现实根,stop);
+            语言基础统一输入请求 q{context.语言,固定来源.固定UTF8原文,{},0,0,0,0,0,&names,
+                语言解释读取模式::本次正式有限集完整读取};
+            q.正式人称 = 本次人称;
+            q.读取静态角色缺口 = true;
+            auto 句段 = 投影接收篇章句界(q.固定原文);
+            if (句段.empty()) 句段.push_back({{static_cast<std::size_t>(k.原文起点),
+                static_cast<std::size_t>(k.原文终点)},q.固定原文});
+            std::vector<新接收指代材料> 指代;
+            out.句段解释.clear();
+            for (const auto& 句 : 句段) {
+                检查认知停止(stop);
+                q.固定原文 = 句.句面原文;
+                auto 图 = 只读解释单句基础语言(q,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
+                using I = 语言场景基础输入状态;
+                if (图.状态 == I::读取漂移 || 图.状态 == I::引用不可读) 漂移();
+                if (图.状态 == I::工程未完成 || 图.状态 == I::额度不足) 资源();
+                if (图.状态 == I::内部不一致) throw std::logic_error("passive receive person interpretation inconsistent");
+                out.句段解释.push_back(记录句段解释(图,句.全文范围,d.关系陈述));
+                auto 项 = 投影原消息人称(图,k,句.全文范围);
+                指代.insert(指代.end(),std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
+            }
+            const auto 原指代 = d.语言.读取当前接收指代关系组(k,d.语言世界,d.外设);
+            if (原指代.状态 == 角色状态::资源失败) 资源();
+            if (原指代.状态 == 角色状态::前提已变化) 漂移();
+            if (原指代.状态 != 角色状态::已完成 && 原指代.状态 != 角色状态::未找到)
+                throw std::logic_error("passive receive existing references unreadable");
+            if (原指代.信息) for (const auto& 既有 : *原指代.信息) {
+                if (既有.原词面 == "我" || 既有.原词面 == "你" || 既有.原词面 == "我们") continue;
+                if (std::ranges::none_of(out.句段解释,[&](const auto& 句) {
+                    return 句.起始标量 == 既有.句段范围.起始标量 && 句.结束标量 == 既有.句段范围.结束标量;
+                })) continue;
+                指代.push_back({既有.出现,既有.句段范围,既有.角色,{},既有.值});
+            }
+            auto 保存 = d.语言.保存接收语言解释及指代关系(k,{*out.S,固定来源.节点,context.语言,
+                k.原文起点,k.原文终点,out.句段解释},指代,本次人称.说话者.value_or(稳定编码{}),d.语言世界,d.外设);
+            if (保存.状态 == 角色状态::资源失败) 资源();
+            if (保存.状态 == 角色状态::前提已变化 || 保存.状态 == 角色状态::未找到) 漂移();
+            if (保存.状态 != 角色状态::已完成 || !保存.信息)
+                throw std::logic_error("passive receive person interpretation unpublished");
+            throw 推进中断{阶段::语言解释待完善,"已保存同源被动解释及确定的一端，角色不足时保留原消息"};
         }
+        if (!context.已绑定自我)
+            throw 推进中断{阶段::语言解释待完善,"已有采用保留，当前缺少正式接收自我"};
+        work.说话者 = 历史采用 ? std::optional{adopted.信息->说话者节点} : 本次人称.说话者;
         const auto speaker=*work.说话者;
         out.H=speaker;
-        篇章成文语境=语言图交互上下文{m.消息节点,speaker,*context.已绑定自我,context.现实根};
+        if (本次人称.说话者 == speaker && 本次人称.受话者 == context.已绑定自我)
+            篇章成文语境=语言图交互上下文{m.消息节点,speaker,*本次人称.受话者,context.现实根};
         if (out.阶段==阶段::已保存场景信息 && out.篇章成文
             && out.篇章成文->状态==接收篇章成文状态::待成文)
             throw 推进中断{阶段::已保存场景信息,"固定篇章已采用，继续反向成文"};
@@ -2648,6 +2692,13 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             接收专名读取器 names(d,context.现实根,stop);
             语言基础统一输入请求 req{context.语言,固定来源.固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
             req.交互上下文=语言图交互上下文{m.消息节点,speaker,*context.已绑定自我,context.现实根};
+            req.正式人称 = 本次人称;
+            std::vector<新接收指代材料> 本次人称材料;
+            const auto 收集人称 = [&](const 语言基础统一输入结果& 图, 解释原文范围 句) {
+                auto 项 = 投影原消息人称(图,k,句);
+                本次人称材料.insert(本次人称材料.end(),
+                    std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
+            };
             const auto 句段组 = 投影接收篇章句界(req.固定原文);
             req.读取静态角色缺口 = true;
             const auto 词头来源 = [&] {
@@ -2680,7 +2731,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             const auto 保存解释材料 = [&](const std::vector<接收语言句段解释>& 解释组) {
                 检查认知停止(stop);
                 using S = 新接收指代调用状态;
-                std::vector<新接收指代材料> 指代材料;
+                auto 指代材料 = 本次人称材料;
                 for (const auto& 句 : 解释组) {
                     if (!句.主体关系 || !句.主体关系->指代概念 || !句.主体关系->来源) continue;
                     const auto& 关系 = *句.主体关系;
@@ -2689,7 +2740,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     if (关系.来源->已绑定存在)
                         出现.值 = 新接收指代关系值{新接收指代直接目标{
                             新绑定指称{新指称类别::存在, *关系.来源->已绑定存在}}};
-                    指代材料.push_back(std::move(出现));
+                    if (!std::ranges::any_of(指代材料, [&](const auto& 项) { return 项.出现 == 出现.出现; }))
+                        指代材料.push_back(std::move(出现));
                 }
                 auto 保存 = d.语言.保存接收语言解释及指代关系(k,
                     {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组}, 指代材料,
@@ -2729,6 +2781,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     req.局部称名组=称名;
                     req.固定原文 = 句段.句面原文;
                     const auto 解释 = 解释当前句();
+                    收集人称(解释,句段.全文范围);
                     auto& 句 = 解释组.emplace_back(记录句段解释(解释, 句段.全文范围, d.关系陈述));
                     记录待完善谓项概念(d, 固定来源, 解释, 句, stop);
                     主体观察.记录(解释, req.语言节点, d.名称, d.语言世界, 固定来源, 句);
@@ -2807,6 +2860,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     检查认知停止(stop);
                     req.固定原文 = 句段.句面原文;
                     auto 结果 = 解释正式句段(句段.全文范围);
+                    收集人称(结果,句段.全文范围);
                     需要普通词条筹办 |= 有普通词条名称缺口(结果);
                     解释组.push_back(记录句段解释(结果, 句段.全文范围));
                     if (冲突组.empty() && 是子类型定义(结果))
@@ -2831,6 +2885,11 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 out.词条准入->准入材料 = 准入读回.信息->节点;
                 本次取得正式解释 = true;
                 if (!有句界冲突 && !子类型解释组.empty()) 保存正式词段子类型解释();
+                if (!有句界冲突 && !本次人称材料.empty()) {
+                    确认语言场景();
+                    if (保存解释材料(out.句段解释))
+                        throw 推进中断{阶段::已保存场景信息,"已读回同源正式篇章采用"};
+                }
                 throw 推进中断{阶段::前置输入治理等待, "已按同源正式词段逐句解释，等待篇章对象绑定"};
             }
             进入步骤("读取语言解释资源");
@@ -2845,6 +2904,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
 #endif
             const 解释原文范围 整句{static_cast<std::size_t>(k.原文起点), static_cast<std::size_t>(k.原文终点)};
             auto parsed = 正式词段重入 ? 解释正式句段(整句) : 解释当前句();
+            收集人称(parsed,整句);
             bool 已采用静态篇章=false;
             if (正式词段重入) {
                 out.句段解释 = {记录句段解释(parsed, 整句)};
@@ -2855,13 +2915,17 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     记录待完善谓项概念(d, 固定来源, parsed, out.句段解释.front(), stop);
                     保存正式词段子类型解释();
                 }
+                if (!本次人称材料.empty()) {
+                    确认语言场景();
+                    已采用静态篇章 = 保存解释材料(out.句段解释);
+                }
             } else if (parsed.状态 != 语言场景基础输入状态::输入拒绝) {
                 确认语言场景();
                 out.句段解释 = {记录句段解释(parsed, 整句, d.关系陈述)};
                 记录待完善谓项概念(d, 固定来源, parsed, out.句段解释.front(), stop);
                 接收篇章主体观察 主体观察;
                 主体观察.记录(parsed, req.语言节点, d.名称, d.语言世界, 固定来源, out.句段解释.front());
-                if (parsed.静态结构 || out.句段解释.front().关系观察
+                if (!本次人称材料.empty() || parsed.静态结构 || out.句段解释.front().关系观察
                     || (!parsed.含义 && parsed.完整候选组.empty()))
                     已采用静态篇章=保存解释材料(out.句段解释);
             }

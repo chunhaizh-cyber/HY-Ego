@@ -505,6 +505,59 @@ bool 是单根普通静态陈述图知识(const 新语言知识定义& 定义) {
             || 根.操作 == 新语言知识含义操作::特征子类型定义);
 }
 
+namespace {
+std::uint32_t 引号闭合符(std::uint32_t 字) {
+    switch (字) {
+    case 0x201C: return 0x201D;
+    case 0x2018: return 0x2019;
+    case 0x300C: return 0x300D;
+    case 0x300E: return 0x300F;
+    case 0x3008: return 0x3009;
+    case 0x300A: return 0x300B;
+    case 0x22: case 0x27: return 字;
+    default: return 0;
+    }
+}
+bool 独立闭合引号(std::uint32_t 字) {
+    return 字 == 0x201D || 字 == 0x2019 || 字 == 0x300D
+        || 字 == 0x300F || 字 == 0x3009 || 字 == 0x300B;
+}
+bool 是英文词内撇号(const std::vector<std::uint32_t>& 码点, std::size_t i) {
+    const auto 词内字符 = [](std::uint32_t 字) {
+        return (字 >= U'a' && 字 <= U'z') || (字 >= U'A' && 字 <= U'Z') || (字 >= U'0' && 字 <= U'9');
+    };
+    return 码点[i] == 0x27 && i > 0 && i + 1 < 码点.size()
+        && 词内字符(码点[i - 1]) && 词内字符(码点[i + 1]);
+}
+std::vector<新接收指代作用域段> 本次人称作用域(
+    const std::vector<std::uint32_t>& 文本, std::size_t 首, std::size_t 末) {
+    std::vector<std::pair<std::size_t, std::uint32_t>> 栈;
+    std::vector<新接收指代作用域段> 路径;
+    bool 转述边界不明 = false;
+    for (std::size_t i = 0; i < 文本.size(); ++i) {
+        const auto 字 = 文本[i];
+        if (是英文词内撇号(文本, i)) continue;
+        if (!栈.empty() && 栈.back().second == 字) {
+            const auto 起 = 栈.back().first;
+            栈.pop_back();
+            if (起 < 首 && 末 <= i) 路径.push_back({起, i + 1});
+            if (栈.empty() && i < 首) 转述边界不明 = false;
+        } else if (const auto 终止 = 引号闭合符(字)) {
+            栈.emplace_back(i, 终止);
+        } else if (独立闭合引号(字)) {
+            return {{0, 文本.size()}};
+        } else if (栈.empty() && i < 首 && (字 == U'说' || 字 == U'问' || 字 == U'称')
+            && (i == 0 || (文本[i - 1] != U'请' && 文本[i - 1] != U'询'))) {
+            转述边界不明 = true;
+        }
+    }
+    if (!栈.empty()) return {{0, 文本.size()}};
+    std::ranges::reverse(路径);
+    if (转述边界不明 && 路径.empty()) 路径.push_back({0, 文本.size()});
+    return 路径;
+}
+}
+
 std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文) {
     const auto 原文 = 解码标准UTF8(固定原文);
     if (!原文) return {};
@@ -515,10 +568,6 @@ std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string
     };
     const auto 是空白 = [](std::uint32_t 字) {
         return 字 == U' ' || 字 == U'\t' || 字 == U'\r' || 字 == U'\n' || 字 == 0x3000;
-    };
-
-    const auto 是ASCII写法字符 = [](std::uint32_t 字) {
-        return (字 >= U'a' && 字 <= U'z') || (字 >= U'A' && 字 <= U'Z') || (字 >= U'0' && 字 <= U'9');
     };
 
     std::vector<接收篇章句段候选> 结果;
@@ -541,26 +590,16 @@ std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string
 
     for (std::size_t i = 0; i < 码点.size(); ++i) {
         const auto 字 = 码点[i];
-        // ASCII 单引号也作引号，保留英文缩写中的撇号。
-        if (字 == U'\'' && i > 0 && i + 1 < 码点.size()
-            && 是ASCII写法字符(码点[i - 1]) && 是ASCII写法字符(码点[i + 1])) continue;
+        if (是英文词内撇号(码点, i)) continue;
         if (!待闭合引号.empty() && 待闭合引号.back() == 字) {
             待闭合引号.pop_back();
             continue;
         }
-        switch (字) {
-        case 0x201C: 待闭合引号.push_back(0x201D); continue; // “”
-        case 0x2018: 待闭合引号.push_back(0x2019); continue; // ‘’
-        case 0x300C: 待闭合引号.push_back(0x300D); continue; // 「」
-        case 0x300E: 待闭合引号.push_back(0x300F); continue; // 『』
-        case 0x3008: 待闭合引号.push_back(0x3009); continue; // 〈〉
-        case 0x300A: 待闭合引号.push_back(0x300B); continue; // 《》
-        case U'"': 待闭合引号.push_back(U'"'); continue;
-        case U'\'': 待闭合引号.push_back(U'\''); continue;
-        case 0x201D: case 0x2019: case 0x300D: case 0x300F: case 0x3009: case 0x300B:
-            return {};
-        default: break;
+        if (const auto 结束符 = 引号闭合符(字)) {
+            待闭合引号.push_back(结束符);
+            continue;
         }
+        if (独立闭合引号(字)) return {};
         if (!待闭合引号.empty()) continue;
 
         if (是终止符(字)) {
@@ -4394,6 +4433,17 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
         std::map<稳定编码,指代名称关系信息> 指代保护;
         // 仅复用本次解释的正式首读；匹配后仍收集完整候选，末次复核不走此缓存。
         std::map<稳定编码,指代名称关系信息> 受话者指代材料;
+        using 人称匹配键 = std::tuple<稳定编码,std::int64_t,std::int64_t,std::size_t,std::size_t>;
+        std::map<人称匹配键, unsigned> 正式人称定位;
+        const auto 记录正式人称 = [&](稳定编码 知识, std::int64_t 节点, std::int64_t 角色编号,
+            std::size_t 首, std::size_t 末) {
+            const auto 角色 = 正式人称定位.find({知识,节点,角色编号,首,末});
+            if (角色 == 正式人称定位.end() || 角色->second == 3
+                || std::ranges::any_of(结果.原消息人称组, [&](const auto& 项) {
+                    return 项.范围.起始标量 == 首 && 项.范围.结束标量 == 末;
+                })) return;
+            结果.原消息人称组.push_back({{首,末},角色->second == 1,本次人称作用域(原文->码点,首,末)});
+        };
         std::map<稳定编码,std::vector<基础联合节点快照>> 交互身份保护;
         const auto 核交互身份=[&](稳定编码 身份) {
             if(交互身份保护.contains(身份))return;
@@ -4717,7 +4767,19 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                             指代保护.emplace(指代.节点,指代);词保护.emplace(指代.词条.节点,指代.词条);
                             // 调用方对该指代原文范围给出的对象绑定（如成文回读按本次说话者／受话者绑定）优先采用。
                             const auto 指定=std::find_if(请求.对象绑定组.begin(),请求.对象绑定组.end(),[&](const auto& 项){return 项.原文范围.起始标量==游标&&项.原文范围.结束标量==端;});
-                            if(指定!=请求.对象绑定组.end()) {
+                            if (请求.正式人称) {
+                                const bool 普通人称 = 片段(游标,端) == (说话者指代 ? "我" : "你");
+                                if (普通人称) 正式人称定位[
+                                    {知识编号,引用.含义编号,引用.角色编号,游标,端}] |= 说话者指代 ? 1u : 2u;
+                                const auto 角色E = 说话者指代 ? 请求.正式人称->说话者 : 请求.正式人称->受话者;
+                                if (普通人称 && 角色E && 本次人称作用域(原文->码点, 游标, 端).empty()) {
+                                    核交互身份(*角色E);
+                                    候选.push_back(语言图引用值{新语言知识角色类别::存在,*角色E,{},{}});
+                                } else {
+                                    候选.push_back(语言图引用值{新语言知识角色类别::存在概念,
+                                        *角色->指代概念节点,*角色->指代概念节点,指代.节点});
+                                }
+                            } else if(指定!=请求.对象绑定组.end()) {
                                 const auto 对象=存在.获取存在(指定->存在节点);if(!对象)throw 状态类::引用不可读;
                                 const auto [位置,新增]=存在保护.emplace(对象->节点,*对象);if(!新增&&位置->second!=*对象)throw 状态类::读取漂移;
                                 候选.push_back(语言图引用值{新语言知识角色类别::存在,指定->存在节点,{},{}});
@@ -5392,6 +5454,8 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                     const auto 范围 = 候选.角色范围.find(键);
                     if (范围 == 候选.角色范围.end()) continue;
                     const auto 值 = 候选.值组.find(键);
+                    if (值 != 候选.值组.end()) 记录正式人称(知识,根.局部编号,参数.规则角色,
+                        范围->second.first,范围->second.second);
                     结构.角色组.push_back({参数.规则角色, 参数.参数, 范围->second.first,
                         范围->second.second, 接收静态角色值(值 == 候选.值组.end() ? nullptr : &值->second)});
                 }
@@ -5438,6 +5502,15 @@ static 语言图解释结果 解释单句含义图实现(const 语言图解释�
                 结果.图角色原文定位组=std::move(候选定位.at(键));
                 if(结果.状态==状态类::已形成唯一含义)
                     结果.限定主体绑定组=std::move(限定绑定按语义.at(键));
+            }
+
+            for (const auto& 定位 : 结果.图角色原文定位组) {
+                const auto 出现 = std::ranges::find_if(图.出现组, [&](const auto& 项) {
+                    return 项.出现编号 == 定位.出现编号;
+                });
+                if (出现 == 图.出现组.end()) continue;
+                记录正式人称(出现->所用知识节点,出现->定义含义编号,定位.角色编号,
+                    static_cast<std::size_t>(定位.原文起点),static_cast<std::size_t>(定位.原文终点));
             }
 
             if (请求.读取静态角色缺口 && !同义来源多义 && 图.出现组.size() == 1

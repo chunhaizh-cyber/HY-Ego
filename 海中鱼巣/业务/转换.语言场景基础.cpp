@@ -1013,11 +1013,12 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释前");
 #endif
-    auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组,q.待完善概念词用组},lang,words,names,es,fs,instances);
+    auto 图解释=解释单句含义图({q.语言节点,q.固定原文,q.未核验来源语言记录节点,{},{},q.专名绑定读取,q.读取模式,q.交互上下文,q.读取静态角色缺口,q.正式词段,q.局部称名组,q.待完善概念词用组,q.正式人称},lang,words,names,es,fs,instances);
 #ifdef HY_EGO_DEBUG_LOG_LANGUAGE_INPUT_PHASE
     观察.记录(L"含义图解释后", static_cast<int>(图解释.状态), 图解释.完整候选组.size());
 #endif
     result.图角色原文定位组=图解释.图角色原文定位组;
+    result.原消息人称组=std::move(图解释.原消息人称组);
     if(依据){依据->合并依据(图解释.特征概念依据组,图解释.词面查询依据组,图解释.名称候选依据组);if(!图解释.对象绑定保护.empty())依据->并保护(图解释.对象绑定保护);}
     else result.对象绑定保护=图解释.对象绑定保护;
     result.图解释状态=图解释.状态;result.未覆盖范围组=图解释.未覆盖范围组;result.受阻节点组=图解释.受阻节点组;
@@ -1161,6 +1162,24 @@ static 语言基础统一输入结果 只读解释单句基础语言实现(const
     if(result.状态==I::已形成且读回){result.含义=std::move(meaning);result.状态=I::已形成只读候选;}
     else result.完整候选组.clear();
     return result;
+}
+
+std::vector<新接收指代材料> 投影原消息人称(const 语言基础统一输入结果& 图,
+    const 新接收认知来源键& M, 解释原文范围 句) {
+    std::vector<新接收指代材料> 输出;
+    for (const auto& 项 : 图.原消息人称组) {
+        const auto 长度 = 句.结束标量 - 句.起始标量;
+        if (项.范围.起始标量 >= 项.范围.结束标量 || 项.范围.结束标量 > 长度) continue;
+        新接收指代出现键 键{M, {句.起始标量 + 项.范围.起始标量,
+            句.起始标量 + 项.范围.结束标量}, 项.作用域};
+        for (auto& 域 : 键.作用域) {
+            域.起始标量 += 句.起始标量;
+            域.结束标量 += 句.起始标量;
+        }
+        输出.push_back({std::move(键), {句.起始标量,句.结束标量},
+            项.是说话者 ? "说话者" : "受话者", {}, {}});
+    }
+    return 输出;
 }
 
 语言基础统一输入结果 只读解释单句基础语言(const 语言基础统一输入请求& q,

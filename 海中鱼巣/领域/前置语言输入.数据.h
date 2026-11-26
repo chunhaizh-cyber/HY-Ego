@@ -2,6 +2,7 @@
 
 #include "接收认知来源.数据.h"
 #include "语言含义网.数据.h"
+#include "消息交互.数据.h"
 #include <cstdint>
 #include <optional>
 #include <span>
@@ -169,6 +170,12 @@ struct 新接收指代调用结果 final {
     std::optional<新接收指代出现键> 失效位置;
 };
 
+struct 新正式消息角色材料 final {
+    新外设消息信息 消息;
+    std::optional<稳定编码> 事实, 说话者, 受话者;
+    基础只读预期 证据预期;
+};
+
 struct 新接收指代材料 final {
     新接收指代出现键 出现;
     新接收指代作用域段 句段范围;
@@ -188,6 +195,7 @@ struct 新接收指代读回项 final {
     std::optional<稳定编码> 采用;
     std::optional<std::int64_t> 采用内容项;
     std::string 角色;
+    std::optional<稳定编码> 原消息角色事实{};
 };
 
 struct 新接收语言解释内容 final {

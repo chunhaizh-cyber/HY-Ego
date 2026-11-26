@@ -259,6 +259,7 @@ struct 网页外设运行回调组 final {
         std::uint64_t, std::string_view, std::optional<std::uint64_t>)> 接收消息;
     std::function<void(const 网页定向发送事实&)> 发送完成;
     网页输出队列回调组 输出队列;
+    std::function<void(const 网页定向发送事实&)> 发送后投影;
 };
 网页定向发送结果 提交网页对话框消息(const 网页定向发送请求&) noexcept;
 网页定向发送结果 查询网页对话框发送(
