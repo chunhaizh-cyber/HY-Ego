@@ -4,7 +4,7 @@
 
 - 主工作区 `D:/海中鱼巣`，`main`。S0 起点 `570360bdd757c3f46743d48268f7cad6b9eb1080`，计划 v0.1 blob `48771ab33f5ab3727a183463fa5a6f0f1dd07edf`。本窗口持有 16 个生产路径的本轮写入及专属构建目录。
 - 唯一直接依赖随 `1cffd0d5250a8f530b062ec766dc42f1fbb13b42` 发布。接口 blob `6be73af84f57e98061b435cf295601ad34919c41`，实现 blob `9d82a506387af6ad8bfb3d4b334664ed4f1eadfe`。
-- 同组初建的先行工程证据见 [初建提供者编译节点](20261126_SENTENCE-SCENE-SYNC-REF_本地同组初建提供者编译节点.md)。本轮构建和运行分开登记。
+- 同组初建的先行工程证据见 [初建提供者编译节点](20261126_SENTENCE-SCENE-SYNC-REF_本地同组初建提供者编译节点.md)。本轮构建和运行分开登记。 已退出执行队列的正文从 [原可执行计划 v0.1](https://github.com/chunhaizh-cyber/HY-Ego/blob/570360bdd757c3f46743d48268f7cad6b9eb1080/%E8%AE%A1%E5%88%92/20261126_SENTENCE-SCENE-SYNC-REF_%E6%8C%87%E4%BB%A3%E5%85%B3%E7%B3%BB%E6%AD%A3%E5%BC%8F%E5%86%99%E5%85%A5%E4%B8%8E%E7%8B%AC%E7%AB%8B%E8%AF%BB%E5%9B%9E%E5%AE%9E%E6%96%BD%E8%AE%A1%E5%88%92_v0.1.md) 追溯。
 
 ## 工程验证
 
