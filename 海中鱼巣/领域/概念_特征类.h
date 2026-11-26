@@ -118,7 +118,18 @@ struct 特征概念概念集合值域 final {
     friend bool operator==(const 特征概念概念集合值域&, const 特征概念概念集合值域&) = default;
 };
 
-// I64标量使用规范化闭区间；结构化I64材料使用有序分量值域；
+struct 特征概念I64已知值成员 final {
+    std::int64_t 值;
+    稳定编码 采用来源;
+    friend bool operator==(const 特征概念I64已知值成员&, const 特征概念I64已知值成员&) = default;
+};
+
+struct 特征概念I64已知值集 final {
+    std::vector<特征概念I64已知值成员> 成员组;
+    friend bool operator==(const 特征概念I64已知值集&, const 特征概念I64已知值集&) = default;
+};
+
+// I64标量使用规范化闭区间或明确的已知值集合；结构化I64材料使用有序分量值域；
 // 其它材料可使用全材料值域或完整特征值节点身份集合。
 using 特征概念值域 = std::variant<
     std::vector<特征概念I64闭区间>,
@@ -130,7 +141,8 @@ using 特征概念值域 = std::variant<
     特征概念需求集合值域,
     特征概念存在集合值域,
     特征概念信息引用值域,
-    特征概念概念集合值域>;
+    特征概念概念集合值域,
+    特征概念I64已知值集>;
 
 using 特征概念准确值 = std::variant<std::int64_t, 稳定编码>;
 
@@ -392,6 +404,15 @@ struct 待完善特征概念结果 final {
 struct 适用范围I64子类型信息 final {
     稳定编码 概念, 直接上位, 适用存在概念, 定义来源;
     稳定编码 正式特征类型, 整树根;
+};
+
+enum class I64已知值成员状态 : std::uint8_t { 已收录 = 1, 未覆盖, 父域明确排除 };
+
+struct I64已知值成员读取结果 final {
+    特征概念规则状态 状态 = 特征概念规则状态::入口拒绝;
+    std::optional<I64已知值成员状态> 成员状态;
+    std::optional<稳定编码> 依据;
+    std::vector<基础联合节点快照> 保护组;
 };
 
 struct 适用范围I64值域修订请求 final {
@@ -686,7 +707,14 @@ public:
     特征概念编码操作结果 完善适用范围I64子类型(
         稳定编码 概念, 稳定编码 直接上位, 稳定编码 适用存在概念, 稳定编码 定义来源,
         const 特征概念值域&, const 新_特征值类&, const 新_存在类&,
-        std::span<const 稳定编码> 候选持有者 = {}) noexcept;
+        std::span<const 稳定编码> 候选持有者 = {},
+        std::span<const 基础联合节点快照> 已采用成员来源 = {}) noexcept;
+    // 来源由正式成员采用方签发，概念所有者在同一提交核其快照并保留正式引用。
+    特征概念编码操作结果 追加适用范围I64已知值(稳定编码 原概念,
+        const 特征概念I64已知值集& 当前预期, const 特征概念I64已知值集& 增量,
+        std::span<const 基础联合节点快照> 已采用成员来源) noexcept;
+    I64已知值成员读取结果 读取适用范围I64已知值成员状态(
+        稳定编码 原概念, std::int64_t 值, std::optional<稳定编码> 单位) const noexcept;
     特征概念编码操作结果 修订适用范围I64子类型值域(
         const 适用范围I64值域修订请求&, const 新_特征值类&) noexcept;
     // 只定位实例显式采用的最近限定类型；无限定时为整树根。
