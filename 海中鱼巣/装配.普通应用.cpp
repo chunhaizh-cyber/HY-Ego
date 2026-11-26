@@ -1968,6 +1968,24 @@ public:
                     }
                     局部对象JSON += ']';
                 }
+                std::string 场景方向JSON = "null";
+                const auto 比较 = 当前_.自然语言世界树.读取接收语言场景方向(
+                    item.M, 当前_.世界事实.语言服务, 当前_.外设世界树);
+                if (比较.状态 == 基础结构操作状态::已完成) {
+                    场景方向JSON = "[";
+                    for (const auto& 项 : 比较.实例组) {
+                        检查停止();
+                        if (场景方向JSON.size() > 1) 场景方向JSON += ',';
+                        场景方向JSON += "{\"feature\":" + 控制编码(项.特征)
+                            + ",\"adoption\":" + 控制编码(项.采用) + ",\"scene\":" + 控制编码(项.场景)
+                            + ",\"type\":" + 控制编码(项.类型) + ",\"subject\":" + 控制编码(项.主体)
+                            + ",\"reference\":" + 控制编码(项.参照) + ",\"value\":" + 控制编码(项.值)
+                            + ",\"direction\":\">0\"" + std::string(",\"message\":") + 控制编码(项.消息)
+                            + ",\"definition\":" + 控制编码(项.解释定义) + ",\"construction\":" + 控制编码(项.构式)
+                            + ",\"start\":" + 控制计数(项.起始标量) + ",\"end\":" + 控制计数(项.结束标量) + "}";
+                    }
+                    场景方向JSON += ']';
+                }
                 std::string 部分成文JSON = "null";
                 if (已保存 && item.部分成文 && item.部分成文->解释记录 == 正式.信息->记录节点
                     && item.句段解释 == 正式.信息->内容.句段组) {
@@ -2054,7 +2072,7 @@ public:
                     + ",\"partialRoundTrips\":" + 部分成文JSON
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
                     + ",\"interactionReferences\":" + 交互指代JSON
-                    + ",\"localObjects\":" + 局部对象JSON + "}";
+                    + ",\"localObjects\":" + 局部对象JSON + ",\"sceneDirections\":" + 场景方向JSON + "}";
             }
         }
         std::string 短答JSON="null";
@@ -4599,6 +4617,8 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
                 || 读回.信息->算法 != 二次特征算法::语言温度比较方向
                 || 读回.信息->语言适用范围 != 语言比较适用范围{温度FT, 存在语义根})
                 throw std::logic_error("language temperature direction type readback differs");
+            if (!当前.自然语言世界树.接入语言温度方向类型(二次, *建立.概念节点))
+                throw std::logic_error("language temperature direction provider unavailable");
             std::wstring 方向;
             const auto& 成员 = std::get<std::vector<稳定编码>>(读回.信息->输出特征概念.值域);
             for (const auto 节点 : 成员) {

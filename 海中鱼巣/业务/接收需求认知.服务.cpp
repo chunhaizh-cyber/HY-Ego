@@ -2719,6 +2719,14 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if (保存.状态 == 角色状态::前提已变化 || 保存.状态 == 角色状态::未找到) 漂移();
             if (保存.状态 != 角色状态::已完成 || !保存.信息)
                 throw std::logic_error("passive receive person interpretation unpublished");
+            if (读取同文候选) {
+                const auto 方向 = d.语言世界.采用接收语言场景方向(k, *保存.信息, d.语言, d.外设);
+                using A = 基础节点组追加状态;
+                if (方向 == A::资源失败) 资源();
+                if (方向 == A::预期不符 || 方向 == A::节点不存在 || 方向 == A::引用不存在) 漂移();
+                if (方向 != A::已完成)
+                    throw std::logic_error("received comparison scene direction unpublished");
+            }
             throw 推进中断{阶段::语言解释待完善,"已保存同源被动解释及确定的一端，角色不足时保留原消息"};
         }
         if (!context.已绑定自我)

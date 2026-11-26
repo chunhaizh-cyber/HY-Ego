@@ -14,6 +14,7 @@
 #include <map>
 #include <set>
 #include <thread>
+#include <tuple>
 
 #ifdef HY_EGO_DEBUG_LOG_TASK_STATE_PREMISE
 #include <sstream>
@@ -167,10 +168,16 @@ std::map<稳定编码, const void*> 联合更新占用表;
 稳定编码 正式I64类型登记{}, 温度规格登记字段{}, 正式I64类型节点类型{};
 稳定编码 正式I64规格节点类型{}, 规范来源引用字段{}, 规范条款字段{}, 规范比较字段{};
 稳定编码 正式指代类型登记{}, 指代类型登记字段{}, 正式指代类型节点类型{}, 指代内容范围字段{};
+稳定编码 场景方向持有字段{}, 方向主体字段{}, 方向参照字段{}, 方向当前采用字段{};
+稳定编码 方向采用节点类型{}, 方向采用特征字段{}, 方向原消息字段{};
+稳定编码 方向原解释字段{}, 方向构式字段{}, 方向句范围字段{};
 const std::array 正式类型结构键{
     &正式I64类型登记, &温度规格登记字段, &正式I64类型节点类型, &正式I64规格节点类型,
     &规范来源引用字段, &规范条款字段, &规范比较字段,
-    &正式指代类型登记, &指代类型登记字段, &正式指代类型节点类型, &指代内容范围字段};
+    &正式指代类型登记, &指代类型登记字段, &正式指代类型节点类型, &指代内容范围字段,
+    &场景方向持有字段, &方向主体字段, &方向参照字段, &方向当前采用字段,
+    &方向采用节点类型, &方向采用特征字段, &方向原消息字段, &方向原解释字段,
+    &方向构式字段, &方向句范围字段};
 constexpr char 指代关系规范条款[] = "7233 §4 / 7160 §5.6";
 constexpr char 首版温度规范条款[] = "用户裁决：首版温度定义";
 
@@ -3278,6 +3285,126 @@ bool 新_特征类::初始化() noexcept {
     } catch (const std::length_error&) {
         return {S::资源失败};
     }
+}
+
+新语言场景方向实例读取 新_特征类::读取语言场景方向实例(稳定编码 场景) const {
+    using S = 基础结构操作状态;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        if (!结构已初始化() || !有效(场景)) return {};
+        const auto 持有 = 全局基础数据集.查询字段(场景, 场景方向持有字段);
+        std::vector<稳定编码> 节点组{场景};
+        std::set<稳定编码> 特征组;
+        for (const auto& 字段 : 持有) {
+            const auto* F = std::get_if<稳定编码>(&字段.内容);
+            if (!F || !有效(*F) || !特征组.insert(*F).second) return {S::内部不一致};
+            const auto 采用 = 读取唯一节点字段(*F, 方向当前采用字段);
+            if (!采用) return {S::内部不一致};
+            节点组.push_back(*F);
+            节点组.push_back(*采用);
+        }
+        const auto 批 = 全局基础数据集.查询节点组完整结构(节点组);
+        if (批.状态 != S::已完成) return {批.状态};
+        std::map<稳定编码, const 基础联合节点快照*> 图;
+        for (const auto& 项 : 批.节点组) {
+            if (!项.快照) return {S::节点不存在};
+            图.emplace(项.查询节点, &*项.快照);
+        }
+        const auto 单字段 = [&](稳定编码 节点, 稳定编码 键) -> 基础字段内容 {
+            const 基础字段关系* 单 = nullptr;
+            for (const auto& 字段 : 图.at(节点)->结构.字段组) {
+                if (字段.字段节点 != 键) continue;
+                if (单) throw std::logic_error("comparison field repeated");
+                单 = &字段;
+            }
+            if (!单) throw std::logic_error("comparison field missing");
+            return 单->内容;
+        };
+        const auto 引用 = [&](稳定编码 节点, 稳定编码 键) {
+            const auto 目标 = std::get<稳定编码>(单字段(节点, 键));
+            if (!有效(目标)) throw std::logic_error("comparison reference invalid");
+            return 目标;
+        };
+        std::vector<基础字段关系> 同次持有;
+        for (const auto& 字段 : 图.at(场景)->结构.字段组)
+            if (字段.字段节点 == 场景方向持有字段) 同次持有.push_back(字段);
+        if (同次持有 != 持有) return {S::内部不一致};
+        std::set<std::tuple<稳定编码, 稳定编码, 稳定编码>> 键组;
+        新语言场景方向实例读取 结果{S::已完成};
+        for (const auto F : 特征组) {
+            const auto 采用 = 引用(F, 方向当前采用字段);
+            const auto& 入向 = 图.at(F)->入向外部关系组;
+            if (引用(F, 节点类型字段) != 特征节点类型
+                || 引用(采用, 节点类型字段) != 方向采用节点类型
+                || 引用(采用, 方向采用特征字段) != F || 入向.size() != 1
+                || 入向.front().源节点 != 场景 || 入向.front().类型 != 基础外部关系类型::父子
+                || 入向.front().角色或顺序 != 0) return {S::内部不一致};
+            const auto 类型 = 引用(F, 特征概念字段);
+            const auto 主体 = 引用(F, 方向主体字段);
+            const auto 参照 = 引用(F, 方向参照字段);
+            const auto 值 = 引用(F, 当前值字段);
+            const auto 范围 = std::get<std::vector<std::uint64_t>>(
+                std::get<基础值>(单字段(采用, 方向句范围字段)).材料);
+            if (主体 == 参照 || 值 != 引用(采用, 当前值字段)
+                || 范围.size() != 2 || 范围.front() >= 范围.back()
+                || !键组.emplace(类型, 主体, 参照).second) return {S::内部不一致};
+            结果.实例组.push_back({场景, 类型, 主体, 参照, 值,
+                引用(采用, 方向原消息字段), 引用(采用, 方向原解释字段),
+                引用(采用, 方向构式字段), 范围.front(), 范围.back(), F, 采用});
+        }
+        return 结果;
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+      catch (const std::length_error&) { return {S::资源失败}; }
+      catch (...) { return {S::内部不一致}; }
+}
+
+基础节点组追加状态 新_特征类::建立首批语言场景方向实例(稳定编码 场景,
+    const std::vector<新语言场景方向实例>& 项组,
+    std::vector<基础联合节点快照> 证明, 基础只读预期 只读) {
+    using A = 基础节点组追加状态;
+    using S = 基础结构操作状态;
+    try {
+        std::lock_guard 锁(新特征互斥);
+        const auto 已有 = 读取语言场景方向实例(场景);
+        if (已有.状态 == S::资源失败) return A::资源失败;
+        if (已有.状态 != S::已完成) return A::内部不一致;
+        const auto 持有 = 全局基础数据集.查询字段(场景, 场景方向持有字段);
+        基础节点组追加请求 请求;
+        请求.只读预期 = std::move(只读);
+        请求.容许新增入向预期组 = std::move(证明);
+        请求.只读预期.字段集合组.push_back({场景, 场景方向持有字段, {}, 持有});
+        请求.窄写字段键组.push_back({场景, 场景方向持有字段});
+        请求.窄关系端点组.push_back(场景);
+        std::set<std::tuple<稳定编码, 稳定编码, 稳定编码>> 本批键;
+        for (const auto& 项 : 项组) {
+            if (项.场景 != 场景 || 项.主体 == 项.参照
+                || !本批键.emplace(项.类型, 项.主体, 项.参照).second)
+                return A::入口拒绝;
+            const auto 在用 = std::ranges::find_if(已有.实例组, [&](const auto& 旧) {
+                return 旧.类型 == 项.类型 && 旧.主体 == 项.主体 && 旧.参照 == 项.参照;
+            });
+            if (在用 != 已有.实例组.end()) continue;
+            for (const auto n : {场景, 项.类型, 项.主体, 项.参照, 项.值, 项.消息,
+                    项.解释定义, 项.构式, 节点类型字段, 特征节点类型, 特征概念字段, 当前值字段,
+                    场景方向持有字段, 方向主体字段, 方向参照字段, 方向当前采用字段, 方向采用节点类型,
+                    方向采用特征字段, 方向原消息字段, 方向原解释字段, 方向构式字段, 方向句范围字段})
+                请求.只读预期.节点组.push_back({n});
+            const 基础组内节点引用 F{请求.新节点组.size()};
+            const 基础组内节点引用 采用{F.索引 + 1};
+            请求.新节点组.push_back({{{节点类型字段, 特征节点类型}, {特征概念字段, 项.类型},
+                {方向主体字段, 项.主体}, {方向参照字段, 项.参照},
+                {当前值字段, 项.值}, {方向当前采用字段, 采用}}});
+            请求.新节点组.push_back({{{节点类型字段, 方向采用节点类型}, {方向采用特征字段, F},
+                {当前值字段, 项.值}, {方向原消息字段, 项.消息}, {方向原解释字段, 项.解释定义},
+                {方向构式字段, 项.构式}, {方向句范围字段,
+                    基础值{std::vector<std::uint64_t>{项.起始标量, 项.结束标量}}}}});
+            请求.追加字段组.push_back({场景, 场景方向持有字段, F});
+            请求.追加外部关系组.push_back({场景, F, 基础外部关系类型::父子, 0});
+        }
+        if (请求.新节点组.empty()) return A::已完成;
+        return 全局基础数据集.原子追加节点组(请求).状态;
+    } catch (const std::bad_alloc&) { return A::资源失败; }
+      catch (const std::length_error&) { return A::资源失败; }
 }
 
 正式I64特征类型结果 新_特征类::读取正式I64特征类型(稳定编码 FT) const noexcept {

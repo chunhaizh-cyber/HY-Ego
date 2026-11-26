@@ -542,6 +542,18 @@ struct 正式指代关系特征类型结果 final {
     std::optional<正式指代关系特征类型信息> 信息;
 };
 
+struct 新语言场景方向实例 final {
+    稳定编码 场景, 类型, 主体, 参照, 值, 消息, 解释定义, 构式;
+    std::uint64_t 起始标量 = 0, 结束标量 = 0;
+    稳定编码 特征, 采用;
+    friend bool operator==(const 新语言场景方向实例&, const 新语言场景方向实例&) = default;
+};
+struct 新语言场景方向实例读取 final {
+    基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
+    std::vector<新语言场景方向实例> 实例组;
+};
+
+class 新_自然语言世界树类;
 class 新_特征类 final {
 public:
     bool 装配正式概念引用读取接口(const 概念_存在类* 范围读取,
@@ -772,6 +784,11 @@ public:
     std::optional<新特征准确值> 读取准备原当前值(
         const 新特征当前值组准备&, 稳定编码 特征) const;
 private:
+    friend class 新_自然语言世界树类;
+    新语言场景方向实例读取 读取语言场景方向实例(稳定编码) const;
+    基础节点组追加状态 建立首批语言场景方向实例(稳定编码,
+        const std::vector<新语言场景方向实例>&, std::vector<基础联合节点快照>,
+        基础只读预期);
     新宿主空信息特征建立结果 发布空信息引用特征组合(
         稳定编码 特征概念, 基础节点组追加请求&, std::optional<基础组内节点引用> 宿主,
         bool& 已发表);
