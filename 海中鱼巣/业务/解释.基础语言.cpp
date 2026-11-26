@@ -529,6 +529,11 @@ bool 是英文词内撇号(const std::vector<std::uint32_t>& 码点, std::size_t
     return 码点[i] == 0x27 && i > 0 && i + 1 < 码点.size()
         && 词内字符(码点[i - 1]) && 词内字符(码点[i + 1]);
 }
+bool 潜在转述标记(const std::vector<std::uint32_t>& 文本, std::size_t i) {
+    const auto 字 = 文本[i];
+    return (字 == U'说' || 字 == U'问' || 字 == U'称')
+        && (i == 0 || (文本[i - 1] != U'请' && 文本[i - 1] != U'询'));
+}
 std::vector<新接收指代作用域段> 本次人称作用域(
     const std::vector<std::uint32_t>& 文本, std::size_t 首, std::size_t 末) {
     std::vector<std::pair<std::size_t, std::uint32_t>> 栈;
@@ -546,8 +551,7 @@ std::vector<新接收指代作用域段> 本次人称作用域(
             栈.emplace_back(i, 终止);
         } else if (独立闭合引号(字)) {
             return {{0, 文本.size()}};
-        } else if (栈.empty() && i < 首 && (字 == U'说' || 字 == U'问' || 字 == U'称')
-            && (i == 0 || (文本[i - 1] != U'请' && 文本[i - 1] != U'询'))) {
+        } else if (栈.empty() && i < 首 && 潜在转述标记(文本, i)) {
             转述边界不明 = true;
         }
     }
@@ -556,6 +560,18 @@ std::vector<新接收指代作用域段> 本次人称作用域(
     if (转述边界不明 && 路径.empty()) 路径.push_back({0, 文本.size()});
     return 路径;
 }
+}
+
+bool 可读取无上下文外层共指(const std::string& 固定原文) {
+    const auto 原文 = 解码标准UTF8(固定原文);
+    if (!原文 || 原文->码点.empty()) return false;
+    const auto& 文本 = 原文->码点;
+    for (std::size_t i = 0; i < 文本.size(); ++i) {
+        if (是英文词内撇号(文本, i)) continue;
+        if (引号闭合符(文本[i]) || 独立闭合引号(文本[i]) || 潜在转述标记(文本, i))
+            return false;
+    }
+    return true;
 }
 
 std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文) {

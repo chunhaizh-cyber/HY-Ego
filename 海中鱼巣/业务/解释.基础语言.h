@@ -31,6 +31,7 @@ struct 接收篇章句段候选 final {
 };
 bool 是单根普通静态陈述图知识(const 新语言知识定义&);
 std::vector<接收篇章句段候选> 投影接收篇章句界(const std::string& 固定原文);
+bool 可读取无上下文外层共指(const std::string& 固定原文);
 std::vector<解释原文范围> 核对接收篇章句间分隔(const std::string& 固定原文,
     const std::vector<接收篇章句段候选>& 句段组, const 新语言词条准入定义&);
 enum class 语言图专名绑定状态 : std::uint8_t {
