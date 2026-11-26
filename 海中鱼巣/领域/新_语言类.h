@@ -802,6 +802,7 @@ struct 新原所求项答复信息 final {
     std::int64_t UTC纳秒=0, 准确整数=0;
     std::uint64_t 结束标量=0;
     std::string 原文;
+    std::optional<std::int64_t> 指明原整数;
 };
 struct 新原所求项答复结果 final {
     新原所求项答复状态 状态=新原所求项答复状态::输入拒绝;
@@ -972,7 +973,7 @@ public:
     bool 是登记的原文分界问题(稳定编码) const;
     新原所求项答复结果 保存原消息整数答复(稳定编码 M,稳定编码 来源场景,
         std::int64_t 准确整数,稳定编码 单位,const 新_自然语言世界树类&,
-        std::optional<稳定编码> 原有效答复={});
+        std::optional<稳定编码> 原有效答复={},std::optional<std::int64_t> 指明原整数={});
     新原所求项答复结果 读取原所求项答复(稳定编码 Send,
         std::optional<稳定编码> 指定历史答复={}) const;
     std::optional<新出站具体表达信息> 读取出站具体表达(稳定编码 场景或来源) const;

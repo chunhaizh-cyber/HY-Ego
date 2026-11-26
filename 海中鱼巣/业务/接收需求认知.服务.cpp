@@ -2491,11 +2491,37 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
         const bool 历史采用 = adopted.状态==新语言含义采用状态::已采用 && adopted.信息;
         if (!历史采用 && !out.分界答复) {
             using I=基础语言输入状态;
-            const auto 短答=解释明确整数短答(m.UTF8正文,context.语言,d.语言,d.词);
-            if(短答.状态==I::资源失败)资源();
-            if(短答.状态==I::引用不可读||短答.状态==I::读取漂移)漂移();
-            if(短答.状态==I::内部不一致)throw std::logic_error("正式整数答复单位读取不一致");
-            if(短答.值 && 短答.值->单位) {
+            const auto 解释带单位I64=[&](const std::string& 文本)
+                -> std::optional<std::pair<std::int64_t,稳定编码>> {
+                const auto 材料=解释明确整数短答(文本,context.语言,d.语言,d.词);
+                if(材料.状态==I::资源失败)资源();
+                if(材料.状态==I::引用不可读||材料.状态==I::读取漂移)漂移();
+                if(材料.状态==I::内部不一致)throw std::logic_error("正式整数答复单位读取不一致");
+                if(!材料.值||!材料.值->单位)return {};
+                const auto& 十进制=材料.值->规范十进制;
+                std::int64_t 值=0;
+                const auto 转换=std::from_chars(十进制.data(),十进制.data()+十进制.size(),值);
+                if(转换.ec!=std::errc{}||转换.ptr!=十进制.data()+十进制.size())return {};
+                return std::pair{值,*材料.值->单位};
+            };
+            constexpr std::string_view 中文引导="更正答案：", 西文引导="更正答案:", 旧新分隔="改为";
+            const std::string_view 原文=m.UTF8正文;
+            const auto 引导长度=原文.starts_with(中文引导) ? 中文引导.size()
+                : 原文.starts_with(西文引导) ? 西文引导.size() : 0;
+            std::optional<std::pair<std::int64_t,稳定编码>> 短答;
+            std::optional<std::int64_t> 指明原整数;
+            if(引导长度) {
+                const auto 分隔=原文.find(旧新分隔,引导长度);
+                if(分隔!=std::string_view::npos&&原文.find(旧新分隔,分隔+旧新分隔.size())==std::string_view::npos) {
+                    const auto 旧=解释带单位I64(std::string{原文.substr(引导长度,分隔-引导长度)});
+                    const auto 新=解释带单位I64(std::string{原文.substr(分隔+旧新分隔.size())});
+                    if(旧&&新&&旧->second==新->second) {
+                        短答=新;
+                        指明原整数=旧->first;
+                    }
+                }
+            } else 短答=解释带单位I64(m.UTF8正文);
+            if(短答) {
                 bool 正式分界回复=false;
                 if(m.回应消息节点) {
                     const auto 运输=d.外设.读取消息保护(*m.回应消息节点);
@@ -2504,29 +2530,24 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                         正式分界回复=d.语言.是登记的原文分界问题(*运输.消息->关联问题);
                 }
                 if(!正式分界回复) {
-                    const auto& 十进制=短答.值->规范十进制;
-                    std::int64_t 值=0;
-                    const auto 转换=std::from_chars(十进制.data(),十进制.data()+十进制.size(),值);
-                    if(转换.ec==std::errc{}&&转换.ptr==十进制.data()+十进制.size()) {
-                        进入步骤("保存带单位的原消息整数答复");
-                        if(stop.stop_requested()||!会话仍活跃(m))
-                            throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
-                        const auto 场景=d.语言世界.建立或取得接收来源场景(m.消息节点);
-                        if(场景.状态==新来源子场景状态::资源失败)资源();
-                        if(!场景.信息)漂移();
-                        const auto 答复=d.语言.保存原消息整数答复(m.消息节点,场景.信息->场景节点,
-                            值,*短答.值->单位,d.语言世界);
-                        using A=新原所求项答复状态;
-                        if(答复.状态==A::资源失败)资源();
-                        if(答复.状态==A::前提已变化||答复.状态==A::未找到)漂移();
-                        if((答复.状态!=A::已关联&&答复.状态!=A::待确认)||!答复.信息)
-                            throw std::logic_error("正式原消息整数答复未保存");
-                        out.S=场景.信息->场景节点;
-                        out.被动解释来源=k;
-                        out.H=本次人称.说话者;
-                        throw 推进中断{阶段::已保存场景信息,答复.状态==A::已关联
-                            ? "原所求项已保存正式整数答复" : "正式整数解释已保存，原所求项待确认"};
-                    }
+                    进入步骤("保存带单位的原消息整数答复");
+                    if(stop.stop_requested()||!会话仍活跃(m))
+                        throw 推进中断{阶段::停止未完成,"停止前保留已接纳消息"};
+                    const auto 场景=d.语言世界.建立或取得接收来源场景(m.消息节点);
+                    if(场景.状态==新来源子场景状态::资源失败)资源();
+                    if(!场景.信息)漂移();
+                    const auto 答复=d.语言.保存原消息整数答复(m.消息节点,场景.信息->场景节点,
+                        短答->first,短答->second,d.语言世界,{},指明原整数);
+                    using A=新原所求项答复状态;
+                    if(答复.状态==A::资源失败)资源();
+                    if(答复.状态==A::前提已变化||答复.状态==A::未找到)漂移();
+                    if((答复.状态!=A::已关联&&答复.状态!=A::待确认)||!答复.信息)
+                        throw std::logic_error("正式原消息整数答复未保存");
+                    out.S=场景.信息->场景节点;
+                    out.被动解释来源=k;
+                    out.H=本次人称.说话者;
+                    throw 推进中断{阶段::已保存场景信息,答复.状态==A::已关联
+                        ? "原所求项已保存正式整数答复" : "正式整数解释已保存，原所求项待确认"};
                 }
             }
         }
