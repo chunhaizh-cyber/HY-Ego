@@ -28,6 +28,7 @@
 #include <iterator>
 #include <map>
 #include <mutex>
+#include <set>
 #include <stdexcept>
 #include <tuple>
 
@@ -2668,6 +2669,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if (句段.empty()) 句段.push_back({{static_cast<std::size_t>(k.原文起点),
                 static_cast<std::size_t>(k.原文终点)},q.固定原文});
             std::vector<新接收指代材料> 指代;
+            std::set<稳定编码> 本文已声明;
             out.句段解释.clear();
             for (const auto& 句 : 句段) {
                 检查认知停止(stop);
@@ -2686,13 +2688,39 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     }
                 }
                 auto& 证据 = out.句段解释.emplace_back(记录句段解释(图,句.全文范围,d.关系陈述));
-                if (可取存在归类(图))
+                const bool 待取归类 = 可取存在归类(图);
+                if (待取归类)
                     记录待完善谓项概念(d, 固定来源, 图, 证据, stop);
                 if (读取同文候选) {
-                    if (是正式局部声明(图))
+                    using O = 新语言知识含义操作;
+                    using P = 新语言知识参数角色;
+                    using C = 新语言知识角色类别;
+                    bool 已取待完善归类 = false;
+                    if (待取归类 && 证据.静态结构) {
+                        const auto& 角色组 = 证据.静态结构->角色组;
+                        const auto 分类 = std::ranges::find(角色组, P::归类概念, &接收语言已解释角色::参数);
+                        const auto* 值 = 分类 != 角色组.end() && 分类->值
+                            ? std::get_if<语言图引用值>(&*分类->值) : nullptr;
+                        已取待完善归类 = 值 && 值->类别 == C::存在概念 && !值->选用名称关系;
+                    }
+                    const bool 局部声明 = 是正式局部声明(图) || 已取待完善归类;
+                    const bool 取同文指代 = !本文已声明.empty() && 证据.静态结构
+                        && 证据.静态结构->操作 == O::特征描述;
+                    if (局部声明 || 取同文指代)
                         主体观察.记录(图, q.语言节点, d.名称, d.语言世界, 固定来源, 证据);
                     else
                         主体观察.记录未绑定候选(图, q.语言节点, d.名称, 证据);
+
+                    const auto& 关系 = 证据.主体关系;
+                    if (关系 && 关系->已确定 && 关系->来源 && 关系->来源->已绑定存在) {
+                        const auto E = *关系->来源->已绑定存在;
+                        if (局部声明 && !关系->指代概念) 本文已声明.insert(E);
+                        if (取同文指代 && 关系->指代概念 && 本文已声明.contains(E)) {
+                            指代.push_back({{k, {关系->起始标量, 关系->结束标量}, {}},
+                                {证据.起始标量, 证据.结束标量}, "主体", {}, 新接收指代关系值{
+                                    新接收指代直接目标{新绑定指称{新指称类别::存在, E}}}});
+                        }
+                    }
                 }
                 auto 项 = 投影原消息人称(图,k,句.全文范围);
                 指代.insert(指代.end(),std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
@@ -2705,6 +2733,11 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             bool 已有明确非人称 = false;
             if (原指代.信息) for (const auto& 既有 : *原指代.信息) {
                 if (既有.原词面 == "我" || 既有.原词面 == "你" || 既有.原词面 == "我们") continue;
+                const auto 本次 = std::ranges::find(指代, 既有.出现, &新接收指代材料::出现);
+                if (本次 != 指代.end()) {
+                    if (!既有.值 || 既有.值 == 本次->值) continue;
+                    指代.erase(本次);
+                }
                 已有明确非人称 |= 既有.值.has_value();
                 if (std::ranges::none_of(out.句段解释,[&](const auto& 句) {
                     return 句.起始标量 == 既有.句段范围.起始标量 && 句.结束标量 == 既有.句段范围.结束标量;

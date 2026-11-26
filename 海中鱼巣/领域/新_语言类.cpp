@@ -8685,6 +8685,7 @@ bool 接收指代条目范围有效(const 接收指代条目数据& 项, const �
             std::set<接收指代范围> 已保存范围;
             for (const auto P : 场景.指代实例组()) {
                 核接收指代来源(读, P, *来源.信息, 场景);
+                if (!读.字段(P, 组织键::指代关系F).empty()) continue;
                 const auto 定义 = 读.引用(P, 组织键::定义);
                 组织要求(std::ranges::find(历史定义, 基础字段内容{定义}) != 历史定义.end());
                 const auto 范围 = 读接收指代范围(读, P);

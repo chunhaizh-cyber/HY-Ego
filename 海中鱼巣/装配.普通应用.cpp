@@ -1951,6 +1951,31 @@ public:
                         指代实例JSON += ']';
                     }
                 }
+                std::string 语言指代JSON = "null";
+                if (已保存) {
+                    const auto 读 = 当前_.世界事实.语言服务.读取当前接收指代关系组(
+                        *item.被动解释来源, 当前_.自然语言世界树, 当前_.外设世界树);
+                    语言指代JSON = "{\"status\":" + 控制计数(static_cast<std::uint64_t>(读.状态)) + ",\"items\":[";
+                    if (读.信息) for (const auto& 指代 : *读.信息) {
+                        检查停止();
+                        std::optional<新绑定指称> 目标;
+                        if (指代.值) {
+                            if (const auto* 直接 = std::get_if<新接收指代直接目标>(&*指代.值)) {
+                                if (const auto* 引用 = std::get_if<新绑定指称>(直接)) 目标 = *引用;
+                            }
+                        }
+                        if (语言指代JSON.back() != '[') 语言指代JSON += ',';
+                        语言指代JSON += "{\"feature\":" + 控制编码(指代.特征)
+                            + ",\"definition\":" + 控制编码(指代.解释定义)
+                            + ",\"expression\":" + 控制JSON字符串(指代.原词面)
+                            + ",\"role\":" + 控制JSON字符串(指代.角色)
+                            + ",\"start\":" + 控制计数(指代.出现.范围.起始标量)
+                            + ",\"end\":" + 控制计数(指代.出现.范围.结束标量)
+                            + ",\"target\":" + (目标 ? 控制编码(目标->节点) : "null")
+                            + ",\"targetCategory\":" + (目标 ? 控制计数(static_cast<std::uint64_t>(目标->类别)) : "null") + "}";
+                    }
+                    语言指代JSON += "]}";
+                }
                 std::string 局部对象JSON = "null";
                 const auto 局部 = 当前_.自然语言世界树.读取接收局部对象组(item.M);
                 if (局部.状态 == 新来源子场景状态::已存在) {
@@ -2072,6 +2097,7 @@ public:
                     + ",\"partialRoundTrips\":" + 部分成文JSON
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
                     + ",\"interactionReferences\":" + 交互指代JSON
+                    + ",\"languageReferences\":" + 语言指代JSON
                     + ",\"localObjects\":" + 局部对象JSON + ",\"sceneDirections\":" + 场景方向JSON + "}";
             }
         }
