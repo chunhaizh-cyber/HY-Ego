@@ -1201,9 +1201,16 @@ private:
     const void* 需求就绪通知所有者_ = nullptr;
     std::function<void(稳定编码)> 需求就绪通知_;
     void 发出需求就绪通知(稳定编码 需求节点) noexcept;
+    struct 原所求项首次采用准备 final {
+        基础联合节点快照 补问;
+        std::vector<基础联合节点快照> 原请求保护;
+        基础只读预期 语言预期;
+        稳定编码 本次答复;
+    };
     新被认知需求信息更新结果 更新被认知需求信息内部(const 新被认知需求信息更新请求&,
         std::optional<稳定编码> 目标形式内容来源 = std::nullopt,
-        std::optional<稳定编码> 目标栏内容来源 = std::nullopt) noexcept;
+        std::optional<稳定编码> 目标栏内容来源 = std::nullopt,
+        const 原所求项首次采用准备* 首次采用 = nullptr) noexcept;
     新需求操作状态 确保主体需求特征(稳定编码 主体) noexcept;
     稳定编码 主体需求特征类型_;
     const 新服务要求确认读取接口* 服务要求确认读取接口_ = nullptr;

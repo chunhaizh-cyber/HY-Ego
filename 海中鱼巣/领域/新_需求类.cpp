@@ -1931,21 +1931,46 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
     try {
         if(!接收认知语言读取接口_)throw std::logic_error("demand owner language reader not installed");
         if(!有效(Qn)||!有效(出站来源))return S::入口拒绝;
-        const auto q=接收认知语言读取接口_->按出站来源读取问题(出站来源);
-        if(!q||!q->答案)return S::入口拒绝;
-        const 新补问需求答案 want{q->答案->答案信息,转补问答案来源(q->答案->来源)};
+        using L=新正式整数补问答复状态;
+        const auto 正式=接收认知语言读取接口_->按出站来源读取正式整数补问答复(出站来源);
+        if(正式.状态==L::资源失败)return S::资源失败;
+        if(正式.状态==L::等待)return S::前提已变化;
+        if(正式.状态==L::结构不一致)throw std::logic_error("formal integer question read is inconsistent");
+        要求需求物理(正式.信息.has_value()==(正式.状态==L::已读取));
+        新补问需求答案 want{};
+        稳定编码 被问需求;
+        if(正式.信息) {
+            want={正式.信息->答复.答复,新补问答案来源::消息转换};
+            被问需求=正式.信息->被问信息;
+        } else {
+            const auto q=接收认知语言读取接口_->按出站来源读取问题(出站来源);
+            if(!q||!q->答案)return S::入口拒绝;
+            want={q->答案->答案信息,转补问答案来源(q->答案->来源)};
+            被问需求=q->定义.被认知需求;
+        }
         std::lock_guard lock(新需求互斥);
         if(!结构仍存在())return S::尚未初始化;
         const auto Q=读取需求治理信息(Qn);
         if(!Q)return S::需求不存在;
-        if(!是补问需求形状(*Q)||Q->完整目标->目标.引用内容定位->引用需求节点!=q->定义.被认知需求)return S::入口拒绝;
-        if(Q->补问答案)return *Q->补问答案==want ? S::无变化 : S::同来源目标冲突;
+        if(!是补问需求形状(*Q))return S::入口拒绝;
+        const auto& 定位=*Q->完整目标->目标.引用内容定位;
+        if(定位.引用需求节点!=被问需求)return S::入口拒绝;
+        if(正式.信息 && 定位.正式内容路径.front()!=正式.信息->规格.待完善字段)return S::入口拒绝;
+        if(Q->补问答案) {
+            if(*Q->补问答案==want)return S::无变化;
+            if(!正式.信息 || Q->补问答案->来源!=新补问答案来源::消息转换)return S::同来源目标冲突;
+            const auto 历史=接收认知语言读取接口_->按历史答复读取正式整数补问答复(Q->补问答案->答案信息);
+            if(历史.状态==L::资源失败)return S::资源失败;
+            if(历史.状态==L::结构不一致)throw std::logic_error("formal integer question receipt is inconsistent");
+            return 历史.信息&&历史.信息->原提问==正式.信息->原提问 ? S::无变化 : S::前提已变化;
+        }
         const auto captured=全局基础数据集.查询节点组完整结构({Qn,want.答案信息});
         if(captured.状态==基础结构操作状态::资源失败)return S::资源失败;
         要求需求物理(captured.状态==基础结构操作状态::已完成&&captured.节点组.size()==2);
         基础节点组追加请求 r;
         for(const auto& x:captured.节点组){if(!x.快照)return S::前提已变化;r.预期联合节点组.push_back(*x.快照);}
         if(读取需求治理信息(Qn)!=Q)return S::前提已变化;
+        if(正式.信息)r.只读预期=正式.信息->有效预期;
         r.追加字段组.push_back({Qn,补问答案信息字段,want.答案信息});
         r.追加字段组.push_back({Qn,补问答案来源字段,基础值{static_cast<std::int64_t>(want.来源)}});
         const auto commit=全局基础数据集.原子追加节点组(r);
@@ -1980,6 +2005,20 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
         const auto D=读取需求治理信息(Dn);
         if(!D||D->执行域!=新需求执行域::被认知||!D->已知目标)return 结束(W::前提已变化);
         const auto& t=*D->已知目标;
+        using L=新正式整数补问答复状态;
+        auto 正式=接收认知语言读取接口_->按历史答复读取正式整数补问答复(Q->补问答案->答案信息);
+        if(正式.状态==L::资源失败)return 结束(W::资源失败);
+        if(正式.状态==L::等待)return 结束(W::前提已变化);
+        if(正式.状态==L::结构不一致)throw std::logic_error("formal integer answer history is inconsistent");
+        要求需求物理(正式.信息.has_value()==(正式.状态==L::已读取));
+        if(正式.信息) {
+            const auto& a=*正式.信息;
+            if(Q->补问答案->来源!=新补问答案来源::消息转换
+                ||a.被问信息!=Dn||a.规格.待完善字段!=栏||a.规格.目标存在!=t.目标存在节点
+                ||a.规格.特征类型!=t.目标特征类型概念节点||!D->首次接收认知来源)
+                return 结束(W::答案不可用,L"原正式所求项与首次被认知需求的正式目标不一致");
+            out.答案信息=a.答复.答复;
+        }
         // 被问栏：目标形式或其载荷（先天槽：需求目标形式、目标域、目标比较、目标方向）。
         const auto slots=需求目标字段槽();
         std::array<稳定编码,4> roots{};
@@ -1995,6 +2034,7 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
         // R121（7240 §5.5第3项）：目标栏（目标存在或目标特征类型）补问的答案是需求信息节点；父任务只取其
         // 目标存在与目标特征类型写入D对应栏，节点带出的值或方向不在此写入（留待载荷栏补问按结构比对取用）。
         if(栏位==roots.end()) {
+            if(正式.信息)return 结束(W::答案不可用,L"正式整数答复不适用于目标存在或类型栏");
             const auto 存在根=特征概念服务_.读取先天特征类型槽(先天特征类型槽::需求目标存在);
             const auto FT根=特征概念服务_.读取先天特征类型槽(先天特征类型槽::需求目标FT);
             for(const auto* x:{&存在根,&FT根}) {
@@ -2051,28 +2091,37 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             t.目标比较关系概念节点.has_value(),t.目标变化方向.has_value()};
         if(栏已知[栏位-roots.begin()])return 结束(W::栏已有值);
         if(!t.目标存在节点||!t.目标特征类型概念节点)return 结束(W::答案不可用,L"被认知需求目标存在或目标特征类型未知");
-        // 答案未被采用：没有任何被认知需求以该答案信息为字段内容来源。
-        for(const auto other:读取多节点字段(需求树根节点,被认知需求登记字段)) {
-            const auto o=读取需求治理信息(other);
-            if(!o)return 结束(W::前提已变化);
-            if(o->目标形式内容来源==out.答案信息)return 结束(W::答案已被采用);
+        if(正式.信息&&栏位!=roots.begin()&&栏位!=roots.begin()+1)
+            return 结束(W::答案不可用,L"正式整数答复只补目标形式或值域");
+        新问题答案信息 v;
+        if(正式.信息) {
+            const auto& a=*正式.信息;
+            v={a.答复.答复,新问题答案来源::消息转换,a.规格.目标存在,a.规格.特征类型,
+                新值陈述值种类::准确整数,std::to_string(a.答复.准确整数),{},{},a.规格.单位,{},{}};
+        } else {
+            // 旧式问题的答案采用判定沿现行治理。
+            for(const auto other:读取多节点字段(需求树根节点,被认知需求登记字段)) {
+                const auto o=读取需求治理信息(other);
+                if(!o)return 结束(W::前提已变化);
+                if(o->目标形式内容来源==out.答案信息)return 结束(W::答案已被采用);
+            }
+            // 同问题的全部答案（7240 §5.5第4项）：值不同不写。
+            std::optional<新语言问题信息> 问题;
+            for(auto& x:接收认知语言读取接口_->查询同结构问题(Dn,*t.目标存在节点,*t.目标特征类型概念节点))
+                if(x.答案&&x.答案->答案信息==*out.答案信息&&转补问答案来源(x.答案->来源)==Q->补问答案->来源)问题=std::move(x);
+            if(!问题)throw std::logic_error("field question answer has no matching outbound question");
+            std::vector<新问题答案信息> 全部;
+            for(const auto& a:接收认知语言读取接口_->查找问题答案(问题->问题节点).答案组) {
+                auto v=接收认知语言读取接口_->读取问题答案信息(a.答案信息);
+                if(!v)throw std::logic_error("structure-matched answer information unreadable");
+                全部.push_back(std::move(*v));
+            }
+            const auto 本答案=std::find_if(全部.begin(),全部.end(),[&](const auto& v){return v.信息节点==*out.答案信息;});
+            if(本答案==全部.end())throw std::logic_error("registered answer not among structure-matched answers");
+            v=*本答案;
+            if(std::any_of(全部.begin(),全部.end(),[&](const auto& x){return !答案值相同(x,v);}))
+                return 结束(W::答案冲突,L"同一问题有多条值不同的答案 条数="+std::to_wstring(全部.size()));
         }
-        // 同问题的全部答案（7240 §5.5第4项）：值不同不写。
-        std::optional<新语言问题信息> 问题;
-        for(auto& x:接收认知语言读取接口_->查询同结构问题(Dn,*t.目标存在节点,*t.目标特征类型概念节点))
-            if(x.答案&&x.答案->答案信息==*out.答案信息&&转补问答案来源(x.答案->来源)==Q->补问答案->来源)问题=std::move(x);
-        if(!问题)throw std::logic_error("field question answer has no matching outbound question");
-        std::vector<新问题答案信息> 全部;
-        for(const auto& a:接收认知语言读取接口_->查找问题答案(问题->问题节点).答案组) {
-            auto v=接收认知语言读取接口_->读取问题答案信息(a.答案信息);
-            if(!v)throw std::logic_error("structure-matched answer information unreadable");
-            全部.push_back(std::move(*v));
-        }
-        const auto 本答案=std::find_if(全部.begin(),全部.end(),[&](const auto& v){return v.信息节点==*out.答案信息;});
-        if(本答案==全部.end())throw std::logic_error("registered answer not among structure-matched answers");
-        const auto v=*本答案;
-        if(std::any_of(全部.begin(),全部.end(),[&](const auto& x){return !答案值相同(x,v);}))
-            return 结束(W::答案冲突,L"同一问题有多条值不同的答案 条数="+std::to_wstring(全部.size()));
         // 目标形式由值陈述推出（计划 v0.5 §3.5第2项）：具体值/闭区间→值，方向→变化方向；形式与载荷同次写入。
         auto 新目标=t;
         if(v.值种类==新值陈述值种类::变化方向) {
@@ -2117,7 +2166,43 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
                 return 结束(W::答案不可用,L"值答案与已知目标载荷不一致");
             新目标.目标形式=新需求目标形式::值;新目标.目标值域概念节点=tc.概念节点;新目标.目标比较关系概念节点=profile.概念节点;
         } else return 结束(W::答案不可用,L"答案值种类不能推出目标形式 种类="+std::to_wstring(static_cast<int>(v.值种类)));
-        const auto 写=更新被认知需求信息内部({Dn,*D,新目标,std::nullopt},*out.答案信息);
+        std::optional<原所求项首次采用准备> 首次采用;
+        if(正式.信息) {
+            const auto& a=*正式.信息;
+            const auto& 来源=*D->首次接收认知来源;
+            const auto 角色=接收认知语言读取接口_->读取正式消息角色(来源.键.接收消息节点,新外设消息方向::接收);
+            using R=新接收指代调用状态;
+            if(角色.状态==R::资源失败)return 结束(W::资源失败);
+            if(角色.状态==R::结构不一致)throw std::logic_error("original request scene evidence is inconsistent");
+            if(角色.状态!=R::已完成||!角色.信息||!角色.信息->事实)return 结束(W::前提已变化);
+            if(角色.信息->内部交互场景!=a.内部交互场景||角色.信息->说话者!=a.受询者
+                ||角色.信息->受话者!=a.询问者||D->需求主体存在节点!=a.受询者)
+                return 结束(W::答案不可用,L"答复与原请求的内部交互场景或双端不一致");
+            新部分服务要求目标 原请求目标;
+            原请求目标.目标存在节点=t.目标存在节点;
+            原请求目标.目标特征类型概念节点=t.目标特征类型概念节点;
+            auto 原请求=读取接收认知需求来源保护(*接收认知语言读取接口_,特征服务_,来源,
+                D->需求主体存在节点,原请求目标,false);
+            using S=新需求操作状态;
+            if(原请求.状态==S::资源失败)return 结束(W::资源失败);
+            if(原请求.状态==S::前提已变化)return 结束(W::前提已变化);
+            if(原请求.状态==S::目标内容依赖未就绪)return 结束(W::目标内容依赖未就绪);
+            if(原请求.状态!=S::已找到)return 结束(W::答案不可用,L"原已采用请求未通过首次补全核验");
+            const auto 补问=全局基础数据集.查询节点组完整结构({Qn});
+            if(补问.状态==基础结构操作状态::资源失败)return 结束(W::资源失败);
+            if(补问.状态!=基础结构操作状态::已完成||补问.节点组.size()!=1
+                ||!补问.节点组.front().快照||读取需求治理信息(Qn)!=Q)return 结束(W::前提已变化);
+            auto 预期=std::move(正式.信息->有效预期);
+            const auto& 角色保护=角色.信息->证据预期;
+            预期.节点组.insert(预期.节点组.end(),角色保护.节点组.begin(),角色保护.节点组.end());
+            预期.字段集合组.insert(预期.字段集合组.end(),角色保护.字段集合组.begin(),角色保护.字段集合组.end());
+            预期.外部关系集合组.insert(预期.外部关系集合组.end(),
+                角色保护.外部关系集合组.begin(),角色保护.外部关系集合组.end());
+            首次采用.emplace(原所求项首次采用准备{*补问.节点组.front().快照,std::move(原请求.完整保护),
+                std::move(预期),a.答复.答复});
+        }
+        const auto 写=更新被认知需求信息内部({Dn,*D,新目标,std::nullopt},*out.答案信息,std::nullopt,
+            首次采用 ? &*首次采用 : nullptr);
         using S=新需求操作状态;
         switch(写.状态) {
         case S::已修改:发出需求就绪通知(Dn);return 结束(W::已写入);
@@ -7022,7 +7107,8 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"建立待完善被认知需求",L"待完善需求建立发生工程故障");}
 }
 新被认知需求信息更新结果 新_需求类::更新被认知需求信息内部(const 新被认知需求信息更新请求& q,
-    std::optional<稳定编码> 内容来源,std::optional<稳定编码> 目标栏来源) noexcept {
+    std::optional<稳定编码> 内容来源,std::optional<稳定编码> 目标栏来源,
+    const 原所求项首次采用准备* 首次采用) noexcept {
     try {
         std::unique_lock lock(新需求互斥);using S=新需求操作状态;
         const auto old=读取需求治理信息(q.需求节点);if(!old)return {S::需求不存在,{}};
@@ -7036,6 +7122,17 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
         if(q.预期信息.节点!=q.需求节点||*old!=q.预期信息)return {S::前提已变化,{}};
         if(const auto 承载=要求目标特征实例承载(q.需求节点);承载!=S::已修改&&承载!=S::无变化)return {承载,{}};
         基础节点组追加请求 r;
+        if(首次采用) {
+            要求需求物理(内容来源==首次采用->本次答复&&!q.认知来源&&!目标栏来源);
+            r.只读预期=首次采用->语言预期;
+            r.预期联合节点组=首次采用->原请求保护;
+            if(!并需求保护(r.预期联合节点组,{首次采用->补问}))return {S::前提已变化,{}};
+            const auto& 字段组=首次采用->补问.结构.字段组;
+            const auto 答复=std::ranges::find(字段组,补问答案信息字段,&基础字段关系::字段节点);
+            要求需求物理(答复!=字段组.end()&&std::holds_alternative<稳定编码>(答复->内容));
+            if(答复->内容!=基础字段内容{首次采用->本次答复})
+                r.替换字段组.push_back({答复->编码,首次采用->本次答复});
+        }
         if(!加需求存在保护(old->需求主体存在节点,存在服务_,r.预期联合节点组))throw std::runtime_error("recognized demand subject identity missing");
         const auto status=核验部分需求目标(q.已知目标,存在服务_,词条读取_,接收认知语言读取接口_,特征概念服务_,二次特征概念服务_,r.预期联合节点组);
         if(status!=S::已找到)return {status,{}};

@@ -9107,6 +9107,57 @@ std::optional<原整数所求项> 读原整数所求项(组织读取现场& r,�
     return 原整数所求项{节点,原提问,*项,*原文->整数所求};
 }
 
+std::optional<稳定编码> 读原提问等待键(组织读取现场& r,稳定编码 原提问) {
+    const auto 来源=r.引用(原提问,组织键::来源);
+    const auto 场景=r.引用(原提问,组织键::场景);
+    std::optional<稳定编码> 结果;
+    for(const auto& f:r.字段(组键(组织键::登记根),组织键::问题登记)) {
+        const auto Q=std::get<稳定编码>(f);
+        if(r.引用(Q,组织键::来源)!=来源||r.引用(Q,组织键::场景)!=场景)continue;
+        组织要求(!结果&&r.整数(Q,组织键::类型)==103);
+        结果=Q;
+    }
+    return 结果;
+}
+
+新正式整数补问答复结果 读正式整数补问答复(组织读取现场& r,const 新出站具体表达信息& 原文,
+    稳定编码 答复关系,std::optional<稳定编码> 历史答复={}) {
+    using S=新正式整数补问答复状态;
+    if(!原文.整数所求)return {S::非本类};
+    const auto Send=读原提问证据(r,原文.节点);
+    const auto 场景=读可选组织引用(r,原文.节点,组织键::原提问内部场景);
+    if(!Send||!场景)return {S::等待};
+    组织要求(读可选组织引用(r,原文.节点,组织键::原消息角色依据).has_value());
+    const auto 项=读原整数所求项(r,原文.节点,*Send);
+    组织要求(项.has_value());
+    const auto 内容=std::ranges::find(原文.含义网.内容项组,项->语义.被询内容编号,&新含义内容项::编号);
+    组织要求(内容!=原文.含义网.内容项组.end());
+    const auto* 静态=std::get_if<新静态含义单元>(&内容->内容);
+    const auto* 主体=静态 ? std::get_if<新绑定指称>(&静态->主体) : nullptr;
+    组织要求(主体&&主体->类别==新指称类别::需求&&有效(主体->节点));
+    if(历史答复) {
+        const auto 历史组=r.字段(项->节点,组织键::答复历史);
+        组织要求(std::ranges::any_of(历史组,[&](const auto& f){
+            return std::get<稳定编码>(f)==*历史答复;
+        }));
+    }
+    const auto 当前=读可选组织引用(r,项->节点,组织键::有效答复);
+    if(!当前)return {S::等待};
+    auto 答复=读原消息整数答复(r,*当前);
+    组织要求(答复.所求项==项->节点&&答复.关系概念==答复关系&&答复.单位==项->规格.单位
+        &&读可选组织引用(r,*当前,组织键::原提问内部场景)==场景
+        &&r.引用(*当前,组织键::答复原提问)==原文.节点
+        &&答复.准确整数>=项->规格.下界&&答复.准确整数<=项->规格.上界);
+    基础只读预期 预期;
+    for(const auto N:{原文.节点,项->节点,*当前,答复.来源场景}) {
+        const auto& 对象=r.读(N).结构;
+        预期.节点组.push_back(对象.节点);
+        预期.字段集合组.push_back({N,std::nullopt,{},对象.字段组});
+    }
+    return {S::已读取,新正式整数补问答复材料{原文.节点,稳定编码{Send->front()},项->节点,
+        主体->节点,*场景,项->语义.询问者,项->语义.受询者,项->规格,std::move(答复),std::move(预期)}};
+}
+
 std::optional<新问题答案查询结果> 投影原所求项答复(组织读取现场& r,const 新语言问题定义& q) {
     if(q.被问种类!=新问题被问种类::载荷栏)return std::nullopt;
     const bool 上次=r.展开值引用;
@@ -9176,7 +9227,7 @@ bool 新_语言类::配置原所求项答复关系(稳定编码 关系) {
         const auto 长度=static_cast<std::uint64_t>(std::ranges::count_if(消息.UTF8正文,
             [](unsigned char 字节){return (字节&0xc0u)!=0x80u;}));
         if(!长度)return {S::输入拒绝};
-        std::lock_guard 锁(新语言互斥);
+        std::unique_lock 锁(新语言互斥);
         if(!有效(原所求项答复关系_))return {S::结构不一致};
         组织读取现场 读;
         读.展开值引用=false;
@@ -9194,6 +9245,12 @@ bool 新_语言类::配置原所求项答复关系(稳定编码 关系) {
                 ||重读->结束标量!=长度||重读->指明原整数!=指明原整数
                 ||(原有效答复&&重读->前版答复!=原有效答复))
                 return {S::前提已变化};
+            std::optional<稳定编码> 唤醒;
+            if(重读->所求项&&!重读->前版答复
+                &&读可选组织引用(读,*重读->所求项,组织键::有效答复)==重读->答复)
+                唤醒=读原提问等待键(读,读.引用(重读->答复,组织键::答复原提问));
+            锁.unlock();
+            if(唤醒)发出问题答案就绪通知({&*唤醒,1});
             return {重读->所求项 ? S::已关联 : S::待确认,std::move(重读)};
         }
 
@@ -9243,6 +9300,7 @@ bool 新_语言类::配置原所求项答复关系(稳定编码 关系) {
         if(选中&&!选中->要替换&&读可选组织引用(读,选中->项.节点,组织键::有效答复))选中=nullptr;
         const auto* 目标=选中 ? &选中->项 : nullptr;
         if(原有效答复&&!目标)return {S::前提已变化};
+        const auto 唤醒=目标&&!选中->要替换 ? 读原提问等待键(读,目标->原提问) : std::nullopt;
 
         组织写入现场 写;
         const auto A=写.节点(原消息整数答复类型,0);
@@ -9282,7 +9340,44 @@ bool 新_语言类::配置原所求项答复关系(稳定编码 关系) {
         组织读取现场 回读;
         auto v=读原消息整数答复(回读,发布.新节点组.front());
         if(目标)组织要求(v.所求项==目标->节点 && 读可选组织引用(回读,目标->节点,组织键::有效答复)==v.答复);
+        锁.unlock();
+        if(唤醒)发出问题答案就绪通知({&*唤醒,1});
         return {目标 ? S::已关联 : S::待确认,std::move(v)};
+    } catch(const std::bad_alloc&) {return {S::资源失败};}
+      catch(const std::length_error&) {return {S::资源失败};}
+      catch(const std::logic_error&) {return {S::结构不一致};}
+      catch(const std::bad_variant_access&) {return {S::结构不一致};}
+}
+
+新正式整数补问答复结果 新_语言类::按出站来源读取正式整数补问答复(稳定编码 出站来源) const {
+    using S=新正式整数补问答复状态;
+    try {
+        std::lock_guard 锁(新语言互斥);
+        组织读取现场 读;
+        读.展开值引用=false;
+        const auto 原文=读出站(读,出站来源);
+        if(!原文||原文->来源!=出站来源)return {S::非本类};
+        return 读正式整数补问答复(读,*原文,原所求项答复关系_);
+    } catch(const std::bad_alloc&) {return {S::资源失败};}
+      catch(const std::length_error&) {return {S::资源失败};}
+      catch(const std::logic_error&) {return {S::结构不一致};}
+      catch(const std::bad_variant_access&) {return {S::结构不一致};}
+}
+
+新正式整数补问答复结果 新_语言类::按历史答复读取正式整数补问答复(稳定编码 历史答复) const {
+    using S=新正式整数补问答复状态;
+    try {
+        std::lock_guard 锁(新语言互斥);
+        组织读取现场 读;
+        读.展开值引用=false;
+        const auto 类型=读.字段(历史答复,组织键::类型);
+        if(类型.empty()||读.整数(历史答复,组织键::类型)!=原消息整数答复类型)return {S::非本类};
+        const auto A=读原消息整数答复(读,历史答复);
+        if(!A.所求项)return {S::等待};
+        const auto 原提问=读.引用(历史答复,组织键::答复原提问);
+        const auto 原文=读出站(读,读.引用(原提问,组织键::场景));
+        组织要求(原文&&原文->节点==原提问&&原文->整数所求.has_value());
+        return 读正式整数补问答复(读,*原文,原所求项答复关系_,历史答复);
     } catch(const std::bad_alloc&) {return {S::资源失败};}
       catch(const std::length_error&) {return {S::资源失败};}
       catch(const std::logic_error&) {return {S::结构不一致};}
