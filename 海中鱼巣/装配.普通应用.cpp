@@ -1984,6 +1984,46 @@ public:
                     }
                     部分成文JSON += ']';
                 }
+                std::string 交互指代JSON = "null";
+                if (已保存 && 当前_.外设场景标识类型
+                    && (std::ranges::any_of(正式.信息->内容.句段组, [](const auto& 句) {
+                            return 句.主体关系 && 句.主体关系->指代概念;
+                        }) || (正式.信息->篇章采用 && !正式.信息->篇章采用->指代目标组.empty()))) {
+                    const auto 读交互指代 = [&](std::optional<稳定编码> 采用) {
+                        检查停止();
+                        const auto 读取 = 当前_.接收认知.读取现实交互场景指代(*item.被动解释来源,
+                            当前_.世界树, *当前_.外设场景标识类型, {}, 采用);
+                        auto JSON = "{\"status\":" + 控制计数(static_cast<std::uint64_t>(读取.状态));
+                        if (!读取.信息) return JSON + "}";
+                        const auto& 材料 = *读取.信息;
+                        JSON += ",\"scene\":" + 控制编码(材料.现实交互场景)
+                            + ",\"message\":" + 控制编码(材料.接收消息)
+                            + ",\"languageScene\":" + 控制编码(材料.语言场景)
+                            + ",\"adoption\":" + 控制编码(材料.篇章采用) + ",\"references\":[";
+                        bool 首项 = true;
+                        for (const auto& 项 : 材料.指代组) {
+                            检查停止();
+                            if (!首项) JSON += ',';
+                            首项 = false;
+                            JSON += "{\"instance\":" + 控制编码(项.实例)
+                                + ",\"target\":" + (项.目标 ? 控制编码(项.目标->节点) : "null")
+                                + ",\"targetConfirmedInReality\":" + 控制布尔(项.已确认现实目标);
+                            if (项.原文范围) {
+                                JSON += ",\"start\":" + 控制计数(项.原文范围->first)
+                                    + ",\"end\":" + 控制计数(项.原文范围->second)
+                                    + ",\"evidenceDefinition\":" + 控制编码(项.解释依据);
+                            }
+                            if (项.采用内容项)
+                                JSON += ",\"contentItem\":" + 控制计数(static_cast<std::uint64_t>(*项.采用内容项));
+                            JSON += '}';
+                        }
+                        return JSON + "]}";
+                    };
+                    const auto 采用 = 正式.信息->篇章采用
+                        ? std::optional{正式.信息->篇章采用->节点} : std::nullopt;
+                    交互指代JSON = "{\"current\":" + 读交互指代({})
+                        + ",\"adopted\":" + (采用 ? 读交互指代(采用) : "null") + "}";
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"definitionNode\":" + (已保存 ? 控制编码(正式.信息->解释定义节点) : "null")
@@ -1992,6 +2032,7 @@ public:
                     + ",\"meaningCandidate\":" + (已保存 ? 接收候选含义JSON(正式.信息->内容.含义候选) : "null")
                     + ",\"partialRoundTrips\":" + 部分成文JSON
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
+                    + ",\"interactionReferences\":" + 交互指代JSON
                     + ",\"localObjects\":" + 局部对象JSON + "}";
             }
         }

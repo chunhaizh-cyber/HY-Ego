@@ -1,11 +1,14 @@
 #pragma once
 #include "../领域/接收认知来源.数据.h"
 #include "../领域/前置语言输入.数据.h"
+#include "../领域/语言分界.数据.h"
 #include <memory>
 #include <optional>
 #include <stop_token>
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace 海中鱼巣 {
 class 新_外设世界树类; class 新_自然语言世界树类;
@@ -100,6 +103,19 @@ struct 接收需求认知观察 final {
     std::optional<接收篇章成文观察> 篇章成文{};
     std::optional<接收部分成文观察> 部分成文{};
 };
+struct 现实交互指代项 final {
+    稳定编码 实例;
+    std::optional<新绑定指称> 目标;
+    std::optional<std::pair<std::uint64_t, std::uint64_t>> 原文范围{};
+    std::optional<稳定编码> 解释依据{};
+    std::optional<std::int64_t> 采用内容项{};
+    bool 已确认现实目标 = false;
+};
+struct 现实交互指代材料 final {
+    稳定编码 现实交互场景, 接收消息, 语言场景;
+    std::optional<稳定编码> 篇章采用;
+    std::vector<现实交互指代项> 指代组;
+};
 // 普通应用持有；推进/ACK仍由self唯一消费者串行调用，worker可并发只读。
 // 服务与依赖必须存活到全部相关self/manager/worker最终join。
 class 离线词典数据源;
@@ -127,6 +143,10 @@ public:
     新前置语言输入读取结果 复读已筹办分界缺口(
         const 新前置语言输入材料&,std::stop_token) const override;
     std::optional<接收需求认知观察> 读取最近观察() const;
+    // 留空的篇章采用表示读取当前解释；指定后只读该采用固定的目标。
+    新语言分界调用结果<现实交互指代材料> 读取现实交互场景指代(
+        const 新接收认知来源键&, const 新_世界树类&, 稳定编码 外设场景标识类型,
+        std::optional<稳定编码> 预期现实交互场景, std::optional<稳定编码> 篇章采用) const;
     // ASK-READ-SCENE v0.4 §3.3 第4项：说话者取自我的交互者特征当前值；须在首次推进前由装配设置一次。
     void 设置交互者特征类型(稳定编码) noexcept;
 private:

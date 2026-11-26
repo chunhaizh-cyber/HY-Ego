@@ -1383,3 +1383,14 @@ Release x64 编译链接退出 0，0 错误、0 警告，用时 1:25.62。259 �
 Release x64 编译及链接退出 0，0 错误、0 警告，259 项构建输入前后无变化。相对上片只有两份计划内源码变化。产物 SHA256 `044AE3A33DEAFD76EF161AA4D0EBA757BC5F6140991C5B94F68D244773FA99DF`。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e34-exact-sentence-20261126/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e34-exact-sentence-20261126/release.log)
 
 本片发布语言只读能力。运行未触发，生产采用方尚未调用该精确句段读口。下一片按原消息所属场景提供说话者及待就绪时的部分解释，再接正式采用和普通 Chrome 验收。
+
+### 56E36 现实交互场景按需读取语言指代
+
+施工基线 `98cd5e2e37b324ae77d68e6a6f84084c2d492594`。统一设计 v1.250 第 10.164 节，统一实施计划 v2.212，blob `d189e2213a799019988ac7d2effee137c59337f6`。
+
+- 新增公开读口 `接收需求认知服务::读取现实交互场景指代(const 新接收认知来源键&, const 新_世界树类&, 稳定编码, std::optional<稳定编码>, std::optional<稳定编码>) const`。沿同一正式 M 定位现实交互场景，按当前适用实例或指定篇章采用提供原语言场景、指代实例和所指材料，区分缺材料、错误场景及无效输入。指代目标以类型化引用交付，现实事实由场景所有者的范围读口确认。读口不获取写入权、不保存第二份实例。
+- 普通应用接收认知控制读回在观察带指代的解释时按需调用该入口，输出 `interactionReferences.current` 和 `interactionReferences.adopted`。保留语言所有者原实例证据。用途卡新增该读口和普通控制读回边，原规范引用 1110、1150。调试切片无变化。
+
+Release x64 编译链接退出 0，0 错误、0 警告。259 项构建输入前后无变化，相对上一个构建只有计划内的三份源码改动。产物 SHA256 `83ECD1FCEA266B92678A20DC18FF9D002ADC0FA30A4F02B656DD3B67B24CB037`。[构建结果](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e36-interaction-references-20261126/result.json) · [编译日志](D:/TEMP/海中鱼巣/WEB-LANGUAGE-DEMAND-CLOSURE/56e36-interaction-references-20261126/release.log)
+
+本片实现按需读取及控制面接线。现实业务采用、同窗和跨窗、待解、固定历史仍待运行验收。56E35 及其上位目标继续暂停。

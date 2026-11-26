@@ -1794,6 +1794,75 @@ void 接收需求认知服务::封存会话(std::string_view c) noexcept {
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"封存接收认知会话",L"接收认知会话封存发生工程异常。");}
 }
 std::optional<接收需求认知观察> 接收需求认知服务::读取最近观察() const {std::lock_guard g(实现_->锁);return 实现_->最近;}
+新语言分界调用结果<现实交互指代材料> 接收需求认知服务::读取现实交互场景指代(
+    const 新接收认知来源键& 来源, const 新_世界树类& 世界, 稳定编码 外设场景标识类型,
+    std::optional<稳定编码> 预期现实交互场景, std::optional<稳定编码> 篇章采用) const {
+    using S = 新语言分界工程状态;
+    using C = 新场景操作状态;
+    if (!有效(来源.接收消息节点) || !有效(外设场景标识类型)
+        || 来源.原文起点 != 0 || !来源.原文终点 || !来源.根出现路径.empty()
+        || (预期现实交互场景 && !有效(*预期现实交互场景)) || (篇章采用 && !有效(*篇章采用)))
+        return {S::输入拒绝, {}, {}};
+
+    const auto& d = 实现_->依赖;
+    try {
+        const auto 消息 = d.外设.读取分界消息正文(来源.接收消息节点);
+        if (消息.状态 == S::未支持) return {S::输入拒绝, {}, {}};
+        if (消息.状态 != S::已完成) return {消息.状态, {}, {}};
+        if (!消息.消息) throw std::logic_error("interaction reference source missing");
+        const auto 副本 = 世界.查找现实交互场景(消息.消息->场景节点, 外设场景标识类型);
+        if (副本.状态 == C::资源失败) return {S::资源失败, {}, {}};
+        if (副本.状态 == C::存在不存在) return {S::材料未就绪, {}, {}};
+        if (副本.状态 == C::入口拒绝) return {S::未初始化, {}, {}};
+        if (副本.状态 != C::无变化 || !副本.存在节点)
+            throw std::logic_error("interaction reference window mapping inconsistent");
+        const auto 现实场景 = d.现实场景.查询所属场景(*副本.存在节点);
+        if (!现实场景) return {S::材料未就绪, {}, {}};
+        if (预期现实交互场景 && 预期现实交互场景 != 现实场景)
+            return {S::输入拒绝, {}, {}};
+
+        const auto 解释 = d.语言.读取接收语言解释(来源, d.语言世界, d.外设);
+        if (解释.状态 == S::未找到) return {S::材料未就绪, {}, {}};
+        if (解释.状态 != S::已完成) return {解释.状态, {}, {}};
+        if (!解释.信息) throw std::logic_error("interaction reference explanation missing");
+        const auto 现实根 = 世界.获取世界树根场景();
+        if (!现实根) return {S::未初始化, {}, {}};
+        const auto 属于现实世界 = [&](const 新绑定指称& 目标) {
+            return 目标.类别 == 新指称类别::存在
+                && d.现实场景.存在属于场景范围(*现实根, 目标.节点);
+        };
+
+        现实交互指代材料 材料{*现实场景, 来源.接收消息节点, 解释.信息->内容.来源场景, 篇章采用, {}};
+        if (篇章采用) {
+            const auto& 已采用 = 解释.信息->篇章采用;
+            if (!已采用 || 已采用->节点 != *篇章采用) return {S::未找到, {}, {}};
+            材料.指代组.reserve(已采用->指代目标组.size());
+            for (const auto& 项 : 已采用->指代目标组) {
+                材料.指代组.push_back({项.实例, 项.采用时目标, {}, {}, 项.内容项,
+                    属于现实世界(项.采用时目标)});
+            }
+        } else {
+            const auto 实例组 = d.语言.读取接收指代实例组(来源, d.语言世界, d.外设);
+            if (实例组.状态 != S::已完成) return {实例组.状态, {}, {}};
+            if (!实例组.信息) throw std::logic_error("interaction reference instances missing");
+            材料.指代组.reserve(实例组.信息->size());
+            for (const auto& 项 : *实例组.信息) {
+                if (!项.当前适用) continue;
+                现实交互指代项 指代{项.节点, {},
+                    std::pair{项.出现.起始标量, 项.出现.结束标量},
+                    项.当前依据.value_or(项.解释定义)};
+                if (项.当前目标) {
+                    指代.目标 = 新绑定指称{新指称类别::存在, *项.当前目标};
+                    指代.已确认现实目标 = 属于现实世界(*指代.目标);
+                }
+                材料.指代组.push_back(std::move(指代));
+            }
+        }
+        return {S::已完成, std::move(材料), {}};
+    } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
+      catch (const std::length_error&) { return {S::资源失败, {}, {}}; }
+}
+
 void 接收需求认知服务::设置交互者特征类型(稳定编码 t) noexcept {
     if(!有效(t))工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"设置交互者特征类型",L"装配给出的交互者特征类型无效。");
     std::lock_guard g(实现_->锁);实现_->交互者特征类型=t;
