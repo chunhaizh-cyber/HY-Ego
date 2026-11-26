@@ -5,6 +5,7 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <stdexcept>
 #include <utility>
 
 namespace 海中鱼巣 {
@@ -377,6 +378,38 @@ public:
         }
     }
 
+    新特征值保护读取结果 读取特征值保护(稳定编码 节点) const {
+        using 状态 = 新特征值保护读取状态;
+        using 底座状态 = 基础结构操作状态;
+        using 解码状态 = 新特征值快照解码状态;
+
+        if (!有效(节点)) return {状态::输入拒绝, {}, {}};
+        try {
+            std::scoped_lock 锁(互斥_);
+            if (!已初始化_) return {状态::未初始化, {}, {}};
+
+            const auto 读取 = 数据集_.查询完整节点结构(节点);
+            if (读取.状态 == 底座状态::节点不存在) return {状态::节点不存在, {}, {}};
+            if (读取.状态 == 底座状态::资源失败) return {状态::资源失败, {}, {}};
+            if (读取.状态 != 底座状态::已完成 || !读取.结构
+                || 读取.结构->节点.编码 != 节点) {
+                return {状态::结构不一致, {}, {}};
+            }
+
+            auto 解码 = 解码特征值快照已加锁(*读取.结构);
+            if (解码.状态 == 解码状态::非本类节点) return {状态::非本类节点, {}, {}};
+            if (解码.状态 != 解码状态::已解码 || !解码.信息) {
+                return {状态::结构不一致, {}, {}};
+            }
+            解码.窄预期.节点组.push_back(基础节点{特征值类型节点_});
+            return {状态::已读取, std::move(解码.信息), std::move(解码.窄预期)};
+        } catch (const std::bad_alloc&) {
+            return {状态::资源失败, {}, {}};
+        } catch (const std::length_error&) {
+            return {状态::资源失败, {}, {}};
+        }
+    }
+
     新特征值快照解码结果 解码特征值快照(const 基础节点结构& 结构) const {
         std::scoped_lock 锁(互斥_);
         return 解码特征值快照已加锁(结构);
@@ -720,6 +753,10 @@ bool 新_特征值类::初始化() noexcept {
 std::optional<新特征值信息> 新_特征值类::获取特征值(
     稳定编码 节点) const noexcept {
     return 实现_->获取特征值(节点);
+}
+
+新特征值保护读取结果 新_特征值类::读取特征值保护(稳定编码 节点) const {
+    return 实现_->读取特征值保护(节点);
 }
 
 新特征值快照解码结果 新_特征值类::解码特征值快照(const 基础节点结构& 结构) const {
