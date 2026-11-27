@@ -2433,6 +2433,17 @@ public:
                     if(点 && 点->size()==1 && 点->front().下界==点->front().上界) {
                         const auto 发布=当前_.需求服务.读取主体需求特征发布关联(D->节点);
                         const auto 确认版本=当前_.需求服务.读取场景需求确认版本(D->节点);
+                        std::optional<稳定编码> 发生状态;
+                        if(确认版本 && 确认版本->确认.value_or(false) && 确认版本->确认关系 && 发布.关联) {
+                            const auto 发生=当前_.需求服务.读取主体需求发生关联按来源(*确认版本->确认关系);
+                            if(发生.关联 && 发生.关联->定位.需求节点==D->节点
+                                && 发生.关联->定位.主体存在节点==D->需求主体存在节点
+                                && 发生.关联->定位.场景节点==发布.关联->场景节点
+                                && 发生.关联->定位.动作节点==发布.关联->动作节点) {
+                                const auto 状态=当前_.服务对象需求发布.读取需求发生状态(发生.关联->状态节点);
+                                if(状态.发生 && 状态.发生->关联==*发生.关联)发生状态=发生.关联->状态节点;
+                            }
+                        }
                         治理后答JSON="{\"demand\":"+控制编码(D->节点)
                             +",\"confirmationVersion\":"+控制编码(确认版本 ? std::optional{确认版本->节点} : std::nullopt)
                             +",\"confirmationReply\":"+控制编码(确认版本 ? 确认版本->回复 : std::nullopt)
@@ -2449,7 +2460,7 @@ public:
                             +",\"sourceMessage\":"+控制编码(D->场景后答首次来源->原消息)
                             +",\"sceneDemand\":"+控制编码(D->场景后答首次来源->场景需求)
                             +",\"featurePublished\":"+控制布尔(发布.关联.has_value())
-                            +",\"occurrence\":"+控制编码(发布.关联 ? 发布.关联->首状态节点 : std::nullopt)+"}";
+                            +",\"occurrence\":"+控制编码(发生状态)+"}";
                     }
                 }
             }
@@ -2554,6 +2565,37 @@ public:
             if (成文.状态 == L::资源失败) return {};
             if (成文.信息) 成文JSON = 字符串(*成文.信息);
         }
+        std::string 整条确认疑问="null";
+        using 参=新语言知识参数角色;
+        using 类=新语言知识角色类别;
+        for(const auto& 句:信息.内容.句段组) {
+            if(句.构式!=语言基础统一构式::需求确认 || !句.静态结构
+                || 句.静态结构->操作!=新语言知识含义操作::信息请求 || 句.静态结构->角色组.size()!=4)continue;
+            const auto& 组=句.静态结构->角色组;
+            const auto 角色项=[&](参 项)->const 接收语言已解释角色* {
+                const auto r=std::ranges::find(组,项,&接收语言已解释角色::参数);
+                return r!=组.end() && r->值 ? &*r : nullptr;
+            };
+            const auto H=角色项(参::主体);
+            const auto E=角色项(参::目标存在);
+            const auto FT=角色项(参::特征类型);
+            const auto V=角色项(参::特征值);
+            const auto* 主体=H ? std::get_if<语言图引用值>(&*H->值) : nullptr;
+            const auto* 子水=E ? std::get_if<语言图引用值>(&*E->值) : nullptr;
+            const auto* 类型=FT ? std::get_if<语言图引用值>(&*FT->值) : nullptr;
+            const auto* 值=V ? std::get_if<语言图整数值>(&*V->值) : nullptr;
+            if(!主体 || 主体->类别!=类::存在 || !子水 || 子水->类别!=类::存在 || !类型
+                || (类型->类别!=类::I64标量特征类型 && 类型->类别!=类::正式特征类型) || !值 || !值->单位)continue;
+            if(整条确认疑问!="null")return {};
+            const auto 范围=[](const 接收语言已解释角色& r) {
+                return "["+控制计数(r.起始标量)+","+控制计数(r.结束标量)+"]";
+            };
+            整条确认疑问="{\"subject\":"+控制编码(主体->节点)+",\"target\":"+控制编码(子水->节点)
+                +",\"featureType\":"+控制编码(类型->节点)+",\"integer\":"+字符串(值->规范十进制)
+                +",\"unit\":"+控制编码(值->单位)+",\"expectation\":true,\"question\":true"
+                +",\"subjectRange\":"+范围(*H)+",\"targetRange\":"+范围(*E)+",\"featureRange\":"+范围(*FT)
+                +",\"valueRange\":"+范围(*V)+"}";
+        }
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
             + ",\"receiptCountChange\":" + 数量变化
@@ -2568,6 +2610,7 @@ public:
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
             + ",\"meaning\":" + 接收候选含义JSON(信息.内容.含义候选)
             + ",\"adoptedMeaning\":" + (采用 ? 接收候选含义JSON(采用->内容.含义候选) : "null")
+            + ",\"wholeDemandConfirmationQuestion\":" + 整条确认疑问
             + ",\"sentences\":[";
         bool 首句 = true;
         for (const auto& 句 : 信息.内容.句段组) {
@@ -7686,17 +7729,20 @@ std::optional<std::string> 验证完整需求确认成文(普通应用上下文&
         写状态("demand-concept",static_cast<int>(类别.状态));
         return {};
     }
+    写状态("read-start",0);
     const auto 材料=当前.需求服务.读取正式信息参数保护(D,类别.信息->需求);
     if(材料.状态!=正式信息参数读取状态::已读取) {
         写状态("read",static_cast<int>(材料.状态));
         return {};
     }
+    写状态("projection-start",0);
     auto 图=从正式需求投影形成语言图(材料,*当前.中文语言节点,true,
         世界.语言服务,世界.词服务,世界.存在概念服务);
     if(图.状态!=正式需求语言投影状态::已投影 || !图.含义) {
         写状态("projection",static_cast<int>(图.状态));
         return {};
     }
+    写状态("names-start",0);
     std::ifstream 选名("case06-confirmation-word-choices.txt");
     if (选名.is_open()) {
         std::string 版本,主体名称,目标名称,特征名称,多余;
@@ -7737,12 +7783,14 @@ std::optional<std::string> 验证完整需求确认成文(普通应用上下文&
         }
     }
     const 语言基础统一输出请求 请求{*当前.中文语言节点,*图.含义,2048,48,320,320,512,128};
+    写状态("expression-start",0);
     const auto 成文=从基础信息生成可回读单句(请求,当前.自然语言世界树,世界.语言服务,
         世界.词服务,世界.名称关系服务,世界.存在概念服务,世界.特征概念服务,世界.存在服务,&当前.需求服务);
     if(成文.状态!=语言场景基础输出状态::已生成且唯一回读 || 成文.构式!=语言基础统一构式::需求确认) {
         写状态("expression",static_cast<int>(成文.状态));
         return {};
     }
+    写状态("version-start",0);
     const auto 最新=当前.需求服务.读取正式信息参数保护(D,类别.信息->需求);
     const auto 快照相同=[](const 基础联合节点快照& 左,const 基础联合节点快照& 右) {
         return 左.结构.节点==右.结构.节点 && 左.结构.字段组==右.结构.字段组
@@ -7778,6 +7826,18 @@ void 验证隔离整条需求确认发布(普通应用上下文& 当前, const �
         || 原消息->场景节点!=窗.来源.外设场景) {记录<<"original window unavailable"<<std::endl;return;}
     const auto 居所=事实.场景服务.查询所属场景(版本->主体);
     if(!居所) {记录<<"subject scene unavailable"<<std::endl;return;}
+    const auto 读取目标特征=[&]()->std::optional<std::vector<新特征信息>> {
+        const auto E=事实.存在服务.获取存在(版本->目标);
+        if(!E)return {};
+        std::vector<新特征信息> 组;
+        for(const auto Id:E->特征节点组) {
+            auto F=事实.特征服务.获取特征(Id);
+            if(!F)return {};
+            组.push_back(std::move(*F));
+        }
+        return 组;
+    };
+    const auto 目标特征前=读取目标特征();
     const auto 发布前=当前.服务对象需求发布.读取主体需求(*居所,版本->主体);
     if(发布前.当前需求节点==D || 当前.需求服务.读取主体需求特征发布关联(D).关联) {
         记录<<"unexpected publication before confirmation"<<std::endl;
@@ -7792,11 +7852,8 @@ void 验证隔离整条需求确认发布(普通应用上下文& 当前, const �
         记录<<"exact point unavailable"<<std::endl;
         return;
     }
-    auto 正文=成文;
-    const auto 整数标记=正文.rfind("是整数");
-    if(整数标记==std::string::npos) {记录<<"confirmed expression shape unavailable"<<std::endl;return;}
-    正文.replace(整数标记,std::string_view("是整数").size(),"达到");
-    正文="请确认，"+正文+"？";
+    const auto& 正文=成文;
+    if(!正文.ends_with("吗")) {记录<<"confirmed expression shape unavailable"<<std::endl;return;}
 
     const auto 建网=[](新表达指称 自我,新表达指称 对端,新表达指称 主体,
         新表达指称 目标对象,新表达指称 特征,新表达特征值 量) {
@@ -7887,14 +7944,29 @@ void 验证隔离整条需求确认发布(普通应用上下文& 当前, const �
             if(!登记.方法节点){记录<<"publication action definition unavailable"<<std::endl;return;}
             const 服务对象需求发布请求 发布请求{*居所,版本->主体,D,*登记.方法节点,答复->关系节点,窗.自我,{}};
             const auto 发=当前.服务对象需求发布.发布已确认需求(发布请求);
+            const auto 首次来源=当前.需求服务.读取主体需求发生关联按来源(答复->关系节点);
             const auto 再发=当前.服务对象需求发布.发布已确认需求(发布请求);
+            const auto 发生=当前.需求服务.读取主体需求发生关联按来源(答复->关系节点);
             const auto F=当前.服务对象需求发布.读取主体需求(*居所,版本->主体);
-            const auto S节点=发.需求发生 ? std::optional{发.需求发生->状态.节点} : std::nullopt;
+            const auto S节点=发生.关联 && 发生.关联->定位.需求节点==D && 发生.关联->定位.主体存在节点==版本->主体
+                && 发生.关联->定位.场景节点==*居所 && F.需求特征节点==发生.关联->定位.特征节点
+                && 发生.关联->动作来源节点==答复->关系节点
+                ? std::optional{发生.关联->状态节点} : std::nullopt;
             const auto 状态=S节点 ? 当前.服务对象需求发布.读取需求发生状态(*S节点) : 服务对象需求发生读取结果{};
-            记录<<"publish="<<static_cast<int>(发.状态)<<" repeat="<<static_cast<int>(再发.状态)
-                <<" F="<<(F.需求特征节点 ? F.需求特征节点->值:0)<<" current="<<(F.当前需求节点==D)
-                <<" S="<<(S节点 ? S节点->值:0)<<" Sread="<<static_cast<bool>(状态.发生)
-                <<" repeatS="<<(S节点 && 再发.需求发生 && 再发.需求发生->状态.节点==S节点)<<std::endl;
+            const auto 同源=S节点 ? 当前.服务对象需求发布.发布已确认需求(发布请求) : 服务对象需求发布结果{};
+            const auto 出现=[](const 服务对象需求发布结果& r){return r.需求发生 ? r.需求发生->状态.节点.值 : 0;};
+            记录<<"publish="<<static_cast<int>(发.状态)<<" publishAction="<<发.动作节点.value_or(稳定编码{}).值
+                <<" publishS="<<出现(发)<<" firstSourceS="<<(首次来源.关联 ? 首次来源.关联->状态节点.值:0)
+                <<" repeat="<<static_cast<int>(再发.状态)
+                <<" repeatAction="<<再发.动作节点.value_or(稳定编码{}).值<<" replayS="<<出现(再发)
+                <<" F="<<F.需求特征节点.value_or(稳定编码{}).值<<" current="<<(F.当前需求节点==D)
+                <<" sourceRecord="<<发生.记录节点.value_or(稳定编码{}).值
+                <<" sourceAction="<<(发生.关联 ? 发生.关联->定位.动作节点.值:0)
+                <<" S="<<S节点.value_or(稳定编码{}).值
+                <<" Sread="<<(状态.发生 && 状态.发生->关联==发生.关联)
+                <<" targetFeaturesUnchanged="<<(目标特征前 && 目标特征前==读取目标特征())
+                <<" repeatS="<<(S节点 && 同源.状态==服务对象需求发布状态::已复用 && 出现(同源)==S节点->值
+                    && 同源.动作节点==发生.关联->定位.动作节点)<<std::endl;
             return;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
