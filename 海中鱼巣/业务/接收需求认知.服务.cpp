@@ -2185,10 +2185,28 @@ std::int64_t 读I64(const std::string& s){
         throw 推进中断{阶段::D映射受阻,"目标FT类型或单位暂不能精确映射"};
     if(p.方向){out.目标形式=新需求目标形式::变化方向;out.目标变化方向=*p.方向==新语言知识特征方向::增加 ? 新需求变化方向::增加 : 新需求变化方向::减少;return out;}
     const auto lo=读I64(p.准确整数 ? *p.准确整数 : *p.区间下界),hi=p.准确整数 ? lo : 读I64(*p.区间上界);
-    const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
-    if(!ranges)throw 推进中断{阶段::D映射受阻,"目标FT不是已支持的I64区间值域"};
-    if(lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))
-        throw 推进中断{阶段::D映射拒绝,"语言目标不包含于目标FT准入值域"};
+    if(std::holds_alternative<特征概念I64已知值集>(def.值域)) {
+        using C = 特征概念规则状态;
+        if(!p.准确整数 || p.区间下界 || p.区间上界)
+            throw 推进中断{阶段::D映射受阻,"开放集合首次完整目标需要明确的准确整数"};
+        const auto 成员=d.特征概念.读取适用范围I64已知值成员状态(p.目标特征类型,lo,p.单位);
+        if(成员.状态==C::资源失败)资源();
+        if(成员.状态==C::前提已变化)漂移();
+        if(成员.状态==C::材料类型不相容)
+            throw 推进中断{阶段::D映射拒绝,"开放集合目标的材料类型或单位不相容"};
+        if(成员.状态!=C::已完成 || !成员.成员状态)
+            throw std::logic_error("open set target membership is not readable");
+        if(成员.成员状态==I64已知值成员状态::未覆盖)
+            throw 推进中断{阶段::D映射受阻,"开放集合尚未覆盖该准确值"};
+        if(成员.成员状态==I64已知值成员状态::父域明确排除)
+            throw 推进中断{阶段::D映射拒绝,"正式父域明确排除该准确值"};
+        if(!成员.依据)throw std::logic_error("open set target member has no adopted source");
+    } else {
+        const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
+        if(!ranges)throw 推进中断{阶段::D映射受阻,"目标FT不是已支持的I64值域"};
+        if(lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))
+            throw 推进中断{阶段::D映射拒绝,"语言目标不包含于目标FT准入值域"};
+    }
     特征概念定义 target{def.材料类型,std::vector<特征概念I64闭区间>{{lo,hi}},def.单位,def.比较规则,def.聚合规则,{}};
     检查认知停止(stop);
     const auto tc=d.特征概念.建立或取得特征概念强类型(target,d.特征值,p.目标特征类型);

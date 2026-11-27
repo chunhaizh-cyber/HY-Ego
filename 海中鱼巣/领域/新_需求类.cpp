@@ -7114,11 +7114,29 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
                 ||D.信息->实例所属特征类型!=p.目标特征类型||domain.单位!=ft.单位||p.单位!=ft.单位
                 ||domain.比较规则!=ft.比较规则||domain.聚合规则!=ft.聚合规则
                 ||!intervals||intervals->size()!=1)return {S::目标值域不合法,{}};
-            const auto range=特征概念服务_.比较值域(ft.材料类型,domain.值域,ft.值域);
-            if(range.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
-            if(range.状态!=特征概念规则状态::已完成||!range.关系
-                ||(*range.关系!=特征概念值域关系::相等&&*range.关系!=特征概念值域关系::右包含左))return {S::目标值域不合法,{}};
             const auto& interval=intervals->front();
+            if(std::holds_alternative<特征概念I64已知值集>(ft.值域)) {
+                using M=特征概念规则状态;
+                if(!p.准确整数 || p.区间下界 || p.区间上界 || interval.下界!=interval.上界
+                    || *p.准确整数!=std::to_string(interval.下界))return {S::目标值域不合法,{}};
+                const auto 成员=特征概念服务_.读取适用范围I64已知值成员状态(
+                    p.目标特征类型,interval.下界,p.单位);
+                if(成员.状态==M::资源失败)return {S::资源失败,{}};
+                if(成员.状态==M::前提已变化)return {S::前提已变化,{}};
+                if(成员.状态==M::材料类型不相容)return {S::目标值域不合法,{}};
+                if(成员.状态!=M::已完成 || !成员.成员状态)
+                    throw std::logic_error("received demand open set membership is not readable");
+                if(成员.成员状态==I64已知值成员状态::未覆盖)return {S::目标内容依赖未就绪,{}};
+                if(成员.成员状态==I64已知值成员状态::父域明确排除)return {S::目标值域不合法,{}};
+                if(!成员.依据 || 成员.保护组.empty())
+                    throw std::logic_error("received demand open set member has no adopted source protection");
+                if(!并需求保护(protect,成员.保护组))return {S::前提已变化,{}};
+            } else {
+                const auto range=特征概念服务_.比较值域(ft.材料类型,domain.值域,ft.值域);
+                if(range.状态==特征概念规则状态::资源失败)throw std::bad_alloc{};
+                if(range.状态!=特征概念规则状态::已完成||!range.关系
+                    ||(*range.关系!=特征概念值域关系::相等&&*range.关系!=特征概念值域关系::右包含左))return {S::目标值域不合法,{}};
+            }
             if(p.准确整数) {
                 if(p.区间下界||p.区间上界||*p.准确整数!=std::to_string(interval.下界)
                     ||interval.下界!=interval.上界)return {S::目标值域不合法,{}};
