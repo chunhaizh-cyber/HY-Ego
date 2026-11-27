@@ -951,6 +951,7 @@ body{display:block;background:#0e1520}main{width:min(1760px,96vw);margin:20px au
 <button type="button" class="secondary" id="interaction-confirm" disabled>确认本次交互</button>
 <span id="interaction-confirm-status" aria-live="polite"></span>
 <section id="messages"><div class="empty">尚无对话消息</div></section>
+<div><button type="button" class="secondary" id="expression-generate" disabled>生成文字</button> <span id="expression-status" aria-live="polite"></span><pre id="expression-text" hidden></pre></div>
 <form id="form"><div id="reply-selection" hidden><span id="reply-selection-text" aria-live="polite"></span> <button type="button" class="secondary" id="cancel-reply">取消回复</button></div><textarea id="input" maxlength="1048576" placeholder="输入消息；Enter发送，Shift+Enter换行"></textarea><button type="submit">发送</button><button type="button" class="secondary" id="close">结束</button><footer>网页接收成功只表示消息进入当前交互宿主，不表示任务完成或需求满足。</footer></form>
 <section id="output-control" style="padding:14px;border-top:1px solid #304157">
 <h2>控制台提交输出</h2>
@@ -1163,6 +1164,37 @@ function render(items){
 let refreshing=false;
 async function refresh(){if(refreshing||outputClosed)return;refreshing=true;try{if(!dialogueId)throw new Error();const headers={'X-HY-Dialogue-Id':dialogueId};const outbound=await fetch(base+'/api/outbound',{cache:'no-store',headers});if(outbound.status!==204){if(!outbound.ok)throw new Error();await outbound.json();}const r=await fetch(base+'/api/messages',{cache:'no-store',headers});if(!r.ok)throw new Error();render((await r.json()).messages);outputReady=true;renderInteractionConfirm();renderOutputReceipts();status.textContent='本机服务可访问';await outputRefreshStates();}catch{status.textContent=dialogueId?'本机服务取件异常':'浏览器不支持安全对话框标识';}finally{refreshing=false;}}
 async function poll(){if(outputClosed)return;await refresh();if(!outputClosed)setTimeout(poll,750);}
+let expressionReceipt=null,expressionBusy=false;
+const expressionButton=document.getElementById('expression-generate');
+const expressionStatus=document.getElementById('expression-status');
+const expressionText=document.getElementById('expression-text');
+expressionButton.addEventListener('click',async()=>{
+    if(expressionBusy||!expressionReceipt||outputClosed)return;
+    const id=expressionReceipt;
+    expressionBusy=true;expressionButton.disabled=true;
+    expressionText.hidden=true;expressionText.textContent='';
+    expressionStatus.textContent='正在从已保存信息成文';
+    try{
+        for(let attempt=0;attempt<36&&!outputClosed;++attempt){
+            const r=await fetch(base+'/api/control/received?id='+encodeURIComponent(id),{
+                method:'POST',cache:'no-store',headers:{'X-HY-Dialogue-Id':dialogueId}});
+            if(r.status===202||r.status===503){
+                await new Promise(resolve=>setTimeout(resolve,500));
+                continue;
+            }
+            if(!r.ok)throw new Error();
+            const data=await r.json();
+            if(data.ingressSequence!==id)throw new Error();
+            if(typeof data.expression==='string'&&data.expression){
+                expressionText.textContent=data.expression;expressionText.hidden=false;
+                expressionStatus.textContent='已生成文字';
+            }else expressionStatus.textContent='当前信息还不能完整成文';
+            return;
+        }
+        expressionStatus.textContent='信息仍在准备，可再次生成';
+    }catch{expressionStatus.textContent='未取得本窗已保存信息';}
+    finally{expressionBusy=false;expressionButton.disabled=!expressionReceipt||outputClosed;}
+});
 form.addEventListener('submit',async event=>{
     event.preventDefault();
     const text=input.value;
@@ -1177,6 +1209,9 @@ form.addEventListener('submit',async event=>{
     try{
         const response=await fetch(base+'/api/messages',{method:'POST',headers,body:text});
         if(!response.ok)throw new Error();
+        const receipt=await response.json();
+        expressionReceipt=typeof receipt.ingressSequence==='string'?receipt.ingressSequence:null;
+        if(!expressionBusy)expressionButton.disabled=!expressionReceipt;
         if(input.value===text)input.value='';
         if(selectedReply===reply)selectReply(null);
         await refresh();
@@ -1541,12 +1576,14 @@ bool 处理控制台指定接收请求(SOCKET 客户端, const HTTP请求& 请�
         return true;
     };
     const std::string 前缀 = 路径 + "?id=";
-    if (请求.方法 != "GET" || !请求.正文.empty() || 请求.控制安全头无效
+    const bool 成文 = 请求.方法 == "POST";
+    if ((!成文 && 请求.方法 != "GET") || !请求.正文.empty() || 请求.控制安全头无效
         || !请求.对话框标识 || !请求.主机 || !请求.目标.starts_with(前缀))
         return 回复("400 Bad Request", R"({"status":"invalid"})");
     if (!页面Origin.starts_with("http://127.0.0.1:"))
         throw std::logic_error("received readback trusted origin unavailable");
-    if (*请求.主机 != 页面Origin.substr(7) || (请求.来源 && *请求.来源 != 页面Origin))
+    if (*请求.主机 != 页面Origin.substr(7) || (成文 && !请求.来源)
+        || (请求.来源 && *请求.来源 != 页面Origin))
         return 回复("403 Forbidden", R"({"status":"forbidden"})");
     const auto ID = std::string_view(请求.目标).substr(前缀.size());
     std::uint64_t 序号 = 0;
@@ -1555,7 +1592,7 @@ bool 处理控制台指定接收请求(SOCKET 客户端, const HTTP请求& 请�
         || 转换.ec != std::errc{} || 转换.ptr != ID.data() + ID.size())
         return 回复("400 Bad Request", R"({"status":"invalid"})");
     if (!回调.读取指定接收) return 回复("503 Service Unavailable", R"({"status":"unavailable"})");
-    const auto 结果 = 回调.读取指定接收({std::string(会话), *请求.对话框标识, 序号});
+    const auto 结果 = 回调.读取指定接收({std::string(会话), *请求.对话框标识, 序号, 成文});
     using S = 网页指定接收读回状态;
     switch (结果.状态) {
     case S::待采集: return 回复("202 Accepted", R"({"status":"pending"})");

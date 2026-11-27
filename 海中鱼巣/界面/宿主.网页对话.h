@@ -26,6 +26,7 @@ enum class 网页指定接收读回状态 : std::uint8_t { 待采集, 已读取,
 struct 网页指定接收查询 final {
     std::string 会话, 对话框;
     std::uint64_t 入站序号;
+    bool 成文 = false;
     friend bool operator==(const 网页指定接收查询&, const 网页指定接收查询&) = default;
 };
 struct 网页指定接收读回结果 final {

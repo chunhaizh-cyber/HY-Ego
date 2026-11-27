@@ -2411,6 +2411,17 @@ public:
                 + ",\"currentKnownExistence\":" + 编码或空(当前身份,&新本窗身份认知::已知存在)
                 + ",\"human\":" + (人类 ? 控制布尔(*人类) : "null") + "}";
         }
+        std::string 成文JSON = "null";
+        if (查询.成文) {
+            const auto 根 = 当前_.世界树.获取世界树根场景();
+            if (!根) return {};
+            const auto 成文 = 当前_.接收认知.从正式接收信息成文({消息->消息节点, 0, 长度, {}},
+                {消息->消息节点, *角色.信息->说话者, *角色.信息->受话者, *根}, 停止_);
+            if (成文.状态 == L::前提已变化 || 成文.状态 == L::材料未就绪)
+                return {S::待采集};
+            if (成文.状态 == L::资源失败) return {};
+            if (成文.信息) 成文JSON = 字符串(*成文.信息);
+        }
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
             + ",\"receiptCountChange\":" + 数量变化
@@ -2418,6 +2429,7 @@ public:
             + ",\"identityLanguageSource\":" + 控制编码(消息->本窗身份自述语言定义)
             + ",\"windowIdentityCognition\":" + 身份认知JSON
             + ",\"adoptedObjectCorrespondence\":" + 对象对应JSON
+            + ",\"expression\":" + 成文JSON
             + ",\"selfSceneDemandReview\":" + 自我取用JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)

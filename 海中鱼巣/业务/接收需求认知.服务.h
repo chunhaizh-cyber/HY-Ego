@@ -12,6 +12,7 @@
 
 namespace 海中鱼巣 {
 struct 新本窗身份认知材料;
+struct 语言图交互上下文;
 class 新_外设世界树类; class 新_自然语言世界树类;
 class 关系陈述语言服务;
 class 新_语言类; class 新_词类; class 概念_名称关系类;
@@ -162,6 +163,8 @@ public:
         新本窗身份认知材料&, std::stop_token);
     新语言分界调用结果<本窗自述对象对应> 读取本窗自述对象对应(
         const 新接收认知来源键&, 稳定编码 内部场景, const 新_世界树类&) const;
+    新语言分界调用结果<std::string> 从正式接收信息成文(
+        const 新接收认知来源键&, const 语言图交互上下文&, std::stop_token) const;
     std::optional<接收需求认知观察> 读取最近观察() const;
     // 留空的篇章采用表示读取当前解释；指定后只读该采用固定的目标。
     新语言分界调用结果<现实交互指代材料> 读取现实交互场景指代(
