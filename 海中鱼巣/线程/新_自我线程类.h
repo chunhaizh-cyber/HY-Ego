@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <stop_token>
+#include <string_view>
 
 #include "../业务/新_世界树类.h"
 namespace 海中鱼巣 { class 新_外设世界树类; }
@@ -397,6 +398,7 @@ public:
         const 新_外设世界树类& 外设世界, 稳定编码 外设场景标识类型,
         稳定编码 外设存在标识类型) noexcept;
     void 通知外设交互场景变化() noexcept;
+    void 通知同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept;
     新自我线程操作结果 绑定服务值结算确认端口(
         新服务值结算确认接口& 端口) noexcept;
     新自我消息接收结果 提交消息(

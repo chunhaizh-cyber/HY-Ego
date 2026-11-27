@@ -82,6 +82,7 @@ namespace 海中鱼巣 {
 // DEP-READY-WAKE B（设计4.3②）：外设世界树接收事实形成状态后的事实变化投递端口（定义在
 // 业务/新_外设世界树类.cpp）。装配阶段在治理线程启动前绑定，上下文回收前解除。
 void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> 端口) noexcept;
+void 通知普通应用同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept;
 namespace 普通应用装配内部 {
 
 #ifdef HY_EGO_DEBUG_LOG_MAINLINE_PHASE
@@ -2114,6 +2115,22 @@ public:
                     +",\"integer\":"+字符串(*值.准确整数)+",\"unit\":"+控制编码(值.单位)+"}";
             }
         }
+        std::string 正式场景角色 = "null";
+        if (有效(item.M)) {
+            const auto 消息 = 当前_.外设世界树.读取消息保护(item.M);
+            if (消息.消息 && 消息.消息->来源.方向 == 新外设消息方向::接收) {
+                const auto& M = *消息.消息;
+                const auto 读取 = 当前_.世界树.读取原消息场景角色事实(
+                    {item.M, M.场景节点, M.窗口节点, M.正文材料节点, M.来源.方向});
+                if (读取.事实) {
+                    const auto& 角色 = *读取.事实;
+                    正式场景角色 = R"({"record":)" + 控制编码(角色.事实节点)
+                        + R"(,"scene":)" + 控制编码(角色.场景)
+                        + R"(,"speaker":)" + 控制编码(角色.说话者)
+                        + R"(,"recipient":)" + 控制编码(角色.受话者) + "}";
+                }
+            }
+        }
         auto JSON = "{\"stage\":"+字符串(names[n-1])+",\"reason\":"+字符串(item.原因)
             +",\"message\":"+控制编码(有效(item.M)?std::optional<稳定编码>{item.M}:std::nullopt)
             +",\"admissionBoundPerson\":"+控制编码(接纳绑定人)
@@ -2123,6 +2140,7 @@ public:
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
             +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入
             +",\"admittedInterpretation\":"+正式词段解释+",\"languageInterpretation\":"+被动句段解释
+            + R"(,"formalInteractionRoles":)" + 正式场景角色
             +",\"explicitIntegerReply\":"+短答JSON+"}";
         检查停止();
         return JSON;
@@ -2224,6 +2242,21 @@ private:
             return JSON;
         };
         const auto 接收认知 = 接收认知材料();
+        std::string 临时场景正文 = "[";
+        const auto 根 = 当前_.世界树.获取世界树根场景();
+        for (const auto& 场景 : 当前_.世界树.读取正式临时交互场景()) {
+            检查停止();
+            if (临时场景正文.size() > 1) 临时场景正文 += ',';
+            const bool 现实候选 = 根 && 当前_.世界事实.场景服务.存在属于场景范围(*根, 场景.本窗对端);
+            临时场景正文 += R"({"externalWindow":)" + 控制编码(场景.来源.外设窗口)
+                + R"(,"externalScene":)" + 控制编码(场景.来源.外设场景)
+                + R"(,"confirmation":)" + 控制编码(场景.来源.确认)
+                + R"(,"scene":)" + 控制编码(场景.场景) + R"(,"parent":)" + 控制编码(场景.父场景)
+                + R"(,"windowModel":)" + 控制编码(场景.窗口副本)
+                + R"(,"self":)" + 控制编码(场景.自我) + R"(,"localPeer":)" + 控制编码(场景.本窗对端)
+                + R"(,"eligibleAsReality":)" + 控制布尔(现实候选) + "}";
+        }
+        临时场景正文 += ']';
         检查停止();
         const auto 完成时间 = 控制UTC时间();
         检查停止();
@@ -2244,7 +2277,8 @@ private:
             "\"workSnapshot\":" + 学习材料.JSON + ",\"pendingMethods\":" + 控制计数(自我.待学习方法数)
             + ",\"lastSelfCompletionMethodId\":" + (自我.最近学习结束 ? 控制编码(自我.最近学习结束->方法节点) : "null")
             + ",\"lastSelfError\":" + 异常正文(自我.最近学习运行异常)
-            + "},\"timeline\":" + 时间线.JSON + ",\"receivedDemandCognition\":"+接收认知+"}";
+            + "},\"timeline\":" + 时间线.JSON + ",\"receivedDemandCognition\":"+接收认知
+            + ",\"temporaryInteractionScenes\":" + 临时场景正文 + "}";
         检查停止();
         return {std::move(正文), 需求已读取 && 任务已读取 && 服务材料.完整 && 学习材料.完整 && 时间线.完整 && 目录材料.完整};
     }
@@ -5578,6 +5612,7 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             结果.状态 = 普通应用装配状态::线程绑定失败; return 结果;
         }
         当前.网页外设模块.设置交互场景建立通知(&通知普通应用外设交互场景已建立);
+        当前.网页外设模块.设置明确交互确认通知(&通知普通应用同窗明确交互确认);
         // TASK-STATE-CAUSAL 切片4：需求字段更新后的就绪通知（以需求节点为键）投递任务管理线程既有接纳；
         // 管理线程未启动/已停止时投递自然被拒收。
         if (!当前.需求服务.绑定需求就绪通知(&当前.任务管理线程,
@@ -6233,6 +6268,16 @@ void 结束普通应用网页会话(std::string_view 公开会话标识) noexcep
         // 只结束连接授权，不删除外设事实和历史语言确认。
     } catch (...) {
         // noexcept宿主回收边界；正常清理仅销毁缓存，不分配或写领域事实。
+    }
+}
+
+void 通知普通应用同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept {
+    try {
+        std::lock_guard 锁(普通应用装配内部::上下文锁);
+        if (普通应用装配内部::上下文)
+            普通应用装配内部::上下文->自我线程.通知同窗明确交互确认(会话, 对话框);
+    } catch (...) {
+        // 外设已保留明确确认，重投可重新唤醒。
     }
 }
 

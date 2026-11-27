@@ -87,6 +87,7 @@ struct 网页外设运行模块::实现 final {
     std::optional<std::string> 活跃会话;
     std::map<std::string, 新外设对话框定位, std::less<>> 页面目录;
     std::atomic<void (*)() noexcept> 交互场景建立通知{nullptr};
+    std::atomic<void (*)(std::string_view, std::string_view) noexcept> 明确交互确认通知{nullptr};
 
     void 通知交互场景建立() noexcept {
         if (const auto 通知 = 交互场景建立通知.load(std::memory_order_acquire)) 通知();
@@ -315,7 +316,13 @@ struct 网页外设运行模块::实现 final {
             return 当前->接收消息(会话, 页面, 序号, 正文, 回应输出, 读取来源);
         };
         结果.交互确认 = [当前](const 网页对话框目标& 目标, bool 提交) {
-            return 当前->交互确认(目标,提交);
+            const auto 回执 = 当前->交互确认(目标, 提交);
+            using S = 网页交互确认状态;
+            if (提交 && (回执.状态 == S::已记录 || 回执.状态 == S::已复用)) {
+                if (const auto 通知 = 当前->明确交互确认通知.load(std::memory_order_acquire))
+                    通知(目标.公开会话标识, 目标.对话框标识);
+            }
+            return 回执;
         };
         结果.发送完成 = [当前](const 网页定向发送事实& 事实) { 当前->发送完成(事实); };
         结果.输出队列.入列 = [当前](const 网页输出入列请求& 请求) {
@@ -340,6 +347,11 @@ struct 网页外设运行模块::实现 final {
 
 void 网页外设运行模块::设置交互场景建立通知(void (*通知)() noexcept) noexcept {
     if (实现_) 实现_->交互场景建立通知.store(通知, std::memory_order_release);
+}
+
+void 网页外设运行模块::设置明确交互确认通知(
+    void (*通知)(std::string_view, std::string_view) noexcept) noexcept {
+    if (实现_) 实现_->明确交互确认通知.store(通知, std::memory_order_release);
 }
 
 void 网页外设运行模块::关闭() noexcept {

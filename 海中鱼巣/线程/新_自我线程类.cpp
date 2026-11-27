@@ -791,6 +791,7 @@ struct 新_自我线程类::实现 final {
     稳定编码 外设场景标识类型{};
     稳定编码 外设存在标识类型{};
     bool 外设交互场景待补建 = false;
+    std::set<std::pair<std::string, std::string>> 待核临时交互确认;
     std::chrono::steady_clock::time_point 最近接收认知推进{};
     std::mutex 治理基础互斥;
     新自我治理基础结果 治理基础缓存;
@@ -5808,7 +5809,7 @@ struct 新_自我线程类::实现 final {
                 : 新自我线程生命周期::等待治理消息;
             状态变化.notify_all();
             const auto 等待推进 = [&](std::optional<std::chrono::steady_clock::time_point> 时点 = std::nullopt) {
-                if (有关联变化通知() || 最终服务工作待唤醒.load() || 接收认知待唤醒 || 外设交互场景待补建) return;
+                if (有关联变化通知() || 最终服务工作待唤醒.load() || 接收认知待唤醒 || 外设交互场景待补建 || !待核临时交互确认.empty()) return;
                 if (需求扫描阶段 == 新自我需求扫描阶段::等待扫描结果
                     && 扫描工作结果.valid()
                     && 扫描工作结果.wait_for(std::chrono::milliseconds(0)) == std::future_status::ready) return;
@@ -5822,7 +5823,7 @@ struct 新_自我线程类::实现 final {
                 if (时点) 状态变化.wait_until(锁, *时点);
                 else 状态变化.wait(锁, [this] {
                     return 停止已请求 || 有关联变化通知() || 最终服务工作待唤醒.load() || 接收认知待唤醒
-                        || 外设交互场景待补建
+                        || 外设交互场景待补建 || !待核临时交互确认.empty()
                         || 有未停放消息已加锁()
                         || (!待转交事实变化.empty() && 普通消息数量已加锁() < 消息配置->邮箱容量)
                         || 有学习结果已就绪()
@@ -5835,6 +5836,25 @@ struct 新_自我线程类::实现 final {
             };
             bool 扫描需要让出 = false;
             while (!停止已请求 && !停止源.stop_requested()) {
+                if (!待核临时交互确认.empty()) {
+                    auto 待核 = 待核临时交互确认.extract(待核临时交互确认.begin());
+                    锁.unlock();
+                    const auto& [会话, 对话框] = 待核.value();
+                    const auto 来源 = 外设世界->读取已确认临时场景来源(会话, 对话框);
+                    const auto& 回执 = 来源.确认;
+                    if (!停止源.stop_requested() && 回执.状态 == 新外设事实状态::已完成) {
+                        if (!回执.确认 || !回执.场景 || !回执.窗口 || !来源.本窗外设对端)
+                            throw std::logic_error("confirmed temporary source payload is incomplete");
+                        const auto 已采用 = 世界树服务->采用已确认临时交互场景(
+                            {*回执.场景, *回执.窗口, *回执.确认, *来源.本窗外设对端});
+                        if (已采用.状态 == 新场景范围成员读取状态::结构不一致)
+                            throw std::logic_error("confirmed temporary interaction publication invariant failed");
+                    } else if (回执.状态 == 新外设事实状态::结构不一致) {
+                        throw std::logic_error("confirmed temporary interaction source invariant failed");
+                    }
+                    锁.lock();
+                    continue;
+                }
                 if (外设交互场景待补建) {
                     // INTERACT-SCENE-INSTINCT（2026-11-09用户裁决）：现实交互场景与交互者对应存在改由获取服务对象
                     // 本能（内置监听）按需求建立；自我线程不再自动补建，外设通知只作唤醒。
@@ -7204,6 +7224,19 @@ bool 新_自我线程类::绑定模拟学习(模拟学习服务& 服务) noexcep
         实现_->外设交互场景待补建 = true; // 启动后先补建一次，不依赖通知必然送达。
         return 实现_->操作结果(新自我线程操作状态::已完成);
     } catch (...) { return {新自我线程操作状态::内部错误, 新自我线程生命周期::内部错误}; }
+}
+
+void 新_自我线程类::通知同窗明确交互确认(
+    std::string_view 会话, std::string_view 对话框) noexcept {
+    if (!实现_ || 会话.empty() || 对话框.empty()) return;
+    try {
+        std::lock_guard 锁(实现_->状态互斥);
+        if (实现_->停止已请求 || 实现_->线程已完成 || !实现_->外设世界) return;
+        实现_->待核临时交互确认.emplace(std::string(会话), std::string(对话框));
+        实现_->状态变化.notify_all();
+    } catch (...) {
+        // 外设确认已经保留；同源下一次显式确认仍可重新提交。
+    }
 }
 
 void 新_自我线程类::通知外设交互场景变化() noexcept {

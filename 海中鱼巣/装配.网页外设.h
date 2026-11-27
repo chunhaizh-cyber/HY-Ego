@@ -22,6 +22,7 @@ public:
     网页外设运行回调组 取得运行回调(网页接收会话来源读取 = nullptr);
     // 新建外设交互场景后在模块锁外调用一次（6120 §11.1）；启动宿主前设置。
     void 设置交互场景建立通知(void (*通知)() noexcept) noexcept;
+    void 设置明确交互确认通知(void (*通知)(std::string_view, std::string_view) noexcept) noexcept;
     void 关闭() noexcept;
     网页外设运行模块(const 网页外设运行模块&) = delete;
     网页外设运行模块& operator=(const 网页外设运行模块&) = delete;
