@@ -667,17 +667,21 @@ std::vector<语言场景局部称名> 读取同源局部称名(认知依赖& d,
 
 // A local object stays in its original language scene. This view reads only the
 // confirmed window's earlier, already saved declarations.
-bool 新增请求仅含类型词面引号(const std::string& 正文, const 接收语言句段解释& 句) {
+bool 仅含类型词面引号(const std::string& 正文, const 接收语言句段解释& 句,
+    bool 允许后续句 = false) {
     using P = 新语言知识参数角色;
     using O = 新语言知识含义操作;
-    if (句.起始标量 != 0 || !句.静态结构 || 句.静态结构->操作 != O::特征新增请求) return false;
+    if (句.起始标量 != 0 || !句.静态结构) return false;
+    const auto 操作 = 允许后续句 ? O::任务用途描述 : O::特征新增请求;
+    if (句.静态结构->操作 != 操作) return false;
     const auto& 角色组 = 句.静态结构->角色组;
     const auto 类型 = std::ranges::find(角色组, P::特征类型, &接收语言已解释角色::参数);
     if (类型 == 角色组.end() || 类型->起始标量 == 0 || 类型->起始标量 >= 类型->结束标量
         || 类型->结束标量 >= 句.结束标量) return false;
     using namespace 语言场景转换内部;
     const auto 原文 = 解码语言场景原文(正文);
-    if (!原文 || 原文->标量字节边界.size() - 1 != 句.结束标量) return false;
+    if (!原文 || 原文->标量字节边界.size() - 1 < 句.结束标量
+        || (!允许后续句 && 原文->标量字节边界.size() - 1 != 句.结束标量)) return false;
     const auto 开引 = static_cast<std::size_t>(类型->起始标量 - 1);
     const auto 闭引 = static_cast<std::size_t>(类型->结束标量);
     if (读取语言场景原文范围(*原文, {开引, 开引 + 1}) != "「"
@@ -703,7 +707,7 @@ std::vector<语言场景局部称名> 读取同窗已声明局部称名(
     const auto& 当前消息 = 本次.消息;
     if (!本次.事实 || !本次.内部交互场景 || !本次.说话者 || !本次.受话者
         || (!可读取无上下文外层共指(当前消息.UTF8正文)
-            && (!新增请求引号依据 || !新增请求仅含类型词面引号(当前消息.UTF8正文, *新增请求引号依据)))) return 结果;
+            && (!新增请求引号依据 || !仅含类型词面引号(当前消息.UTF8正文, *新增请求引号依据)))) return 结果;
 
     const auto 保留消息 = d.外设.读取当前消息(当前消息.窗口节点, 新外设消息方向::接收);
     for (const auto& 前文 : 保留消息) {
@@ -1391,7 +1395,8 @@ std::optional<接收部分成文句段> 从接收具名部分句段成文(认知
 void 关联同文待绑定任务(std::vector<接收语言句段解释>& 句段, const std::string& 原文) {
     using O = 新语言知识含义操作;
     using P = 新语言知识参数角色;
-    if (句段.size()!=2 || !可读取无上下文外层共指(原文)) return;
+    if (句段.size() != 2 || (!可读取无上下文外层共指(原文)
+        && !仅含类型词面引号(原文,句段.front(),true))) return;
     const auto& 首句 = 句段.front();
     auto& 末句 = 句段.back();
     if (!首句.静态结构 || 首句.静态结构->操作!=O::任务用途描述
@@ -1434,7 +1439,8 @@ std::optional<接收部分成文句段> 从接收任务两句成文(认知依赖
         throw std::logic_error("saved task description source unavailable");
     const auto& 原文 = 固定.信息->固定UTF8原文;
     const auto 解码 = 语言场景转换内部::解码语言场景原文(原文);
-    if (!解码 || !可读取无上下文外层共指(原文)) return {};
+    if (!解码 || (!可读取无上下文外层共指(原文)
+        && !仅含类型词面引号(原文,内容.句段组.front(),true))) return {};
     接收部分成文句段 输出(内容.原文起点,内容.原文终点);
     const auto 加词 = [&](稳定编码 节点) {
         using T = 新词条查询状态;
@@ -1460,7 +1466,8 @@ std::optional<接收部分成文句段> 从接收任务两句成文(认知依赖
             const auto* 表达 = std::get_if<新语言知识图角色表达项>(&项.载荷);
             const auto 角色 = std::ranges::find(结构.角色组,项.局部编号,&接收语言已解释角色::角色编号);
             if (!表达 || 角色 == 结构.角色组.end()) return {};
-            if (表达->方式 == W::明确对象描述 && (角色->参数 == P::主体 || 角色->参数 == P::目标存在) && !角色->值) {
+            if (表达->方式 == W::明确对象描述 && !角色->值
+                && (角色->参数 == P::主体 || 角色->参数 == P::目标存在 || 角色->参数 == P::需求主体)) {
                 输出.UTF8正文 += 语言场景转换内部::读取语言场景原文范围(*解码,
                     {static_cast<std::size_t>(角色->起始标量),static_cast<std::size_t>(角色->结束标量)});
             } else if (表达->方式 == W::已消解指代 && 角色->参数 == P::受请求者 && 表达->指代名称关系节点) {
@@ -3736,6 +3743,12 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
                     throw std::logic_error("received typed language scene material was not published");
+                const auto& 正式句段 = 保存.信息->内容.句段组;
+                if (正式句段.size() == 2 && 正式句段.back().主体关系 && 正式句段.back().静态结构
+                    && 正式句段.back().静态结构->操作 == 新语言知识含义操作::任务当前等待描述) {
+                    // 保存时副本补了同文未决任务，控制读取须用成功保存的同一份材料。
+                    out.句段解释 = 正式句段;
+                }
                 if (处理局部组成材料(d, out, *角色.信息, *保存.信息, stop)) {
                     out.部分成文 = 从接收部分含义成文并独立回读(d, *保存.信息, k, req.交互上下文, stop, 步骤);
                     throw 推进中断{阶段::已保存场景信息, "已发表并读回同一直接场景的局部组成"};

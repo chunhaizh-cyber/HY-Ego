@@ -449,9 +449,24 @@ bool 核验并规范化图草稿(初始化知识草稿& 草稿, std::string& 诊
             已表达角色.emplace(子->子角色.含义编号,子->子角色.角色编号);
         } else if (!std::holds_alternative<std::string>(项.载荷)) return 拒绝("图表达混入旧结构项");
     }
+    // 特征名称摘要可以省略需求目标的持有者。它仍是图角色，
+    // 没有文字或授权来源时不能成为完整含义。
+    const auto 是摘要省略角色 = [&](const 新语言图含义节点& 节点, std::int64_t 角色) {
+        if (根.操作 != 含义操作::任务用途描述 || 根.子含义组.size() != 1
+            || 节点.操作 != 含义操作::特征描述 || 节点.特征值分支
+            || 节点.作用域 != 新语言知识作用域::需求目标范围) return false;
+        const auto& 需求 = *节点表.at(根.子含义组.front().子含义编号);
+        return 需求.子含义组.size() == 1
+            && 需求.子含义组.front().用途 == 新语言子含义用途::需求目标
+            && 需求.子含义组.front().子含义编号 == 节点.局部编号
+            && std::ranges::any_of(节点.参数组, [&](const auto& 项) {
+                return 项.参数 == 参数角色::主体 && 项.规则角色 == 角色;
+            });
+    };
     const auto 完整表达=[&](auto&& 自身,std::int64_t 编号)->bool {
         const auto& 节点=*节点表.at(编号);
         for(const auto& 角色:节点.角色组)if(!已表达角色.contains({编号,角色.局部编号})) {
+            if (是摘要省略角色(节点, 角色.局部编号)) continue;
             const auto 边=std::find_if(节点.子含义组.begin(),节点.子含义组.end(),[&](const auto& 项){return 项.本节点角色编号==角色.局部编号;});
             if(边==节点.子含义组.end()||!自身(自身,边->子含义编号))return false;
         }

@@ -7339,7 +7339,9 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
             for (const auto& 角色 : 结构.角色组) {
                 using P=新语言知识参数角色;
                 if (!在段内(角色.起始标量,角色.结束标量) || !角色编号.insert(角色.角色编号).second
-                    || 角色.参数<P::主体 || 角色.参数>P::后值 || !参数组.insert(角色.参数).second)
+                    || 角色.参数 < P::主体 || !参数组.insert(角色.参数).second
+                    || (角色.参数 > P::后值
+                        && !(结构.操作 == O::任务用途描述 && 角色.参数 == P::需求主体)))
                     return false;
                 if (!角色.值) continue;
                 if (const auto* 引用=std::get_if<语言图引用值>(&*角色.值)) {
@@ -7378,6 +7380,12 @@ bool 接收语言解释内容有效(const 新接收语言解释内容& 内容, c
                 if (!T || T->值 || 句.缺口组.empty()) return false;
                 if (结构.操作 == O::任务当前等待描述) {
                     if (参数组.size() != 1) return false;
+                } else if (const auto* 主体 = 取静态角色(结构,P::需求主体)) {
+                    const auto* FT = 取静态角色(结构,P::特征类型);
+                    const auto* 类型 = 静态角色值<语言图引用值>(FT);
+                    if (参数组.size() != 3 || 主体->值 || !类型 || 类型->类别 != C::I64标量特征类型
+                        || !类型->选用名称关系 || T->结束标量 > 主体->起始标量
+                        || 主体->结束标量 > FT->起始标量) return false;
                 } else {
                     const auto* H = 取静态角色(结构,P::受请求者);
                     const auto* E = 取静态角色(结构,P::目标存在);
