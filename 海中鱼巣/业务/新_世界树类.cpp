@@ -633,13 +633,24 @@ struct 新世界需求引用组合准备::实现 final {
                     || f->当前值 != std::optional<新特征准确值>{新特征准确值{in.当前需求节点}}) return {};
             }
         }
-        // 只预期不写：封存快照仍须在签发前以L1验证，消费方再次共同CAS。
+        // 联合事实在一次只读快照中复核。封存片段只随消费者的实际写入提交。
+        // 批读以编码排序。先按相同身份顺序排列完整快照。
+        std::ranges::sort(protections,{},[](const auto& 快照){return 快照.结构.节点.编码.值;});
+        std::vector<稳定编码> 保护节点;
+        保护节点.reserve(protections.size());
+        for (const auto& 快照 : protections) 保护节点.push_back(快照.结构.节点.编码);
+        const auto 批读 = 全局基础数据集.查询节点组完整结构(保护节点);
+        if (批读.状态 != 基础结构操作状态::已完成 || 批读.节点组.size() != protections.size())
+            世界I64组合故障(L"需求事实保护批读失败");
+        for (std::size_t i=0; i<protections.size(); ++i) {
+            const auto& 当前 = 批读.节点组[i];
+            if (当前.查询节点 != 保护节点[i])
+                世界I64组合故障(L"需求事实保护批读定位不符");
+            if (!当前.快照 || !组合快照相同(*当前.快照, protections[i])) return {S::前提已变化, {}};
+        }
         基础节点组追加请求 req; req.预期联合节点组 = protections;
         const auto sealed = 全局基础数据集.封存原子追加片段(req);
         if (sealed.状态 != 基础节点组追加状态::已完成 || !sealed.片段) 世界I64组合故障(L"需求事实保护封存失败");
-        const auto check = 全局基础数据集.原子追加封存片段组({*sealed.片段});
-        if (check.状态 == 基础节点组追加状态::预期不符) return {S::前提已变化, {}};
-        if (check.状态 != 基础节点组追加状态::已完成) 世界I64组合故障(L"需求事实保护验证失败");
         新需求特征事实依据 basis{in, std::move(protections), *sealed.片段};
         return {S::已核验, 新需求特征事实凭据{std::move(basis), this}};
     } catch (...) { 世界I64组合故障(L"需求发布事实核验工程异常"); }
