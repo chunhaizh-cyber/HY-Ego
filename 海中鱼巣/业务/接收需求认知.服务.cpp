@@ -665,6 +665,83 @@ std::vector<语言场景局部称名> 读取同源局部称名(认知依赖& d,
     return 结果;
 }
 
+// A local object stays in its original language scene. This view reads only the
+// confirmed window's earlier, already saved declarations.
+std::vector<语言场景局部称名> 读取同窗已声明局部称名(
+    认知依赖& d, const 新正式消息角色材料& 本次, std::stop_token 停止) {
+    using L = 新语言分界工程状态;
+    using R = 新接收指代调用状态;
+    using O = 新语言知识含义操作;
+    using C = 新语言知识角色类别;
+    using P = 新语言知识参数角色;
+    std::vector<语言场景局部称名> 结果;
+    const auto& 当前消息 = 本次.消息;
+    if (!本次.事实 || !本次.内部交互场景 || !本次.说话者 || !本次.受话者
+        || !可读取无上下文外层共指(当前消息.UTF8正文)) return 结果;
+
+    const auto 保留消息 = d.外设.读取当前消息(当前消息.窗口节点, 新外设消息方向::接收);
+    for (const auto& 前文 : 保留消息) {
+        检查认知停止(停止);
+        if (前文.来源.来源序号 >= 当前消息.来源.来源序号) continue;
+        if (前文.场景节点 != 当前消息.场景节点 || 前文.窗口节点 != 当前消息.窗口节点
+            || 前文.来源.公开宿主会话 != 当前消息.来源.公开宿主会话
+            || 前文.来源.对话框标识 != 当前消息.来源.对话框标识)
+            throw std::logic_error("local description source is outside its confirmed window");
+        if (!可读取无上下文外层共指(前文.UTF8正文)) continue;
+
+        const auto 角色 = d.语言.读取正式消息角色(前文.消息节点, 新外设消息方向::接收);
+        if (角色.状态 == R::资源失败) 资源();
+        if (角色.状态 == R::前提已变化) 漂移();
+        if (角色.状态 != R::已完成 || !角色.信息)
+            throw std::logic_error("local description source roles unreadable");
+        if (!角色.信息->事实 || 角色.信息->内部交互场景 != 本次.内部交互场景
+            || 角色.信息->说话者 != 本次.说话者 || 角色.信息->受话者 != 本次.受话者) continue;
+
+        const 新接收认知来源键 来源{前文.消息节点, 0, 标量数(前文.UTF8正文), {}};
+        const auto 正式 = d.语言.读取接收语言解释(来源, d.语言世界, d.外设);
+        if (正式.状态 == L::资源失败) 资源();
+        if (正式.状态 == L::前提已变化) 漂移();
+        if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) continue;
+        if (正式.状态 != L::已完成 || !正式.信息)
+            throw std::logic_error("local description source explanation unreadable");
+
+        const auto 声明 = d.语言世界.读取接收局部对象组(前文.消息节点);
+        using S = 新来源子场景状态;
+        if (声明.状态 == S::资源失败) 资源();
+        if (声明.状态 == S::前提已变化 || 声明.状态 == S::未建立) 漂移();
+        if (声明.状态 != S::已存在)
+            throw std::logic_error("local description source objects unreadable");
+        if (声明.对象组.empty()) continue;
+        using namespace 语言场景转换内部;
+        const auto 原文 = 解码语言场景原文(前文.UTF8正文);
+        if (!原文) throw std::logic_error("local description source is not UTF-8");
+
+        for (const auto& 对象 : 声明.对象组) {
+            const auto& 锚 = 对象.声明;
+            if (对象.场景 != 正式.信息->内容.来源场景
+                || 锚.前置来源 != 正式.信息->内容.前置来源) continue;
+            const auto 是该声明 = [&](const 接收语言句段解释& 句) {
+                if (!句.静态结构 || 句.静态结构->操作 != O::概念归类
+                    || 句.静态结构->所用构式 != 锚.构式
+                    || !句.主体关系 || !句.主体关系->已确定 || 句.主体关系->指代概念) return false;
+                const auto& 组 = 句.静态结构->角色组;
+                const auto 主体 = std::ranges::find(组, P::主体, &接收语言已解释角色::参数);
+                const auto* 值 = 主体 != 组.end() && 主体->值
+                    ? std::get_if<语言图引用值>(&*主体->值) : nullptr;
+                return 值 && 值->类别 == C::存在 && 值->节点 == 对象.存在
+                    && 主体->起始标量 == 锚.起始标量 && 主体->结束标量 == 锚.结束标量;
+            };
+            if (std::ranges::count_if(正式.信息->内容.句段组, 是该声明) != 1) continue;
+            auto 词面 = 读取语言场景原文范围(*原文, {锚.起始标量, 锚.结束标量});
+            if (词面.empty()) throw std::logic_error("local description source has an empty name range");
+            if (std::ranges::none_of(结果, [&](const auto& 项) {
+                return 项.存在节点 == 对象.存在 && 项.词面 == 词面;
+            })) 结果.push_back({对象.存在, std::move(词面)});
+        }
+    }
+    return 结果;
+}
+
 struct 接收待完善谓项 final {
     const 新前置语言缺口* 缺口;
     语言场景待完善概念词用 词用;
@@ -3295,6 +3372,9 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     std::make_move_iterator(项.begin()),std::make_move_iterator(项.end()));
             };
             const auto 句段组 = 投影接收篇章句界(req.固定原文);
+            const auto 同窗前文 = 正式词段重入 ? std::vector<语言场景局部称名>{}
+                : 读取同窗已声明局部称名(d, *角色.信息, stop);
+            req.局部称名组 = 同窗前文;
             req.读取静态角色缺口 = true;
             const auto 词头来源 = [&] {
                 std::lock_guard 锁(impl.锁);
@@ -3374,6 +3454,7 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 for (const auto& 句段 : 句段组) {
                     检查认知停止(stop);
                     称名=读取同源局部称名(d,k,stop,句段.全文范围.起始标量);
+                    称名.insert(称名.end(), 同窗前文.begin(), 同窗前文.end());
                     req.局部称名组=称名;
                     req.固定原文 = 句段.句面原文;
                     const auto 解释 = 解释当前句();
