@@ -108,7 +108,6 @@ struct 普通应用装配结果 final {
     std::optional<治理时间概念集合> 治理时间概念;
     std::optional<稳定编码> 服务任务特征概念节点;
     std::optional<稳定编码> 服务任务特征节点;
-    std::optional<稳定编码> 获取服务对象方法节点;
 
     bool 成功() const noexcept;
 };
@@ -190,7 +189,7 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
 void 结束普通应用网页会话(std::string_view 公开会话标识) noexcept;
 void 通知普通应用接收事实已记录(std::string_view,std::string_view,std::uint64_t) noexcept;
 // 外设类新建外设交互场景后在模块锁外调用；只唤醒self补建现实交互场景，不传载荷。
-void 通知普通应用外设交互场景已建立() noexcept;
+void 通知普通应用外设交互场景已建立(稳定编码 场景) noexcept;
 网页服务目标选项结果 查询普通应用服务目标选项(std::string_view 公开会话标识) noexcept;
 // 来源主体由活跃会话绑定；目标存在必须显式提交并核验现实范围。
 网页服务要求结果 预览普通应用服务要求(std::string_view 公开会话标识,

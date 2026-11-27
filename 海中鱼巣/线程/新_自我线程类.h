@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "../业务/新_世界树类.h"
-namespace 海中鱼巣 { class 新_外设世界树类; class 服务对象本能运行服务; }
+namespace 海中鱼巣 { class 新_外设世界树类; class 服务对象本能运行服务; struct 新窗口服务观察; }
 #include "新_自我工作线程类.h"
 #include "新_学习线程类.h"
 #include "新_任务管理线程类.h"
@@ -404,7 +404,8 @@ public:
     新自我线程操作结果 绑定外设世界树(
         const 新_外设世界树类& 外设世界, const 服务对象本能运行服务& 交互取材, 稳定编码 外设场景标识类型,
         稳定编码 外设存在标识类型) noexcept;
-    void 通知外设交互场景变化() noexcept;
+    void 通知外设交互场景变化(稳定编码 场景) noexcept;
+    std::vector<新窗口服务观察> 读取窗口服务观察() const;
     void 通知同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept;
     新自我线程操作结果 绑定服务值结算确认端口(
         新服务值结算确认接口& 端口) noexcept;

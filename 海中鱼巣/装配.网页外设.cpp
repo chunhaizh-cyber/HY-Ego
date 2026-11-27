@@ -86,11 +86,11 @@ struct 网页外设运行模块::实现 final {
     bool 就绪 = false, 已关闭 = false;
     std::optional<std::string> 活跃会话;
     std::map<std::string, 新外设对话框定位, std::less<>> 页面目录;
-    std::atomic<void (*)() noexcept> 交互场景建立通知{nullptr};
+    std::atomic<void (*)(稳定编码) noexcept> 交互场景建立通知{nullptr};
     std::atomic<void (*)(std::string_view, std::string_view) noexcept> 明确交互确认通知{nullptr};
 
-    void 通知交互场景建立() noexcept {
-        if (const auto 通知 = 交互场景建立通知.load(std::memory_order_acquire)) 通知();
+    void 通知交互场景建立(稳定编码 场景) noexcept {
+        if (const auto 通知 = 交互场景建立通知.load(std::memory_order_acquire)) 通知(场景);
     }
 
     bool 会话匹配(std::string_view 会话) const noexcept {
@@ -153,12 +153,13 @@ struct 网页外设运行模块::实现 final {
     bool 确认页面(const 网页对话框目标& 目标) noexcept {
         try {
             bool 新建 = false;
+            稳定编码 新场景{};
             {
                 std::lock_guard 锁(互斥);
                 if (!目标格式有效(目标) || !会话匹配(目标.公开会话标识)) return false;
-                (void)建立页面(目标, &新建);
+                新场景 = 建立页面(目标, &新建).场景节点;
             }
-            if (新建) 通知交互场景建立();
+            if (新建) 通知交互场景建立(新场景);
             return true;
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"确认网页外设页面", L"正式外设页面建立或读回失败。", 异常.what());
@@ -201,6 +202,7 @@ struct 网页外设运行模块::实现 final {
             const auto 来源 = 读取来源 ? 读取来源(会话) : std::optional{网页接收会话来源{}};
             if (!来源) return false;
             bool 新建 = false;
+            稳定编码 新场景{};
             {
                 std::lock_guard 锁(互斥);
                 if (!会话匹配(会话) || !序号 || 正文.empty()
@@ -208,6 +210,7 @@ struct 网页外设运行模块::实现 final {
                 const 网页对话框目标 目标{std::string(会话), std::string(页面)};
                 if (!目标格式有效(目标)) return false;
                 const auto& 定位 = 建立页面(目标, &新建);
+                新场景 = 定位.场景节点;
                 const auto 时间 = 取得正式发布时间();
                 const auto 回应输出 = 回应输出编码 ? std::optional{稳定编码{*回应输出编码}} : std::nullopt;
                 const auto 结果 = 世界->更新接收(定位, 序号, 正文, 时间,
@@ -216,7 +219,7 @@ struct 网页外设运行模块::实现 final {
                 if (!事实发布完成(结果))
                     throw std::runtime_error("peripheral received fact publication incomplete");
             }
-            if (新建) 通知交互场景建立();
+            if (新建) 通知交互场景建立(新场景);
             return true;
         } catch (const std::exception& 异常) {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"接收网页外设事实", L"真实输入发布或正式读回失败，不返回可重发的正常否定。", 异常.what());
@@ -345,7 +348,7 @@ struct 网页外设运行模块::实现 final {
     }
 }
 
-void 网页外设运行模块::设置交互场景建立通知(void (*通知)() noexcept) noexcept {
+void 网页外设运行模块::设置交互场景建立通知(void (*通知)(稳定编码) noexcept) noexcept {
     if (实现_) 实现_->交互场景建立通知.store(通知, std::memory_order_release);
 }
 

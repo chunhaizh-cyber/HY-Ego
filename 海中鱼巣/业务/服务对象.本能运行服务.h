@@ -12,6 +12,17 @@ struct 新外设网页临时场景来源结果;
 class 新_任务类;
 class 新_动态类;
 
+enum class 新窗口服务观察状态 : std::uint8_t {
+    等待正式确认, 等待对端, 概念缺判别定义, 对端归属材料不足, 明确非人类, 人类待权限登记, 前提已变化
+};
+struct 新窗口服务观察 final {
+    稳定编码 外设场景;
+    std::optional<稳定编码> 窗口, 确认, 外设对端, 内部场景, 内部对端, 人类概念;
+    新窗口服务观察状态 状态 = 新窗口服务观察状态::等待正式确认;
+    bool 已由新窗触发 = false;
+    std::uint64_t 续办次数 = 0;
+};
+
 // 所有借用服务须保活至调用结束；普通应用先归并自我，再关闭端口。
 class 服务对象本能运行服务 final : public 新服务对象获取本能端口,
                                    public std::enable_shared_from_this<服务对象本能运行服务>
@@ -26,6 +37,7 @@ class 服务对象本能运行服务 final : public 新服务对象获取本能�
     // 正式按窗取材。自我核验确认时读取，返回外设所有者原结果。
     新外设网页临时场景来源结果 获取已确认窗口交互事实(
         std::string_view 会话, std::string_view 对话框) const noexcept;
+    新窗口服务观察 处理新外设窗口(稳定编码 外设场景) const noexcept;
     bool 关闭() noexcept;
     std::optional<稳定编码> 已登记方法节点() const noexcept;
     std::optional<新服务对象获取配置> 读取登记材料() const noexcept override;
