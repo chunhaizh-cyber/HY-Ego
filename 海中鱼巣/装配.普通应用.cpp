@@ -2410,6 +2410,33 @@ public:
                         +",\"description\":"+控制JSON字符串(源.描述)+"}";
                 }
             }
+            std::string 治理后答JSON="null";
+            if (目标对应JSON!="null") {
+                const auto D=当前_.需求服务.读取场景后答首次需求(消息->消息节点,需求.陈述节点);
+                if(D && D->完整目标 && D->场景后答首次来源) {
+                    const auto& 目标=D->完整目标->目标;
+                    const auto 域=目标.目标值域概念节点
+                        ? 当前_.世界事实.特征概念服务.读取特征概念定义保护(*目标.目标值域概念节点)
+                        : 特征概念定义保护结果{};
+                    const auto* 点=域.信息 ? std::get_if<std::vector<特征概念I64闭区间>>(&域.信息->定义.值域) : nullptr;
+                    if(点 && 点->size()==1 && 点->front().下界==点->front().上界) {
+                        const auto 发布=当前_.需求服务.读取主体需求特征发布关联(D->节点);
+                        治理后答JSON="{\"demand\":"+控制编码(D->节点)
+                            +",\"subject\":"+控制编码(D->需求主体存在节点)
+                            +",\"target\":"+控制编码(D->完整目标->目标存在节点)
+                            +",\"featureType\":"+控制编码(目标.目标特征类型概念节点)
+                            +",\"domain\":"+控制编码(目标.目标值域概念节点)
+                            +",\"integer\":"+std::to_string(点->front().下界)
+                            +",\"unit\":"+控制编码(域.信息->定义.单位)
+                            +",\"completed\":"+控制布尔(D->信息完善阶段==新需求信息完善阶段::已完善)
+                            +",\"answer\":"+控制编码(D->场景后答首次来源->答复)
+                            +",\"sourceMessage\":"+控制编码(D->场景后答首次来源->原消息)
+                            +",\"sceneDemand\":"+控制编码(D->场景后答首次来源->场景需求)
+                            +",\"featurePublished\":"+控制布尔(发布.关联.has_value())
+                            +",\"occurrence\":"+控制编码(发布.关联 ? 发布.关联->首状态节点 : std::nullopt)+"}";
+                    }
+                }
+            }
             说话者需求JSON="{\"record\":"+控制编码(需求.陈述节点)
                 +",\"sourceMessage\":"+控制编码(内容.来源消息)
                 +",\"sourceScene\":"+控制编码(内容.来源场景)
@@ -2422,7 +2449,8 @@ public:
                 +",\"featureConcept\":"+控制编码(依据.目标特征概念)
                 +",\"formalTargetType\":"+控制编码(内容.特征类型)
                 +",\"intent\":\"adjust\",\"targetValue\":"+目标值
-                +",\"internalTargetCopy\":"+目标副本JSON+",\"internalTargetCorrespondence\":"+目标对应JSON+"}";
+                +",\"internalTargetCopy\":"+目标副本JSON+",\"internalTargetCorrespondence\":"+目标对应JSON
+                +",\"sceneAnswerAdoptedDemand\":"+治理后答JSON+"}";
             const auto 自我=当前_.自我线程.读取快照();
             const auto& 取用=自我.最近场景需求取用;
             if(取用&&取用->原消息==消息->消息节点&&取用->场景需求==需求.陈述节点
@@ -6240,6 +6268,30 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
                     || 对应.信息->内部存在 != 内部E) return {S::同来源目标冲突};
                 return {S::已找到,对应.信息->完整保护};
             });
+        当前.需求服务.装配场景后答目标读口(
+            [&当前](const 新场景后答首次来源& 源,稳定编码 语言E,稳定编码 目标,稳定编码 类型)
+                -> 新同窗需求目标保护结果 {
+                using S=新需求操作状态;
+                using B=基础结构操作状态;
+                const auto 批=全局基础数据集.查询节点组完整结构({源.内部副本,源.场景});
+                if(批.状态==B::资源失败)return {S::资源失败};
+                if(批.状态!=B::已完成 || 批.节点组.size()!=2)return {S::前提已变化};
+                const auto 副本=当前.世界树.读取本窗目标描述副本(源.场景,语言E);
+                const auto 对应=当前.世界树.读取本窗目标对应(源.场景,语言E);
+                if(!副本 || 副本->存在!=源.内部副本 || !对应 || 对应->子水!=目标 || 对应->特征类型!=类型)
+                    return {S::同来源目标冲突};
+                const auto& 锚=副本->来源;
+                if(锚.需求消息!=源.原消息 || 锚.需求角色事实!=源.角色 || 锚.需求始!=源.原始
+                    || 锚.需求末!=源.原末 || 锚.目标始!=源.目标始 || 锚.目标末!=源.目标末)
+                    return {S::认知来源不合法};
+                auto 实际=定位语言图限定主体(对应->杯,类型,当前.世界事实.存在服务,当前.世界事实.特征概念服务,true);
+                if(实际.实际主体!=目标 || 实际.保护.empty())return {S::目标存在不合法};
+                for(const auto& 项:批.节点组) {
+                    if(!项.快照)return {S::前提已变化};
+                    实际.保护.push_back(*项.快照);
+                }
+                return {S::已找到,std::move(实际.保护)};
+            });
         // 通用本能“进入场景”（R94/R95）。
         当前.进入场景运行 = std::make_shared<进入场景本能运行服务>(当前.世界树, 当前.方法服务);
         {
@@ -7596,6 +7648,38 @@ void 验证同窗第六组目标选定(普通应用上下文& 当前, const 新�
                 << " demandMessage=" << 观察->原消息.值 << " sceneDemand=" << 观察->场景需求.值
                 << " role=" << 观察->角色事实.值 << " adopted=" << static_cast<bool>(已采用)
                 << " replay=" << (已采用 && 已采用==重读) << '\n';
+            if (已采用) {
+                const auto& 答=*观察->后答;
+                auto& 语言=当前.世界事实.语言服务;
+                const auto 条目组=语言.读取说话者场景需求(窗.本窗对端,窗.场景);
+                const auto 项=std::ranges::find(条目组,观察->场景需求,&新值陈述信息::陈述节点);
+                if(项==条目组.end() || !项->内容.目标存在)return;
+                const auto 副本=当前.世界树.读取本窗目标描述副本(窗.场景,*项->内容.目标存在);
+                if(!副本)return;
+                const auto& 锚=副本->来源;
+                const 新场景后答首次来源 源{观察->场景需求,观察->原消息,窗.场景,观察->角色事实,
+                    答.原提问,答.发送,答.所求项,答.答复,答.原消息,答.关系,答.单位,副本->存在,
+                    锚.需求始,锚.需求末,锚.目标始,锚.目标末};
+                auto 错=源;
+                ++错.目标始;
+                const auto 拒绝=当前.需求服务.建立或取得场景后答首次需求(错,已采用->子水,已采用->特征类型,语言);
+                using S=新需求操作状态;
+                const auto 采用=[&] {
+                    return 当前.需求服务.建立或取得场景后答首次需求(源,已采用->子水,已采用->特征类型,语言);
+                };
+                auto 首次=采用();
+                unsigned 重读次数=0;
+                while(首次.状态==S::前提已变化 && !首次.需求节点 && 重读次数<3 && !停止.stop_requested()) {
+                    ++重读次数;
+                    首次=采用();
+                }
+                const auto 同源=首次.状态==S::已建立 && 首次.需求节点 ? 采用() : 新需求建立结果{};
+                std::ofstream 采用记录("isolated-scene-answer-demand.txt",std::ios::trunc);
+                采用记录 << "wrongRejected=" << (拒绝.状态==S::认知来源不合法 && !拒绝.需求节点)
+                    << " first=" << (首次.状态==S::已建立) << " replay=" << (同源.状态==S::已复用 && 同源.需求节点==首次.需求节点)
+                    << " retries=" << 重读次数 << " wrongStatus=" << static_cast<int>(拒绝.状态) << " firstStatus=" << static_cast<int>(首次.状态)
+                    << " replayStatus=" << static_cast<int>(同源.状态) << " id=" << (首次.需求节点 ? 首次.需求节点->值 : 0) << '\n';
+            }
             return;
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
