@@ -2189,7 +2189,7 @@ std::int64_t 读I64(const std::string& s){
         using C = 特征概念规则状态;
         if(!p.准确整数 || p.区间下界 || p.区间上界)
             throw 推进中断{阶段::D映射受阻,"开放集合首次完整目标需要明确的准确整数"};
-        const auto 成员=d.特征概念.读取适用范围I64已知值成员状态(p.目标特征类型,lo,p.单位);
+        const auto 成员=读取首次需求开放单点准入(d.特征概念,p.目标特征类型,lo,p.单位);
         if(成员.状态==C::资源失败)资源();
         if(成员.状态==C::前提已变化)漂移();
         if(成员.状态==C::材料类型不相容)
@@ -2200,7 +2200,6 @@ std::int64_t 读I64(const std::string& s){
             throw 推进中断{阶段::D映射受阻,"开放集合尚未覆盖该准确值"};
         if(成员.成员状态==I64已知值成员状态::父域明确排除)
             throw 推进中断{阶段::D映射拒绝,"正式父域明确排除该准确值"};
-        if(!成员.依据)throw std::logic_error("open set target member has no adopted source");
     } else {
         const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
         if(!ranges)throw 推进中断{阶段::D映射受阻,"目标FT不是已支持的I64值域"};

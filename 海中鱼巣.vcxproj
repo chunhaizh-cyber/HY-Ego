@@ -41,7 +41,9 @@
     <ClInclude Include="海中鱼巣\业务\关系陈述.语言服务.h" />
     <ClCompile Include="海中鱼巣\业务\关系陈述.语言服务.cpp" />
     <ClInclude Include="海中鱼巣\业务\自检.服务权限登记.h" />
+    <ClInclude Include="海中鱼巣\业务\自检.限定I64需求目标.h" />
     <ClCompile Include="海中鱼巣\业务\自检.服务权限登记.cpp" />
+    <ClCompile Include="海中鱼巣\业务\自检.限定I64需求目标.cpp" />
     <ClInclude Include="海中鱼巣\业务\自检.关系概念出站.h" />
     <ClCompile Include="海中鱼巣\业务\自检.关系概念出站.cpp" />
     <ClInclude Include="海中鱼巣\业务\字段询问.本能运行服务.h" />

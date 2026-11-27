@@ -36,6 +36,7 @@ struct 启动选项 {
     bool 验证服务权限登记 = false;
     bool 验证关系概念出站 = false;
     bool 验证同窗需求主体 = false;
+    bool 验证限定I64需求目标 = false;
 };
 
 struct 启动选项解析结果 {

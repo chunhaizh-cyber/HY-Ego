@@ -110,6 +110,17 @@ bool 比较关系适用纯判据(const 二次特征概念信息& 比较,稳定�
 }
 }
 
+I64已知值成员读取结果 读取首次需求开放单点准入(
+    const 概念_特征类& 概念, 稳定编码 类型, std::optional<std::int64_t> 准确整数,
+    std::optional<稳定编码> 单位) noexcept {
+    using M=特征概念规则状态;
+    if(!准确整数)return {M::材料类型不相容};
+    auto 结果=概念.读取适用范围I64已知值成员状态(类型,准确整数,单位);
+    if(结果.状态==M::已完成 && 结果.成员状态==I64已知值成员状态::已收录
+        && (!结果.依据 || 结果.保护组.empty()))return {M::内部不一致};
+    return 结果;
+}
+
 新需求目标定义核验结果 核验需求目标定义保护(const 新需求目标定义& t,
     const 概念_特征类& fc,const 概念_二次特征类& rc) {
     using S=新需求目标定义核验状态;
@@ -7119,7 +7130,7 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
                 using M=特征概念规则状态;
                 if(!p.准确整数 || p.区间下界 || p.区间上界 || interval.下界!=interval.上界
                     || *p.准确整数!=std::to_string(interval.下界))return {S::目标值域不合法,{}};
-                const auto 成员=特征概念服务_.读取适用范围I64已知值成员状态(
+                const auto 成员=读取首次需求开放单点准入(特征概念服务_,
                     p.目标特征类型,interval.下界,p.单位);
                 if(成员.状态==M::资源失败)return {S::资源失败,{}};
                 if(成员.状态==M::前提已变化)return {S::前提已变化,{}};
@@ -7128,8 +7139,6 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
                     throw std::logic_error("received demand open set membership is not readable");
                 if(成员.成员状态==I64已知值成员状态::未覆盖)return {S::目标内容依赖未就绪,{}};
                 if(成员.成员状态==I64已知值成员状态::父域明确排除)return {S::目标值域不合法,{}};
-                if(!成员.依据 || 成员.保护组.empty())
-                    throw std::logic_error("received demand open set member has no adopted source protection");
                 if(!并需求保护(protect,成员.保护组))return {S::前提已变化,{}};
             } else {
                 const auto range=特征概念服务_.比较值域(ft.材料类型,domain.值域,ft.值域);
