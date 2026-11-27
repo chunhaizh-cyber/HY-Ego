@@ -8,7 +8,7 @@
 #include <string_view>
 
 #include "../业务/新_世界树类.h"
-namespace 海中鱼巣 { class 新_外设世界树类; }
+namespace 海中鱼巣 { class 新_外设世界树类; class 服务对象本能运行服务; }
 #include "新_自我工作线程类.h"
 #include "新_学习线程类.h"
 #include "新_任务管理线程类.h"
@@ -400,9 +400,9 @@ public:
     新自我线程操作结果 绑定任务管理(新_任务管理线程类& 任务管理) noexcept;
     新自我线程操作结果 绑定接收需求认知(接收需求认知服务&) noexcept;
     void 通知接收认知变化() noexcept;
-    // 启动前绑定；外设world须比self存活更久。self启动后及每次通知后补建现实交互场景（6120 §11.1）。
+    // 启动前绑定；两服务保活至自我归并。明确确认后由本能按窗取材。
     新自我线程操作结果 绑定外设世界树(
-        const 新_外设世界树类& 外设世界, 稳定编码 外设场景标识类型,
+        const 新_外设世界树类& 外设世界, const 服务对象本能运行服务& 交互取材, 稳定编码 外设场景标识类型,
         稳定编码 外设存在标识类型) noexcept;
     void 通知外设交互场景变化() noexcept;
     void 通知同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept;
