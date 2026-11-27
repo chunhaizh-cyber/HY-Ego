@@ -3844,6 +3844,38 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     if (!std::ranges::any_of(指代材料, [&](const auto& 项) { return 项.出现 == 出现.出现; }))
                         指代材料.push_back(std::move(出现));
                 }
+                const auto 是自述 = [](const auto& 句) {
+                    return 句.静态结构 && 句.静态结构->操作 == 新语言知识含义操作::身份自述;
+                };
+                const auto 自述数 = std::ranges::count_if(解释组, 是自述);
+                if (自述数 == 1 && 可读取无上下文外层共指(固定来源.固定UTF8原文)) {
+                    using P = 新语言知识参数角色;
+                    using C = 新语言知识角色类别;
+                    using S场景 = 新来源子场景状态;
+                    auto& 句 = *std::ranges::find_if(解释组, 是自述);
+                    auto& 结构 = *句.静态结构;
+                    if (结构.角色组.size() != 2)
+                        throw std::logic_error("identity claim lacks its two language roles");
+                    for (auto& 项 : 结构.角色组) {
+                        if (项.值 || (项.参数 != P::主体 && 项.参数 != P::目标存在))
+                            throw std::logic_error("identity claim language role already bound or invalid");
+                        const auto 结果 = d.语言世界.建立或取得接收局部对象(固定来源,
+                            项.起始标量, 项.结束标量, 结构.所用构式);
+                        if (结果.状态 == S场景::资源失败) 资源();
+                        if (结果.状态 == S场景::前提已变化 || 结果.状态 == S场景::未建立) 漂移();
+                        if ((结果.状态 != S场景::已建立 && 结果.状态 != S场景::已存在)
+                            || !结果.信息 || 结果.信息->场景 != out.S || 结果.信息->存在 == speaker)
+                            throw std::logic_error("identity claim language existence unavailable");
+                        项.值 = 语言图引用值{C::存在, 结果.信息->存在, {}, {}};
+                    }
+                    句.状态 = 语言场景基础输入状态::已形成且读回;
+                    句.图状态 = 基础语言输入状态::已形成唯一含义;
+                    句.缺口组.clear();
+                } else if (自述数 != 0) {
+                    for (auto& 句 : 解释组)
+                        if (是自述(句))
+                            句.静态结构.reset();
+                }
                 auto 保存 = d.语言.保存接收语言解释及指代关系(k,
                     {*out.S,固定来源.节点,context.语言,k.原文起点,k.原文终点,解释组}, 指代材料,
                     speaker,d.语言世界,d.外设);
@@ -3856,6 +3888,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                     && 正式句段.back().静态结构->操作 == 新语言知识含义操作::任务当前等待描述) {
                     // 保存时副本补了同文未决任务，控制读取须用成功保存的同一份材料。
                     out.句段解释 = 正式句段;
+                }
+                if (std::ranges::any_of(正式句段, 是自述)) {
+                    out.句段解释 = 正式句段;
+                    throw 推进中断{阶段::已保存场景信息, "已保存独立语言场景身份自述关系及两端存在"};
                 }
                 const auto 同窗需求目标 = [&](const 接收语言静态结构& 结构) {
                     using P=新语言知识参数角色;
