@@ -2100,6 +2100,19 @@ public:
                         + ",\"end\":" + 控制计数(特征->来源.结束标量)
                         + ",\"scope\":[],\"currentValueUnknown\":" + 控制布尔(特征->当前值未知) + "}";
                 }
+                std::string 局部组成JSON = "null";
+                if (item.局部组成子) {
+                    const auto 组成 = 当前_.自然语言世界树.读取接收局部组成(*item.局部组成子);
+                    if (组成) 局部组成JSON = "{\"scene\":" + 控制编码(组成->场景)
+                        + ",\"whole\":" + 控制编码(组成->父) + ",\"part\":" + 控制编码(组成->子)
+                        + ",\"featureType\":" + 控制编码(组成->类型) + ",\"feature\":" + 控制编码(组成->特征)
+                        + ",\"value\":" + 控制编码(组成->父) + ",\"concept\":" + 控制编码(组成->专属概念)
+                        + ",\"state\":" + 控制编码(组成->状态) + ",\"sourceMessage\":" + 控制编码(组成->来源.消息)
+                        + ",\"definition\":" + 控制编码(组成->来源.解释定义)
+                        + ",\"start\":" + 控制计数(组成->来源.起始标量)
+                        + ",\"end\":" + 控制计数(组成->来源.结束标量)
+                        + ",\"adoptedTime\":" + 控制计数(static_cast<std::uint64_t>(组成->采用时间.纳秒)) + "}";
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"definitionNode\":" + (已保存 ? 控制编码(正式.信息->解释定义节点) : "null")
@@ -2111,6 +2124,7 @@ public:
                     + ",\"interactionReferences\":" + 交互指代JSON
                     + ",\"languageReferences\":" + 语言指代JSON
                     + ",\"localObjects\":" + 局部对象JSON + ",\"localNamedFeature\":" + 局部具名特征JSON
+                    + ",\"localComposition\":" + 局部组成JSON
                     + ",\"sceneDirections\":" + 场景方向JSON + "}";
             }
         }

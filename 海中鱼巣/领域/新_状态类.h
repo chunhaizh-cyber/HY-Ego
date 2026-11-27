@@ -182,6 +182,9 @@ public:
 private:
     std::optional<新状态信息> 读取词条前状态(
         稳定编码 词条, 稳定编码 特征, const 新特征准确值& 旧值) const;
+    std::optional<基础组内节点引用> 准备局部组成首状态(基础节点组追加请求&,
+        稳定编码 子, 基础组内节点引用 特征, 稳定编码 类型,
+        稳定编码 父, const 新状态强时间&) const;
     friend class 新_存在类;
     friend class 新_动态类;
     friend class 新_任务类;

@@ -991,6 +991,69 @@ bool 接收关系语义一致(const 接收语言关系候选& 原, const 接收�
         });
 }
 
+bool 处理局部组成材料(认知依赖& d, 接收需求认知观察& out,
+    const 新正式消息角色材料& 角色, const 新接收语言解释信息& 解释, std::stop_token stop) {
+    using P = 新语言知识参数角色;
+    using A = 基础节点组追加状态;
+    const auto& 内容 = 解释.内容;
+    if (!角色.事实 || !角色.内部交互场景 || !角色.说话者 || !角色.受话者
+        || 内容.原文起点 != 0 || 标量数(角色.消息.UTF8正文) != 内容.原文终点
+        || !可读取无上下文外层共指(角色.消息.UTF8正文)) return false;
+    const 接收语言句段解释* 来源句 = nullptr;
+    const 接收语言关系候选* 关系 = nullptr;
+    for (const auto& 句 : 内容.句段组) {
+        const auto* 候选 = 读取可成文关系(句);
+        if (!候选 || 候选->种子键 != "existence.composition") continue;
+        if (关系) return false;
+        关系 = 候选;
+        来源句 = &句;
+    }
+    if (!关系 || 关系->端点组.size() != 2 || 关系->源角色键 != "整体" || 关系->目标角色键 != "部分")
+        return false;
+    const auto 整体 = std::ranges::find(关系->端点组, P::整体, &接收语言关系端点::参数);
+    const auto 部分 = std::ranges::find(关系->端点组, P::部分, &接收语言关系端点::参数);
+    if (整体 == 关系->端点组.end() || 部分 == 关系->端点组.end()
+        || 整体->角色键 != "整体" || 部分->角色键 != "部分"
+        || 整体->指称->节点 == 部分->指称->节点) return false;
+    const auto M = 角色.消息.消息节点;
+    std::map<稳定编码, 稳定编码> 声明消息;
+    auto 称名 = 读取同窗已声明局部称名(d, 角色, stop, &声明消息);
+    auto 同文称名 = 读取同源局部称名(d, {M, 内容.原文起点, 内容.原文终点, {}}, stop, 来源句->起始标量);
+    for (const auto& 名 : 同文称名) {
+        称名.push_back(名);
+        声明消息.emplace(名.存在节点, M);
+    }
+    const auto 原文 = 语言场景转换内部::解码语言场景原文(角色.消息.UTF8正文);
+    if (!原文) throw std::logic_error("local composition source is not UTF-8");
+    const auto 验端点 = [&](const 接收语言关系端点& 端) {
+        if (端.起始标量 < 来源句->起始标量 || 端.结束标量 > 来源句->结束标量
+            || !声明消息.contains(端.指称->节点)) return false;
+        const auto 词面 = 语言场景转换内部::读取语言场景原文范围(*原文,
+            {static_cast<std::size_t>(端.起始标量), static_cast<std::size_t>(端.结束标量)});
+        return !词面.empty() && std::ranges::count(称名, 词面, &语言场景局部称名::词面) == 1
+            && std::ranges::any_of(称名, [&](const auto& 项) {
+                return 项.词面 == 词面 && 项.存在节点 == 端.指称->节点;
+            });
+    };
+    if (!验端点(*整体) || !验端点(*部分)) return false;
+    const auto 父 = 整体->指称->节点;
+    const auto 子 = 部分->指称->节点;
+    if (声明消息.at(父) != 声明消息.at(子)) return false;
+    检查认知停止(stop);
+    const auto 时间 = UTC时钟适配器{}.读取当前UTC时间证据_v1({});
+    if (!时间.成功()) throw std::logic_error("local composition lacks adoption UTC");
+    const auto 已写 = d.语言世界.采用接收局部组成(声明消息.at(子), 父, 子,
+        {M, 解释.解释定义节点, 来源句->起始标量, 来源句->结束标量},
+        角色.证据预期, {新状态时间语义::实例绝对UTC, 时间.证据->UTC纳秒});
+    if (已写.状态 == A::入口拒绝) return false;
+    if (已写.状态 == A::资源失败) 资源();
+    if (已写.状态 == A::预期不符 || 已写.状态 == A::节点不存在 || 已写.状态 == A::引用不存在) 漂移();
+    if (已写.状态 != A::已完成 || !已写.信息 || 已写.信息->子 != 子 || 已写.信息->父 != 父)
+        throw std::logic_error("local composition atomic publication failed");
+    out.局部组成子 = 子;
+    return true;
+}
+
 void 追加正式关系成文观察(认知依赖& d, const 新接收语言解释信息& 正式,
     const 新接收认知来源键& 来源, const 语言图交互上下文& 交互,
     接收部分成文观察& 观察, std::stop_token stop) {
@@ -1004,7 +1067,20 @@ void 追加正式关系成文观察(认知依赖& d, const 新接收语言解释
         const auto* 原=读取可成文关系(句);
         if (!原) continue;
         auto& 输出=观察.句段组.emplace_back(句.起始标量,句.结束标量);
-        const auto 称名=读取同源局部称名(d,来源,stop);
+        auto 称名=读取同源局部称名(d,来源,stop);
+        if (原->种子键 == "existence.composition") {
+            using R = 新接收指代调用状态;
+            const auto 角色 = d.语言.读取正式消息角色(来源.接收消息节点, 新外设消息方向::接收);
+            if (角色.状态 == R::资源失败) 资源();
+            if (角色.状态 == R::前提已变化) 漂移();
+            if (角色.状态 == R::已完成 && 角色.信息) {
+                auto 前文 = 读取同窗已声明局部称名(d, *角色.信息, stop);
+                for (const auto& 名 : 前文) {
+                    const auto 相同 = [&](const auto& 项) { return 项.存在节点 == 名.存在节点 && 项.词面 == 名.词面; };
+                    if (std::ranges::none_of(称名, 相同)) 称名.push_back(名);
+                }
+            }
+        }
         const auto 成文=d.关系陈述->生成接收关系陈述(正式.内容.语言节点,*原,交互,称名);
         if (成文.状态==B::读取漂移 || 成文.状态==B::引用不可读) 漂移();
         if (成文.状态==B::工程未完成 || 成文.状态==B::额度不足) 资源();
@@ -1022,7 +1098,7 @@ void 追加正式关系成文观察(认知依赖& d, const 新接收语言解释
         if (当前.状态!=L::已完成 || !当前.信息)
             throw std::logic_error("received relation source unavailable");
         if (当前.信息->记录节点!=正式.记录节点 || 当前.信息->内容!=正式.内容) 漂移();
-        const auto 回读称名=读取同源局部称名(d,来源,stop);
+        const auto& 回读称名=称名;
         接收专名读取器 专名(d,交互.现实范围根,stop);
         语言基础统一输入请求 回读{正式.内容.语言节点,输出.UTF8正文,{},0,0,0,0,0,
             &专名,语言解释读取模式::本次正式有限集完整读取};
@@ -3609,6 +3685,10 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
                     throw std::logic_error("received typed language scene material was not published");
+                if (处理局部组成材料(d, out, *角色.信息, *保存.信息, stop)) {
+                    out.部分成文 = 从接收部分含义成文并独立回读(d, *保存.信息, k, req.交互上下文, stop, 步骤);
+                    throw 推进中断{阶段::已保存场景信息, "已发表并读回同一直接场景的局部组成"};
+                }
                 if (处理局部具名特征材料(d, out, *角色.信息, *保存.信息, stop))
                     throw 推进中断{阶段::已保存场景信息, "已保存有来源的局部空特征，当前值未知"};
                 if (!保存.信息->篇章采用) {
