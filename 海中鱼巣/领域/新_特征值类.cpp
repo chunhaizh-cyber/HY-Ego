@@ -777,6 +777,41 @@ std::vector<稳定编码> 新_特征值类::查询特征值(
     return 实现_->查询特征值(物理类型, 材料);
 }
 
+新服务权限值结果 新_特征值类::保存或取得服务权限值(std::uint64_t 数值) {
+    using S = 新服务权限值状态;
+    try {
+        const auto 节点 = 保存或取得特征值(
+            材料物理类型::U64数组, std::vector<std::uint64_t>{数值});
+        if (!有效(节点)) return {S::保存失败};
+        auto 读回 = 读取服务权限值(节点);
+        if (读回.状态 == S::已读取 && 读回.数值 != 数值) return {S::结构不一致};
+        return 读回;
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    }
+}
+
+新服务权限值结果 新_特征值类::读取服务权限值(稳定编码 节点) const {
+    using S = 新服务权限值状态;
+    using R = 新特征值保护读取状态;
+    auto 保护 = 读取特征值保护(节点);
+    switch (保护.状态) {
+    case R::资源失败: return {S::资源失败};
+    case R::结构不一致: return {S::结构不一致};
+    case R::非本类节点: return {S::材料形状不相容};
+    case R::输入拒绝:
+    case R::未初始化:
+    case R::节点不存在: return {S::节点不可读};
+    case R::已读取: break;
+    default: return {S::结构不一致};
+    }
+    if (!保护.信息 || 保护.信息->节点 != 节点) return {S::结构不一致};
+    const auto* 项组 = std::get_if<std::vector<std::uint64_t>>(&保护.信息->材料);
+    if (保护.信息->物理类型 != 材料物理类型::U64数组 || !项组 || 项组->size() != 1)
+        return {S::材料形状不相容};
+    return {S::已读取, 节点, 项组->front(), std::move(保护.窄预期)};
+}
+
 bool 新_特征值类::是特征值节点(稳定编码 节点) const noexcept {
     return 实现_->是特征值节点(节点);
 }
