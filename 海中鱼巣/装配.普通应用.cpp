@@ -2236,10 +2236,30 @@ public:
         if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) return {S::待采集};
         if (正式.状态 != L::已完成 || !正式.信息) return {};
 
+        const auto 收件数量 = 外设.读取接收数量变化(来源, 消息->消息节点);
+        if (收件数量.状态 != F::已完成 && 收件数量.状态 != F::未找到) return {};
+        std::string 数量变化 = "null";
+        if (收件数量.变化) {
+            const auto& 变化 = *收件数量.变化;
+            const auto 状态JSON = [](const 新外设接收数量状态& 状态) {
+                return "{\"id\":" + 控制编码(状态.节点)
+                    + ",\"count\":" + 控制计数(static_cast<std::uint64_t>(状态.数量))
+                    + ",\"utcNs\":" + 控制计数(static_cast<std::uint64_t>(状态.UTC纳秒)) + "}";
+            };
+            数量变化 = "{\"scene\":" + 控制编码(变化.场景)
+                + ",\"window\":" + 控制编码(变化.窗口)
+                + ",\"feature\":" + 控制编码(变化.特征)
+                + ",\"dynamic\":" + 控制编码(变化.动态)
+                + ",\"receiptUtcNs\":" + 控制计数(static_cast<std::uint64_t>(消息->正式记录时间.纳秒))
+                + ",\"before\":" + 状态JSON(变化.前)
+                + ",\"after\":" + 状态JSON(变化.后) + "}";
+        }
+
         const auto& 信息 = *正式.信息;
         const auto& 采用 = 信息.篇章采用;
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
+            + ",\"receiptCountChange\":" + 数量变化
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
             + ",\"meaning\":" + 接收候选含义JSON(信息.内容.含义候选)

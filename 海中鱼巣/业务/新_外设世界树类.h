@@ -67,6 +67,18 @@ struct 新外设接收记录完整结果 final {
     新外设事实状态 状态 = 新外设事实状态::未初始化;
     std::vector<新外设消息信息> 消息组;
 };
+struct 新外设接收数量状态 final {
+    稳定编码 节点;
+    std::int64_t 数量, UTC纳秒;
+};
+struct 新外设接收数量变化 final {
+    稳定编码 场景, 窗口, 特征, 动态;
+    新外设接收数量状态 前, 后;
+};
+struct 新外设接收数量变化读取结果 final {
+    新外设事实状态 状态;
+    std::optional<新外设接收数量变化> 变化{};
+};
 struct 新外设消息保护结果 final {
     新外设事实状态 状态 = 新外设事实状态::未初始化;
     std::optional<新外设消息信息> 消息;
@@ -130,6 +142,9 @@ public:
     std::optional<新外设消息信息> 读取消息(稳定编码 消息节点) const noexcept;
     新外设接收记录完整结果 读取场景当前及指定接收记录(
         std::span<const std::string> 活跃会话, std::span<const 稳定编码> 续办消息) const noexcept;
+    // 已核验消息来源的窗口接收数量变化。时间只描述实际接收，不描述正文。
+    新外设接收数量变化读取结果 读取接收数量变化(
+        const 新外设消息来源键&, 稳定编码 消息节点) const noexcept;
     新外设消息保护结果 读取消息保护(稳定编码 消息节点) const noexcept;
     新分界消息读取结果 读取分界消息正文(稳定编码 消息节点) const override;
     std::optional<新外设消息信息> 查找消息(const 新外设消息来源键&) const noexcept;
