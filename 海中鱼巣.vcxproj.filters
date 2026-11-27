@@ -664,6 +664,8 @@
     <ClCompile Include="海中鱼巣\业务\初始化.关系概念.cpp"><Filter>海中鱼巣\业务</Filter></ClCompile>
     <ClInclude Include="海中鱼巣\业务\关系陈述.语言服务.h"><Filter>海中鱼巣\业务</Filter></ClInclude>
     <ClCompile Include="海中鱼巣\业务\关系陈述.语言服务.cpp"><Filter>海中鱼巣\业务</Filter></ClCompile>
+    <ClInclude Include="海中鱼巣\业务\自检.服务权限登记.h"><Filter>海中鱼巣\业务</Filter></ClInclude>
+    <ClCompile Include="海中鱼巣\业务\自检.服务权限登记.cpp"><Filter>海中鱼巣\业务</Filter></ClCompile>
     <ClInclude Include="海中鱼巣\业务\自检.关系概念出站.h"><Filter>海中鱼巣\业务</Filter></ClInclude>
     <ClCompile Include="海中鱼巣\业务\自检.关系概念出站.cpp"><Filter>海中鱼巣\业务</Filter></ClCompile>
   </ItemGroup>

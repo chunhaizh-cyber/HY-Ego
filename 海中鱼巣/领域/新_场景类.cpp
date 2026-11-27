@@ -865,6 +865,14 @@ struct 相对坐标项形成结果 final {
     }
 }
 
+void 新_场景类::合并服务权限状态挂接(const 新场景状态参与绑定& 绑定,
+    基础节点组追加请求& 请求, 基础组内节点引用 状态, bool 同服务场景) const {
+    if (绑定.owner_ != this || 状态.索引 >= 请求.新节点组.size())
+        throw std::logic_error("service permission state binding mismatch");
+    if (!同服务场景) 请求.预期联合节点组.push_back(绑定.本轮宿主_);
+    请求.追加字段组.push_back({绑定.场景_, 绑定.状态列表键_, 状态});
+}
+
 新场景状态封存结果 新_场景类::封存场景状态挂接(
     const 新场景状态参与绑定& 绑定, 新特征状态参与材料 参与) const {
     // 纯构造：F准备资格仍有效，禁止进入场景/状态getter及其运行锁。

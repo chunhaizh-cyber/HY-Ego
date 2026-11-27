@@ -54,8 +54,14 @@ namespace 海中鱼巣 {
                 网页服务对象参数索引 = 当前参数索引;
                 continue;
             }
+            if (参数 == "--verify-service-permission-registration") {
+                if (选项.验证服务权限登记 || 选项.验证关系概念出站)
+                    return {启动选项解析状态::重复模式参数, {}, 当前参数索引};
+                选项.验证服务权限登记 = true;
+                continue;
+            }
             if (参数 == "--verify-relation-concept-nl") {
-                if (选项.验证关系概念出站) {
+                if (选项.验证关系概念出站 || 选项.验证服务权限登记) {
                     return {启动选项解析状态::重复模式参数, {}, 当前参数索引};
                 }
                 选项.验证关系概念出站 = true;
