@@ -6,6 +6,7 @@
 #include "本能词条归类.运行接口.h"
 #include "任务结算.规则.h"
 #include "新_方法类.h"
+#include "服务对象.材料合同.h"
 #include "新_场景类.h"
 #include "新_存在类.h"
 #include "新_词类.h"
@@ -24069,6 +24070,39 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                     return n && n <= 方法->参数规格组.size() && 方法->参数规格组[n - 1].有序规格
                         ? &*方法->参数规格组[n - 1].有序规格 : nullptr;
                 };
+                const bool 获取本窗服务对象 = 方法->本能函数登记名 == 新本能函数登记名_获取服务对象;
+                std::optional<新临时交互场景信息> 本窗;
+                if (获取本窗服务对象) {
+                    const auto* 参与规格 = 规格于(4);
+                    const auto* 交互规格 = 规格于(6);
+                    if (!参与规格 || !交互规格) throw std::logic_error("service acquisition role specifications missing");
+                    const auto 自我材料 = 对象表.find(自我节点);
+                    if (自我材料 == 对象表.end()) throw std::logic_error("current self missing from service scope");
+                    std::optional<稳定编码> 当前交互者;
+                    for (const auto f : 自我材料->second.特征组) {
+                        const auto F = 特征服务_.获取特征(f);
+                        if (!F) throw std::logic_error("self service interactor feature unreadable");
+                        if (!特征概念兼容(F->特征概念节点, 交互规格->范围概念节点) || !F->当前值) continue;
+                        const auto* 值 = std::get_if<稳定编码>(&*F->当前值);
+                        if (!值 || 当前交互者) throw std::logic_error("invalid current self interactor");
+                        当前交互者 = *值;
+                    }
+                    for (const auto& 项 : 场景服务_.读取本树正式临时交互场景(参与规格->范围概念节点, &特征服务_)) {
+                        if (项.自我 != 自我节点 || 项.父场景 != *实参场景
+                            || (当前交互者 && *当前交互者 != 项.本窗对端)) continue;
+                        if (本窗) { 本窗.reset(); break; }
+                        本窗 = 项;
+                    }
+                    if (本窗 && 本窗->参与交互者特征) {
+                        for (const auto 节点 : {本窗->场景, 本窗->本窗对端}) {
+                            const auto 材料 = 读取对象(节点);
+                            if (!材料) throw std::logic_error("verified current window parameter is unreadable");
+                            对象表.insert_or_assign(节点, *材料);
+                        }
+                    } else {
+                        本窗.reset();
+                    }
+                }
                 const auto 固定节点 = [&](std::uint32_t n) -> std::optional<稳定编码> {
                     if (固定采用) {
                         for (const auto& b : 固定采用->参数绑定组)
@@ -24145,6 +24179,21 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                     for (const auto& [n, 对象] : 对象表) {
                         if(对象.信息类型!=新方法参数信息类型::存在)continue;
                         if (固定 && n != *固定) continue;
+                        if (获取本窗服务对象 && (有序.序号 == 3 || 有序.序号 == 5)) {
+                            if (!本窗 || n != (有序.序号 == 3 ? 本窗->场景 : 本窗->本窗对端)) continue;
+                            if (有序.序号 == 5) {
+                                const auto 人类 = 存在服务_.比较存在与概念信息(n, 有序.范围概念节点);
+                                if (人类.状态 != 特征概念规则状态::已完成
+                                    && 人类.状态 != 特征概念规则状态::前提已变化)
+                                    throw std::logic_error("service human recognition material unreadable");
+                                if (!具有正式人类类型证据(人类)) {
+                                    项.概念未知 = 人类.归属 != 特征成员概念归属::不属于;
+                                    continue;
+                                }
+                            }
+                        }
+                        if (本窗 && 有序.序号 != 3 && 有序.序号 != 5
+                            && (n == 本窗->场景 || n == 本窗->本窗对端)) continue;
                         bool 缺少必需类型 = false;
                         const auto 匹配 = 核验参数类型归属(存在服务_, 存在概念服务_, n, 有序.范围概念节点, &缺少必需类型);
                         const bool 具备类型 = std::all_of(有序.必需特征类型组.begin(), 有序.必需特征类型组.end(),
@@ -24288,6 +24337,9 @@ bool 新_任务类::核同本次场景核验批(const 新任务本次场景核�
                     }
                 }
                 if (!选定) 选定 = 排序配对.empty() ? 候选集 : 收窄(*排序配对.front().second);
+                // 已核实的本窗场景与参与特征可以提供筹办材料；未知的人类资格仍阻断完整绑定。
+                if (获取本窗服务对象 && 本窗 && !候选集[3].empty())
+                    (*选定)[3] = 候选集[3];
                 // 4) 存在位置绑定：取稳定编码最小者
                 for (auto& [位置, 集] : *选定) {
                     auto& 项 = 有序预解[位置];
