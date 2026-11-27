@@ -65,6 +65,16 @@ struct 新临时交互场景信息 final {
     稳定编码 场景, 父场景, 窗口副本, 自我, 本窗对端;
     std::optional<稳定编码> 参与交互者特征;
 };
+struct 新本窗目标描述来源 final {
+    稳定编码 语言存在, 声明消息, 需求消息, 需求角色事实;
+    std::uint64_t 声明始, 声明末, 需求始, 需求末, 目标始, 目标末;
+    std::string 描述;
+};
+struct 新本窗目标描述副本 final {
+    稳定编码 场景, 存在;
+    新本窗目标描述来源 来源;
+};
+
 struct 新临时交互场景结果 final {
     新场景范围成员读取状态 状态 = 新场景范围成员读取状态::起点不可读;
     std::optional<新临时交互场景信息> 信息;
@@ -644,6 +654,10 @@ public:
         std::uint64_t 当前时刻) const noexcept;
 
 private:
+    friend class 新_世界树类;
+    std::optional<新本窗目标描述副本> 读取本窗目标描述副本(稳定编码, 稳定编码) const;
+    std::optional<新本窗目标描述副本> 采用本窗目标描述(
+        稳定编码, const 新本窗目标描述来源&, 基础只读预期, std::vector<基础联合节点快照>);
     bool 场景属于临时交互范围(稳定编码 场景) const;
     新指定场景范围读取结果 读取指定场景范围实现(
         稳定编码, std::vector<基础联合节点快照>*) const noexcept;
