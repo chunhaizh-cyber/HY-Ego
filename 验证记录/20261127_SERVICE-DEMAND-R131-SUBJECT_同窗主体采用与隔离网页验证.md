@@ -247,3 +247,9 @@ Release x64 使用 `release-20261128-035956`，262 项实际输入，SHA-256 `22
 - HTTP 关闭 200，同 PID 30932 自然退出 0。主要原件为 `whole-demand-native-outbound.json`、`whole-demand-before-confirmation.json`、`whole-demand-explicit-reply-latest.json`、`whole-demand-confirmation-published.json`、`whole-demand-independent-world-after.json`、`isolated-whole-demand-confirmation-exchange.txt`、`close.json` 和 `exit.json`。驱动第二次定向读回遇 202 待采集后中止，留下原件。已获得一次成功独立 HTTP 读回和所有者独立读回，第二次 HTTP 读取及错窗仍随后补证。
 
 普通恢复环境的条件未开放，本次正向发生来自具名隔离应用的实际正式网页。新成文读取只验实际出站结构；以同句另作入站的嵌套图字段仍无本轮实证。没有重测其余原组。
+同构建补证由 `8204ade89` 的 262 项正式输入核同。后续运行均使用同一 SHA-256。
+
+- `case06-hosted-v021b-20261128-051036` 再次走通真实 Q43133、O43192、Send43361，答复 M44334 和关系 44559 写回 D42144／V42227。发表 F44636、S44726，同源发布重投复用 S44726。两次独立原消息定向 HTTP 200 均读回同一 D、V、确认、期望值和 S。PID 14224 正常关闭、自然退出 0。该运行第二页脚本未取得错窗传输回执，保留原件。
+- `case06-hosted-v021b-20261128-051350` 在定向原消息读回前遇到网页传输通用工程错误、TCP 重置。原件为 `verified-transport-engineering-fault.txt`，应用异常窗口已单独关闭，该次无正常 HTTP 关闭证据，也没有确认或发布证据。
+- `case06-hosted-v021b-20261128-051526` 读回真实 Q43026、O43085、Send43287，答复 M44351 和关系 44576，写回原内 D42037／V42120，重投复用，错误版本拒绝。另一个真实 Chrome 页面已正常确认，使用原窗 O43085 发错窗回复。正式传输返回 HTTP 422「请选择当前对话中已显示的消息」。原件 `independent-cross-window-transport.json` 含两个不同的实际对话标识。通过同一正式入口关闭，HTTP 200，同 PID 15952 自然退出 0。
+- 上一条错窗运行还观察到独立发布异常分支。F44653 已以 D42037 为当前值，首次发布返回「前提已变化」8，重投返回「已发布但当前读回变化」11，未取得可独立读取的发生 S。这不归入完整 F/S 成功。日志不足以确认返回点是在联合写入后读回、首态关联，还是发生关联追加。现有发布器对已完成来源可复用，当前例首先要检查已经形成的动作、状态和独立关联，保留实际事实，不重复派发新动作或凭 F 补造 S。
