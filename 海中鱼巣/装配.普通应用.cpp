@@ -8,6 +8,7 @@
 #include "业务/接收需求认知.服务.h"
 #include "业务/解释.基础语言.h"
 #include "业务/转换.语言场景基础.h"
+#include "业务/转换.语言场景共同.h"
 #include "领域/语言含义图.数据.h"
 #include "领域/语言分界.数据.h"
 #include "领域/数据服务.词典材料类.h"
@@ -6118,6 +6119,38 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
                 return {S::已找到,认知->已知存在,自我,
                     新同窗需求主体来源{认知->采用节点,认知->原消息},std::move(保护)};
             });
+        当前.需求服务.装配同窗需求目标读口(
+            [&当前](稳定编码 请求M, 稳定编码 语言E, 稳定编码 内部E, const 新同窗需求主体来源& 锚)
+                -> 新同窗需求目标保护结果 {
+                using S = 新需求操作状态;
+                using R = 新接收指代调用状态;
+                using L = 新语言分界工程状态;
+                if (请求M == 锚.认知消息 || 语言E == 内部E) return {};
+                auto& 语言 = 当前.世界事实.语言服务;
+                const auto 请求 = 语言.读取正式消息角色(请求M,新外设消息方向::接收);
+                const auto 自述 = 语言.读取正式消息角色(锚.认知消息,新外设消息方向::接收);
+                if (请求.状态 == R::资源失败 || 自述.状态 == R::资源失败) return {S::资源失败};
+                if (请求.状态 == R::前提已变化 || 自述.状态 == R::前提已变化) return {S::前提已变化};
+                if (请求.状态 != R::已完成 || 自述.状态 != R::已完成 || !请求.信息 || !自述.信息) return {};
+                const auto& 甲 = *请求.信息;
+                const auto& 乙 = *自述.信息;
+                if (!甲.事实 || !乙.事实 || !甲.内部交互场景 || !甲.说话者 || !甲.受话者
+                    || 甲.内部交互场景 != 乙.内部交互场景 || 甲.说话者 != 乙.说话者 || 甲.受话者 != 乙.受话者
+                    || 甲.消息.窗口节点 != 乙.消息.窗口节点 || 甲.消息.场景节点 != 乙.消息.场景节点
+                    || 甲.消息.来源.公开宿主会话 != 乙.消息.来源.公开宿主会话
+                    || 甲.消息.来源.对话框标识 != 乙.消息.来源.对话框标识
+                    || 甲.消息.正式记录时间.纳秒 <= 乙.消息.正式记录时间.纳秒) return {};
+                const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(乙.消息.UTF8正文,
+                    [](unsigned char 字节) { return (字节 & 0xc0) != 0x80; }));
+                const auto 对应 = 当前.接收认知.读取本窗自述对象对应(
+                    {锚.认知消息,0,长度,{}},*甲.内部交互场景,当前.世界树);
+                if (对应.状态 == L::资源失败) return {S::资源失败};
+                if (对应.状态 == L::前提已变化) return {S::前提已变化};
+                if (对应.状态 != L::已完成 || !对应.信息 || 对应.信息->认知采用 != 锚.认知采用
+                    || 对应.信息->原角色 != *乙.事实 || 对应.信息->语言存在 != 语言E
+                    || 对应.信息->内部存在 != 内部E) return {S::同来源目标冲突};
+                return {S::已找到,对应.信息->完整保护};
+            });
         // 通用本能“进入场景”（R94/R95）。
         当前.进入场景运行 = std::make_shared<进入场景本能运行服务>(当前.世界树, 当前.方法服务);
         {
@@ -7346,6 +7379,199 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
     }
 }
 
+namespace {
+using 普通应用装配内部::普通应用上下文;
+
+// 具名隔离入口提供原始结构；采用节点由正常语言 owner 自行创建。
+struct 隔离需求采用来源 final : 新语言采用来源读取接口 {
+    普通应用上下文& 应用;
+    const 新语言含义采用请求& 请求;
+    稳定编码 语法, FT, 对端, 自我, 内部场景, 语言E;
+    隔离需求采用来源(普通应用上下文& a, const 新语言含义采用请求& q,
+        稳定编码 g, 稳定编码 f, 稳定编码 peer, 稳定编码 self, 稳定编码 scene, 稳定编码 target)
+        : 应用(a), 请求(q), 语法(g), FT(f), 对端(peer), 自我(self), 内部场景(scene), 语言E(target) {}
+    新语言采用来源保护 读取采用来源保护(
+        const 新接收认知来源键& 键, 稳定编码 S) const override {
+        using R = 新接收指代调用状态;
+        using L = 新语言分界工程状态;
+        using U = 新语言含义采用状态;
+        using F = 新外设事实状态;
+        if (键 != 请求.来源 || S != 请求.场景节点) return {U::输入拒绝};
+        auto& d = 应用.世界事实;
+        auto& 外设 = 应用.外设世界树;
+        const auto M = 外设.读取消息保护(键.接收消息节点);
+        const auto 角色 = d.语言服务.读取正式消息角色(键.接收消息节点,新外设消息方向::接收);
+        const auto 前置 = d.语言服务.读取前置来源(键,外设);
+        const auto 场景 = 应用.自然语言世界树.读取接收来源场景(键.接收消息节点);
+        const auto 定义 = d.语言服务.获取语言知识(语法,d.词服务,d.存在概念服务);
+        if (M.状态 != F::已完成 || !M.消息 || 角色.状态 != R::已完成 || !角色.信息
+            || !角色.信息->事实 || 角色.信息->内部交互场景 != 内部场景
+            || 角色.信息->说话者 != 对端 || 角色.信息->受话者 != 自我
+            || 前置.状态 != L::已完成 || !前置.信息 || 前置.信息->固定文本材料 != 请求.原文材料节点
+            || 前置.信息->固定UTF8原文 != M.消息->UTF8正文 || !场景.信息 || 场景.信息->场景节点 != S
+            || !定义.信息 || 定义.信息->定义.目标.含义图 != 请求.含义.定义图) return {U::前提已变化};
+        using namespace 语言场景转换内部;
+        解释读取依据 依据{d.语言服务,d.词服务,d.名称关系服务,d.特征概念服务};
+        std::vector<稳定编码> 节点{键.接收消息节点,M.消息->正文材料节点,前置.信息->节点,
+            请求.原文材料节点,请求.含义.语言节点,S,语法,定义.信息->目标节点,定义.信息->结构节点,*角色.信息->事实,
+            对端,自我,内部场景,语言E};
+        std::sort(节点.begin(),节点.end());
+        节点.erase(std::unique(节点.begin(),节点.end()),节点.end());
+        const auto 批 = 全局基础数据集.查询节点组完整结构(节点);
+        if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点.size())
+            return {U::前提已变化};
+        for (const auto& 项 : 批.节点组) {
+            if (!项.快照) return {U::前提已变化};
+            依据.并保护({*项.快照});
+        }
+        依据.读特征(FT);
+        if (依据.失败 != 读取状态::已完成 || 依据.特征概念依据组.empty())
+            return {U::前提已变化};
+        return {U::已采用,键,S,对端,请求.现实范围根,请求.原文材料节点,
+            M.消息->来源.公开宿主会话,M.消息->来源.对话框标识,M.消息->UTF8正文,M.消息->来源.来源序号,
+            请求.含义,请求.角色原文定位组,std::move(依据.特征概念依据组),std::move(依据.完整保护),自我};
+    }
+};
+
+void 验证同窗结构化需求复制(普通应用上下文& 当前, const 新临时交互场景信息& 窗) {
+    std::ofstream 记录("structured-demand-copy.txt",std::ios::out | std::ios::trunc);
+    if (!记录) return;
+    auto& d = 当前.世界事实;
+    auto& L = d.语言服务;
+    auto& W = 当前.外设世界树;
+    const auto 认知 = 当前.世界树.读取本窗身份认知(窗.场景);
+    if (!认知 || !当前.中文语言节点) { 记录 << "identity missing\n"; return; }
+    const auto 自述 = W.读取消息(认知->原消息);
+    const auto 来源 = W.读取对话框来源(窗.来源.外设窗口);
+    const auto 根 = 当前.世界树.获取世界树根场景();
+    if (!自述 || !来源 || !根) { 记录 << "window missing\n"; return; }
+    const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(自述->UTF8正文,
+        [](unsigned char 字节) { return (字节 & 0xc0) != 0x80; }));
+    const auto 对应 = 当前.接收认知.读取本窗自述对象对应(
+        {自述->消息节点,0,长度,{}},窗.场景,当前.世界树);
+    if (!对应.信息 || 对应.信息->语言存在 == 认知->已知存在) { 记录 << "identity correspondence missing\n"; return; }
+    const auto 语言E = 对应.信息->语言存在;
+    const auto 内E = 认知->已知存在;
+    const auto 温度 = d.特征服务.建立或取得先天温度特征类型();
+    const auto 先天 = 当前.世界树.获取先天特征概念();
+    if (!温度.信息 || !先天) { 记录 << "feature definition missing\n"; return; }
+    const auto 域 = d.特征概念服务.读取正式I64类型完整域(温度.信息->节点);
+    if (域.状态 != 特征概念规则状态::已完成 || !域.概念节点) {
+        记录 << "temperature concept binding missing\n"; return;
+    }
+    const auto FT = *域.概念节点;
+    const auto 知识组 = L.枚举语言知识候选(*当前.中文语言节点,1024,d.词服务,d.存在概念服务);
+    const 新语言知识信息* 构式 = nullptr;
+    using O = 新语言知识含义操作;
+    for (const auto& K : 知识组.信息组) if (const auto& G = K.定义.目标.含义图;
+        G && G->根含义编号 == 1 && G->节点组.size() == 3
+        && G->节点组[0].操作 == O::行动请求 && G->节点组[1].操作 == O::需求描述
+        && G->节点组[2].操作 == O::特征方向描述 && G->节点组[2].方向 == 新语言知识特征方向::增加) {
+        if (构式) { 记录 << "ambiguous structure\n"; return; }
+        构式 = &K;
+    }
+    if (!构式) { 记录 << "structure missing\n"; return; }
+    const std::string 原文 = "请你满足以下需求：我需要我的温度增加";
+    const auto 时间 = UTC时钟适配器{}.读取当前UTC时间证据_v1({});
+    // 自述和登记已完成。停止本宿主普通收件推进，后续仅组合调用正式 owner。
+    // 外设窗口和已发表角色仍在，具名结构化输入不会另行进入任务承接。
+    当前.接收认知.封存会话(来源->公开宿主会话);
+    constexpr std::uint64_t 序号 = 90001;
+    if (!时间.成功() || W.更新接收(来源->定位,序号,原文,
+        {新状态时间语义::实例绝对UTC,时间.证据->UTC纳秒}) != 新外设事实状态::已完成) {
+        记录 << "receive failed\n"; return;
+    }
+    const auto M = W.查找消息({来源->公开宿主会话,来源->对话框标识,新外设消息方向::接收,序号});
+    if (!M) { 记录 << "message missing\n"; return; }
+    const 新接收认知来源键 键{M->消息节点,0,18,{}};
+    const auto 来源场景 = 当前.自然语言世界树.建立或取得接收来源场景(M->消息节点);
+    const auto 前置 = L.建立或取得前置来源({键},W);
+    if (!来源场景.信息 || !前置.信息) { 记录 << "source material missing\n"; return; }
+    using Scope = 新语言知识作用域;
+    using C = 新语言知识角色类别;
+    const auto ref = [](C c, 稳定编码 n) { return 语言图引用值{c,n,{},{}}; };
+    const auto K = 构式->节点;
+    const auto 范围 = [](std::size_t a,std::size_t b) { return std::pair{a,b}; };
+    语言图含义材料 图{*当前.中文语言节点,*构式->定义.目标.含义图,1,{
+        {1,K,1,Scope::请求范围,{},{{0,ref(C::存在,窗.自我)},{1,语言图子出现引用{2}}},范围(0,18)},
+        {2,K,2,Scope::需求目标范围,{3},{{0,ref(C::存在,窗.本窗对端)},{1,语言图子出现引用{3}}},范围(9,18)},
+        {3,K,3,Scope::需求目标范围,{3,2},{{0,ref(C::存在,语言E)},{1,ref(C::I64标量特征类型,FT)}},范围(12,18)}
+    },原文};
+    图.正式指称作用域 = M->消息节点;
+    const 新语言含义采用请求 请求{键,来源场景.信息->场景节点,窗.本窗对端,*根,前置.信息->固定文本材料,
+        std::move(图),{{1,0,1,2},{2,0,9,10},{3,0,12,13},{3,1,14,16}}};
+    const 隔离需求采用来源 读口{当前,请求,K,FT,窗.本窗对端,窗.自我,窗.场景,语言E};
+    const auto U = L.建立或取得接收采用含义(请求,d.特征服务,d.特征概念服务,读口);
+    记录 << "M=" << M->消息节点.值 << " languageE=" << 语言E.值 << " internalE=" << 内E.值
+        << " Ustatus=" << static_cast<int>(U.状态) << std::endl;
+    if (!U.信息) return;
+    const auto P = L.读取采用行动请求保护(U.信息->节点,窗.自我,d.特征服务,d.存在服务);
+    if (!P.信息 || P.信息->期望需求.目标存在 != 语言E) { 记录 << "adopted role mismatch\n"; return; }
+    const 新接收认知来源 采用{P.信息->需求来源,U.信息->节点};
+    const auto 主体F = [&]() -> std::optional<新特征信息> {
+        const auto E = d.存在服务.获取存在(内E);
+        if (!E) return {};
+        std::optional<新特征信息> 结果;
+        for (const auto id : E->特征节点组) {
+            const auto F = d.特征服务.获取特征(id);
+            const auto 类型 = F ? d.特征服务.捕获特征匹配定义(F->特征概念节点) : std::nullopt;
+            if (!F || !类型) throw std::logic_error("subject feature readback failed");
+            if (类型->特征类型根 != 先天->需求) continue;
+            if (结果 || F->上级特征节点) throw std::logic_error("subject feature is not unique and top level");
+            结果 = F;
+        }
+        return 结果;
+    };
+    const auto 启动F = 主体F();
+    新部分服务要求目标 目标;
+    目标.目标存在节点 = 内E;
+    目标.目标特征类型概念节点 = FT;
+    目标.目标形式 = 新需求目标形式::变化方向;
+    目标.目标变化方向 = 新需求变化方向::增加;
+    auto& D = 当前.需求服务;
+    const auto 写 = [&](const 新接收认知来源& 证据, const 新部分服务要求目标& T) {
+        return D.建立或取得接收认知需求({证据,T,{},true},L,d.特征服务,当前.自然语言世界树);
+    };
+    auto 错范围 = 采用;
+    ++错范围.键.原文起点;
+    auto 错目标 = 目标;
+    错目标.目标存在节点 = 窗.自我;
+    const auto 拒范围 = 写(错范围,目标);
+    const auto 拒对象 = 写(采用,错目标);
+    const auto 拒绝后F = 主体F();
+    记录 << "U=" << U.信息->节点.值
+        << " rejectedRange=" << static_cast<int>(拒范围.状态)
+        << " rejectedTarget=" << static_cast<int>(拒对象.状态)
+        << " featureBefore=" << (启动F ? 启动F->节点.值 : 0)
+        << " featureAfterRejection=" << (拒绝后F ? 拒绝后F->节点.值 : 0) << std::endl;
+    if (拒范围.需求节点 || 拒对象.需求节点 || 启动F != 拒绝后F) return;
+    const auto 建立 = 写(采用,目标);
+    auto 再投 = 写(采用,目标);
+    for (int 次数 = 0; 次数 < 3 && 建立.状态 == 新需求操作状态::已建立
+        && 再投.状态 == 新需求操作状态::前提已变化; ++次数) {
+        记录 << "replay prerequisite changed; refresh same source" << std::endl;
+        std::this_thread::sleep_for(std::chrono::milliseconds(30));
+        再投 = 写(采用,目标);
+    }
+    const auto 读回 = D.查询接收认知来源需求(采用,L,d.特征服务);
+    const auto F = 主体F();
+    记录 << "create=" << static_cast<int>(建立.状态)
+        << " replay=" << static_cast<int>(再投.状态)
+        << " read=" << static_cast<int>(读回.状态)
+        << " D=" << (读回.信息 ? 读回.信息->节点.值 : 0)
+        << " F=" << (F ? F->节点.值 : 0)
+        << " Fcurrent=" << (F && F->当前值.has_value())
+        << " Fhistory=" << (F ? F->历史不同值.size() : 0) << std::endl;
+    if (建立.状态 == 新需求操作状态::已建立 && 再投.状态 == 新需求操作状态::已复用
+        && 读回.状态 == 新需求操作状态::已找到 && 读回.信息 && 读回.信息->已知目标 && F
+        && 建立.需求节点 == 再投.需求节点 && 建立.需求节点 == 读回.信息->节点
+        && 读回.信息->需求主体存在节点 == 内E && 读回.信息->已知目标->目标存在节点 == 内E
+        && !F->当前值 && F->历史不同值.empty())
+        记录 << "independent readback matched\n";
+    else 记录 << "independent readback mismatch\n";
+}
+} // namespace
+
 std::jthread 启动同窗需求主体隔离验证() noexcept {
     using namespace 普通应用装配内部;
     try {
@@ -7364,7 +7590,10 @@ std::jthread 启动同窗需求主体隔离验证() noexcept {
             {特征概念材料物理类型::U64数组,特征概念全材料值域{}, {},
                 特征概念比较规则::完整材料精确}},V,类型读取);
         if (!权限类型.类型根) return {};
-        return std::jthread([当前,自我 = *自我材料.自我存在,服务F](std::stop_token 停止) {
+        wchar_t 子用例开关[2]{};
+        const bool 验证结构复制 = GetEnvironmentVariableW(
+            L"HY_EGO_VERIFY_STRUCTURED_DEMAND_COPY", 子用例开关, 2) == 1 && 子用例开关[0] == L'1';
+        return std::jthread([当前,自我 = *自我材料.自我存在,服务F,验证结构复制](std::stop_token 停止) {
             using S = 新活动服务登记状态;
             while (!停止.stop_requested()) {
                 const auto 场景组 = 当前->世界树.读取正式临时交互场景();
@@ -7374,6 +7603,13 @@ std::jthread 启动同窗需求主体隔离验证() noexcept {
                         场景组.front().来源.外设场景,自我,服务F,新本窗服务登记模式::隔离活动数据集验证);
                     if (登记.状态 == S::已登记 && 登记.服务状态节点) {
                         (void)当前->自我线程.提交事实变化(*登记.服务状态节点);
+                        if (!验证结构复制) return;
+                        try {
+                            验证同窗结构化需求复制(*当前,场景组.front());
+                        } catch (const std::exception& 错误) {
+                            std::ofstream 记录("structured-demand-copy.txt",std::ios::app);
+                            记录 << 错误.what() << '\n';
+                        }
                         return;
                     }
                     if (登记.状态 != S::前提已变化 && 登记.状态 != S::资格待定) return;
