@@ -12,6 +12,7 @@ struct 正式表达需求目标栏 final { 稳定编码 需求D{},字段特征�
 struct 正式表达场景期望值 final {
     稳定编码 场景需求, 目标存在, 特征概念, 上位类型;
     std::string 目标词面, 特征词面;
+    bool 保留容器限定 = false;
 };
 struct 正式表达招呼 final { 新招呼种类 种类=新招呼种类::发起; };
 struct 正式表达成文参数 final {
