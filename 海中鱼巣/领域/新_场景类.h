@@ -69,6 +69,12 @@ struct 新本窗目标描述来源 final {
     稳定编码 语言存在, 声明消息, 需求消息, 需求角色事实;
     std::uint64_t 声明始, 声明末, 需求始, 需求末, 目标始, 目标末;
     std::string 描述;
+    friend bool operator==(const 新本窗目标描述来源&, const 新本窗目标描述来源&) = default;
+};
+struct 新本窗目标对应 final {
+    稳定编码 杯, 子水, 特征类型;
+    std::string 验收选择;
+    friend bool operator==(const 新本窗目标对应&, const 新本窗目标对应&) = default;
 };
 struct 新本窗目标描述副本 final {
     稳定编码 场景, 存在;
@@ -656,6 +662,10 @@ public:
 private:
     friend class 新_世界树类;
     std::optional<新本窗目标描述副本> 读取本窗目标描述副本(稳定编码, 稳定编码) const;
+    std::optional<新本窗目标对应> 读取本窗目标对应(稳定编码 场景, 稳定编码 语言存在) const;
+    std::optional<新本窗目标对应> 采用本窗目标对应(
+        const 新本窗目标描述副本&, const 新本窗目标对应&, 基础只读预期,
+        std::vector<基础联合节点快照>);
     std::optional<新本窗目标描述副本> 采用本窗目标描述(
         稳定编码, const 新本窗目标描述来源&, 基础只读预期, std::vector<基础联合节点快照>);
     bool 场景属于临时交互范围(稳定编码 场景) const;

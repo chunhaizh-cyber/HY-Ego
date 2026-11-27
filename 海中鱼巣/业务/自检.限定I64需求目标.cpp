@@ -14,7 +14,8 @@
 namespace 海中鱼巣 {
 
 namespace {
-bool 验证限定I64需求目标(新_世界树类& 世界,bool 具名网页前态) {
+bool 验证限定I64需求目标(新_世界树类& 世界,bool 具名网页前态,
+    std::optional<隔离第六组目标选定>* 选定 = nullptr) {
     std::ofstream 输出("i64-demand-target-verification.txt",std::ios::trunc);
     if(!输出)return false;
     const auto 核验=[&](bool 条件,const char* 标识) {
@@ -179,6 +180,19 @@ bool 验证限定I64需求目标(新_世界树类& 世界,bool 具名网页前�
         核验(事实.场景服务.查询状态列表(场景)==当前状态,"no-state-from-target-admission");
         输出 << "point=" << 点.概念节点->值 << " parent-exclusion="
             << (父区间->front().下界-1) << std::endl;
+        if (具名网页前态 && 选定) {
+            std::ifstream 选择输入("case06-selected-target.txt");
+            if (选择输入.is_open()) {
+                std::string 版本, 来源试验, 选择身份, 对象角色;
+                std::uint64_t 起 = 0, 终 = 0;
+                const bool 合格 = static_cast<bool>(选择输入 >> 版本 >> 来源试验 >> 选择身份 >> 对象角色 >> 起 >> 终)
+                    && 版本 == "ISOLATED-TARGET-CHOICE-V1" && 来源试验 == 试验
+                    && 选择身份.starts_with("CASE06-OPERATOR-") && 对象角色 == "controlled-cup"
+                    && 起 < 终 && !(选择输入 >> 尾项);
+                核验(合格,"isolated-operator-choice-configuration");
+                *选定 = 隔离第六组目标选定{{*受试杯,*子水,C,选择身份},起,终};
+            }
+        }
         return true;
     } catch(const std::exception& 错误) {
         输出 << 错误.what() << std::endl;
@@ -193,8 +207,8 @@ bool 运行限定I64需求目标准入验证() {
     return 验证限定I64需求目标(世界,false);
 }
 
-bool 准备隔离第六组水温(新_世界树类& 世界) {
-    return 验证限定I64需求目标(世界,true);
+bool 准备隔离第六组水温(新_世界树类& 世界, std::optional<隔离第六组目标选定>& 选定) {
+    return 验证限定I64需求目标(世界,true,&选定);
 }
 
 } // namespace 海中鱼巣
