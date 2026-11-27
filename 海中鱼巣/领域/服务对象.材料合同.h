@@ -31,13 +31,15 @@ struct 新服务对象材料 final {
     friend bool operator==(const 新服务对象材料&, const 新服务对象材料&) = default;
 };
 
-inline bool 具有正式人类类型证据(const 存在概念信息比较结果& 判定) {
-    if (判定.状态 != 特征概念规则状态::已完成 || 判定.归属 != 特征成员概念归属::属于)
-        return false;
+inline std::optional<bool> 读取正式人类二元结论(const 存在概念信息比较结果& 判定) {
+    if (判定.状态 != 特征概念规则状态::已完成) return std::nullopt;
+    if (判定.归属 == 特征成员概念归属::不属于) return false;
+    if (判定.归属 != 特征成员概念归属::属于) return std::nullopt;
+    if (判定.路径 == 存在概念归属路径::实例关系) return true;
+    if (判定.路径 == 存在概念归属路径::定义匹配 && 判定.采集 && 判定.采集->材料
+        && !判定.采集->材料->必需特征组.empty()) return true;
     // 空定义的形式匹配不能认定为人类。
-    return 判定.路径 == 存在概念归属路径::实例关系
-        || (判定.路径 == 存在概念归属路径::定义匹配 && 判定.采集 && 判定.采集->材料
-            && !判定.采集->材料->必需特征组.empty());
+    return std::nullopt;
 }
 
 struct 新服务对象获取配置 final {

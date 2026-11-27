@@ -945,6 +945,17 @@ enum class 新任务方法条件缺口种类 : std::uint8_t {
     参数特征类型未取得 = 5, 参数概念未确认 = 6
 };
 
+enum class 新任务人类判定缺项种类 : std::uint8_t {
+    概念缺判别定义 = 1, 对端缺事实, 暂不可比较, 已有排除依据
+};
+
+struct 新任务人类判定缺项 final {
+    新任务人类判定缺项种类 种类;
+    稳定编码 对端, 人类概念, 临时场景, 外设窗口;
+    std::vector<存在概念认知缺口> 事实缺项组;
+    friend bool operator==(const 新任务人类判定缺项&, const 新任务人类判定缺项&) = default;
+};
+
 // 仅是本次筹办材料。未知对象不造占位节点，不能直接当作正式子需求。
 struct 新任务方法条件缺口 final {
     新任务方法条件缺口种类 种类 = 新任务方法条件缺口种类::参数对象未取得;
@@ -955,6 +966,7 @@ struct 新任务方法条件缺口 final {
     std::optional<std::uint64_t> 条件项序号;
     std::vector<新任务虚拟存在引用> 任务成员候选组;
     std::optional<稳定编码> 执行分支节点;
+    std::optional<新任务人类判定缺项> 人类判定缺项;
     friend bool operator==(const 新任务方法条件缺口&,
         const 新任务方法条件缺口&) = default;
 };
