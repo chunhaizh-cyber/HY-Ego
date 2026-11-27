@@ -667,9 +667,33 @@ std::vector<语言场景局部称名> 读取同源局部称名(认知依赖& d,
 
 // A local object stays in its original language scene. This view reads only the
 // confirmed window's earlier, already saved declarations.
+bool 新增请求仅含类型词面引号(const std::string& 正文, const 接收语言句段解释& 句) {
+    using P = 新语言知识参数角色;
+    using O = 新语言知识含义操作;
+    if (句.起始标量 != 0 || !句.静态结构 || 句.静态结构->操作 != O::特征新增请求) return false;
+    const auto& 角色组 = 句.静态结构->角色组;
+    const auto 类型 = std::ranges::find(角色组, P::特征类型, &接收语言已解释角色::参数);
+    if (类型 == 角色组.end() || 类型->起始标量 == 0 || 类型->起始标量 >= 类型->结束标量
+        || 类型->结束标量 >= 句.结束标量) return false;
+    using namespace 语言场景转换内部;
+    const auto 原文 = 解码语言场景原文(正文);
+    if (!原文 || 原文->标量字节边界.size() - 1 != 句.结束标量) return false;
+    const auto 开引 = static_cast<std::size_t>(类型->起始标量 - 1);
+    const auto 闭引 = static_cast<std::size_t>(类型->结束标量);
+    if (读取语言场景原文范围(*原文, {开引, 开引 + 1}) != "「"
+        || 读取语言场景原文范围(*原文, {闭引, 闭引 + 1}) != "」") return false;
+    // 只屏蔽已由构式确定的一对名称边界；额外的引号或转述仍由统一门禁拒绝。
+    const auto& 边界 = 原文->标量字节边界;
+    auto 外层 = 正文;
+    外层.replace(边界[闭引], 边界[闭引 + 1] - 边界[闭引], " ");
+    外层.replace(边界[开引], 边界[开引 + 1] - 边界[开引], " ");
+    return 可读取无上下文外层共指(外层);
+}
+
 std::vector<语言场景局部称名> 读取同窗已声明局部称名(
     认知依赖& d, const 新正式消息角色材料& 本次, std::stop_token 停止,
-    std::map<稳定编码, 稳定编码>* 声明消息组 = nullptr) {
+    std::map<稳定编码, 稳定编码>* 声明消息组 = nullptr,
+    const 接收语言句段解释* 新增请求引号依据 = nullptr) {
     using L = 新语言分界工程状态;
     using R = 新接收指代调用状态;
     using O = 新语言知识含义操作;
@@ -678,7 +702,8 @@ std::vector<语言场景局部称名> 读取同窗已声明局部称名(
     std::vector<语言场景局部称名> 结果;
     const auto& 当前消息 = 本次.消息;
     if (!本次.事实 || !本次.内部交互场景 || !本次.说话者 || !本次.受话者
-        || !可读取无上下文外层共指(当前消息.UTF8正文)) return 结果;
+        || (!可读取无上下文外层共指(当前消息.UTF8正文)
+            && (!新增请求引号依据 || !新增请求仅含类型词面引号(当前消息.UTF8正文, *新增请求引号依据)))) return 结果;
 
     const auto 保留消息 = d.外设.读取当前消息(当前消息.窗口节点, 新外设消息方向::接收);
     for (const auto& 前文 : 保留消息) {
@@ -1170,7 +1195,7 @@ std::optional<接收部分成文句段> 从接收具名部分句段成文(认知
     const auto 需求主体 = 取角色(P::主体);
     if (主体 == 结构.角色组.end() || 类型 == 结构.角色组.end()) return {};
     const auto* 已绑定主体 = 主体->值 ? std::get_if<语言图引用值>(&*主体->值) : nullptr;
-    if (主体->值 && ((!当前值询问 && !上升) || !交互 || !已绑定主体 || 已绑定主体->类别 != C::存在)) return {};
+    if (主体->值 && ((!当前值询问 && !上升 && !新增) || !交互 || !已绑定主体 || 已绑定主体->类别 != C::存在)) return {};
     if (需求 && (需求主体 == 结构.角色组.end() || 需求主体->值
         || 结构.角色组.size() != (载荷 == 结构.角色组.end() ? 3 : 4))) return {};
     if ((新增 && 类型->值) || (!新增 && !类型->值)) return {};
@@ -1246,7 +1271,7 @@ std::optional<接收部分成文句段> 从接收具名部分句段成文(认知
         if (角色.状态 != R::已完成 || !角色.信息)
             throw std::logic_error("saved bound question roles unavailable");
         if (角色.信息->说话者 != 交互->说话者H || 角色.信息->受话者 != 交互->受话者E) 漂移();
-        return 读取同窗已声明局部称名(d, *角色.信息, stop);
+        return 读取同窗已声明局部称名(d, *角色.信息, stop, nullptr, 新增 ? &句 : nullptr);
     };
     const auto 主体原词面 = 未决词面(*主体);
     const auto 取唯一称名 = [&](const std::vector<语言场景局部称名>& 名称组)
@@ -3664,7 +3689,19 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             const auto 解释当前句 = [&] {
                 auto 初读 = 读当前句();
                 if (!正式词段重入 && 取得欠缺的可信词头(d, 词头来源, req.语言节点, req.固定原文, 初读, stop))
-                    return 读当前句();
+                    初读 = 读当前句();
+                if (!正式词段重入 && req.局部称名组.empty() && req.固定原文 == m.UTF8正文
+                    && 初读.静态结构
+                    && 初读.静态结构->操作 == 新语言知识含义操作::特征新增请求) {
+                    const auto 新增句 = 记录句段解释(初读, {0, 标量数(req.固定原文)});
+                    const auto 称名 = 读取同窗已声明局部称名(d, *角色.信息, stop, nullptr, &新增句);
+                    if (!称名.empty()) {
+                        req.局部称名组 = 称名;
+                        auto 已补主体 = 读当前句();
+                        req.局部称名组 = {};
+                        return 已补主体;
+                    }
+                }
                 return 初读;
             };
             const auto 确认语言场景 = [&] {
