@@ -22101,14 +22101,37 @@ bool 筹办普通概念当前可读(概念_存在类& 概念,稳定编码 C) {
             else {
                 candidate.实际材料目标=row->定义.词条X;
                 依赖节点(row->定义.词条X);
-                if(row->概念解读.状态==新词典归类概念状态::已明确)
-                    candidate.实际采用概念=row->概念解读.采用概念;
-                if(candidate.实际采用概念)依赖节点(*candidate.实际采用概念);
                 if(row->定义.词条X!=word->词条.节点) {
                     candidate.材料状态=新归类学习材料状态::目标不相符;
                     candidate.请求.reset();
-                } else if(candidate.实际采用概念)
-                    candidate.材料状态=新归类学习材料状态::已明确;
+                } else if(row->概念解读.状态==新词典归类概念状态::已明确) {
+                    const auto 配置=存在概念服务_.读取词典归类信息概念();
+                    if(配置.状态!=正式结构操作状态::已读取 || !配置.信息)
+                        return {S::结构依赖未就绪,{},{},{}};
+                    const auto& 类型=*配置.信息;
+                    const auto 采用=词条读取_->取得语言服务().读取词典归类参数保护(
+                        row->节点,类型.材料范围,类型);
+                    using P=正式信息参数读取状态;
+                    if(采用.状态==P::资源失败)return {S::资源失败,{},{},{}};
+                    if(采用.状态==P::信息不存在) {
+                        candidate.材料状态=新归类学习材料状态::材料已退出;
+                        candidate.请求.reset();
+                    } else {
+                        if(采用.状态!=P::已读取 || !采用.信息)return {S::结构依赖未就绪,{},{},{}};
+                        const auto 字段=std::ranges::find_if(采用.信息->直接内容组,
+                            [&](const auto& f){return f.特征类型==类型.采用概念FT;});
+                        if(字段==采用.信息->直接内容组.end())
+                            throw std::logic_error("dictionary name adoption field missing");
+                        if(字段->内容.状态==正式内容值状态::已知 && 字段->内容.值) {
+                            candidate.实际采用概念=std::get<稳定编码>(*字段->内容.值);
+                            依赖节点(*candidate.实际采用概念);
+                            candidate.材料状态=新归类学习材料状态::已明确;
+                        } else {
+                            candidate.材料状态=新归类学习材料状态::需目标自身材料;
+                            candidate.请求.reset();
+                        }
+                    }
+                }
             }
             out.候选组.push_back(std::move(candidate));
         }
