@@ -2257,9 +2257,30 @@ public:
 
         const auto& 信息 = *正式.信息;
         const auto& 采用 = 信息.篇章采用;
+        std::string 说话者需求JSON="null";
+        for(const auto& 需求:语言.读取说话者场景需求(*角色.信息->说话者,*角色.信息->内部交互场景)){
+            检查停止();
+            if(需求.内容.来源消息!=消息->消息节点)continue;
+            const auto& 依据=*需求.说话者调整需求;
+            if(依据.原消息角色事实!=*角色.信息->事实)return {};
+            const auto& 内容=需求.内容;
+            说话者需求JSON="{\"record\":"+控制编码(需求.陈述节点)
+                +",\"sourceMessage\":"+控制编码(内容.来源消息)
+                +",\"sourceScene\":"+控制编码(内容.来源场景)
+                +",\"interactionScene\":"+控制编码(依据.内部交互场景)
+                +",\"roleFact\":"+控制编码(依据.原消息角色事实)
+                +",\"definition\":"+控制编码(依据.解释定义)
+                +",\"speaker\":"+控制编码(内容.说话者)
+                +",\"owner\":"+控制编码(内容.主体存在)
+                +",\"target\":"+控制编码(内容.目标存在)
+                +",\"featureConcept\":"+控制编码(依据.目标特征概念)
+                +",\"intent\":\"adjust\",\"targetValue\":null}";
+            break;
+        }
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
             + ",\"receiptCountChange\":" + 数量变化
+            + ",\"speakerSceneDemand\":" + 说话者需求JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
             + ",\"meaning\":" + 接收候选含义JSON(信息.内容.含义候选)
