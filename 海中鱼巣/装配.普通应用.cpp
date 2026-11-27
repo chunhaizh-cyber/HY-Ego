@@ -7636,6 +7636,91 @@ std::optional<新本窗目标对应> 采用隔离第六组目标选定(
         *副本,选定.对应,std::move(保护),std::move(子水.保护));
 }
 
+void 验证完整需求确认成文(普通应用上下文& 当前, 稳定编码 D) {
+    std::ofstream 记录("isolated-whole-demand-confirmation-expression.txt",std::ios::trunc);
+    if(!记录)return;
+    const auto 写状态=[&](const char* 阶段,int 状态) {
+        记录 << "demand=" << D.值 << " stage=" << 阶段 << " status=" << 状态 << std::endl;
+    };
+    if(!当前.中文语言节点){写状态("language",0);return;}
+    const auto& 世界=当前.世界事实;
+    const auto 类别=世界.存在概念服务.读取先天需求任务方法概念();
+    if(类别.状态!=正式结构操作状态::已读取 || !类别.信息) {
+        写状态("demand-concept",static_cast<int>(类别.状态));
+        return;
+    }
+    const auto 材料=当前.需求服务.读取正式信息参数保护(D,类别.信息->需求);
+    if(材料.状态!=正式信息参数读取状态::已读取) {
+        写状态("read",static_cast<int>(材料.状态));
+        return;
+    }
+    auto 图=从正式需求投影形成语言图(材料,*当前.中文语言节点,true,
+        世界.语言服务,世界.词服务,世界.存在概念服务);
+    if(图.状态!=正式需求语言投影状态::已投影 || !图.含义) {
+        写状态("projection",static_cast<int>(图.状态));
+        return;
+    }
+    std::ifstream 选名("case06-confirmation-word-choices.txt");
+    if (选名.is_open()) {
+        std::string 版本,主体名称,目标名称,特征名称,多余;
+        const auto 已知D=当前.需求服务.读取需求治理信息(D);
+        if (!(选名>>版本>>主体名称>>目标名称>>特征名称) || 版本!="ISOLATED-CONFIRMATION-WORDS-V1"
+            || (选名>>多余) || !已知D || !已知D->完整目标) {
+            写状态("explicit-name-input",0);
+            return;
+        }
+        using K=新语言知识角色类别;
+        for(auto& 出现:图.含义->出现组) for(auto& 角色:出现.角色组) {
+            auto* 引用=std::get_if<语言图引用值>(&角色.值);
+            if(!引用)continue;
+            稳定编码 概念=引用->节点;
+            const std::string* 选=nullptr;
+            if(引用->类别==K::I64标量特征类型) {
+                选=&特征名称;
+            } else if(引用->类别==K::存在) {
+                const auto 专属=世界.存在服务.查询专属存在概念(引用->节点);
+                if(!专属){写状态("explicit-name-subject",0);return;}
+                概念=*专属;
+                if(引用->节点==已知D->需求主体存在节点)选=&主体名称;
+                else if(引用->节点==已知D->完整目标->目标存在节点)选=&目标名称;
+            }
+            if(!选){写状态("explicit-name-position",0);return;}
+            const auto 候选=世界.名称关系服务.查询概念名称(概念);
+            std::optional<稳定编码> 名称;
+            for(const auto N:候选.名称关系节点组) {
+                const auto 关系=世界.名称关系服务.获取名称关系(N);
+                if(!关系.信息 || 关系.信息->概念节点!=概念)continue;
+                const auto 词=世界.词服务.获取词条(关系.信息->词条节点);
+                if(!词.信息 || 词.信息->语言节点!=当前.中文语言节点 || 词.信息->规范化词面!=*选)continue;
+                if(名称){写状态("explicit-name-conflict",0);return;}
+                名称=N;
+            }
+            if(!名称){写状态("explicit-name-unavailable",static_cast<int>(引用->类别));return;}
+            引用->选用名称关系=名称;
+        }
+    }
+    const 语言基础统一输出请求 请求{*当前.中文语言节点,*图.含义,2048,48,320,320,512,128};
+    const auto 成文=从基础信息生成可回读单句(请求,当前.自然语言世界树,世界.语言服务,
+        世界.词服务,世界.名称关系服务,世界.存在概念服务,世界.特征概念服务,世界.存在服务,&当前.需求服务);
+    if(成文.状态!=语言场景基础输出状态::已生成且唯一回读 || 成文.构式!=语言基础统一构式::需求确认) {
+        写状态("expression",static_cast<int>(成文.状态));
+        return;
+    }
+    const auto 最新=当前.需求服务.读取正式信息参数保护(D,类别.信息->需求);
+    const auto 快照相同=[](const 基础联合节点快照& 左,const 基础联合节点快照& 右) {
+        return 左.结构.节点==右.结构.节点 && 左.结构.字段组==右.结构.字段组
+            && 左.入向字段组==右.入向字段组 && 左.入向外部关系组==右.入向外部关系组
+            && 左.出向外部关系组==右.出向外部关系组;
+    };
+    if(最新.状态!=正式信息参数读取状态::已读取
+        || !std::ranges::equal(最新.完整保护组,材料.完整保护组,快照相同)) {
+        写状态("version",static_cast<int>(最新.状态));
+        return;
+    }
+    写状态("sentence",1);
+    记录 << 成文.文本 << std::endl;
+}
+
 void 验证同窗第六组目标选定(普通应用上下文& 当前, const 新临时交互场景信息& 窗,
     const 隔离第六组目标选定& 选定, std::stop_token 停止) {
     while (!停止.stop_requested()) {
@@ -7679,6 +7764,8 @@ void 验证同窗第六组目标选定(普通应用上下文& 当前, const 新�
                     << " first=" << (首次.状态==S::已建立) << " replay=" << (同源.状态==S::已复用 && 同源.需求节点==首次.需求节点)
                     << " retries=" << 重读次数 << " wrongStatus=" << static_cast<int>(拒绝.状态) << " firstStatus=" << static_cast<int>(首次.状态)
                     << " replayStatus=" << static_cast<int>(同源.状态) << " id=" << (首次.需求节点 ? 首次.需求节点->值 : 0) << '\n';
+                if(首次.状态==S::已建立 && 首次.需求节点)
+                    验证完整需求确认成文(当前,*首次.需求节点);
             }
             return;
         }

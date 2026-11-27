@@ -4607,6 +4607,14 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             if(parsed.状态==语言场景基础输入状态::读取漂移)漂移();
             if(parsed.状态==语言场景基础输入状态::工程未完成||parsed.状态==语言场景基础输入状态::额度不足)资源();
             if(parsed.状态==语言场景基础输入状态::内部不一致)throw std::logic_error("pure language explanation reported internal inconsistency");
+            if (parsed.状态==语言场景基础输入状态::已形成值式图
+                && parsed.构式==语言基础统一构式::需求确认
+                && parsed.含义 && std::holds_alternative<语言图含义材料>(*parsed.含义)) {
+                确认语言场景();
+                out.句段解释 = {记录句段解释(parsed,整句)};
+                保存解释材料(out.句段解释);
+                throw 推进中断{阶段::已保存场景信息,"已保存原消息的整条需求确认疑问"};
+            }
             // R121（7240 §5.4“需求信息节点”）：需求陈述/请求达成在语言转换阶段就在接收来源语言场景形成需求信息节点，
             // 不依赖下方能否建成被认知需求，也不依赖需求主体是否为本次说话者；同一来源消息只一个节点，已有则不改。
             const auto 提取=提取需求信息(parsed,标量数(m.UTF8正文));

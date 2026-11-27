@@ -1478,7 +1478,7 @@ enum class 正式需求内容序号 : std::size_t {
     for(const auto& 定义:语义.二次特征定义组)if(!二次表.emplace(定义.节点,&定义).second)throw std::logic_error("duplicate formal comparison definition");
     const auto 取特征=[&](稳定编码 编号)->const 特征概念定义保护信息& {const auto 位置=特征表.find(编号);if(位置==特征表.end())throw std::logic_error("formal feature closure missing");return *位置->second;};
     const auto& 类型=取特征(目标类型);
-    if(类型.类型根!=目标类型)throw std::logic_error("formal target FT is not root");
+    if(类型.实例所属特征类型!=目标类型)throw std::logic_error("formal target FT is not the instance type");
     if(类型.定义.材料类型!=特征概念材料物理类型::I64标量||类型.定义.比较规则!=特征概念比较规则::I64数值){结果.状态=状态类::目标形态未支持;return 结果;}
     新语言知识含义操作 目标操作=M::特征描述;std::optional<新语言知识特征方向> 目标方向;
     std::int64_t 下界=0,上界=0;
@@ -1489,7 +1489,7 @@ enum class 正式需求内容序号 : std::size_t {
     }else if(形式==1) {
         if(槽(正式需求内容序号::方向).状态!=值态::不适用)throw std::logic_error("value demand contains direction");
         const auto 域节点=引用(正式需求内容序号::目标域),比较节点=引用(正式需求内容序号::比较);const auto& 域=取特征(域节点);
-        if(域.类型根!=目标类型||域.定义.单位!=类型.定义.单位)throw std::logic_error("formal demand domain root or unit mismatch");
+        if(域.实例所属特征类型!=目标类型||域.定义.单位!=类型.定义.单位)throw std::logic_error("formal demand domain type or unit mismatch");
         const auto* 区间=std::get_if<std::vector<特征概念I64闭区间>>(&域.定义.值域);
         if(!区间||区间->size()!=1){结果.状态=状态类::目标形态未支持;return 结果;}
         下界=区间->front().下界;上界=区间->front().上界;if(下界>上界)throw std::logic_error("formal target interval invalid");

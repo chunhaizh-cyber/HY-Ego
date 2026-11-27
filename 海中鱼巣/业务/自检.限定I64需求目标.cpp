@@ -101,6 +101,20 @@ bool 验证限定I64需求目标(新_世界树类& 世界,bool 具名网页前�
 
         const auto 中文=L.建立或取得语言({"zh-CN",{}});
         核验(中文.语言节点.has_value(),"fixture-language");
+        if(具名网页前态) {
+            std::ifstream 指定("case06-confirmation-target-name.txt");
+            if(指定.is_open()) {
+                std::string 类型, 来源试验, 名称, 多余;
+                const bool 合法=static_cast<bool>(指定>>类型>>来源试验>>名称)
+                    && 类型=="ISOLATED-CONFIRMATION-NAME-V1" && 来源试验==试验
+                    && !名称.empty() && !(指定>>多余) && 左.专属存在概念节点.has_value();
+                核验(合法,"whole-demand-confirmation-target-name-configuration");
+                const auto 词=事实.词服务.建立或取得词条({*中文.语言节点,严格UTF8字节精确规范化合同节点,名称,{}});
+                核验(词.词条节点.has_value(),"whole-demand-confirmation-target-word-owner");
+                const auto 名=事实.名称关系服务.建立或取得名称关系(*左.专属存在概念节点,*词.词条节点);
+                核验(名.名称关系节点.has_value(),"whole-demand-confirmation-target-name-owner");
+            }
+        }
         核验(L.初始化语言知识结构()==新语言知识状态::已完成,"fixture-knowledge-schema");
         const 新语言知识来源请求 来源请求{新语言知识来源种类::经确认先天定义,*中文.语言节点,
             "隔离试验温度限定类型：" + 试验 + "；独立设定来源：" + 独立来源};
