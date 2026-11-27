@@ -2,6 +2,7 @@
 #include "新_任务类.h"
 #include "概念_存在类.h"
 #include "新_语言类.h"
+#include "新_自然语言世界树类.h"
 #include "新_词类.h"
 #include "语言含义图.数据.h"
 #include "../核心/容错检查.h"
@@ -7112,7 +7113,8 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
     return {S::已找到,std::move(protect)};
 }
 新需求建立结果 新_需求类::建立或取得接收认知需求(const 新接收认知需求建立请求& q,
-    const 新_语言类& language,const 新_特征类& features) noexcept {
+    const 新_语言类& language,const 新_特征类& features,
+    const 新_自然语言世界树类& 语言世界) noexcept {
     using S=新需求操作状态;
     try {
         const auto U=language.读取采用含义(q.来源.采用含义节点,features);
@@ -7126,6 +7128,9 @@ std::optional<先天需求范围种类> 识别先天需求范围(const 先天信
         // 5380 §3.5：先确保主体的“需求”特征存在，再读取来源保护（避免主体快照随后变化）。
         const auto 已有 = 查询接收认知来源需求(q.来源,language,features);
         if (已有.状态 != S::已找到 && 已有.状态 != S::需求不存在) return {已有.状态,{},{}};
+        if (!已有.信息 && q.已知目标.目标存在节点
+            && 语言世界.是自然语言场景存在(*q.已知目标.目标存在节点))
+            return {S::目标内容依赖未就绪,{},{}};
         auto 主体 = 已有.信息 ? 已有.信息->需求主体存在节点 : U.信息->说话者节点;
         auto 采用 = 已有.信息 ? 已有.信息->首次主体来源 : std::optional<新同窗需求主体来源>{};
         新同窗需求主体读取结果 当前;

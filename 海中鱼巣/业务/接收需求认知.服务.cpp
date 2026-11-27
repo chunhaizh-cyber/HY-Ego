@@ -3862,11 +3862,14 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             } else if(known.状态!=新需求操作状态::需求不存在)throw std::logic_error("same-source demand lookup failed");
             {
                 进入步骤("映射正式需求目标");
+                if (!known.信息 && d.语言世界.是自然语言场景存在(projected.目标存在))
+                    throw 推进中断{阶段::D映射受阻,"语言场景目标缺内部世界正式对应"};
                 const auto target=映射目标(d,projected,stop);
                 if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求发表"};
                 进入步骤("发表同源被认知需求");
                 const auto created=d.需求.建立或取得接收认知需求(
-                    {source,target,需求信息节点,out.受请求者 == context.已绑定自我 && out.受请求者.has_value()},d.语言,d.特征);
+                    {source,target,需求信息节点,out.受请求者 == context.已绑定自我 && out.受请求者.has_value()},
+                    d.语言,d.特征,d.语言世界);
                 if(created.状态==新需求操作状态::资源失败)资源();if(created.状态==新需求操作状态::前提已变化)漂移();
                 if(created.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                 if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)

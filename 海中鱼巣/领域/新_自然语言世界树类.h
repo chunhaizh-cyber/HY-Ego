@@ -197,6 +197,7 @@ public:
         稳定编码 场景节点) const noexcept;
     std::vector<稳定编码> 查询全部场景() const noexcept;
     bool 是自然语言场景节点(稳定编码 节点) const noexcept;
+    bool 是自然语言场景存在(稳定编码 节点) const noexcept;
     新自然语言场景复制结果 读取复制场景(稳定编码) const;
 
     // 每次调用都建立新的语言概念实例；同一场景中的同一概念可以重复
