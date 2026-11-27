@@ -2389,6 +2389,32 @@ private:
     std::string 字符串(std::string_view 文本) {
         return 控制JSON字符串(文本, 停止_);
     }
+    普通控制采集结果 服务对象登记(std::optional<稳定编码> 特征节点) {
+        检查停止();
+        const auto 暂不可用 = [&] {
+            return 普通控制采集结果{R"({"status":"暂不可用","feature":)" + 控制编码(特征节点)
+                + R"(,"current":null,"history":null})", false};
+        };
+        if (!特征节点) return 暂不可用();
+        const auto F = 当前_.世界事实.特征服务.获取特征(*特征节点);
+        if (!F || F->节点 != *特征节点 || F->上级特征节点) return 暂不可用();
+
+        std::string 历史 = "[";
+        std::set<稳定编码> 已读;
+        for (const auto& 值 : F->历史不同值) {
+            检查停止();
+            const auto* E = std::get_if<稳定编码>(&值);
+            if (!E || !有效(*E) || !已读.insert(*E).second) return 暂不可用();
+            if (历史.size() != 1) 历史 += ',';
+            历史 += 控制编码(*E);
+        }
+        const auto* 当期 = F->当前值 ? std::get_if<稳定编码>(&*F->当前值) : nullptr;
+        if (F->当前值 && (!当期 || !已读.contains(*当期)))
+            return 暂不可用();
+        return {R"({"status":"已读取","feature":)" + 控制编码(*特征节点)
+            + R"(,"current":)" + (当期 ? 控制编码(*当期) : "null")
+            + R"(,"history":)" + 历史 + "]}", true};
+    }
     普通控制采集结果 采集完整材料() {
         检查停止();
         const auto 开始时间 = 控制UTC时间();
@@ -2546,6 +2572,7 @@ private:
                 + R"(,"resumeCount":)" + 控制计数(项.续办次数) + "}";
         }
         窗口服务正文 += ']';
+        const auto 服务登记 = 服务对象登记(自我.服务对象特征节点);
         const auto 完成时间 = 控制UTC时间();
         检查停止();
         auto 正文 = "{\"readStartedAt\":" + 开始时间 + ",\"readCompletedAt\":" + 完成时间
@@ -2566,9 +2593,10 @@ private:
             + ",\"lastSelfCompletionMethodId\":" + (自我.最近学习结束 ? 控制编码(自我.最近学习结束->方法节点) : "null")
             + ",\"lastSelfError\":" + 异常正文(自我.最近学习运行异常)
             + "},\"timeline\":" + 时间线.JSON + ",\"receivedDemandCognition\":"+接收认知
-            + ",\"temporaryInteractionScenes\":" + 临时场景正文 + ",\"windowServiceObservations\":" + 窗口服务正文 + "}";
+            + ",\"temporaryInteractionScenes\":" + 临时场景正文 + ",\"windowServiceObservations\":" + 窗口服务正文
+            + ",\"serviceObjectRegistry\":" + 服务登记.JSON + "}";
         检查停止();
-        return {std::move(正文), 需求已读取 && 任务已读取 && 服务材料.完整 && 学习材料.完整 && 时间线.完整 && 目录材料.完整};
+        return {std::move(正文), 需求已读取 && 任务已读取 && 服务材料.完整 && 学习材料.完整 && 时间线.完整 && 目录材料.完整 && 服务登记.完整};
     }
     std::string 观测诊断(const std::optional<新任务筹办观测诊断>& 诊断) {
         检查停止();
