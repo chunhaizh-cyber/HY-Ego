@@ -153,6 +153,11 @@ static void 记录治理线程启动返回(const wchar_t* 线程名, const 线�
     } catch (...) { /* 不让观察改变原启动判断和失败回收。 */ }
 }
 
+struct 普通指定接收采集 final {
+    std::shared_ptr<const 网页指定接收查询> 查询;
+    std::optional<网页指定接收读回结果> 结果;
+};
+
 struct 普通控制快照缓存 final {
     std::mutex 互斥;
     std::condition_variable_any 唤醒;
@@ -163,6 +168,7 @@ struct 普通控制快照缓存 final {
     bool 正在采集 = false;
     // 首条正式入站后再放行只读采集，避免与 /api/messages 争用共享结构锁饿死单线程 accept。
     std::atomic<bool> 入站后允许采集{false};
+    std::optional<普通指定接收采集> 指定接收;
 };
 struct 普通控制采集结果 final {
     std::string JSON;
@@ -2171,6 +2177,63 @@ public:
         检查停止();
         return JSON;
     }
+    网页指定接收读回结果 指定接收材料(const 网页指定接收查询& 查询) {
+        using S = 网页指定接收读回状态;
+        using F = 新外设事实状态;
+        using R = 新接收指代调用状态;
+        using L = 新语言分界工程状态;
+        检查停止();
+        auto& 外设 = 当前_.外设世界树;
+        auto& 语言 = 当前_.世界事实.语言服务;
+        const auto 确认 = 外设.读取本次网页交互确认(查询.会话, 查询.对话框);
+        if (确认.状态 == F::资源失败 || 确认.状态 == F::结构不一致 || 确认.状态 == F::未初始化)
+            return {};
+        if (确认.状态 != F::已完成 || !确认.确认 || !确认.场景 || !确认.窗口)
+            return {S::未找到};
+        const 新外设消息来源键 来源{查询.会话, 查询.对话框, 新外设消息方向::接收, 查询.入站序号};
+        const auto 消息 = 外设.查找消息(来源);
+        检查停止();
+        if (!消息 || 消息->来源 != 来源 || 消息->窗口节点 != *确认.窗口
+            || 消息->场景节点 != *确认.场景
+            || 消息->正式记录时间.纳秒 < 确认.确认UTC纳秒) return {S::未找到};
+
+        const auto 角色 = 语言.读取正式消息角色(消息->消息节点, 新外设消息方向::接收);
+        检查停止();
+        if (角色.状态 == R::未找到 || 角色.状态 == R::材料未就绪) return {S::未找到};
+        if (角色.状态 != R::已完成 || !角色.信息) return {};
+        if (!角色.信息->事实 || !角色.信息->内部交互场景 || !角色.信息->说话者
+            || !角色.信息->受话者 || 角色.信息->消息.来源 != 来源
+            || 角色.信息->消息.窗口节点 != *确认.窗口) return {S::未找到};
+        // 正式外设正文已核验为合法 UTF-8，一条原消息使用完整标量范围和根作用域。
+        const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(消息->UTF8正文,
+            [](unsigned char 字节) { return (字节 & 0xc0) != 0x80; }));
+        const auto 正式 = 语言.读取接收语言解释({消息->消息节点, 0, 长度, {}},
+            当前_.自然语言世界树, 外设);
+        检查停止();
+        if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) return {S::待采集};
+        if (正式.状态 != L::已完成 || !正式.信息) return {};
+
+        const auto& 信息 = *正式.信息;
+        const auto& 采用 = 信息.篇章采用;
+        std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
+            + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
+            + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
+            + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
+            + ",\"meaning\":" + 接收候选含义JSON(信息.内容.含义候选)
+            + ",\"adoptedMeaning\":" + (采用 ? 接收候选含义JSON(采用->内容.含义候选) : "null")
+            + ",\"sentences\":[";
+        bool 首句 = true;
+        for (const auto& 句 : 信息.内容.句段组) {
+            if (!首句) JSON += ',';
+            首句 = false;
+            JSON += "{\"start\":" + 控制计数(句.起始标量) + ",\"end\":" + 控制计数(句.结束标量)
+                + ",\"operation\":" + (句.静态结构 ? 控制计数(static_cast<std::uint64_t>(句.静态结构->操作)) : "null") + "}";
+        }
+        JSON += "]}";
+        检查停止();
+        return {S::已读取, std::make_shared<const std::string>(std::move(JSON))};
+    }
+
     普通控制采集可停止结果 采集() {
         try {
             检查停止();
@@ -2588,6 +2651,31 @@ void 停止普通控制采集(普通应用上下文& 当前) {
 #endif
 }
 
+void 采集指定接收材料(普通应用上下文& 当前,
+    const std::shared_ptr<普通控制快照缓存>& 缓存, std::stop_token 停止) {
+    std::shared_ptr<const 网页指定接收查询> 查询;
+    {
+        std::lock_guard 锁(缓存->互斥);
+        if (缓存->指定接收 && !缓存->指定接收->结果) 查询 = 缓存->指定接收->查询;
+    }
+    if (!查询) return;
+
+    网页指定接收读回结果 结果;
+    try {
+        结果 = 普通控制投影(当前, 停止).指定接收材料(*查询);
+    } catch (const 普通控制采集取消&) {
+        if (!停止.stop_requested()) throw;
+    } catch (const std::bad_alloc&) {
+        结果 = {};
+    } catch (const std::length_error&) {
+        结果 = {};
+    }
+
+    std::lock_guard 锁(缓存->互斥);
+    if (缓存->指定接收 && 缓存->指定接收->查询 == 查询)
+        缓存->指定接收->结果 = std::move(结果);
+}
+
 void 采集普通控制面板(普通应用上下文& 当前,
     const std::shared_ptr<普通控制快照缓存>& 缓存, std::stop_token 停止) noexcept {
     try {
@@ -2605,7 +2693,17 @@ void 采集普通控制面板(普通应用上下文& 当前,
             缓存->状态 = 网页控制快照状态::已停止;
             return;
         }
+        auto 下次快照 = std::chrono::steady_clock::now();
         while (!停止.stop_requested()) {
+            采集指定接收材料(当前, 缓存, 停止);
+            if (停止.stop_requested()) break;
+            if (std::chrono::steady_clock::now() < 下次快照) {
+                std::unique_lock 锁(缓存->互斥);
+                (void)缓存->唤醒.wait_until(锁, 停止, 下次快照, [&] {
+                    return 缓存->指定接收 && !缓存->指定接收->结果;
+                });
+                continue;
+            }
             { std::lock_guard 锁(缓存->互斥); 缓存->正在采集 = true; }
             std::shared_ptr<const std::string> 新正文;
             bool 完整 = false;
@@ -2642,10 +2740,12 @@ void 采集普通控制面板(普通应用上下文& 当前,
                     缓存->状态 = 完整 ? 网页控制快照状态::已取得 : 网页控制快照状态::采集失败;
                 } else 缓存->状态 = 网页控制快照状态::采集失败;
             }
-            std::unique_lock 锁(缓存->互斥);
             const auto 间隔 = 完整 ? std::chrono::milliseconds(2000) : std::chrono::milliseconds(15000);
-            (void)缓存->唤醒.wait_for(锁, 停止, 间隔, [] { return false; });
+            下次快照 = std::chrono::steady_clock::now() + 间隔;
         }
+        std::lock_guard 锁(缓存->互斥);
+        缓存->正在采集 = false;
+        缓存->状态 = 网页控制快照状态::已停止;
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"控制面板只读采集", L"只读快照工程异常，不将其解释为业务失败或空数据。");
     }
@@ -6735,6 +6835,28 @@ bool 网页目标格式有效(const 网页对话框目标& 目标) noexcept {
             if (缓存->正文) 年龄 = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::steady_clock::now() - 缓存->完成时间).count());
             return {缓存->状态, 缓存->正文, 缓存->序号, 年龄, 缓存->正在采集};
+        }, [缓存](网页指定接收查询 查询) -> 网页指定接收读回结果 {
+            using S = 网页指定接收读回状态;
+            try {
+                std::lock_guard 锁(缓存->互斥);
+                if (缓存->状态 == 网页控制快照状态::已停止) return {};
+                if (!缓存->入站后允许采集.load(std::memory_order_acquire)) return {S::未找到};
+                if (缓存->指定接收) {
+                    const bool 同键 = *缓存->指定接收->查询 == 查询;
+                    if (!缓存->指定接收->结果) return {同键 ? S::待采集 : S::暂不可用};
+                    if (同键) {
+                        const auto 结果 = std::move(*缓存->指定接收->结果);
+                        缓存->指定接收.reset();
+                        return 结果;
+                    }
+                }
+                缓存->指定接收 = 普通指定接收采集{
+                    std::make_shared<const 网页指定接收查询>(std::move(查询)), {}};
+                缓存->唤醒.notify_all();
+                return {S::待采集};
+            } catch (const std::bad_alloc&) {
+                return {};
+            }
         }};
     } catch (const std::bad_alloc&) {
         (void)记录运行日志(L"控制界面", L"建立只读采集回调", L"控制面板缓存资源不足，未取得快照，不改变业务状态。");

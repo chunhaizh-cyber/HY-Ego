@@ -1531,6 +1531,42 @@ bool 处理控制台输出请求(SOCKET 客户端, const HTTP请求& 请求,
     }
 }
 
+bool 处理控制台指定接收请求(SOCKET 客户端, const HTTP请求& 请求, std::string_view 基础路径,
+    std::string_view 会话, std::string_view 页面Origin, const 网页控制面板回调组& 回调) {
+    const std::string 路径 = std::string(基础路径) + "/api/control/received";
+    if (请求.目标 != 路径 && !请求.目标.starts_with(路径 + "?")) return false;
+    const auto 回复 = [&](std::string_view HTTP状态, std::string_view JSON) {
+        (void)发送响应(客户端, HTTP状态, "application/json;charset=utf-8", JSON);
+        return true;
+    };
+    const std::string 前缀 = 路径 + "?id=";
+    if (请求.方法 != "GET" || !请求.正文.empty() || 请求.控制安全头无效
+        || !请求.对话框标识 || !请求.主机 || !请求.目标.starts_with(前缀))
+        return 回复("400 Bad Request", R"({"status":"invalid"})");
+    if (!页面Origin.starts_with("http://127.0.0.1:"))
+        throw std::logic_error("received readback trusted origin unavailable");
+    if (*请求.主机 != 页面Origin.substr(7) || (请求.来源 && *请求.来源 != 页面Origin))
+        return 回复("403 Forbidden", R"({"status":"forbidden"})");
+    const auto ID = std::string_view(请求.目标).substr(前缀.size());
+    std::uint64_t 序号 = 0;
+    const auto 转换 = std::from_chars(ID.data(), ID.data() + ID.size(), 序号);
+    if (ID.empty() || ID.front() < '1' || ID.front() > '9'
+        || 转换.ec != std::errc{} || 转换.ptr != ID.data() + ID.size())
+        return 回复("400 Bad Request", R"({"status":"invalid"})");
+    if (!回调.读取指定接收) return 回复("503 Service Unavailable", R"({"status":"unavailable"})");
+    const auto 结果 = 回调.读取指定接收({std::string(会话), *请求.对话框标识, 序号});
+    using S = 网页指定接收读回状态;
+    switch (结果.状态) {
+    case S::待采集: return 回复("202 Accepted", R"({"status":"pending"})");
+    case S::未找到: return 回复("404 Not Found", R"({"status":"notFound"})");
+    case S::暂不可用: return 回复("503 Service Unavailable", R"({"status":"unavailable"})");
+    case S::已读取:
+        if (结果.UTF8JSON) return 回复("200 OK", *结果.UTF8JSON);
+        break;
+    }
+    throw std::logic_error("received readback result invalid");
+}
+
 bool 处理请求(SOCKET 客户端,
     std::string_view 基础路径,
     std::string_view 会话标识,
@@ -1554,6 +1590,7 @@ bool 处理请求(SOCKET 客户端,
 
     if (处理交互确认请求(客户端,请求,基础路径,会话标识,页面Origin,对话框事实)) return true;
     if (处理控制台输出请求(客户端, 请求, 基础路径, 会话标识, 页面Origin)) return true;
+    if (处理控制台指定接收请求(客户端, 请求, 基础路径, 会话标识, 页面Origin, 控制面板)) return true;
     const std::string 消息路径 = std::string(基础路径) + "/api/messages";
     const std::string 取件路径 = std::string(基础路径) + "/api/outbound";
     const std::string 结束路径 = std::string(基础路径) + "/api/close";
@@ -1650,7 +1687,8 @@ bool 处理请求(SOCKET 客户端,
                 L"外设已接收真实消息，但宿主显示列表追加失败，保留正式事实。");
         }
         发送响应(客户端, "202 Accepted", "application/json;charset=utf-8",
-            "{\"accepted\":true}");
+            消息接收 ? "{\"accepted\":true,\"ingressSequence\":\"" + std::to_string(*上行序号) + "\"}"
+                      : "{\"accepted\":true}");
         return true;
     }
     if (请求.方法 == "POST" && 请求.目标 == 结束路径 && 请求.正文.empty()) {

@@ -22,9 +22,20 @@ struct 网页控制快照读取结果 final {
     std::uint64_t 距采集完成毫秒 = 0;
     bool 正在采集 = false;
 };
+enum class 网页指定接收读回状态 : std::uint8_t { 待采集, 已读取, 未找到, 暂不可用 };
+struct 网页指定接收查询 final {
+    std::string 会话, 对话框;
+    std::uint64_t 入站序号;
+    friend bool operator==(const 网页指定接收查询&, const 网页指定接收查询&) = default;
+};
+struct 网页指定接收读回结果 final {
+    网页指定接收读回状态 状态 = 网页指定接收读回状态::暂不可用;
+    std::shared_ptr<const std::string> UTF8JSON;
+};
 struct 网页控制面板回调组 final {
     // 仅取得共享缓存，不得在HTTP线程查询业务owner。
     std::function<网页控制快照读取结果()> 读取;
+    std::function<网页指定接收读回结果(网页指定接收查询)> 读取指定接收;
 };
 
 enum class 网页对话宿主状态 : std::uint8_t {
