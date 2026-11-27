@@ -2233,7 +2233,17 @@ public:
         const auto 正式 = 语言.读取接收语言解释({消息->消息节点, 0, 长度, {}},
             当前_.自然语言世界树, 外设);
         检查停止();
-        if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) return {S::待采集};
+        if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) {
+            const auto 答复=语言.按原消息读取整数答复(消息->消息节点);
+            if(!答复.信息) return {S::待采集};
+            const auto& A=*答复.信息;
+            if(A.原文!=消息->UTF8正文 || A.结束标量!=长度) return {};
+            return {S::已读取,std::make_shared<const std::string>("{\"status\":\"ready\",\"ingressSequence\":"+控制计数(查询.入站序号)
+                +",\"message\":"+控制编码(A.原消息)+",\"integerAnswer\":{\"record\":"+控制编码(A.答复)
+                +",\"sourceScene\":"+控制编码(A.来源场景)+",\"item\":"+控制编码(A.所求项)
+                +",\"relation\":"+控制编码(A.关系概念)+",\"integer\":"+std::to_string(A.准确整数)
+                +",\"unit\":"+控制编码(A.单位)+"}}")};
+        }
         if (正式.状态 != L::已完成 || !正式.信息) return {};
 
         const auto 收件数量 = 外设.读取接收数量变化(来源, 消息->消息节点);
@@ -2265,6 +2275,15 @@ public:
             const auto& 依据=*需求.说话者调整需求;
             if(依据.原消息角色事实!=*角色.信息->事实)return {};
             const auto& 内容=需求.内容;
+            const auto 补全=语言.读取已补场景期望值(需求.陈述节点);
+            std::string 目标值="null";
+            if(补全.信息){
+                const auto& B=*补全.信息;
+                目标值="{\"integer\":"+std::to_string(B.答复.准确整数)+",\"unit\":"+控制编码(B.答复.单位)
+                    +",\"answer\":"+控制编码(B.答复.答复)+",\"answerMessage\":"+控制编码(B.答复.原消息)
+                    +",\"originalQuestion\":"+控制编码(B.原提问)+",\"send\":"+控制编码(B.发送)
+                    +",\"item\":"+控制编码(B.所求项)+",\"relation\":"+控制编码(B.答复.关系概念)+"}";
+            }
             说话者需求JSON="{\"record\":"+控制编码(需求.陈述节点)
                 +",\"sourceMessage\":"+控制编码(内容.来源消息)
                 +",\"sourceScene\":"+控制编码(内容.来源场景)
@@ -2275,7 +2294,7 @@ public:
                 +",\"owner\":"+控制编码(内容.主体存在)
                 +",\"target\":"+控制编码(内容.目标存在)
                 +",\"featureConcept\":"+控制编码(依据.目标特征概念)
-                +",\"intent\":\"adjust\",\"targetValue\":null}";
+                +",\"intent\":\"adjust\",\"targetValue\":"+目标值+"}";
             const auto 自我=当前_.自我线程.读取快照();
             const auto& 取用=自我.最近场景需求取用;
             if(取用&&取用->原消息==消息->消息节点&&取用->场景需求==需求.陈述节点
@@ -2426,12 +2445,24 @@ private:
                         最新发送->正文材料节点, 新外设消息方向::发送});
                 if (读.事实) {
                     const auto& 角色 = *读.事实;
+                    const auto 提问=当前_.世界事实.语言服务.读取正式发送原提问(最新发送->消息节点);
+                    std::string 期望补问="null";
+                    if(提问.信息 && 提问.信息->原提问.整数所求 && 提问.信息->原提问.整数所求->场景需求来源){
+                        const auto& 问=*提问.信息;
+                        const auto& 规格=*问.原提问.整数所求;
+                        期望补问=R"({"question":)"+控制编码(问.原提问.节点)
+                            +R"(,"sceneDemand":)"+控制编码(规格.场景需求来源)
+                            +R"(,"target":)"+控制编码(规格.目标存在)
+                            +R"(,"featureConcept":)"+控制编码(规格.待完善字段)
+                            +R"(,"unit":)"+控制编码(规格.单位)
+                            +R"(,"itemOrdinal":)"+std::to_string(问.所求项.待求编号)+"}";
+                    }
                     最后发送角色 = R"({"message":)" + 控制编码(最新发送->消息节点)
                         + R"(,"submissionId":)" + 控制计数(最新发送->来源.来源序号)
                         + R"(,"record":)" + 控制编码(角色.事实节点)
                         + R"(,"scene":)" + 控制编码(角色.场景)
                         + R"(,"speaker":)" + 控制编码(角色.说话者)
-                        + R"(,"recipient":)" + 控制编码(角色.受话者) + "}";
+                        + R"(,"recipient":)" + 控制编码(角色.受话者) + R"(,"sceneExpectationQuestion":)" + 期望补问 + "}";
                 }
             }
             临时场景正文 += R"({"externalWindow":)" + 控制编码(场景.来源.外设窗口)

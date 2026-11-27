@@ -5880,7 +5880,8 @@ struct 新_自我线程类::实现 final {
                         const auto observed=provider->推进一次(token);
                         if(!token.stop_requested()&&observed&&observed->被动解释来源
                             &&observed->阶段==接收需求认知阶段::已保存场景信息&&本自我&&世界树服务) {
-                            const auto& 语言=世界树服务->获取事实服务引用().语言服务;
+                            auto& 语言=世界树服务->获取事实服务引用().语言服务;
+                            语言.补全说话者场景期望值(observed->M,*本自我);
                             const auto 角色=语言.读取正式消息角色(observed->M,新外设消息方向::接收);
                             if(角色.状态==新接收指代调用状态::结构不一致)
                                 throw std::logic_error("scene demand role evidence is inconsistent");
@@ -5893,7 +5894,8 @@ struct 新_自我线程类::实现 final {
                                         throw std::logic_error("scene demand did not match the unique formal message source");
                                     场景需求取用=新自我场景需求取用观察{
                                         observed->M,条目.陈述节点,*来源.内部交互场景,*来源.事实,
-                                        *来源.说话者,*本自我,!条目.内容.值种类,!条目.内容.特征类型,observed->D};
+                                        *来源.说话者,*本自我,!条目.期望值答复,!条目.内容.特征类型,observed->D};
+                                    provider->提交场景期望值询问(*observed->被动解释来源,条目,*本自我,token);
                                 }
                             }
                         }

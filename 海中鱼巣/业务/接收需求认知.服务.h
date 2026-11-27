@@ -17,6 +17,7 @@ class 新_语言类; class 新_词类; class 概念_名称关系类;
 class 概念_存在类; class 概念_特征类; class 概念_二次特征类;
 class 新_存在类; class 新_特征值类; class 新_特征类;
 class 新_场景类; class 新_需求类;
+struct 新值陈述信息;
 struct 新任务前置语言输入结果;
 class 字段询问语言服务; class 新_世界树类; class 正式信息参数读取接口; class 新_自我线程类;
 struct 接收分界依据状态投递 final {
@@ -138,6 +139,8 @@ public:
     bool 装配可信词头来源(std::shared_ptr<const 离线词典数据源>);
     接收认知语境接纳状态 登记会话语境(const 接收需求认知会话语境&);
     void 封存会话(std::string_view) noexcept;
+    void 提交场景期望值询问(const 新接收认知来源键&, const 新值陈述信息&,
+        稳定编码 自我,std::stop_token);
     std::optional<接收需求认知观察> 推进一次(std::stop_token);
     // 与推进一次相同，由self唯一消费者串行调用；只确认邮箱接纳。
     接收行动请求交接确认状态 确认行动请求已交接(
