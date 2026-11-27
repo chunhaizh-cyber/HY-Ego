@@ -2284,10 +2284,53 @@ public:
         // 正式外设正文已核验为合法 UTF-8，一条原消息使用完整标量范围和根作用域。
         const auto 长度 = static_cast<std::uint64_t>(std::ranges::count_if(消息->UTF8正文,
             [](unsigned char 字节) { return (字节 & 0xc0) != 0x80; }));
-        const auto 正式 = 语言.读取接收语言解释({消息->消息节点, 0, 长度, {}},
-            当前_.自然语言世界树, 外设);
+        const 新接收认知来源键 原消息键{消息->消息节点,0,长度,{}};
+        std::string 正式请求JSON = "null";
+        using U = 新语言含义采用状态;
+        const auto 采用读取 = 语言.读取接收采用含义(原消息键,当前_.世界事实.特征服务);
+        if (采用读取.状态 == U::前提已变化) return {S::待采集};
+        if (采用读取.状态 == U::资源失败) return {};
+        if (采用读取.状态 == U::已采用 && 采用读取.信息
+            && 采用读取.信息->来源 == 原消息键 && 采用读取.信息->说话者节点 == *角色.信息->说话者) {
+            const auto 需求 = 语言.读取采用行动请求保护(采用读取.信息->节点,*角色.信息->受话者,
+                当前_.世界事实.特征服务,当前_.世界事实.存在服务);
+            if (需求.状态 == U::前提已变化) return {S::待采集};
+            if (需求.状态 == U::资源失败) return {};
+            if (需求.状态 == U::已采用 && 需求.信息 && 需求.信息->请求来源 == 原消息键
+                && 需求.信息->说话者H == *角色.信息->说话者 && 需求.信息->受请求者E == *角色.信息->受话者) {
+                const auto& 项 = *需求.信息;
+                const auto 指定需求 = 语言.读取采用指定需求目标(
+                    项.采用含义节点,项.需求来源,当前_.世界事实.特征服务);
+                if (指定需求.状态 == U::前提已变化) return {S::待采集};
+                if (指定需求.状态 != U::已采用 || !指定需求.信息
+                    || 指定需求.信息->需求来源 != 项.需求来源) return {};
+                const auto 来源JSON = [&](const 新接收认知来源键& 键) {
+                    std::string 路径="[";
+                    for (const auto index : 键.根出现路径) {
+                        if (路径.size()>1) 路径 += ',';
+                        路径 += 控制计数(static_cast<std::uint64_t>(index));
+                    }
+                    路径 += ']';
+                    return "{\"message\":"+控制编码(键.接收消息节点)
+                        +",\"start\":"+控制计数(键.原文起点)+",\"end\":"+控制计数(键.原文终点)
+                        +",\"path\":"+路径+"}";
+                };
+                正式请求JSON = "{\"meaning\":"+控制编码(项.采用含义节点)
+                    +",\"source\":"+来源JSON(项.请求来源)+",\"demandSource\":"+来源JSON(项.需求来源)
+                    +",\"historicalSpeaker\":"+控制编码(项.说话者H)+",\"recipient\":"+控制编码(项.受请求者E)
+                    +",\"target\":"+控制编码(指定需求.信息->目标存在)
+                    +",\"featureType\":"+控制编码(指定需求.信息->目标特征类型)
+                    +",\"direction\":"+(指定需求.信息->方向
+                        ? 控制计数(static_cast<std::uint64_t>(*指定需求.信息->方向)) : "null")+"}";
+            }
+        }
+        const auto 正式 = 语言.读取接收语言解释(原消息键, 当前_.自然语言世界树, 外设);
         检查停止();
         if (正式.状态 == L::未找到 || 正式.状态 == L::材料未就绪) {
+            if (正式请求JSON != "null")
+                return {S::已读取,std::make_shared<const std::string>("{\"status\":\"ready\",\"ingressSequence\":"
+                    +控制计数(查询.入站序号)+",\"message\":"+控制编码(消息->消息节点)
+                    +",\"formalActionAdoption\":"+正式请求JSON+"}")};
             const auto 答复=语言.按原消息读取整数答复(消息->消息节点);
             if(!答复.信息) return {S::待采集};
             const auto& A=*答复.信息;
@@ -2431,6 +2474,7 @@ public:
             + ",\"windowIdentityCognition\":" + 身份认知JSON
             + ",\"adoptedObjectCorrespondence\":" + 对象对应JSON
             + ",\"expression\":" + 成文JSON
+            + ",\"formalActionAdoption\":" + 正式请求JSON
             + ",\"selfSceneDemandReview\":" + 自我取用JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
@@ -5649,6 +5693,7 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
                     当前.自然语言世界树);
             }
             当前.接收认知.装配关系陈述(*当前.关系陈述语言);
+            当前.接收认知.装配本窗认知读取(当前.世界树);
         }
         // 名称仅关联既有正式FT，语言不产生另一份需求类型或需求内容。
         if (!当前.中文语言节点)
@@ -7544,16 +7589,30 @@ void 验证同窗结构化需求复制(普通应用上下文& 当前, const 新�
         << " rejectedTarget=" << static_cast<int>(拒对象.状态)
         << " featureBefore=" << (启动F ? 启动F->节点.值 : 0)
         << " featureAfterRejection=" << (拒绝后F ? 拒绝后F->节点.值 : 0) << std::endl;
-    if (拒范围.需求节点 || 拒对象.需求节点 || 启动F != 拒绝后F) return;
-    const auto 建立 = 写(采用,目标);
-    auto 再投 = 写(采用,目标);
-    for (int 次数 = 0; 次数 < 3 && 建立.状态 == 新需求操作状态::已建立
-        && 再投.状态 == 新需求操作状态::前提已变化; ++次数) {
-        记录 << "replay prerequisite changed; refresh same source" << std::endl;
-        std::this_thread::sleep_for(std::chrono::milliseconds(30));
-        再投 = 写(采用,目标);
+    if (拒范围.状态 != 新需求操作状态::认知来源不合法
+        || 拒对象.状态 != 新需求操作状态::同来源目标冲突
+        || 拒范围.需求节点 || 拒对象.需求节点 || 启动F != 拒绝后F) {
+        记录 << "negative readback mismatch\n"; return;
     }
-    const auto 读回 = D.查询接收认知来源需求(采用,L,d.特征服务);
+    using 状态 = 新需求操作状态;
+    // 只有正式的前提变化可重取同源，业务拒绝或工程失败保持原结果。
+    const auto 重读前提 = [&](std::string_view 步骤, const auto& 操作) {
+        auto 结果 = 操作();
+        for (int 次数 = 0; 次数 < 3 && 结果.状态 == 状态::前提已变化; ++次数) {
+            记录 << 步骤 << " prerequisite changed; refresh same source" << std::endl;
+            std::this_thread::sleep_for(std::chrono::milliseconds(30));
+            结果 = 操作();
+        }
+        return 结果;
+    };
+    const auto 独立查询 = [&] { return D.查询接收认知来源需求(采用,L,d.特征服务); };
+    if (重读前提("initial-read",独立查询).状态 != 状态::需求不存在) {
+        记录 << "unexpected existing source\n"; return;
+    }
+    const auto 同源写入 = [&] { return 写(采用,目标); };
+    const auto 建立 = 重读前提("create",同源写入);
+    const auto 再投 = 重读前提("replay",同源写入);
+    const auto 读回 = 重读前提("independent-read",独立查询);
     const auto F = 主体F();
     记录 << "create=" << static_cast<int>(建立.状态)
         << " replay=" << static_cast<int>(再投.状态)
@@ -7562,7 +7621,8 @@ void 验证同窗结构化需求复制(普通应用上下文& 当前, const 新�
         << " F=" << (F ? F->节点.值 : 0)
         << " Fcurrent=" << (F && F->当前值.has_value())
         << " Fhistory=" << (F ? F->历史不同值.size() : 0) << std::endl;
-    if (建立.状态 == 新需求操作状态::已建立 && 再投.状态 == 新需求操作状态::已复用
+    if ((建立.状态 == 状态::已建立 || 建立.状态 == 状态::已复用)
+        && 再投.状态 == 状态::已复用
         && 读回.状态 == 新需求操作状态::已找到 && 读回.信息 && 读回.信息->已知目标 && F
         && 建立.需求节点 == 再投.需求节点 && 建立.需求节点 == 读回.信息->节点
         && 读回.信息->需求主体存在节点 == 内E && 读回.信息->已知目标->目标存在节点 == 内E

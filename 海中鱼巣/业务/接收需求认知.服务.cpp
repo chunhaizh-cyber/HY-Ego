@@ -429,6 +429,7 @@ struct 认知依赖 final {
     概念_特征类& 特征概念;概念_二次特征类& 二次概念;新_存在类& 存在;
     新_特征值类& 特征值;新_特征类& 特征;新_场景类& 现实场景;新_需求类& 需求;
     const 关系陈述语言服务* 关系陈述 = nullptr;
+    const 新_世界树类* 本窗世界 = nullptr;
 };
 void 记录待完善谓项概念(认知依赖& d, const 新语言前置来源信息& 来源,
     const 语言基础统一输入结果& 解释, 接收语言句段解释& 句, std::stop_token stop) {
@@ -1952,8 +1953,12 @@ public:
     接收采用读取器(认知依赖& d,const 接收需求认知会话语境& context,
         const 新外设消息信息& m,const 新语言解释资源保护结果& resources,
         const 新指定场景范围保护结果& scope,const 语言基础统一输入结果& parsed,
-        const std::vector<专名现场项>& names,稳定编码 speaker,std::stop_token stop,std::function<bool()> 语境仍有效)
-        :d_(d),context_(context),m_(m),resources_(resources),scope_(scope),parsed_(parsed),names_(names),speaker_(speaker),stop_(stop),语境仍有效_(std::move(语境仍有效)){}
+        const std::vector<专名现场项>& names,稳定编码 speaker,std::stop_token stop,std::function<bool()> 语境仍有效,
+        const 新正式消息角色材料& 原角色, std::optional<稳定编码> 本窗目标,
+        std::function<std::optional<本窗自述对象对应>()> 重读本窗目标)
+        :d_(d),context_(context),m_(m),resources_(resources),scope_(scope),parsed_(parsed),names_(names),
+          speaker_(speaker),stop_(stop),语境仍有效_(std::move(语境仍有效)),原角色_(原角色),
+          本窗目标_(本窗目标),重读本窗目标_(std::move(重读本窗目标)){}
     新语言采用来源保护 读取采用来源保护(const 新接收认知来源键& k,稳定编码 scene) const override {
         新语言采用来源保护 out;
         try {
@@ -2036,8 +2041,36 @@ public:
             if(roles.主体!=speaker_)漂移();
             if(roles.受请求者) {
                 if(roles.受请求者!=context_.已绑定自我)漂移();
+                if(std::count(scope.范围.范围成员存在组.begin(),scope.范围.范围成员存在组.end(),*roles.受请求者)!=1)漂移();
+                const bool 采用本窗目标 = 本窗目标_ && std::ranges::any_of(图.出现组,[&](const auto& 出现) {
+                    return std::ranges::any_of(出现.角色组,[&](const auto& 绑定) {
+                        const auto* 值 = std::get_if<语言图引用值>(&绑定.值);
+                        return 值 && 值->类别 == 新语言知识角色类别::存在 && 值->节点 == 本窗目标_;
+                    });
+                });
+                if (采用本窗目标) {
+                    using R = 新接收指代调用状态;
+                    const auto 当前角色 = d_.语言.读取正式消息角色(m_.消息节点,新外设消息方向::接收);
+                    if (当前角色.状态 == R::资源失败) 资源();
+                    if (当前角色.状态 != R::已完成 || !当前角色.信息 || !原角色_.事实 || !原角色_.内部交互场景
+                        || 当前角色.信息->事实 != 原角色_.事实 || 当前角色.信息->内部交互场景 != 原角色_.内部交互场景
+                        || 当前角色.信息->说话者 != roles.主体 || 当前角色.信息->受话者 != roles.受请求者
+                        || !同消息(当前角色.信息->消息,m_)) 漂移();
+                    const auto 角色批 = 全局基础数据集.查询节点组完整结构({*原角色_.事实,*原角色_.内部交互场景});
+                    if (角色批.状态 == 基础结构操作状态::资源失败) 资源();
+                    if (角色批.状态 != 基础结构操作状态::已完成 || 角色批.节点组.size() != 2) 漂移();
+                    for (const auto& 项 : 角色批.节点组) {
+                        if (!项.快照) 漂移();
+                        并保护(out.完整保护,{*项.快照});
+                    }
+                    if (全局基础数据集.核验只读预期(当前角色.信息->证据预期) != 基础节点组追加状态::已完成) 漂移();
+                    const auto 对应 = 重读本窗目标_();
+                    if (!对应 || 对应->语言存在 != 本窗目标_) 漂移();
+                    并保护(out.完整保护,对应->完整保护);
+                } else if (std::count(scope.范围.范围成员存在组.begin(),scope.范围.范围成员存在组.end(),roles.主体)!=1) {
+                    漂移();
+                }
                 for(const auto E:{roles.主体,*roles.受请求者}) {
-                    if(std::count(scope.范围.范围成员存在组.begin(),scope.范围.范围成员存在组.end(),E)!=1)漂移();
                     检查认知停止(stop_);
                     const auto identity=d_.存在.读取存在身份保护(E);
                     if(identity.状态==基础结构操作状态::资源失败)资源();
@@ -2080,6 +2113,9 @@ private:
     稳定编码 speaker_;
     std::stop_token stop_;
     std::function<bool()> 语境仍有效_;
+    const 新正式消息角色材料& 原角色_;
+    std::optional<稳定编码> 本窗目标_;
+    std::function<std::optional<本窗自述对象对应>()> 重读本窗目标_;
 };
 std::int64_t 读I64(const std::string& s){
     std::int64_t v=0;const auto r=std::from_chars(s.data(),s.data()+s.size(),v);
@@ -2561,6 +2597,9 @@ struct 接收需求认知服务::实现 final {
 接收需求认知服务::~接收需求认知服务()=default;
 void 接收需求认知服务::装配关系陈述(const 关系陈述语言服务& 服务) noexcept {
     实现_->依赖.关系陈述 = &服务;
+}
+void 接收需求认知服务::装配本窗认知读取(const 新_世界树类& 世界) noexcept {
+    实现_->依赖.本窗世界 = &世界;
 }
 bool 接收需求认知服务::装配被动分界询问(接收分界询问配置 配置) {
     if(!配置.世界||!配置.表达||!配置.取材||!有效(配置.外设场景标识类型)||!有效(配置.材料范围概念)
@@ -4079,6 +4118,29 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             接收专名读取器 names(d,context.现实根,stop);
             语言基础统一输入请求 req{context.语言,固定来源.固定UTF8原文,{},0,0,0,0,0,&names,语言解释读取模式::本次正式有限集完整读取};
             req.交互上下文=语言图交互上下文{m.消息节点,speaker,*context.已绑定自我,context.现实根};
+            const auto 读取本窗请求对应 = [&]() -> std::optional<本窗自述对象对应> {
+                if (!d.本窗世界 || !角色.信息->事实 || !角色.信息->内部交互场景
+                    || 角色.信息->说话者 != speaker || 角色.信息->受话者 != context.已绑定自我) return {};
+                const auto 场景 = *角色.信息->内部交互场景;
+                const auto 认知 = d.本窗世界->读取本窗身份认知(场景);
+                if (!认知 || 认知->原对端 != speaker || 认知->原消息 == m.消息节点) return {};
+                const auto 自述 = d.外设.读取消息保护(认知->原消息);
+                if (自述.状态 == 新外设事实状态::资源失败) 资源();
+                if (自述.状态 != 新外设事实状态::已完成 || !自述.消息
+                    || 自述.消息->窗口节点 != m.窗口节点 || 自述.消息->场景节点 != m.场景节点
+                    || 自述.消息->来源.公开宿主会话 != m.来源.公开宿主会话
+                    || 自述.消息->来源.对话框标识 != m.来源.对话框标识
+                    || 自述.消息->正式记录时间.纳秒 >= m.正式记录时间.纳秒) return {};
+                const auto 对应 = 读取本窗自述对象对应({认知->原消息,0,标量数(自述.消息->UTF8正文),{}},场景,*d.本窗世界);
+                if (对应.状态 == 新语言分界工程状态::资源失败) 资源();
+                if (对应.状态 != 新语言分界工程状态::已完成 || !对应.信息
+                    || 对应.信息->认知采用 != 认知->采用节点 || 对应.信息->原角色 != 认知->原角色) return {};
+                return 对应.信息;
+            };
+            if (m.UTF8正文.starts_with("请你满足以下需求：")) {
+                if (const auto 对应 = 读取本窗请求对应())
+                    req.交互上下文->本窗自述语言目标 = 对应->语言存在;
+            }
             req.正式人称 = 本次人称;
             std::vector<新接收指代材料> 本次人称材料;
             const auto 收集人称 = [&](const 语言基础统一输入结果& 图, 解释原文范围 句) {
@@ -4569,7 +4631,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 const auto it=impl.会话组.find(context.公开宿主会话);
                 return it!=impl.会话组.end()&&!it->second.封存&&it->second.语境==context;
             };
-            接收采用读取器 reader(d,context,m,resources,scope,parsed,names.项目,speaker,stop,contextStill);
+            接收采用读取器 reader(d,context,m,resources,scope,parsed,names.项目,speaker,stop,contextStill,
+                *角色.信息,req.交互上下文->本窗自述语言目标,读取本窗请求对应);
             进入步骤("发表同源语言采用");
             const auto u=d.语言.建立或取得接收采用含义({k,*out.S,speaker,context.现实根,固定来源.固定文本材料,graph,parsed.图角色原文定位组},d.特征,d.特征概念,reader);
             if(u.状态==新语言含义采用状态::资源失败)资源();if(u.状态==新语言含义采用状态::前提已变化)漂移();

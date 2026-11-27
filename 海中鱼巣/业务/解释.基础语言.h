@@ -139,6 +139,8 @@ struct 语言图正式信息绑定 final {
 };
 struct 语言图交互上下文 final {
     稳定编码 接收消息M, 说话者H, 受话者E, 现实范围根;
+    // 只供经正式本窗认知保护的行动请求目标，不替换原说话者。
+    std::optional<稳定编码> 本窗自述语言目标{};
     friend bool operator==(const 语言图交互上下文&,
         const 语言图交互上下文&) = default;
 };
