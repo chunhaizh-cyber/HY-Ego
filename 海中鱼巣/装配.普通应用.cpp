@@ -2089,6 +2089,17 @@ public:
                     交互指代JSON = "{\"current\":" + 读交互指代({})
                         + ",\"adopted\":" + (采用 ? 读交互指代(采用) : "null") + "}";
                 }
+                std::string 局部具名特征JSON = "null";
+                if (item.局部具名特征对象) {
+                    const auto 特征 = 当前_.自然语言世界树.读取接收局部具名特征(*item.局部具名特征对象);
+                    if (特征) 局部具名特征JSON = "{\"existence\":" + 控制编码(特征->对象)
+                        + ",\"feature\":" + 控制编码(特征->特征) + ",\"concept\":" + 控制编码(特征->概念)
+                        + ",\"sourceMessage\":" + 控制编码(特征->来源.消息)
+                        + ",\"definition\":" + 控制编码(特征->来源.解释定义)
+                        + ",\"start\":" + 控制计数(特征->来源.起始标量)
+                        + ",\"end\":" + 控制计数(特征->来源.结束标量)
+                        + ",\"scope\":[],\"currentValueUnknown\":" + 控制布尔(特征->当前值未知) + "}";
+                }
                 被动句段解释 = "{\"source\":" + 控制编码(前置来源) + ",\"scene\":" + 控制编码(item.S)
                     + ",\"record\":" + (已保存 ? 控制编码(正式.信息->记录节点) : "null")
                     + ",\"definitionNode\":" + (已保存 ? 控制编码(正式.信息->解释定义节点) : "null")
@@ -2099,7 +2110,8 @@ public:
                     + ",\"adoptedMeaning\":" + 采用JSON + ",\"referenceInstances\":" + 指代实例JSON
                     + ",\"interactionReferences\":" + 交互指代JSON
                     + ",\"languageReferences\":" + 语言指代JSON
-                    + ",\"localObjects\":" + 局部对象JSON + ",\"sceneDirections\":" + 场景方向JSON + "}";
+                    + ",\"localObjects\":" + 局部对象JSON + ",\"localNamedFeature\":" + 局部具名特征JSON
+                    + ",\"sceneDirections\":" + 场景方向JSON + "}";
             }
         }
         std::string 短答JSON="null";

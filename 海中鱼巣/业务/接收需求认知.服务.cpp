@@ -668,7 +668,8 @@ std::vector<语言场景局部称名> 读取同源局部称名(认知依赖& d,
 // A local object stays in its original language scene. This view reads only the
 // confirmed window's earlier, already saved declarations.
 std::vector<语言场景局部称名> 读取同窗已声明局部称名(
-    认知依赖& d, const 新正式消息角色材料& 本次, std::stop_token 停止) {
+    认知依赖& d, const 新正式消息角色材料& 本次, std::stop_token 停止,
+    std::map<稳定编码, 稳定编码>* 声明消息组 = nullptr) {
     using L = 新语言分界工程状态;
     using R = 新接收指代调用状态;
     using O = 新语言知识含义操作;
@@ -736,10 +737,96 @@ std::vector<语言场景局部称名> 读取同窗已声明局部称名(
             if (词面.empty()) throw std::logic_error("local description source has an empty name range");
             if (std::ranges::none_of(结果, [&](const auto& 项) {
                 return 项.存在节点 == 对象.存在 && 项.词面 == 词面;
-            })) 结果.push_back({对象.存在, std::move(词面)});
+            })) {
+                结果.push_back({对象.存在, std::move(词面)});
+                if (声明消息组) 声明消息组->emplace(对象.存在, 前文.消息节点);
+            }
         }
     }
     return 结果;
+}
+
+bool 处理局部具名特征材料(认知依赖& d, 接收需求认知观察& out,
+    const 新正式消息角色材料& 角色, const 新接收语言解释信息& 解释, std::stop_token stop) {
+    using O = 新语言知识含义操作;
+    using P = 新语言知识参数角色;
+    using C = 新语言知识角色类别;
+    using N = 概念名称关系查询状态;
+    using T = 新词条查询状态;
+    using W = 新特征写入状态;
+    const auto& 内容 = 解释.内容;
+    if (内容.句段组.size() != 1 || 内容.原文起点 != 0
+        || !角色.事实 || !角色.内部交互场景 || !角色.说话者 || !角色.受话者) return false;
+    const auto& 句 = 内容.句段组.front();
+    if (!句.静态结构 || 句.起始标量 != 内容.原文起点 || 句.结束标量 != 内容.原文终点) return false;
+    const auto& 结构 = *句.静态结构;
+    const bool 发表 = 结构.操作 == O::未分解具名特征声明;
+    if (!发表 && 结构.操作 != O::信息请求) return false;
+    if (!可读取无上下文外层共指(角色.消息.UTF8正文)
+        || 标量数(角色.消息.UTF8正文) != 内容.原文终点) return false;
+    const auto 取角色 = [&](P 参数) -> const 语言图引用值* {
+        const auto it = std::ranges::find(结构.角色组, 参数, &接收语言已解释角色::参数);
+        return it == 结构.角色组.end() || !it->值 ? nullptr : std::get_if<语言图引用值>(&*it->值);
+    };
+    const auto* E = 取角色(P::主体);
+    const auto* FT = 取角色(P::特征类型);
+    if (!E || E->类别 != C::存在 || !FT || FT->类别 != C::特征概念
+        || FT->来源概念 != FT->节点 || !FT->选用名称关系) return false;
+    if (发表 && 结构.角色组.size() != 2) return false;
+    const auto 名称 = d.名称.获取名称关系(*FT->选用名称关系);
+    if (名称.状态 == N::工程未完成 || 名称.状态 == N::读取未完成 || 名称.状态 == N::资源失败) 资源();
+    if (名称.状态 == N::结构不一致 || 名称.状态 == N::输入不合法)
+        throw std::logic_error("local named feature name unreadable");
+    if (名称.状态 != N::已找到 || !名称.信息 || 名称.信息->概念节点 != FT->节点) 漂移();
+    const auto 词 = d.词.获取词条(名称.信息->词条节点);
+    if (词.状态 == T::资源失败) 资源();
+    if (词.状态 == T::结构不一致) throw std::logic_error("local named feature word unreadable");
+    if (词.状态 != T::已找到 || !词.信息) 漂移();
+    if (词.信息->语言节点 != 内容.语言节点 || 词.信息->规范化词面 != "水温") return false;
+    std::map<稳定编码, 稳定编码> 声明消息;
+    const auto 同窗对象 = 读取同窗已声明局部称名(d, 角色, stop, &声明消息);
+    const auto 对象角色 = std::ranges::find(结构.角色组, P::主体, &接收语言已解释角色::参数);
+    const auto 原文 = 语言场景转换内部::解码语言场景原文(角色.消息.UTF8正文);
+    if (!原文) throw std::logic_error("local named feature source text invalid");
+    const auto 词面 = 语言场景转换内部::读取语言场景原文范围(*原文,
+        {static_cast<std::size_t>(对象角色->起始标量), static_cast<std::size_t>(对象角色->结束标量)});
+    if (std::ranges::count(同窗对象, 词面, &语言场景局部称名::词面) != 1
+        || std::ranges::none_of(同窗对象, [&](const auto& 项) { return 项.存在节点 == E->节点 && 项.词面 == 词面; })
+        || !声明消息.contains(E->节点)) return false;
+
+    if (!发表) {
+        const auto 读回 = d.语言世界.读取接收局部具名特征(E->节点);
+        if (读回 && 读回->概念 == FT->节点) out.局部具名特征对象 = E->节点;
+        return false;
+    }
+    const auto 候选保护 = d.名称.读取词条名称候选保护(名称.信息->词条节点);
+    if (候选保护.状态 == N::工程未完成 || 候选保护.状态 == N::读取未完成
+        || 候选保护.状态 == N::资源失败) 资源();
+    if (候选保护.状态 == N::结构不一致 || 候选保护.状态 == N::输入不合法)
+        throw std::logic_error("local named feature candidate protection invalid");
+    if (候选保护.状态 != N::已找到 || 候选保护.候选组.size() != 1) return false;
+    const auto* 关系 = std::get_if<概念名称关系信息>(&候选保护.候选组.front());
+    if (!关系 || 关系->节点 != *FT->选用名称关系 || 关系->概念节点 != FT->节点) return false;
+    auto 预期 = 角色.证据预期;
+    for (const auto& 项 : 候选保护.完整保护) {
+        const auto& 节点 = 项.结构.节点;
+        if (std::ranges::none_of(预期.节点组, [&](const auto& 已有) { return 已有.编码 == 节点.编码; }))
+            预期.节点组.push_back(节点);
+        预期.字段集合组.push_back({节点.编码, {}, {}, 项.结构.字段组});
+    }
+    检查认知停止(stop);
+    const auto 已写 = d.语言世界.采用接收局部具名特征(声明消息.at(E->节点), E->节点, FT->节点,
+        {角色.消息.消息节点, 解释.解释定义节点, 句.起始标量, 句.结束标量}, std::move(预期));
+    if (已写.状态 == W::资源失败) 资源();
+    if (已写.状态 == W::前提已变化) 漂移();
+    if (已写.状态 == W::入口拒绝 || 已写.状态 == W::概念不存在) return false;
+    if ((已写.状态 != W::已完成 && 已写.状态 != W::无变化) || !已写.特征节点)
+        throw std::logic_error("local named feature publication failed");
+    const auto 读回 = d.语言世界.读取接收局部具名特征(E->节点);
+    if (!读回 || 读回->特征 != 已写.特征节点 || 读回->概念 != FT->节点)
+        throw std::logic_error("local named feature publication not readable");
+    out.局部具名特征对象 = E->节点;
+    return true;
 }
 
 struct 接收待完善谓项 final {
@@ -3522,6 +3609,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 if (保存.状态 == S::前提已变化 || 保存.状态 == S::未找到) 漂移();
                 if (保存.状态 != S::已完成 || !保存.信息)
                     throw std::logic_error("received typed language scene material was not published");
+                if (处理局部具名特征材料(d, out, *角色.信息, *保存.信息, stop))
+                    throw 推进中断{阶段::已保存场景信息, "已保存有来源的局部空特征，当前值未知"};
                 if (!保存.信息->篇章采用) {
                     auto 采用 = d.语言.采用当前接收指代关系篇章(k, speaker,
                         保存.信息->解释定义节点, d.语言世界, d.外设);

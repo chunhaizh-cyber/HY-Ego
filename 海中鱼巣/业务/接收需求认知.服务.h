@@ -102,6 +102,7 @@ struct 接收需求认知观察 final {
     std::optional<新接收认知来源键> 被动解释来源{};
     std::optional<接收篇章成文观察> 篇章成文{};
     std::optional<接收部分成文观察> 部分成文{};
+    std::optional<稳定编码> 局部具名特征对象{};
 };
 struct 现实交互指代项 final {
     稳定编码 实例;
