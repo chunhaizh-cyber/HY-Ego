@@ -4127,7 +4127,14 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
             const auto 读当前句 = [&] {
                 auto 结果 = 只读解释单句基础语言(req,d.语言,d.词,d.名称,d.存在概念,d.特征概念,d.存在);
                 using I = 语言场景基础输入状态;
-                if (结果.状态 == I::读取漂移 || 结果.状态 == I::引用不可读) 漂移();
+                if (结果.状态 == I::读取漂移 || 结果.状态 == I::引用不可读) {
+                    std::string 原因 = 结果.状态 == I::读取漂移 ? "正式解释读取漂移" : "正式解释引用不可读";
+                    if (结果.图解释状态)
+                        原因 += "，图状态=" + std::to_string(static_cast<int>(*结果.图解释状态));
+                    for (const auto 节点 : std::span(结果.受阻节点组).first((std::min)(结果.受阻节点组.size(), std::size_t{4})))
+                        原因 += "，受阻节点=" + std::to_string(节点.值);
+                    throw 推进中断{阶段::前提变化,std::move(原因)};
+                }
                 if (结果.状态 == I::工程未完成 || 结果.状态 == I::额度不足) 资源();
                 if (结果.状态 == I::内部不一致) throw std::logic_error("received sentence interpretation inconsistent");
                 return 结果;
