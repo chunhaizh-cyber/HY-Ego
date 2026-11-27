@@ -414,6 +414,8 @@ struct I64已知值成员读取结果 final {
     std::optional<I64已知值成员状态> 成员状态;
     std::optional<稳定编码> 依据;
     std::vector<基础联合节点快照> 保护组;
+    std::optional<稳定编码> 定义来源{}, 单位{};
+    std::vector<稳定编码> 已知成员节点组{};
 };
 
 struct 适用范围I64值域修订请求 final {
@@ -716,7 +718,8 @@ public:
         const 特征概念I64已知值集& 当前预期, const 特征概念I64已知值集& 增量,
         std::span<const 基础联合节点快照> 已采用成员来源) noexcept;
     I64已知值成员读取结果 读取适用范围I64已知值成员状态(
-        稳定编码 原概念, std::int64_t 值, std::optional<稳定编码> 单位) const noexcept;
+        稳定编码 原概念, std::optional<std::int64_t> 值 = {},
+        std::optional<稳定编码> 单位 = {}) const noexcept;
     特征概念编码操作结果 修订适用范围I64子类型值域(
         const 适用范围I64值域修订请求&, const 新_特征值类&) noexcept;
     // 只定位实例显式采用的最近限定类型；无限定时为整树根。

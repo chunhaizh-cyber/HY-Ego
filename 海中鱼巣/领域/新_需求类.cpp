@@ -2122,6 +2122,7 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             if(std::any_of(全部.begin(),全部.end(),[&](const auto& x){return !答案值相同(x,v);}))
                 return 结束(W::答案冲突,L"同一问题有多条值不同的答案 条数="+std::to_wstring(全部.size()));
         }
+        std::optional<std::pair<std::int64_t,稳定编码>> 已知域采用;
         // 目标形式由值陈述推出（计划 v0.5 §3.5第2项）：具体值/闭区间→值，方向→变化方向；形式与载荷同次写入。
         auto 新目标=t;
         if(v.值种类==新值陈述值种类::变化方向) {
@@ -2145,9 +2146,31 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             const auto lo=答案整数(v.准确整数 ? *v.准确整数 : *v.区间下界,ok1);
             const auto hi=v.准确整数 ? lo : 答案整数(*v.区间上界,ok2);
             if(!ok1||!ok2)return 结束(W::答案不可用,L"答案整数超出I64");
-            const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
-            if(!ranges||lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))
-                return 结束(W::答案不可用,L"答案值不在目标特征类型准入值域内");
+            if(std::holds_alternative<特征概念I64已知值集>(def.值域)) {
+                if(!正式.信息||正式.信息->规格.已知成员版本.empty()||!v.准确整数||lo!=hi)
+                    return 结束(W::答案不可用,L"开放值域只采用原所求项的正式准确整数");
+                using C=特征概念规则状态;
+                const auto& 规格=正式.信息->规格;
+                const auto 读=特征概念服务_.读取适用范围I64已知值成员状态(FT,lo,v.单位);
+                if(读.状态==C::资源失败)return 结束(W::资源失败);
+                if(读.状态==C::前提已变化)return 结束(W::前提已变化);
+                if(读.状态==C::材料类型不相容)return 结束(W::答案不可用,L"开放值域类型或单位不相容");
+                if(读.状态!=C::已完成||!读.成员状态)throw std::logic_error("known integer membership read failed");
+                if(读.定义来源!=规格.规范来源||读.已知成员节点组!=规格.已知成员版本)
+                    return 结束(W::前提已变化,L"原所求项的开放值域版本已过期");
+                if(读.成员状态==I64已知值成员状态::未覆盖)
+                    return 结束(W::答案不可用,L"开放值域未覆盖该准确值");
+                if(读.成员状态==I64已知值成员状态::父域明确排除)
+                    return 结束(W::答案不可用,L"正式父域排除了该准确值");
+                if(!读.依据)throw std::logic_error("known integer member has no accepted source");
+                已知域采用.emplace(lo,*读.依据);
+            } else {
+                if(正式.信息&&!正式.信息->规格.已知成员版本.empty())
+                    return 结束(W::前提已变化,L"原所求项的开放值域已变化");
+                const auto* ranges=std::get_if<std::vector<特征概念I64闭区间>>(&def.值域);
+                if(!ranges||lo>hi||std::none_of(ranges->begin(),ranges->end(),[&](const auto& x){return x.下界<=lo&&x.上界>=hi;}))
+                    return 结束(W::答案不可用,L"答案值不在目标特征类型准入值域内");
+            }
             特征概念定义 target{def.材料类型,std::vector<特征概念I64闭区间>{{lo,hi}},def.单位,def.比较规则,def.聚合规则,{}};
             const auto tc=特征概念服务_.建立或取得特征概念强类型(target,特征值服务_,FT);
             if(tc.状态==特征概念规则状态::资源失败)return 结束(W::资源失败);
@@ -2192,6 +2215,18 @@ bool 答案值相同(const 新问题答案信息& a,const 新问题答案信息&
             if(补问.状态==基础结构操作状态::资源失败)return 结束(W::资源失败);
             if(补问.状态!=基础结构操作状态::已完成||补问.节点组.size()!=1
                 ||!补问.节点组.front().快照||读取需求治理信息(Qn)!=Q)return 结束(W::前提已变化);
+            if(已知域采用) {
+                using C=特征概念规则状态;
+                const auto& [值,依据]=*已知域采用;
+                const auto 复核=特征概念服务_.读取适用范围I64已知值成员状态(a.规格.特征类型,值,a.规格.单位);
+                if(复核.状态==C::资源失败)return 结束(W::资源失败);
+                if(复核.状态==C::前提已变化||复核.状态==C::材料类型不相容)return 结束(W::前提已变化);
+                if(复核.状态!=C::已完成)throw std::logic_error("known integer membership recheck failed");
+                if(复核.定义来源!=a.规格.规范来源||复核.已知成员节点组!=a.规格.已知成员版本
+                    ||复核.成员状态!=I64已知值成员状态::已收录||复核.依据!=依据
+                    ||!并需求保护(原请求.完整保护,复核.保护组))
+                    return 结束(W::前提已变化,L"写回前开放值域版本或成员依据已变化");
+            }
             auto 预期=std::move(正式.信息->有效预期);
             const auto& 角色保护=角色.信息->证据预期;
             预期.节点组.insert(预期.节点组.end(),角色保护.节点组.begin(),角色保护.节点组.end());

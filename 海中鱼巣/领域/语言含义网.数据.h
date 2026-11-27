@@ -293,6 +293,8 @@ struct 新出站正式被询定位 final {
 struct 新出站整数所求规格 final {
     稳定编码 目标存在, 特征类型, 单位, 待完善字段, 规范来源;
     std::int64_t 下界=0, 上界=0;
+    // 非空表示开放模式；成员为概念所有者不可变节点的正式引用。
+    std::vector<稳定编码> 已知成员版本{};
     friend bool operator==(const 新出站整数所求规格&,const 新出站整数所求规格&)=default;
 };
 struct 新出站具体表达信息 final {
