@@ -6085,7 +6085,7 @@ struct 新_自我线程类::实现 final {
                                         处理本窗新认知(外设场景);
                                 }
                             }
-                            语言.补全说话者场景期望值(observed->M,*本自我);
+                            const auto 已补需求=语言.补全说话者场景期望值(observed->M,*本自我);
                             const auto 角色=语言.读取正式消息角色(observed->M,新外设消息方向::接收);
                             if(角色.状态==新接收指代调用状态::结构不一致)
                                 throw std::logic_error("scene demand role evidence is inconsistent");
@@ -6093,6 +6093,29 @@ struct 新_自我线程类::实现 final {
                                 &&角色.信息->受话者==本自我) {
                                 const auto& 来源=*角色.信息;
                                 for(const auto& 条目:语言.读取说话者场景需求(*来源.说话者,*来源.内部交互场景)) {
+                                    if(已补需求==条目.陈述节点) {
+                                        const auto 回读=语言.读取已补场景期望值(*已补需求);
+                                        const auto 原角色=语言.读取正式消息角色(条目.内容.来源消息,新外设消息方向::接收);
+                                        if(!回读.信息||!原角色.信息||!条目.说话者调整需求
+                                            ||原角色.信息->事实!=条目.说话者调整需求->原消息角色事实
+                                            ||原角色.信息->内部交互场景!=来源.内部交互场景
+                                            ||原角色.信息->说话者!=来源.说话者||原角色.信息->受话者!=本自我)
+                                            throw std::logic_error("scene demand answer source is inconsistent");
+                                        const auto& 材料=*回读.信息;
+                                        const auto& 答复=材料.答复;
+                                        if(材料.被问信息!=条目.陈述节点||材料.内部交互场景!=来源.内部交互场景
+                                            ||材料.询问者!=本自我||材料.受询者!=来源.说话者
+                                            ||答复.原消息!=observed->M||答复.答复!=条目.期望值答复
+                                            ||答复.所求项!=材料.所求项||!答复.关系概念)
+                                            throw std::logic_error("scene demand answer does not match current reply");
+                                        场景需求取用=新自我场景需求取用观察{
+                                            条目.内容.来源消息,条目.陈述节点,*来源.内部交互场景,
+                                            条目.说话者调整需求->原消息角色事实,*来源.说话者,*本自我,
+                                            false,!条目.内容.特征类型,{},新自我场景需求取用观察::后答材料{
+                                                材料.原提问,材料.发送,材料.所求项,答复.答复,答复.原消息,
+                                                *答复.关系概念,答复.单位,答复.准确整数}};
+                                        continue;
+                                    }
                                     if(条目.内容.来源消息!=observed->M)continue;
                                     if(场景需求取用||条目.说话者调整需求->原消息角色事实!=*来源.事实)
                                         throw std::logic_error("scene demand did not match the unique formal message source");
