@@ -793,6 +793,7 @@ struct 新_自我线程类::实现 final {
     bool 外设交互场景待补建 = false;
     std::set<std::pair<std::string, std::string>> 待核临时交互确认;
     std::chrono::steady_clock::time_point 最近接收认知推进{};
+    std::optional<新自我场景需求取用观察> 最近场景需求取用;
     std::mutex 治理基础互斥;
     新自我治理基础结果 治理基础缓存;
     mutable std::mutex 状态互斥;
@@ -5867,6 +5868,8 @@ struct 新_自我线程类::实现 final {
                     接收认知待唤醒=false;
                     auto* provider=接收认知;const auto token=停止源.get_token();
                     bool 行动请求已入邮箱=false;
+                    const auto 本自我=初始化结果 ? 初始化结果->自我存在 : std::nullopt;
+                    std::optional<新自我场景需求取用观察> 场景需求取用;
                     锁.unlock();
                     try {
                         try {
@@ -5875,6 +5878,25 @@ struct 新_自我线程类::实现 final {
                             (void)调试日志<调试切片::RECEIVED_DEMAND_SCHED>(L"自我线程",L"推进接收需求认知入口",诊断.str());
                         } catch (...) {}
                         const auto observed=provider->推进一次(token);
+                        if(!token.stop_requested()&&observed&&observed->被动解释来源
+                            &&observed->阶段==接收需求认知阶段::已保存场景信息&&本自我&&世界树服务) {
+                            const auto& 语言=世界树服务->获取事实服务引用().语言服务;
+                            const auto 角色=语言.读取正式消息角色(observed->M,新外设消息方向::接收);
+                            if(角色.状态==新接收指代调用状态::结构不一致)
+                                throw std::logic_error("scene demand role evidence is inconsistent");
+                            if(角色.信息&&角色.信息->事实&&角色.信息->说话者&&角色.信息->内部交互场景
+                                &&角色.信息->受话者==本自我) {
+                                const auto& 来源=*角色.信息;
+                                for(const auto& 条目:语言.读取说话者场景需求(*来源.说话者,*来源.内部交互场景)) {
+                                    if(条目.内容.来源消息!=observed->M)continue;
+                                    if(场景需求取用||条目.说话者调整需求->原消息角色事实!=*来源.事实)
+                                        throw std::logic_error("scene demand did not match the unique formal message source");
+                                    场景需求取用=新自我场景需求取用观察{
+                                        observed->M,条目.陈述节点,*来源.内部交互场景,*来源.事实,
+                                        *来源.说话者,*本自我,!条目.内容.值种类,!条目.内容.特征类型,observed->D};
+                                }
+                            }
+                        }
                         if(!token.stop_requested()&&observed&&observed->待交接前置输入) {
                             const auto accepted=接纳前置输入(*observed->待交接前置输入);
                             if(accepted.状态==新自我消息接收状态::已接收||accepted.状态==新自我消息接收状态::精确重复) {
@@ -5923,6 +5945,7 @@ struct 新_自我线程类::实现 final {
                     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"推进接收需求认知",L"真实消息认知发生未知工程异常。");}
                     锁.lock();
                     最近接收认知推进=std::chrono::steady_clock::now();
+                    if(场景需求取用 && !停止源.stop_requested())最近场景需求取用=std::move(场景需求取用);
                     if(停止已请求||停止源.stop_requested())break;
                     // 普通认知拍仍继续原治理；前U材料或行动请求入邮箱后优先排干。
                     if(行动请求已入邮箱)continue;
@@ -7673,6 +7696,7 @@ std::stop_token 新_自我线程类::读取停止令牌() const noexcept {
             }));
         快照.最近学习结束=实现_->最近学习结束;
         快照.最近学习运行异常=实现_->最近学习运行异常;
+        快照.最近场景需求取用=实现_->最近场景需求取用;
         return 快照;
     } catch (...) {
         快照.生命周期 = 新自我线程生命周期::内部错误;

@@ -2258,6 +2258,7 @@ public:
         const auto& 信息 = *正式.信息;
         const auto& 采用 = 信息.篇章采用;
         std::string 说话者需求JSON="null";
+        std::string 自我取用JSON="null";
         for(const auto& 需求:语言.读取说话者场景需求(*角色.信息->说话者,*角色.信息->内部交互场景)){
             检查停止();
             if(需求.内容.来源消息!=消息->消息节点)continue;
@@ -2275,12 +2276,25 @@ public:
                 +",\"target\":"+控制编码(内容.目标存在)
                 +",\"featureConcept\":"+控制编码(依据.目标特征概念)
                 +",\"intent\":\"adjust\",\"targetValue\":null}";
+            const auto 自我=当前_.自我线程.读取快照();
+            const auto& 取用=自我.最近场景需求取用;
+            if(取用&&取用->原消息==消息->消息节点&&取用->场景需求==需求.陈述节点
+                &&取用->内部交互场景==依据.内部交互场景&&取用->角色事实==依据.原消息角色事实
+                &&取用->说话者==内容.说话者&&取用->受话自我==*角色.信息->受话者){
+                自我取用JSON="{\"sourceMessage\":"+控制编码(取用->原消息)
+                    +",\"sceneDemand\":"+控制编码(取用->场景需求)
+                    +",\"self\":"+控制编码(取用->受话自我)
+                    +",\"missingTargetValue\":"+控制布尔(取用->缺目标值)
+                    +",\"missingFormalTargetType\":"+控制布尔(取用->缺正式目标类型)
+                    +",\"governanceDemand\":"+控制编码(取用->被认知需求)+"}";
+            }
             break;
         }
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
             + ",\"receiptCountChange\":" + 数量变化
             + ",\"speakerSceneDemand\":" + 说话者需求JSON
+            + ",\"selfSceneDemandReview\":" + 自我取用JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
             + ",\"meaning\":" + 接收候选含义JSON(信息.内容.含义候选)
