@@ -2412,6 +2412,7 @@ public:
                 +",\"owner\":"+控制编码(内容.主体存在)
                 +",\"target\":"+控制编码(内容.目标存在)
                 +",\"featureConcept\":"+控制编码(依据.目标特征概念)
+                +",\"formalTargetType\":"+控制编码(内容.特征类型)
                 +",\"intent\":\"adjust\",\"targetValue\":"+目标值
                 +",\"internalTargetCopy\":"+目标副本JSON+"}";
             const auto 自我=当前_.自我线程.读取快照();
