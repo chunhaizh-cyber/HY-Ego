@@ -2,6 +2,7 @@
 
 #include "../核心/基础数据集.h"
 #include <cstdint>
+#include <optional>
 #include <vector>
 
 namespace 海中鱼巣 {
@@ -21,6 +22,7 @@ struct 新接收认知来源 final {
 struct 新行动请求承接来源 final {
     新接收认知来源 需求来源;
     稳定编码 被认知需求节点, 来源人类节点, 受请求者节点;
+    std::optional<稳定编码> 本次发生状态{};
     friend bool operator==(const 新行动请求承接来源&, const 新行动请求承接来源&) = default;
 };
 
