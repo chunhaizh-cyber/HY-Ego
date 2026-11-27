@@ -2570,6 +2570,114 @@ void 接收需求认知服务::封存会话(std::string_view c) noexcept {
         }}
     catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"封存接收认知会话",L"接收认知会话封存发生工程异常。");}
 }
+bool 接收需求认知服务::读取本窗身份认知材料(const 新接收认知来源键& 键, 稳定编码 自我,
+    const 新_世界树类& 世界, 新本窗身份认知材料& 结果, std::stop_token 停止) {
+    using L = 新语言分界工程状态;
+    using R = 新接收指代调用状态;
+    using F = 新外设事实状态;
+    using N = 概念名称关系查询状态;
+    using C = 新语言知识角色类别;
+    using O = 新语言知识含义操作;
+    using P = 新语言知识参数角色;
+    using B = 基础结构操作状态;
+    if (停止.stop_requested()) return false;
+    auto& d = 实现_->依赖;
+    const auto 解释 = d.语言.读取接收语言解释(键,d.语言世界,d.外设);
+    if (解释.状态 == L::未找到 || 解释.状态 == L::材料未就绪 || 解释.状态 == L::前提已变化) return false;
+    if (解释.状态 == L::资源失败) throw std::bad_alloc{};
+    if (解释.状态 != L::已完成 || !解释.信息) throw std::logic_error("cognition source interpretation could not be read");
+    const auto& 语言 = *解释.信息;
+    const auto 自述 = [](const auto& 句) { return 句.静态结构 && 句.静态结构->操作 == O::身份自述; };
+    if (std::ranges::count_if(语言.内容.句段组,自述) != 1) return false;
+    const auto& 句 = *std::ranges::find_if(语言.内容.句段组,自述);
+    const auto& 结构 = *句.静态结构;
+    const auto 角色 = d.语言.读取正式消息角色(键.接收消息节点,新外设消息方向::接收);
+    if (角色.状态 == R::资源失败) throw std::bad_alloc{};
+    if (角色.状态 == R::结构不一致) throw std::logic_error("cognition original role evidence is corrupt");
+    if (角色.状态 != R::已完成 || !角色.信息 || !角色.信息->内部交互场景
+        || !角色.信息->说话者 || !角色.信息->事实 || 角色.信息->受话者 != 自我) return false;
+    const auto& 源 = *角色.信息;
+    const auto 根 = 世界.获取世界树根场景();
+    if (!根) return false;
+    const auto 场景组 = 世界.读取正式临时交互场景();
+    const auto 场景 = std::ranges::find_if(场景组,[&](const auto& 项) {
+        return 项.场景 == *源.内部交互场景 && 项.本窗对端 == *源.说话者 && 项.自我 == 自我
+            && 项.来源.外设场景 == 源.消息.场景节点 && 项.来源.外设窗口 == 源.消息.窗口节点;
+    });
+    if (场景 == 场景组.end()) return false;
+
+    const auto 对象 = d.语言世界.读取接收局部对象组(键.接收消息节点);
+    if (对象.状态 == 新来源子场景状态::资源失败) throw std::bad_alloc{};
+    if (对象.状态 == 新来源子场景状态::前提已变化) return false;
+    if (对象.状态 != 新来源子场景状态::已存在) throw std::logic_error("cognition language endpoints are unavailable");
+    std::vector<稳定编码> 证明节点{语言.解释定义节点,语言.记录节点,*源.事实};
+    for (const auto& 项 : 结构.角色组) {
+        const auto* e = 项.值 ? std::get_if<语言图引用值>(&*项.值) : nullptr;
+        if (!e || e->类别 != C::存在 || e->来源概念 || e->选用名称关系
+            || std::ranges::count_if(对象.对象组,[&](const auto& obj) {
+                return obj.场景 == 语言.内容.来源场景 && obj.存在 == e->节点
+                    && obj.声明.前置来源 == 语言.内容.前置来源 && obj.声明.构式 == 结构.所用构式
+                    && obj.声明.起始标量 == 项.起始标量 && obj.声明.结束标量 == 项.结束标量;
+            }) != 1) throw std::logic_error("cognition language endpoint proof is not local to the original message");
+        证明节点.push_back(e->节点);
+    }
+    const auto 快照 = 全局基础数据集.查询节点组完整结构(证明节点);
+    if (快照.状态 == B::资源失败) throw std::bad_alloc{};
+    if (快照.状态 != B::已完成) return false;
+    std::vector<基础联合节点快照> 语言保护;
+    for (const auto& 项 : 快照.节点组) {
+        if (!项.快照) return false;
+        语言保护.push_back(*项.快照);
+    }
+    const auto 关联 = d.外设.关联源窗身份自述定义(源.消息,场景->来源.确认,语言.解释定义节点,语言保护);
+    if (关联 == F::资源失败) throw std::bad_alloc{};
+    if (关联 == F::结构不一致) throw std::logic_error("peripheral identity source link publication failed");
+    if (关联 != F::已完成) return false;
+    const auto 外设 = d.外设.读取消息保护(键.接收消息节点);
+    if (外设.状态 == F::资源失败) throw std::bad_alloc{};
+    if (外设.状态 != F::已完成 || !外设.消息
+        || 外设.消息->本窗身份自述语言定义 != 语言.解释定义节点) return false;
+
+    const auto 目标 = std::ranges::find(结构.角色组,P::目标存在,&接收语言已解释角色::参数);
+    if (目标 == 结构.角色组.end()) throw std::logic_error("cognition has no source name role");
+    const auto 原文 = 语言场景转换内部::解码语言场景原文(外设.消息->UTF8正文);
+    if (!原文) throw std::logic_error("cognition source is not UTF-8");
+    const auto 词面 = 语言场景转换内部::读取语言场景原文范围(*原文,{目标->起始标量,目标->结束标量});
+    const auto W = d.词.按规范化词面查询保护(语言.内容.语言节点,严格UTF8字节精确规范化合同节点,词面);
+    if (W.状态 == 新词条保护状态::资源失败) throw std::bad_alloc{};
+    if (W.状态 != 新词条保护状态::已读取 || !W.信息) return false;
+    const auto 名称 = d.名称.读取词条名称候选保护(W.信息->节点);
+    if (名称.状态 == N::资源失败) throw std::bad_alloc{};
+    if (名称.状态 == N::结构不一致 || 名称.状态 == N::工程未完成)
+        throw std::logic_error("cognition name owner could not read candidates");
+    if (名称.状态 != N::已找到) return false;
+    接收专名读取器 读取(d,*根,停止);
+    std::optional<稳定编码> 已有, 名称证明;
+    std::vector<基础联合节点快照> 保护 = std::move(语言保护);
+    并保护(保护,外设.完整保护);
+    并保护(保护,W.完整保护);
+    并保护(保护,名称.完整保护);
+    for (const auto& 候选 : 名称.候选组) {
+        const auto* 普通 = std::get_if<概念名称关系信息>(&候选);
+        if (!普通) continue;
+        if (!d.存在概念.是存在概念节点(普通->概念节点)) continue;
+        const auto 专名 = 读取.读(普通->概念节点,{目标->起始标量,目标->结束标量});
+        if (专名.状态 == 语言图专名绑定状态::资源失败) throw std::bad_alloc{};
+        if (专名.状态 == 语言图专名绑定状态::前提已变化) return false;
+        并保护(保护,专名.保护);
+        if (专名.状态 != 语言图专名绑定状态::已绑定 || !专名.身份) continue;
+        if (已有 && *已有 != 专名.身份->存在节点) return false;
+        if (!已有) 名称证明 = 普通->节点;
+        已有 = 专名.身份->存在节点;
+    }
+    if (!已有 || !名称证明 || 停止.stop_requested()) return false;
+    // 已有实际身份与本次自述冲突时，保留此前可知的更强依据。
+    if (*源.说话者 != *已有 && d.现实场景.存在属于场景范围(*根,*源.说话者)) return false;
+    结果 = {{ {},场景->场景,*源.说话者,*已有,键.接收消息节点,*源.事实,语言.解释定义节点,*名称证明},
+        场景->来源,std::move(保护)};
+    return true;
+}
+
 std::optional<接收需求认知观察> 接收需求认知服务::读取最近观察() const {std::lock_guard g(实现_->锁);return 实现_->最近;}
 新语言分界调用结果<现实交互指代材料> 接收需求认知服务::读取现实交互场景指代(
     const 新接收认知来源键& 来源, const 新_世界树类& 世界, 稳定编码 外设场景标识类型,

@@ -2352,10 +2352,42 @@ public:
             }
             break;
         }
+        std::string 身份认知JSON = "null";
+        const auto 场景 = *角色.信息->内部交互场景;
+        const auto 身份采用 = 当前_.世界树.读取本窗身份认知(场景,消息->消息节点);
+        const auto 当前身份 = 当前_.世界树.读取本窗身份认知(场景);
+        if (身份采用 || 当前身份) {
+            const auto 编码或空 = [](const auto& 项, const auto 成员) {
+                return 控制编码(项 ? std::optional{(*项).*成员} : std::nullopt);
+            };
+            if ((身份采用 && (身份采用->原对端 != 角色.信息->说话者 || 身份采用->原角色 != 角色.信息->事实
+                    || 身份采用->语言定义 != 消息->本窗身份自述语言定义))
+                || (当前身份 && 当前身份->原对端 != 角色.信息->说话者))
+                return {};
+            std::optional<bool> 人类;
+            if (当前身份 && 当前_.服务对象运行) {
+                const auto 配置 = 当前_.服务对象运行->读取登记材料();
+                if (配置) {
+                    const auto 判定 = 当前_.世界事实.存在服务.比较存在与概念信息(
+                        当前身份->已知存在,配置->人类概念节点);
+                    if (判定.状态 == 特征概念规则状态::已完成) 人类 = 读取正式人类二元结论(判定);
+                    else if (判定.状态 != 特征概念规则状态::前提已变化) return {};
+                }
+            }
+            身份认知JSON = "{\"originalPeer\":" + 控制编码(角色.信息->说话者)
+                + ",\"scene\":" + 控制编码(场景)
+                + ",\"receipt\":" + 编码或空(身份采用,&新本窗身份认知::采用节点)
+                + ",\"adoptedName\":" + 编码或空(身份采用,&新本窗身份认知::名称关系)
+                + ",\"currentReceipt\":" + 编码或空(当前身份,&新本窗身份认知::采用节点)
+                + ",\"currentKnownExistence\":" + 编码或空(当前身份,&新本窗身份认知::已知存在)
+                + ",\"human\":" + (人类 ? 控制布尔(*人类) : "null") + "}";
+        }
         std::string JSON = "{\"status\":\"ready\",\"ingressSequence\":" + 控制计数(查询.入站序号)
             + ",\"message\":" + 控制编码(消息->消息节点) + ",\"record\":" + 控制编码(信息.记录节点)
             + ",\"receiptCountChange\":" + 数量变化
             + ",\"speakerSceneDemand\":" + 说话者需求JSON
+            + ",\"identityLanguageSource\":" + 控制编码(消息->本窗身份自述语言定义)
+            + ",\"windowIdentityCognition\":" + 身份认知JSON
             + ",\"selfSceneDemandReview\":" + 自我取用JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)

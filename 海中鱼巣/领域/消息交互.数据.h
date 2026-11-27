@@ -25,6 +25,7 @@ struct 新外设消息信息 final {
     std::optional<稳定编码> 对应输出消息节点{};
     std::optional<稳定编码> 关联问题{};
     std::optional<稳定编码> 接纳会话绑定人{};
+    std::optional<稳定编码> 本窗身份自述语言定义{};
 };
 struct 新连接事实 final {
     稳定编码 调用身份, 动作节点, 现实场景, 自我存在, 目标存在;

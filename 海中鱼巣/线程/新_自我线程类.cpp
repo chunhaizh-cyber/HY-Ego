@@ -5935,6 +5935,10 @@ struct 新_自我线程类::实现 final {
                         if(!token.stop_requested()&&observed&&observed->被动解释来源
                             &&observed->阶段==接收需求认知阶段::已保存场景信息&&本自我&&世界树服务) {
                             auto& 语言=世界树服务->获取事实服务引用().语言服务;
+                            新本窗身份认知材料 身份;
+                            if (provider->读取本窗身份认知材料(*observed->被动解释来源,*本自我,*世界树服务,身份,token)
+                                && !token.stop_requested())
+                                (void)世界树服务->采用本窗身份认知(std::move(身份));
                             语言.补全说话者场景期望值(observed->M,*本自我);
                             const auto 角色=语言.读取正式消息角色(observed->M,新外设消息方向::接收);
                             if(角色.状态==新接收指代调用状态::结构不一致)

@@ -460,6 +460,7 @@ void 核验分界消息端口(const 新分界消息读取结果& 读取, 稳定�
     if (消息.消息节点 != 消息节点 || 消息.来源.方向 != 新外设消息方向::接收
         || !有效(消息.正文材料节点) || !有效(消息.场景节点) || !有效(消息.窗口节点)
         || (消息.接纳会话绑定人 && !有效(*消息.接纳会话绑定人))
+        || (消息.本窗身份自述语言定义 && !有效(*消息.本窗身份自述语言定义))
         || !新_语言类::严格UTF8字节串有效(消息.UTF8正文)
         || 预期.字段集合组.size() != 1 || !预期.外部关系集合组.empty())
         throw std::logic_error("boundary message success contract corrupt");
@@ -473,7 +474,8 @@ void 核验分界消息端口(const 新分界消息读取结果& 读取, 稳定�
     if (节点组.size() != 5 || 选择.节点 != 消息节点 || 选择.字段节点
         || !选择.排除字段键组.empty()
         || 选择.字段组.size() != 10 + static_cast<std::size_t>(消息.回应消息节点.has_value())
-            + static_cast<std::size_t>(消息.接纳会话绑定人.has_value()))
+            + static_cast<std::size_t>(消息.接纳会话绑定人.has_value())
+            + static_cast<std::size_t>(消息.本窗身份自述语言定义.has_value()))
         throw std::logic_error("boundary message field selector contract corrupt");
     std::set<稳定编码> 字段码组, 字段键组;
     for (const auto& 字段 : 选择.字段组)

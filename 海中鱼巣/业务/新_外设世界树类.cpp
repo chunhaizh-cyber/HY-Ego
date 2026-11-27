@@ -31,7 +31,8 @@ constexpr std::size_t 接收回应字段 = 12;
 constexpr std::size_t 发送对应输出字段 = 13;
 constexpr std::size_t 输出关联问题字段 = 14;
 constexpr std::size_t 接纳会话绑定人字段 = 15;
-std::array<稳定编码, 16> 消息字段{};
+constexpr std::size_t 本窗身份自述字段 = 16;
+std::array<稳定编码, 17> 消息字段{};
 稳定编码 消息根{};
 enum class 交互确认键 : std::size_t { 窗口确认, 场景, 窗口, 会话, 对话框, 时间, 数量 };
 std::array<稳定编码, static_cast<std::size_t>(交互确认键::数量)> 交互确认字段{};
@@ -100,10 +101,11 @@ std::optional<新外设消息信息> 读取正式消息(
     const auto* 对应输出 = 查(发送对应输出字段);
     const auto* 问题 = 查(输出关联问题字段);
     const auto* 绑定人 = 查(接纳会话绑定人字段);
+    const auto* 身份自述 = 查(本窗身份自述字段);
     if (消息.结构.字段组.size() != 10 + static_cast<std::size_t>(回应 != nullptr)
             + static_cast<std::size_t>(对应输出 != nullptr) + static_cast<std::size_t>(问题 != nullptr)
-            + static_cast<std::size_t>(绑定人 != nullptr)
-        || ((回应 || 绑定人) && 结果.来源.方向 != 新外设消息方向::接收)
+            + static_cast<std::size_t>(绑定人 != nullptr) + static_cast<std::size_t>(身份自述 != nullptr)
+        || ((回应 || 绑定人 || 身份自述) && 结果.来源.方向 != 新外设消息方向::接收)
         || (对应输出 && 结果.来源.方向 != 新外设消息方向::发送)
         || (问题 && 结果.来源.方向 != 新外设消息方向::输出))
         throw std::runtime_error("peripheral reply field shape invalid");
@@ -126,6 +128,11 @@ std::optional<新外设消息信息> 读取正式消息(
         const auto 编码 = std::get<稳定编码>(*绑定人);
         if (!有效(编码) || 编码 == 节点) throw std::runtime_error("peripheral admission binding endpoint invalid");
         结果.接纳会话绑定人 = 编码;
+    }
+    if (身份自述) {
+        const auto 定义 = std::get<稳定编码>(*身份自述);
+        if (!有效(定义) || 定义 == 节点) throw std::runtime_error("peripheral identity claim source invalid");
+        结果.本窗身份自述语言定义 = 定义;
     }
     结果.来源.来源序号 = 序号[0];
     结果.正文材料节点 = std::get<稳定编码>(取(8));
@@ -1483,6 +1490,35 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
     }
 }
 
+新外设事实状态 新_外设世界树类::关联源窗身份自述定义(const 新外设消息信息& 预期,
+    稳定编码 确认, 稳定编码 定义, std::vector<基础联合节点快照> 定义保护) {
+    using S = 新外设事实状态;
+    using A = 基础节点组追加状态;
+    if (!有效(定义) || 预期.来源.方向 != 新外设消息方向::接收
+        || !std::ranges::any_of(定义保护,[&](const auto& 项) { return 项.结构.节点.编码 == 定义; }))
+        return S::入口拒绝;
+    const auto 本窗 = 读取本次网页交互确认(预期.来源.公开宿主会话,预期.来源.对话框标识);
+    if (本窗.状态 != S::已完成) return 本窗.状态;
+    if (本窗.确认 != 确认 || 本窗.窗口 != 预期.窗口节点 || 本窗.场景 != 预期.场景节点
+        || 本窗.确认UTC纳秒 > 预期.正式记录时间.纳秒) return S::入口拒绝;
+    std::lock_guard 锁(外设互斥);
+    std::vector<基础联合节点快照> 源;
+    const auto 消息 = 读取正式消息(预期.消息节点,&源);
+    if (!消息 || 消息->来源 != 预期.来源 || 消息->正文材料节点 != 预期.正文材料节点
+        || 消息->窗口节点 != 预期.窗口节点 || 消息->场景节点 != 预期.场景节点) return S::未就绪;
+    if (消息->本窗身份自述语言定义)
+        return *消息->本窗身份自述语言定义 == 定义 ? S::已完成 : S::入口拒绝;
+    基础节点组追加请求 请求;
+    请求.追加字段组.push_back({消息->消息节点,消息字段[本窗身份自述字段],定义});
+    请求.预期联合节点组 = std::move(定义保护);
+    请求.预期联合节点组.insert(请求.预期联合节点组.end(),源.begin(),源.end());
+    请求.只读预期.节点组.push_back({消息字段[本窗身份自述字段]});
+    const auto 写 = 全局基础数据集.原子追加节点组(请求);
+    if (写.状态 == A::已完成) return S::已完成;
+    if (写.状态 == A::预期不符 || 写.状态 == A::节点不存在 || 写.状态 == A::引用不存在) return S::未就绪;
+    return 写.状态 == A::资源失败 ? S::资源失败 : S::结构不一致;
+}
+
 新外设消息保护结果 新_外设世界树类::读取消息保护(稳定编码 节点) const noexcept {
     try {
         std::lock_guard 锁(外设互斥);
@@ -1527,7 +1563,8 @@ std::optional<新外设消息信息> 新_外设世界树类::读取消息(稳定
         if (结果.发布前提.字段集合组.size() != 1
             || 结果.发布前提.字段集合组.front().字段组.size()
                 != 10 + static_cast<std::size_t>(结果.消息->回应消息节点.has_value())
-                    + static_cast<std::size_t>(结果.消息->接纳会话绑定人.has_value()))
+                    + static_cast<std::size_t>(结果.消息->接纳会话绑定人.has_value())
+                    + static_cast<std::size_t>(结果.消息->本窗身份自述语言定义.has_value()))
             throw std::logic_error("boundary message final projection missing");
         return 结果;
     } catch (const std::bad_alloc&) {

@@ -1614,11 +1614,12 @@ std::vector<std::uint64_t> 原消息角色来源材料(const 新原消息角色�
         if (角色外设场景标识类型_)
             return *角色外设场景标识类型_ == 标识类型 ? S::已完成 : S::输入拒绝;
         const auto 键 = 全局基础数据集.原子建立节点组(
-            std::vector<基础组内新节点>(原消息角色字段_.size()));
+            std::vector<基础组内新节点>(原消息角色字段_.size() + 本窗身份认知字段_.size()));
         if (键.状态 == 基础结构操作状态::资源失败) return S::资源失败;
-        if (键.状态 != 基础结构操作状态::已完成 || 键.节点组.size() != 原消息角色字段_.size())
+        if (键.状态 != 基础结构操作状态::已完成 || 键.节点组.size() != 原消息角色字段_.size() + 本窗身份认知字段_.size())
             return S::结构不一致;
-        std::ranges::copy(键.节点组, 原消息角色字段_.begin());
+        std::copy_n(键.节点组.begin(),原消息角色字段_.size(),原消息角色字段_.begin());
+        std::copy_n(键.节点组.begin()+原消息角色字段_.size(),本窗身份认知字段_.size(),本窗身份认知字段_.begin());
         角色外设场景标识类型_ = 标识类型;
         return S::已完成;
     } catch (...) {
@@ -1677,6 +1678,93 @@ std::vector<新临时交互场景信息> 新_世界树类::读取正式临时交
     } catch (...) {
         return {S::资源失败};
     }
+}
+
+namespace {
+enum 本窗身份键 : std::size_t {
+    身份当前, 身份历史, 身份场景, 身份对端, 身份已有, 身份原消息, 身份原角色, 身份语言定义, 身份名称关系
+};
+
+新本窗身份认知 读取身份认知记录(稳定编码 节点, 稳定编码 场景, const std::array<稳定编码,9>& 键) {
+    const auto 读 = [&](本窗身份键 字段) {
+        const auto 组 = 全局基础数据集.查询字段(节点,键[字段]);
+        if (组.size() != 1) throw std::logic_error("identity cognition field missing or repeated");
+        return 组.front().内容;
+    };
+    const auto 引用 = [&](本窗身份键 字段) {return std::get<稳定编码>(读(字段));};
+    const auto 消息 = std::get<std::vector<std::uint64_t>>(std::get<基础值>(读(身份原消息)).材料);
+    if (引用(身份场景) != 场景 || 消息.size() != 1 || !消息.front())
+        throw std::logic_error("identity cognition source does not match scene");
+    return {节点,场景,引用(身份对端),引用(身份已有),稳定编码{消息.front()},
+        引用(身份原角色),引用(身份语言定义),引用(身份名称关系)};
+}
+}
+
+std::optional<新本窗身份认知> 新_世界树类::读取本窗身份认知(
+    稳定编码 场景, std::optional<稳定编码> 原消息) const {
+    std::lock_guard 锁(新世界树互斥);
+    if (!角色外设场景标识类型_ || !有效(场景)) return {};
+    const auto& 键 = 本窗身份认知字段_;
+    const auto 记录组 = 全局基础数据集.查询字段(场景,键[原消息 ? 身份历史 : 身份当前]);
+    std::optional<新本窗身份认知> 结果;
+    for (const auto& 项 : 记录组) {
+        const auto 已读 = 读取身份认知记录(std::get<稳定编码>(项.内容),场景,键);
+        if (原消息 && 已读.原消息 != *原消息) continue;
+        if (结果) throw std::logic_error("identity cognition read is not unique");
+        结果 = 已读;
+    }
+    return 结果;
+}
+
+bool 新_世界树类::采用本窗身份认知(新本窗身份认知材料 材料) {
+    using B = 基础结构操作状态;
+    using A = 基础节点组追加状态;
+    const auto& c = 材料.对应;
+    std::lock_guard 锁(新世界树互斥);
+    if (!角色外设场景标识类型_ || !有效(c.场景) || !有效(c.原消息)) return false;
+    const auto 场景组 = 场景服务_.读取本树正式临时交互场景();
+    if (!std::ranges::any_of(场景组,[&](const auto& 项) {
+        return 项.场景 == c.场景 && 项.本窗对端 == c.原对端 && 项.来源 == 材料.外设来源;
+    })) return false;
+    const auto& 键 = 本窗身份认知字段_;
+    const auto 当前 = 全局基础数据集.查询字段(c.场景,键[身份当前]);
+    const auto 历史 = 全局基础数据集.查询字段(c.场景,键[身份历史]);
+    if (当前.size() > 1) throw std::logic_error("identity cognition current field is not unique");
+    for (const auto& 项 : 历史) {
+        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(项.内容),c.场景,键);
+        if (旧.原消息 == c.原消息)
+            return 旧.已知存在 == c.已知存在 && 旧.原对端 == c.原对端
+                && 旧.原角色 == c.原角色 && 旧.语言定义 == c.语言定义;
+    }
+    if (!当前.empty()) {
+        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(当前.front().内容),c.场景,键);
+        if (旧.已知存在 != c.已知存在 || 旧.原对端 != c.原对端) return false;
+    }
+    基础节点组追加请求 请求;
+    请求.新节点组.resize(1);
+    请求.新节点组.front().字段组 = {
+        {键[身份场景],c.场景},{键[身份对端],c.原对端},{键[身份已有],c.已知存在},
+        {键[身份原消息],基础值{std::vector<std::uint64_t>{c.原消息.值}}},
+        {键[身份原角色],c.原角色},{键[身份语言定义],c.语言定义},{键[身份名称关系],c.名称关系}};
+    const 基础组内节点引用 记录{0};
+    请求.追加字段组.push_back({c.场景,键[身份历史],记录});
+    if (当前.empty()) 请求.追加字段组.push_back({c.场景,键[身份当前],记录});
+    请求.只读预期.字段集合组 = {{c.场景,键[身份当前],{},当前},{c.场景,键[身份历史],{},历史}};
+    请求.窄写字段键组.push_back({c.场景,键[身份历史]});
+    if (当前.empty()) 请求.窄写字段键组.push_back({c.场景,键[身份当前]});
+    请求.只读预期.节点组.push_back({c.场景});
+    for (const auto 字段 : 键) 请求.只读预期.节点组.push_back({字段});
+    请求.容许新增入向预期组 = std::move(材料.完整保护);
+    const auto 宿主 = 全局基础数据集.查询节点组完整结构({c.场景});
+    if (宿主.状态 == B::资源失败) throw std::bad_alloc{};
+    if (宿主.状态 != B::已完成 || 宿主.节点组.size() != 1 || !宿主.节点组.front().快照) return false;
+    std::erase_if(请求.容许新增入向预期组,[&](const auto& 项) {return 项.结构.节点.编码 == c.场景;});
+    请求.容许新增入向预期组.push_back(*宿主.节点组.front().快照);
+    const auto 写 = 全局基础数据集.原子追加节点组(请求);
+    if (写.状态 == A::已完成) return true;
+    if (写.状态 == A::资源失败) throw std::bad_alloc{};
+    if (写.状态 == A::预期不符 || 写.状态 == A::节点不存在 || 写.状态 == A::引用不存在) return false;
+    throw std::logic_error("identity cognition publication rejected by dataset, status=" + std::to_string(static_cast<unsigned>(写.状态)));
 }
 
 新原消息角色读取结果 新_世界树类::读取原消息场景角色事实(const 新原消息角色来源& 来源) const noexcept {
