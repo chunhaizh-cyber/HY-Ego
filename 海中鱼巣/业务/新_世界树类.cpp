@@ -2584,6 +2584,37 @@ std::optional<新状态信息> 新_世界树类::查找最近同类型状态(
     } catch (...) { 世界I64组合故障(L"单引用更新或事实派生遇到工程异常"); }
 }
 
+std::optional<std::uint64_t> 选择下一个服务权限(std::optional<std::uint64_t> 最大) noexcept {
+    if (!最大) return 0;
+    if (*最大 == (std::numeric_limits<std::uint64_t>::max)()) return std::nullopt;
+    return *最大 + 1;
+}
+
+std::optional<新状态信息> 新_世界树类::读取活动对端续判状态(稳定编码 场景,
+    稳定编码 对端, 稳定编码 状态, std::int64_t 已受理时刻, bool 来源活动) const {
+    if (!来源活动 || !有效(状态) || 场景服务_.查询所属场景(对端) != 场景) return std::nullopt;
+    const auto S = 状态服务_.获取状态(状态);
+    if (!S || S->被描述存在节点 != 对端 || S->强时间.语义 != 新状态时间语义::实例绝对UTC
+        || S->强时间.纳秒 <= 已受理时刻 || !S->固定准确值) return std::nullopt;
+    const auto 主体 = 存在服务_.获取存在(对端);
+    if (!主体 || std::ranges::find(主体->特征节点组, S->来源实例特征节点) == 主体->特征节点组.end())
+        return std::nullopt;
+    const auto F = 特征服务_.获取特征(S->来源实例特征节点);
+    if (!F || F->当前值 != S->固定准确值) return std::nullopt;
+    const auto 场景状态 = 场景服务_.查询状态列表(场景);
+    if (std::ranges::count(场景状态, 状态) != 1) return std::nullopt;
+    for (const auto n : 状态服务_.按实例特征查询状态(S->来源实例特征节点)) {
+        if (n == 状态) continue;
+        const auto 候选 = 状态服务_.获取状态(n);
+        if (!候选 || (候选->被描述存在节点 == 对端
+            && 候选->强时间.语义 == 新状态时间语义::实例绝对UTC
+            && 候选->强时间.纳秒 >= S->强时间.纳秒)) return std::nullopt;
+    }
+    if (状态服务_.获取状态(状态) != S || 特征服务_.获取特征(S->来源实例特征节点) != F
+        || 场景服务_.查询所属场景(对端) != 场景) return std::nullopt;
+    return S;
+}
+
 新活动服务登记结果 新_世界树类::登记活动数据集服务对象(
     稳定编码 自我, 稳定编码 服务F, 稳定编码 对端, std::optional<稳定编码> 预期当前) {
     using S = 新活动服务登记状态;
@@ -2668,9 +2699,8 @@ std::optional<新状态信息> 新_世界树类::查找最近同类型状态(
             return {S::前提已变化};
         std::vector<基础封存追加片段> 片段;
         if (!当前权限) {
-            if (!号码.empty() && *号码.rbegin() == (std::numeric_limits<std::uint64_t>::max)())
-                return {S::权限已满};
-            当前权限 = 号码.empty() ? 0u : *号码.rbegin() + 1;
+            当前权限 = 选择下一个服务权限(号码.empty() ? std::nullopt : std::optional{*号码.rbegin()});
+            if (!当前权限) return {S::权限已满};
             const auto V = 值.保存或取得服务权限值(*当前权限);
             if (V.状态 != 新服务权限值状态::已读取) return {S::资源失败};
             基础组内节点引用 权限F{};

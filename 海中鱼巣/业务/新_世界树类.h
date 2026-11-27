@@ -296,6 +296,8 @@ struct 新世界事实服务引用 final {
 
 // ARCH-L3 / DATA-L3 综合语义编排层。它只组合新版领域类的公开入口，
 // 不直接写基础节点、字段或关系，也不建立第二份场景、状态、动态或概念事实。
+std::optional<std::uint64_t> 选择下一个服务权限(std::optional<std::uint64_t> 最大) noexcept;
+
 enum class 新活动服务登记状态 : std::uint8_t {
     入口拒绝, 前提已变化, 资格待定, 资格排除, 权限已满, 资源失败, 已是当前, 已登记
 };
@@ -417,6 +419,8 @@ public:
         const 新特征准确值& 新值,
         const 新状态强时间& 强时间,
         std::optional<稳定编码> 动作动态节点 = std::nullopt) noexcept;
+    std::optional<新状态信息> 读取活动对端续判状态(稳定编码 场景, 稳定编码 对端,
+        稳定编码 状态, std::int64_t 已受理时刻, bool 来源活动) const;
     新活动服务登记结果 登记活动数据集服务对象(稳定编码 自我, 稳定编码 服务F,
         稳定编码 对端, std::optional<稳定编码> 预期当前);
     新世界特征变化结果 更新场景特征并形成动态(

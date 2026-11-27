@@ -794,6 +794,7 @@ struct 新_自我线程类::实现 final {
     稳定编码 外设存在标识类型{};
     std::set<稳定编码> 待处理新外设场景;
     std::map<稳定编码, 新窗口服务观察> 窗口服务观察;
+    std::set<std::string, std::less<>> 已结束窗口来源会话;
     std::set<std::pair<std::string, std::string>> 待核临时交互确认;
     std::chrono::steady_clock::time_point 最近接收认知推进{};
     std::optional<新自我场景需求取用观察> 最近场景需求取用;
@@ -3189,6 +3190,31 @@ struct 新_自我线程类::实现 final {
         return true;
     }
 
+    void 处理同窗状态材料(稳定编码 来源状态) {
+        if (!交互取材本能 || !世界树服务) return;
+        const auto S = 世界树服务->获取事实服务引用().状态服务.获取状态(来源状态);
+        if (!S) return;
+        std::vector<新窗口服务观察> 原待办;
+        {
+            std::lock_guard 锁(状态互斥);
+            for (const auto& [id, 记录] : 窗口服务观察) {
+                (void)id;
+                if (!记录.来源已关闭 && 记录.内部对端 == S->被描述存在节点)
+                    原待办.push_back(记录);
+            }
+        }
+        for (const auto& 原 : 原待办) {
+            auto 更新 = 交互取材本能->续判同窗正式材料(原, 来源状态);
+            if (!更新) continue;
+            std::lock_guard 锁(状态互斥);
+            const auto 当前 = 窗口服务观察.find(原.外设场景);
+            if (停止已请求 || 当前 == 窗口服务观察.end() || 当前->second.来源已关闭
+                || 当前->second.确认 != 原.确认 || 当前->second.内部对端 != 原.内部对端
+                || 当前->second.最近材料 != 原.最近材料) continue;
+            当前->second = std::move(*更新);
+        }
+    }
+
     新自我消息处理结果 处理消息(const 新自我治理消息& 消息) noexcept {
         新自我消息处理结果 结果;
         结果.原消息 = 消息;
@@ -3198,6 +3224,11 @@ struct 新_自我线程类::实现 final {
                 // 回执仅确认异步唤醒已接纳，不证明该状态已匹配某个执行。
                 结果.结果状态接收状态 =
                     任务管理->提交结果状态通知(消息.来源状态节点);
+            }
+            try {
+                处理同窗状态材料(消息.来源状态节点);
+            } catch (...) {
+                工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"同窗状态材料接收", L"续判准备未正常完成。");
             }
             结果.需求复核 = 复核需求(消息.来源状态节点);
             break;
@@ -5849,6 +5880,7 @@ struct 新_自我线程类::实现 final {
                     auto 记录 = 交互取材本能->处理新外设窗口(场景);
                     锁.lock();
                     记录.已由新窗触发 = true;
+                    记录.来源已关闭 = 已结束窗口来源会话.contains(记录.内部会话);
                     窗口服务观察.emplace(场景, std::move(记录));
                     continue;
                 }
@@ -5865,6 +5897,7 @@ struct 新_自我线程类::实现 final {
                     if (停止源.stop_requested() || 回执.状态 != 新外设事实状态::已完成) continue;
                     if (!回执.确认 || !回执.场景 || !回执.窗口 || !来源.本窗外设对端)
                         throw std::logic_error("confirmed temporary source payload is incomplete");
+                    if (已结束窗口来源会话.contains(会话)) continue;
                     const auto 本次 = 窗口服务观察.find(*回执.场景);
                     if (本次 == 窗口服务观察.end())
                         throw std::logic_error("confirmed interaction has no matching new window event");
@@ -5876,6 +5909,10 @@ struct 新_自我线程类::实现 final {
                     锁.lock();
                     记录.已由新窗触发 = true;
                     记录.续办次数 = 本次->second.续办次数 + 1;
+                    记录.来源已关闭 = 已结束窗口来源会话.contains(会话);
+                    记录.最近材料 = 本次->second.最近材料;
+                    记录.材料时刻下限 = (std::max)(记录.材料时刻下限, 本次->second.材料时刻下限);
+                    记录.材料续判次数 = 本次->second.材料续判次数;
                     本次->second = std::move(记录);
                     continue;
                 }
@@ -7291,6 +7328,20 @@ void 新_自我线程类::通知外设交互场景变化(稳定编码 场景) no
         实现_->状态变化.notify_all();
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"通知外设交互场景变化", L"外设交互场景轻通知异常。");
+    }
+}
+
+void 新_自我线程类::通知窗口来源会话结束(std::string_view 会话) noexcept {
+    if (!实现_ || 会话.empty()) return;
+    try {
+        std::lock_guard 锁(实现_->状态互斥);
+        实现_->已结束窗口来源会话.emplace(会话);
+        for (auto& [id, 记录] : 实现_->窗口服务观察) {
+            (void)id;
+            if (记录.内部会话 == 会话) 记录.来源已关闭 = true;
+        }
+    } catch (...) {
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"结束窗口材料来源", L"正式来源生命周期收束失败。");
     }
 }
 

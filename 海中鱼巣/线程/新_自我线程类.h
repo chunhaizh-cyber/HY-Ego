@@ -405,6 +405,7 @@ public:
         const 新_外设世界树类& 外设世界, const 服务对象本能运行服务& 交互取材, 稳定编码 外设场景标识类型,
         稳定编码 外设存在标识类型) noexcept;
     void 通知外设交互场景变化(稳定编码 场景) noexcept;
+    void 通知窗口来源会话结束(std::string_view) noexcept;
     std::vector<新窗口服务观察> 读取窗口服务观察() const;
     void 通知同窗明确交互确认(std::string_view 会话, std::string_view 对话框) noexcept;
     新自我线程操作结果 绑定服务值结算确认端口(

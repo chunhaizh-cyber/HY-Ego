@@ -36,6 +36,9 @@ bool 运行服务权限登记工程验证() {
         核验(最大.状态 == V::已读取 && 最大.数值 == (std::numeric_limits<std::uint64_t>::max)()
             && 最大.节点 != 零.节点 && 值.读取服务权限值(最大.节点).数值 == 最大.数值,
             "uint64-max-exact");
+        const auto 极限 = (std::numeric_limits<std::uint64_t>::max)();
+        核验(选择下一个服务权限({}) == 0 && 选择下一个服务权限(极限 - 1) == 极限
+            && !选择下一个服务权限(极限), "no-permission-wrap-at-cap");
         const auto 错形 = 值.保存或取得特征值(材料物理类型::U64数组, std::vector<std::uint64_t>{0,1});
         核验(值.读取服务权限值(错形).状态 == V::材料形状不相容, "reject-nonsingleton");
         const auto 权限定义 = FT.建立或取得先天特征类型槽({先天特征类型槽::服务权限,
@@ -105,6 +108,32 @@ bool 运行服务权限登记工程验证() {
         核验(已当前.状态 == W::已是当前 && 已当前.权限 == 0 && 快照() == 回读
             && 事实.场景服务.查询状态列表(场景) == 状态
             && 状态.size() == 原状态.size() + 5, "current-no-write-and-five-states");
+        const auto 旁证类型 = FT.建立或取得特征概念(
+            {特征概念材料物理类型::I64标量, std::vector<特征概念I64闭区间>{{0,1}}}, 值);
+        const auto 待 = 事实.场景服务.建立成员存在(场景, {{}, {{旁证类型,std::int64_t{0}}}}, 时);
+        核验(待.存在节点.has_value(), "pending-fixture");
+        const auto 再前 = 快照();
+        核验(次(*待.存在节点, A.存在节点).状态 == W::资格待定 && 快照() == 再前,
+            "pending-no-registration");
+        const auto 补F = 事实.存在服务.添加无当前值特征(*待.存在节点, 许可特征);
+        核验(补F.特征节点.has_value(), "late-fact-owner-target");
+        const auto 发布 = 世界.更新存在特征并形成动态(场景, *待.存在节点, *补F.特征节点,
+            新特征准确值{std::int64_t{1}}, {新状态时间语义::实例绝对UTC, 2});
+        核验(发布.新状态节点.has_value(), "late-fact-owner-state");
+        const auto S节点 = *发布.新状态节点;
+        const auto 材料 = 世界.读取活动对端续判状态(场景, *待.存在节点, S节点, 1, true);
+        核验(材料 && 材料->节点 == S节点 && 材料->来源实例特征节点 == *补F.特征节点,
+            "same-owner-late-state-reopened");
+        核验(!世界.读取活动对端续判状态(场景, *A.存在节点, S节点, 1, true)
+            && !世界.读取活动对端续判状态(*A.存在节点, *待.存在节点, S节点, 1, true)
+            && !世界.读取活动对端续判状态(场景, *待.存在节点, S节点, 2, true)
+            && !世界.读取活动对端续判状态(场景, *待.存在节点, S节点, 1, false)
+            && 快照() == 再前, "wrong-stale-repeat-closed-no-registration");
+        const auto 新登记 = 次(*待.存在节点, A.存在节点);
+        核验(新登记.状态 == W::已登记 && 新登记.权限 == 2 && 独立权限(*待.存在节点, 2),
+            "late-state-then-formal-qualification-and-register");
+        输出 << "late E=" << 待.存在节点->值 << " source S=" << S节点.值
+            << " service S=" << 新登记.服务状态节点->值 << std::endl;
         输出 << "A=" << A.存在节点->值 << " B=" << B.存在节点->值 << " F=" << F.特征节点->值
             << " states=" << 初.服务状态节点->值 << "," << 后.服务状态节点->值 << "," << 回.服务状态节点->值 << std::endl;
         return true;
