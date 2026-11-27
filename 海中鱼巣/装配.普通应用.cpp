@@ -2592,6 +2592,7 @@ private:
             case 状态::对端归属材料不足: 状态名 = "对端归属材料不足"; break;
             case 状态::明确非人类: 状态名 = "明确非人类"; break;
             case 状态::人类待权限登记: 状态名 = "人类待权限登记"; break;
+            case 状态::合格待正式恢复: 状态名 = "合格待正式恢复"; break;
             case 状态::前提已变化: 状态名 = "前提已变化"; break;
             }
             if (!状态名) throw std::logic_error("new window observation status invalid");
@@ -2606,6 +2607,8 @@ private:
                 + R"(,"lastMaterial":)" + 控制编码(项.最近材料)
                 + R"(,"lastMaterialUtcNs":)" + (项.最近材料
                     ? 控制计数(static_cast<std::uint64_t>(项.材料时刻下限)) : "null")
+                + R"(,"registrationCognition":)" + 控制编码(项.登记认知来源)
+                + R"(,"registrationCandidate":)" + 控制编码(项.登记认知存在)
                 + R"(,"sourceClosed":)" + 控制布尔(项.来源已关闭) + "}";
         }
         窗口服务正文 += ']';

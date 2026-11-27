@@ -14,7 +14,7 @@ class 新_任务类;
 class 新_动态类;
 
 enum class 新窗口服务观察状态 : std::uint8_t {
-    等待正式确认, 等待对端, 概念缺判别定义, 对端归属材料不足, 明确非人类, 人类待权限登记, 前提已变化
+    等待正式确认, 等待对端, 概念缺判别定义, 对端归属材料不足, 明确非人类, 人类待权限登记, 前提已变化, 合格待正式恢复
 };
 struct 新窗口服务观察 final {
     稳定编码 外设场景;
@@ -26,6 +26,7 @@ struct 新窗口服务观察 final {
     std::int64_t 材料时刻下限 = 0;
     std::uint64_t 材料续判次数 = 0;
     bool 来源已关闭 = false;
+    std::optional<稳定编码> 登记认知来源, 登记认知存在;
     std::uint64_t 续办次数 = 0;
 };
 
@@ -44,6 +45,7 @@ class 服务对象本能运行服务 final : public 新服务对象获取本能�
     新外设网页临时场景来源结果 获取已确认窗口交互事实(
         std::string_view 会话, std::string_view 对话框) const noexcept;
     新窗口服务观察 处理新外设窗口(稳定编码 外设场景) const noexcept;
+    std::optional<新窗口服务观察> 确认并登记本窗服务对象(稳定编码 外设场景) const noexcept;
     bool 绑定正式服务对象特征(稳定编码) noexcept;
     std::optional<新窗口服务观察> 续判同窗正式材料(const 新窗口服务观察&, 稳定编码 状态节点) const noexcept;
     bool 关闭() noexcept;

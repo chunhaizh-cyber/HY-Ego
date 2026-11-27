@@ -3190,6 +3190,25 @@ struct 新_自我线程类::实现 final {
         return true;
     }
 
+    void 处理本窗新认知(稳定编码 外设场景) {
+        if (!交互取材本能) return;
+        {
+            std::lock_guard 锁(状态互斥);
+            const auto 项 = 窗口服务观察.find(外设场景);
+            if (停止已请求 || 项 == 窗口服务观察.end() || 项->second.来源已关闭) return;
+        }
+        const auto 续办 = 交互取材本能->确认并登记本窗服务对象(外设场景);
+        if (!续办) return;
+        std::lock_guard 锁(状态互斥);
+        const auto 项 = 窗口服务观察.find(外设场景);
+        if (停止已请求 || 项 == 窗口服务观察.end() || 项->second.来源已关闭
+            || 项->second.确认 != 续办->确认 || 项->second.内部场景 != 续办->内部场景
+            || 项->second.内部对端 != 续办->内部对端) return;
+        项->second.状态 = 续办->状态;
+        项->second.登记认知来源 = 续办->登记认知来源;
+        项->second.登记认知存在 = 续办->登记认知存在;
+    }
+
     void 处理同窗状态材料(稳定编码 来源状态) {
         if (!交互取材本能 || !世界树服务) return;
         const auto S = 世界树服务->获取事实服务引用().状态服务.获取状态(来源状态);
@@ -5937,8 +5956,16 @@ struct 新_自我线程类::实现 final {
                             auto& 语言=世界树服务->获取事实服务引用().语言服务;
                             新本窗身份认知材料 身份;
                             if (provider->读取本窗身份认知材料(*observed->被动解释来源,*本自我,*世界树服务,身份,token)
-                                && !token.stop_requested())
-                                (void)世界树服务->采用本窗身份认知(std::move(身份));
+                                && !token.stop_requested()) {
+                                const auto 外设场景 = 身份.外设来源.外设场景;
+                                const auto 当前场景 = 身份.对应.场景;
+                                const auto 前 = 世界树服务->读取本窗身份认知(当前场景);
+                                if (世界树服务->采用本窗身份认知(std::move(身份))) {
+                                    const auto 后 = 世界树服务->读取本窗身份认知(当前场景);
+                                    if (后 && (!前 || 前->采用节点 != 后->采用节点))
+                                        处理本窗新认知(外设场景);
+                                }
+                            }
                             语言.补全说话者场景期望值(observed->M,*本自我);
                             const auto 角色=语言.读取正式消息角色(observed->M,新外设消息方向::接收);
                             if(角色.状态==新接收指代调用状态::结构不一致)

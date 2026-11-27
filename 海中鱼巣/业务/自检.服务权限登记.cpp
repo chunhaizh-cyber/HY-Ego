@@ -1,5 +1,6 @@
 #include "自检.服务权限登记.h"
 #include "新_世界树类.h"
+#include "../领域/消息交互.数据.h"
 
 #include <algorithm>
 #include <array>
@@ -136,6 +137,63 @@ bool 运行服务权限登记工程验证() {
             << " service S=" << 新登记.服务状态节点->值 << std::endl;
         输出 << "A=" << A.存在节点->值 << " B=" << B.存在节点->值 << " F=" << F.特征节点->值
             << " states=" << 初.服务状态节点->值 << "," << 后.服务状态节点->值 << "," << 回.服务状态节点->值 << std::endl;
+        // 已登记工程入口的独立活动数据集材料，不是网页身份输入。
+        const auto 根 = 概念.读取存在根概念保护();
+        核验(根.信息.has_value() && 世界.登记自我(*H.存在节点,场景) == 新场景操作状态::已完成,
+            "passive-self-owner");
+        const auto 参与 = FT.建立或取得特征概念({特征概念材料物理类型::存在节点引用,
+            特征概念存在引用值域{根.信息->节点}, {}, 特征概念比较规则::存在身份精确}, 值);
+        核验(世界.配置现实交互场景特征(服务类型,参与) == 新场景操作状态::已完成
+            && 世界.配置原消息角色事实(参与) == 新原消息角色状态::已完成, "passive-scene-contract");
+        const auto 建窗 = [&](std::optional<稳定编码> E) {
+            const auto 输入 = 全局基础数据集.原子建立节点组(std::vector<基础组内新节点>(8));
+            核验(输入.节点组.size()==8,"passive-fixture-provenance");
+            const auto& n = 输入.节点组;
+            const 新临时交互场景来源 源{n[0],n[1],n[2],n[3]};
+            const auto 窗 = 世界.采用已确认临时交互场景(源);
+            核验(窗.信息.has_value(),"passive-formal-window-owner");
+            if (!E) return n[0];
+            const auto 角色 = 世界.准备原消息场景角色事实({n[4],n[0],n[1],n[5],新外设消息方向::接收});
+            核验(角色.状态==新原消息角色状态::已完成 && 角色.片段,"passive-role-source");
+            const auto 角色发布 = 全局基础数据集.原子追加封存片段组({*角色.片段});
+            核验(角色发布.状态==基础节点组追加状态::已完成 && 角色发布.片段回执组.size()==1,
+                "passive-published-role");
+            const auto 角色节点 = 角色发布.片段回执组.front().新节点组().front();
+            核验(世界.采用本窗身份认知({{{},窗.信息->场景,窗.信息->本窗对端,*E,n[4],角色节点,n[6],n[7]},源,{}}),
+                "passive-published-cognition");
+            return n[0];
+        };
+        using 模式 = 新本窗服务登记模式;
+        const auto 丙 = 建立(1), 丁 = 建立(1);
+        核验(丙.存在节点 && 丁.存在节点,"passive-new-eligible-targets");
+        const auto 无窗 = 建窗({}), 否窗 = 建窗(N.存在节点);
+        const auto 丙窗 = 建窗(丙.存在节点), 丁窗 = 建窗(丁.存在节点);
+        const auto 从窗 = [&](稳定编码 窗, 模式 选择 = 模式::隔离活动数据集验证) {
+            return 世界.确认登记本窗服务对象(窗,*H.存在节点,*F.特征节点,选择);
+        };
+        const auto 前 = 快照();
+        核验(从窗(无窗).状态 == W::资格待定 && 从窗(否窗).状态 == W::资格排除
+            && 从窗(丙窗,模式::普通待恢复).状态 == W::恢复写入未开放 && 快照()==前,
+            "passive-pending-excluded-restore-gate-no-write");
+        const auto 丙登记 = 从窗(丙窗), 丁登记 = 从窗(丁窗);
+        输出 << "passive C status " << static_cast<unsigned>(丙登记.状态)
+            << " D status " << static_cast<unsigned>(丁登记.状态) << std::endl;
+        核验(丙登记.状态==W::已登记 && 丙登记.权限==3 && 丁登记.状态==W::已登记 && 丁登记.权限==4
+            && 独立权限(*丙.存在节点,3) && 独立权限(*丁.存在节点,4), "passive-two-new-ordered-permissions");
+        const auto 动作 = 丙登记.认知来源 ? 世界.读取本窗服务动作(*丙登记.认知来源) : std::nullopt;
+        核验(动作 && 动作->被动动作==丙登记.被动动作 && 动作->服务状态节点==丙登记.服务状态节点
+            && 动作->认知存在==丙.存在节点,"passive-independent-cognition-action-state");
+        const auto 已丁 = 快照();
+        核验(从窗(丙窗).状态==W::已处理 && 快照()==已丁,"passive-replay-no-switch");
+        const auto 同丁 = 从窗(建窗(丁.存在节点));
+        核验(同丁.状态==W::已是当前 && !同丁.被动动作 && 快照()==已丁,"passive-already-current-zero-write");
+        const auto 再丙 = 从窗(建窗(丙.存在节点));
+        const auto 终 = 快照();
+        核验(再丙.状态==W::已登记 && 再丙.权限==3 && 再丙.被动动作 && 终 && 已丁
+            && 终->历史不同值==已丁->历史不同值 && 终->当前值==新特征准确值{*丙.存在节点},
+            "passive-fresh-window-reuses-reference-and-permission");
+        输出 << "passive cognition=" << 丙登记.认知来源->值 << " action=" << 丙登记.被动动作->值
+            << " service state=" << 丙登记.服务状态节点->值 << std::endl;
         return true;
     } catch (const std::exception& e) {
         输出 << e.what() << std::endl;
