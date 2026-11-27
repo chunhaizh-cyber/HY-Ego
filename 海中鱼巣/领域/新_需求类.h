@@ -390,6 +390,10 @@ public:
     virtual 新引用内容目标判定 求值指定需求内容(const 新需求完整目标&) const noexcept=0;
 };
 enum class 新需求信息完善阶段 : std::int64_t { 待完善=1, 已完善=2 };
+struct 新同窗需求主体来源 final {
+    稳定编码 认知采用, 认知消息;
+    friend bool operator==(const 新同窗需求主体来源&, const 新同窗需求主体来源&) = default;
+};
 struct 新需求治理信息 final {
     稳定编码 节点;
     std::optional<新需求根角色> 根角色;
@@ -422,6 +426,7 @@ struct 新需求治理信息 final {
     // R121（7240 §5.4）：仅首次接收认知建立的被认知需求可有——同一句话在接收来源语言场景形成的需求信息节点
     // （内容来源记录）。只记录来源，不表示该节点已被采用为任何补问的答案。
     std::optional<稳定编码> 需求信息来源;
+    std::optional<新同窗需求主体来源> 首次主体来源;
     friend bool operator==(const 新需求治理信息&, const 新需求治理信息&) = default;
 };
 // 方案D（2026-11-12用户裁决）：先天需求下位概念的事实归属，由需求owner判定、不由本能写入。
@@ -436,6 +441,7 @@ struct 新接收认知需求建立请求 final {
     新部分服务要求目标 已知目标;
     // R121：同一句话的需求信息节点，记为所建需求的内容来源。
     std::optional<稳定编码> 需求信息节点;
+    bool 允许同窗主体采用 = false;
 };
 struct 新被认知需求直接内容 final {
     稳定编码 需求节点, 主体存在节点;
@@ -528,6 +534,14 @@ enum class 新需求操作状态 : std::uint8_t {
     执行域不适用, 认知来源不合法, 同来源目标冲突, 需重新确认, 前提已变化,
     目标内容依赖未就绪=27, 目标内容未支持=28, 需求未满足
 };
+struct 新同窗需求主体读取结果 final {
+    新需求操作状态 状态 = 新需求操作状态::需求不存在;
+    稳定编码 主体, 自我;
+    std::optional<新同窗需求主体来源> 来源;
+    std::vector<基础联合节点快照> 完整保护;
+};
+using 新同窗需求主体读口 = std::function<新同窗需求主体读取结果(
+    稳定编码, std::optional<新同窗需求主体来源>)>;
 struct 新接收认知需求读取结果 final {
     新需求操作状态 状态=新需求操作状态::入口拒绝;
     std::optional<新需求治理信息> 信息;
@@ -926,6 +940,7 @@ public:
         稳定编码 需求节点, 稳定编码 预期主体,
         const std::vector<稳定编码>& 正式内容FT组) const noexcept;
     void 装配接收认知语言读取接口(const 新_语言类*) noexcept;
+    void 装配同窗需求主体读口(新同窗需求主体读口);
     void 装配词条读取(const 新_词类&) noexcept;
     新被认知需求资格读取结果 读取被认知需求完整资格保护(稳定编码,稳定编码) const noexcept;
     新需求内容判定结果 判定被认知需求内容保护(稳定编码,稳定编码,稳定编码,
@@ -1101,11 +1116,13 @@ private:
     新接收认知需求读取结果 查询接收认知来源需求已加锁(const 新接收认知来源键&,
         const std::vector<基础联合节点快照>& 来源保护) const;
     接收认知来源保护结果 读取接收认知需求来源保护(const 新_语言类&,const 新_特征类&,
-        const 新接收认知来源&,稳定编码,const 新部分服务要求目标&,bool 已发表) const;
+        const 新接收认知来源&,稳定编码,const 新部分服务要求目标&,bool 已发表,
+        const std::optional<新同窗需求主体来源>& = {}) const;
     新需求建立结果 建立待完善被认知需求内部(const 新待完善被认知需求建立请求&,
         const std::optional<新接收认知来源>&,
         const std::vector<基础联合节点快照>&,
-        std::optional<稳定编码> 需求信息来源 = std::nullopt) noexcept;
+        std::optional<稳定编码> 需求信息来源 = std::nullopt,
+        std::optional<新同窗需求主体来源> 首次主体来源 = std::nullopt) noexcept;
     新需求操作状态 确保目标特征实例承载内部(稳定编码) noexcept;
     // 向上送出：共享技术读取及旧采用链保留明确漂移/资源异常，不经旧工程包装。
     std::optional<新需求治理信息> 读取需求治理信息可抛内部(稳定编码,
@@ -1218,6 +1235,7 @@ private:
     const 新服务要求确认读取接口* 服务要求确认读取接口_ = nullptr;
     const 新部分服务要求读取接口* 部分服务要求读取接口_ = nullptr;
     const 新_语言类* 接收认知语言读取接口_ = nullptr;
+    新同窗需求主体读口 同窗需求主体读口_;
     const 新_词类* 词条读取_ = nullptr;
     const 新引用内容目标读取接口* 引用内容目标读取接口_ = nullptr;
     const 新需求新增成员读取接口* 新增成员读取_ = nullptr;

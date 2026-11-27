@@ -3843,7 +3843,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                 const auto target=映射目标(d,projected,stop);
                 if(stop.stop_requested())throw 推进中断{阶段::停止未完成,"停止后不进入需求发表"};
                 进入步骤("发表同源被认知需求");
-                const auto created=d.需求.建立或取得接收认知需求({source,target,需求信息节点},d.语言,d.特征);
+                const auto created=d.需求.建立或取得接收认知需求(
+                    {source,target,需求信息节点,out.受请求者 == context.已绑定自我 && out.受请求者.has_value()},d.语言,d.特征);
                 if(created.状态==新需求操作状态::资源失败)资源();if(created.状态==新需求操作状态::前提已变化)漂移();
                 if(created.状态==新需求操作状态::目标内容依赖未就绪)throw 推进中断{阶段::资源延后,"需求目标内容依赖未就绪，保留原认知进度等待重试"};
                 if((created.状态!=新需求操作状态::已建立&&created.状态!=新需求操作状态::已复用)||!created.需求节点)
@@ -3868,7 +3869,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                             ||fresh.信息->需求来源!=source.键||fresh.信息->请求来源!=k
                             ||fresh.信息->说话者H!=speaker)
                             throw std::logic_error("request and child demand final source inconsistent");
-                        const auto qualification=d.需求.读取被认知需求完整资格保护(*out.D,speaker);
+                        const auto 需求主体 = verified.信息->需求主体存在节点;
+                        const auto qualification=d.需求.读取被认知需求完整资格保护(*out.D,需求主体);
                         if(qualification.状态==新被认知需求资格状态::资源失败)资源();
                         if(qualification.状态==新被认知需求资格状态::前提已变化)漂移();
                         if(qualification.状态==新被认知需求资格状态::内容待完善)
@@ -3876,7 +3878,8 @@ std::optional<接收需求认知观察> 接收需求认知服务::推进一次(s
                         if(qualification.状态!=新被认知需求资格状态::已读取||!qualification.信息)
                             throw std::logic_error("request child demand complete qualification unavailable");
                         out.阶段=阶段::已读回行动请求;out.原因="明确行动请求及同源需求子内容正式读回；未承接";
-                        out.待交接请求=新行动请求承接来源{source,*out.D,speaker,*out.受请求者};
+                        out.H=需求主体;
+                        out.待交接请求=新行动请求承接来源{source,*out.D,需求主体,*out.受请求者};
                     } else {out.阶段=阶段::已读回;out.原因="同源语言采用与被认知需求正式读回；未自动承接";}
                     本次终结=true;
                 }

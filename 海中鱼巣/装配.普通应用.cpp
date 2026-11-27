@@ -1660,6 +1660,7 @@ public:
                 item.原因+="；当前正式行动请求读回暂不可用";
             }
         }
+        std::optional<稳定编码> 认知需求主体, 主体认知采用, 主体认知消息;
         if(item.D) {
             检查停止();
             const auto d=当前_.需求服务.读取需求治理信息(*item.D);
@@ -1668,6 +1669,12 @@ public:
                 ||d->首次接收认知来源->采用含义节点!=item.U
                 ||!item.需求来源||d->首次接收认知来源->键!=*item.需求来源) {
                 item.D.reset();item.待交接请求.reset();item.原因+="；当前正式需求来源读回暂不可用";
+            } else {
+                认知需求主体 = d->需求主体存在节点;
+                if (d->首次主体来源) {
+                    主体认知采用 = d->首次主体来源->认知采用;
+                    主体认知消息 = d->首次主体来源->认知消息;
+                }
             }
         }
         std::string 来源="null";
@@ -2234,6 +2241,9 @@ public:
             +",\"admissionBoundPerson\":"+控制编码(接纳绑定人)
             +",\"speaker\":"+控制编码(item.H)+",\"scene\":"+控制编码(item.S)
             +",\"meaning\":"+控制编码(item.U)+",\"demand\":"+控制编码(item.D)
+            +",\"demandSubject\":"+控制编码(认知需求主体)
+            +",\"demandSubjectCognition\":"+控制编码(主体认知采用)
+            +",\"demandSubjectCognitionMessage\":"+控制编码(主体认知消息)
             +",\"recipient\":"+控制编码(item.受请求者)+",\"demandSource\":"+来源
             +",\"handoffPending\":"+控制布尔(item.待交接请求.has_value())
             +",\"boundaryReply\":"+分界答复+",\"boundaryAdmission\":"+词条准入
@@ -5990,6 +6000,68 @@ static 新语言分界工程状态 初始化普通应用前置来源(新_语言�
             结果.状态 = 普通应用装配状态::本能函数端口装配失败;
             return 结果;
         }
+        当前.需求服务.装配同窗需求主体读口(
+            [&当前, 自我 = *结果.自我->自我存在, 服务F = *结果.自我->服务对象特征节点](
+                稳定编码 M, std::optional<新同窗需求主体来源> 已采用) -> 新同窗需求主体读取结果 {
+                using S = 新需求操作状态;
+                using R = 新接收指代调用状态;
+                const auto 无依据 = 已采用 ? S::认知来源不合法 : S::需求不存在;
+                auto& 语言 = 当前.世界事实.语言服务;
+                const auto 角色 = 语言.读取正式消息角色(M,新外设消息方向::接收);
+                if (角色.状态 == R::资源失败) return {S::资源失败};
+                if (角色.状态 == R::前提已变化) return {S::前提已变化};
+                if (角色.状态 == R::结构不一致) throw std::logic_error("service request role corrupt");
+                if (!角色.信息 || !角色.信息->事实 || !角色.信息->内部交互场景
+                    || !角色.信息->说话者 || 角色.信息->受话者 != 自我) return {无依据};
+                const auto& 原 = *角色.信息;
+                const auto 场景 = *原.内部交互场景;
+
+                std::vector<基础联合节点快照> 保护;
+                const auto 捕获 = [&](std::vector<稳定编码> ids) {
+                    std::sort(ids.begin(),ids.end());
+                    ids.erase(std::unique(ids.begin(),ids.end()),ids.end());
+                    const auto 批 = 全局基础数据集.查询节点组完整结构(ids);
+                    if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+                    if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != ids.size())
+                        throw std::logic_error("service request evidence snapshot unavailable");
+                    for (const auto& 项 : 批.节点组) {
+                        if (!项.快照) return false;
+                        保护.push_back(*项.快照);
+                    }
+                    return true;
+                };
+                auto ids = std::vector<稳定编码>{场景,M,*原.事实};
+                if (!已采用) ids.push_back(服务F);
+                if (!捕获(std::move(ids))) return {S::前提已变化};
+                const auto 窗组 = 当前.世界树.读取正式临时交互场景();
+                const auto 窗 = std::ranges::find_if(窗组,[&](const auto& 项) {
+                    return 项.场景 == 场景 && 项.自我 == 自我 && 项.本窗对端 == 原.说话者
+                        && 项.来源.外设场景 == 原.消息.场景节点 && 项.来源.外设窗口 == 原.消息.窗口节点;
+                });
+                if (窗 == 窗组.end()) return {无依据};
+                const auto 认知 = 当前.世界树.读取本窗身份认知(场景,
+                    已采用 ? std::optional{已采用->认知消息} : std::nullopt);
+                if (!认知 || 认知->原对端 != 窗->本窗对端 || 认知->已知存在 == 自我) return {无依据};
+                if (已采用 && 已采用->认知采用 != 认知->采用节点) return {无依据};
+                if (!捕获({认知->采用节点,认知->原消息,认知->原角色,认知->已知存在}))
+                    return {S::前提已变化};
+                const auto 认知角色 = 语言.读取正式消息角色(认知->原消息,新外设消息方向::接收);
+                if (认知角色.状态 == R::资源失败) return {S::资源失败};
+                if (认知角色.状态 == R::前提已变化) return {S::前提已变化};
+                if (认知角色.状态 == R::结构不一致) throw std::logic_error("identity cognition role corrupt");
+                if (!认知角色.信息 || 认知角色.信息->事实 != 认知->原角色
+                    || 认知角色.信息->内部交互场景 != 场景
+                    || 认知角色.信息->说话者 != 原.说话者 || 认知角色.信息->受话者 != 自我
+                    || 认知角色.信息->消息.窗口节点 != 原.消息.窗口节点
+                    || 认知角色.信息->消息.场景节点 != 原.消息.场景节点
+                    || 认知角色.信息->消息.正式记录时间.纳秒 >= 原.消息.正式记录时间.纳秒) return {无依据};
+                if (!已采用) {
+                    const auto 登记 = 当前.世界事实.特征服务.获取特征(服务F);
+                    if (!登记 || 登记->当前值 != 新特征准确值{认知->已知存在}) return {无依据};
+                }
+                return {S::已找到,认知->已知存在,自我,
+                    新同窗需求主体来源{认知->采用节点,认知->原消息},std::move(保护)};
+            });
         // 通用本能“进入场景”（R94/R95）。
         当前.进入场景运行 = std::make_shared<进入场景本能运行服务>(当前.世界树, 当前.方法服务);
         {
@@ -7215,6 +7287,46 @@ std::optional<网页原文分界引文> 读取普通应用原文分界引文(
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"生成普通应用关系陈述",
             L"关系陈述生产入口工程异常。");
+    }
+}
+
+std::jthread 启动同窗需求主体隔离验证() noexcept {
+    using namespace 普通应用装配内部;
+    try {
+        std::lock_guard 锁(上下文锁);
+        if (!上下文 || !上下文->装配结果 || !上下文->装配结果->自我) return {};
+        auto* 当前 = 上下文.get();
+        const auto& 自我材料 = *当前->装配结果->自我;
+        if (!自我材料.自我存在 || !自我材料.服务对象特征节点) return {};
+        const auto 服务F = *自我材料.服务对象特征节点;
+        const auto F = 当前->世界事实.特征服务.获取特征(服务F);
+        if (!F || F->当前值 || !F->历史不同值.empty()) return {};
+        auto& FT = 当前->世界事实.特征概念服务;
+        auto& V = 当前->世界事实.特征值服务;
+        const std::array<const 正式概念身份读取接口*,2> 类型读取{&FT,&当前->世界事实.存在概念服务};
+        const auto 权限类型 = FT.建立或取得先天特征类型槽({先天特征类型槽::服务权限,
+            {特征概念材料物理类型::U64数组,特征概念全材料值域{}, {},
+                特征概念比较规则::完整材料精确}},V,类型读取);
+        if (!权限类型.类型根) return {};
+        return std::jthread([当前,自我 = *自我材料.自我存在,服务F](std::stop_token 停止) {
+            using S = 新活动服务登记状态;
+            while (!停止.stop_requested()) {
+                const auto 场景组 = 当前->世界树.读取正式临时交互场景();
+                if (场景组.size() == 1 && 场景组.front().自我 == 自我
+                    && 当前->世界树.读取本窗身份认知(场景组.front().场景)) {
+                    const auto 登记 = 当前->世界树.确认登记本窗服务对象(
+                        场景组.front().来源.外设场景,自我,服务F,新本窗服务登记模式::隔离活动数据集验证);
+                    if (登记.状态 == S::已登记 && 登记.服务状态节点) {
+                        (void)当前->自我线程.提交事实变化(*登记.服务状态节点);
+                        return;
+                    }
+                    if (登记.状态 != S::前提已变化 && 登记.状态 != S::资格待定) return;
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        });
+    } catch (...) {
+        return {};
     }
 }
 

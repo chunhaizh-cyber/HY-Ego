@@ -19,6 +19,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 
 namespace 海中鱼巣 {
 
@@ -209,5 +210,6 @@ void 通知普通应用外设交互场景已建立(稳定编码 场景) noexcept
 
 // 装配后功能自检；返回是否全部强制项通过（未验证项不计入强制失败）。
 bool 运行普通应用关系概念出站验证() noexcept;
+std::jthread 启动同窗需求主体隔离验证() noexcept;
 
 } // namespace 海中鱼巣
