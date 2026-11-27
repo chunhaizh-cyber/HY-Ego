@@ -3068,7 +3068,7 @@ void 接收需求认知服务::提交场景期望值询问(const 新接收认知
     using P=新语言知识参数角色;
     using C=特征概念规则状态;
     auto& d=实现_->依赖;
-    if(stop.stop_requested() || !条目.说话者调整需求 || 条目.期望值答复 || !条目.内容.目标存在
+    if(stop.stop_requested() || !条目.说话者调整需求 || 条目.期望值答复
         || 条目.内容.来源消息!=键.接收消息节点) return;
     const auto& 依据=*条目.说话者调整需求;
     const auto 角色=d.语言.读取正式消息角色(键.接收消息节点,新外设消息方向::接收);
@@ -3091,15 +3091,16 @@ void 接收需求认知服务::提交场景期望值询问(const 新接收认知
             && 句.静态结构->操作==新语言知识含义操作::需求描述;
     };
     if(std::ranges::count_if(句组,是原需求句)!=1) return;
-    const auto& 结构=*std::ranges::find_if(句组,是原需求句)->静态结构;
+    const auto 需求句=std::ranges::find_if(句组,是原需求句);
+    const auto& 结构=*需求句->静态结构;
     const auto 原文=语言场景转换内部::解码语言场景原文(源.UTF8正文);
     if(!原文) return;
-    const auto 词面=[&](P 参数,稳定编码 节点) -> std::string {
+    const auto 词面=[&](P 参数,std::optional<稳定编码> 节点) -> std::string {
         const auto R=std::ranges::find(结构.角色组,参数,&接收语言已解释角色::参数);
-        if(R==结构.角色组.end() || !R->值) return {};
-        const auto* 引用=std::get_if<语言图引用值>(&*R->值);
-        if(!引用 || 引用->节点!=节点 || R->起始标量>=R->结束标量
+        if(R==结构.角色组.end() || R->起始标量>=R->结束标量
             || R->起始标量<起点 || R->结束标量>终点) return {};
+        const auto* 引用=R->值 ? std::get_if<语言图引用值>(&*R->值) : nullptr;
+        if(节点 ? (!引用 || 引用->节点!=*节点) : R->值.has_value()) return {};
         return 语言场景转换内部::读取语言场景原文范围(*原文,
             {static_cast<std::size_t>(R->起始标量),static_cast<std::size_t>(R->结束标量)});
     };
@@ -3112,8 +3113,8 @@ void 接收需求认知服务::提交场景期望值询问(const 新接收认知
     if(!类型.信息 || 类型.前提已变化 || 类型.信息->定义.材料类型!=特征概念材料物理类型::I64标量
         || !类型.信息->定义.单位) return;
     const auto 单位=*类型.信息->定义.单位;
-    const auto 目标=*条目.内容.目标存在;
-    const auto 目标词面=词面(P::目标存在,目标);
+    const auto 目标=条目.内容.目标存在.value_or(稳定编码{});
+    const auto 目标词面=词面(P::目标存在,条目.内容.目标存在);
     const auto 特征词面=词面(P::特征类型,依据.目标特征概念);
     if(目标词面.empty() || 特征词面.empty()) return;
     const auto 目标角色=std::ranges::find(结构.角色组,P::目标存在,&接收语言已解释角色::参数);
@@ -3123,6 +3124,9 @@ void 接收需求认知服务::提交场景期望值询问(const 新接收认知
         && 语言场景转换内部::读取语言场景原文范围(*原文,
             {static_cast<std::size_t>(目标角色->结束标量),static_cast<std::size_t>(特征角色->起始标量)})=="中";
     if(后段 && !容器限定) return;
+    if(!有效(目标) && (!容器限定 || !后段 || 句组.size()!=2 || &*需求句!=&句组.back()
+        || !句组.front().静态结构
+        || 句组.front().静态结构->操作!=新语言知识含义操作::身份自述)) return;
     const auto 来源=条目.陈述节点;
     if(const auto 已有=d.语言.按出站来源读取问题(来源)){
         const auto 出站=d.语言.读取出站具体表达(来源);
@@ -3147,7 +3151,7 @@ void 接收需求认知服务::提交场景期望值询问(const 新接收认知
     if(!已存){
         auto 保护=类型.预期节点组;
         保护.push_back(*概念.节点快照);
-        for(const auto 节点:{目标,单位}) {
+        for(const auto 节点:{有效(目标) ? 目标 : 来源,单位}) {
             const auto 查询=全局基础数据集.查询节点组完整结构({节点});
             if(查询.状态==基础结构操作状态::资源失败) 资源();
             if(查询.节点组.size()!=1 || !查询.节点组.front().快照) return;
