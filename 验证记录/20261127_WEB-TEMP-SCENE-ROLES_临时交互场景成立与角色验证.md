@@ -32,3 +32,11 @@ WEB-TEMP-SCENE-ROLES v0.1，冻结 15d683146、登记 95ce6143b，计划 blob 75
 - 海中鱼巣/装配.网页外设.h edd4be3b5112240985dad8eef7c3ea4ecb8c3cba
 - 海中鱼巣/领域/新_场景类.cpp 088ca694183f12e9d9f38508886b15c99bb4573c
 - 海中鱼巣/领域/新_场景类.h 8e092a47bddbf884f591d7c3ffaac4f2ee78cfaf
+
+## 可选实际 Send 复测
+
+补齐普通控制快照对已实际发送 M 的只读角色投影。复测编译使用 Release x64，0 警告、0 错误，39.67 秒，目录 D:/TEMP/海中鱼巣/WEB-INTERACTION-ENTRY/release-20261127-080834，258项源码摘要一致，新装配源码 Git blob 2c99bbf1fb22e10646ddf89d726d1db96a1356d0。未放宽生产发送接纳条件。
+
+20261127-080928 同一普通宿主，隔离 PID 43156。先重得两个临时场景、匿名端点隔离、旧 M33591 保留无角色、新入站和物理所在场景 24828 不变。A 场景 34553／局部端点 34562；B 场景 35266／局部端点 35275。通过普通控制台出站入口以精确请求头传输「我问你。」。HTTP 提交 202 且同窗真实收到文本，提交 1 的正式状态为已完整写出、HTTP 已写 385 字节。现实世界 owner 独立读回实际 Send M36794、角色证据 36800、A 场景 34553，自我 24838 为说话者、A 端点 34562 为受话者，与 A 入站 M35289 相反。B 无实际出站角色。控制投影不根据待发输出反推 Send。正常关闭 HTTP 200，原 PID 43156 自然退出 0，逻辑错误日志为空。
+
+原始目录 D:/TEMP/海中鱼巣/WEB-INTERACTION-ENTRY/run-20261127-080928。关键文件包括 result.json、formal-send-roles.json、outbound-submit.json、outbound-status.json、after-send-*.json、exit.json。原 415 错误保留。PowerShell/.NET 媒体类型解析在分号后增加空格，而正式路由要求字面匹配；复测请求记录直接核对了客户端发送的 text/plain;charset=utf-8。此次验证内部角色按实际收发方向固化。正式现实对应、杯水、七组仍待独立验收。
