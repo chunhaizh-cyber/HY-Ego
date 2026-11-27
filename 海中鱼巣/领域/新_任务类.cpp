@@ -18357,6 +18357,10 @@ bool 新任务复合分解同一(const 新任务复合目标分解提议& 左, c
             proposal.依据 = 新任务因果筹办依据{request, readback};
             proposal.状态 = readback.状态 == 新因果筹办读取状态::无已知路径
                 ? 新任务因果子需求提议状态::无路径 : 新任务因果子需求提议状态::无需子需求;
+            if (readback.来源前驱读回 && 是持续服务任务缺登记对象(request)) {
+                proposal.状态 = 新任务因果子需求提议状态::无需子需求;
+                return proposal;
+            }
             if(readback.来源前驱读回) {
                 proposal.来源前驱前端组=readback.来源前驱读回->行动前端组;
                 if(proposal.来源前驱前端组.size()==1)proposal.状态=新任务因果子需求提议状态::已形成;
@@ -19310,9 +19314,22 @@ bool 新_任务类::核验因果子需求身份内部(
     return 提取无停止因果读取<新任务因果复核结果>(复核任务因果等待(waiting,edges,{}));
 }
 
+bool 是持续服务任务缺登记对象(const 新因果筹办请求& 请求) noexcept {
+    const auto& 来源 = 请求.来源前驱上下文;
+    const auto& 见证 = 请求.目标.新增成员来源见证;
+    if (!来源 || !见证 || 见证->要求.指定来源主体 || 来源->本槽既有实例) return false;
+    const auto& 对象 = 来源->交互者;
+    return 对象.状态 == 新来源前驱材料状态::未形成
+        && 对象.交互者特征节点 && !对象.当前准确值 && 对象.已验证人类组.empty();
+}
+
 // 无适用错误分支：仅解释本次值式读回，不查仓库、不授执行许可。
 bool 新_任务类::支持当前被动条件等待(const 新任务因果子需求提议& 当前) noexcept {
     if(!当前.依据)return false;
+    if (是持续服务任务缺登记对象(当前.依据->请求))
+        return 当前.状态 == 新任务因果子需求提议状态::无需子需求
+            && 当前.子需求项组.empty() && 当前.来源前驱前端组.empty()
+            && 当前.继续推进任务组.empty();
     const auto& 读回=当前.依据->读回;
     const bool 普通被动=当前.状态==新任务因果子需求提议状态::无需子需求
         &&std::any_of(读回.分支组.begin(),读回.分支组.end(),[](const auto& 分支) {
@@ -19370,6 +19387,23 @@ bool 新_任务类::支持当前被动条件等待(const 新任务因果子需�
     }
     检查因果读取停止(停止);
     if (satisfied) return 正常返回({新任务因果复核状态::原目标当前满足待完成核验, {}, {request.父需求节点}});
+    if (是持续服务任务缺登记对象(request) && !waiting.来源前端
+        && waiting.子需求节点组.empty() && waiting.待推进任务组.empty()) {
+        auto fresh = 提取因果正常读取<新任务因果子需求提议>(
+            提议任务因果子需求(request.父任务节点, edges, 停止));
+        const bool 仍等待 = fresh.依据 && 支持当前被动条件等待(fresh)
+            && 是持续服务任务缺登记对象(fresh.依据->请求)
+            && fresh.依据->请求.父任务节点 == request.父任务节点
+            && fresh.依据->请求.父需求节点 == request.父需求节点
+            && fresh.依据->请求.目标存在节点 == request.目标存在节点
+            && fresh.依据->请求.目标 == request.目标
+            && fresh.依据->请求.来源前驱上下文->交互者.交互者特征节点
+                == request.来源前驱上下文->交互者.交互者特征节点;
+        if (仍等待)
+            return 正常返回({新任务因果复核状态::仍等条件, std::move(fresh), {}});
+        return 正常返回({新任务因果复核状态::条件发生变化需重新筹办,
+            std::move(fresh), {request.父任务节点, request.父需求节点}});
+    }
     if(request.来源前驱上下文) {
         bool 仍有效=false;
         std::vector<基础联合节点快照> 保护;

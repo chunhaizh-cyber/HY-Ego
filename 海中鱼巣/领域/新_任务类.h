@@ -1172,6 +1172,8 @@ struct 新当前满足需求结果 final {
     稳定编码 需求节点;
 };
 using 新任务单读可停止结果 = std::variant<std::optional<新任务信息>, 新任务因果读取取消>;
+bool 是持续服务任务缺登记对象(const 新因果筹办请求&) noexcept;
+
 struct 新任务因果等待依据 final {
     新任务因果筹办依据 采用依据;
     std::vector<稳定编码> 子需求节点组, 待推进任务组;
