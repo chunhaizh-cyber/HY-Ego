@@ -2366,6 +2366,25 @@ public:
         const auto 场景 = *角色.信息->内部交互场景;
         const auto 身份采用 = 当前_.世界树.读取本窗身份认知(场景,消息->消息节点);
         const auto 当前身份 = 当前_.世界树.读取本窗身份认知(场景);
+        std::string 对象对应JSON = "null";
+        if (身份采用) {
+            const auto 对应 = 当前_.接收认知.读取本窗自述对象对应(
+                {消息->消息节点, 0, 长度, {}}, 场景, 当前_.世界树);
+            if (对应.状态 == L::已完成 && 对应.信息) {
+                const auto& 项 = *对应.信息;
+                if (项.认知采用 != 身份采用->采用节点 || 项.解释定义 != 信息.解释定义节点) return {};
+                对象对应JSON = "{\"sourceMessage\":" + 控制编码(项.原消息)
+                    + ",\"languageScene\":" + 控制编码(项.语言场景)
+                    + ",\"definition\":" + 控制编码(项.解释定义)
+                    + ",\"languageExistence\":" + 控制编码(项.语言存在)
+                    + ",\"start\":" + 控制计数(项.原文起点)
+                    + ",\"end\":" + 控制计数(项.原文终点)
+                    + ",\"internalScene\":" + 控制编码(项.内部场景)
+                    + ",\"internalExistence\":" + 控制编码(项.内部存在)
+                    + ",\"adoption\":" + 控制编码(项.认知采用)
+                    + ",\"roleFact\":" + 控制编码(项.原角色) + "}";
+            }
+        }
         if (身份采用 || 当前身份) {
             const auto 编码或空 = [](const auto& 项, const auto 成员) {
                 return 控制编码(项 ? std::optional{(*项).*成员} : std::nullopt);
@@ -2398,6 +2417,7 @@ public:
             + ",\"speakerSceneDemand\":" + 说话者需求JSON
             + ",\"identityLanguageSource\":" + 控制编码(消息->本窗身份自述语言定义)
             + ",\"windowIdentityCognition\":" + 身份认知JSON
+            + ",\"adoptedObjectCorrespondence\":" + 对象对应JSON
             + ",\"selfSceneDemandReview\":" + 自我取用JSON
             + ",\"definitionNode\":" + 控制编码(信息.解释定义节点)
             + ",\"adoption\":" + 控制编码(采用 ? std::optional{采用->节点} : std::nullopt)
