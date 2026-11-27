@@ -1,4 +1,5 @@
 #include "装配.普通应用.h"
+#include "业务/自检.限定I64需求目标.h"
 #include "业务/初始化.表达组织知识.h"
 #include "领域/世界挂接.全局根.h"
 #include "装配.网页外设.h"
@@ -7665,6 +7666,15 @@ void 验证同窗结构化需求复制(普通应用上下文& 当前, const 新�
     else 记录 << "independent readback mismatch\n";
 }
 } // namespace
+
+bool 准备同窗需求水温隔离验证() noexcept {
+    using namespace 普通应用装配内部;
+    try {
+        std::lock_guard 锁(上下文锁);
+        return 上下文 && 上下文->装配结果 && 上下文->装配结果->成功()
+            && 准备隔离第六组水温(上下文->世界树);
+    } catch (...) { return false; }
+}
 
 std::jthread 启动同窗需求主体隔离验证() noexcept {
     using namespace 普通应用装配内部;

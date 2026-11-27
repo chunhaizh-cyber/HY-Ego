@@ -102,6 +102,13 @@ void 记录治理返回(const wchar_t* 阶段, const 普通应用治理操作结
             通过 ? 程序失败阶段::无 : 程序失败阶段::关系概念出站验证};
     }
 
+    if (选项.验证同窗需求主体) {
+        wchar_t 受控水温[2]{};
+        if (GetEnvironmentVariableW(L"HY_EGO_VERIFY_ISOLATED_WATER_TARGET",受控水温,2)==1
+            && 受控水温[0]==L'1' && !准备同窗需求水温隔离验证())
+            return {模式,程序运行状态::初始化失败,程序失败阶段::普通应用装配};
+    }
+
     auto 信号 = 安装程序停止信号();
     记录启动返回(L"停止信号安装返回", [&](auto& 文本) {
         文本 << L"停止信号安装状态=" << static_cast<int>(信号.状态)
