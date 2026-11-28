@@ -16,6 +16,7 @@
 namespace 海中鱼巣 {
 
 class 概念_存在类;
+class 新_特征类;
 class 基础持久视图;
 enum class 基础持久状态;
 
@@ -26,6 +27,20 @@ struct 新特征值命中信息 final {
     std::int64_t 命中次数 = 0;
     friend bool operator==(const 新特征值命中信息&,
         const 新特征值命中信息&) = default;
+};
+
+class 新持久自我顶层特征材料 final {
+    friend class 新_特征类;
+    const 基础持久视图* 视图_ = nullptr;
+    const 新_特征类* 所有者_ = nullptr;
+    稳定编码 自我_{};
+    std::vector<基础联合节点快照> 特征组_;
+};
+
+struct 新持久服务对象特征信息 final {
+    稳定编码 特征, 类型根;
+    std::optional<稳定编码> 当前;
+    std::vector<新特征值命中信息> 历史;
 };
 
 struct 新特征信息 final {
@@ -601,7 +616,13 @@ public:
         概念_特征类& 特征概念服务) noexcept;
     ~新_特征类() noexcept;
     基础持久状态 恢复当前权威(const 基础持久视图&, 稳定编码 自我,
-        std::span<const 稳定编码> 顶层特征) noexcept;
+        std::span<const 稳定编码> 顶层特征, 新持久自我顶层特征材料&) noexcept;
+    std::pair<基础持久状态, std::optional<新持久服务对象特征信息>>
+        读取当前权威服务对象特征(const 基础持久视图&, 稳定编码 自我, 稳定编码 H,
+            const 新持久自我顶层特征材料&) const noexcept;
+    std::pair<基础持久状态, std::optional<std::pair<稳定编码, std::uint64_t>>>
+        读取当前权威服务对象权限(const 基础持久视图&, 稳定编码 对端,
+            std::span<const 稳定编码> 对端顶层, 稳定编码 服务权限类型根) const noexcept;
 
     void 装配存在引用读取接口(
         const 特征存在引用读取接口& 读取接口) noexcept;

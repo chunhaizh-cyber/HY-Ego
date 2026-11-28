@@ -2012,8 +2012,9 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     }
 }
 
-新存在身份保护结果 新_存在类::读取存在身份保护可抛内部(稳定编码 节点) const {
-    const auto 读 = 全局基础数据集.查询节点组完整结构({节点});
+新存在身份保护结果 新_存在类::读取存在身份保护可抛内部(
+    稳定编码 节点, const 基础数据集& 数据) const {
+    const auto 读 = 数据.查询节点组完整结构({节点});
     if (读.状态 != 基础结构操作状态::已完成) return {读.状态, {}, {}, false};
     if (读.节点组.size() != 1 || !读.节点组.front().快照)
         return {基础结构操作状态::节点不存在, {}, {}, false};
@@ -2029,6 +2030,56 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     if (类型 != 存在节点类型 || !概念)
         return {基础结构操作状态::内部不一致, {}, {}, false};
     return {基础结构操作状态::已完成, 新存在身份保护信息{节点, *概念}, {s}, false};
+}
+
+std::pair<基础持久状态, std::vector<稳定编码>> 新_存在类::读取当前权威专属存在顶层(
+    const 基础持久视图& 视图, 稳定编码 目标) const noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    using C = 专属存在概念身份读取状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 失败 = [&](S 状态) -> std::pair<S, std::vector<稳定编码>> {
+        return {会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态, {}};
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return {S::入口拒绝, {}};
+        std::lock_guard 锁(新存在互斥);
+        if (会话->读取().get() != &视图) return {S::前提已变化, {}};
+        if (存在恢复所有者 != this || !有效(目标)) return 失败(S::入口拒绝);
+        if (!结构已初始化()) return 失败(S::结构冲突);
+
+        const auto 身份 = 读取存在身份保护可抛内部(目标, 视图.结构());
+        if (身份.状态 == B::资源失败) return 失败(S::资源失败);
+        if (身份.前提已变化) return 失败(S::前提已变化);
+        if (身份.状态 != B::已完成 || !身份.信息 || 身份.信息->存在节点 != 目标
+            || 身份.预期节点组.size() != 1 || 身份.预期节点组.front().结构.节点.编码 != 目标)
+            return 失败(S::结构冲突);
+        const auto& 快照 = 身份.预期节点组.front();
+        std::vector<稳定编码> 顶层特征;
+        for (const auto& 字段 : 快照.结构.字段组) {
+            if (字段.字段节点 == 存在清理中字段) return 失败(S::结构冲突);
+            if (字段.字段节点 != 实例特征字段) continue;
+            const auto* F = std::get_if<稳定编码>(&字段.内容);
+            if (!F || !有效(*F) || *F == 目标) return 失败(S::结构冲突);
+            顶层特征.push_back(*F);
+        }
+        std::sort(顶层特征.begin(), 顶层特征.end());
+        if (std::adjacent_find(顶层特征.begin(), 顶层特征.end()) != 顶层特征.end())
+            return 失败(S::结构冲突);
+
+        if (会话->读取().get() != &视图) return {S::前提已变化, {}};
+        const auto EC = 身份.信息->专属存在概念节点;
+        const auto 概念 = 存在概念服务_.读取专属存在概念身份保护(EC, 目标, 快照);
+        if (概念.状态 == C::资源失败) return 失败(S::资源失败);
+        if (概念.状态 == C::前提已变化) return 失败(S::前提已变化);
+        if (概念.状态 != C::已完成 || 概念.专属概念节点 != EC || 概念.对应存在节点 != 目标
+            || 概念.身份保护.empty()) return 失败(S::结构冲突);
+        if (会话->读取().get() != &视图) return {S::前提已变化, {}};
+        return {S::已读取, std::move(顶层特征)};
+    } catch (const std::bad_alloc&) { return 失败(S::资源失败); }
+    catch (const std::length_error&) { return 失败(S::资源失败); }
+    catch (...) { return 失败(S::结构冲突); }
 }
 
 新存在身份保护结果 新_存在类::读取存在身份保护(稳定编码 节点) const noexcept {

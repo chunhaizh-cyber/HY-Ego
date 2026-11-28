@@ -7,6 +7,7 @@
 #include <variant>
 #include <vector>
 #include <span>
+#include <tuple>
 #include <utility>
 
 #include "../核心/基础数据集.h"
@@ -874,6 +875,8 @@ public:
 
 private:
     friend class 新_特征类;
+    std::tuple<基础结构操作状态, 稳定编码, bool> 读取恢复特征类型头(
+        const 基础持久视图&, 稳定编码 FC) const noexcept;
     基础片段封存结果 封存新增先天实例计数(std::uint32_t 槽, 稳定编码 概念, std::size_t 数量) const;
     基础片段封存结果 封存新增指代关系实例计数(稳定编码 概念, std::size_t 数量) const;
     // 只供信息引用型空F出生：本owner计数与调用者封存的空实例共同发布。

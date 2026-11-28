@@ -269,8 +269,8 @@ bool 结构仍存在() noexcept {
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
-    稳定编码 节点, 稳定编码 字段) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 字段);
+    稳定编码 节点, 稳定编码 字段, const 基础数据集& 数据 = 全局基础数据集) {
+    const auto 字段组 = 数据.查询字段(节点, 字段);
     if (字段组.size() != 1) return std::nullopt;
     const auto* 目标 = std::get_if<稳定编码>(&字段组.front().内容);
     return 目标 ? std::optional<稳定编码>{*目标} : std::nullopt;
@@ -327,43 +327,57 @@ struct 历史值命中物理记录 final {
     std::int64_t 命中次数 = 0;
 };
 
+std::optional<历史值命中物理记录> 解码历史值命中记录(
+    const 基础字段关系& 持有, const 基础节点结构& 记录) {
+    const 基础字段关系* 类型 = nullptr;
+    const 基础字段关系* 所属 = nullptr;
+    const 基础字段关系* 值字段 = nullptr;
+    const 基础字段关系* 次数字段 = nullptr;
+    for (const auto& 字段 : 记录.字段组) {
+        const 基础字段关系** 位置 = nullptr;
+        if (字段.字段节点 == 节点类型字段) 位置 = &类型;
+        else if (字段.字段节点 == 历史值记录所属特征字段) 位置 = &所属;
+        else if (字段.字段节点 == 历史值记录准确值字段) 位置 = &值字段;
+        else if (字段.字段节点 == 历史值记录命中次数字段) 位置 = &次数字段;
+        if (!位置) continue;
+        if (*位置) return {};
+        *位置 = &字段;
+    }
+    if (!类型 || 类型->内容 != 基础字段内容{历史值命中记录节点类型}
+        || !所属 || !值字段 || !次数字段
+        || 持有.内容 != 基础字段内容{记录.节点.编码}) return {};
+    const auto* 所属特征 = std::get_if<稳定编码>(&所属->内容);
+    const auto 值 = 解码准确值(*值字段);
+    const auto 次数值 = 解码准确值(*次数字段);
+    const auto* 次数 = 次数值 ? std::get_if<std::int64_t>(&*次数值) : nullptr;
+    if (!所属特征 || !值 || !次数 || *次数 <= 0) return {};
+    return 历史值命中物理记录{记录.节点.编码, *所属特征, 持有.编码, 次数字段->编码, *值, *次数};
+}
+
 std::optional<std::vector<历史值命中物理记录>> 读取历史值命中记录(
     稳定编码 特征节点) {
     std::vector<历史值命中物理记录> 结果;
     for (const auto& 持有关系 : 全局基础数据集.查询字段(
         特征节点, 历史值命中记录字段)) {
         const auto* 记录节点 = std::get_if<稳定编码>(&持有关系.内容);
-        if (!记录节点 || !节点仍存在(*记录节点)) return std::nullopt;
-        const auto 类型 = 读取唯一节点字段(*记录节点, 节点类型字段);
-        const auto 准确值组 = 全局基础数据集.查询字段(
-            *记录节点, 历史值记录准确值字段);
-        const auto 次数组 = 全局基础数据集.查询字段(
-            *记录节点, 历史值记录命中次数字段);
-        const auto 所属特征 = 读取唯一节点字段(
-            *记录节点, 历史值记录所属特征字段);
-        if (!类型 || *类型 != 历史值命中记录节点类型
-            || !所属特征 || 准确值组.size() != 1 || 次数组.size() != 1) {
-            return std::nullopt;
-        }
-        if (*所属特征 != 特征节点) {
+        if (!记录节点) return std::nullopt;
+        const auto 读取 = 全局基础数据集.查询完整节点结构(*记录节点);
+        if (读取.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (读取.状态 != 基础结构操作状态::已完成 || !读取.结构) return std::nullopt;
+        const auto 记录 = 解码历史值命中记录(持有关系, *读取.结构);
+        if (!记录) return std::nullopt;
+        if (记录->所属特征 != 特征节点) {
             const auto 父关系 = 全局基础数据集.查询目标关系(
                 特征节点, 基础外部关系类型::父子);
             const auto 标记 = 读取唯一I64字段(
                 特征节点, 归组子特征标记字段);
             if (父关系.size() != 1
-                || 父关系.front().源节点 != *所属特征
+                || 父关系.front().源节点 != 记录->所属特征
                 || !标记 || *标记 != 1) {
                 return std::nullopt;
             }
         }
-        const auto 准确值 = 解码准确值(准确值组.front());
-        const auto 次数 = 读取唯一I64字段(
-            *记录节点, 历史值记录命中次数字段);
-        if (!准确值 || !次数 || *次数 <= 0) return std::nullopt;
-        结果.push_back({
-            *记录节点, *所属特征,
-            持有关系.编码, 次数组.front().编码,
-            *准确值, *次数});
+        结果.push_back(*记录);
     }
     return 结果;
 }
@@ -700,16 +714,16 @@ bool 写入值域内容(
 
 std::optional<特征概念值域> 读取值域节点(
     稳定编码 值域节点,
-    特征概念材料物理类型 材料类型) {
-    const auto 类型 = 读取唯一节点字段(值域节点, 节点类型字段);
+    特征概念材料物理类型 材料类型, const 基础数据集& 数据 = 全局基础数据集) {
+    const auto 类型 = 读取唯一节点字段(值域节点, 节点类型字段, 数据);
     if (!类型 || *类型 != 值域节点类型) return std::nullopt;
-    const auto I64字段组 = 全局基础数据集.查询字段(
+    const auto I64字段组 = 数据.查询字段(
         值域节点, I64值域字段);
-    const auto 全材料字段组 = 全局基础数据集.查询字段(
+    const auto 全材料字段组 = 数据.查询字段(
         值域节点, 全材料值域字段);
-    const auto 非I64字段组 = 全局基础数据集.查询字段(
+    const auto 非I64字段组 = 数据.查询字段(
         值域节点, 非I64值域字段);
-    const auto 结构分量组 = 全局基础数据集.查询字段(
+    const auto 结构分量组 = 数据.查询字段(
         值域节点, 结构化分量字段);
     const auto 表示数量 = static_cast<int>(!I64字段组.empty())
         + static_cast<int>(!全材料字段组.empty())
@@ -759,12 +773,12 @@ std::optional<特征概念值域> 读取值域节点(
     有序分量.reserve(结构分量组.size());
     for (const auto& 分量字段 : 结构分量组) {
         const auto* 分量节点 = std::get_if<稳定编码>(&分量字段.内容);
-        if (!分量节点 || !节点仍存在(*分量节点)) return std::nullopt;
-        const auto 分量类型 = 读取唯一节点字段(*分量节点, 节点类型字段);
-        const auto 顺序字段组 = 全局基础数据集.查询字段(
+        if (!分量节点 || !数据.查询节点(*分量节点)) return std::nullopt;
+        const auto 分量类型 = 读取唯一节点字段(*分量节点, 节点类型字段, 数据);
+        const auto 顺序字段组 = 数据.查询字段(
             *分量节点, 分量顺序字段);
-        const auto 角色 = 读取唯一节点字段(*分量节点, 分量角色字段);
-        const auto 分量域字段组 = 全局基础数据集.查询字段(
+        const auto 角色 = 读取唯一节点字段(*分量节点, 分量角色字段, 数据);
+        const auto 分量域字段组 = 数据.查询字段(
             *分量节点, 分量I64值域字段);
         if (!分量类型 || *分量类型 != 结构化分量节点类型
             || 顺序字段组.size() != 1 || !角色
@@ -783,12 +797,12 @@ std::optional<特征概念值域> 读取值域节点(
             if ((*展平)[i] > (*展平)[i + 1]) return std::nullopt;
             分量.值域.push_back({(*展平)[i], (*展平)[i + 1]});
         }
-        const auto 单位字段组 = 全局基础数据集.查询字段(
+        const auto 单位字段组 = 数据.查询字段(
             *分量节点, 分量单位字段);
         if (单位字段组.size() > 1) return std::nullopt;
         if (!单位字段组.empty()) {
             const auto* 单位 = std::get_if<稳定编码>(&单位字段组.front().内容);
-            if (!单位 || !节点仍存在(*单位)) return std::nullopt;
+            if (!单位 || !数据.查询节点(*单位)) return std::nullopt;
             分量.单位 = *单位;
         }
         有序分量.emplace_back(static_cast<std::size_t>(*顺序), std::move(分量));
@@ -3194,8 +3208,99 @@ bool 新特征I64更新准备::核心有变化() const noexcept {
     if (特征恢复所有者 == this) 清除特征恢复绑定();
 }
 
+namespace {
+std::pair<基础结构操作状态, 稳定编码> 解码恢复顶层特征头(
+    const 基础联合节点快照& 快照, 稳定编码 F) noexcept {
+    using S = 基础结构操作状态;
+    if (快照.结构.节点.编码 != F
+        || std::ranges::any_of(快照.入向外部关系组, [](const auto& 边) {
+            return 边.类型 == 基础外部关系类型::父子;
+        })) return {S::内部不一致, {}};
+    std::optional<稳定编码> 类型, 概念;
+    for (const auto& 字段 : 快照.结构.字段组) {
+        if (字段.字段节点 != 节点类型字段 && 字段.字段节点 != 特征概念字段) continue;
+        auto& 位置 = 字段.字段节点 == 节点类型字段 ? 类型 : 概念;
+        const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+        if (位置 || !节点 || !有效(*节点)) return {S::内部不一致, {}};
+        位置 = *节点;
+    }
+    if (类型 != 特征节点类型 || !概念) return {S::内部不一致, {}};
+    return {S::已完成, *概念};
+}
+
+struct 恢复单引用特征 final {
+    std::optional<稳定编码> 当前, 标准, 聚合域;
+    std::map<稳定编码, std::int64_t> 历史;
+};
+
+std::optional<恢复单引用特征> 解码恢复单引用特征(
+    const 基础数据集& 数据, const 基础联合节点快照& 特征,
+    稳定编码 保活字段, bool 读权限) {
+    if (std::ranges::any_of(特征.出向外部关系组, [](const auto& 边) {
+        return 边.类型 == 基础外部关系类型::父子;
+    })) return {};
+    恢复单引用特征 结果;
+    std::map<稳定编码, const 基础字段关系*> 命中字段组;
+    std::set<稳定编码> 实际保护;
+    const auto 引用 = [](const 基础字段关系& 字段) -> std::optional<稳定编码> {
+        const auto 值 = 解码准确值(字段);
+        const auto* 节点 = 值 ? std::get_if<稳定编码>(&*值) : nullptr;
+        return 节点 && 有效(*节点) ? std::optional{*节点} : std::nullopt;
+    };
+    for (const auto& 字段 : 特征.结构.字段组) {
+        const auto 键 = 字段.字段节点;
+        if (键 == 归组子特征标记字段 || (!读权限 && 键 == 实例历史聚合值域字段)) return {};
+        if (键 == 当前值字段 || 键 == 标准值字段 || 键 == 实例历史聚合值域字段) {
+            auto& 槽 = 键 == 当前值字段 ? 结果.当前
+                : 键 == 标准值字段 ? 结果.标准 : 结果.聚合域;
+            if (槽) return {};
+            槽 = 引用(字段);
+            if (!槽) return {};
+        } else if (键 == 历史值字段) {
+            const auto 节点 = 引用(字段);
+            if (!节点 || !结果.历史.emplace(*节点, 1).second) return {};
+        } else if (键 == 历史值命中记录字段) {
+            const auto 节点 = 引用(字段);
+            if (!节点 || !命中字段组.emplace(*节点, &字段).second) return {};
+        } else if (键 == 保活字段) {
+            const auto 节点 = 引用(字段);
+            if (读权限 || !节点 || !实际保护.insert(*节点).second) return {};
+        }
+    }
+    if (!命中字段组.empty()) {
+        std::vector<稳定编码> 身份组;
+        身份组.reserve(命中字段组.size());
+        for (const auto& 项 : 命中字段组) 身份组.push_back(项.first);
+        const auto 批 = 数据.查询节点组完整结构(身份组);
+        if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+        if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 身份组.size()) return {};
+        for (const auto& 项 : 批.节点组) {
+            const auto 字段 = 命中字段组.find(项.查询节点);
+            if (!项.快照 || 项.快照->结构.节点.编码 != 项.查询节点 || 字段 == 命中字段组.end()) return {};
+            const auto& 入向字段 = 项.快照->入向字段组;
+            if (std::ranges::count_if(入向字段, [](const auto& 引用字段) {
+                    return 引用字段.字段节点 == 历史值命中记录字段;
+                }) != 1 || std::ranges::find(入向字段, *字段->second) == 入向字段.end()) return {};
+            const auto 命中 = 解码历史值命中记录(*字段->second, 项.快照->结构);
+            if (!命中 || 命中->所属特征 != 特征.结构.节点.编码) return {};
+            const auto* 值 = std::get_if<稳定编码>(&命中->值);
+            if (!值 || !有效(*值) || !结果.历史.emplace(*值, 命中->命中次数).second) return {};
+        }
+    }
+    if ((结果.当前 && !结果.历史.contains(*结果.当前))
+        || (结果.标准 && !结果.历史.contains(*结果.标准))) return {};
+    const auto 标准次数 = 结果.标准 ? 结果.历史.at(*结果.标准) : 0;
+    for (const auto& [节点, 次数] : 结果.历史) {
+        if ((结果.标准 && 次数 > 标准次数)
+            || (!读权限 && 实际保护.erase(节点) != 1)) return {};
+    }
+    if (!实际保护.empty()) return {};
+    return 结果;
+}
+}
+
 基础持久状态 新_特征类::恢复当前权威(const 基础持久视图& 视图, 稳定编码 自我,
-    std::span<const 稳定编码> 顶层特征) noexcept {
+    std::span<const 稳定编码> 顶层特征, 新持久自我顶层特征材料& 材料) noexcept {
     using S = 基础持久状态;
     using B = 基础结构操作状态;
     const auto 映射 = [](B 状态) {
@@ -3204,6 +3309,7 @@ bool 新特征I64更新准备::核心有变化() const noexcept {
         return S::结构冲突;
     };
     try {
+        if (材料.所有者_) return S::入口拒绝;
         const auto 会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
         if (!会话) return S::入口拒绝;
         if (会话->读取().get() != &视图) return S::前提已变化;
@@ -3227,32 +3333,25 @@ bool 新特征I64更新准备::核心有变化() const noexcept {
             特征结构已发表 = true;
         }
 
+        std::vector<基础联合节点快照> 快照组;
         const auto 复核 = [&]() noexcept {
             try {
                 const std::vector<稳定编码> 特征组(顶层特征.begin(), 顶层特征.end());
-                const auto 批 = 全局基础数据集.查询节点组完整结构(特征组);
+                const auto& 数据 = 视图.结构();
+                auto 批 = 数据.查询节点组完整结构(特征组);
                 if (批.状态 != B::已完成) return 映射(批.状态);
                 if (批.节点组.size() != 特征组.size()) return S::结构冲突;
+                快照组.reserve(特征组.size());
                 for (std::size_t i = 0; i < 特征组.size(); ++i) {
                     const auto F = 特征组[i];
-                    const auto& 项 = 批.节点组[i];
-                    if (项.查询节点 != F || !项.快照 || 项.快照->结构.节点.编码 != F)
-                        return S::结构冲突;
-                    if (std::ranges::any_of(项.快照->入向外部关系组, [](const auto& 关系) {
-                            return 关系.类型 == 基础外部关系类型::父子;
-                        })) return S::结构冲突;
-                    std::optional<稳定编码> 类型, 概念;
-                    for (const auto& 字段 : 项.快照->结构.字段组) {
-                        if (字段.字段节点 != 节点类型字段 && 字段.字段节点 != 特征概念字段) continue;
-                        auto& 位置 = 字段.字段节点 == 节点类型字段 ? 类型 : 概念;
-                        const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
-                        if (位置 || !节点 || !有效(*节点)) return S::结构冲突;
-                        位置 = *节点;
-                    }
-                    if (类型 != 特征节点类型 || !概念 || !全局基础数据集.查询节点(*概念))
+                    auto& 项 = 批.节点组[i];
+                    if (项.查询节点 != F || !项.快照) return S::结构冲突;
+                    const auto [头状态, 概念] = 解码恢复顶层特征头(*项.快照, F);
+                    if (头状态 != B::已完成 || !数据.查询节点(概念))
                         return S::结构冲突;
                     const auto 持有 = 核验恢复自我服务特征持有(视图, 存在键, 自我, F);
                     if (持有 != B::已完成) return 映射(持有);
+                    快照组.push_back(std::move(*项.快照));
                 }
                 return S::已读取;
             } catch (const std::bad_alloc&) { return S::资源失败; }
@@ -3266,10 +3365,157 @@ bool 新特征I64更新准备::核心有变化() const noexcept {
             return 视图变化 ? S::前提已变化 : 结果;
         }
         特征恢复所有者 = this;
+        材料.特征组_.swap(快照组);
+        材料.视图_ = &视图;
+        材料.所有者_ = this;
+        材料.自我_ = 自我;
         return S::已读取;
     } catch (const std::bad_alloc&) { return S::资源失败; }
     catch (const std::length_error&) { return S::资源失败; }
     catch (...) { return S::结构冲突; }
+}
+
+std::pair<基础持久状态, std::optional<新持久服务对象特征信息>>
+新_特征类::读取当前权威服务对象特征(const 基础持久视图& 视图, 稳定编码 自我, 稳定编码 H,
+    const 新持久自我顶层特征材料& 材料) const noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    using M = 特征概念材料物理类型;
+    using R = std::pair<S, std::optional<新持久服务对象特征信息>>;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 失败 = [&](S 状态) -> R {
+        return {会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态, {}};
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话 || !有效(自我) || !有效(H)) return 失败(S::入口拒绝);
+        std::lock_guard 锁(新特征互斥);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        if (特征恢复所有者 != this || 材料.所有者_ != this
+            || 材料.视图_ != &视图 || 材料.自我_ != 自我)
+            return 失败(S::入口拒绝);
+
+        const 基础联合节点快照* 服务快照 = nullptr;
+        稳定编码 服务根{};
+        std::map<稳定编码, bool> 根匹配;
+        const auto 是单存在引用形态 = [](const 特征概念信息& 定义) {
+            return 定义.材料类型 == M::存在节点引用 && !定义.单位
+                && std::holds_alternative<特征概念存在引用值域>(定义.值域)
+                && 定义.比较规则 == 特征概念比较规则::存在身份精确
+                && 定义.聚合规则 == 特征概念聚合规则::不自动聚合;
+        };
+        for (const auto& 快照 : 材料.特征组_) {
+            const auto [头状态, FC] = 解码恢复顶层特征头(快照, 快照.结构.节点.编码);
+            if (头状态 != B::已完成) return 失败(S::结构冲突);
+            const auto [路径状态, FT, 是存在引用] = 特征概念服务_.读取恢复特征类型头(视图, FC);
+            if (路径状态 != B::已完成)
+                return 失败(路径状态 == B::资源失败 ? S::资源失败 : S::结构冲突);
+            if (!是存在引用) continue;
+            const auto [根项, 首次] = 根匹配.try_emplace(FT, false);
+            if (首次) {
+                const auto 根 = 特征概念服务_.读取特征概念定义保护(FT);
+                if (根.前提已变化) return 失败(S::前提已变化);
+                if (根.状态 == B::资源失败) return 失败(S::资源失败);
+                if (根.状态 != B::已完成 || !根.信息 || 根.预期节点组.empty()
+                    || 根.信息->类型根 != FT || 根.信息->定义.节点 != FT)
+                    return 失败(S::结构冲突);
+                const auto& 定义 = 根.信息->定义;
+                根项->second = 是单存在引用形态(定义)
+                    && std::get<特征概念存在引用值域>(定义.值域).存在概念节点 == H;
+            }
+            if (!根项->second) continue;
+            if (服务快照) return 失败(S::结构冲突);
+            if (FC != FT) {
+                const auto 概念 = 特征概念服务_.读取特征概念定义保护(FC);
+                if (概念.前提已变化) return 失败(S::前提已变化);
+                if (概念.状态 == B::资源失败) return 失败(S::资源失败);
+                if (概念.状态 != B::已完成 || !概念.信息 || 概念.预期节点组.empty()
+                    || 概念.信息->类型根 != FT || 概念.信息->定义.节点 != FC
+                    || !是单存在引用形态(概念.信息->定义))
+                    return 失败(S::结构冲突);
+            }
+            服务快照 = &快照;
+            服务根 = FT;
+        }
+        if (!服务快照) return 失败(S::材料不完整);
+        const auto 保活字段 = 特征概念服务_.存在集合成员保护字段();
+        if (!有效(保活字段)) return 失败(S::结构冲突);
+        const auto 引用 = 解码恢复单引用特征(视图.结构(), *服务快照, 保活字段, false);
+        if (!引用) return 失败(S::结构冲突);
+        新持久服务对象特征信息 结果{服务快照->结构.节点.编码, 服务根, 引用->当前};
+        结果.历史.reserve(引用->历史.size());
+        for (const auto& [节点, 次数] : 引用->历史) 结果.历史.push_back({节点, 次数});
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        return {S::已读取, std::move(结果)};
+    } catch (const std::bad_alloc&) { return 失败(S::资源失败); }
+    catch (const std::length_error&) { return 失败(S::资源失败); }
+    catch (...) { return 失败(S::结构冲突); }
+}
+
+std::pair<基础持久状态, std::optional<std::pair<稳定编码, std::uint64_t>>>
+新_特征类::读取当前权威服务对象权限(const 基础持久视图& 视图, 稳定编码 对端,
+    std::span<const 稳定编码> 对端顶层, 稳定编码 服务权限类型根) const noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    using R = std::pair<S, std::optional<std::pair<稳定编码, std::uint64_t>>>;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 失败 = [&](S 状态) -> R {
+        return {会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态, {}};
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话 || !有效(对端) || !有效(服务权限类型根)) return 失败(S::入口拒绝);
+        std::lock_guard 锁(新特征互斥);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        if (特征恢复所有者 != this) return 失败(S::入口拒绝);
+        if (对端顶层.empty()) return 失败(S::材料不完整);
+
+        const auto& 数据 = 视图.结构();
+        const std::vector<稳定编码> 身份组(对端顶层.begin(), 对端顶层.end());
+        const auto 批 = 数据.查询节点组完整结构(身份组);
+        if (批.状态 == B::资源失败) return 失败(S::资源失败);
+        if (批.状态 != B::已完成 || 批.节点组.size() != 身份组.size()) return 失败(S::结构冲突);
+        const 基础联合节点快照* 权限快照 = nullptr;
+        for (std::size_t i = 0; i < 批.节点组.size(); ++i) {
+            const auto& 项 = 批.节点组[i];
+            if (项.查询节点 != 身份组[i] || !项.快照) return 失败(S::结构冲突);
+            const auto [头状态, FC] = 解码恢复顶层特征头(*项.快照, 项.查询节点);
+            if (头状态 != B::已完成) return 失败(S::结构冲突);
+            const auto [路径状态, FT, 是存在引用] = 特征概念服务_.读取恢复特征类型头(视图, FC);
+            if (路径状态 != B::已完成)
+                return 失败(路径状态 == B::资源失败 ? S::资源失败 : S::结构冲突);
+            if (FT != 服务权限类型根) continue;
+            if (权限快照 || FC != FT || 是存在引用) return 失败(S::结构冲突);
+            权限快照 = &*项.快照;
+        }
+        if (!权限快照) return 失败(S::材料不完整);
+        const auto F = 权限快照->结构.节点.编码;
+        const auto 存在键 = 读取恢复服务存在结构(视图);
+        const auto 持有 = 核验恢复自我服务特征持有(视图, 存在键, 对端, F);
+        if (持有 == B::资源失败) return 失败(S::资源失败);
+        if (持有 != B::已完成) return 失败(S::结构冲突);
+        const auto 保活字段 = 特征概念服务_.存在集合成员保护字段();
+        if (!有效(保活字段)) return 失败(S::结构冲突);
+        const auto 引用 = 解码恢复单引用特征(数据, *权限快照, 保活字段, true);
+        if (!引用) return 失败(S::结构冲突);
+        if (!引用->当前) return 失败(S::材料不完整);
+        const auto V = *引用->当前;
+        if (引用->标准 != V || 引用->历史.size() != 1 || !引用->聚合域)
+            return 失败(S::结构冲突);
+        const auto 聚合 = 读取值域节点(*引用->聚合域, 特征概念材料物理类型::U64数组, 数据);
+        const auto* 集合 = 聚合 ? std::get_if<std::vector<稳定编码>>(&*聚合) : nullptr;
+        if (!集合 || 集合->size() != 1 || 集合->front() != V) return 失败(S::结构冲突);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        const auto 权限 = 特征值服务_.读取服务权限值(V);
+        if (权限.状态 == 新服务权限值状态::资源失败) return 失败(S::资源失败);
+        if (权限.状态 == 新服务权限值状态::节点不可读) return 失败(S::材料不完整);
+        if (权限.状态 != 新服务权限值状态::已读取 || 权限.节点 != V || !权限.数值)
+            return 失败(S::结构冲突);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        return {S::已读取, std::pair{F, *权限.数值}};
+    } catch (const std::bad_alloc&) { return 失败(S::资源失败); }
+    catch (const std::length_error&) { return 失败(S::资源失败); }
+    catch (...) { return 失败(S::结构冲突); }
 }
 
 void 新_特征类::装配存在引用读取接口(

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <optional>
 #include <set>
+#include <utility>
 #include <vector>
 
 #include "../核心/基础数据集.h"
@@ -196,6 +197,9 @@ public:
     ~新_存在类() noexcept override;
     基础持久状态 恢复当前权威(const 基础持久视图&, 稳定编码 自我,
         std::vector<稳定编码>& 顶层特征) noexcept;
+    // 向上送出：普通暖启动负责按持久状态诊断。
+    std::pair<基础持久状态, std::vector<稳定编码>> 读取当前权威专属存在顶层(
+        const 基础持久视图&, 稳定编码 目标) const noexcept;
 
     bool 初始化() noexcept;
 
@@ -313,7 +317,8 @@ private:
     新存在概念匹配采集结果 采集存在概念匹配材料内部(稳定编码, 稳定编码, bool 计算匹配) const noexcept;
     新存在特征值更新结果 完成已提交同值需求发生(
         稳定编码,稳定编码,const 新特征值添加结果&,稳定编码,稳定编码,const 新状态强时间&) noexcept;
-    新存在身份保护结果 读取存在身份保护可抛内部(稳定编码) const;
+    新存在身份保护结果 读取存在身份保护可抛内部(稳定编码,
+        const 基础数据集& 数据 = 全局基础数据集) const;
     enum class 已提交准确值类别 : std::uint8_t { I64, 存在引用, 需求引用, 引用集合, 恢复需求引用, 同值需求发生 };
     新存在特征值更新结果 完成已恢复需求引用特征变化(
         稳定编码, 稳定编码, 稳定编码, 稳定编码, const 新状态强时间&) noexcept;

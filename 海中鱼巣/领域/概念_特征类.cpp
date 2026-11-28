@@ -46,7 +46,7 @@ bool 相邻或重叠(
     const 特征概念I64闭区间& 左,
     const 特征概念I64闭区间& 右) noexcept;
 std::optional<稳定编码> 读取唯一节点字段(
-    稳定编码 节点, 稳定编码 字段);
+    稳定编码 节点, 稳定编码 字段, const 基础数据集& 数据 = 全局基础数据集);
 
 稳定编码 节点类型字段{};
 稳定编码 特征概念节点类型{};
@@ -1841,7 +1841,8 @@ struct 单概念路径 final {
     稳定编码 根;
 };
 
-std::optional<单概念路径> 读取单概念路径(稳定编码 概念节点) {
+std::optional<单概念路径> 读取单概念路径(
+    稳定编码 概念节点, const 基础数据集& 数据 = 全局基础数据集) {
     if (!有效(概念节点)) return std::nullopt;
     单概念路径 结果;
     稳定编码 当前 = 概念节点;
@@ -1850,10 +1851,10 @@ std::optional<单概念路径> 读取单概念路径(稳定编码 概念节点) 
             != 结果.从自身到根.end()) {
             return std::nullopt;
         }
-        const auto 类型 = 读取唯一节点字段(当前, 节点类型字段);
+        const auto 类型 = 读取唯一节点字段(当前, 节点类型字段, 数据);
         if (!类型 || *类型 != 特征概念节点类型) return std::nullopt;
         结果.从自身到根.push_back(当前);
-        const auto 上位 = 全局基础数据集.查询目标关系(
+        const auto 上位 = 数据.查询目标关系(
             当前, 基础外部关系类型::父子);
         if (上位.size() != 1) return std::nullopt;
         当前 = 上位.front().源节点;
@@ -1980,8 +1981,8 @@ std::optional<std::uint64_t> 值域匹配尺度(
 }
 
 std::optional<std::int64_t> 读取唯一I64字段(
-    稳定编码 节点, 稳定编码 字段) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 字段);
+    稳定编码 节点, 稳定编码 字段, const 基础数据集& 数据 = 全局基础数据集) {
+    const auto 字段组 = 数据.查询字段(节点, 字段);
     if (字段组.size() != 1) return std::nullopt;
     const auto* 值 = std::get_if<基础值>(&字段组.front().内容);
     if (!值) return std::nullopt;
@@ -2001,8 +2002,8 @@ std::optional<std::vector<std::int64_t>> 读取唯一I64组字段(
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
-    稳定编码 节点, 稳定编码 字段) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 字段);
+    稳定编码 节点, 稳定编码 字段, const 基础数据集& 数据) {
+    const auto 字段组 = 数据.查询字段(节点, 字段);
     if (字段组.size() != 1) return std::nullopt;
     const auto* 目标 = std::get_if<稳定编码>(&字段组.front().内容);
     return 目标 ? std::optional<稳定编码>{*目标} : std::nullopt;
@@ -6529,6 +6530,29 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
     }
 }
 
+std::tuple<基础结构操作状态, 稳定编码, bool> 概念_特征类::读取恢复特征类型头(
+    const 基础持久视图& 视图, 稳定编码 FC) const noexcept {
+    using 状态 = 基础结构操作状态;
+    try {
+        std::lock_guard 锁(特征概念树互斥);
+        if (恢复概念持有者 != this) return {状态::入口拒绝, {}, false};
+        const auto& 数据 = 视图.结构();
+        const auto 路径 = 读取单概念路径(FC, 数据);
+        if (!路径) return {状态::内部不一致, {}, false};
+        const auto 材料 = 读取唯一I64字段(路径->根, 材料类型字段, 数据);
+        if (!材料) return {状态::内部不一致, {}, false};
+        const auto 类型 = static_cast<特征概念材料物理类型>(*材料);
+        if (!是支持的材料类型(类型)) return {状态::内部不一致, {}, false};
+        return {状态::已完成, 路径->根, 类型 == 特征概念材料物理类型::存在节点引用};
+    } catch (const std::bad_alloc&) {
+        return {状态::资源失败, {}, false};
+    } catch (const std::length_error&) {
+        return {状态::资源失败, {}, false};
+    } catch (...) {
+        return {状态::内部不一致, {}, false};
+    }
+}
+
 单特征概念关系结果 概念_特征类::比较单特征概念(
     稳定编码 左概念节点,
     稳定编码 右概念节点) const noexcept {
@@ -7044,6 +7068,7 @@ bool 概念_特征类::是特征概念节点(稳定编码 节点) const noexcept
         out.状态 = 基础结构操作状态::已完成;
         return out;
     } catch (const std::bad_alloc&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
+    catch (const std::length_error&) { return {基础结构操作状态::资源失败, {}, {}, false}; }
     catch (...) { return {基础结构操作状态::内部不一致, {}, {}, false}; }
 }
 
