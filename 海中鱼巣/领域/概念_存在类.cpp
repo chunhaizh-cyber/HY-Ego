@@ -2844,6 +2844,8 @@ std::map<std::uint32_t,稳定编码> 读取正式登记(std::vector<基础联合
     return out;
 }
 std::optional<std::size_t> 正式形状(const 基础节点结构&s) {
+    // 类型字段键自身保存字符串自键，不承载正式概念定义。
+    if (s.节点.编码 == 节点类型字段) return std::nullopt;
     auto types=正式引用组(s,节点类型字段);
     if(types.size()!=1) {
         for(auto t:types)for(std::size_t i=基础类型键;i<=结构类型键;++i)
