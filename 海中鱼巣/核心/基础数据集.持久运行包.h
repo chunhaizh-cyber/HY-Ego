@@ -26,6 +26,22 @@ private:
     std::uint64_t 下一个编码_ = 0;
 };
 
+struct 基础自键定义 final {
+    std::string_view 标记;
+    稳定编码 节点;
+};
+
+struct 基础结构自键读回 final {
+    基础结构操作状态 状态 = 基础结构操作状态::入口拒绝;
+    std::vector<稳定编码> 节点组;
+};
+
+// 结构所有者提供本域的固定标记与物理节点。底座只校验和发表直接字段。
+基础结构操作状态 发表基础结构自键(
+    基础数据集& 数据, std::span<const 基础自键定义> 定义组);
+基础结构自键读回 读取基础结构自键(
+    const 基础持久视图& 视图, std::span<const std::string_view> 标记组);
+
 class 基础持久首份候选 final {
 public:
     const 基础持久视图& 读取() const noexcept { return *视图_; }

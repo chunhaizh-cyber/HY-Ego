@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <new>
+#include <set>
 #include <stdexcept>
 
 namespace 海中鱼巣 {
@@ -147,6 +148,101 @@ std::vector<基础字段关系> 基础持久视图::查询自键标记(std::stri
     const auto [起点, 终点] = 自键标记_.equal_range(值);
     for (auto it = 起点; it != 终点; ++it) 结果.push_back(*it->second);
     return 结果;
+}
+
+namespace {
+
+bool 是精确自键(const 基础字段关系& 字段, 稳定编码 节点, std::string_view 标记) noexcept {
+    const auto* 直接值 = std::get_if<基础值>(&字段.内容);
+    const auto* 字符串 = 直接值 ? std::get_if<std::string>(&直接值->材料) : nullptr;
+    return 字段.所属节点 == 节点 && 字段.字段节点 == 节点 && 字符串 && *字符串 == 标记;
+}
+
+} // namespace
+
+基础结构操作状态 发表基础结构自键(
+    基础数据集& 数据, std::span<const 基础自键定义> 定义组) {
+    using S = 基础结构操作状态;
+    using A = 基础节点组追加状态;
+    if (定义组.empty()) return S::入口拒绝;
+    try {
+        std::vector<稳定编码> 编码组;
+        std::map<稳定编码, std::string_view> 待登记;
+        std::set<std::string_view> 标记组;
+        编码组.reserve(定义组.size());
+        for (const auto& 项 : 定义组) {
+            if (!有效(项.节点) || 项.标记.empty() || !标记组.insert(项.标记).second
+                || !待登记.emplace(项.节点, 项.标记).second)
+                return S::入口拒绝;
+            编码组.push_back(项.节点);
+        }
+        auto 读回 = 数据.查询节点组完整结构(编码组);
+        if (读回.状态 != S::已完成) return 读回.状态;
+        if (读回.节点组.size() != 定义组.size()) return S::内部不一致;
+
+        基础节点组追加请求 请求;
+        std::set<稳定编码> 已检查;
+        for (auto& 项 : 读回.节点组) {
+            const auto 键 = 项.查询节点;
+            const auto 声明 = 待登记.find(键);
+            if (!项.快照 || 项.快照->结构.节点.编码 != 键 || 声明 == 待登记.end()
+                || !已检查.insert(键).second) return S::内部不一致;
+            const auto& 字段 = 项.快照->结构.字段组;
+            const auto 同键 = [&](const auto& 值) { return 值.字段节点 == 键; };
+            const auto 已有 = std::ranges::find_if(字段, 同键);
+            if (已有 != 字段.end()) {
+                if (!是精确自键(*已有, 键, 声明->second)
+                    || std::find_if(std::next(已有), 字段.end(), 同键) != 字段.end())
+                    return S::内部不一致;
+                continue;
+            }
+            请求.预期联合节点组.push_back(std::move(*项.快照));
+            请求.只读预期.节点组.push_back({键});
+            请求.只读预期.字段集合组.push_back({键, 键, {}, {}});
+            请求.追加字段组.push_back({键, 键, 基础值{std::string(声明->second)}});
+        }
+        if (请求.追加字段组.empty()) return S::已完成;
+        if (请求.追加字段组.size() != 定义组.size()) return S::内部不一致;
+        const auto 写入 = 数据.原子追加节点组(请求);
+        if (写入.状态 != A::已完成) {
+            if (写入.状态 == A::资源失败) return S::资源失败;
+            return S::内部不一致;
+        }
+        return S::已完成;
+    } catch (const std::bad_alloc&) {
+        return S::资源失败;
+    } catch (const std::length_error&) {
+        return S::资源失败;
+    }
+}
+
+基础结构自键读回 读取基础结构自键(
+    const 基础持久视图& 视图, std::span<const std::string_view> 标记组) {
+    using S = 基础结构操作状态;
+    if (标记组.empty()) return {S::入口拒绝};
+    try {
+        std::set<std::string_view> 声明;
+        std::set<稳定编码> 已见;
+        std::vector<稳定编码> 节点组;
+        节点组.reserve(标记组.size());
+        for (const auto 标记 : 标记组) {
+            if (标记.empty() || !声明.insert(标记).second) return {S::入口拒绝};
+            const auto 标记字段 = 视图.查询自键标记(标记);
+            if (标记字段.empty()) return {S::节点不存在};
+            if (标记字段.size() != 1) return {S::内部不一致};
+            const auto 键 = 标记字段.front().所属节点;
+            if (!有效(键) || !已见.insert(键).second) return {S::内部不一致};
+            const auto 正式字段 = 视图.结构().查询字段(键, 键);
+            if (正式字段.size() != 1 || 正式字段.front() != 标记字段.front()
+                || !是精确自键(正式字段.front(), 键, 标记)) return {S::内部不一致};
+            节点组.push_back(键);
+        }
+        return {S::已完成, std::move(节点组)};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (const std::length_error&) {
+        return {S::资源失败};
+    }
 }
 
 void 基础持久运行包::建立自键索引(基础持久视图& 视图) {

@@ -369,6 +369,9 @@
     <ClInclude Include="海中鱼巣\领域\概念_特征类.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\领域\概念_特征.恢复.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
     <ClCompile Include="海中鱼巣\领域\概念_特征类.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
