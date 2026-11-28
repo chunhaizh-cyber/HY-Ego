@@ -1,5 +1,6 @@
 #include "新_外设世界树类.h"
 #include "../核心/容错检查.h"
+#include "../核心/基础数据集.持久运行包.h"
 #include "../领域/世界挂接.全局根.h"
 #include "../领域/数据服务.外设词典记录类.h"
 
@@ -39,6 +40,67 @@ std::array<稳定编码, static_cast<std::size_t>(交互确认键::数量)> 交�
 稳定编码 确认字段(交互确认键 键) { return 交互确认字段[static_cast<std::size_t>(键)]; }
 const 新_特征值类* 消息值服务 = nullptr;
 std::mutex 外设互斥;
+
+constexpr std::array<std::string_view, 24> 外设消息结构标记{
+    "HY-Ego/7241/peripheral-message-0/v1",
+    "HY-Ego/7241/peripheral-message-1/v1",
+    "HY-Ego/7241/peripheral-message-2/v1",
+    "HY-Ego/7241/peripheral-message-3/v1",
+    "HY-Ego/7241/peripheral-message-4/v1",
+    "HY-Ego/7241/peripheral-message-5/v1",
+    "HY-Ego/7241/peripheral-message-6/v1",
+    "HY-Ego/7241/peripheral-message-7/v1",
+    "HY-Ego/7241/peripheral-message-8/v1",
+    "HY-Ego/7241/peripheral-message-9/v1",
+    "HY-Ego/7241/peripheral-message-10/v1",
+    "HY-Ego/7241/peripheral-message-11/v1",
+    "HY-Ego/7241/peripheral-message-12/v1",
+    "HY-Ego/7241/peripheral-message-13/v1",
+    "HY-Ego/7241/peripheral-message-14/v1",
+    "HY-Ego/7241/peripheral-message-15/v1",
+    "HY-Ego/7241/peripheral-message-16/v1",
+    "HY-Ego/6120/peripheral-confirm-0/v1",
+    "HY-Ego/6120/peripheral-confirm-1/v1",
+    "HY-Ego/6120/peripheral-confirm-2/v1",
+    "HY-Ego/6120/peripheral-confirm-3/v1",
+    "HY-Ego/6120/peripheral-confirm-4/v1",
+    "HY-Ego/6120/peripheral-confirm-5/v1",
+    "HY-Ego/7241/peripheral-message-root/v1"
+};
+static_assert(外设消息结构标记.size() == 消息字段.size() + 交互确认字段.size() + 1);
+
+// 调用者持外设互斥。使用已经初始化的结构身份。
+std::array<稳定编码, 外设消息结构标记.size()> 读取当前外设消息结构编码已加锁() {
+    std::array<稳定编码, 外设消息结构标记.size()> 编码{};
+    const auto 确认起点 = std::copy(消息字段.begin(), 消息字段.end(), 编码.begin());
+    const auto 根位置 = std::copy(交互确认字段.begin(), 交互确认字段.end(), 确认起点);
+    *根位置 = 消息根;
+    return 编码;
+}
+
+// 诊断责任：向上送出资源错误，结构错误返回原状态供调用者收束。
+基础结构操作状态 核验外设消息根字段(
+    const 基础联合节点快照& 快照, 稳定编码 根, 稳定编码 成员键, bool 要求自键) {
+    using S = 基础结构操作状态;
+    if (!有效(根) || !有效(成员键) || 根 == 成员键 || 快照.结构.节点.编码 != 根)
+        return S::内部不一致;
+    bool 已见自键 = false;
+    std::set<稳定编码> 已见成员;
+    for (const auto& 字段 : 快照.结构.字段组) {
+        if (字段.所属节点 != 根) return S::内部不一致;
+        if (字段.字段节点 == 根) {
+            const auto* 值 = std::get_if<基础值>(&字段.内容);
+            const auto* 标记 = 值 ? std::get_if<std::string>(&值->材料) : nullptr;
+            if (已见自键 || !标记 || *标记 != 外设消息结构标记.back()) return S::内部不一致;
+            已见自键 = true;
+        } else {
+            const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+            if (字段.字段节点 != 成员键 || !节点 || !有效(*节点) || !已见成员.insert(*节点).second)
+                return S::内部不一致;
+        }
+    }
+    return 要求自键 && !已见自键 ? S::节点不存在 : S::已完成;
+}
 
 基础联合节点快照 读取消息快照(稳定编码 节点) {
     const auto 结果 = 全局基础数据集.查询节点组完整结构({节点});
@@ -216,8 +278,10 @@ public:
 std::optional<新外设消息信息> 按来源查找消息(const 新外设消息来源键& 来源) {
     std::optional<新外设消息信息> 结果;
     const auto 根 = 读取消息快照(消息根);
+    if (核验外设消息根字段(根, 消息根, 消息字段[10], false) != 基础结构操作状态::已完成)
+        throw std::runtime_error("peripheral message root corrupt");
     for (const auto& 字段 : 根.结构.字段组) {
-        if (字段.字段节点 != 消息字段[10]) throw std::runtime_error("peripheral message root corrupt");
+        if (字段.字段节点 == 消息根) continue;
         const auto 消息 = 读取正式消息(std::get<稳定编码>(字段.内容));
         if (!消息) throw std::runtime_error("peripheral message root holds invalid message");
         if (消息->来源 != 来源) continue;
@@ -273,6 +337,51 @@ bool 更新完成(新外设事实状态 状态) {
 新_外设世界树类::新_外设世界树类(新_世界树类& 世界) noexcept
     : 世界_(世界), 服务_(世界.获取事实服务引用()),
       场景_(外设根, 服务_.存在服务, 服务_.状态服务, 服务_.动态服务) {}
+
+基础结构操作状态 新_外设世界树类::发表已初始化外设消息持久自键() {
+    using S = 基础结构操作状态;
+    std::lock_guard 锁(外设互斥);
+    if (!有效(外设根) || !消息值服务) return S::入口拒绝;
+    const auto 编码 = 读取当前外设消息结构编码已加锁();
+    auto 排序编码 = 编码;
+    std::sort(排序编码.begin(), 排序编码.end());
+    if (!有效(排序编码.front())) return S::节点不存在;
+    if (std::adjacent_find(排序编码.begin(), 排序编码.end()) != 排序编码.end())
+        return S::内部不一致;
+    std::array<基础自键定义, 外设消息结构标记.size()> 键组{};
+    for (std::size_t i = 0; i < 键组.size(); ++i) 键组[i] = {外设消息结构标记[i], 编码[i]};
+    return 发表基础结构自键(全局基础数据集, 键组);
+}
+
+基础结构操作状态 新_外设世界树类::核验外设消息持久自键(
+    const 基础持久视图& 视图, bool 与当前初始化登记核同) {
+    using S = 基础结构操作状态;
+    try {
+        const auto 带键 = 读取基础结构自键(视图, 外设消息结构标记);
+        if (带键.状态 != S::已完成) return 带键.状态;
+        if (带键.节点组.size() != 外设消息结构标记.size()) return S::内部不一致;
+        const auto 根 = 带键.节点组.back();
+        const auto 根批 = 视图.结构().查询节点组完整结构({根});
+        if (根批.状态 != S::已完成) return 根批.状态;
+        if (根批.节点组.size() != 1) return S::内部不一致;
+        if (!根批.节点组.front().快照) return S::节点不存在;
+        const auto 根状态 = 核验外设消息根字段(
+            *根批.节点组.front().快照, 根, 带键.节点组[10], true);
+        if (根状态 != S::已完成) return 根状态;
+        if (与当前初始化登记核同) {
+            std::lock_guard 锁(外设互斥);
+            if (!有效(外设根) || !消息值服务) return S::入口拒绝;
+            const auto 当前 = 读取当前外设消息结构编码已加锁();
+            if (!std::equal(带键.节点组.begin(), 带键.节点组.end(), 当前.begin()))
+                return S::内部不一致;
+        }
+        return S::已完成;
+    } catch (const std::bad_alloc&) {
+        return S::资源失败;
+    } catch (const std::length_error&) {
+        return S::资源失败;
+    }
+}
 
 新世界初始化结果 新_外设世界树类::初始化() noexcept {
     try {
@@ -1914,9 +2023,10 @@ std::vector<新外设消息信息> 新_外设世界树类::读取输出队列材
         std::optional<新外设消息信息> 同题输出;
         阶段 = L"正式输出既有消息身份与来源序号扫描失败；保留已发生事实，不重试。";
         const auto 根 = 读取消息快照(消息根);
+        if (核验外设消息根字段(根, 消息根, 消息字段[10], false) != 基础结构操作状态::已完成)
+            throw std::runtime_error("peripheral message root corrupt");
         for (const auto& 字段 : 根.结构.字段组) {
-            if (字段.字段节点 != 消息字段[10])
-                throw std::runtime_error("peripheral message root corrupt");
+            if (字段.字段节点 == 消息根) continue;
             const auto 消息 = 读取正式消息(std::get<稳定编码>(字段.内容));
             if (!消息) throw std::runtime_error("peripheral message root holds invalid message");
             if (请求.关联问题 && 消息->关联问题 == 请求.关联问题) {
