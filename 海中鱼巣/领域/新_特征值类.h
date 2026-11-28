@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string>
 #include <variant>
 #include <vector>
@@ -19,6 +20,11 @@ enum class 材料物理类型 : std::int64_t {
     二维二值格 = 4,
     三维二值格 = 5
 };
+
+namespace 特征值内部 {
+std::optional<std::size_t> 解析全零格字数(材料物理类型 类型,
+    std::span<const std::uint64_t> 材料) noexcept;
+}
 
 using 新特征值材料 = std::variant<
     std::vector<std::uint64_t>,
@@ -43,7 +49,7 @@ struct 新特征值快照解码结果 final {
 };
 
 enum class 新特征值保护读取状态 : std::uint8_t {
-    已读取 = 1, 输入拒绝, 未初始化, 节点不存在, 非本类节点, 结构不一致, 资源失败
+    已读取 = 1, 输入拒绝, 未初始化, 节点不存在, 非本类节点, 结构不一致, 资源失败, 格式不支持
 };
 
 struct 新特征值保护读取结果 final {
@@ -68,6 +74,10 @@ struct 新特征值快照解码结构 final {
     稳定编码 节点类型字段, 特征值类型节点, 材料物理类型字段, 原始材料字段;
 };
 
+enum class 新特征值运行恢复状态 : std::uint8_t {
+    已恢复 = 1, 精确复用, 未绑定, 格式不支持, 结构不一致, 前提已变化, 资源失败
+};
+
 class 新_特征值类 final {
 public:
     // 基础数据集必须比本对象存活更久。
@@ -81,9 +91,10 @@ public:
 
     // 建立本类共享的类型节点与字段节点；重复调用不会重复建立。
     bool 初始化() noexcept;
+    新特征值运行恢复状态 恢复当前权威() noexcept;
 
     // 二维按 y * 边长 + x、三维按 (z * 边长 + y) * 边长 + x 排列位，x 最快变化。
-    // 二维二值格先按占用包围框等比例居中，再由原图按面积覆盖率生成各层；三维二值格保留逐级占用汇总。
+    // 压缩层逐级按占用 OR 汇总。规范化全零描述直接保存为原始材料。
     // 返回完整原始材料节点，失败返回空编码。
     稳定编码 保存或取得特征值(
         材料物理类型 物理类型, const 新特征值材料& 材料) noexcept;

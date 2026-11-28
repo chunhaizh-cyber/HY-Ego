@@ -1833,6 +1833,29 @@ std::optional<std::int64_t> 比较三维体素投影(
     return static_cast<std::int64_t>(总分 / 3);
 }
 
+std::optional<std::int64_t> 比较二值格材料(
+    材料物理类型 类型, const 新特征值信息& 左, const 新特征值信息& 右) {
+    if (左.物理类型 != 类型 || 右.物理类型 != 类型) return std::nullopt;
+    const auto* 左位图 = std::get_if<std::vector<std::uint64_t>>(&左.材料);
+    const auto* 右位图 = std::get_if<std::vector<std::uint64_t>>(&右.材料);
+    if (!左位图 || !右位图) return std::nullopt;
+
+    const auto 比较用位图 = [类型](const std::vector<std::uint64_t>& 原值,
+                                std::vector<std::uint64_t>& 展开)
+        -> const std::vector<std::uint64_t>& {
+        const auto 字数 = 特征值内部::解析全零格字数(类型, 原值);
+        if (!字数) return 原值;
+        展开.resize(*字数);
+        return 展开;
+    };
+    std::vector<std::uint64_t> 左展开, 右展开;
+    const auto& 左材料 = 比较用位图(*左位图, 左展开);
+    const auto& 右材料 = 比较用位图(*右位图, 右展开);
+    return 类型 == 材料物理类型::二维二值格
+        ? 比较二维轮廓材料(左材料, 右材料)
+        : 比较三维体素投影(左材料, 右材料);
+}
+
 std::uint64_t I64有序编码(std::int64_t 值) noexcept {
     return std::bit_cast<std::uint64_t>(值) ^ (std::uint64_t{1} << 63);
 }
@@ -2070,7 +2093,7 @@ struct 同类型特征概念上下文 final {
     const 新特征准确值& 左值,
     const 新特征准确值& 右值,
     新_特征值类& 特征值服务,
-    概念_特征类& 特征概念服务) noexcept {
+    概念_特征类& 特征概念服务) {
     新特征比较结果 结果;
     结果.材料 = 新特征比较材料::双准确值;
     const auto 概念 = 特征概念服务.获取特征概念(比较概念节点);
@@ -2201,22 +2224,14 @@ struct 同类型特征概念上下文 final {
         return 结果;
     }
     if (概念->材料类型 == 特征概念材料物理类型::二维二值格) {
-        const auto* 左轮廓 =
-            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
-        const auto* 右轮廓 =
-            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
-        结果.比较值 = 左轮廓 && 右轮廓
-            ? 比较二维轮廓材料(*左轮廓, *右轮廓).value_or(-1) : -1;
+        结果.比较值 = 比较二值格材料(
+            材料物理类型::二维二值格, *左信息, *右信息).value_or(-1);
         结果.状态 = 新特征比较状态::已完成;
         return 结果;
     }
     if (概念->材料类型 == 特征概念材料物理类型::三维二值格) {
-        const auto* 左体素 =
-            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
-        const auto* 右体素 =
-            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
-        结果.比较值 = 左体素 && 右体素
-            ? 比较三维体素投影(*左体素, *右体素).value_or(-1) : -1;
+        结果.比较值 = 比较二值格材料(
+            材料物理类型::三维二值格, *左信息, *右信息).value_or(-1);
         结果.状态 = 新特征比较状态::已完成;
         return 结果;
     }
@@ -2231,7 +2246,7 @@ std::optional<std::int64_t> 计算节点材料接近度(
     稳定编码 左值节点,
     稳定编码 右值节点,
     新_特征值类& 特征值服务,
-    概念_特征类& 特征概念服务) noexcept {
+    概念_特征类& 特征概念服务) {
     const auto 根概念 = 特征概念服务.获取特征概念(特征类型根);
     const auto 先天 = 特征概念服务.获取先天特征概念();
     if (!根概念) return std::nullopt;
@@ -2271,20 +2286,10 @@ std::optional<std::int64_t> 计算节点材料接近度(
             : 计算多维相似度(*左数组, *右数组);
     }
     if (材料类型 == 特征概念材料物理类型::二维二值格) {
-        const auto* 左轮廓 =
-            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
-        const auto* 右轮廓 =
-            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
-        return 左轮廓 && 右轮廓
-            ? 比较二维轮廓材料(*左轮廓, *右轮廓) : std::nullopt;
+        return 比较二值格材料(材料物理类型::二维二值格, *左信息, *右信息);
     }
     if (材料类型 == 特征概念材料物理类型::三维二值格) {
-        const auto* 左体素 =
-            std::get_if<std::vector<std::uint64_t>>(&左信息->材料);
-        const auto* 右体素 =
-            std::get_if<std::vector<std::uint64_t>>(&右信息->材料);
-        return 左体素 && 右体素
-            ? 比较三维体素投影(*左体素, *右体素) : std::nullopt;
+        return 比较二值格材料(材料物理类型::三维二值格, *左信息, *右信息);
     }
     return std::nullopt;
 }
