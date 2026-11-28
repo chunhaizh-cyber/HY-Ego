@@ -58,6 +58,10 @@ bool 存在结构已发表 = false;
         ? 稳定编码{} : 读回.节点组[static_cast<std::size_t>(项 - 存在结构自键组.begin())];
 }
 
+constexpr std::array<std::string_view, 2> 自我单例角色自键{
+    "HY-Ego/7150/项目自我单例角色/v1", "HY-Ego/7150/单例角色目标字段/v1"};
+std::array<稳定编码, 2> 自我单例角色结构{};
+
 constexpr std::int64_t 存在组成子存在关系角色 = 2;
 
 bool 节点仍存在(稳定编码 节点) noexcept {
@@ -370,6 +374,42 @@ bool 新_存在类::装配存在集合成员保护字段(稳定编码 字段) no
         }
     } catch (const std::bad_alloc&) { return {S::资源失败, {}, {}}; }
     catch (...) { return {S::内部不一致, {}, {}}; }
+}
+
+bool 新_存在类::是自我单例角色目标(稳定编码 E) const {
+    std::lock_guard 锁(新存在互斥);
+    const auto [锚点, 字段] = 自我单例角色结构;
+    if (!有效(锚点) || !有效(字段) || !是存在节点(E)) return false;
+    const auto 引用 = 全局基础数据集.查询字段(锚点, 字段);
+    return 引用.size() == 1 && 引用.front().内容 == 基础字段内容{E};
+}
+
+基础结构操作状态 新_存在类::准备自我单例角色目标(
+    基础节点组追加请求& 请求, 稳定编码 E) const {
+    using S = 基础结构操作状态;
+    std::lock_guard 锁(新存在互斥);
+    if (!是存在节点(E) || !全局基础数据集.查询字段(E, 存在清理中字段).empty())
+        return S::入口拒绝;
+
+    std::array<基础自键定义, 自我单例角色自键.size()> 定义{};
+    for (std::size_t i = 0; i < 定义.size(); ++i) {
+        if (!有效(自我单例角色结构[i])) 自我单例角色结构[i] = 全局基础数据集.新建节点();
+        if (!有效(自我单例角色结构[i])) return S::资源失败;
+        定义[i] = {自我单例角色自键[i], 自我单例角色结构[i]};
+    }
+    const auto 已登记 = 发表基础结构自键(全局基础数据集, 定义);
+    if (已登记 != S::已完成) return 已登记;
+
+    const auto [锚点, 字段] = 自我单例角色结构;
+    const auto 保护 = 全局基础数据集.查询节点组完整结构({锚点});
+    if (保护.状态 != S::已完成) return 保护.状态;
+    if (保护.节点组.size() != 1 || !保护.节点组.front().快照) return S::内部不一致;
+    const auto& 快照 = *保护.节点组.front().快照;
+    if (std::ranges::any_of(快照.结构.字段组, [字段](const auto& 项) { return 项.字段节点 == 字段; }))
+        return S::入口拒绝;
+    请求.预期联合节点组.push_back(快照);
+    请求.追加字段组.push_back({锚点, 字段, E});
+    return S::已完成;
 }
 
 新存在操作状态 新_存在类::准备零特征存在追加(
@@ -2046,6 +2086,35 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     for (std::size_t i = 0; i < 标记.size(); ++i)
         标记[i] = 存在结构自键组[i].标记;
     return 读取基础结构自键(视图, 标记);
+}
+
+std::pair<基础结构操作状态, 稳定编码> 读取恢复自我单例角色(const 基础持久视图& 视图) {
+    using S = 基础结构操作状态;
+    try {
+        const auto 角色 = 读取基础结构自键(视图, 自我单例角色自键);
+        if (角色.状态 != S::已完成) return {角色.状态, {}};
+        const auto 存在 = 读取恢复服务存在结构(视图);
+        if (存在.状态 != S::已完成) return {存在.状态, {}};
+        const auto 键 = [&](const 稳定编码* 位置) { return 查找恢复存在结构键(存在, 位置); };
+        const auto& 数据 = 视图.结构();
+        const auto 引用 = 数据.查询字段(角色.节点组[0], 角色.节点组[1]);
+        if (引用.empty()) return {S::节点不存在, {}};
+        const auto* E = 引用.size() == 1 ? std::get_if<稳定编码>(&引用.front().内容) : nullptr;
+        if (!E || !有效(*E) || *E == 角色.节点组[0] || *E == 角色.节点组[1])
+            return {S::内部不一致, {}};
+        const auto 类型 = 数据.查询字段(*E, 键(&节点类型字段));
+        const auto 概念 = 数据.查询字段(*E, 键(&专属存在概念字段));
+        const auto* C = 概念.size() == 1 ? std::get_if<稳定编码>(&概念.front().内容) : nullptr;
+        if (类型.size() != 1 || 类型.front().内容 != 基础字段内容{键(&存在节点类型)}
+            || !C || !有效(*C) || *C == *E || !数据.查询节点(*C)
+            || !数据.查询字段(*E, 键(&存在清理中字段)).empty())
+            return {S::内部不一致, {}};
+        return {S::已完成, *E};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败, {}};
+    } catch (const std::length_error&) {
+        return {S::资源失败, {}};
+    }
 }
 
 基础结构操作状态 核验恢复自我服务特征持有(const 基础持久视图& 视图,

@@ -30,6 +30,7 @@ inline constexpr std::uint64_t 普通应用默认线程进入等待毫秒 = 5000
 inline constexpr std::uint64_t 普通应用默认线程停止回收等待毫秒 = 120000;
 
 struct 普通应用配置 final {
+    bool 持久空仓形成自我 = false;
     std::uint64_t 自我线程邮箱容量 = 普通应用默认邮箱容量;
     std::uint64_t 任务管理线程邮箱容量 = 普通应用默认邮箱容量;
     std::uint64_t 资源重试间隔毫秒 = 普通应用默认资源重试间隔毫秒;

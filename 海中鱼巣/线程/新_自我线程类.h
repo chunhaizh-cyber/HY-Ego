@@ -133,6 +133,7 @@ struct 新自我线程初始化请求 final {
     // 冷启动不预置服务对象（2026-11-10用户裁决），由获取服务对象本能写入。
     稳定编码 人类存在概念节点;
 
+    bool 持久空仓形成自我 = false;
     bool 完整() const noexcept;
     friend bool operator==(
         const 新自我线程初始化请求&,
