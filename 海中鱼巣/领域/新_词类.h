@@ -141,6 +141,8 @@ struct 新词条保护结果 final {
 class 新_词类 final : public 新词条材料特征写入接口 {
 public:
     explicit 新_词类(新_语言类& 语言服务) noexcept;
+    ~新_词类() noexcept override;
+    基础持久状态 恢复当前权威(const 基础持久视图&) noexcept;
 
     bool 初始化() noexcept;
 

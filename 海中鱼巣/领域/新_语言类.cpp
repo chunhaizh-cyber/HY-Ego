@@ -10,6 +10,7 @@
 #include "新_自然语言世界树类.h"
 #include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
+#include "../核心/基础数据集.持久运行包.h"
 
 #include <algorithm>
 #include <array>
@@ -84,6 +85,38 @@ std::map<std::string, 稳定编码> 语言索引;
 稳定编码 语言登记键字段{};
 稳定编码 创建来源字段{};
 稳定编码 单位名称语言字段{}, 单位名称词条字段{}, 单位名称单位字段{};
+
+struct 语言结构键 final {
+    std::string_view 标记;
+    稳定编码* 节点;
+};
+constexpr std::array<语言结构键, 9> 语言结构键组{{
+    {"HY-Ego/1100/语言结构/节点类型字段/v1", &节点类型字段},
+    {"HY-Ego/1100/语言结构/自然语言组织根类型/v1", &自然语言组织根类型},
+    {"HY-Ego/1100/语言结构/语言组织根类型/v1", &语言组织根类型},
+    {"HY-Ego/1100/语言结构/语言节点类型/v1", &语言节点类型},
+    {"HY-Ego/1100/语言结构/语言登记键字段/v1", &语言登记键字段},
+    {"HY-Ego/1100/语言结构/创建来源字段/v1", &创建来源字段},
+    {"HY-Ego/1100/语言结构/单位名称语言字段/v1", &单位名称语言字段},
+    {"HY-Ego/1100/语言结构/单位名称词条字段/v1", &单位名称词条字段},
+    {"HY-Ego/1100/语言结构/单位名称单位字段/v1", &单位名称单位字段},
+}};
+const 新_语言类* 语言恢复所有者 = nullptr;
+
+bool 发表语言结构自键() {
+    std::array<基础自键定义, 语言结构键组.size()> 定义{};
+    for (std::size_t i = 0; i < 定义.size(); ++i)
+        定义[i] = {语言结构键组[i].标记, *语言结构键组[i].节点};
+    return 发表基础结构自键(全局基础数据集, 定义) == 基础结构操作状态::已完成;
+}
+
+void 清除语言恢复绑定() noexcept {
+    for (const auto& 项 : 语言结构键组) *项.节点 = {};
+    自然语言组织根节点 = {};
+    语言组织根节点 = {};
+    语言索引.clear();
+    语言恢复所有者 = nullptr;
+}
 
 enum class 接收含义键 : std::size_t {
     采用类型, 定义图类型, 出现类型, 角色类型, 定位类型,
@@ -724,9 +757,68 @@ bool 新_语言类::严格UTF8字节串有效(const std::string& 文本) noexcep
     return true;
 }
 
+新_语言类::~新_语言类() noexcept {
+    std::lock_guard 锁(新语言互斥);
+    if (语言恢复所有者 == this) 清除语言恢复绑定();
+}
+
+基础持久状态 新_语言类::恢复当前权威(const 基础持久视图& 视图) noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 核同 = [&](S 状态) noexcept {
+        return 会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态;
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return S::入口拒绝;
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        std::array<std::string_view, 语言结构键组.size()> 标记{};
+        for (std::size_t i = 0; i < 标记.size(); ++i) 标记[i] = 语言结构键组[i].标记;
+        const auto 键 = 读取基础结构自键(视图, 标记);
+        std::lock_guard 锁(新语言互斥);
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        if (键.状态 == B::节点不存在) return S::材料不完整;
+        if (键.状态 == B::资源失败) return S::资源失败;
+        if (键.状态 != B::已完成 || 键.节点组.size() != 标记.size()) return S::结构冲突;
+        if (语言恢复所有者 || 有效(自然语言组织根节点) || 有效(语言组织根节点)
+            || !语言索引.empty() || std::ranges::any_of(语言结构键组, [](const auto& 项) {
+                return 有效(*项.节点);
+            })) return S::入口拒绝;
+
+        const auto& 数据 = 视图.结构();
+        const auto 组织 = 数据.查询目标字段(键.节点组[1], 键.节点组[0]);
+        const auto 语言根 = 数据.查询目标字段(键.节点组[2], 键.节点组[0]);
+        if (组织.empty() || 语言根.empty()) return 核同(S::材料不完整);
+        if (组织.size() != 1 || 语言根.size() != 1 || 组织.front().所属节点 == 语言根.front().所属节点)
+            return 核同(S::结构冲突);
+        for (std::size_t i = 0; i < 键.节点组.size(); ++i) *语言结构键组[i].节点 = 键.节点组[i];
+        自然语言组织根节点 = 组织.front().所属节点;
+        语言组织根节点 = 语言根.front().所属节点;
+        const auto 复核 = []() noexcept {
+            try { return 结构仍存在() && 重建语言索引() ? S::已读取 : S::结构冲突; }
+            catch (const std::bad_alloc&) { return S::资源失败; }
+            catch (const std::length_error&) { return S::资源失败; }
+            catch (...) { return S::结构冲突; }
+        };
+        const auto 结果 = 复核();
+        const bool 变化 = 会话->读取().get() != &视图;
+        if (变化 || 结果 != S::已读取) {
+            清除语言恢复绑定();
+            return 变化 ? S::前提已变化 : 结果;
+        }
+        语言恢复所有者 = this;
+        return S::已读取;
+    } catch (const std::bad_alloc&) { return 核同(S::资源失败); }
+    catch (const std::length_error&) { return 核同(S::资源失败); }
+    catch (...) { return 核同(S::结构冲突); }
+}
+
 bool 新_语言类::初始化() noexcept {
     try {
         std::lock_guard 锁(新语言互斥);
+        if (基础持久运行包::读取已绑定会话(全局基础数据集))
+            return 语言恢复所有者 == this && 结构仍存在();
         auto 建立独立节点 = [](稳定编码& 节点) {
             if (有效(节点)) return 节点仍存在(节点);
             节点 = 全局基础数据集.新建节点();
@@ -763,7 +855,8 @@ bool 新_语言类::初始化() noexcept {
         if (!确保唯一类型字段(语言组织根节点, 语言组织根类型)) {
             return false;
         }
-        return 结构仍存在() && 重建语言索引() && 初始化接收含义结构已加锁();
+        return 结构仍存在() && 重建语言索引() && 初始化接收含义结构已加锁()
+            && 发表语言结构自键();
     } catch (...) {
         return false;
     }

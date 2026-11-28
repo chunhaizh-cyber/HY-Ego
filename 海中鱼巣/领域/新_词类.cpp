@@ -1,8 +1,10 @@
 #include "新_词类.h"
 #include "数据操作.执行结果参与.h"
 #include "../核心/容错检查.h"
+#include "../核心/基础数据集.持久运行包.h"
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <map>
 #include <mutex>
@@ -45,6 +47,39 @@ std::map<词条键, 稳定编码> 词条索引;
 稳定编码 创建来源字段{};
 稳定编码 词条特征成员字段{};
 稳定编码 所属自然语言场景字段{};
+
+struct 词条结构键 final {
+    std::string_view 标记;
+    稳定编码* 节点;
+};
+constexpr std::array<词条结构键, 10> 词条结构键组{{
+    {"HY-Ego/2200/词条结构/节点类型字段/v1", &节点类型字段},
+    {"HY-Ego/2200/词条结构/词组织根类型/v1", &词组织根类型},
+    {"HY-Ego/2200/词条结构/词条节点类型/v1", &词条节点类型},
+    {"HY-Ego/2200/词条结构/规范化合同节点类型/v1", &规范化合同节点类型},
+    {"HY-Ego/2200/词条结构/所属语言字段/v1", &所属语言字段},
+    {"HY-Ego/2200/词条结构/规范化合同字段/v1", &规范化合同字段},
+    {"HY-Ego/2200/词条结构/规范化词面字段/v1", &规范化词面字段},
+    {"HY-Ego/2200/词条结构/创建来源字段/v1", &创建来源字段},
+    {"HY-Ego/2200/词条结构/词条特征成员字段/v1", &词条特征成员字段},
+    {"HY-Ego/2200/词条结构/所属自然语言场景字段/v1", &所属自然语言场景字段},
+}};
+const 新_词类* 词条恢复所有者 = nullptr;
+
+bool 发表词条结构自键() {
+    std::array<基础自键定义, 词条结构键组.size()> 定义{};
+    for (std::size_t i = 0; i < 定义.size(); ++i)
+        定义[i] = {词条结构键组[i].标记, *词条结构键组[i].节点};
+    return 发表基础结构自键(全局基础数据集, 定义) == 基础结构操作状态::已完成;
+}
+
+void 清除词条恢复绑定() noexcept {
+    for (const auto& 项 : 词条结构键组) *项.节点 = {};
+    词组织根节点 = {};
+    严格UTF8字节精确规范化合同节点 = {};
+    词条索引.clear();
+    词条恢复所有者 = nullptr;
+}
 
 [[noreturn]] void 词条挂接故障(const wchar_t* 原因) noexcept {
     工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"词条名称特征联合发布", 原因);
@@ -127,7 +162,7 @@ bool 类型为(稳定编码 节点, 稳定编码 类型) {
 }
 
 bool 结构句柄完整() noexcept {
-    const std::vector<稳定编码> 节点组{
+    const std::array 节点组{
         自然语言组织根节点, 语言组织根节点, 词组织根节点,
         严格UTF8字节精确规范化合同节点, 节点类型字段,
         词组织根类型, 词条节点类型, 规范化合同节点类型,
@@ -154,31 +189,36 @@ bool 结构仍存在() {
 }
 
 struct 词条扩展 final { std::vector<稳定编码> 特征组; 稳定编码 场景; };
-std::optional<词条扩展> 解码词条扩展(const std::vector<基础字段关系>& 字段组) {
+std::optional<词条扩展> 解码词条扩展(const std::vector<基础字段关系>& 字段组,
+    bool 恢复读取 = false) {
+    const auto 故障 = [恢复读取](const wchar_t* 原因) {
+        if (恢复读取) throw std::logic_error("invalid restored word extension");
+        词条挂接故障(原因);
+    };
     词条扩展 结果;
     std::optional<稳定编码> 场景;
     for (const auto& 字段 : 字段组) {
         if (字段.字段节点 != 词条特征成员字段 && 字段.字段节点 != 所属自然语言场景字段) continue;
         const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
-        if (!节点 || !有效(*节点)) 词条挂接故障(L"词条成员字段无法解码");
+        if (!节点 || !有效(*节点)) 故障(L"词条成员字段无法解码");
         if (字段.字段节点 == 所属自然语言场景字段) {
-            if (场景) 词条挂接故障(L"词条场景重复");
+            if (场景) 故障(L"词条场景重复");
             场景 = *节点;
         } else {
             if (std::find(结果.特征组.begin(), 结果.特征组.end(), *节点) != 结果.特征组.end())
-                词条挂接故障(L"词条特征成员重复");
+                故障(L"词条特征成员重复");
             结果.特征组.push_back(*节点);
         }
     }
     if (结果.特征组.empty() && !场景) return {};
-    if (结果.特征组.empty() || !场景) 词条挂接故障(L"词条成员与场景不完整");
+    if (结果.特征组.empty() || !场景) 故障(L"词条成员与场景不完整");
     结果.场景 = *场景;
     return 结果;
 }
 
 std::optional<新词条信息> 读取词条信息(
     稳定编码 节点, const 新_语言类& 语言服务,
-    std::optional<词条扩展>* 扩展 = nullptr) {
+    std::optional<词条扩展>* 扩展 = nullptr, bool 恢复读取 = false) {
     if (!节点仍存在(节点) || !类型为(节点, 词条节点类型)
         || !有唯一父节点(节点, 词组织根节点)) {
         return std::nullopt;
@@ -187,11 +227,13 @@ std::optional<新词条信息> 读取词条信息(
     const auto 合同 = 读取唯一节点字段(节点, 规范化合同字段);
     const auto 词面 = 读取唯一字符串字段(节点, 规范化词面字段);
     if (!语言 || !合同 || !词面
-        || !语言服务.是语言节点(*语言)
         || *合同 != 严格UTF8字节精确规范化合同节点
         || !新_语言类::严格UTF8字节串有效(*词面)) {
         return std::nullopt;
     }
+    const auto 语言读回 = 语言服务.获取语言(*语言);
+    if (恢复读取 && 语言读回.状态 == 新语言查询状态::资源失败) throw std::bad_alloc{};
+    if (语言读回.状态 != 新语言查询状态::已找到) return std::nullopt;
 
     const auto 来源组 = 全局基础数据集.查询字段(节点, 创建来源字段);
     std::optional<稳定编码> 来源;
@@ -206,7 +248,7 @@ std::optional<新词条信息> 读取词条信息(
     if (结构.状态 == 基础结构操作状态::节点不存在) return {};
     if (结构.状态 != 基础结构操作状态::已完成 || !结构.结构)
         throw std::logic_error("word structure read failed");
-    const auto 读得扩展 = 解码词条扩展(结构.结构->字段组);
+    const auto 读得扩展 = 解码词条扩展(结构.结构->字段组, 恢复读取);
     if (扩展) *扩展 = 读得扩展;
     return 新词条信息{节点, *语言, *合同, *词面, 来源};
 }
@@ -222,12 +264,12 @@ bool 确保唯一类型字段(稳定编码 节点, 稳定编码 类型) {
     return 值 && *值 == 类型;
 }
 
-bool 重建词条索引(const 新_语言类& 语言服务) {
+bool 重建词条索引(const 新_语言类& 语言服务, bool 恢复读取 = false) {
     std::map<词条键, 稳定编码> 新索引;
     for (const auto& 关系 : 全局基础数据集.查询源关系(
         词组织根节点, 基础外部关系类型::父子)) {
         if (关系.角色或顺序 != 0) return false;
-        const auto 信息 = 读取词条信息(关系.目标节点, 语言服务);
+        const auto 信息 = 读取词条信息(关系.目标节点, 语言服务, nullptr, 恢复读取);
         if (!信息) return false;
         词条键 键{信息->语言节点, 信息->规范化合同节点,
             信息->规范化词面};
@@ -584,8 +626,75 @@ const 新_语言类& 新_词类::取得语言服务() const noexcept {
     return 语言服务_;
 }
 
+新_词类::~新_词类() noexcept {
+    std::lock_guard 锁(新词互斥);
+    if (词条恢复所有者 == this) 清除词条恢复绑定();
+}
+
+基础持久状态 新_词类::恢复当前权威(const 基础持久视图& 视图) noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 核同 = [&](S 状态) noexcept {
+        return 会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态;
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return S::入口拒绝;
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        std::array<std::string_view, 词条结构键组.size()> 标记{};
+        for (std::size_t i = 0; i < 标记.size(); ++i) 标记[i] = 词条结构键组[i].标记;
+        const auto 键 = 读取基础结构自键(视图, 标记);
+        std::lock_guard 锁(新词互斥);
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        if (键.状态 == B::节点不存在) return S::材料不完整;
+        if (键.状态 == B::资源失败) return S::资源失败;
+        if (键.状态 != B::已完成 || 键.节点组.size() != 标记.size()) return S::结构冲突;
+        if (词条恢复所有者 || 有效(词组织根节点) || 有效(严格UTF8字节精确规范化合同节点)
+            || !词条索引.empty() || std::ranges::any_of(词条结构键组, [](const auto& 项) {
+                return 有效(*项.节点);
+            })) return S::入口拒绝;
+
+        const auto& 数据 = 视图.结构();
+        const auto 根 = 数据.查询目标字段(键.节点组[1], 键.节点组[0]);
+        const auto 合同 = 数据.查询目标字段(键.节点组[3], 键.节点组[0]);
+        if (根.empty() || 合同.empty()) return 核同(S::材料不完整);
+        if (根.size() != 1 || 合同.size() != 1 || 根.front().所属节点 == 合同.front().所属节点)
+            return 核同(S::结构冲突);
+        for (const auto& 项 : {根.front(), 合同.front()}) {
+            const auto 结构 = 数据.查询完整节点结构(项.所属节点);
+            if (结构.状态 == B::资源失败) return 核同(S::资源失败);
+            if (结构.状态 != B::已完成 || !结构.结构 || 结构.结构->字段组.size() != 1
+                || 结构.结构->字段组.front() != 项) return 核同(S::结构冲突);
+        }
+        for (std::size_t i = 0; i < 键.节点组.size(); ++i) *词条结构键组[i].节点 = 键.节点组[i];
+        词组织根节点 = 根.front().所属节点;
+        严格UTF8字节精确规范化合同节点 = 合同.front().所属节点;
+        const auto 复核 = [&]() noexcept {
+            try { return 结构仍存在() && 重建词条索引(语言服务_, true) ? S::已读取 : S::结构冲突; }
+            catch (const std::bad_alloc&) { return S::资源失败; }
+            catch (const std::length_error&) { return S::资源失败; }
+            catch (...) { return S::结构冲突; }
+        };
+        const auto 结果 = 复核();
+        const bool 变化 = 会话->读取().get() != &视图;
+        if (变化 || 结果 != S::已读取) {
+            清除词条恢复绑定();
+            return 变化 ? S::前提已变化 : 结果;
+        }
+        词条恢复所有者 = this;
+        return S::已读取;
+    } catch (const std::bad_alloc&) { return 核同(S::资源失败); }
+    catch (const std::length_error&) { return 核同(S::资源失败); }
+    catch (...) { return 核同(S::结构冲突); }
+}
+
 bool 新_词类::初始化() noexcept {
     try {
+        if (基础持久运行包::读取已绑定会话(全局基础数据集)) {
+            std::lock_guard 锁(新词互斥);
+            return 词条恢复所有者 == this && 结构仍存在();
+        }
         if (!语言服务_.初始化()) return false;
         std::lock_guard 锁(新词互斥);
         auto 建立独立节点 = [](稳定编码& 节点) {
@@ -627,7 +736,7 @@ bool 新_词类::初始化() noexcept {
             规范化合同节点类型)) {
             return false;
         }
-        return 结构仍存在() && 重建词条索引(语言服务_);
+        return 结构仍存在() && 重建词条索引(语言服务_) && 发表词条结构自键();
     } catch (...) {
         return false;
     }

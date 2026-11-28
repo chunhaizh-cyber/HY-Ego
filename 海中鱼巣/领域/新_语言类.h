@@ -21,6 +21,8 @@
 
 namespace 海中鱼巣 {
 
+class 基础持久视图;
+enum class 基础持久状态;
 enum class 新词典归类参数批次状态 : std::uint8_t {
     已解码 = 1, 未初始化, 信息不存在, 结构不可解码, 需补快照
 };
@@ -886,6 +888,8 @@ struct 新问题答案信息 final {
 // 语言节点登记语言身份；词面匹配只组合公开读取，不解释词义或绑定概念。
 class 新_语言类 final {
 public:
+    ~新_语言类() noexcept;
+    基础持久状态 恢复当前权威(const 基础持久视图&) noexcept;
     新语言知识状态 登记计量单位词条(稳定编码 语言, 稳定编码 单位, 稳定编码 词条,
         const 概念_特征类&, const 新_词类&) noexcept;
     新语言计量单位名称结果 按词条读取计量单位(稳定编码 语言, 稳定编码 词条) const noexcept;
