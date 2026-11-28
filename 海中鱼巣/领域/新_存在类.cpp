@@ -1,7 +1,12 @@
 #include "新_存在类.h"
+#include "恢复.服务对象所有者.h"
+#include "../核心/基础数据集.持久运行包.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
+#include <array>
+#include <new>
+#include <string_view>
 #include <map>
 #include <mutex>
 #include <set>
@@ -24,6 +29,35 @@ std::recursive_mutex& 新存在互斥 = 领域同步内部::存在特征互斥;
 稳定编码 专属存在概念字段{};
 稳定编码 存在清理中字段{}, 存在清理中标记节点{};
 
+struct 存在结构自键位置 final {
+    std::string_view 标记;
+    稳定编码* 节点;
+};
+
+// 字面结构身份不随代码标识符改名而改变。
+constexpr std::array<存在结构自键位置, 6> 存在结构自键组{{
+    {"HY-Ego/7150/节点类型字段/v1", &节点类型字段},
+    {"HY-Ego/7150/存在节点类型/v1", &存在节点类型},
+    {"HY-Ego/7150/实例特征字段/v1", &实例特征字段},
+    {"HY-Ego/7150/专属存在概念字段/v1", &专属存在概念字段},
+    {"HY-Ego/7150/存在清理中字段/v1", &存在清理中字段},
+    {"HY-Ego/7150/存在清理中标记节点/v1", &存在清理中标记节点},
+}};
+bool 存在结构已发表 = false;
+
+基础结构操作状态 发表存在结构自键() {
+    std::array<基础自键定义, 存在结构自键组.size()> 定义{};
+    for (std::size_t i = 0; i < 定义.size(); ++i)
+        定义[i] = {存在结构自键组[i].标记, *存在结构自键组[i].节点};
+    return 发表基础结构自键(全局基础数据集, 定义);
+}
+
+稳定编码 查找恢复存在结构键(const 基础结构自键读回& 读回, const 稳定编码* 位置) {
+    const auto 项 = std::ranges::find(存在结构自键组, 位置, &存在结构自键位置::节点);
+    return 项 == 存在结构自键组.end()
+        ? 稳定编码{} : 读回.节点组[static_cast<std::size_t>(项 - 存在结构自键组.begin())];
+}
+
 constexpr std::int64_t 存在组成子存在关系角色 = 2;
 
 bool 节点仍存在(稳定编码 节点) noexcept {
@@ -31,18 +65,13 @@ bool 节点仍存在(稳定编码 节点) noexcept {
 }
 
 bool 结构已初始化() noexcept {
-    return 有效(节点类型字段)
-        && 有效(存在节点类型)
-        && 有效(实例特征字段)
-        && 有效(专属存在概念字段);
+    return 存在结构已发表
+        && std::ranges::all_of(存在结构自键组, [](const auto& 项) { return 有效(*项.节点); });
 }
 
 bool 结构仍存在() noexcept {
     return 结构已初始化()
-        && 节点仍存在(节点类型字段)
-        && 节点仍存在(存在节点类型)
-        && 节点仍存在(实例特征字段)
-        && 节点仍存在(专属存在概念字段);
+        && std::ranges::all_of(存在结构自键组, [](const auto& 项) { return 节点仍存在(*项.节点); });
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
@@ -227,11 +256,12 @@ bool 新_存在类::初始化() noexcept {
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"存在初始化",
                 L"发现残留存在清理门，门字段快照见诊断；保留现场，人工修复后启动。", 诊断.c_str());
         }
-        if (结构已初始化()) return 结构仍存在();
-        return 建立(节点类型字段)
-            && 建立(存在节点类型)
-            && 建立(实例特征字段)
-            && 建立(专属存在概念字段);
+        if (结构已初始化())
+            return 结构仍存在() && 发表存在结构自键() == 基础结构操作状态::已完成;
+        if (!std::ranges::all_of(存在结构自键组, [&](const auto& 项) { return 建立(*项.节点); }))
+            return false;
+        存在结构已发表 = 发表存在结构自键() == 基础结构操作状态::已完成;
+        return 存在结构已发表;
     } catch (...) {
         return false;
     }
@@ -2008,6 +2038,43 @@ std::vector<稳定编码> 新_存在类::查询直接子存在(
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"读取存在顶层特征定位保护",
             L"存在身份或顶层持有结构读取发生未知工程异常。");
+    }
+}
+
+基础结构自键读回 读取恢复服务存在结构(const 基础持久视图& 视图) {
+    std::array<std::string_view, 存在结构自键组.size()> 标记{};
+    for (std::size_t i = 0; i < 标记.size(); ++i)
+        标记[i] = 存在结构自键组[i].标记;
+    return 读取基础结构自键(视图, 标记);
+}
+
+基础结构操作状态 核验恢复自我服务特征持有(const 基础持久视图& 视图,
+    const 基础结构自键读回& 键组, 稳定编码 E, 稳定编码 F) {
+    using S = 基础结构操作状态;
+    if (!有效(E) || !有效(F) || E == F) return S::入口拒绝;
+    if (键组.状态 != S::已完成) return 键组.状态;
+    try {
+        const auto 实际键组 = 读取恢复服务存在结构(视图);
+        if (实际键组.状态 != S::已完成) return 实际键组.状态;
+        if (键组.节点组 != 实际键组.节点组) return S::内部不一致;
+        const auto 键 = [&](const 稳定编码* 位置) { return 查找恢复存在结构键(实际键组, 位置); };
+        const auto& 数据 = 视图.结构();
+        const auto 读取 = 数据.查询完整节点结构(E);
+        if (读取.状态 != S::已完成) return 读取.状态;
+        if (!读取.结构 || 读取.结构->节点.编码 != E) return S::内部不一致;
+        const auto 类型 = 数据.查询字段(E, 键(&节点类型字段));
+        if (类型.size() != 1 || 类型.front().内容 != 基础字段内容{键(&存在节点类型)}
+            || !数据.查询字段(E, 键(&存在清理中字段)).empty())
+            return S::内部不一致;
+        const auto 概念 = 数据.查询字段(E, 键(&专属存在概念字段));
+        const auto* C = 概念.size() == 1 ? std::get_if<稳定编码>(&概念.front().内容) : nullptr;
+        if (!C || !有效(*C) || *C == E) return S::内部不一致;
+        const auto 持有 = 数据.查询目标字段(F, 键(&实例特征字段));
+        return 持有.size() == 1 && 持有.front().所属节点 == E ? S::已完成 : S::内部不一致;
+    } catch (const std::bad_alloc&) {
+        return S::资源失败;
+    } catch (const std::length_error&) {
+        return S::资源失败;
     }
 }
 

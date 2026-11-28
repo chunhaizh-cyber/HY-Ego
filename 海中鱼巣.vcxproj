@@ -347,6 +347,7 @@
     <ClInclude Include="海中鱼巣\领域\概念_名称关系类.h" />
     <ClInclude Include="海中鱼巣\领域\新_特征值类.h" />
     <ClInclude Include="海中鱼巣\领域\新_特征值.恢复.h" />
+    <ClInclude Include="海中鱼巣\领域\恢复.服务对象所有者.h" />
     <ClInclude Include="海中鱼巣\领域\概念_特征类.h" />
     <ClInclude Include="海中鱼巣\领域\概念_特征.恢复.h" />
     <ClInclude Include="海中鱼巣\领域\新_特征类.h" />

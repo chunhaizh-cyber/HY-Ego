@@ -1,5 +1,6 @@
 #include "../领域/服务对象.材料合同.h"
 #include "新_世界树类.h"
+#include "../领域/恢复.服务对象所有者.h"
 #include "../领域/数据操作.执行结果参与.h"
 #include "../领域/消息交互.数据.h"
 #include "../核心/容错检查.h"
@@ -1617,6 +1618,38 @@ std::vector<std::uint64_t> 原消息角色来源材料(const 新原消息角色�
 }
 }
 
+namespace {
+
+// 保持原消息角色、认知与动作实现的物理数组顺序。
+constexpr std::array<std::string_view, 20> 本窗角色持久标记{
+    "HY-Ego/6120/message-role-0/v1",
+    "HY-Ego/6120/message-role-1/v1",
+    "HY-Ego/6120/message-role-2/v1",
+    "HY-Ego/6120/message-role-3/v1",
+    "HY-Ego/6120/message-role-4/v1",
+    "HY-Ego/6120/message-role-5/v1",
+    "HY-Ego/6120/window-cognition-0/v1",
+    "HY-Ego/6120/window-cognition-1/v1",
+    "HY-Ego/6120/window-cognition-2/v1",
+    "HY-Ego/6120/window-cognition-3/v1",
+    "HY-Ego/6120/window-cognition-4/v1",
+    "HY-Ego/6120/window-cognition-5/v1",
+    "HY-Ego/6120/window-cognition-6/v1",
+    "HY-Ego/6120/window-cognition-7/v1",
+    "HY-Ego/6120/window-cognition-8/v1",
+    "HY-Ego/6120/service-action-0/v1",
+    "HY-Ego/6120/service-action-1/v1",
+    "HY-Ego/6120/service-action-2/v1",
+    "HY-Ego/6120/service-action-3/v1",
+    "HY-Ego/6120/service-action-4/v1"
+};
+
+} // namespace
+
+基础结构自键读回 读取恢复本窗角色结构(const 基础持久视图& 视图) {
+    return 读取基础结构自键(视图, 本窗角色持久标记);
+}
+
 新原消息角色状态 新_世界树类::配置原消息角色事实(稳定编码 标识类型) noexcept {
     using S = 新原消息角色状态;
     try {
@@ -1630,6 +1663,16 @@ std::vector<std::uint64_t> 原消息角色来源材料(const 新原消息角色�
         if (键.状态 == 基础结构操作状态::资源失败) return S::资源失败;
         if (键.状态 != 基础结构操作状态::已完成 || 键.节点组.size() != 原消息角色字段_.size() + 本窗身份认知字段_.size() + 本窗服务动作字段_.size())
             return S::结构不一致;
+        std::array<基础自键定义, 本窗角色持久标记.size()> 标记{};
+        if (标记.size() != 键.节点组.size()) return S::结构不一致;
+        for (std::size_t i = 0; i < 标记.size(); ++i)
+            标记[i] = {本窗角色持久标记[i], 键.节点组[i]};
+        const auto 发表 = 发表基础结构自键(全局基础数据集, 标记);
+        if (发表 != 基础结构操作状态::已完成) {
+            if (全局基础数据集.原子删除节点结构(键.节点组, {}, {})
+                != 基础结构操作状态::已完成) return S::结构不一致;
+            return 发表 == 基础结构操作状态::资源失败 ? S::资源失败 : S::结构不一致;
+        }
         std::copy_n(键.节点组.begin(),原消息角色字段_.size(),原消息角色字段_.begin());
         std::copy_n(键.节点组.begin()+原消息角色字段_.size(),本窗身份认知字段_.size(),本窗身份认知字段_.begin());
         std::copy_n(键.节点组.begin()+原消息角色字段_.size()+本窗身份认知字段_.size(),
