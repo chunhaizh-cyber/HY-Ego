@@ -1,5 +1,10 @@
 #include "基础数据集.持久运行包.h"
 
+#define NOMINMAX
+#include <Windows.h>
+#include <bcrypt.h>
+
+#include <algorithm>
 #include <new>
 #include <stdexcept>
 
@@ -62,6 +67,7 @@ std::pair<状态, 基础持久运行包::视图> 基础持久运行包::准备(
         结果->身份_ = 映像->数据集身份;
         结果->下一个编码_ = 映像->下一个编码;
         结果->结构_ = std::move(结构);
+        建立自键索引(*结果);
         return {状态::已读取, std::move(结果)};
     } catch (const std::bad_alloc&) {
         return {状态::资源失败, {}};
@@ -136,6 +142,69 @@ std::pair<状态, std::unique_ptr<基础持久运行包>> 基础持久运行包:
     return 状态::已提交;
 }
 
+std::vector<基础字段关系> 基础持久视图::查询自键标记(std::string_view 值) const {
+    std::vector<基础字段关系> 结果;
+    const auto [起点, 终点] = 自键标记_.equal_range(值);
+    for (auto it = 起点; it != 终点; ++it) 结果.push_back(*it->second);
+    return 结果;
+}
+
+void 基础持久运行包::建立自键索引(基础持久视图& 视图) {
+    for (const auto& [编码, 字段] : 视图.结构().字段关系_) {
+        if (字段.所属节点 != 字段.字段节点) continue;
+        const auto* 直接值 = std::get_if<基础值>(&字段.内容);
+        const auto* 字符串 = 直接值 ? std::get_if<std::string>(&直接值->材料) : nullptr;
+        if (字符串) 视图.自键标记_.emplace(*字符串, &字段);
+    }
+}
+
+bool 基础持久运行包::可开始首份(const 基础数据集& 源) {
+    const std::shared_lock 锁(源.互斥_);
+    return 源.下一个编码_ == 1 && 源.节点_.empty()
+        && 源.外部关系_.empty() && 源.字段关系_.empty();
+}
+
+std::pair<状态, std::unique_ptr<const 基础持久首份候选>> 基础持久运行包::准备首份(
+    const 基础数据集& 源) const {
+    if (读取()) return {状态::入口拒绝, nullptr};
+    try {
+        基础快照映像 映像;
+        const auto 随机 = BCryptGenRandom(nullptr, 映像.数据集身份.data(),
+            static_cast<ULONG>(映像.数据集身份.size()), BCRYPT_USE_SYSTEM_PREFERRED_RNG);
+        if (随机 != 0 || std::ranges::all_of(映像.数据集身份, [](auto 值) { return 值 == 0; }))
+            return {状态::资源失败, nullptr};
+        {
+            const std::shared_lock 锁(源.互斥_);
+            if (源.节点_.empty()) return {状态::入口拒绝, nullptr};
+            映像.下一个编码 = 源.下一个编码_;
+            拷贝权威记录(源.节点_, 映像.节点组);
+            拷贝权威记录(源.外部关系_, 映像.外部关系组);
+            拷贝权威记录(源.字段关系_, 映像.字段关系组);
+        }
+        auto [编码, 字节] = 编码基础快照(映像);
+        if (编码 != 状态::已读取) return {编码, nullptr};
+        auto [准入, 视图] = 准备(字节);
+        if (准入 != 状态::已读取) return {准入, nullptr};
+        auto 候选 = std::unique_ptr<基础持久首份候选>(new 基础持久首份候选);
+        候选->会话身份_ = 封存身份_;
+        候选->视图_ = std::move(视图);
+        候选->字节_ = std::move(字节);
+        return {状态::已读取, std::move(候选)};
+    } catch (const std::bad_alloc&) {
+        return {状态::资源失败, nullptr};
+    } catch (const std::length_error&) {
+        return {状态::资源失败, nullptr};
+    }
+}
+
+状态 基础持久运行包::提交首份(const 基础持久首份候选& 候选) {
+    if (提交中_.test_and_set(std::memory_order_acquire)) return 状态::提交占用;
+    const 提交资格释放 资格{提交中_};
+    if (发布未决_) return 状态::发布结果未知;
+    if (读取() || 候选.会话身份_ != 封存身份_) return 状态::入口拒绝;
+    return 发表已准备(候选.视图_, 候选.字节_);
+}
+
 基础片段封存结果 基础持久运行包::封存追加(const 基础节点组追加请求& 请求) const {
     基础数据集 封存环境;
     封存环境.封存实例身份_ = 封存身份_;
@@ -189,6 +258,7 @@ std::pair<状态, std::unique_ptr<基础持久运行包>> 基础持久运行包:
         const auto [编码, 字节] = 编码基础快照(映像);
         if (编码 != 状态::已读取)
             return {编码 == 状态::资源失败 ? 编码 : 状态::内部不一致};
+        建立自键索引(*后);
         const auto 提交状态 = 发表已准备(std::move(后), 字节);
         if (提交状态 != 状态::已提交) return {提交状态};
         return {提交状态, 组合.状态, std::move(组合.片段回执组)};

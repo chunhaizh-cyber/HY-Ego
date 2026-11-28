@@ -1,5 +1,6 @@
 #include "世界挂接.全局根.h"
 
+#include "../核心/基础数据集.持久运行包.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -7,6 +8,7 @@
 #include <mutex>
 #include <new>
 #include <stdexcept>
+#include <string_view>
 
 namespace 海中鱼巣 {
 
@@ -19,6 +21,12 @@ namespace {
 constexpr std::int64_t 世界类型登记关系角色 = 9101;
 constexpr std::int64_t 世界根挂接关系角色 = 9102;
 constexpr std::size_t 世界类型数 = 5;
+constexpr std::array<std::string_view, 4> 恢复标记组{
+    "HY-Ego/4202/global-root-type-field/v1",
+    "HY-Ego/4202/global-root-type-value/v1",
+    "HY-Ego/4202/world-type-registration-field/v1",
+    "HY-Ego/4202/world-owner-type-field/v1"
+};
 
 std::mutex 全局根互斥;
 // 私有结构节点：只作字段键或类型值使用，不承载事实。
@@ -27,6 +35,17 @@ std::mutex 全局根互斥;
 稳定编码 世界类型登记键字段{};
 稳定编码 所属世界类型字段{};
 std::array<稳定编码, 世界类型数> 世界类型节点{};
+
+std::array<稳定编码, 恢复标记组.size()> 当前恢复标记键() noexcept {
+    return {全局根类型字段, 全局根类型, 世界类型登记键字段, 所属世界类型字段};
+}
+
+bool 是恢复标记(const 基础字段关系& 字段, 稳定编码 节点, std::string_view 标记) noexcept {
+    const auto* 值 = std::get_if<基础值>(&字段.内容);
+    const auto* 字符串 = 值 ? std::get_if<std::string>(&值->材料) : nullptr;
+    return 字段.所属节点 == 节点 && 字段.字段节点 == 节点
+        && 字符串 && *字符串 == 标记;
+}
 
 std::optional<std::size_t> 键序号(世界类型登记键 键) noexcept {
     const auto 值 = static_cast<std::int64_t>(键);
@@ -48,8 +67,8 @@ std::optional<稳定编码> 唯一引用字段(稳定编码 节点, 稳定编码
     return *目标;
 }
 
-std::optional<std::int64_t> 唯一整数字段(稳定编码 节点, 稳定编码 字段) {
-    const auto 组 = 全局基础数据集.查询字段(节点, 字段);
+std::optional<std::int64_t> 唯一整数字段(const 基础数据集& 数据, 稳定编码 节点, 稳定编码 字段) {
+    const auto 组 = 数据.查询字段(节点, 字段);
     if (组.size() != 1) return std::nullopt;
     const auto* 值 = std::get_if<基础值>(&组.front().内容);
     const auto* 数 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
@@ -66,6 +85,12 @@ std::vector<基础外部关系> 角色出边(稳定编码 节点, std::int64_t �
 bool 全局根结构完整已加锁() {
     if (!节点存在(全局根场景节点) || !节点存在(全局根类型字段) || !节点存在(全局根类型)
         || !节点存在(世界类型登记键字段) || !节点存在(所属世界类型字段)) return false;
+    const auto 标记键 = 当前恢复标记键();
+    for (std::size_t i = 0; i < 标记键.size(); ++i) {
+        const auto 字段 = 全局基础数据集.查询字段(标记键[i], 标记键[i]);
+        if (字段.size() != 1 || !是恢复标记(字段.front(), 标记键[i], 恢复标记组[i]))
+            return false;
+    }
     bool 多项 = false;
     const auto 类型 = 唯一引用字段(全局根场景节点, 全局根类型字段, 多项);
     if (!类型 || *类型 != 全局根类型) return false;
@@ -78,7 +103,7 @@ bool 全局根结构完整已加锁() {
     for (std::size_t i = 0; i < 世界类型数; ++i) {
         const auto 节点 = 世界类型节点[i];
         if (!节点存在(节点)
-            || 唯一整数字段(节点, 世界类型登记键字段) != static_cast<std::int64_t>(i + 1))
+            || 唯一整数字段(全局基础数据集, 节点, 世界类型登记键字段) != static_cast<std::int64_t>(i + 1))
             return false;
         if (std::count_if(登记边.begin(), 登记边.end(),
                 [&](const 基础外部关系& 边) { return 边.目标节点 == 节点; }) != 1)
@@ -139,7 +164,23 @@ bool 读取挂接已加锁(std::vector<世界根挂接信息>& 输出) {
             请求.追加外部关系组.push_back({基础组内节点引用{0}, 基础组内节点引用{i + 1},
                 基础外部关系类型::父子, 世界类型登记关系角色});
         }
-        请求.只读预期.节点组.push_back({全局根类型});  // 新节点字段引用的既有类型节点
+        const auto 标记键 = 当前恢复标记键();
+        const auto 键结构 = 全局基础数据集.查询节点组完整结构(
+            std::vector<稳定编码>(标记键.begin(), 标记键.end()));
+        if (键结构.状态 == 基础结构操作状态::资源失败)
+            return 全局根操作状态::资源失败;
+        if (键结构.状态 != 基础结构操作状态::已完成 || 键结构.节点组.size() != 标记键.size())
+            return 全局根操作状态::结构不一致;
+        for (const auto& 项 : 键结构.节点组) {
+            if (!项.快照) return 全局根操作状态::结构不一致;
+            请求.预期联合节点组.push_back(*项.快照);
+        }
+        for (std::size_t i = 0; i < 标记键.size(); ++i) {
+            const auto 键 = 标记键[i];
+            请求.只读预期.节点组.push_back({键});
+            请求.只读预期.字段集合组.push_back({键, 键, {}, {}});
+            请求.追加字段组.push_back({键, 键, 基础值{std::string(恢复标记组[i])}});
+        }
         const auto 结果 = 全局基础数据集.原子追加节点组(请求);
         if (结果.状态 != 基础节点组追加状态::已完成) return 映射追加状态(结果.状态);
         if (结果.新节点组.size() != 世界类型数 + 1)
@@ -238,6 +279,105 @@ std::optional<稳定编码> 新_全局根类::查询世界根(世界类型登记
         return 结果;
     } catch (...) {
         全局根工程失败(L"全局根读回", L"全局根读回发生未预期工程异常。");
+    }
+}
+
+全局根读回结果 新_全局根类::读取恢复全局根(const 基础持久视图& 视图) noexcept {
+    using S = 全局根操作状态;
+    using R = 基础外部关系类型;
+    try {
+        const auto& 数据 = 视图.结构();
+        std::array<稳定编码, 恢复标记组.size()> 标记键{};
+        for (std::size_t i = 0; i < 标记键.size(); ++i) {
+            const auto 命中 = 视图.查询自键标记(恢复标记组[i]);
+            if (命中.size() != 1) return {S::结构不一致};
+            const auto 键 = 命中.front().所属节点;
+            if (!有效(键) || std::find(标记键.begin(), 标记键.end(), 键) != 标记键.end())
+                return {S::结构不一致};
+            const auto 字段 = 数据.查询字段(键, 键);
+            if (字段.size() != 1 || 字段.front() != 命中.front()
+                || !是恢复标记(字段.front(), 键, 恢复标记组[i]))
+                return {S::结构不一致};
+            标记键[i] = 键;
+        }
+
+        const auto [根字段, 根类型, 登记字段, 所属字段] = 标记键;
+        const auto 根引用 = 数据.查询目标字段(根类型, 根字段);
+        if (根引用.size() != 1) return {S::结构不一致};
+        const auto 根 = 根引用.front().所属节点;
+        if (std::find(标记键.begin(), 标记键.end(), 根) != 标记键.end()
+            || 数据.查询字段(根, 根字段) != 根引用
+            || !数据.查询源关系(根, R::兄弟).empty()
+            || !数据.查询目标关系(根, R::兄弟).empty()
+            || !数据.查询目标关系(根, R::父子).empty())
+            return {S::结构不一致};
+
+        std::array<稳定编码, 世界类型数> 类型节点{};
+        std::vector<稳定编码> 挂接目标;
+        for (const auto& 边 : 数据.查询源关系(根, R::父子)) {
+            const auto 目标 = 边.目标节点;
+            if (目标 == 根 || std::find(标记键.begin(), 标记键.end(), 目标) != 标记键.end())
+                return {S::结构不一致};
+            if (边.角色或顺序 == 世界类型登记关系角色) {
+                const auto 键 = 唯一整数字段(数据, 目标, 登记字段);
+                const auto 序号 = 键 ? 键序号(static_cast<世界类型登记键>(*键)) : std::nullopt;
+                if (!序号 || 有效(类型节点[*序号])) return {S::结构不一致};
+                const auto 入边 = 数据.查询目标关系(目标, R::父子);
+                if (std::count_if(入边.begin(), 入边.end(), [](const auto& 项) {
+                        return 项.角色或顺序 == 世界类型登记关系角色;
+                    }) != 1)
+                    return {S::结构不一致};
+                类型节点[*序号] = 目标;
+            } else if (边.角色或顺序 == 世界根挂接关系角色) {
+                挂接目标.push_back(目标);
+            } else {
+                return {S::结构不一致};
+            }
+        }
+        if (!std::ranges::all_of(类型节点, 有效)) return {S::结构不一致};
+
+        std::array<稳定编码, 世界类型数> 各世界根{};
+        for (const auto 目标 : 挂接目标) {
+            if (std::find(类型节点.begin(), 类型节点.end(), 目标) != 类型节点.end())
+                return {S::结构不一致};
+            const auto 所属 = 数据.查询字段(目标, 所属字段);
+            if (所属.size() != 1) return {S::结构不一致};
+            const auto* 类型 = std::get_if<稳定编码>(&所属.front().内容);
+            if (!类型) return {S::结构不一致};
+            const auto 位置 = std::find(类型节点.begin(), 类型节点.end(), *类型);
+            if (位置 == 类型节点.end()) return {S::结构不一致};
+            const auto 序号 = static_cast<std::size_t>(位置 - 类型节点.begin());
+            const auto 入边 = 数据.查询目标关系(目标, R::父子);
+            if (有效(各世界根[序号]) || std::count_if(入边.begin(), 入边.end(), [](const auto& 项) {
+                    return 项.角色或顺序 == 世界根挂接关系角色;
+                }) != 1)
+                return {S::结构不一致};
+            各世界根[序号] = 目标;
+        }
+
+        全局根读回结果 结果;
+        for (std::size_t i = 0; i < 各世界根.size(); ++i) {
+            const auto 键 = static_cast<std::int64_t>(i + 1);
+            const auto 世界根 = 各世界根[i];
+            const auto 类型使用 = 数据.查询目标字段(类型节点[i], 所属字段);
+            if (!有效(世界根)) {
+                if (键 != static_cast<std::int64_t>(世界类型登记键::模拟) || !类型使用.empty())
+                    return {S::结构不一致};
+                continue;
+            }
+            if (类型使用.size() != 1 || 类型使用.front().所属节点 != 世界根)
+                return {S::结构不一致};
+            结果.挂接组.push_back({类型节点[i], 世界根, 键});
+        }
+        结果.全局根节点 = 根;
+        结果.状态 = S::已完成;
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (const std::length_error&) {
+        return {S::资源失败};
+    } catch (...) {
+        全局根工程失败(L"恢复全局根读回", L"恢复全局根读回发生未预期工程异常。");
     }
 }
 
