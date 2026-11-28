@@ -18,8 +18,6 @@
 
 namespace 海中鱼巣 {
 
-thread_local 基础数据集* 基础数据集::候选入口_ = nullptr;
-thread_local 基础数据集* 基础数据集::候选数据_ = nullptr;
 基础数据集 全局基础数据集;
 
 struct 基础封存追加片段::内容 final {
@@ -575,7 +573,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点) const noexcept 
 }
 
 bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 忽略所属节点) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->有入向字段引用(节点, 忽略所属节点);
     try {
         std::shared_lock 锁(互斥_);
         if (持久会话_) return 持久会话_->读取()->结构().有入向字段引用(节点, 忽略所属节点);
@@ -673,7 +670,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
     const std::vector<稳定编码>& 自有字段关系组,
     const std::vector<稳定编码>& 结构外部关系组,
     const std::vector<稳定编码>& 允许外部入向字段关系组) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->检查节点结构引用闭包(节点组, 自有字段关系组, 结构外部关系组, 允许外部入向字段关系组);
     try {
         std::shared_lock 锁(互斥_);
         if (持久会话_) return 持久会话_->读取()->结构().检查节点结构引用闭包(节点组, 自有字段关系组, 结构外部关系组, 允许外部入向字段关系组);
@@ -693,7 +689,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
     const std::vector<稳定编码>& 节点组,
     const std::vector<稳定编码>& 字段关系组,
     const std::vector<稳定编码>& 外部关系组) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子删除节点结构(节点组, 字段关系组, 外部关系组);
     using 状态 = 基础结构操作状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -715,7 +710,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
 }
 
 稳定编码 基础数据集::新建节点() noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->新建节点();
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return {};
@@ -729,7 +723,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
 }
 
 稳定编码 基础数据集::新建节点(稳定编码 上级节点) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->新建节点(上级节点);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return {};
@@ -755,7 +748,6 @@ bool 基础数据集::有入向字段引用(稳定编码 节点, 稳定编码 �
 }
 
 bool 基础数据集::删除节点(稳定编码 节点) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->删除节点(节点);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -767,7 +759,6 @@ bool 基础数据集::删除节点(稳定编码 节点) noexcept {
 }
 
 std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询节点(节点);
     try {
         std::shared_lock 锁(互斥_);
         if (持久会话_) return 持久会话_->读取()->结构().查询节点(节点);
@@ -785,7 +776,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础节点建立结果 基础数据集::原子建立节点(
     const 基础节点建立请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子建立节点(请求);
     using 状态 = 基础结构操作状态;
     try {
         // 单节点入口只适配值式请求，发布仍经同一个组构建实现。
@@ -814,7 +804,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础节点组建立结果 基础数据集::原子建立节点组(
     const std::vector<基础组内新节点>& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子建立节点组(请求);
     using 状态 = 基础结构操作状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -978,7 +967,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 }
 
 基础节点组追加状态 基础数据集::核验只读预期(const 基础只读预期& 预期) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->核验只读预期(预期);
     using 状态 = 基础节点组追加状态;
     try {
         std::shared_lock 锁(互斥_);
@@ -995,7 +983,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础节点组追加结果 基础数据集::原子追加节点组(
     const 基础节点组追加请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子追加节点组(请求);
     using 状态 = 基础节点组追加状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -1369,7 +1356,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础片段封存结果 基础数据集::封存原子追加片段(
     const 基础节点组追加请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->封存原子追加片段(请求);
     using 状态 = 基础节点组追加状态;
     try {
         auto 材料 = std::make_shared<基础封存追加片段::内容>();
@@ -1396,7 +1382,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础片段组合结果 基础数据集::原子追加封存片段组(
     const std::vector<基础封存追加片段>& 片段组) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子追加封存片段组(片段组);
     using 状态 = 基础节点组追加状态;
     bool 已发布 = false;
     try {
@@ -1584,7 +1569,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 }
 
 基础节点结构结果 基础数据集::查询完整节点结构(稳定编码 节点) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询完整节点结构(节点);
     using 状态 = 基础结构操作状态;
     try {
         std::shared_lock 锁(互斥_);
@@ -1605,7 +1589,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础引用节点结构结果 基础数据集::查询字段引用节点结构(
     稳定编码 目标节点, 稳定编码 字段节点) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询字段引用节点结构(目标节点, 字段节点);
     using 状态 = 基础结构操作状态;
     try {
         std::shared_lock 锁(互斥_);
@@ -1640,7 +1623,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础联合节点查询结果 基础数据集::查询节点组完整结构(
     const std::vector<稳定编码>& 节点组) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询节点组完整结构(节点组);
     using 状态 = 基础结构操作状态;
     try {
         std::shared_lock 锁(互斥_);
@@ -1674,7 +1656,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础字段组合变化结果 基础数据集::原子比较变更字段组(
     const 基础字段组合变化请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子比较变更字段组(请求);
     using 状态 = 基础字段组合变化状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -1823,7 +1804,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础互引节点建立结果 基础数据集::原子建立互引节点(
     const 基础互引节点建立请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子建立互引节点(请求);
     using 状态 = 基础互引节点操作状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -1909,7 +1889,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 基础互引节点操作状态 基础数据集::原子删除互引节点(
     const 基础互引节点删除请求& 请求) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->原子删除互引节点(请求);
     using 状态 = 基础互引节点操作状态;
     try {
         std::unique_lock 锁(互斥_);
@@ -2016,7 +1995,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 
 稳定编码 基础数据集::添加关系(稳定编码 源节点, 稳定编码 目标节点,
     基础外部关系类型 类型, std::int64_t 角色或顺序) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->添加关系(源节点, 目标节点, 类型, 角色或顺序);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return {};
@@ -2033,7 +2011,6 @@ std::optional<基础节点> 基础数据集::查询节点(稳定编码 节点) c
 bool 基础数据集::修改关系(稳定编码 关系, 稳定编码 源节点,
     稳定编码 目标节点, 基础外部关系类型 类型,
     std::int64_t 角色或顺序) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->修改关系(关系, 源节点, 目标节点, 类型, 角色或顺序);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -2065,7 +2042,6 @@ bool 基础数据集::修改关系(稳定编码 关系, 稳定编码 源节点,
 }
 
 bool 基础数据集::删除关系(稳定编码 关系) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->删除关系(关系);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -2080,7 +2056,6 @@ bool 基础数据集::删除关系(稳定编码 关系) noexcept {
 }
 
 std::optional<基础外部关系> 基础数据集::查询关系(稳定编码 关系) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询关系(关系);
     try {
         std::shared_lock 锁(互斥_);
         if (持久会话_) return 持久会话_->读取()->结构().查询关系(关系);
@@ -2094,7 +2069,6 @@ std::optional<基础外部关系> 基础数据集::查询关系(稳定编码 关
 
 std::vector<基础外部关系> 基础数据集::查询源关系(
     稳定编码 源节点, 基础外部关系类型 类型) const {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询源关系(源节点, 类型);
     std::shared_lock 锁(互斥_);
     if (持久会话_) return 持久会话_->读取()->结构().查询源关系(源节点, 类型);
     std::vector<基础外部关系> 结果;
@@ -2105,7 +2079,6 @@ std::vector<基础外部关系> 基础数据集::查询源关系(
 
 std::vector<基础外部关系> 基础数据集::查询目标关系(
     稳定编码 目标节点, 基础外部关系类型 类型) const {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询目标关系(目标节点, 类型);
     std::shared_lock 锁(互斥_);
     if (持久会话_) return 持久会话_->读取()->结构().查询目标关系(目标节点, 类型);
     std::vector<基础外部关系> 结果;
@@ -2116,7 +2089,6 @@ std::vector<基础外部关系> 基础数据集::查询目标关系(
 
 稳定编码 基础数据集::添加字段值(
     稳定编码 节点, 稳定编码 字段节点, 基础值 值) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->添加字段值(节点, 字段节点, std::move(值));
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return {};
@@ -2134,7 +2106,6 @@ std::vector<基础外部关系> 基础数据集::查询目标关系(
 
 稳定编码 基础数据集::添加字段节点(
     稳定编码 节点, 稳定编码 字段节点, 稳定编码 目标节点) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->添加字段节点(节点, 字段节点, 目标节点);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return {};
@@ -2151,7 +2122,6 @@ std::vector<基础外部关系> 基础数据集::查询目标关系(
 }
 
 bool 基础数据集::修改字段值(稳定编码 字段关系, 基础值 值) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->修改字段值(字段关系, std::move(值));
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -2177,7 +2147,6 @@ bool 基础数据集::修改字段值(稳定编码 字段关系, 基础值 值) 
 
 bool 基础数据集::修改字段节点(
     稳定编码 字段关系, 稳定编码 目标节点) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->修改字段节点(字段关系, 目标节点);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -2219,7 +2188,6 @@ bool 基础数据集::修改字段节点(
 }
 
 bool 基础数据集::删除字段(稳定编码 字段关系) noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->删除字段(字段关系);
     try {
         std::unique_lock 锁(互斥_);
         if (持久会话_) return false;
@@ -2240,7 +2208,6 @@ bool 基础数据集::删除字段(稳定编码 字段关系) noexcept {
 
 std::optional<基础字段关系> 基础数据集::查询字段关系(
     稳定编码 字段关系) const noexcept {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询字段关系(字段关系);
     try {
         std::shared_lock 锁(互斥_);
         if (持久会话_) return 持久会话_->读取()->结构().查询字段关系(字段关系);
@@ -2254,7 +2221,6 @@ std::optional<基础字段关系> 基础数据集::查询字段关系(
 
 std::vector<基础字段关系> 基础数据集::查询字段(
     稳定编码 节点, 稳定编码 字段节点) const {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询字段(节点, 字段节点);
     std::shared_lock 锁(互斥_);
     if (持久会话_) return 持久会话_->读取()->结构().查询字段(节点, 字段节点);
     std::vector<基础字段关系> 结果;
@@ -2268,7 +2234,6 @@ std::vector<基础字段关系> 基础数据集::查询字段(
 
 std::vector<基础字段关系> 基础数据集::查询目标字段(
     稳定编码 目标节点, 稳定编码 字段节点) const {
-    if (auto* 候选 = 取线程私有候选()) return 候选->查询目标字段(目标节点, 字段节点);
     std::shared_lock 锁(互斥_);
     if (持久会话_) return 持久会话_->读取()->结构().查询目标字段(目标节点, 字段节点);
     std::vector<基础字段关系> 结果;

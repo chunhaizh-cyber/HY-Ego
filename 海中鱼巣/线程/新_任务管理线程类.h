@@ -219,8 +219,7 @@ enum class 新自我筹办裁决状态 : std::uint8_t {
     任务状态变化,
     需核查,
     已处理条件子需求,
-    已处理因果子需求,
-    已处理来源行动请求
+    已处理因果子需求
 };
 
 enum class 新自我执行前判断状态 : std::uint8_t {
@@ -328,17 +327,6 @@ struct 新子需求采用回执 final {
         const 新子需求采用回执&) = default;
 };
 
-struct 新筹办来源行动请求候选 final {
-    enum class 分支 : std::uint8_t { 首次承接 = 1, 续办任务关联 };
-    新行动请求承接来源 来源;
-    分支 处理分支;
-    std::optional<稳定编码> 预期执行需求;
-    friend bool operator==(const 新筹办来源行动请求候选&, const 新筹办来源行动请求候选&) = default;
-};
-
-std::optional<新筹办来源行动请求候选> 读取唯一筹办来源行动请求(
-    const 新任务因果子需求提议& 提议);
-
 struct 新自我筹办裁决 final {
     新任务筹办反馈定位 定位;
     新自我筹办裁决状态 状态 = 新自我筹办裁决状态::需核查;
@@ -360,15 +348,6 @@ struct 新自我筹办裁决 final {
     };
     std::optional<因果采用回执> 因果回执;
     std::vector<新任务依赖键> 附加等待依赖键组;
-    struct 来源行动请求回执材料 final {
-        enum class 终态 : std::uint8_t { 已承接 = 1, 等待正式登记, 等待本窗身份对应, 来源不适用 };
-        新行动请求承接来源 来源;
-        终态 状态;
-        std::optional<稳定编码> 执行需求, 对应任务;
-        std::vector<新任务依赖键> 等待键组;
-        friend bool operator==(const 来源行动请求回执材料&, const 来源行动请求回执材料&) = default;
-    };
-    std::optional<来源行动请求回执材料> 来源行动请求回执;
     friend bool operator==(const 新自我筹办裁决&,
         const 新自我筹办裁决&) = default;
 };
