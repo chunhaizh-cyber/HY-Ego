@@ -1,16 +1,41 @@
 #include "新_特征值类.h"
+#include "新_特征值.恢复.h"
+#include "../核心/基础数据集.持久运行包.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
 #include <limits>
 #include <map>
 #include <mutex>
+#include <new>
+#include <string_view>
 #include <stdexcept>
 #include <utility>
 
 namespace 海中鱼巣 {
 
 namespace {
+
+constexpr std::array<std::string_view, 6> 恢复标记组{
+    "HY-Ego/2100/value-node-type-field/v1",
+    "HY-Ego/2100/value-node-type/v1",
+    "HY-Ego/2100/compression-layer-type/v1",
+    "HY-Ego/2100/material-physical-type-field/v1",
+    "HY-Ego/2100/original-material-field/v1",
+    "HY-Ego/2100/compressed-material-field/v1"
+};
+
+using 特征值结构键组 = std::array<稳定编码, 恢复标记组.size()>;
+
+bool 是特征值恢复标记(const 基础字段关系& 字段, 稳定编码 键, std::string_view 标记) noexcept {
+    const auto* 值 = std::get_if<基础值>(&字段.内容);
+    const auto* 字符串 = 值 ? std::get_if<std::string>(&值->材料) : nullptr;
+    return 字段.所属节点 == 键 && 字段.字段节点 == 键 && 字符串 && *字符串 == 标记;
+}
+
+[[noreturn]] void 特征值恢复工程失败(const wchar_t* 入口, const wchar_t* 原因) noexcept {
+    工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, 入口, 原因);
+}
 
 struct 材料键 final {
     材料物理类型 类型 = 材料物理类型::U64数组;
@@ -330,24 +355,78 @@ public:
     explicit 实现(基础数据集& 数据集) : 数据集_(数据集) {}
 
     bool 初始化() noexcept {
-        std::scoped_lock 锁(互斥_);
-        if (已初始化_) return true;
+        特征值结构键组 已建节点{};
+        bool 已发表 = false;
+        const auto 清理未发表 = [&]() noexcept {
+            for (auto 位置 = 已建节点.rbegin(); 位置 != 已建节点.rend(); ++位置) {
+                if (有效(*位置)) 数据集_.删除节点(*位置);
+            }
+        };
+        try {
+            std::scoped_lock 锁(互斥_);
+            if (已初始化_) return true;
 
-        std::vector<稳定编码> 已建节点;
-        for (auto* 目标 : {&节点类型字段_, &特征值类型节点_, &压缩层类型节点_,
-                &材料物理类型字段_, &原始材料字段_, &压缩材料字段_}) {
-            *目标 = 数据集_.新建节点();
-            if (!有效(*目标)) {
-                for (auto 位置 = 已建节点.rbegin(); 位置 != 已建节点.rend(); ++位置) {
-                    数据集_.删除节点(*位置);
+            for (auto& 节点 : 已建节点) {
+                节点 = 数据集_.新建节点();
+                if (!有效(节点)) {
+                    清理未发表();
+                    return false;
                 }
-                清空结构节点();
+            }
+
+            const auto 键结构 = 数据集_.查询节点组完整结构(
+                std::vector<稳定编码>(已建节点.begin(), 已建节点.end()));
+            if (键结构.状态 != 基础结构操作状态::已完成
+                || 键结构.节点组.size() != 已建节点.size()) {
+                清理未发表();
                 return false;
             }
-            已建节点.push_back(*目标);
+
+            基础节点组追加请求 请求;
+            for (const auto& 项 : 键结构.节点组) {
+                if (!项.快照) {
+                    清理未发表();
+                    return false;
+                }
+                请求.预期联合节点组.push_back(*项.快照);
+            }
+            for (std::size_t i = 0; i < 已建节点.size(); ++i) {
+                const auto 键 = 已建节点[i];
+                请求.只读预期.节点组.push_back({键});
+                请求.只读预期.字段集合组.push_back({键, 键, {}, {}});
+                请求.追加字段组.push_back({键, 键, 基础值{std::string(恢复标记组[i])}});
+            }
+            const auto 写入 = 数据集_.原子追加节点组(请求);
+            if (写入.状态 != 基础节点组追加状态::已完成) {
+                清理未发表();
+                return false;
+            }
+            已发表 = true;
+            for (std::size_t i = 0; i < 已建节点.size(); ++i) {
+                const auto 键 = 已建节点[i];
+                const auto 字段 = 数据集_.查询字段(键, 键);
+                if (字段.size() != 1 || !是特征值恢复标记(字段.front(), 键, 恢复标记组[i]))
+                    特征值恢复工程失败(L"特征值结构初始化", L"结构标记完整发表后读回不符。");
+            }
+            节点类型字段_ = 已建节点[0];
+            特征值类型节点_ = 已建节点[1];
+            压缩层类型节点_ = 已建节点[2];
+            材料物理类型字段_ = 已建节点[3];
+            原始材料字段_ = 已建节点[4];
+            压缩材料字段_ = 已建节点[5];
+            已初始化_ = true;
+            return true;
+        } catch (const std::bad_alloc&) {
+            if (已发表) 特征值恢复工程失败(L"特征值结构初始化", L"结构发表后无法完整读回。");
+            清理未发表();
+            return false;
+        } catch (const std::length_error&) {
+            if (已发表) 特征值恢复工程失败(L"特征值结构初始化", L"结构发表后读回超出资源限制。");
+            清理未发表();
+            return false;
+        } catch (...) {
+            特征值恢复工程失败(L"特征值结构初始化", L"结构标记发表发生未预期工程异常。");
         }
-        已初始化_ = true;
-        return true;
     }
 
     稳定编码 保存或取得特征值(
@@ -448,15 +527,6 @@ public:
     }
 
 private:
-    void 清空结构节点() noexcept {
-        节点类型字段_ = {};
-        特征值类型节点_ = {};
-        压缩层类型节点_ = {};
-        材料物理类型字段_ = {};
-        原始材料字段_ = {};
-        压缩材料字段_ = {};
-    }
-
     bool 是指定类型节点(稳定编码 节点, 稳定编码 类型节点) const {
         const auto 实际类型 = 读取唯一节点字段(数据集_, 节点, 节点类型字段_);
         return 实际类型 && *实际类型 == 类型节点;
@@ -814,6 +884,70 @@ std::vector<稳定编码> 新_特征值类::查询特征值(
 
 bool 新_特征值类::是特征值节点(稳定编码 节点) const noexcept {
     return 实现_->是特征值节点(节点);
+}
+
+新特征值恢复结构读回 读取恢复特征值结构(const 基础持久视图& 视图) noexcept {
+    using S = 新特征值保护读取状态;
+    try {
+        特征值结构键组 键组{};
+        for (std::size_t i = 0; i < 键组.size(); ++i) {
+            const auto 命中 = 视图.查询自键标记(恢复标记组[i]);
+            if (命中.size() != 1) return {S::结构不一致};
+            const auto 键 = 命中.front().所属节点;
+            if (!有效(键) || std::find(键组.begin(), 键组.end(), 键) != 键组.end())
+                return {S::结构不一致};
+            const auto 字段 = 视图.结构().查询字段(键, 键);
+            if (字段.size() != 1 || 字段.front() != 命中.front()
+                || !是特征值恢复标记(字段.front(), 键, 恢复标记组[i]))
+                return {S::结构不一致};
+            键组[i] = 键;
+        }
+        return {S::已读取, 键组};
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (const std::length_error&) {
+        return {S::资源失败};
+    } catch (...) {
+        特征值恢复工程失败(L"恢复特征值结构", L"只读结构重取发生未预期工程异常。");
+    }
+}
+
+新特征值保护读取结果 读取恢复特征值材料(const 基础持久视图& 视图,
+    const 新特征值恢复结构读回& 结构, 材料物理类型 类型, const 新特征值材料& 材料) noexcept {
+    using S = 新特征值保护读取状态;
+    using B = 基础结构操作状态;
+    using D = 新特征值快照解码状态;
+    if (!是已知物理类型(类型) || !材料形态匹配(类型, 材料)) return {S::输入拒绝};
+    if (结构.状态 != S::已读取) return {结构.状态};
+    const auto 实际结构 = 读取恢复特征值结构(视图);
+    if (实际结构.状态 != S::已读取) return {实际结构.状态};
+    if (实际结构.键 != 结构.键) return {S::结构不一致};
+    try {
+        const auto 解码结构 = 实际结构.解码结构();
+        const auto& 数据 = 视图.结构();
+        新特征值保护读取结果 结果{S::节点不存在};
+        for (const auto& 引用 : 数据.查询目标字段(解码结构.特征值类型节点, 解码结构.节点类型字段)) {
+            const auto 节点 = 引用.所属节点;
+            const auto 读回 = 数据.查询完整节点结构(节点);
+            if (读回.状态 == B::资源失败) return {S::资源失败};
+            if (读回.状态 != B::已完成 || !读回.结构 || 读回.结构->节点.编码 != 节点)
+                return {S::结构不一致};
+            auto 解码 = 新_特征值类::解码特征值快照(*读回.结构, 解码结构);
+            if (解码.状态 != D::已解码 || !解码.信息 || 解码.信息->节点 != 节点)
+                return {S::结构不一致};
+            if (解码.信息->物理类型 != 类型 || 解码.信息->材料 != 材料) continue;
+            if (结果.状态 == S::已读取) return {S::结构不一致};
+            解码.窄预期.节点组.push_back({解码结构.特征值类型节点});
+            结果 = {S::已读取, std::move(解码.信息), std::move(解码.窄预期)};
+        }
+        return 结果;
+    } catch (const std::bad_alloc&) {
+        return {S::资源失败};
+    } catch (const std::length_error&) {
+        return {S::资源失败};
+    } catch (...) {
+        特征值恢复工程失败(L"恢复特征值材料", L"只读材料重取发生未预期工程异常。");
+    }
 }
 
 } // namespace 海中鱼巣
