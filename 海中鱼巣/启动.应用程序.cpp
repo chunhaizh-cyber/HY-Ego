@@ -7,8 +7,11 @@
 #include "装配.普通应用.h"
 #include "界面/宿主.网页对话.h"
 #include "核心/日志系统.h"
+#include "核心/基础数据集.持久运行包.h"
 
 #include <chrono>
+#include <new>
+#include <stdexcept>
 #include <sstream>
 
 namespace 海中鱼巣 {
@@ -54,6 +57,36 @@ void 记录治理返回(const wchar_t* 阶段, const 普通应用治理操作结
     }
 }
 
+程序运行结果 检查普通启动持久准入(const 启动选项& 选项) {
+    using S = 基础持久状态;
+    using P = 程序失败阶段;
+    auto 状态 = S::资源失败;
+    auto 阶段 = P::持久库准入失败;
+    bool 视图存在 = false;
+    try {
+        const auto& 参数 = 选项.当前事实持久目录;
+        const std::filesystem::path 目录{std::u8string(参数.begin(), 参数.end())};
+        const auto [打开状态, 运行包] = 基础持久运行包::打开(目录);
+        状态 = 打开状态;
+        视图存在 = 运行包 && static_cast<bool>(运行包->读取());
+        if (状态 == S::空仓 && 运行包 && !视图存在) 阶段 = P::持久空仓引导未接入;
+        else if (状态 == S::已读取 && 视图存在) 阶段 = P::持久业务重绑未接入;
+        else if (状态 == S::空仓 || 状态 == S::已读取) 状态 = S::内部不一致;
+    } catch (const std::bad_alloc&) {
+        状态 = S::资源失败;
+    } catch (const std::length_error&) {
+        状态 = S::资源失败;
+    } catch (const std::filesystem::filesystem_error&) {
+        状态 = S::资源失败;
+    }
+    记录启动返回(L"普通持久准入返回", [&](auto& 文本) {
+        文本 << L"存储状态=" << static_cast<int>(状态)
+            << L"；失败阶段=" << static_cast<int>(阶段)
+            << L"；隔离视图=" << 视图存在;
+    });
+    return {选项.模式, 程序运行状态::装配失败, 阶段, 状态};
+}
+
 程序运行结果 运行新版普通程序(const 启动选项& 选项) {
     if (!选项.验证当前快照存储参数[0].empty()) {
         const bool 通过 = 运行当前快照存储工程验证(选项.验证当前快照存储参数);
@@ -70,6 +103,8 @@ void 记录治理返回(const wchar_t* 阶段, const 普通应用治理操作结
         return {选项.模式, 通过 ? 程序运行状态::已完成 : 程序运行状态::初始化失败,
             通过 ? 程序失败阶段::无 : 程序失败阶段::普通应用装配};
     }
+    if (!选项.当前事实持久目录.empty()) return 检查普通启动持久准入(选项);
+
     // 声明在宿主、停止信号等局部对象之前，逆序收尾时先结束宿主和回调，
     // 再销毁应用上下文；不能留到跨翻译单元全局服务的静态析构阶段。
     struct 普通上下文作用域回收 final {
