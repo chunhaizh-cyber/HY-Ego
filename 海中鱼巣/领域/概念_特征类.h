@@ -16,6 +16,7 @@ namespace 海中鱼巣 {
 
 class 概念_名称关系类;
 class 概念_特征类;
+class 基础持久视图;
 class 新_存在类;
 class 新_特征类;
 class 新消息待发表凭据;
@@ -689,6 +690,7 @@ struct 特征分类关系保护结果 final {
 };
 class 概念_特征类 final : public 正式概念身份读取接口 {
 public:
+    ~概念_特征类() noexcept override;
     bool 装配概念身份范围读取(const 概念_存在类*) noexcept;
     概念身份范围读取结果 读取概念身份范围(稳定编码 内容范围) const;
     特征概念编码操作结果 建立或取得概念引用子值域(稳定编码 父概念, 稳定编码 内容范围) noexcept;
@@ -885,6 +887,8 @@ private:
         const 适用范围I64值域修订请求* = nullptr);
     std::vector<稳定编码> 查询特征概念内部(const 特征概念定义&) const;
     friend class 概念_名称关系类;
+    friend class 新_世界树类;
+    特征概念规则状态 恢复当前权威(const 新_特征值类&, const 基础持久视图&) noexcept;
     基础片段封存结果 封存建立名称参与(
         const 基础节点组追加请求&, std::size_t 名称槽, 稳定编码 概念) const;
     基础片段封存结果 封存删除名称参与(稳定编码 概念, 稳定编码 名称) const;
@@ -899,6 +903,7 @@ private:
     // 初始化时借用，不拥有；服务须覆盖本对象的初始化后使用期。
     // 仅供无材料参数的值域比较入口读取有限材料，不另建材料owner。
     const 新_特征值类* 特征值读取服务_ = nullptr;
+    bool 已安装恢复引用_ = false;
 };
 
 } // namespace 海中鱼巣

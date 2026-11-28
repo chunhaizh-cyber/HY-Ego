@@ -1,6 +1,8 @@
 #pragma once
 
-#include "../核心/基础数据集.h"
+#include "概念_特征类.h"
+
+#include <array>
 
 namespace 海中鱼巣 {
 
@@ -12,6 +14,8 @@ struct 特征概念恢复读回结果 final {
     稳定编码 词典来源批次类型根;
     std::size_t 键数 = 0;
     稳定编码 服务权限类型根;
+    std::array<稳定编码, 79> 结构键{};
+    先天特征概念集合 先天;
 };
 
 // 只读候选中已发表的 owner 结构和普通先天槽，不重绑运行期 owner。

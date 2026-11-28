@@ -338,8 +338,9 @@ public:
         新世界引用集合组合准备&, const 基础封存追加片段&) noexcept;
     新世界引用集合组合结果 提交存在引用集合改变并形成动态(
         新世界引用集合组合准备&) noexcept;
-    新_世界树类() noexcept;
+    新_世界树类();
     ~新_世界树类();
+    特征概念规则状态 恢复已绑定特征概念(const 基础持久视图&) noexcept;
 
     新_世界树类(const 新_世界树类&) = delete;
     新_世界树类& operator=(const 新_世界树类&) = delete;
