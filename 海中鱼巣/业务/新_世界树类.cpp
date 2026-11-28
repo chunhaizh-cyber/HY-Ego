@@ -1750,9 +1750,10 @@ enum 本窗身份键 : std::size_t {
     身份当前, 身份历史, 身份场景, 身份对端, 身份已有, 身份原消息, 身份原角色, 身份语言定义, 身份名称关系
 };
 
-新本窗身份认知 读取身份认知记录(稳定编码 节点, 稳定编码 场景, const std::array<稳定编码,9>& 键) {
+新本窗身份认知 读取身份认知记录(稳定编码 节点, 稳定编码 场景, const std::array<稳定编码,9>& 键,
+    const 基础数据集& 数据 = 全局基础数据集) {
     const auto 读 = [&](本窗身份键 字段) {
-        const auto 组 = 全局基础数据集.查询字段(节点,键[字段]);
+        const auto 组 = 数据.查询字段(节点,键[字段]);
         if (组.size() != 1) throw std::logic_error("identity cognition field missing or repeated");
         return 组.front().内容;
     };
@@ -1821,24 +1822,28 @@ bool 新_世界树类::采用本窗身份认知(新本窗身份认知材料 材�
     using B = 基础结构操作状态;
     using A = 基础节点组追加状态;
     const auto& c = 材料.对应;
-    std::lock_guard 锁(新世界树互斥);
+    std::unique_lock 锁(新世界树互斥);
     if (!角色外设场景标识类型_ || !有效(c.场景) || !有效(c.原消息)) return false;
+    const auto 会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+    const auto 前 = 会话 ? 会话->读取() : nullptr;
+    const auto& 数据 = 前 ? 前->结构() : 全局基础数据集;
     const auto 场景组 = 场景服务_.读取本树正式临时交互场景();
     if (!std::ranges::any_of(场景组,[&](const auto& 项) {
         return 项.场景 == c.场景 && 项.本窗对端 == c.原对端 && 项.来源 == 材料.外设来源;
     })) return false;
     const auto& 键 = 本窗身份认知字段_;
-    const auto 当前 = 全局基础数据集.查询字段(c.场景,键[身份当前]);
-    const auto 历史 = 全局基础数据集.查询字段(c.场景,键[身份历史]);
+    const auto 当前 = 数据.查询字段(c.场景,键[身份当前]);
+    const auto 历史 = 数据.查询字段(c.场景,键[身份历史]);
     if (当前.size() > 1) throw std::logic_error("identity cognition current field is not unique");
     for (const auto& 项 : 历史) {
-        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(项.内容),c.场景,键);
+        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(项.内容),c.场景,键,数据);
         if (旧.原消息 == c.原消息)
             return 旧.已知存在 == c.已知存在 && 旧.原对端 == c.原对端
-                && 旧.原角色 == c.原角色 && 旧.语言定义 == c.语言定义;
+                && 旧.原角色 == c.原角色 && 旧.语言定义 == c.语言定义
+                && (!会话 || 旧.名称关系 == c.名称关系);
     }
     if (!当前.empty()) {
-        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(当前.front().内容),c.场景,键);
+        const auto 旧 = 读取身份认知记录(std::get<稳定编码>(当前.front().内容),c.场景,键,数据);
         if (旧.已知存在 != c.已知存在 || 旧.原对端 != c.原对端) return false;
     }
     基础节点组追加请求 请求;
@@ -1856,11 +1861,40 @@ bool 新_世界树类::采用本窗身份认知(新本窗身份认知材料 材�
     请求.只读预期.节点组.push_back({c.场景});
     for (const auto 字段 : 键) 请求.只读预期.节点组.push_back({字段});
     请求.容许新增入向预期组 = std::move(材料.完整保护);
-    const auto 宿主 = 全局基础数据集.查询节点组完整结构({c.场景});
+    const auto 宿主 = 数据.查询节点组完整结构({c.场景});
     if (宿主.状态 == B::资源失败) throw std::bad_alloc{};
     if (宿主.状态 != B::已完成 || 宿主.节点组.size() != 1 || !宿主.节点组.front().快照) return false;
     std::erase_if(请求.容许新增入向预期组,[&](const auto& 项) {return 项.结构.节点.编码 == c.场景;});
     请求.容许新增入向预期组.push_back(*宿主.节点组.front().快照);
+    if (会话) {
+        using P = 基础持久状态;
+        const auto 封存 = 会话->封存追加(请求);
+        if (封存.状态 == A::资源失败) throw std::bad_alloc{};
+        if (封存.状态 != A::已完成 || !封存.片段)
+            throw std::logic_error("persistent cognition seal rejected");
+        锁.unlock();
+        const auto 提交 = 会话->提交追加(前, {*封存.片段});
+        if (提交.持久状态 == P::前提已变化 || 提交.持久状态 == P::提交占用
+            || (提交.持久状态 == P::结构拒绝
+                && (提交.结构状态 == A::预期不符 || 提交.结构状态 == A::节点不存在
+                    || 提交.结构状态 == A::引用不存在))) return false;
+        if (提交.持久状态 == P::资源失败) throw std::bad_alloc{};
+        if (提交.持久状态 == P::发布结果未知)
+            throw std::logic_error("persistent cognition publication outcome unknown");
+        if (提交.持久状态 != P::已提交 || 提交.回执组.size() != 1
+            || !提交.回执组.front().对应片段(*封存.片段)
+            || 提交.回执组.front().新节点组().size() != 1)
+            throw std::logic_error("persistent cognition publication receipt incomplete");
+        const auto 节点 = 提交.回执组.front().新节点组().front();
+        const auto 后 = 会话->读取();
+        const auto 已读 = 读取身份认知记录(节点, c.场景, 键, 后->结构());
+        const auto 历史已读 = 后->结构().查询字段(c.场景, 键[身份历史]);
+        if (!std::ranges::any_of(历史已读, [&](const auto& 项) { return 项.内容 == 基础字段内容{节点}; })
+            || 已读.原对端 != c.原对端 || 已读.已知存在 != c.已知存在 || 已读.原消息 != c.原消息
+            || 已读.原角色 != c.原角色 || 已读.语言定义 != c.语言定义 || 已读.名称关系 != c.名称关系)
+            throw std::logic_error("persistent cognition authoritative readback mismatch");
+        return true;
+    }
     const auto 写 = 全局基础数据集.原子追加节点组(请求);
     if (写.状态 == A::已完成) return true;
     if (写.状态 == A::资源失败) throw std::bad_alloc{};

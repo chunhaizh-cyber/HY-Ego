@@ -309,6 +309,8 @@ struct 基础互引节点删除请求 final {
     std::vector<基础联合节点快照> 预期节点组;
 };
 
+class 基础持久运行包;
+
 class 基础数据集 final {
     friend class 基础持久运行包;
 public:
@@ -421,6 +423,8 @@ private:
         const std::set<std::uint64_t>& 必需) const;
 
     mutable std::shared_mutex 互斥_;
+    // 仅启动绑定。绑定后本实例没有本地事实、旧写入口关闭。
+    std::shared_ptr<基础持久运行包> 持久会话_;
     // 首次封存时在锁内生成，之后不变；旧句柄不能用于地址复用后的新数据集。
     std::shared_ptr<const int> 封存实例身份_;
     std::uint64_t 下一个编码_ = 1;

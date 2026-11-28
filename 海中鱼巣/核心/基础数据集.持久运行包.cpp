@@ -1,5 +1,7 @@
 #include "基础数据集.持久运行包.h"
 
+#include <mutex>
+
 #define NOMINMAX
 #include <Windows.h>
 #include <bcrypt.h>
@@ -254,9 +256,26 @@ void 基础持久运行包::建立自键索引(基础持久视图& 视图) {
     }
 }
 
+状态 基础持久运行包::绑定恢复权威(基础数据集& 入口,
+    const std::shared_ptr<基础持久运行包>& 会话) {
+    if (!会话 || !会话->读取()) return 状态::入口拒绝;
+    std::unique_lock 锁(入口.互斥_);
+    if (入口.持久会话_) return 入口.持久会话_ == 会话 ? 状态::已读取 : 状态::入口拒绝;
+    if (入口.下一个编码_ != 1 || 入口.封存实例身份_
+        || !入口.节点_.empty() || !入口.外部关系_.empty() || !入口.字段关系_.empty())
+        return 状态::入口拒绝;
+    入口.持久会话_ = 会话;
+    return 状态::已读取;
+}
+
+std::shared_ptr<基础持久运行包> 基础持久运行包::读取已绑定会话(const 基础数据集& 入口) {
+    std::shared_lock 锁(入口.互斥_);
+    return 入口.持久会话_;
+}
+
 bool 基础持久运行包::可开始首份(const 基础数据集& 源) {
     const std::shared_lock 锁(源.互斥_);
-    return 源.下一个编码_ == 1 && 源.节点_.empty()
+    return !源.持久会话_ && 源.下一个编码_ == 1 && 源.节点_.empty()
         && 源.外部关系_.empty() && 源.字段关系_.empty();
 }
 

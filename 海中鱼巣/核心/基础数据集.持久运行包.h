@@ -61,12 +61,15 @@ struct 基础持久追加结果 final {
     std::vector<基础片段发布回执> 回执组;
 };
 
-// 仅底座运行包使用。现有全局写入和普通宿主尚未接入。
+// 持久会话持有唯一当前事实与提交资格。
 class 基础持久运行包 final {
+    friend class 基础数据集;
 public:
     using 视图 = std::shared_ptr<const 基础持久视图>;
     static std::pair<基础持久状态, std::unique_ptr<基础持久运行包>> 打开(
         const std::filesystem::path& 目录);
+    static 基础持久状态 绑定恢复权威(基础数据集& 入口, const std::shared_ptr<基础持久运行包>& 会话);
+    static std::shared_ptr<基础持久运行包> 读取已绑定会话(const 基础数据集& 入口);
     视图 读取() const noexcept { return 当前_.load(std::memory_order_acquire); }
     基础持久状态 提交(const 视图& 预期, const 基础快照映像& 候选);
     // 仅用于实际普通启动的全新、无运行期消费者引导候选。
