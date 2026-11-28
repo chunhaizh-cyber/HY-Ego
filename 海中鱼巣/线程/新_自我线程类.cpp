@@ -3032,62 +3032,154 @@ struct 新_自我线程类::实现 final {
             return out;
         }catch(...){工程异常终止(HY_EGO_WIDEN(__FILE__),__LINE__,L"处理前置输入材料",L"输入父域、原工作读回或结果确认异常");}
     }
-    bool 读取发生承接保护(const 新行动请求承接来源& 来源,
-        std::vector<基础联合节点快照>& 保护) {
-        if (!世界树服务 || !初始化结果 || !初始化结果->自我存在
-            || !初始化结果->服务对象特征节点 || !来源.本次发生状态) return false;
-        const auto 自我 = *初始化结果->自我存在;
-        const auto 服务F = *初始化结果->服务对象特征节点;
-        const auto 发生 = 需求服务->读取主体需求发生关联按状态(*来源.本次发生状态);
-        if (!发生.关联 || !发生.记录节点 || 发生.关联->定位.主体存在节点 != 来源.来源人类节点
-            || 发生.关联->定位.需求节点 != 来源.被认知需求节点
-            || 发生.关联->状态节点 != *来源.本次发生状态 || 来源.受请求者节点 != 自我) return false;
-        const auto 事实 = 世界树服务->获取事实服务引用();
-        const auto 取保护 = [&](const std::vector<稳定编码>& 节点) {
-            const auto 批 = 全局基础数据集.查询节点组完整结构(节点);
-            if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
-            if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点.size())
-                throw std::logic_error("occurrence adoption evidence unreadable");
-            for (const auto& 项 : 批.节点组) {
-                if (!项.快照) return false;
-                保护.push_back(*项.快照);
+    enum class 发生承接资格状态 {
+        已核验, 等待正式登记, 等待本窗身份对应, 前提已变化, 来源不适用, 依赖未就绪, 资源失败
+    };
+    struct 发生承接资格结果 final {
+        发生承接资格状态 状态;
+        std::vector<基础联合节点快照> 完整保护;
+    };
+
+    发生承接资格结果 读取发生承接保护(const 新行动请求承接来源& 来源) {
+        using S = 发生承接资格状态;
+        using R = 新接收指代调用状态;
+        using W = 新世界需求引用组合状态;
+        try {
+            if (!世界树服务 || !初始化结果 || !初始化结果->自我存在
+                || !初始化结果->服务对象特征节点) return {S::依赖未就绪};
+            const auto 自我 = *初始化结果->自我存在;
+            if (!来源.本次发生状态 || 来源.受请求者节点 != 自我) return {S::来源不适用};
+            const auto 服务F = *初始化结果->服务对象特征节点;
+            const auto 发生 = 需求服务->读取主体需求发生关联按状态(*来源.本次发生状态);
+            if (发生.关联.has_value() != 发生.记录节点.has_value())
+                throw std::logic_error("occurrence adoption record identity incomplete");
+            if (!发生.关联 || 发生.关联->定位.主体存在节点 != 来源.来源人类节点
+                || 发生.关联->定位.需求节点 != 来源.被认知需求节点
+                || 发生.关联->状态节点 != *来源.本次发生状态
+                || 发生.关联->定位.方式 != 新需求发生方式::新需求) return {S::来源不适用};
+
+            const auto 事实 = 世界树服务->获取事实服务引用();
+            std::vector<基础联合节点快照> 保护;
+            const auto 取保护 = [&](const std::vector<稳定编码>& 节点) {
+                const auto 批 = 全局基础数据集.查询节点组完整结构(节点);
+                if (批.状态 == 基础结构操作状态::资源失败) throw std::bad_alloc{};
+                if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 节点.size())
+                    throw std::logic_error("occurrence adoption evidence unreadable");
+                for (const auto& 项 : 批.节点组) {
+                    if (!项.快照) return false;
+                    保护.push_back(*项.快照);
+                }
+                return true;
+            };
+            const auto 收口 = [&](S 状态) -> 发生承接资格结果 {
+                const auto 组节点 = 联合快照组节点(保护);
+                const auto 批 = 全局基础数据集.查询节点组完整结构(
+                    std::vector<稳定编码>(组节点.begin(), 组节点.end()));
+                if (批.状态 == 基础结构操作状态::资源失败) return {S::资源失败};
+                if (批.状态 != 基础结构操作状态::已完成 || 批.节点组.size() != 组节点.size())
+                    throw std::logic_error("occurrence adoption evidence recheck failed");
+                for (const auto& 项 : 批.节点组) {
+                    if (!项.快照 || std::any_of(保护.begin(), 保护.end(), [&](const auto& 原) {
+                        return 原.结构.节点.编码 == 项.查询节点
+                            && !联合快照容许变化判定(*项.快照, 原, 组节点);
+                    })) return {S::前提已变化};
+                }
+                if (状态 != S::已核验) return {状态};
+                发生承接资格结果 结果{状态};
+                结果.完整保护.reserve(批.节点组.size());
+                for (const auto& 项 : 批.节点组) 结果.完整保护.push_back(*项.快照);
+                return 结果;
+            };
+            if (!取保护({*发生.记录节点})) return {S::前提已变化};
+            const auto 发生复读 = 需求服务->读取主体需求发生关联按状态(*来源.本次发生状态);
+            if (发生复读.关联 != 发生.关联 || 发生复读.记录节点 != 发生.记录节点)
+                return {S::前提已变化};
+
+            const auto M = 来源.需求来源.键.接收消息节点;
+            const auto 角色 = 事实.语言服务.读取正式消息角色(M, 新外设消息方向::接收);
+            const auto 核同角色 = [&]() -> S {
+                const auto 复读 = 事实.语言服务.读取正式消息角色(M, 新外设消息方向::接收);
+                if (复读.状态 == R::资源失败) return S::资源失败;
+                if (复读.状态 == R::目标保护未装配) return S::依赖未就绪;
+                if (复读.状态 == R::结构不一致 || 复读.状态 == R::发布未知
+                    || (复读.状态 == R::已完成 && !复读.信息))
+                    throw std::logic_error("occurrence adoption role evidence recheck inconsistent");
+                if (复读.状态 != 角色.状态 || 复读.信息.has_value() != 角色.信息.has_value())
+                    return S::前提已变化;
+                if (!角色.信息) return S::已核验;
+                const auto& 原 = *角色.信息;
+                const auto& 新 = *复读.信息;
+                if (新.事实 != 原.事实 || 新.内部交互场景 != 原.内部交互场景
+                    || 新.说话者 != 原.说话者 || 新.受话者 != 原.受话者
+                    || 新.消息.场景节点 != 原.消息.场景节点 || 新.消息.窗口节点 != 原.消息.窗口节点
+                    || 新.消息.正文材料节点 != 原.消息.正文材料节点) return S::前提已变化;
+                return S::已核验;
+            };
+            const auto 拒绝角色 = [&]() -> 发生承接资格结果 {
+                const auto 复核 = 核同角色();
+                if (复核 != S::已核验) return {复核};
+                return 收口(S::来源不适用);
+            };
+            switch (角色.状态) {
+            case R::资源失败: return {S::资源失败};
+            case R::前提已变化: return {S::前提已变化};
+            case R::目标保护未装配: return {S::依赖未就绪};
+            case R::输入拒绝:
+            case R::未找到:
+            case R::引用失效:
+            case R::材料未就绪:
+                return 拒绝角色();
+            case R::已完成: break;
+            default:
+                throw std::logic_error("occurrence adoption role evidence inconsistent");
             }
-            return true;
-        };
-        if (!取保护({服务F, *发生.记录节点})) return false;
-        const auto 登记 = 事实.特征服务.获取特征(服务F);
-        if (!登记 || 登记->当前值 != 新特征准确值{来源.来源人类节点}) return false;
+            if (!角色.信息) throw std::logic_error("occurrence adoption role evidence missing");
+            if (!角色.信息->事实 || !角色.信息->内部交互场景 || !角色.信息->说话者
+                || !角色.信息->受话者) return 拒绝角色();
+            const auto 窗场景 = *角色.信息->内部交互场景;
+            if (!取保护({M, *角色.信息->事实, 窗场景})) return {S::前提已变化};
+            const auto 角色复核 = 核同角色();
+            if (角色复核 != S::已核验) return {角色复核};
+            if (角色.信息->受话者 != 自我) return 收口(S::来源不适用);
+            const auto 窗组 = 世界树服务->读取正式临时交互场景();
+            const auto 窗 = std::find_if(窗组.begin(), 窗组.end(), [&](const auto& 项) {
+                return 项.场景 == 窗场景 && 项.自我 == 自我 && 项.本窗对端 == 角色.信息->说话者
+                    && 项.来源.外设场景 == 角色.信息->消息.场景节点
+                    && 项.来源.外设窗口 == 角色.信息->消息.窗口节点;
+            });
+            if (窗 == 窗组.end()) return 收口(S::来源不适用);
 
-        const auto M = 来源.需求来源.键.接收消息节点;
-        const auto 角色 = 事实.语言服务.读取正式消息角色(M, 新外设消息方向::接收);
-        if (角色.状态 == 新接收指代调用状态::资源失败) throw std::bad_alloc{};
-        if (角色.状态 == 新接收指代调用状态::结构不一致)
-            throw std::logic_error("occurrence adoption role evidence inconsistent");
-        if (!角色.信息 || !角色.信息->事实 || !角色.信息->内部交互场景
-            || !角色.信息->说话者 || 角色.信息->受话者 != 自我) return false;
-        const auto 窗场景 = *角色.信息->内部交互场景;
-        if (!取保护({M, *角色.信息->事实, 窗场景})) return false;
-        const auto 窗组 = 世界树服务->读取正式临时交互场景();
-        const auto 窗 = std::find_if(窗组.begin(), 窗组.end(), [&](const auto& 项) {
-            return 项.场景 == 窗场景 && 项.自我 == 自我 && 项.本窗对端 == 角色.信息->说话者
-                && 项.来源.外设场景 == 角色.信息->消息.场景节点
-                && 项.来源.外设窗口 == 角色.信息->消息.窗口节点;
-        });
-        if (窗 == 窗组.end()) return false;
-        if (窗->本窗对端 != 来源.来源人类节点) {
-            const auto 认知 = 世界树服务->读取本窗身份认知(窗场景);
-            if (!认知 || 认知->原对端 != 窗->本窗对端 || 认知->已知存在 != 来源.来源人类节点
-                || !取保护({认知->采用节点})) return false;
+            const auto& 定位 = 发生.关联->定位;
+            const auto 当前 = 世界树服务->读取需求引用更新依据(定位.场景节点, 定位.主体存在节点, 定位.特征节点);
+            if (当前.状态 == W::前提已变化) return {S::前提已变化};
+            if (当前.状态 == W::目标不合法) return 收口(S::来源不适用);
+            if (当前.状态 != W::已读取 || !当前.依据)
+                throw std::logic_error("occurrence adoption current reference inconsistent");
+            保护.push_back(当前.依据->特征保护);
+            保护.insert(保护.end(), 当前.依据->定位保护组.begin(), 当前.依据->定位保护组.end());
+            if (当前.依据->原需求节点 != 来源.被认知需求节点
+                || 当前.依据->前状态节点 != 来源.本次发生状态) return 收口(S::来源不适用);
+
+            const bool 已取登记保护 = 取保护({服务F});
+            const auto 登记 = 事实.特征服务.获取特征(服务F);
+            if (!已取登记保护 && !登记)
+                throw std::logic_error("occurrence adoption registry feature missing");
+            if (!已取登记保护 || !登记) return {S::前提已变化};
+            if (登记->当前值 != 新特征准确值{来源.来源人类节点})
+                return 收口(S::等待正式登记);
+            if (窗->本窗对端 != 来源.来源人类节点) {
+                const auto 认知 = 世界树服务->读取本窗身份认知(窗场景);
+                if (!认知) return 收口(S::等待本窗身份对应);
+                if (认知->场景 != 窗场景 || 认知->原对端 != 窗->本窗对端) return 收口(S::来源不适用);
+                if (!取保护({认知->采用节点})) return {S::前提已变化};
+                if (认知->已知存在 != 来源.来源人类节点) return 收口(S::等待本窗身份对应);
+            }
+            return 收口(S::已核验);
+        } catch (const std::bad_alloc&) {
+            return {S::资源失败};
+        } catch (const std::length_error&) {
+            return {S::资源失败};
         }
-
-        const auto& 定位 = 发生.关联->定位;
-        const auto 当前 = 世界树服务->读取需求引用更新依据(定位.场景节点, 定位.主体存在节点, 定位.特征节点);
-        if (当前.状态 != 新世界需求引用组合状态::已读取 || !当前.依据
-            || 当前.依据->原需求节点 != 来源.被认知需求节点
-            || 当前.依据->前状态节点 != 来源.本次发生状态) return false;
-        保护.push_back(当前.依据->特征保护);
-        保护.insert(保护.end(), 当前.依据->定位保护组.begin(), 当前.依据->定位保护组.end());
-        return true;
     }
 
     std::optional<新自我消息处理结果> 处理行动请求承接(消息项& 项) {
@@ -3097,6 +3189,10 @@ struct 新_自我线程类::实现 final {
             throw std::logic_error("action request adoption dependencies missing");
         新自我消息处理结果 out;out.原消息=项.消息;
         const auto& source=*项.消息.行动请求来源;
+        if (source.受请求者节点 != *初始化结果->自我存在 && source.本次发生状态) {
+            out.状态 = 新自我消息处理状态::入口拒绝;
+            return out;
+        }
         if(source.受请求者节点!=*初始化结果->自我存在)
             throw std::logic_error("action request addressee differs from self");
         if(项.管理结果.valid()) {
@@ -3147,12 +3243,48 @@ struct 新_自我线程类::实现 final {
             const auto 已有 = 需求服务->查询行动请求自我需求(source);
             if (已有.状态 == 新需求操作状态::资源失败 || 已有.状态 == 新需求操作状态::前提已变化)
                 return std::nullopt;
-            if (已有.状态 != 新需求操作状态::已找到
-                && (已有.状态 != 新需求操作状态::需求不存在 || !读取发生承接保护(source, 发生保护)
-                    || 判定需求合法性(source.被认知需求节点, 自我需求承接依据::行动请求)
-                        == 自我需求合法性判定::不合法)) {
+            if (已有.状态 == 新需求操作状态::尚未初始化
+                || 已有.状态 == 新需求操作状态::目标内容依赖未就绪) {
+                (void)结构依赖未就绪已停止(L"查询行动请求自我需求", static_cast<int>(已有.状态), 项.消息.消息编号);
+                out.状态 = 新自我消息处理状态::停止取消;
+                return out;
+            }
+            if (已有.状态 == 新需求操作状态::认知来源不合法 || 已有.状态 == 新需求操作状态::同来源目标冲突) {
                 out.状态 = 新自我消息处理状态::入口拒绝;
                 return out;
+            }
+            if (已有.状态 == 新需求操作状态::需求不存在) {
+                auto 资格 = 读取发生承接保护(source);
+                using S = 发生承接资格状态;
+                switch (资格.状态) {
+                case S::已核验:
+                    if (判定需求合法性(source.被认知需求节点, 自我需求承接依据::行动请求)
+                        == 自我需求合法性判定::不合法) {
+                        out.状态 = 新自我消息处理状态::入口拒绝;
+                        return out;
+                    }
+                    发生保护 = std::move(资格.完整保护);
+                    break;
+                case S::等待正式登记:
+                case S::等待本窗身份对应:
+                    out.状态 = 新自我消息处理状态::等待材料;
+                    return out;
+                case S::前提已变化:
+                case S::资源失败:
+                    return std::nullopt;
+                case S::来源不适用:
+                    out.状态 = 新自我消息处理状态::入口拒绝;
+                    return out;
+                case S::依赖未就绪:
+                    (void)结构依赖未就绪已停止(
+                        L"读取发生承接保护", static_cast<int>(资格.状态), 项.消息.消息编号);
+                    out.状态 = 新自我消息处理状态::停止取消;
+                    return out;
+                default:
+                    throw std::logic_error("occurrence adoption eligibility inconsistent");
+                }
+            } else if (已有.状态 != 新需求操作状态::已找到) {
+                throw std::logic_error("occurrence adopted demand query inconsistent");
             }
         }
         const auto adopted = 需求服务->建立或取得行动请求需求已核验(
