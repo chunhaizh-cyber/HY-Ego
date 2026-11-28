@@ -108,22 +108,23 @@ std::optional<新状态强时间> 解码强时间(const 基础字段关系& 字�
 }
 
 std::optional<稳定编码> 读取唯一节点字段(
-    稳定编码 节点, 稳定编码 字段节点) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 字段节点);
+    const 基础数据集& 数据, 稳定编码 节点, 稳定编码 字段节点) {
+    const auto 字段组 = 数据.查询字段(节点, 字段节点);
     if (字段组.size() != 1) return std::nullopt;
     const auto* 目标 = std::get_if<稳定编码>(&字段组.front().内容);
-    return 目标 && 节点仍存在(*目标)
+    return 目标 && 有效(*目标) && 数据.查询节点(*目标)
         ? std::optional<稳定编码>{*目标} : std::nullopt;
 }
 
 // 返回false表示结构损坏；成功且值为空表示未知，不能混为读取失败。
-bool 读取准确值字段(稳定编码 节点, std::optional<新特征准确值>& 准确值) {
+bool 读取准确值字段(const 基础数据集& 数据, 稳定编码 节点,
+    稳定编码 字段键, std::optional<新特征准确值>& 准确值) {
     准确值.reset();
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 状态固定准确值字段);
+    const auto 字段组 = 数据.查询字段(节点, 字段键);
     if (字段组.empty()) return true;
     if (字段组.size() != 1) return false;
     if (const auto* 目标 = std::get_if<稳定编码>(&字段组.front().内容)) {
-        if (!节点仍存在(*目标)) return false;
+        if (!有效(*目标) || !数据.查询节点(*目标)) return false;
         准确值 = 新特征准确值{*目标};
         return true;
     }
@@ -134,14 +135,9 @@ bool 读取准确值字段(稳定编码 节点, std::optional<新特征准确值
     return true;
 }
 
-std::optional<新状态强时间> 读取唯一强时间字段(稳定编码 节点) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 状态强时间字段);
-    return 字段组.size() == 1 ? 解码强时间(字段组.front()) : std::nullopt;
-}
-
 std::optional<std::pair<稳定编码, std::int64_t>> 读取唯一I64字段(
-    稳定编码 节点, 稳定编码 字段节点) {
-    const auto 字段组 = 全局基础数据集.查询字段(节点, 字段节点);
+    稳定编码 节点, 稳定编码 字段节点, const 基础数据集& 数据 = 全局基础数据集) {
+    const auto 字段组 = 数据.查询字段(节点, 字段节点);
     if (字段组.size() != 1) return std::nullopt;
     const auto* 值 = std::get_if<基础值>(&字段组.front().内容);
     if (!值) return std::nullopt;
@@ -150,6 +146,70 @@ std::optional<std::pair<稳定编码, std::int64_t>> 读取唯一I64字段(
         ? std::optional<std::pair<稳定编码, std::int64_t>>{
             std::pair{字段组.front().编码, *I64}}
         : std::nullopt;
+}
+
+std::optional<新状态信息> 解码状态内容(const 基础数据集& 数据,
+    std::span<const 稳定编码> 键, 稳定编码 节点) {
+    const auto 存在 = 读取唯一节点字段(数据, 节点, 键[2]);
+    const auto 来源特征 = 读取唯一节点字段(数据, 节点, 键[3]);
+    const auto 特征类型 = 读取唯一节点字段(数据, 节点, 键[4]);
+    std::optional<新特征准确值> 准确值;
+    const bool 准确值有效 = 读取准确值字段(数据, 节点, 键[5], 准确值);
+    const auto 时间字段 = 数据.查询字段(节点, 键[6]);
+    const auto 时间 = 时间字段.size() == 1 ? 解码强时间(时间字段.front()) : std::nullopt;
+    const auto 引用次数 = 读取唯一I64字段(节点, 键[7], 数据);
+    if (!存在 || !来源特征 || !特征类型 || !准确值有效 || !时间
+        || !引用次数 || 引用次数->second < 0) return std::nullopt;
+    return 新状态信息{节点, *存在, *来源特征, *特征类型, 准确值, *时间, 引用次数->second};
+}
+
+新状态持久读取状态 映射状态结构读回(const 基础结构自键读回& 读回) noexcept {
+    using S = 新状态持久读取状态;
+    using B = 基础结构操作状态;
+    if (读回.状态 == B::节点不存在) return S::材料不完整;
+    if (读回.状态 == B::资源失败) return S::资源失败;
+    return 读回.状态 == B::已完成 && 读回.节点组.size() == 状态自键组.size()
+        ? S::已读取 : S::结构不一致;
+}
+
+新状态持久读取结果 读取持久状态节点(const 基础数据集& 数据,
+    std::span<const 稳定编码> 键, 稳定编码 节点) {
+    using S = 新状态持久读取状态;
+    if (!有效(节点) || !数据.查询节点(节点)) return {S::状态不存在};
+    const auto 类型组 = 数据.查询字段(节点, 键[0]);
+    if (类型组.empty()) return {S::状态不存在};
+    const auto* 类型 = 类型组.size() == 1
+        ? std::get_if<稳定编码>(&类型组.front().内容) : nullptr;
+    if (!类型 || !有效(*类型) || !数据.查询节点(*类型)) return {S::结构不一致};
+    if (*类型 != 键[1]) return {S::状态不存在};
+    auto 信息 = 解码状态内容(数据, 键, 节点);
+    if (!信息) return {S::结构不一致};
+    return {S::已读取, std::move(信息)};
+}
+
+新存在状态持久读取结果 读取持久存在状态(const 基础持久视图& 视图, 稳定编码 E) {
+    using S = 新状态持久读取状态;
+    const auto 结构 = 读取恢复服务状态结构(视图);
+    const auto 键状态 = 映射状态结构读回(结构);
+    if (键状态 != S::已读取) return {键状态};
+    const auto& 数据 = 视图.结构();
+    if (!有效(E) || !数据.查询节点(E)) return {S::材料不完整};
+
+    std::vector<稳定编码> 候选组;
+    for (const auto& 字段 : 数据.查询目标字段(E, 结构.节点组[2]))
+        候选组.push_back(字段.所属节点);
+    std::sort(候选组.begin(), 候选组.end());
+    候选组.erase(std::unique(候选组.begin(), 候选组.end()), 候选组.end());
+
+    新存在状态持久读取结果 结果{S::已读取};
+    for (const auto 节点 : 候选组) {
+        auto 项 = 读取持久状态节点(数据, 结构.节点组, 节点);
+        if (项.状态 == S::状态不存在) continue;
+        if (项.状态 != S::已读取) return {项.状态};
+        if (项.信息->被描述存在节点 != E) return {S::结构不一致};
+        结果.信息组.push_back(std::move(*项.信息));
+    }
+    return 结果;
 }
 
 稳定编码 写入准确值字段(
@@ -607,9 +667,51 @@ std::optional<新状态信息> 新_状态类::读取词条前状态(
     }
 }
 
+新状态持久读取结果 新_状态类::读取当前权威状态(稳定编码 状态节点) const noexcept {
+    using S = 新状态持久读取状态;
+    try {
+        const auto 会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return {S::未绑定};
+        const auto 视图 = 会话->读取();
+        if (!视图) return {S::结构不一致};
+        const auto 结构 = 读取恢复服务状态结构(*视图);
+        const auto 键状态 = 映射状态结构读回(结构);
+        if (键状态 != S::已读取) return {键状态};
+        return 读取持久状态节点(视图->结构(), 结构.节点组, 状态节点);
+    } catch (const std::bad_alloc&) { return {S::资源失败}; }
+    catch (const std::length_error&) { return {S::资源失败}; }
+    catch (...) { return {S::结构不一致}; }
+}
+
+新存在状态持久读取结果 新_状态类::读取当前权威存在状态(
+    const 基础持久视图& 预期, 稳定编码 E) const noexcept {
+    using S = 新状态持久读取状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    新存在状态持久读取结果 结果;
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return {S::未绑定};
+        const auto 视图 = 会话->读取();
+        if (!视图) return {S::结构不一致};
+        if (视图.get() != &预期) return {S::前提已变化};
+        结果 = 读取持久存在状态(*视图, E);
+    } catch (const std::bad_alloc&) { 结果.状态 = S::资源失败; }
+    catch (const std::length_error&) { 结果.状态 = S::资源失败; }
+    catch (...) { 结果.状态 = S::结构不一致; }
+    if (会话 && 会话->读取().get() != &预期) return {S::前提已变化};
+    return 结果;
+}
+
 std::optional<新状态信息> 新_状态类::获取状态(
     稳定编码 状态节点) const noexcept {
     try {
+        using S = 新状态持久读取状态;
+        auto 持久 = 读取当前权威状态(状态节点);
+        if (持久.状态 == S::已读取) return std::move(持久.信息);
+        if (持久.状态 == S::状态不存在) return std::nullopt;
+        if (持久.状态 != S::未绑定)
+            throw std::logic_error("persistent state read failed");
+
         std::lock_guard 锁(新状态互斥);
         const std::array 结构节点组{状态节点类型字段, 状态节点类型,
             状态被描述存在字段, 状态来源实例特征字段, 状态特征类型字段,
@@ -627,22 +729,7 @@ std::optional<新状态信息> 新_状态类::获取状态(
         if (!类型 || !有效(*类型) || !全局基础数据集.查询节点(*类型))
             工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取状态", L"状态类型字段损坏");
         if (*类型 != 状态节点类型) return std::nullopt;
-        const auto 存在 = 读取唯一节点字段(
-            状态节点, 状态被描述存在字段);
-        const auto 来源实例特征 = 读取唯一节点字段(
-            状态节点, 状态来源实例特征字段);
-        const auto 特征类型 = 读取唯一节点字段(
-            状态节点, 状态特征类型字段);
-        std::optional<新特征准确值> 准确值;
-        const bool 准确值有效 = 读取准确值字段(状态节点, 准确值);
-        const auto 时间 = 读取唯一强时间字段(状态节点);
-        const auto 引用次数 = 读取唯一I64字段(
-            状态节点, 状态被引用次数字段);
-        if (!存在 || !来源实例特征 || !特征类型 || !准确值有效 || !时间
-            || !引用次数 || 引用次数->second < 0) return std::nullopt;
-        return 新状态信息{
-            状态节点, *存在, *来源实例特征, *特征类型, 准确值, *时间,
-            引用次数->second};
+        return 解码状态内容(全局基础数据集, 结构节点组, 状态节点);
     } catch (...) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"获取状态", L"状态读取抛出工程异常");
     }

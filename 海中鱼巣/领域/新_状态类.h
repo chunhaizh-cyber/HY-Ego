@@ -12,6 +12,7 @@
 
 namespace 海中鱼巣 {
 
+class 基础持久视图;
 class 新_存在类;
 class 新_动态类;
 class 新_任务类;
@@ -50,6 +51,20 @@ struct 新状态信息 final {
     新状态强时间 强时间;
     std::int64_t 被引用次数 = 0;
     friend bool operator==(const 新状态信息&, const 新状态信息&) = default;
+};
+
+enum class 新状态持久读取状态 : std::uint8_t {
+    已读取 = 1, 未绑定, 前提已变化, 材料不完整, 状态不存在, 结构不一致, 资源失败
+};
+
+struct 新状态持久读取结果 final {
+    新状态持久读取状态 状态 = 新状态持久读取状态::未绑定;
+    std::optional<新状态信息> 信息;
+};
+
+struct 新存在状态持久读取结果 final {
+    新状态持久读取状态 状态 = 新状态持久读取状态::未绑定;
+    std::vector<新状态信息> 信息组;
 };
 
 enum class 新状态操作状态 : std::uint8_t {
@@ -129,6 +144,9 @@ public:
 
     std::optional<新状态信息> 获取状态(
         稳定编码 状态节点) const noexcept;
+    新状态持久读取结果 读取当前权威状态(稳定编码 状态节点) const noexcept;
+    新存在状态持久读取结果 读取当前权威存在状态(
+        const 基础持久视图& 预期, 稳定编码 E) const noexcept;
     bool 是状态节点(稳定编码 节点) const noexcept;
 
     std::vector<稳定编码> 按存在查询状态(
