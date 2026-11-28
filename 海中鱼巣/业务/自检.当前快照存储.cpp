@@ -69,6 +69,62 @@ bool 核对运行视图(const 基础持久运行包::视图& 视图, bool 第二
         && 结构.有入向字段引用({2});
 }
 
+bool 核对组合视图(const 基础持久运行包::视图& 视图) {
+    if (!视图 || 视图->下一个编码() != 13) return false;
+    const auto& 结构 = 视图->结构();
+    const auto 值 = 结构.查询字段关系({6});
+    const auto 关联 = 结构.查询字段({11}, {3});
+    return 值 && 值->内容 == 基础字段内容{基础值{std::int64_t{30}}}
+        && 结构.查询节点({11}).has_value() && 关联.size() == 1
+        && 关联.front().编码 == 稳定编码{12} && 关联.front().内容 == 基础字段内容{稳定编码{1}};
+}
+
+bool 验证持久组合(基础持久运行包& 运行, std::string_view 操作) {
+    using A = 基础节点组追加状态;
+    const auto 前 = 运行.读取();
+    if (操作 == "pack-composite-read") return 核对组合视图(前);
+    if (!核对运行视图(前, false)) return false;
+    基础节点组追加请求 请求;
+    请求.新节点组.push_back({{{{3}, 稳定编码{1}}}});
+    const auto 核验 = 前->结构().查询节点组完整结构({{1}});
+    if (核验.状态 != 基础结构操作状态::已完成 || 核验.节点组.size() != 1 || !核验.节点组.front().快照)
+        return false;
+    请求.预期联合节点组.push_back(*核验.节点组.front().快照);
+    请求.替换字段组.push_back({{6}, 基础值{std::int64_t{30}}});
+    const auto 封存 = 运行.封存追加(请求);
+    if (封存.状态 != A::已完成 || !封存.片段) return false;
+    const std::vector<基础封存追加片段> 片段组{*封存.片段};
+    if (操作 == "pack-composite-unknown") {
+        const auto 不明 = 运行.提交追加(前, 片段组);
+        if (不明.持久状态 != S::发布结果未知 || !不明.回执组.empty() || 运行.读取() != 前)
+            return false;
+        const auto 禁止 = 运行.提交追加(前, 片段组);
+        return 禁止.持久状态 == S::发布结果未知 && 禁止.回执组.empty()
+            && 运行.提交(前, 示例(false)) == S::发布结果未知;
+    }
+    if (操作 != "pack-composite-write") return false;
+    基础数据集 外部;
+    const auto 外部封存 = 外部.封存原子追加片段(请求);
+    if (外部封存.状态 != A::已完成 || !外部封存.片段) return false;
+    const auto 拒绝外部 = 运行.提交追加(前, {*外部封存.片段});
+    if (拒绝外部.持久状态 != S::结构拒绝 || !拒绝外部.回执组.empty()) return false;
+
+    请求.预期联合节点组.front().结构.字段组.back().内容 = 基础值{std::int64_t{88}};
+    const auto 旧封存 = 运行.封存追加(请求);
+    if (旧封存.状态 != A::已完成 || !旧封存.片段) return false;
+    const auto 拒绝旧值 = 运行.提交追加(前, {*旧封存.片段});
+    if (拒绝旧值.持久状态 != S::结构拒绝 || 拒绝旧值.结构状态 != A::预期不符
+        || !拒绝旧值.回执组.empty() || 运行.读取() != 前) return false;
+
+    const auto 成功 = 运行.提交追加(前, 片段组);
+    if (成功.持久状态 != S::已提交 || 成功.结构状态 != A::已完成 || 成功.回执组.size() != 1
+        || !成功.回执组.front().对应片段(*封存.片段)
+        || 成功.回执组.front().新节点组() != std::vector<稳定编码>{{11}}
+        || !核对组合视图(运行.读取()) || !核对运行视图(前, false)) return false;
+    const auto 旧视图 = 运行.提交追加(前, 片段组);
+    return 旧视图.持久状态 == S::前提已变化 && 旧视图.回执组.empty();
+}
+
 bool 验证运行包(const std::filesystem::path& 根, std::string_view 操作, std::string_view 案例) {
     if (操作 == "pack-seed-unsupported") {
         auto [状态, 存储] = 基础持久存储::打开(根);
@@ -82,6 +138,7 @@ bool 验证运行包(const std::filesystem::path& 根, std::string_view 操作, 
     if (操作 == "pack-reject-format") return 状态 == S::格式不支持 && !运行;
     if (操作 == "pack-reject-digest") return 状态 == S::摘要不一致 && !运行;
     if (!运行) return false;
+    if (操作.starts_with("pack-composite-")) return 验证持久组合(*运行, 操作);
     const auto 前 = 运行->读取();
     if (操作 == "pack-empty") return 状态 == S::空仓 && !前;
     if (操作 == "pack-read") return 状态 == S::已读取 && 核对运行视图(前, 案例 == "2");
