@@ -567,6 +567,100 @@ std::pair<基础结构操作状态, 稳定编码> 读取存在语义根结构(
     catch (...) { return S::结构冲突; }
 }
 
+std::pair<基础持久状态, std::vector<std::optional<存在概念种类>>>
+概念_存在类::核验当前权威普通名称端点(const 基础持久视图& 视图,
+    std::span<const std::pair<稳定编码, 稳定编码>> 端点组) const noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    using 结果类型 = std::pair<S, std::vector<std::optional<存在概念种类>>>;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 失败 = [&](S 状态) -> 结果类型 {
+        return {会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态, {}};
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return {S::入口拒绝, {}};
+        std::lock_guard 锁(存在概念图互斥);
+        if (会话->读取().get() != &视图) return {S::前提已变化, {}};
+        if (存在概念恢复所有者 != this) return 失败(S::入口拒绝);
+        if (!结构已初始化()) return 失败(S::结构冲突);
+
+        std::vector<稳定编码> 节点组{存在概念图根节点};
+        for (const auto& [概念, 名称] : 端点组) {
+            if (!有效(概念) || !有效(名称)) return 失败(S::结构冲突);
+            节点组.push_back(概念);
+        }
+        排序去重(节点组);
+        const auto& 数据 = 视图.结构();
+        const auto 批 = 数据.查询节点组完整结构(节点组);
+        if (批.状态 == B::资源失败) return 失败(S::资源失败);
+        if (批.状态 != B::已完成 || 批.节点组.size() != 节点组.size())
+            return 失败(S::结构冲突);
+        for (std::size_t i = 0; i < 节点组.size(); ++i) {
+            const auto& 项 = 批.节点组[i];
+            if (项.查询节点 != 节点组[i] || !项.快照 || 项.快照->结构.节点.编码 != 节点组[i])
+                return 失败(S::结构冲突);
+        }
+        const auto 快照 = [&](稳定编码 节点) -> const 基础联合节点快照& {
+            const auto 项 = std::ranges::lower_bound(批.节点组, 节点,
+                std::less<稳定编码>{}, &基础联合节点读取项::查询节点);
+            return *项->快照;
+        };
+        const auto 是组织父边 = [](const 基础外部关系& 边) {
+            return 边.类型 == 基础外部关系类型::父子 && 边.角色或顺序 == 组织归属关系角色;
+        };
+        const auto& 根 = 快照(存在概念图根节点);
+        std::vector<std::optional<存在概念种类>> 种类组;
+        种类组.reserve(端点组.size());
+        for (const auto& [概念, 名称] : 端点组) {
+            if (!数据.查询节点(名称)) return 失败(S::结构冲突);
+            const auto& 当前 = 快照(概念);
+            std::optional<存在概念种类> 种类;
+            std::size_t 类型字段数 = 0, 名称匹配数 = 0, 对应字段数 = 0;
+            稳定编码 对应存在{};
+            for (const auto& 字段 : 当前.结构.字段组) {
+                const auto* 引用 = std::get_if<稳定编码>(&字段.内容);
+                if (字段.字段节点 == 节点类型字段) {
+                    ++类型字段数;
+                    if (引用 && *引用 == 抽象存在概念节点类型) 种类 = 存在概念种类::抽象;
+                    if (引用 && *引用 == 专属存在概念节点类型) 种类 = 存在概念种类::专属;
+                } else if (字段.字段节点 == 名称关系字段 && 引用 && *引用 == 名称) {
+                    ++名称匹配数;
+                } else if (字段.字段节点 == 对应存在字段) {
+                    ++对应字段数;
+                    if (引用) 对应存在 = *引用;
+                }
+            }
+            std::size_t 组织父边数 = 0;
+            const 基础外部关系* 图根父边 = nullptr;
+            for (const auto& 边 : 当前.入向外部关系组) {
+                if (!是组织父边(边)) continue;
+                ++组织父边数;
+                if (边.源节点 == 存在概念图根节点) 图根父边 = &边;
+            }
+            const auto 根出边数 = std::ranges::count_if(根.出向外部关系组, [&](const auto& 边) {
+                return 是组织父边(边) && 边.目标节点 == 概念;
+            });
+            if (!种类 && !图根父边 && 根出边数 == 0) {
+                种类组.push_back(std::nullopt);
+                continue;
+            }
+            if (!种类 || 类型字段数 != 1 || 组织父边数 != 1 || !图根父边 || 根出边数 != 1
+                || 图根父边->目标节点 != 概念
+                || std::ranges::find(根.出向外部关系组, *图根父边) == 根.出向外部关系组.end()
+                || 名称匹配数 != 1) return 失败(S::结构冲突);
+            if (*种类 == 存在概念种类::抽象 ? 对应字段数 != 0
+                : 对应字段数 != 1 || !有效(对应存在) || 对应存在 == 概念 || !数据.查询节点(对应存在))
+                return 失败(S::结构冲突);
+            种类组.push_back(种类);
+        }
+        if (会话->读取().get() != &视图) return {S::前提已变化, {}};
+        return {S::已读取, std::move(种类组)};
+    } catch (const std::bad_alloc&) { return 失败(S::资源失败); }
+    catch (const std::length_error&) { return 失败(S::资源失败); }
+    catch (...) { return 失败(S::结构冲突); }
+}
+
 bool 概念_存在类::初始化() noexcept {
     try {
         std::lock_guard 锁(存在概念图互斥);

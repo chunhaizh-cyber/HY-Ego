@@ -5,6 +5,7 @@
 #include "概念_存在类.h"
 #include "概念_特征类.h"
 #include "概念_动态类.h"
+#include "../核心/基础数据集.持久运行包.h"
 #include "../核心/容错检查.h"
 
 #include <algorithm>
@@ -12,6 +13,7 @@
 #include <map>
 #include <mutex>
 #include <new>
+#include <ranges>
 #include <set>
 #include <stdexcept>
 #include <tuple>
@@ -34,6 +36,27 @@ std::recursive_mutex 概念名称关系互斥;
 std::array<稳定编码, 3> 指代名称键{};
 std::array<稳定编码, 3> 指代名称待核验键{};
 constexpr std::size_t 角色键 = 0, 语言键 = 1, 来源键 = 2;
+
+constexpr std::array 名称结构键组{
+    &节点类型字段, &名称关系根类型, &名称关系节点类型, &被命名概念字段, &目标词条字段
+};
+constexpr std::array<std::string_view, 名称结构键组.size()> 名称结构标记组{
+    "HY-Ego/2210/名称关系结构/节点类型字段/v1",
+    "HY-Ego/2210/名称关系结构/名称关系根类型/v1",
+    "HY-Ego/2210/名称关系结构/名称关系节点类型/v1",
+    "HY-Ego/2210/名称关系结构/被命名概念字段/v1",
+    "HY-Ego/2210/名称关系结构/目标词条字段/v1"
+};
+const 概念_名称关系类* 名称恢复所有者 = nullptr;
+
+bool 名称结构自键相符(const 基础节点结构& 结构, std::string_view 标记) {
+    if (结构.字段组.size() != 1) return false;
+    const auto& 字段 = 结构.字段组.front();
+    const auto* 直接值 = std::get_if<基础值>(&字段.内容);
+    const auto* 字符串 = 直接值 ? std::get_if<std::string>(&直接值->材料) : nullptr;
+    return 字段.所属节点 == 结构.节点.编码 && 字段.字段节点 == 结构.节点.编码
+        && 字符串 && *字符串 == 标记;
+}
 
 指代名称读取状态 指代名称键状态() {
     using 状态 = 指代名称读取状态;
@@ -79,7 +102,7 @@ bool 类型为(稳定编码 节点, 稳定编码 类型) {
 }
 
 bool 结构句柄完整() noexcept {
-    const std::vector<稳定编码> 节点组{
+    const std::array 节点组{
         自然语言组织根节点, 概念名称关系根节点, 节点类型字段,
         名称关系根类型, 名称关系节点类型, 被命名概念字段,
         目标词条字段};
@@ -293,6 +316,7 @@ struct 名称原始全集 final {
     std::array<稳定编码, 3> 指代键快照{};
     std::vector<基础联合节点快照> 快照组;
     std::vector<名称原始项> 项组;
+    bool 命中未恢复的指代结构 = false;
 };
 std::optional<稳定编码> 唯一字段引用(
     const 基础联合节点快照& 快照, 稳定编码 键) {
@@ -436,12 +460,14 @@ auto 按实时名称材料执行(操作&& 执行) {
     std::optional<稳定编码> 目标概念=std::nullopt,
     std::optional<稳定编码> 目标名称=std::nullopt,
     std::optional<稳定编码> 目标词条=std::nullopt,
-    bool 保护读取=false) {
+    bool 保护读取=false,
+    const 基础持久视图* 恢复视图=nullptr) {
     名称原始全集 结果;
+    const auto& 数据 = 恢复视图 ? 恢复视图->结构() : 全局基础数据集;
     结果.指代键快照 = 指代名称键;
     if (!结构句柄完整()) { 结果.状态 = 指代名称读取状态::依赖缺失; return 结果; }
     if (!目标词条 && !保护读取 && !结构仍存在()) return 结果;
-    const auto 根首读 = 全局基础数据集.查询节点组完整结构(
+    const auto 根首读 = 数据.查询节点组完整结构(
         {概念名称关系根节点});
     if (根首读.状态 == 基础结构操作状态::资源失败) {
         结果.状态 = 指代名称读取状态::资源失败; return 结果;
@@ -474,7 +500,7 @@ auto 按实时名称材料执行(操作&& 执行) {
     if (目标名称) {
         查询概念.reset();
         if (根成员.contains(*目标名称)) {
-            const auto 读取 = 全局基础数据集.查询节点组完整结构({*目标名称});
+            const auto 读取 = 数据.查询节点组完整结构({*目标名称});
             if (读取.状态 == 基础结构操作状态::资源失败) {
                 结果.状态 = 指代名称读取状态::资源失败; return 结果;
             }
@@ -489,7 +515,7 @@ auto 按实时名称材料执行(操作&& 执行) {
     std::vector<基础字段关系> 索引字段;
     if (!定向) 选择名称 = 根成员;
     else if (目标词条) {
-        const auto 读取 = 全局基础数据集.查询节点组完整结构({*目标词条});
+        const auto 读取 = 数据.查询节点组完整结构({*目标词条});
         if (读取.状态 == 基础结构操作状态::资源失败) {
             结果.状态 = 指代名称读取状态::资源失败; return 结果;
         }
@@ -499,7 +525,7 @@ auto 按实时名称材料执行(操作&& 执行) {
             结果.状态 = 指代名称读取状态::依赖已变化; return 结果;
         }
         词条首读 = *读取.节点组.front().快照;
-        const auto 反查 = 全局基础数据集.查询字段引用节点结构(*目标词条, 目标词条字段);
+        const auto 反查 = 数据.查询字段引用节点结构(*目标词条, 目标词条字段);
         if (反查.状态 == 基础结构操作状态::资源失败) {
             结果.状态 = 指代名称读取状态::资源失败; return 结果;
         }
@@ -514,17 +540,25 @@ auto 按实时名称材料执行(操作&& 执行) {
                 || !根成员.contains(字段.所属节点)
                 || !选择名称.insert(字段.所属节点).second) return 结果;
         }
-        身份.insert(*目标词条);
+        if (恢复视图) {
+            auto 实际字段 = 词条首读->入向字段组 | std::views::filter([](const auto& 字段) {
+                return 字段.字段节点 == 目标词条字段;
+            });
+            if (!std::ranges::equal(实际字段, 索引字段)) return 结果;
+            身份.erase(概念名称关系根节点);
+        } else {
+            身份.insert(*目标词条);
+        }
     }
     else if (查询概念) {
-        const auto 读取 = 全局基础数据集.查询节点组完整结构({*查询概念});
+        const auto 读取 = 数据.查询节点组完整结构({*查询概念});
         if (读取.状态 == 基础结构操作状态::资源失败) {
             结果.状态 = 指代名称读取状态::资源失败; return 结果;
         }
         if (读取.状态 != 基础结构操作状态::已完成 || 读取.节点组.size() != 1) return 结果;
         if (读取.节点组.front().快照) {
             概念首读 = *读取.节点组.front().快照;
-            const auto 反查 = 全局基础数据集.查询字段引用节点结构(*查询概念, 被命名概念字段);
+            const auto 反查 = 数据.查询字段引用节点结构(*查询概念, 被命名概念字段);
             if (反查.状态 == 基础结构操作状态::资源失败) {
                 结果.状态 = 指代名称读取状态::资源失败; return 结果;
             }
@@ -545,7 +579,7 @@ auto 按实时名称材料执行(操作&& 执行) {
     }
     身份.insert(选择名称.begin(), 选择名称.end());
     const std::vector<稳定编码> 查询身份(身份.begin(), 身份.end());
-    const auto 联合 = 全局基础数据集.查询节点组完整结构(查询身份);
+    const auto 联合 = 数据.查询节点组完整结构(查询身份);
     if (联合.状态 == 基础结构操作状态::资源失败) {
         结果.状态 = 指代名称读取状态::资源失败; return 结果;
     }
@@ -604,6 +638,10 @@ auto 按实时名称材料执行(操作&& 执行) {
             结果.状态 = 指代名称读取状态::读取漂移; return 结果;
         }
         if (快照.结构.字段组.size() == 6) {
+            if (恢复视图) {
+                结果.命中未恢复的指代结构 = true;
+                return 结果;
+            }
             const auto 键状态 = 指代名称键状态();
             if (键状态 != 指代名称读取状态::已读取) {
                 结果.状态 = 键状态; return 结果;
@@ -1094,9 +1132,146 @@ void 核指代名称同概念组织(const 指代概念信息& 概念,
       特征概念服务_(特征概念服务),
       存在概念服务_(存在概念服务), 动态概念服务_(动态概念服务) {}
 
+概念_名称关系类::~概念_名称关系类() noexcept {
+    std::lock_guard 锁(概念名称关系互斥);
+    if (名称恢复所有者 != this) return;
+    for (auto* 键 : 名称结构键组) *键 = {};
+    概念名称关系根节点 = {};
+    名称恢复所有者 = nullptr;
+}
+
+基础持久状态 概念_名称关系类::恢复当前权威(const 基础持久视图& 视图) noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 核同 = [&](S 状态) {
+        return 会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态;
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return S::入口拒绝;
+        if (核同(S::已读取) != S::已读取) return S::前提已变化;
+        const auto 键 = 读取基础结构自键(视图, 名称结构标记组);
+        if (键.状态 == B::节点不存在) return 核同(S::材料不完整);
+        if (键.状态 == B::资源失败) return 核同(S::资源失败);
+        if (键.状态 != B::已完成 || 键.节点组.size() != 名称结构键组.size())
+            return 核同(S::结构冲突);
+
+        std::lock_guard 锁(概念名称关系互斥);
+        const auto 有已绑定键 = [](const auto& 组) {
+            return std::ranges::any_of(组, 有效);
+        };
+        if (名称恢复所有者 || 有效(概念名称关系根节点)
+            || std::ranges::any_of(名称结构键组, [](const auto* 项) { return 有效(*项); })
+            || 有已绑定键(指代名称键) || 有已绑定键(指代名称待核验键))
+            return 核同(S::入口拒绝);
+
+        const auto& 数据 = 视图.结构();
+        const auto 根类型 = 数据.查询目标字段(键.节点组[1], 键.节点组[0]);
+        if (根类型.empty()) return 核同(S::材料不完整);
+        if (根类型.size() != 1 || !有效(自然语言组织根节点))
+            return 核同(S::结构冲突);
+        const auto 根节点 = 根类型.front().所属节点;
+        std::vector<稳定编码> 查询组 = 键.节点组;
+        查询组.push_back(根节点);
+        查询组.push_back(自然语言组织根节点);
+        const std::set<稳定编码> 互异(查询组.begin(), 查询组.end());
+        if (互异.size() != 查询组.size()) return 核同(S::结构冲突);
+        const auto 联合 = 数据.查询节点组完整结构(查询组);
+        if (联合.状态 == B::资源失败) return 核同(S::资源失败);
+        if (联合.状态 != B::已完成 || 联合.节点组.size() != 查询组.size())
+            return 核同(S::结构冲突);
+        const 基础联合节点快照* 根 = nullptr;
+        const 基础联合节点快照* 组织 = nullptr;
+        for (const auto& 项 : 联合.节点组) {
+            if (!项.快照 || 项.快照->结构.节点.编码 != 项.查询节点)
+                return 核同(S::结构冲突);
+            if (项.查询节点 == 根节点) {
+                根 = &*项.快照;
+            } else if (项.查询节点 == 自然语言组织根节点) {
+                组织 = &*项.快照;
+            } else {
+                const auto 位置 = std::ranges::find(键.节点组, 项.查询节点);
+                if (位置 == 键.节点组.end()
+                    || !名称结构自键相符(项.快照->结构,
+                        名称结构标记组[位置 - 键.节点组.begin()]))
+                    return 核同(S::结构冲突);
+            }
+        }
+        if (!根 || !组织 || 根->结构.字段组.size() != 1
+            || 根->结构.字段组.front() != 根类型.front() || 根->入向外部关系组.size() != 1)
+            return 核同(S::结构冲突);
+        const auto& 父边 = 根->入向外部关系组.front();
+        if (父边.类型 != 基础外部关系类型::父子 || 父边.角色或顺序 != 0
+            || 父边.源节点 != 自然语言组织根节点 || 父边.目标节点 != 根节点
+            || std::ranges::count(组织->出向外部关系组, 父边) != 1)
+            return 核同(S::结构冲突);
+
+        if (核同(S::已读取) != S::已读取) return S::前提已变化;
+        for (std::size_t i = 0; i < 名称结构键组.size(); ++i) *名称结构键组[i] = 键.节点组[i];
+        概念名称关系根节点 = 根节点;
+        名称恢复所有者 = this;
+        return S::已读取;
+    } catch (const std::bad_alloc&) { return 核同(S::资源失败); }
+    catch (const std::length_error&) { return 核同(S::资源失败); }
+    catch (...) { return 核同(S::结构冲突); }
+}
+
+std::pair<基础持久状态, std::vector<持久普通名称候选>>
+概念_名称关系类::读取当前权威普通名称候选(
+    const 基础持久视图& 视图, 稳定编码 词条) const noexcept {
+    using S = 基础持久状态;
+    std::shared_ptr<基础持久运行包> 会话;
+    const auto 失败 = [&](S 状态) -> std::pair<S, std::vector<持久普通名称候选>> {
+        return {会话 && 会话->读取().get() != &视图 ? S::前提已变化 : 状态, {}};
+    };
+    try {
+        会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话 || !有效(词条)) return 失败(S::入口拒绝);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        名称原始全集 原始;
+        {
+            std::lock_guard 锁(概念名称关系互斥);
+            if (名称恢复所有者 != this) return 失败(S::入口拒绝);
+            原始 = 读取名称原始全集(std::nullopt, std::nullopt, 词条, true, &视图);
+        }
+        if (原始.命中未恢复的指代结构) return 失败(S::格式不支持);
+        if (原始.状态 == 指代名称读取状态::资源失败) return 失败(S::资源失败);
+        if (原始.状态 != 指代名称读取状态::已读取) return 失败(S::结构冲突);
+
+        std::vector<std::pair<稳定编码, 稳定编码>> 端点组;
+        端点组.reserve(原始.项组.size());
+        std::set<稳定编码> 概念组;
+        for (const auto& 项 : 原始.项组) {
+            if (!概念组.insert(项.概念).second) return 失败(S::结构冲突);
+            端点组.emplace_back(项.概念, 项.快照.结构.节点.编码);
+        }
+        std::vector<持久普通名称候选> 候选;
+        if (!端点组.empty()) {
+            const auto [状态, 种类组] = 存在概念服务_.核验当前权威普通名称端点(视图, 端点组);
+            if (状态 != S::已读取) return 失败(状态);
+            if (种类组.size() != 端点组.size()) return 失败(S::结构冲突);
+            候选.reserve(端点组.size());
+            for (std::size_t i = 0; i < 端点组.size(); ++i) {
+                const auto& [概念, 名称] = 端点组[i];
+                候选.push_back({{名称, 概念, 词条}, 种类组[i]});
+            }
+            std::ranges::sort(候选, std::less<稳定编码>{},
+                [](const 持久普通名称候选& 项) { return 项.关系.节点; });
+        }
+        std::lock_guard 锁(概念名称关系互斥);
+        if (名称恢复所有者 != this) return 失败(S::入口拒绝);
+        if (会话->读取().get() != &视图) return 失败(S::前提已变化);
+        return {S::已读取, std::move(候选)};
+    } catch (const std::bad_alloc&) { return 失败(S::资源失败); }
+    catch (const std::length_error&) { return 失败(S::资源失败); }
+    catch (...) { return 失败(S::结构冲突); }
+}
+
 指代名称读取状态 概念_名称关系类::初始化指代名称结构() {
     using 状态 = 指代名称读取状态;
     std::lock_guard 锁(概念名称关系互斥);
+    if (基础持久运行包::读取已绑定会话(全局基础数据集)) return 状态::依赖缺失;
     if (!结构句柄完整()) return 状态::依赖缺失;
     if (!结构仍存在()) return 状态::结构不一致;
     const auto 根 = 全局基础数据集.查询节点组完整结构(
@@ -1116,9 +1291,15 @@ void 核指代名称同概念组织(const 指代概念信息& 概念,
                     != 基础外部关系类型::父子
                 || 项.快照->入向外部关系组.front().角色或顺序 != 0)
                 return 状态::结构不一致;
-        } else if (项.查询节点 != 自然语言组织根节点
-            && !项.快照->结构.字段组.empty())
-            return 状态::结构不一致;
+        } else if (项.查询节点 != 自然语言组织根节点) {
+            const auto 位置 = std::ranges::find_if(名称结构键组, [&](const auto* 键) {
+                return *键 == 项.查询节点;
+            });
+            if (位置 == 名称结构键组.end()
+                || !名称结构自键相符(项.快照->结构,
+                    名称结构标记组[位置 - 名称结构键组.begin()]))
+                return 状态::结构不一致;
+        }
     }
     const auto 键状态 = 指代名称键状态();
     if (键状态 == 状态::已读取 || 键状态 == 状态::资源失败)
@@ -1157,6 +1338,10 @@ void 核指代名称同概念组织(const 指代概念信息& 概念,
 
 bool 概念_名称关系类::初始化() noexcept {
     try {
+        if (基础持久运行包::读取已绑定会话(全局基础数据集)) {
+            std::lock_guard 锁(概念名称关系互斥);
+            return 名称恢复所有者 == this;
+        }
         if (!词服务_.初始化()) return false;
         {
         std::lock_guard 锁(概念名称关系互斥);
@@ -1194,6 +1379,11 @@ bool 概念_名称关系类::初始化() noexcept {
             return false;
         }
         if (!结构仍存在()) return false;
+        std::array<基础自键定义, 名称结构键组.size()> 定义组;
+        for (std::size_t i = 0; i < 定义组.size(); ++i)
+            定义组[i] = {名称结构标记组[i], *名称结构键组[i]};
+        if (发表基础结构自键(全局基础数据集, 定义组) != 基础结构操作状态::已完成)
+            return false;
         }
         return 准备名称核验全集(
             词服务_, 特征概念服务_, 存在概念服务_, 动态概念服务_).状态

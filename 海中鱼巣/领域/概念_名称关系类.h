@@ -4,6 +4,7 @@
 #include <exception>
 #include <functional>
 #include <optional>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -204,6 +205,11 @@ struct 指代名称变更结果 final {
 
 // 一条关系只绑定一个概念和一个词条；同一对端点全局唯一。
 // 接纳特征、存在、正式结构和非根动态概念；普通节点不作为概念。
+struct 持久普通名称候选 final {
+    概念名称关系信息 关系;
+    std::optional<存在概念种类> 存在种类;
+};
+
 class 概念_名称关系类 final {
 public:
     概念_名称关系类(
@@ -211,8 +217,12 @@ public:
         概念_特征类& 特征概念服务,
         概念_存在类& 存在概念服务,
         概念_动态类& 动态概念服务) noexcept;
+    ~概念_名称关系类() noexcept;
 
     bool 初始化() noexcept;
+    基础持久状态 恢复当前权威(const 基础持久视图&) noexcept;
+    std::pair<基础持久状态, std::vector<持久普通名称候选>>
+        读取当前权威普通名称候选(const 基础持久视图&, 稳定编码 词条) const noexcept;
 
     指代名称读取状态 初始化指代名称结构();
     指代名称变更结果 建立或取得指代名称关系(const 指代名称建立请求& 请求);

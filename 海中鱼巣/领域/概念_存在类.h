@@ -620,6 +620,10 @@ public:
 
 private:
     friend class 概念_名称关系类;
+    // 向上送出：启动端按持久状态诊断，失败不携带端点种类。
+    std::pair<基础持久状态, std::vector<std::optional<存在概念种类>>>
+    核验当前权威普通名称端点(const 基础持久视图&,
+        std::span<const std::pair<稳定编码, 稳定编码>> 端点组) const noexcept;
     基础片段封存结果 封存建立名称参与(
         const 基础节点组追加请求&, std::size_t 名称槽, 稳定编码 概念) const;
     基础片段封存结果 封存删除名称参与(稳定编码 概念, 稳定编码 名称) const;
