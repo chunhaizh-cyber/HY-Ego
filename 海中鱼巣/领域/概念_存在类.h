@@ -20,6 +20,8 @@ namespace 海中鱼巣 {
 
 class 概念_名称关系类;
 class 新_词类;
+class 基础持久视图;
+enum class 基础持久状态;
 
 enum class 正式结构操作状态 : std::uint8_t {
     已建立=1, 已复用, 已读取, 未找到, 输入拒绝, 依赖未就绪, 前提已变化, 定义冲突
@@ -534,6 +536,8 @@ public:
         const 基础联合节点快照& 已读存在快照) const noexcept;
     存在概念上位保护结果 读取存在概念上位保护(稳定编码) const noexcept;
     explicit 概念_存在类(概念_特征类& 特征概念服务) noexcept;
+    ~概念_存在类() noexcept override;
+    基础持久状态 恢复当前权威(const 基础持久视图&) noexcept;
 
     bool 初始化() noexcept;
 
