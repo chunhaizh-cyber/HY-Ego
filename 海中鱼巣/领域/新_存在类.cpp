@@ -61,6 +61,14 @@ bool 存在结构已发表 = false;
 constexpr std::array<std::string_view, 2> 自我单例角色自键{
     "HY-Ego/7150/项目自我单例角色/v1", "HY-Ego/7150/单例角色目标字段/v1"};
 std::array<稳定编码, 2> 自我单例角色结构{};
+const 新_存在类* 存在恢复所有者 = nullptr;
+
+void 清除存在恢复绑定() noexcept {
+    for (const auto& 项 : 存在结构自键组) *项.节点 = {};
+    自我单例角色结构 = {};
+    存在结构已发表 = false;
+    存在恢复所有者 = nullptr;
+}
 
 constexpr std::int64_t 存在组成子存在关系角色 = 2;
 
@@ -239,9 +247,102 @@ bool 匹配定义需要外部依据(const 新特征匹配定义快照& 定义) n
       存在概念服务_(存在概念服务),
       状态服务_(状态服务) {}
 
+新_存在类::~新_存在类() noexcept {
+    std::lock_guard 锁(新存在互斥);
+    if (存在恢复所有者 == this) 清除存在恢复绑定();
+}
+
+基础持久状态 新_存在类::恢复当前权威(const 基础持久视图& 视图, 稳定编码 自我,
+    std::vector<稳定编码>& 顶层特征) noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    using C = 特征概念规则状态;
+    顶层特征.clear();
+    const auto 映射 = [](B 状态) {
+        if (状态 == B::资源失败) return S::资源失败;
+        if (状态 == B::节点不存在) return S::材料不完整;
+        return S::结构冲突;
+    };
+    try {
+        const auto 会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return S::入口拒绝;
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        const auto 结构 = 读取恢复服务存在结构(视图);
+        const auto 角色 = 读取基础结构自键(视图, 自我单例角色自键);
+        const auto [单例状态, E] = 读取恢复自我单例角色(视图);
+        std::lock_guard 锁(新存在互斥);
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        for (const auto 状态 : {结构.状态, 角色.状态, 单例状态})
+            if (状态 != B::已完成) return 映射(状态);
+        if (结构.节点组.size() != 存在结构自键组.size()
+            || 角色.节点组.size() != 自我单例角色结构.size() || E != 自我) return S::结构冲突;
+
+        const bool 首次 = !存在恢复所有者;
+        if (首次 ? 存在结构已发表 : 存在恢复所有者 != this || !存在结构已发表)
+            return S::结构冲突;
+        for (std::size_t i = 0; i < 结构.节点组.size(); ++i)
+            if (*存在结构自键组[i].节点 != (首次 ? 稳定编码{} : 结构.节点组[i])) return S::结构冲突;
+        for (std::size_t i = 0; i < 自我单例角色结构.size(); ++i)
+            if (自我单例角色结构[i] != (首次 ? 稳定编码{} : 角色.节点组[i])) return S::结构冲突;
+        const auto 清理字段 = 查找恢复存在结构键(结构, &存在清理中字段);
+        const auto 清理标记 = 查找恢复存在结构键(结构, &存在清理中标记节点);
+        if (!全局基础数据集.查询目标字段(清理标记, 清理字段).empty())
+            return 会话->读取().get() != &视图 ? S::前提已变化 : S::结构冲突;
+        if (首次) {
+            for (std::size_t i = 0; i < 结构.节点组.size(); ++i)
+                *存在结构自键组[i].节点 = 结构.节点组[i];
+            std::ranges::copy(角色.节点组, 自我单例角色结构.begin());
+            存在结构已发表 = true;
+        }
+
+        std::vector<稳定编码> 候选;
+        const auto 复核 = [&]() noexcept {
+            try {
+                const auto [锚点, 字段] = 自我单例角色结构;
+                const auto 登记 = 全局基础数据集.查询字段(锚点, 字段);
+                if (登记.size() != 1 || 登记.front().内容 != 基础字段内容{E}) return S::结构冲突;
+                const auto 身份 = 读取存在身份保护可抛内部(E);
+                if (身份.状态 != B::已完成) return 映射(身份.状态);
+                if (!身份.信息 || 身份.信息->存在节点 != E || 身份.预期节点组.size() != 1)
+                    return S::结构冲突;
+                for (const auto& 项 : 身份.预期节点组.front().结构.字段组) {
+                    if (项.字段节点 != 实例特征字段) continue;
+                    const auto* F = std::get_if<稳定编码>(&项.内容);
+                    if (!F || !有效(*F) || *F == E) return S::结构冲突;
+                    候选.push_back(*F);
+                }
+                std::sort(候选.begin(), 候选.end());
+                if (候选.empty() || std::adjacent_find(候选.begin(), 候选.end()) != 候选.end())
+                    return S::结构冲突;
+                const auto 成员 = 读取存在集合成员身份(E);
+                if (成员.状态 == C::资源失败) return S::资源失败;
+                if (成员.状态 == C::前提已变化) return S::前提已变化;
+                if (成员.状态 != C::已完成 || 成员.存在节点 != E || 成员.引用存在根
+                    || 成员.当前概念引用 != 身份.信息->专属存在概念节点) return S::结构冲突;
+                return S::已读取;
+            } catch (const std::bad_alloc&) { return S::资源失败; }
+            catch (const std::length_error&) { return S::资源失败; }
+            catch (...) { return S::结构冲突; }
+        };
+        const auto 结果 = 复核();
+        const bool 视图变化 = 会话->读取().get() != &视图;
+        if (视图变化 || 结果 != S::已读取) {
+            if (首次) 清除存在恢复绑定();
+            return 视图变化 ? S::前提已变化 : 结果;
+        }
+        存在恢复所有者 = this;
+        顶层特征.swap(候选);
+        return S::已读取;
+    } catch (const std::bad_alloc&) { return S::资源失败; }
+    catch (const std::length_error&) { return S::资源失败; }
+    catch (...) { return S::结构冲突; }
+}
+
 bool 新_存在类::初始化() noexcept {
     try {
         std::lock_guard 锁(新存在互斥);
+        if (基础持久运行包::读取已绑定会话(全局基础数据集))
+            return 存在恢复所有者 == this && 结构仍存在();
         if (!特征服务_.初始化() || !存在概念服务_.初始化()
             || !状态服务_.初始化()) return false;
         auto 建立 = [](稳定编码& 节点) {

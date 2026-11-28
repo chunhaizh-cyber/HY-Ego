@@ -193,6 +193,9 @@ public:
         新_特征类& 特征服务,
         概念_存在类& 存在概念服务,
         新_状态类& 状态服务) noexcept;
+    ~新_存在类() noexcept override;
+    基础持久状态 恢复当前权威(const 基础持久视图&, 稳定编码 自我,
+        std::vector<稳定编码>& 顶层特征) noexcept;
 
     bool 初始化() noexcept;
 

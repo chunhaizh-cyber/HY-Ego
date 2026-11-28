@@ -16,6 +16,8 @@
 namespace 海中鱼巣 {
 
 class 概念_存在类;
+class 基础持久视图;
+enum class 基础持久状态;
 
 using 新特征准确值 = 特征概念准确值;
 
@@ -597,6 +599,9 @@ public:
     新_特征类(
         新_特征值类& 特征值服务,
         概念_特征类& 特征概念服务) noexcept;
+    ~新_特征类() noexcept;
+    基础持久状态 恢复当前权威(const 基础持久视图&, 稳定编码 自我,
+        std::span<const 稳定编码> 顶层特征) noexcept;
 
     void 装配存在引用读取接口(
         const 特征存在引用读取接口& 读取接口) noexcept;

@@ -229,6 +229,13 @@ constexpr std::array<特征结构自键位置, 46> 特征结构自键组{{
     {"HY-Ego/1130/方向句范围字段/v1", &方向句范围字段},
 }};
 bool 特征结构已发表 = false;
+const 新_特征类* 特征恢复所有者 = nullptr;
+
+void 清除特征恢复绑定() noexcept {
+    for (const auto& 项 : 特征结构自键组) *项.节点 = {};
+    特征结构已发表 = false;
+    特征恢复所有者 = nullptr;
+}
 
 基础结构操作状态 发表特征结构自键() {
     std::array<基础自键定义, 特征结构自键组.size()> 定义{};
@@ -3182,6 +3189,89 @@ bool 新特征I64更新准备::核心有变化() const noexcept {
     概念_特征类& 特征概念服务) noexcept
     : 特征值服务_(特征值服务), 特征概念服务_(特征概念服务) {}
 
+新_特征类::~新_特征类() noexcept {
+    std::lock_guard 锁(新特征互斥);
+    if (特征恢复所有者 == this) 清除特征恢复绑定();
+}
+
+基础持久状态 新_特征类::恢复当前权威(const 基础持久视图& 视图, 稳定编码 自我,
+    std::span<const 稳定编码> 顶层特征) noexcept {
+    using S = 基础持久状态;
+    using B = 基础结构操作状态;
+    const auto 映射 = [](B 状态) {
+        if (状态 == B::资源失败) return S::资源失败;
+        if (状态 == B::节点不存在) return S::材料不完整;
+        return S::结构冲突;
+    };
+    try {
+        const auto 会话 = 基础持久运行包::读取已绑定会话(全局基础数据集);
+        if (!会话) return S::入口拒绝;
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        const auto 结构 = 读取恢复服务特征结构(视图);
+        const auto 存在键 = 读取恢复服务存在结构(视图);
+        std::lock_guard 锁(新特征互斥);
+        if (会话->读取().get() != &视图) return S::前提已变化;
+        if (结构.状态 != B::已完成) return 映射(结构.状态);
+        if (存在键.状态 != B::已完成) return 映射(存在键.状态);
+        if (结构.节点组.size() != 特征结构自键组.size() || 顶层特征.empty())
+            return S::结构冲突;
+
+        const bool 首次 = !特征恢复所有者;
+        if (首次 ? 特征结构已发表 : 特征恢复所有者 != this || !特征结构已发表)
+            return S::结构冲突;
+        for (std::size_t i = 0; i < 结构.节点组.size(); ++i)
+            if (*特征结构自键组[i].节点 != (首次 ? 稳定编码{} : 结构.节点组[i])) return S::结构冲突;
+        if (首次) {
+            for (std::size_t i = 0; i < 结构.节点组.size(); ++i)
+                *特征结构自键组[i].节点 = 结构.节点组[i];
+            特征结构已发表 = true;
+        }
+
+        const auto 复核 = [&]() noexcept {
+            try {
+                const std::vector<稳定编码> 特征组(顶层特征.begin(), 顶层特征.end());
+                const auto 批 = 全局基础数据集.查询节点组完整结构(特征组);
+                if (批.状态 != B::已完成) return 映射(批.状态);
+                if (批.节点组.size() != 特征组.size()) return S::结构冲突;
+                for (std::size_t i = 0; i < 特征组.size(); ++i) {
+                    const auto F = 特征组[i];
+                    const auto& 项 = 批.节点组[i];
+                    if (项.查询节点 != F || !项.快照 || 项.快照->结构.节点.编码 != F)
+                        return S::结构冲突;
+                    if (std::ranges::any_of(项.快照->入向外部关系组, [](const auto& 关系) {
+                            return 关系.类型 == 基础外部关系类型::父子;
+                        })) return S::结构冲突;
+                    std::optional<稳定编码> 类型, 概念;
+                    for (const auto& 字段 : 项.快照->结构.字段组) {
+                        if (字段.字段节点 != 节点类型字段 && 字段.字段节点 != 特征概念字段) continue;
+                        auto& 位置 = 字段.字段节点 == 节点类型字段 ? 类型 : 概念;
+                        const auto* 节点 = std::get_if<稳定编码>(&字段.内容);
+                        if (位置 || !节点 || !有效(*节点)) return S::结构冲突;
+                        位置 = *节点;
+                    }
+                    if (类型 != 特征节点类型 || !概念 || !全局基础数据集.查询节点(*概念))
+                        return S::结构冲突;
+                    const auto 持有 = 核验恢复自我服务特征持有(视图, 存在键, 自我, F);
+                    if (持有 != B::已完成) return 映射(持有);
+                }
+                return S::已读取;
+            } catch (const std::bad_alloc&) { return S::资源失败; }
+            catch (const std::length_error&) { return S::资源失败; }
+            catch (...) { return S::结构冲突; }
+        };
+        const auto 结果 = 复核();
+        const bool 视图变化 = 会话->读取().get() != &视图;
+        if (视图变化 || 结果 != S::已读取) {
+            if (首次) 清除特征恢复绑定();
+            return 视图变化 ? S::前提已变化 : 结果;
+        }
+        特征恢复所有者 = this;
+        return S::已读取;
+    } catch (const std::bad_alloc&) { return S::资源失败; }
+    catch (const std::length_error&) { return S::资源失败; }
+    catch (...) { return S::结构冲突; }
+}
+
 void 新_特征类::装配存在引用读取接口(
     const 特征存在引用读取接口& 读取接口) noexcept {
     std::lock_guard 锁(新特征互斥);
@@ -3191,6 +3281,8 @@ void 新_特征类::装配存在引用读取接口(
 bool 新_特征类::初始化() noexcept {
     try {
         std::lock_guard 锁(新特征互斥);
+        if (基础持久运行包::读取已绑定会话(全局基础数据集))
+            return 特征恢复所有者 == this && 结构仍存在();
         if (!特征值服务_.初始化()
             || !特征概念服务_.初始化(特征值服务_)) return false;
         if (结构已初始化())
