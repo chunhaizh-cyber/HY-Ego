@@ -385,6 +385,8 @@ struct 新引用内容目标判定 final {
             &&a.必要项目组==b.必要项目组&&a.分支组==b.分支组;
     }
 };
+struct 服务对象需求发生保护结果;
+
 class 新引用内容目标读取接口 {
 public:
     virtual ~新引用内容目标读取接口()=default;
@@ -392,6 +394,8 @@ public:
     virtual 新引用内容目标判定 求值引用内容目标(const 新需求完整目标&) const noexcept=0;
     // 内容符合不证明主体的需求特征已经引用该节点。
     virtual 新引用内容目标判定 求值指定需求内容(const 新需求完整目标&) const noexcept=0;
+    virtual 服务对象需求发生保护结果 读取当前需求发生保护(
+        稳定编码 场景, 稳定编码 主体, 稳定编码 需求特征, 稳定编码 需求) const noexcept = 0;
 };
 enum class 新需求信息完善阶段 : std::int64_t { 待完善=1, 已完善=2 };
 struct 新同窗需求主体来源 final {
@@ -652,6 +656,15 @@ struct 新需求发生关联 final {
     新需求发生核心定位 定位;
     稳定编码 动作来源节点, 状态节点;
     friend bool operator==(const 新需求发生关联&,const 新需求发生关联&)=default;
+};
+enum class 服务对象需求发生保护状态 : std::uint8_t {
+    已读取 = 1, 发生不匹配, 内容未具备, 依赖未就绪, 前提已变化, 资源失败
+};
+struct 服务对象需求发生保护结果 final {
+    服务对象需求发生保护状态 状态 = 服务对象需求发生保护状态::发生不匹配;
+    std::optional<新需求发生关联> 发生;
+    std::optional<新需求完整目标> 目标;
+    std::vector<基础联合节点快照> 完整保护;
 };
 enum class 新需求发生关联读取状态 : std::uint8_t { 已读取=1, 未找到 };
 struct 新需求发生关联读取结果 final {
@@ -1025,6 +1038,8 @@ public:
     新需求发生关联读取结果 读取主体需求发生关联按动作(稳定编码) const noexcept;
     新需求发生关联读取结果 读取主体需求发生关联按来源(稳定编码) const noexcept;
     新需求发生关联读取结果 读取主体需求发生关联按状态(稳定编码) const noexcept;
+    服务对象需求发生保护结果 读取当前需求发生保护(
+        稳定编码 场景, 稳定编码 主体, 稳定编码 需求特征, 稳定编码 需求) const noexcept;
     新需求操作状态 记录主体需求发生关联(const 新需求发生关联&) noexcept;
     bool 是需求迁移恢复状态(稳定编码) const noexcept;
     新需求特征发布关联结果 读取主体需求特征发布关联(稳定编码) const noexcept;
