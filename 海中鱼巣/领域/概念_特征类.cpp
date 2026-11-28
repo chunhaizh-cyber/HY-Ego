@@ -7627,7 +7627,7 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
         const auto 槽序号 = 键(&先天类型槽序号字段);
         const auto 槽根字段 = 键(&先天类型槽根字段);
         std::set<std::uint32_t> 已见序号;
-        稳定编码 批次FT;
+        稳定编码 批次FT, 权限FT;
         for (const auto& 引用 : 数据.查询字段(根, 槽字段)) {
             const auto* 槽 = std::get_if<稳定编码>(&引用.内容);
             if (!槽) return {S::内部不一致};
@@ -7654,52 +7654,61 @@ std::optional<新名称挂接概念解码结构> 概念_特征类::读取名称�
             if (!是固定先天槽(语义序号) || !已见序号.insert(语义序号).second)
                 return {S::内部不一致};
             if (语义序号 == 先天特征类型槽::词典来源批次) 批次FT = *FT;
+            if (语义序号 == 先天特征类型槽::服务权限) 权限FT = *FT;
         }
-        if (!有效(批次FT)) return {S::节点不存在};
+        if (!有效(批次FT) || !有效(权限FT)) return {S::节点不存在};
+        if (批次FT == 权限FT) return {S::内部不一致};
 
-        const auto 保护 = 数据.查询完整节点结构(批次FT);
-        if (保护.状态 == S::资源失败) return {S::资源失败};
-        if (保护.状态 != S::已完成 || !保护.结构) return {S::内部不一致};
-        const auto 父边 = 数据.查询目标关系(批次FT, 基础外部关系类型::父子);
-        if (父边.size() != 1 || 父边.front().源节点 != 根 || 父边.front().角色或顺序 != 0)
-            return {S::内部不一致};
+        const auto 核对槽定义 = [&](稳定编码 FT, 特征概念材料物理类型 物理类型) {
+            const auto 保护 = 数据.查询完整节点结构(FT);
+            if (保护.状态 == S::资源失败) return S::资源失败;
+            if (保护.状态 != S::已完成 || !保护.结构) return S::内部不一致;
+            const auto 父边 = 数据.查询目标关系(FT, 基础外部关系类型::父子);
+            if (父边.size() != 1 || 父边.front().源节点 != 根 || 父边.front().角色或顺序 != 0)
+                return S::内部不一致;
 
-        const auto 整数 = [](auto 值) -> 基础字段内容 {
-            return 基础值{static_cast<std::int64_t>(值)};
+            const auto 整数 = [](auto 值) -> 基础字段内容 {
+                return 基础值{static_cast<std::int64_t>(值)};
+            };
+            const std::array<std::pair<稳定编码, 基础字段内容>, 5> 预期{{
+                {类型字段, 键(&特征概念节点类型)},
+                {键(&材料类型字段), 整数(物理类型)},
+                {键(&比较规则字段), 整数(特征概念比较规则::完整材料精确)},
+                {键(&聚合规则字段), 整数(特征概念聚合规则::不自动聚合)},
+                {键(&全材料值域字段), 整数(1)}
+            }};
+            const auto 计数字段 = 键(&当前引用实例数字段);
+            const auto 名称字段 = 键(&名称关系字段);
+            std::array<bool, 预期.size()> 已见{};
+            bool 已见计数 = false;
+            for (const auto& 字段 : 保护.结构->字段组) {
+                if (字段.字段节点 == 计数字段) {
+                    const auto* 值 = std::get_if<基础值>(&字段.内容);
+                    const auto* 数 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
+                    if (已见计数 || !数 || *数 < 0) return S::内部不一致;
+                    已见计数 = true;
+                    continue;
+                }
+                if (字段.字段节点 == 名称字段) {
+                    if (!std::holds_alternative<稳定编码>(字段.内容)) return S::内部不一致;
+                    continue;
+                }
+                const auto 项 = std::ranges::find(预期, 字段.字段节点,
+                    &std::pair<稳定编码, 基础字段内容>::first);
+                if (项 == 预期.end() || 项->second != 字段.内容) return S::内部不一致;
+                const auto i = static_cast<std::size_t>(项 - 预期.begin());
+                if (已见[i]) return S::内部不一致;
+                已见[i] = true;
+            }
+            if (!已见计数 || !std::ranges::all_of(已见, [](bool 值) { return 值; }))
+                return S::内部不一致;
+            return S::已完成;
         };
-        const std::array<std::pair<稳定编码, 基础字段内容>, 5> 预期{{
-            {类型字段, 键(&特征概念节点类型)},
-            {键(&材料类型字段), 整数(特征概念材料物理类型::UTF8字符串)},
-            {键(&比较规则字段), 整数(特征概念比较规则::完整材料精确)},
-            {键(&聚合规则字段), 整数(特征概念聚合规则::不自动聚合)},
-            {键(&全材料值域字段), 整数(1)}
-        }};
-        const auto 计数字段 = 键(&当前引用实例数字段);
-        const auto 名称字段 = 键(&名称关系字段);
-        std::array<bool, 预期.size()> 已见{};
-        bool 已见计数 = false;
-        for (const auto& 字段 : 保护.结构->字段组) {
-            if (字段.字段节点 == 计数字段) {
-                const auto* 值 = std::get_if<基础值>(&字段.内容);
-                const auto* 数 = 值 ? std::get_if<std::int64_t>(&值->材料) : nullptr;
-                if (已见计数 || !数 || *数 < 0) return {S::内部不一致};
-                已见计数 = true;
-                continue;
-            }
-            if (字段.字段节点 == 名称字段) {
-                if (!std::holds_alternative<稳定编码>(字段.内容)) return {S::内部不一致};
-                continue;
-            }
-            const auto 项 = std::ranges::find(预期, 字段.字段节点,
-                &std::pair<稳定编码, 基础字段内容>::first);
-            if (项 == 预期.end() || 项->second != 字段.内容) return {S::内部不一致};
-            const auto i = static_cast<std::size_t>(项 - 预期.begin());
-            if (已见[i]) return {S::内部不一致};
-            已见[i] = true;
-        }
-        if (!已见计数 || !std::ranges::all_of(已见, [](bool 值) { return 值; }))
-            return {S::内部不一致};
-        return {S::已完成, 根, 批次FT, 键组.节点组.size()};
+        const auto 批次状态 = 核对槽定义(批次FT, 特征概念材料物理类型::UTF8字符串);
+        if (批次状态 != S::已完成) return {批次状态};
+        const auto 权限状态 = 核对槽定义(权限FT, 特征概念材料物理类型::U64数组);
+        if (权限状态 != S::已完成) return {权限状态};
+        return {S::已完成, 根, 批次FT, 键组.节点组.size(), 权限FT};
     } catch (const std::bad_alloc&) {
         return {S::资源失败};
     } catch (const std::length_error&) {
