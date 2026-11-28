@@ -245,6 +245,9 @@
     <ClCompile Include="海中鱼巣\装配.普通应用.cpp" />
     <ClInclude Include="海中鱼巣\装配.网页外设.h" />
     <ClCompile Include="海中鱼巣\装配.网页外设.cpp" />
+    <ClCompile Include="海中鱼巣\核心\基础数据集.持久存储.cpp" />
+    <ClCompile Include="海中鱼巣\核心\基础数据集.快照格式.cpp" />
+    <ClCompile Include="海中鱼巣\业务\自检.当前快照存储.cpp" />
     <ClCompile Include="海中鱼巣\核心\基础数据集.cpp" />
     <ClCompile Include="海中鱼巣\领域\新_自然语言世界树类.cpp" />
     <ClCompile Include="海中鱼巣\领域\世界挂接.全局根.cpp" />
@@ -330,6 +333,9 @@
     <ClInclude Include="海中鱼巣\适配\适配器.单调时钟.h" />
     <ClInclude Include="海中鱼巣\适配\适配器.UTC时钟.h" />
     <ClInclude Include="海中鱼巣\程序运行结果.数据.h" />
+    <ClInclude Include="海中鱼巣\核心\基础数据集.持久存储.h" />
+    <ClInclude Include="海中鱼巣\核心\基础数据集.快照格式.h" />
+    <ClInclude Include="海中鱼巣\业务\自检.当前快照存储.h" />
     <ClInclude Include="海中鱼巣\核心\基础数据集.h" />
     <ClInclude Include="海中鱼巣\领域\新_自然语言世界树类.h" />
     <ClInclude Include="海中鱼巣\领域\世界挂接.全局根.h" />

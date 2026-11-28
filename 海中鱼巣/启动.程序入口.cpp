@@ -54,6 +54,16 @@ namespace 海中鱼巣 {
                 网页服务对象参数索引 = 当前参数索引;
                 continue;
             }
+            if (参数 == "--verify-current-snapshot-storage") {
+                if (参数数量 != 5 || 参数索引 != 1)
+                    return {启动选项解析状态::模式组合冲突, {}, 当前参数索引};
+                for (std::size_t i = 0; i < 3; ++i) {
+                    if (!参数组[i + 2] || !*参数组[i + 2])
+                        return {启动选项解析状态::未知参数, {}, i + 2};
+                    选项.验证当前快照存储参数[i] = 参数组[i + 2];
+                }
+                return {启动选项解析状态::已接受, std::move(选项), 0};
+            }
             if (参数 == "--verify-service-permission-registration") {
                 if (选项.验证服务权限登记 || 选项.验证关系概念出站)
                     return {启动选项解析状态::重复模式参数, {}, 当前参数索引};

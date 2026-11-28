@@ -1,6 +1,7 @@
 // 文件规则：只承载启动选项值类型，不保存原始参数指针或人读诊断文本。
 #pragma once
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -37,6 +38,7 @@ struct 启动选项 {
     bool 验证关系概念出站 = false;
     bool 验证同窗需求主体 = false;
     bool 验证限定I64需求目标 = false;
+    std::array<std::string, 3> 验证当前快照存储参数{};
 };
 
 struct 启动选项解析结果 {

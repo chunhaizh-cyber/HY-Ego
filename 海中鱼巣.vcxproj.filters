@@ -313,9 +313,15 @@
     <ClInclude Include="海中鱼巣\线程\事件日志线程.数据.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="海中鱼巣\核心\基础数据集.持久存储.h"><Filter>头文件</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\核心\基础数据集.快照格式.h"><Filter>头文件</Filter></ClInclude>
+    <ClInclude Include="海中鱼巣\业务\自检.当前快照存储.h"><Filter>头文件</Filter></ClInclude>
     <ClInclude Include="海中鱼巣\核心\基础数据集.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClCompile Include="海中鱼巣\核心\基础数据集.持久存储.cpp"><Filter>源文件</Filter></ClCompile>
+    <ClCompile Include="海中鱼巣\核心\基础数据集.快照格式.cpp"><Filter>源文件</Filter></ClCompile>
+    <ClCompile Include="海中鱼巣\业务\自检.当前快照存储.cpp"><Filter>源文件</Filter></ClCompile>
     <ClCompile Include="海中鱼巣\核心\基础数据集.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
