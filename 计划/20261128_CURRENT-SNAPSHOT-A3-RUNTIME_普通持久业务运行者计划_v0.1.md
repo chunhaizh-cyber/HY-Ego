@@ -19,3 +19,13 @@
 3. 后继在同一实施包优先改造业务释放锁交接，实际权限 V 的准备须零写，正常提交持久通知后才发送。逐段使用实际确认者和真实来源，能从普通入口经第 6 组原问和正式答、独立反读、重启同源重投及自然退出才计通过。第 1 步绝不开放普通写门。需要大范围恢复装配或事务提供者而本切片未完成时，保留真实代码和阶段证据，明确尚未实施或验收的 owner。
 
 允许 `核心/基础数据集.{h,cpp}`、`核心/基础数据集.持久运行包.{h,cpp}`、原普通启动入口与状态、`业务/新_世界树类.{h,cpp}`、证明本包同权威的既有自检实现及正式验证记录。后继如代码落点超出现有文件须先收口设计并更新登记，不能用总目标授权跳过门。Release x64 单组编译；只用仓库外既有受控快照并以普通实际入口观察准入。
+
+## v0.2 外设持久事务切片
+
+Starting `94992dab2`. Same existing ordinary context only, no new mode/endpoint. 4015 §15 / 4070 §5 / 6120 §11.1 / 7241. No permission or new semantics.
+
+Persist formal peripheral message/confirmation schema and message index root in their owner, use exact self-key recover, do not invent historical windows. Initially preserve closed warm host until scene/value/FT owners can be reattached; retained read verification uses original snapshot and does not allocate replacements. Cold host lives only after actual first snapshot matches stopped assembly completely, and relinquishes staging data under the same empty/transfer admission before supplying ordinary input. The same ordinary host may expose only the external window, explicit source confirmation and real receive once their transaction is complete. Service actions, send, complete ordinary startup and governance remain closed until covered. No test route.
+
+Each external operation executes existing owner logic on a privately cloned current view, only on its calling thread, before external notification or receipt. Only the registered data entry routes to that private candidate during the scope. All other callers see published immutable state. Validate source, no-change, full ordinary owner readback before commit; drop candidate on rejection, retain current. Submit lock-free of owner locks through existing durable session, no receipt/notification before publication, stop on unknown. Session sequential; do not run unconverted control panel/governance writers. Read owner indices are derived and must verify candidate against actual persisted material. No use this scope for unrelated owners.
+
+Scope core data set/runtime pack, external world .h/.cpp, ordinary startup/assembly and web adapter/host capability validation, plus exact project evidence. Run actual Release x64 with new isolated stored root. Prefer actual visible Chrome new window plus confirmed source and receive, then independent stored graph readback and restart. If partial, report exact operations and statuses; never label business or ordinary full success on a bootstrap check.
