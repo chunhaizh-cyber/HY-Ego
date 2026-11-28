@@ -422,6 +422,11 @@ private:
         const std::vector<基础联合节点快照>& 预期,
         const std::set<std::uint64_t>& 必需) const;
 
+    static thread_local 基础数据集* 候选入口_;
+    static thread_local 基础数据集* 候选数据_;
+    基础数据集* 取线程私有候选() const noexcept {
+        return 候选入口_ == this ? 候选数据_ : nullptr;
+    }
     mutable std::shared_mutex 互斥_;
     // 仅启动绑定。绑定后本实例没有本地事实、旧写入口关闭。
     std::shared_ptr<基础持久运行包> 持久会话_;

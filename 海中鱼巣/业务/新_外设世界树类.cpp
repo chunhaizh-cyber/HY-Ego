@@ -1,5 +1,6 @@
 #include "新_外设世界树类.h"
 #include "../核心/容错检查.h"
+#include "../核心/基础数据集.持久运行包.h"
 #include "../领域/世界挂接.全局根.h"
 #include "../领域/数据服务.外设词典记录类.h"
 
@@ -39,6 +40,60 @@ std::array<稳定编码, static_cast<std::size_t>(交互确认键::数量)> 交�
 稳定编码 确认字段(交互确认键 键) { return 交互确认字段[static_cast<std::size_t>(键)]; }
 const 新_特征值类* 消息值服务 = nullptr;
 std::mutex 外设互斥;
+thread_local std::vector<稳定编码>* 待提交外设接收通知 = nullptr;
+
+constexpr std::array<std::string_view, 24> 外设消息结构标记{
+    "HY-Ego/7241/peripheral-message-0/v1",
+    "HY-Ego/7241/peripheral-message-1/v1",
+    "HY-Ego/7241/peripheral-message-2/v1",
+    "HY-Ego/7241/peripheral-message-3/v1",
+    "HY-Ego/7241/peripheral-message-4/v1",
+    "HY-Ego/7241/peripheral-message-5/v1",
+    "HY-Ego/7241/peripheral-message-6/v1",
+    "HY-Ego/7241/peripheral-message-7/v1",
+    "HY-Ego/7241/peripheral-message-8/v1",
+    "HY-Ego/7241/peripheral-message-9/v1",
+    "HY-Ego/7241/peripheral-message-10/v1",
+    "HY-Ego/7241/peripheral-message-11/v1",
+    "HY-Ego/7241/peripheral-message-12/v1",
+    "HY-Ego/7241/peripheral-message-13/v1",
+    "HY-Ego/7241/peripheral-message-14/v1",
+    "HY-Ego/7241/peripheral-message-15/v1",
+    "HY-Ego/7241/peripheral-message-16/v1",
+    "HY-Ego/6120/peripheral-confirm-0/v1",
+    "HY-Ego/6120/peripheral-confirm-1/v1",
+    "HY-Ego/6120/peripheral-confirm-2/v1",
+    "HY-Ego/6120/peripheral-confirm-3/v1",
+    "HY-Ego/6120/peripheral-confirm-4/v1",
+    "HY-Ego/6120/peripheral-confirm-5/v1",
+    "HY-Ego/7241/peripheral-message-root/v1"
+};
+
+std::array<稳定编码*, 外设消息结构标记.size()> 外设消息结构位置() {
+    std::array<稳定编码*, 外设消息结构标记.size()> 位置{};
+    auto 输出 = 位置.begin();
+    for (auto& 键 : 消息字段) *输出++ = &键;
+    for (auto& 键 : 交互确认字段) *输出++ = &键;
+    *输出 = &消息根;
+    return 位置;
+}
+
+template<class 操作>
+auto 提交持久外设操作(基础持久运行包& 会话, 操作&& 执行) {
+    using P = 基础持久状态;
+    using S = 新外设事实状态;
+    using R = decltype(执行());
+    R 结果;
+    const auto 状态 = 会话.提交外设候选(全局基础数据集, [&] {
+        结果 = 执行();
+        return 结果.状态 == S::已完成 || 结果.状态 == S::无变化;
+    });
+    if (状态 == P::已提交 || 状态 == P::无变化 || 状态 == P::结构拒绝) return 结果;
+    if (状态 == P::发布结果未知)
+        工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"外设持久发表", L"当前提交结果未知，停止外设入口。");
+    if (状态 == P::资源失败) return R{S::资源失败};
+    return R{S::未就绪};
+}
 
 基础联合节点快照 读取消息快照(稳定编码 节点) {
     const auto 结果 = 全局基础数据集.查询节点组完整结构({节点});
@@ -274,6 +329,17 @@ bool 更新完成(新外设事实状态 状态) {
     : 世界_(世界), 服务_(世界.获取事实服务引用()),
       场景_(外设根, 服务_.存在服务, 服务_.状态服务, 服务_.动态服务) {}
 
+bool 新_外设世界树类::恢复外设消息结构(const 基础持久视图& 视图) {
+    const auto 读回 = 读取基础结构自键(视图, 外设消息结构标记);
+    if (读回.状态 != 基础结构操作状态::已完成) return false;
+    std::lock_guard 锁(外设互斥);
+    const auto 位置 = 外设消息结构位置();
+    for (std::size_t i = 0; i < 位置.size(); ++i)
+        if (有效(*位置[i]) && *位置[i] != 读回.节点组[i]) return false;
+    for (std::size_t i = 0; i < 位置.size(); ++i) *位置[i] = 读回.节点组[i];
+    return true;
+}
+
 新世界初始化结果 新_外设世界树类::初始化() noexcept {
     try {
         std::unique_lock 锁(外设互斥);
@@ -306,6 +372,11 @@ bool 更新完成(新外设事实状态 状态) {
         }
         if (!有效(消息根)) 消息根 = 全局基础数据集.新建节点();
         if (!有效(消息根)) throw std::runtime_error("peripheral message root allocation failed");
+        const auto 位置 = 外设消息结构位置();
+        std::array<基础自键定义, 外设消息结构标记.size()> 键组{};
+        for (std::size_t i = 0; i < 键组.size(); ++i) 键组[i] = {外设消息结构标记[i], *位置[i]};
+        if (发表基础结构自键(全局基础数据集, 键组) != 基础结构操作状态::已完成)
+            throw std::runtime_error("peripheral message structure publication failed");
         if (消息值服务 && 消息值服务 != &服务_.特征值服务)
             throw std::runtime_error("peripheral message value owner changed");
         消息值服务 = &服务_.特征值服务;
@@ -863,6 +934,9 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
     using K = 交互确认键;
     if (会话.empty() || 对话框.empty()) return {S::入口拒绝};
     try {
+        if (!基础持久运行包::在外设候选(全局基础数据集))
+            if (const auto 持久 = 基础持久运行包::读取已绑定会话(全局基础数据集))
+                return 提交持久外设操作(*持久, [&] { return 明确确认本次网页交互(会话, 对话框); });
         std::lock_guard 锁(外设互斥);
         if (!有效(外设根)) return {S::未初始化};
         const auto 定位 = 查找正式窗口(会话,对话框);
@@ -905,6 +979,9 @@ std::optional<新外设交互场景读取> 新_外设世界树类::按场景读�
     std::string_view 公开宿主会话, std::string_view 对话框标识) noexcept {
     if (公开宿主会话.empty() || 对话框标识.empty()) return {};
     try {
+        if (!基础持久运行包::在外设候选(全局基础数据集))
+            if (const auto 持久 = 基础持久运行包::读取已绑定会话(全局基础数据集))
+                return 提交持久外设操作(*持久, [&] { return 建立或取得对话框场景(公开宿主会话, 对话框标识); });
         std::lock_guard 锁(外设互斥);
         if (!有效(外设根)) return {新外设事实状态::未初始化, {}};
         const auto 命中 = 查找正式窗口(公开宿主会话, 对话框标识);
@@ -1269,6 +1346,22 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
     if (实际UTF8正文.empty() || (回应输出 && !有效(*回应输出))
         || (接纳会话绑定人 && !有效(*接纳会话绑定人))) return 新外设事实状态::入口拒绝;
     try {
+        if (!基础持久运行包::在外设候选(全局基础数据集)) {
+            if (const auto 持久 = 基础持久运行包::读取已绑定会话(全局基础数据集)) {
+                using S = 新外设事实状态;
+                struct 接收结果 { S 状态 = S::入口拒绝; };
+                std::vector<稳定编码> 待投递;
+                const auto 结果 = 提交持久外设操作(*持久, [&] {
+                    struct 清理通知出口 {
+                        ~清理通知出口() { 待提交外设接收通知 = nullptr; }
+                    } 回收;
+                    待提交外设接收通知 = &待投递;
+                    return 接收结果{更新接收(定位, 来源序号, 实际UTF8正文, 接收时间, 回应输出, 接纳会话绑定人)};
+                });
+                if (结果.状态 == S::已完成) 投递外设事实变化(待投递);
+                return 结果.状态;
+            }
+        }
         std::vector<稳定编码> 新状态组;
         {
         std::lock_guard 锁(外设互斥);
@@ -1316,7 +1409,8 @@ void 绑定外设世界树事实变化端口(std::function<void(稳定编码)> �
             || 当前内容 != 实际UTF8正文)
             throw std::runtime_error("peripheral receive readback failed");
         }
-        投递外设事实变化(新状态组);
+        if (待提交外设接收通知) 待提交外设接收通知->swap(新状态组);
+        else 投递外设事实变化(新状态组);
         return 新外设事实状态::已完成;
     } catch (const std::exception& e) {
         工程异常终止(HY_EGO_WIDEN(__FILE__), __LINE__, L"记录外设接收",

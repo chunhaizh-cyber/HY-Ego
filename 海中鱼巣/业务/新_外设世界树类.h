@@ -10,6 +10,8 @@
 #include <vector>
 
 namespace 海中鱼巣 {
+
+class 基础持久视图;
 class 新词典接收场景提供接口;
 
 struct 新外设对话框定位 final {
@@ -110,6 +112,7 @@ class 新_外设世界树类 final : public 新语言分界消息读取接口 {
 public:
     explicit 新_外设世界树类(新_世界树类&) noexcept;
     新世界初始化结果 初始化() noexcept;
+    static bool 恢复外设消息结构(const 基础持久视图&);
     std::optional<稳定编码> 获取输出队列特征类型() const noexcept;
     std::optional<稳定编码> 获取接收消息特征类型() const noexcept;
     // 提供者借用本对象及事实服务；所有查询/在途回调结束后才可销毁本对象。

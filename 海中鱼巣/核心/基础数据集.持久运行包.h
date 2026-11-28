@@ -3,6 +3,7 @@
 #include "基础数据集.快照格式.h"
 
 #include <atomic>
+#include <functional>
 #include <map>
 #include <string_view>
 
@@ -70,6 +71,12 @@ public:
         const std::filesystem::path& 目录);
     static 基础持久状态 绑定恢复权威(基础数据集& 入口, const std::shared_ptr<基础持久运行包>& 会话);
     static std::shared_ptr<基础持久运行包> 读取已绑定会话(const 基础数据集& 入口);
+    static 基础持久状态 交接首份权威(基础数据集&, const std::shared_ptr<基础持久运行包>&);
+    static bool 在外设候选(const 基础数据集& 入口) noexcept {
+        return 入口.取线程私有候选() != nullptr;
+    }
+    // 同步所有者事务；回调只构造和读回本候选，不可发布外部通知。
+    基础持久状态 提交外设候选(基础数据集& 入口, const std::function<bool()>& 准备);
     视图 读取() const noexcept { return 当前_.load(std::memory_order_acquire); }
     基础持久状态 提交(const 视图& 预期, const 基础快照映像& 候选);
     // 仅用于实际普通启动的全新、无运行期消费者引导候选。
