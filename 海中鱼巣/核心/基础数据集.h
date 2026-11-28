@@ -310,6 +310,7 @@ struct 基础互引节点删除请求 final {
 };
 
 class 基础数据集 final {
+    friend class 基础持久运行包;
 public:
     基础数据集() = default;
     基础数据集(const 基础数据集&) = delete;
